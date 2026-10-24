@@ -4984,6 +4984,38 @@ and AbstractByteBufTest 252 mapped/156 unreviewed methods. Whole source/fixture/
 provider statuses remain partial. Evidence: artifacts/buffer-snapshot-source-validation
 (ignored).
 
+## Zero-fill, iteration and write-lifetime original fixtures
+
+Ported 28 original declared AbstractByteBufTest methods across unpooled heap/native,
+mixed composite and pooled heap/native storage (140 cases). Four zero-fill methods
+cover complete 4096-byte FF-to-zero conversion using random block lengths [0,31],
+negative WriteZero length and both zero-fill operations after release. Nine iteration
+methods cover readable ascending/indexed descending traversal, indexed early abort,
+four-byte reconstruction in both directions and all four overloads after release.
+Fifteen further methods cover Boolean, byte, BE/LE short/medium/int/long, char and
+BE/LE float/double writes after release.
+
+ByteProcessor becomes Func<byte,bool>; synchronous captured locals replace the
+original AtomicInteger without introducing concurrency. Compare octet patterns with
+unchecked byte narrowing to account for Java signed bytes. Java/CLR use independently
+seeded PRNG streams; their random block sequences are not equated. Negative length
+maps IllegalArgumentException to ArgumentOutOfRangeException. Supplemental CLR checks
+within these cases verify callback counts, no callback after release, receiver
+identity, unchanged iteration cursors and unchanged released write cursors. The
+original releasedBuffer comments remain verbatim. Existing kernel/forwarding/view,
+read-only, bounds, callback-failure and growth/release safety tests remain in use.
+
+All 140 cases pass unchanged runtime and fresh pinned Java Unsafe/NIO; all 28
+original bodies plus releasedBuffer and TestByteProcessor execute verbatim in Java.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 12205/12205, no failures/skips; 51 existing Common warnings, zero Buffer/
+test warnings and new provider native reservations zero. Isolated committed Common
+preserves the unrelated ByteOrder.cs edit (CS8956). Java pool maxOrder=9 versus
+supported CLR test maxOrder=1 is not a geometry/performance comparison.
+AbstractByteBufTest now has 280 mapped/128 unreviewed declared methods. Public API
+reviews and whole source/fixture/provider statuses are unchanged.
+Evidence: artifacts/buffer-mutation-iteration-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

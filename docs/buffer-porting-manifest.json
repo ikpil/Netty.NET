@@ -7102,7 +7102,8 @@
         "test/Netty.NET.Buffer.Tests/ByteBufComparisonSourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufTextSourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -7131,7 +7132,8 @@
         "Content-comparison original-fixture unit: four previously unreviewed methods ported across five heap/native/mixed-composite/pooled providers (20 new cases); original HashSet scenario maps to the existing OriginalHashSetScenarioAndClrDefaultSortUseContent case with heap probe/native keys. Fresh pinned Java Unsafe/NIO each execute five original method bodies verbatim for the same 21 scenarios. CLR CompareTo(null)=1 deliberately replaces Java NullPointerException; fixed endian accessors replace mutable order facades. Existing signed-tail/wrapping hash, exact unsigned compare, generic collection, view/leak wrapper and released-identity tests are reused. All 21 focused cases pass unchanged runtime. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11628 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956); new provider native reservations zero. Three public contracts reviewed per source; whole statuses remain partial. docs/buffer-porting.md#content-comparison-and-clr-collection-contracts; artifacts/buffer-comparison-source-validation (ignored).",
         "Text/Encoding original-fixture unit: 31 previously unreviewed declared methods mapped to 147 cases: 28 four-charset methods across five providers, readable Latin1 String on five providers, and two original direct-Unpooled UTF8 bounds/growth cases on heap. Twenty extra cross-component literal-wire cases explicitly distinguish Java ASCII octets/UTF16 BOM from CLR Encoding fallback/no automatic preamble. All 167 cases pass existing CLR runtime and fresh pinned Java Unsafe/NIO under these declared adaptations; Java executes all 31 original bodies plus eight helpers verbatim. Two CharSequence JavaDocs and two original implementation comments restored; executable runtime tokens unchanged. Seven public text declarations reviewed per source. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11795 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings; new provider native reservations zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). Whole statuses remain partial. docs/buffer-porting.md#strings-and-explicit-encoding-contracts; artifacts/buffer-text-source-validation (ignored).",
         "Scalar round-trip original-fixture unit: 36 declared random/sequential scalar methods ported over five heap/native/mixed/pooled providers (180 cases). Five additional cases execute the real unsigned-short LE helper path and an independent 18-byte literal vector crossing a component boundary. Pinned testSequentialUnsignedShortLEAccess invokes its helper with true (BE); preserve that exact original mapping and record the missing LE coverage explicitly. All 185 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO. All 36 original bodies plus 16 helpers execute verbatim; each runtime separately validates complete wire bytes with CLR BinaryPrimitives or Java NIO using its own reseeded PRNG. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11980 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings and new provider native reservations zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No production/API-status change. docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures; artifacts/buffer-scalar-roundtrip-source-validation (ignored). Whole fixture/provider statuses remain partial.",
-        "Copy/borrowed-view source-fixture unit: ten original declared methods across five providers (50 cases), 30 additional indexed copies through owners/read-only views, and five indexed-after-release cases. All 85 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, executing ten original bodies plus releasedBuffer helper verbatim. Both original copy-after-release methods call copy(); indexed lifetime checks are additional coverage. Read-only views borrow the shared reference counter with independent indices; copied capacity ranges are independent writable owners. Explicit BE/LE accessors replace mutable order identity. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 12065 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings, new provider native reservations zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). docs/buffer-porting.md#copies-and-borrowed-read-only-views; artifacts/buffer-snapshot-source-validation (ignored). Whole source/fixture/provider statuses remain partial."
+        "Copy/borrowed-view source-fixture unit: ten original declared methods across five providers (50 cases), 30 additional indexed copies through owners/read-only views, and five indexed-after-release cases. All 85 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, executing ten original bodies plus releasedBuffer helper verbatim. Both original copy-after-release methods call copy(); indexed lifetime checks are additional coverage. Read-only views borrow the shared reference counter with independent indices; copied capacity ranges are independent writable owners. Explicit BE/LE accessors replace mutable order identity. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 12065 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings, new provider native reservations zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). docs/buffer-porting.md#copies-and-borrowed-read-only-views; artifacts/buffer-snapshot-source-validation (ignored). Whole source/fixture/provider statuses remain partial.",
+        "Zero-fill/iteration/write-lifetime original-fixture unit: 28 previously unreviewed declared methods ported across five heap/native/mixed-composite/pooled providers (140 cases): four zero-fill methods, nine ByteProcessor methods and 15 scalar writes after release. All 140 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO. Java executes all 28 original bodies plus releasedBuffer and TestByteProcessor verbatim. CLR Func<byte,bool> and synchronous captured locals replace ByteProcessor/AtomicInteger; octet comparisons preserve signed Java byte patterns; Java argument errors map to CLR ArgumentOutOfRangeException. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 12205 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings and new provider native reservations zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No runtime/API/status change. docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures; artifacts/buffer-mutation-iteration-source-validation (ignored). Whole fixture/provider statuses remain partial."
       ],
       "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete.",
       "comments": {
@@ -9920,16 +9922,324 @@
             }
           ],
           "adaptation": "scenario=9; A borrowed read-only view releases the shared root claim; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+        },
+        {
+          "upstreamMethod": "testSetZero",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalZeroFillFixtures"
+            }
+          ],
+          "adaptation": "scenario=0; Fill all 4096 bytes with FF, then absolute zero-fill successive random [0,31] byte blocks and verify the full zero result. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteZero",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalZeroFillFixtures"
+            }
+          ],
+          "adaptation": "scenario=1; Reject negative length, prefill FF, Clear, then relative zero-fill random [0,31] byte blocks; verify full bytes and reader 0/writer capacity. Java IllegalArgumentException maps to CLR ArgumentOutOfRangeException. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testSetZeroAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalZeroFillFixtures"
+            }
+          ],
+          "adaptation": "scenario=2; Clear/release an 8-byte owner, then SetZero(0,1) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteZeroAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalZeroFillFixtures"
+            }
+          ],
+          "adaptation": "scenario=3; Clear/release an 8-byte owner, then WriteZero(1) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByte",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=0; Readable ascending iteration of [capacity/4,3*capacity/4) over the original repeating byte pattern; verify every octet, full completion and last visited index. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteAbort",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=1; Indexed ascending iteration from capacity/3 for capacity/3 bytes stops at capacity/2 and returns that absolute index. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteDesc",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=2; Indexed descending iteration of the middle half visits every expected octet and finishes at capacity/4. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteDesc2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=3; Readable descending iteration reconstructs the original four-byte vector [1,2,3,4]. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByte2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=4; Readable ascending iteration reconstructs the original four-byte vector [1,2,3,4]. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=5; Released readable ascending iteration rejects before invoking the callback, even with zero readable bytes. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteAfterRelease1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=6; Released indexed ascending iteration rejects before invoking the callback. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteDescAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=7; Released readable descending iteration rejects before invoking the callback, even with zero readable bytes. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testForEachByteDescAfterRelease1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalByteProcessorFixtures"
+            }
+          ],
+          "adaptation": "scenario=8; Released indexed descending iteration rejects before invoking the callback. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteBooleanAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=0; Clear/release an 8-byte owner, then WriteBoolean with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=1; Clear/release an 8-byte owner, then WriteByte with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteShortAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=2; Clear/release an 8-byte owner, then WriteShort with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteShortLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=3; Clear/release an 8-byte owner, then WriteShortLE with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteMediumAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=4; Clear/release an 8-byte owner, then WriteMedium with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteMediumLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=5; Clear/release an 8-byte owner, then WriteMediumLE with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteIntAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=6; Clear/release an 8-byte owner, then WriteInt with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteIntLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=7; Clear/release an 8-byte owner, then WriteIntLE with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteLongAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=8; Clear/release an 8-byte owner, then WriteLong with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteLongLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=9; Clear/release an 8-byte owner, then WriteLongLE with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteCharAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=10; Clear/release an 8-byte owner, then WriteChar with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteFloatAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=11; Clear/release an 8-byte owner, then WriteFloat with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteFloatLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=12; Clear/release an 8-byte owner, then WriteFloatLE with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteDoubleAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=13; Clear/release an 8-byte owner, then WriteDouble with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
+        },
+        {
+          "upstreamMethod": "testWriteDoubleLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
+              "method": "OriginalScalarWriteAfterReleaseFixtures"
+            }
+          ],
+          "adaptation": "operation=14; Clear/release an 8-byte owner, then WriteDoubleLE with the original value 1 (true for Boolean) must reject released storage. Five providers. Shared PRNG, callback, byte representation and state-check policies: docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 408,
-        "mappedCount": 252,
+        "mappedCount": 280,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 156,
+        "unreviewedCount": 128,
         "unreviewedMethods": [
           "getByteBufferBoundaryCheck",
           "getByteBufferState",
@@ -9939,7 +10249,6 @@
           "testMediumConsistentWithByteBuffer",
           "testIntConsistentWithByteBuffer",
           "testLongConsistentWithByteBuffer",
-          "testSetZero",
           "testRandomHeapBufferTransfer1",
           "testRandomHeapBufferTransfer2",
           "testRandomDirectBufferTransfer",
@@ -9952,7 +10261,6 @@
           "testSequentialByteBufferBackedHeapBufferTransfer2",
           "testSequentialByteBufferTransfer",
           "testSequentialCopiedBufferTransfer1",
-          "testWriteZero",
           "testStreamTransfer1",
           "testStreamTransfer2",
           "testToStringMultipleThreads",
@@ -9960,9 +10268,6 @@
           "testNioBuffer1",
           "testToByteBuffer2",
           "testToByteBuffer3",
-          "testForEachByte",
-          "testForEachByteAbort",
-          "testForEachByteDesc",
           "testInternalNioBuffer",
           "testDuplicateReadGatheringByteChannelMultipleThreads",
           "testSliceReadGatheringByteChannelMultipleThreads",
@@ -9985,7 +10290,6 @@
           "testSetBytesAfterRelease6",
           "testSetBytesAfterRelease7",
           "testSetBytesAfterRelease8",
-          "testSetZeroAfterRelease",
           "testReadBytesAfterRelease",
           "testReadBytesAfterRelease2",
           "testReadBytesAfterRelease3",
@@ -9994,32 +10298,12 @@
           "testReadBytesAfterRelease8",
           "testReadBytesAfterRelease9",
           "testReadBytesAfterRelease10",
-          "testWriteBooleanAfterRelease",
-          "testWriteByteAfterRelease",
-          "testWriteShortAfterRelease",
-          "testWriteShortLEAfterRelease",
-          "testWriteMediumAfterRelease",
-          "testWriteMediumLEAfterRelease",
-          "testWriteIntAfterRelease",
-          "testWriteIntLEAfterRelease",
-          "testWriteLongAfterRelease",
-          "testWriteLongLEAfterRelease",
-          "testWriteCharAfterRelease",
-          "testWriteFloatAfterRelease",
-          "testWriteFloatLEAfterRelease",
-          "testWriteDoubleAfterRelease",
-          "testWriteDoubleLEAfterRelease",
           "testWriteBytesAfterRelease",
           "testWriteBytesAfterRelease2",
           "testWriteBytesAfterRelease3",
           "testWriteBytesAfterRelease6",
           "testWriteBytesAfterRelease7",
           "testWriteBytesAfterRelease8",
-          "testWriteZeroAfterRelease",
-          "testForEachByteAfterRelease",
-          "testForEachByteAfterRelease1",
-          "testForEachByteDescAfterRelease",
-          "testForEachByteDescAfterRelease1",
           "testNioBufferAfterRelease",
           "testNioBufferAfterRelease1",
           "testInternalNioBufferAfterRelease",
@@ -10069,8 +10353,6 @@
           "testReadBytesAndWriteBytesWithFileChannel",
           "testGetBytesAndSetBytesWithFileChannel",
           "testReadBytes",
-          "testForEachByteDesc2",
-          "testForEachByte2",
           "testGetBytesByteBuffer",
           "explicitLittleEndianReadMethodsMustAlwaysUseLittleEndianByteOrder",
           "explicitLittleEndianWriteMethodsMustAlwaysUseLittleEndianByteOrder",
