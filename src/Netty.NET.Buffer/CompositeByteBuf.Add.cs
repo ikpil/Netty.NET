@@ -33,7 +33,8 @@ public partial class CompositeByteBuf
      * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
-    public virtual CompositeByteBuf AddComponents(params ByteBuf[] buffers) => AddComponents(_components.Count, buffers);
+    public virtual CompositeByteBuf AddComponents(params ByteBuf[] buffers)
+        => AddComponents(buffers, false);
 
     /**
      * Add the given {@link ByteBuf}s and increase the {@code writerIndex} if {@code increaseWriterIndex} is
@@ -45,7 +46,7 @@ public partial class CompositeByteBuf
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
     public virtual CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
-        => AddComponents(_components.Count, buffers, increaseWriterIndex);
+        => AddComponentsCore(_components.Count, buffers, 0, increaseWriterIndex);
 
     /**
      * Add the given {@link ByteBuf}s on the specific index
@@ -176,7 +177,7 @@ public partial class CompositeByteBuf
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
     public virtual CompositeByteBuf AddComponents(IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
-        => AddComponents(_components.Count, buffers, increaseWriterIndex);
+        => AddComponentsCore(_components.Count, buffers, increaseWriterIndex);
 
     /**
      * Add the given {@link ByteBuf}s on the specific index
@@ -195,6 +196,10 @@ public partial class CompositeByteBuf
     /// ends additions; remaining yielded entries are safely released. Enumeration
     /// and disposal follow the supplied IEnumerator's CLR contract.</remarks>
     public virtual CompositeByteBuf AddComponents(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
+        => AddComponentsCore(componentIndex, buffers, increaseWriterIndex);
+
+    // The original iterable kernel is private, including its use during construction.
+    private CompositeByteBuf AddComponentsCore(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex)
     {
         // TODO optimize further, similar to ByteBuf[] version
         // (difference here is that we don't know *always* know precise size increase in advance,
@@ -253,7 +258,11 @@ public partial class CompositeByteBuf
         int readerIndex = buffer.ReaderIndex, writerIndex = buffer.WriterIndex;
         if (readerIndex == writerIndex) { buffer.Release(); return this; }
         if (buffer is not CompositeByteBuf source)
-            return AddComponent(buffer, increaseWriterIndex);
+        {
+            AddComponentCore(_components.Count, buffer, increaseWriterIndex);
+            ConsolidateIfNeeded();
+            return this;
+        }
 
         source.CheckIndex(readerIndex, writerIndex - readerIndex);
         // CLR: checked capacity prevents the original unchecked flatten-offset overflow.
@@ -311,6 +320,6 @@ public partial class CompositeByteBuf
     {
         // Consolidate if the number of components will exceed the allowed maximum by the current
         // operation.
-        if (_components.Count > MaxNumComponents) Consolidate();
+        if (_components.Count > MaxNumComponents) ConsolidateCore(0, _components.Count);
     }
 }

@@ -195,7 +195,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      *
      * @param cIndex the index on from which the {@link ByteBuf} will be remove
      */
-    public virtual CompositeByteBuf RemoveComponent(int componentIndex) => RemoveComponents(componentIndex, 1);
+    public virtual CompositeByteBuf RemoveComponent(int componentIndex) => RemoveComponentsCore(componentIndex, 1);
     /**
      * Remove the number of {@link ByteBuf}s starting from the given index.
      *
@@ -203,6 +203,9 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      * @param numComponents the number of components to remove
      */
     public virtual CompositeByteBuf RemoveComponents(int componentIndex, int numComponents)
+        => RemoveComponentsCore(componentIndex, numComponents);
+
+    private CompositeByteBuf RemoveComponentsCore(int componentIndex, int numComponents)
     {
         CheckComponentRange(componentIndex, numComponents);
         for (int i = componentIndex; i < componentIndex + numComponents; ++i) _components[i].Free();
@@ -305,7 +308,9 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
                 // FIXME: No need to create a padding buffer and consolidate.
                 // Just create a big single buffer and put the current content there.
                 // CLR: retain the original growth policy; allocation failures preserve owned components.
-                AddComponent(padding);
+                // Netty uses addComponent0: public insertion overrides must not intercept padding ownership.
+                AddComponentCore(_components.Count, padding, false);
+                ConsolidateIfNeeded();
                 return;
             }
             int bytesToTrim = oldCapacity - value;
@@ -329,7 +334,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /**
      * Consolidate the composed {@link ByteBuf}s
      */
-    public virtual CompositeByteBuf Consolidate() => Consolidate(0, _components.Count);
+    public virtual CompositeByteBuf Consolidate() => ConsolidateCore(0, _components.Count);
     /**
      * Consolidate the composed {@link ByteBuf}s
      *
@@ -337,6 +342,10 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      * @param numComponents the number of components to compose
      */
     public virtual CompositeByteBuf Consolidate(int componentIndex, int numComponents)
+        => ConsolidateCore(componentIndex, numComponents);
+
+    // Netty's consolidate0 is private. Automatic/whole consolidation must not invoke public range overrides.
+    private CompositeByteBuf ConsolidateCore(int componentIndex, int numComponents)
     {
         CheckComponentRange(componentIndex, numComponents);
         if (numComponents <= 1) return this;
@@ -383,12 +392,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         if (readerIndex == 0) return this;
         // Discard everything if (readerIndex = writerIndex = capacity).
         if (readerIndex == WriterIndex && WriterIndex == Capacity)
-        { RemoveComponents(0, _components.Count); SetIndex(0, 0); AdjustMarkers(readerIndex); return this; }
+        { RemoveComponentsCore(0, _components.Count); SetIndex(0, 0); AdjustMarkers(readerIndex); return this; }
         // Remove read components.
         int first = FindComponentIndex(readerIndex);
         if (first == 0) return this; // Nothing to discard
         int offset = _components[first].Offset;
-        RemoveComponents(0, first);
+        RemoveComponentsCore(0, first);
         // Update indexes and markers.
         SetIndex(readerIndex - offset, WriterIndex - offset); AdjustMarkers(offset);
         return this;
@@ -401,7 +410,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         if (readerIndex == 0) return this;
         // Discard everything if (readerIndex = writerIndex = capacity).
         if (readerIndex == WriterIndex && WriterIndex == Capacity)
-        { RemoveComponents(0, _components.Count); SetIndex(0, 0); AdjustMarkers(readerIndex); return this; }
+        { RemoveComponentsCore(0, _components.Count); SetIndex(0, 0); AdjustMarkers(readerIndex); return this; }
         int first = FindComponentIndex(readerIndex);
         ComponentEntry component = _components[first];
         // Replace the first readable component with a new slice.
@@ -410,7 +419,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         // CLR: update captured coordinates and replace any cached borrowed view together.
         int trimmedBytes = readerIndex - component.Offset;
         component.Trim(trimmedBytes, component.Length - trimmedBytes);
-        RemoveComponents(0, first);
+        RemoveComponentsCore(0, first);
         // Update indexes and markers.
         SetIndex(0, WriterIndex - readerIndex); AdjustMarkers(readerIndex);
         return this;

@@ -49,7 +49,7 @@ public partial class CompositeByteBuf
     {
         try
         {
-            AddComponents(0, buffers);
+            AddComponentsCore(0, buffers, false);
             SetIndex(0, Capacity);
         }
         catch

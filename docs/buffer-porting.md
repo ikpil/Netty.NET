@@ -5060,6 +5060,71 @@ then allocator/cache lifecycle and provider/facade specializations. These remain
 unreviewed source details, not a claim that 34 runtime classes are unimplemented.
 Evidence: artifacts/buffer-api-completion-validation (ignored).
 
+## Buffer completion execution plan
+
+Finish the production contract review in this order; completionPlan in the existing
+JSON records the same stages and their status. Implement confirmed gaps before
+expanding original fixture mappings. Existing tests and pinned differential evidence
+are reused; new tests target discovered gaps or uncovered required contracts.
+
+1. **Composite buffers — in progress.** Review construction, transferred claims,
+   captured component ranges, mutation/capacity/marks, consolidation, borrowed views
+   and segmented I/O. First completed unit: structural private dispatch below.
+2. **Allocators and caches — pending.** Review allocation/reallocation/free, eligibility,
+   trim/close, cross-thread returns, outstanding claims/pins and shutdown. Retain
+   needed policies while using the existing CLR replacements for JVM infrastructure.
+3. **Providers and facades — pending.** Review heap/native/pooled/adaptive/empty,
+   read-only/derived/fixed storage and wrapped/leak-aware/unreleasable forwarding.
+4. **Module closure — pending.** Account for remaining source/comment decisions,
+   confirm representative codec/transport consumer contracts and validate the whole
+   module. Unreviewed entries and original test counts are not missing-feature counts.
+
+Each runtime unit requires source/consumer evidence, explicit language and ownership
+choices, appropriate regressions and Debug/Release/rebuilt checked Release validation
+with SIMPLE sampling interval 1, followed by a scoped English commit and push.
+Whole source/provider status changes require their actual complete contract review.
+
+## Composite structural kernel dispatch
+
+The pinned CompositeByteBuf uses private addComponent0/addComponents0/iterable
+addComponents/consolidate0 and direct component-array removal for internal work.
+The CLR port instead re-entered public virtual insertion, batch, consolidation or
+removal overloads during growth, flattening, discard, convenience methods and ordinary
+enumerable construction. A derived override could interrupt these internal operations;
+growth could allocate padding that an overriding AddComponent rejects before adoption,
+and construction could invoke a derived batch override before its initialization.
+
+Route these internal paths through private CLR kernels while retaining the existing
+List, captured-range and ownership implementation. Automatic consolidation and whole
+Consolidate no longer dispatch to unrelated public consolidation overrides. Single
+removal and discard share private removal; ordinary IEnumerable construction and
+unindexed batch methods use the corresponding private insertion path. Non-composite
+flattening also follows private insertion. Preserve intentional public-to-public
+forwarding: the params-array AddComponents calls the public array/bool overload, and
+the ByteBuf-as-IEnumerable special case still calls public indexed AddComponent.
+Public requests and facade forwarding remain virtual. Original comments stay intact.
+
+The new 68 production-contract cases cover unpooled/pooled heap/native storage,
+complete bytes, indices/marks, component counts, original claim release, both
+constructor forms and explicit public interception. The final regression set exposes
+64 failures in the committed runtime (four array-constructor controls pass); all 68
+pass after correction. Rejected padding is cleaned up by the failing-test harness so
+that reproducing the bug does not leave native reservations behind. All provider
+cleanup returns native reservations to zero. Fresh byte-checked pinned Buffer code
+passes the same 68 scenarios with both actual Unsafe and forced NIO. These are
+source-contract regressions, not newly mapped original JUnit methods.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 12273/12273 without failures/skips; 51 existing Common warnings, zero
+Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs
+edit (CS8956). Java and CLR use small maxOrder=1 pools for these small buffer cases;
+allocator geometry/performance is not compared. Actual consumer:
+codec-base/.../ByteToMessageDecoder.java COMPOSITE_CUMULATOR calls
+addFlattenedComponents for both prior cumulation and incoming input. Remaining
+Composite source/constructor/public/provider and failure-path review continues;
+whole source status and original fixture mappings are unchanged.
+Evidence: artifacts/buffer-composite-structural-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
