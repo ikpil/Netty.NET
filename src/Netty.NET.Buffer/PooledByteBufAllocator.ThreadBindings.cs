@@ -134,6 +134,27 @@ public partial class PooledByteBufAllocator
         }
     }
 
+    /**
+     * @deprecated will be removed
+     * Returns {@code true} if the calling {@link Thread} has a {@link ThreadLocal} cache for the allocated
+     * buffers.
+     */
+    /// <summary>Whether the calling physical thread currently owns an arena binding.</summary>
+    /// <remarks>Replaces the deprecated JVM cache-presence query. This includes cache-disabled
+    /// bindings; reading it never creates, trims or removes a binding. Arena-free fallback,
+    /// empty sentinels and composite factories create none. False after allocator disposal.</remarks>
+    public bool HasCurrentThreadBinding
+    {
+        get
+        {
+            lock (_sync)
+            {
+                Thread thread = Thread.CurrentThread;
+                return _threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) && binding.IsOwner(thread);
+            }
+        }
+    }
+
     /// <summary>Drains cached regions and releases the calling physical thread's arena assignment.</summary>
     /// <remarks>Returns false if the thread has no assignment. The next factory allocation
     /// chooses the least-used arenas again. This operation does not return live buffers

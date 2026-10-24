@@ -31,18 +31,44 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
 
     protected static ByteBuf ToLeakAwareBuffer(ByteBuf buffer)
     {
-        IResourceLeakTracker<ByteBuf> leak = ByteBuf.LeakDetector.Track(buffer);
-        if (leak == null) return buffer;
-        return ByteBuf.LeakDetector.IsRecordEnabled()
-            ? new AdvancedLeakAwareByteBuf(buffer, leak) : new SimpleLeakAwareByteBuf(buffer, leak);
+        IResourceLeakTracker<ByteBuf> leak = null;
+        try
+        {
+            leak = ByteBuf.LeakDetector.Track(buffer);
+            if (leak == null) return buffer;
+            return ByteBuf.LeakDetector.IsRecordEnabled()
+                ? new AdvancedLeakAwareByteBuf(buffer, leak) : new SimpleLeakAwareByteBuf(buffer, leak);
+        }
+        catch
+        {
+            ReleaseFailedLeakAwareAllocation(buffer, leak);
+            throw;
+        }
     }
 
     protected static CompositeByteBuf ToLeakAwareBuffer(CompositeByteBuf buffer)
     {
-        IResourceLeakTracker<ByteBuf> leak = ByteBuf.LeakDetector.Track(buffer);
-        if (leak == null) return buffer;
-        return ByteBuf.LeakDetector.IsRecordEnabled()
-            ? new AdvancedLeakAwareCompositeByteBuf(buffer, leak) : new SimpleLeakAwareCompositeByteBuf(buffer, leak);
+        IResourceLeakTracker<ByteBuf> leak = null;
+        try
+        {
+            leak = ByteBuf.LeakDetector.Track(buffer);
+            if (leak == null) return buffer;
+            return ByteBuf.LeakDetector.IsRecordEnabled()
+                ? new AdvancedLeakAwareCompositeByteBuf(buffer, leak) : new SimpleLeakAwareCompositeByteBuf(buffer, leak);
+        }
+        catch
+        {
+            ReleaseFailedLeakAwareAllocation(buffer, leak);
+            throw;
+        }
+    }
+
+    private static void ReleaseFailedLeakAwareAllocation(ByteBuf buffer, IResourceLeakTracker<ByteBuf> leak)
+    {
+        // CLR: a failed factory result cannot reach the caller. Close any tracker and
+        // return the owned reservation without replacing the original detector failure.
+        try { leak?.Close(buffer); } catch { }
+        ReferenceCountUtil.SafeRelease(buffer);
     }
 
     private readonly ByteBuf _emptyBuffer;

@@ -5292,6 +5292,78 @@ this completes the iteration/search unit, not the entire composite source or mod
 The existing manifest records the evidence and remaining source review. Evidence:
 artifacts/buffer-composite-iteration-validation (ignored).
 
+## Allocation ownership and allocator API review
+
+Composite consolidation now invokes the allocated destination's public
+WriteBytes(ByteBuf,int,int), as the original Component.transferTo does. A direct
+SetBytes/manual writer update skipped custom allocator-created destination behavior.
+Whole/range consolidation, automatic consolidation after insertion and capacity
+growth now share the correct receiver kernel and captured source coordinates.
+The existing CLR prepare/publish policy remains: a failed replacement is released,
+all original components/layout stay owned, and successfully inserted/grown components
+remain adopted when automatic consolidation fails. This differs from the original
+which frees each copied component immediately and leaves the replacement live when
+a later transfer throws. It is an explicit CLR ownership policy, not row equality.
+
+Both protected allocator leak-aware helpers now clean up unreturned factory results
+when Track, IsRecordEnabled or wrapper creation fails. Any acquired tracker is closed,
+the owned buffer/reservation is released, and a secondary tracker-close error does
+not replace the initial exception. This applies to unpooled direct/composite factories,
+pooled/fallback factories and adaptive heap/direct factories through the shared base.
+Unpooled heap, disabled tracking and empty sentinel policies are unchanged. Factory
+ownership ends only after a result is successfully returned; pooled/adaptive cached
+storage may remain until trim/disposal after its failed logical buffer is released.
+
+PooledByteBufAllocator.HasCurrentThreadBinding replaces the deprecated Java
+hasThreadLocalCache query with a physical-thread property. It observes existing
+bindings, including cache-disabled ones, without creating, trimming or sweeping any.
+ReleaseCurrentThreadBinding already replaces freeThreadLocalCache. Queries from other
+physical threads observe their own state; disposed allocators report false. Arena-free
+fallback intentionally creates no CLR binding, while the JVM creates an empty
+ThreadLocal cache object. Empty sentinels and composite factories create neither.
+
+The 174 new cases comprise 72 destination-write/rollback cases, 54 isolated detector
+failure cases (108 inner Track/IsRecordEnabled/secondary-close scenarios) and 48 binding
+query/lifetime cases. The committed runtime fails all 72 destination-write and all
+54 detector-failure cases. Fresh collectible contexts install detector factories
+before ByteBuf initialization, without replacing the active process's static detector.
+New cases cover heap/native storage, unpooled/pooled/adaptive destinations, pooled
+arena-free fallback, live buffers after binding detach, exception identity, counts,
+indices, original-source claims and native cleanup.
+
+All 93 original Buffer sources are freshly byte-checked/compiled against the pin.
+Java Unsafe/NIO each execute 180 selected cases. Sixty success/query outcomes match;
+48 original consolidation partial-release/live-result outcomes, 60 original
+unreturned leak-aware buffers and 12 arena-free ThreadLocal-versus-no-binding cases
+are explicitly checked as CLR lifetime/representation differences. The oracle
+manually cleans failed original results/remaining claims; Java production is unchanged.
+
+Four allocator facade inventories now account for 45 declared public instance
+methods: AbstractByteBufAllocator 20, PooledByteBufAllocator 17,
+UnpooledByteBufAllocator 4 and AdaptiveByteBufAllocator 4. Optional parameters fold
+factory overloads; Metric properties own obsolete diagnostic aliases; IReadOnlyList
+replaces JVM List. This inventory checks availability/representation; pooled/adaptive
+internal caches, static defaults and constructor/JVM-finalizer decisions remain
+separate source review. No empty compatibility forwarding methods are added.
+
+UnpooledByteBufAllocator source review is complete under its explicit CLR policies:
+three constructor shapes, the four public operations, heap/direct/composite factories,
+optional detector disabling, stable metrics and instrumented helper classes are
+accounted for. A shared atomic counter sink and owned heap/native providers replace
+LongAdder, instrumented provider variants and DecrementingCleanableDirectBuffer.
+The JVM-only tryNoCleaner constructor comment is retained verbatim in the manifest;
+NativeMemoryOwner/SafeHandle ownership retires that flag. All six original comments
+are preserved. Provider source classes keep their own completion status; logical
+capacity versus deferred physical-pin cleanup remains the documented CLR distinction.
+
+Full net10.0 Debug, Release and rebuilt checked Release with SIMPLE sampling interval 1
+each pass 14482/14482, without failures/skips. Existing Common warnings remain 51;
+Buffer/test warnings are zero. Native reservations return to zero, Common is unchanged,
+and original fixture mappings are unchanged. Only UnpooledByteBufAllocator advances
+to verified; composite and pooled/adaptive internal source closure remain incomplete.
+Existing progress JSON records the completed units; no new Markdown file is added.
+Evidence: artifacts/buffer-allocation-ownership-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5317,8 +5389,10 @@ internal kernels/fields and specialized providers still require source review.
 ByteBufUtil has no unreviewed public static methods; its remaining private/source
 review is separate. CompositeByteBuf now has all 114 declared public methods and three public constructor
 shapes accounted for; specialized iteration/search is reviewed, while remaining
-nonpublic strategy/comment and structural failure review is separate. The other 31 in-progress source files have no signature
-inventory yet. Finish composite internals, then allocator/cache lifecycle and provider/
+nonpublic strategy/comment and structural failure review is separate. PooledByteBufAllocator now accounts for its 17 declared public instance methods;
+its nonpublic arena/cache/configuration review remains separate. UnpooledByteBufAllocator
+is verified under its CLR provider/instrumentation policies. The other 29 in-progress
+source files have no signature inventory yet. Finish composite source closure alongside allocator/cache lifecycle, then provider/
 facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 

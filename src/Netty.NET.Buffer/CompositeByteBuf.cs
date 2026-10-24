@@ -358,8 +358,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             for (int i = componentIndex; i < componentIndex + numComponents; ++i)
             {
                 ComponentEntry component = _components[i];
-                replacement.SetBytes(replacement.WriterIndex, component.Source, component.SourceIndex, component.Length);
-                replacement.WriterIndex += component.Length;
+                replacement.WriteBytes(component.Source, component.SourceIndex, component.Length);
             }
             replacementEntry = new ComponentEntry(replacement, 0, length);
         }
