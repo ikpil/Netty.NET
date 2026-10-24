@@ -693,7 +693,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         EnsureAccessible();
         if (length > ReadableBytes) throw new ArgumentOutOfRangeException(nameof(length));
     }
-    protected void CheckIndex(int index, int length)
+    protected internal void CheckIndex(int index, int length)
     {
         EnsureAccessible();
         // Subtraction avoids Java's signed index + length overflow boundary.
@@ -1620,7 +1620,8 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite(); CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
-        if (source.TryGetReadOnlyMemoryCore(sourceIndex, length, out var input) &&
+        if (source.SupportsDirectBulkCopy && SupportsDirectBulkCopy &&
+            source.TryGetReadOnlyMemoryCore(sourceIndex, length, out var input) &&
             TryGetMemoryCore(index, length, out var output)) input.Span.CopyTo(output.Span);
         else
         {

@@ -378,7 +378,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         CheckIndex(index, length);
         ByteBuf result = AllocateBuffer(length);
-        try { result.SetBytes(0, this, index, length); result.WriterIndex = length; return result; }
+        try { if (length != 0) GetBufferComponents(index, result, 0, length); result.WriterIndex = length; return result; }
         catch { result.Release(); throw; }
     }
 
@@ -486,7 +486,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         }
     }
 
+    internal override bool SupportsDirectBulkCopy => false;
+    internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
+    { CheckIndex(index, length); return CreateReadOnlySequence(index, length, true); }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
+        => CreateReadOnlySequence(index, length, false);
+    private ReadOnlySequence<byte> CreateReadOnlySequence(int index, int length, bool copying)
     {
         if (length == 0) return ReadOnlySequence<byte>.Empty;
         SequenceSegment first = null, last = null;
@@ -495,7 +500,9 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, length);
-            foreach (ReadOnlyMemory<byte> memory in component.Source.AsReadOnlySequence(component.SourceIndex + index - component.Offset, count))
+            ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(component.SourceIndex + index - component.Offset, count)
+                : component.Source.AsReadOnlySequence(component.SourceIndex + index - component.Offset, count);
+            foreach (ReadOnlyMemory<byte> memory in sequence)
             {
                 if (memory.IsEmpty) continue;
                 var next = new SequenceSegment(memory);

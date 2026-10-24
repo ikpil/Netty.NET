@@ -5169,6 +5169,67 @@ Public API review counts, original fixture mappings and whole source/provider
 statuses are unchanged; segmented/bulk/I/O specialization review remains next.
 Evidence: artifacts/buffer-composite-scalar-validation (ignored).
 
+## Composite bulk, memory and I/O review
+
+Corrected the composite bulk family together: a contiguous physical range inside a
+composite no longer skips the selected component Span getter; typed ByteBuf get/set
+requests delegate to the corresponding component overload with captured coordinates
+and original peers when nonaliasing. Mutable Copy uses the original private typed
+copy loop, retaining CLR failed-result cleanup. Opaque aggregate sources avoid the
+raw-memory fast path and use the receiver's canonical CLR span storage kernel;
+optimized/independently counted views propagate that bulk and sequence behavior.
+Fixed composites preserve their existing read-only and explicit heap-copy policies.
+
+Exact physical overlap is inspected using internal borrowed sequences, including
+nested transparent/read-only/offset/pooled views. This does not invoke public memory
+accessors or add public leak-access records. Nonaliasing typed transfers keep their
+original peers; aliased transfers use temporary owned heap peers to preserve the
+existing CLR memmove/snapshot guarantee. Byte/mark/reference behavior and guards
+remain explicit, and snapshots are always released. The current overlap scan compares
+source/destination segments (worst-case pairwise); no gather/scatter or performance
+equivalence is claimed. Public Memory/Sequence borrows remain physical views and do
+not acquire claims/pins or promise a component override's synthetic representation.
+
+252 targeted cases exercise heap/native, seven mutable/fixed/view/independent-count
+forms, inside/cross-component ranges, absolute/relative Span/ByteBuf transfer and
+Copy. The committed implementation fails 186; all 252 now pass. Fresh byte-checked
+Java Unsafe/NIO each pass the same 252 scenarios. The Java oracle selects heap
+allocation (io.netty.noPreferDirect=true) to match the existing CLR fixed-copy policy.
+Pinned mutable Copy leaks its allocated result in 24 throwing-getter cases; the
+oracle records/cleans those claims while CLR retains its existing release-on-failure
+policy. This is a declared lifetime difference, not hidden row equality.
+
+Another 72 cases independently model both overlap directions through heap/native
+backing, mutable/fixed roots, relative operations and nested wrappers that throw from
+public metadata accessors. Another 24 real sync/async Stream, positioned-file and
+loopback-socket cases verify canonical logical component bytes, counts, borrowed
+resource ownership, unchanged absolute cursors/marks/claims and native cleanup.
+Another 28 later-component failure cases verify published prefixes for nonaliasing
+typed transfers, unchanged relative cursors, failed-copy cleanup and alias snapshots
+that publish no bytes when a getter fails. Existing input/EOF/short-read/WouldBlock/
+cancellation/failure contracts are reused.
+CLR I/O deliberately stages canonical Span bytes; it does not mirror arbitrary
+per-component JVM stream/channel overrides, cached NIO identities or repeated
+component input reads. Stream/Socket EOF=0, single composite input reads, complete
+RandomAccess writes and all publication/cleanup policies remain unchanged.
+
+The public availability review now partitions all 114 declared CompositeByteBuf
+methods: 17 portable implementations, 97 CLR projections/replacements, no confirmed
+missing or unreviewed public signature. All three public constructor shapes have
+existing targets. This accounts for properties, optional/reordered flags, standard
+enumeration, spans/Encoding/native I/O and inherited ByteBuf-returning fluent APIs
+where Java redeclares covariance. Existing structural, ownership, lookup, flatten,
+consolidation, enumeration, reference, scalar and I/O evidence is linked per group.
+This is not whole-source completion: nonpublic component iteration/search, remaining
+strategy/comment decisions and facade/provider review remain explicit in the plan.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 13629/13629 before the final 28 failure cases; all 376 focused cases then
+pass in each configuration. No failures/skips; 51 existing Common warnings, zero
+Buffer/test warnings. New native reservations return to zero. Isolated committed Common preserves
+unrelated ByteOrder.cs edit (CS8956). Original fixture mappings and whole source
+statuses are unchanged. Evidence: artifacts/buffer-composite-bulk-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5192,9 +5253,11 @@ ByteBuf's abstract contract source is verified, with all 192 public declarations
 accounted for. AbstractByteBuf has no unreviewed declared public methods; its remaining
 internal kernels/fields and specialized providers still require source review.
 ByteBufUtil has no unreviewed public static methods; its remaining private/source
-review is separate. The other 32 in-progress source files have no signature inventory
-yet. Prioritize CompositeByteBuf component/ownership/mutation/I/O, allocator/cache
-lifecycle, then provider/facade specializations. No remaining test-method count is
+review is separate. CompositeByteBuf now has all 114 declared public methods and three public constructor
+shapes accounted for; its remaining nonpublic component iteration/search and strategy/
+comment review is separate. The other 31 in-progress source files have no signature
+inventory yet. Finish composite internals, then allocator/cache lifecycle and provider/
+facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature

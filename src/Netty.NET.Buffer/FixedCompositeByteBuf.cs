@@ -24,7 +24,7 @@ namespace Netty.NET.Buffer;
  * {@link ByteBuf} implementation which allows to wrap an array of {@link ByteBuf} in a read-only mode.
  * This is useful to write an array of {@link ByteBuf}s.
  */
-internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
+internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly Component[] _components;
     private readonly bool _direct;
@@ -142,7 +142,12 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         }
     }
 
+    internal override bool SupportsDirectBulkCopy => false;
+    internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
+    { CheckIndex(index, length); return CreateReadOnlySequence(index, length, true); }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
+        => CreateReadOnlySequence(index, length, false);
+    private ReadOnlySequence<byte> CreateReadOnlySequence(int index, int length, bool copying)
     {
         if (length == 0) return ReadOnlySequence<byte>.Empty;
         SequenceSegment first = null, last = null;
@@ -153,7 +158,9 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             Component component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, length);
-            foreach (ReadOnlyMemory<byte> memory in component.Source.AsReadOnlySequence(index - component.Offset, count))
+            ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(index - component.Offset, count)
+                : component.Source.AsReadOnlySequence(index - component.Offset, count);
+            foreach (ReadOnlyMemory<byte> memory in sequence)
             {
                 if (memory.IsEmpty) continue;
                 var next = new SequenceSegment(memory);

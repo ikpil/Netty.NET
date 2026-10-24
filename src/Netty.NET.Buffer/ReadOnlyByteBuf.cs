@@ -76,6 +76,9 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         => _parent.GetBytes(index, destination);
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => _parent.AsReadOnlySequence(index, length);
+    internal override bool SupportsDirectBulkCopy => _parent.SupportsDirectBulkCopy;
+    internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
+    { CheckIndex(index, length); return _parent.BorrowCopySequence(index, length); }
     internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
     public override IByteBufAllocator Allocator => _parent.Allocator;
     public override bool IsContiguous => _parent.IsContiguous;

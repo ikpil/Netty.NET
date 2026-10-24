@@ -86,7 +86,7 @@ public abstract partial class ByteBuf
 
     public virtual ReadOnlySpan<byte> AsReadOnlySpan(int index, int length) => AsReadOnlyMemory(index, length).Span;
 
-    protected void EnsureCanWrite()
+    protected internal void EnsureCanWrite()
     {
         EnsureAccessible();
         if (IsReadOnly) throw new NotSupportedException("The buffer is read-only.");

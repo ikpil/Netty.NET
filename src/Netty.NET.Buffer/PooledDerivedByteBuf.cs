@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Net.Sockets;
 using Microsoft.Win32.SafeHandles;
@@ -112,6 +113,13 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     { EnsureCanWrite(); CheckIndex(index, width); Root.SetWord(_offset + index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         => Root.AsReadOnlyMemory(_offset + index, length);
+    protected override void GetBytesCore(int index, Span<byte> destination)
+        => Root.GetBytes(_offset + index, destination);
+    protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
+        => Root.AsReadOnlySequence(_offset + index, length);
+    internal override bool SupportsDirectBulkCopy => Root.SupportsDirectBulkCopy;
+    internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
+    { CheckIndex(index, length); return Root.BorrowCopySequence(_offset + index, length); }
     internal override BufferMemoryLease AcquireReadLease() { EnsureAccessible(); return Root.AcquireReadLease(); }
     internal override BufferMemoryLease PinMemoryForWrite() { EnsureCanWrite(); return Root.PinMemoryForWrite(); }
     public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return Root.Copy(_offset + index, length); }
