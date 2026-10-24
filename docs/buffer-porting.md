@@ -5016,6 +5016,50 @@ AbstractByteBufTest now has 280 mapped/128 unreviewed declared methods. Public A
 reviews and whole source/fixture/provider statuses are unchanged.
 Evidence: artifacts/buffer-mutation-iteration-source-validation (ignored).
 
+## Public contract completion review
+
+Reviewed the remaining 41 ByteBuf and 12 AbstractByteBuf public declarations against
+pinned source bodies, current CLR implementations and existing contract evidence.
+No missing portable operation was found in this declared public surface. ByteBuf
+now accounts for all 192 declarations (115 implemented, 77 CLR replacements);
+AbstractByteBuf accounts for all 149 (102 implemented, 47 CLR replacements).
+ByteBufUtil already accounts for all 53 static declarations. There are no unreviewed
+public declarations or confirmed missing public operations in these three files.
+This is a finite API decision, not completion of every provider or original test.
+
+The decisions cover indexed buffer copies, allocation/storage metadata, shared
+lifetime/hints, diagnostics and Stream/Socket/positioned-file I/O. NIO transfer
+regions become spans without a mutable external cursor. Contiguous exposure uses
+Memory/ReadOnlyMemory, segmented reads use ReadOnlySequence, array eligibility and
+offset use MemoryMarshal.TryGetArray, and addresses use scoped MemoryHandle pins.
+A read-only sequence is not a writable scatter destination: use existing transfer
+operations or explicit consolidation. JVM cached NIO identities/provider counts and
+mutable order facades are intentionally absent; explicit BE/LE accessors replace
+order selection, as the original deprecation recommends. Socket/file/stream count,
+EOF, failure, staging and ownership differences remain explicitly recorded.
+
+Actual pinned transport consumers NioSocketChannel and ChannelOutboundBuffer use
+NIO count/regions for outbound batching. Their future CLR ports must adapt to these
+bounded memories/sequences or existing socket transfers; no transport implementation
+or equal gather/scatter performance is claimed here. Existing contracts cover the
+stated behaviors; 3251 cases across 24 relevant test classes pass on the existing
+checked build with SIMPLE sampling interval 1.
+The previous full Debug/Release/rebuilt checked Release runs each passed 12205,
+and their exact source/test files are checked against current committed code.
+No runtime source or test is changed in this review. The unrelated ByteOrder.cs
+edit remains preserved; validation uses committed Common in the isolated copy.
+
+The abstract ByteBuf source itself is now verified: its twelve concrete defaults,
+sole internal accessibility helper and three interfaces also have CLR counterparts;
+it has no original fields or constructors. All 191 original comments are retained
+(175 in code, 16 archived JVM/API or inlined-guard references). AbstractByteBuf and
+ByteBufUtil remain in-progress for their remaining internal/source review. Original
+fixture mappings remain 280/408; unreviewed fixture methods do not imply absent APIs.
+Next production review is CompositeByteBuf's component ownership, mutation and I/O,
+then allocator/cache lifecycle and provider/facade specializations. These remain
+unreviewed source details, not a claim that 34 runtime classes are unimplemented.
+Evidence: artifacts/buffer-api-completion-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5034,15 +5078,15 @@ replaces Java recycler object reuse. These are implemented alternatives, not gap
 This review checks API availability/representation. Existing tests validate their
 stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
 members, fields, provider details and callers still require separate review.
-ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
-inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
-zero-fill operations, allocated reads, whole Copy, four iteration operations and the
-scalar composition, directional search, primitive reservation, view factory and raw
-integer, index-state, full-discard, capacity-property, array-span, content-comparison,
-Encoding text, indexed Copy and read-only view families reviewed. ByteBuf has 151
-decided/41 unreviewed declarations (41 CLR adapters); AbstractByteBuf has 137/12
-(36 CLR adapters). Other 32 in-progress source files have no signature inventory yet. None is assumed missing
-or complete.
+ByteBuf's abstract contract source is verified, with all 192 public declarations,
+12 concrete defaults, internal accessibility helper, interfaces and original comments
+accounted for. AbstractByteBuf has no unreviewed declared public methods; its remaining
+internal kernels/fields and specialized providers still require source review.
+ByteBufUtil has no unreviewed public static methods; its remaining private/source
+review is separate. The other 32 in-progress source files have no signature inventory
+yet. Prioritize CompositeByteBuf component/ownership/mutation/I/O, allocator/cache
+lifecycle, then provider/facade specializations. No remaining test-method count is
+used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
