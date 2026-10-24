@@ -99,6 +99,35 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         return false;
     }
 
+    // The original fixed composite has the same component-dispatching read kernels.
+    internal override byte ReadByteCore(int index)
+    { CheckIndex(index, 1); return (byte)ReadComponentWord(index, 1, false); }
+    internal override ulong ReadWord(int index, int width, bool littleEndian)
+    { CheckIndex(index, width); return ReadComponentWord(index, width, littleEndian); }
+
+    private ulong ReadComponentWord(int index, int width, bool littleEndian)
+    {
+        Component component = _components[FindComponent(index)];
+        if (width <= component.EndOffset - index)
+        {
+            int local = index - component.Offset;
+            ByteBuf source = component.Source;
+            return width switch
+            {
+                1 => source.GetByte(local),
+                2 => unchecked((ushort)(littleEndian ? source.GetShortLE(local) : source.GetShort(local))),
+                3 => unchecked((uint)(littleEndian ? source.GetUnsignedMediumLE(local) : source.GetUnsignedMedium(local))),
+                4 => unchecked((uint)(littleEndian ? source.GetIntLE(local) : source.GetInt(local))),
+                8 => unchecked((ulong)(littleEndian ? source.GetLongLE(local) : source.GetLong(local))),
+                _ => throw new ArgumentOutOfRangeException(nameof(width))
+            };
+        }
+        int firstWidth = width == 3 ? 2 : width / 2;
+        ulong first = ReadComponentWord(index, firstWidth, littleEndian);
+        ulong second = ReadComponentWord(index + firstWidth, width - firstWidth, littleEndian);
+        return littleEndian ? first | second << (firstWidth * 8) : first << ((width - firstWidth) * 8) | second;
+    }
+
     protected override void GetBytesCore(int index, Span<byte> destination)
     {
         if (destination.IsEmpty) return;

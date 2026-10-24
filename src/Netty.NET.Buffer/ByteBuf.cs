@@ -732,7 +732,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
      */
     // CLR: byte already represents 0..255, so signed/unsigned Java octet APIs share this method.
     /// <remarks>Use unchecked((sbyte)value) when a signed Java byte value is required.</remarks>
-    public virtual byte GetByte(int index) => AsReadOnlySpan(index, 1)[0];
+    public virtual byte GetByte(int index) => ReadByteCore(index);
     /**
          * Gets a boolean at the specified absolute (@code index) in this buffer.
          * This method does not modify the {@code readerIndex} or {@code writerIndex}
@@ -753,7 +753,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public virtual ByteBuf SetByte(int index, int value) { AsSpan(index, 1)[0] = unchecked((byte)value); return this; }
+    public virtual ByteBuf SetByte(int index, int value) { WriteByteCore(index, value); return this; }
     /**
          * Sets the specified boolean at the specified absolute {@code index} in this
          * buffer.
@@ -1129,7 +1129,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     // Relative primitives follow AbstractByteBuf storage kernels, bypassing public
     // absolute overrides. Floating-point and signed-medium methods compose the
     // corresponding relative integer APIs, preserving their override policy.
-    public virtual byte ReadByte() { CheckReadableBytes(1); byte value = AsReadOnlySpan(_readerIndex, 1)[0]; ++_readerIndex; return value; }
+    public virtual byte ReadByte() { CheckReadableBytes(1); byte value = ReadByteCore(_readerIndex); ++_readerIndex; return value; }
     /**
          * Sets the specified byte at the current {@code writerIndex}
          * and increases the {@code writerIndex} by {@code 1} in this buffer.
@@ -1137,7 +1137,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 1}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteByte(int value) { EnsureWritableCore(1); AsSpan(_writerIndex, 1)[0] = unchecked((byte)value); ++_writerIndex; return this; }
+    public virtual ByteBuf WriteByte(int value) { EnsureWritableCore(1); WriteByteCore(_writerIndex, value); ++_writerIndex; return this; }
     /**
          * Gets a boolean at the current {@code readerIndex} and increases
          * the {@code readerIndex} by {@code 1} in this buffer.

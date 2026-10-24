@@ -120,6 +120,14 @@ internal sealed class ByteBufView : ByteBuf
         WriterIndex = length;
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _parent.AsMemory(_offset + index, length);
+    internal override byte ReadByteCore(int index)
+    { CheckIndex(index, 1); return _parent.ReadByteCore(_offset + index); }
+    internal override void WriteByteCore(int index, int value)
+    { EnsureCanWrite(); CheckIndex(index, 1); _parent.WriteByteCore(_offset + index, value); }
+    internal override ulong ReadWord(int index, int width, bool littleEndian)
+    { CheckIndex(index, width); return _parent.ReadWord(_offset + index, width, littleEndian); }
+    internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
+    { EnsureCanWrite(); CheckIndex(index, width); _parent.SetWord(_offset + index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         => _parent.AsReadOnlyMemory(_offset + index, length);
     internal override BufferMemoryLease PinMemoryForWrite() => _parent.PinMemoryForWrite();

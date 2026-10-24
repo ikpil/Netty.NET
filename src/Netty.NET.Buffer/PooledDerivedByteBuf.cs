@@ -102,6 +102,14 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         }
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => Root.AsMemory(_offset + index, length);
+    internal override byte ReadByteCore(int index)
+    { CheckIndex(index, 1); return Root.ReadByteCore(_offset + index); }
+    internal override void WriteByteCore(int index, int value)
+    { EnsureCanWrite(); CheckIndex(index, 1); Root.WriteByteCore(_offset + index, value); }
+    internal override ulong ReadWord(int index, int width, bool littleEndian)
+    { CheckIndex(index, width); return Root.ReadWord(_offset + index, width, littleEndian); }
+    internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
+    { EnsureCanWrite(); CheckIndex(index, width); Root.SetWord(_offset + index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         => Root.AsReadOnlyMemory(_offset + index, length);
     internal override BufferMemoryLease AcquireReadLease() { EnsureAccessible(); return Root.AcquireReadLease(); }

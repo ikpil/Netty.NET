@@ -113,7 +113,12 @@ public abstract partial class ByteBuf
      *
      * Methods here must only be called when PlatformDependent.hasVarHandle() is true.
      */
-    private ulong ReadWord(int index, int width, bool littleEndian)
+    // Keep scalar storage dispatch distinct from public getters/setters. Composite kernels
+    // call their components' public operations; optimized views delegate to these kernels.
+    internal virtual byte ReadByteCore(int index) => AsReadOnlySpan(index, 1)[0];
+    internal virtual void WriteByteCore(int index, int value) => AsSpan(index, 1)[0] = unchecked((byte)value);
+
+    internal virtual ulong ReadWord(int index, int width, bool littleEndian)
     {
         CheckIndex(index, width);
         if (TryGetReadOnlyMemoryCore(index, width, out var memory))
@@ -135,7 +140,7 @@ public abstract partial class ByteBuf
         };
     }
 
-    private ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
+    internal virtual ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
     {
         EnsureCanWrite();
         CheckIndex(index, width);

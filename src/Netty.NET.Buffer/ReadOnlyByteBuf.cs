@@ -66,6 +66,10 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     }
 
     public override bool IsReadOnly => true;
+    internal override byte ReadByteCore(int index)
+    { CheckIndex(index, 1); return _parent.ReadByteCore(index); }
+    internal override ulong ReadWord(int index, int width, bool littleEndian)
+    { CheckIndex(index, width); return _parent.ReadWord(index, width, littleEndian); }
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
         => _parent.TryGetReadOnlyMemory(index, length, out memory);
     protected override void GetBytesCore(int index, Span<byte> destination)

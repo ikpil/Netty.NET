@@ -5125,6 +5125,50 @@ Composite source/constructor/public/provider and failure-path review continues;
 whole source status and original fixture mappings are unchanged.
 Evidence: artifacts/buffer-composite-structural-validation (ignored).
 
+## Component scalar storage dispatch
+
+Reviewed captured original-source duplication, cached component slices, decomposition
+and readable coordinates against the existing ownership/lookup/reference/discard/
+enumeration contracts. No additional ownership gap was found in those paths. The
+next scalar check found a production gap: mutable/fixed composites inherited the
+contiguous Memory-based byte/word kernels, bypassing a component's public primitive
+overrides. Pinned CompositeByteBuf and FixedCompositeByteBuf explicitly delegate to
+those component methods. This affected both absolute and relative access and views.
+
+Make the four existing bounded scalar storage operations internally virtual. Default
+contiguous byte/word paths keep Memory/Span/BinaryPrimitives. Mutable/fixed composites
+select the captured component and its typed public getter/setter; boundary-crossing
+words preserve the original recursive byte/short/int composition and narrowing.
+Ordinary, read-only and independently counted pooled views delegate their storage
+kernels with the correct offset and their own bounds/lifetime/permission guards.
+They still bypass a parent's public primitive override where the original optimized
+view does so. Existing public absolute delegation, pooled LongLE relative exception,
+integer/float composition and reference contracts remain in force. No duplicate
+JVM protected-method hierarchy or public compatibility facade is introduced.
+
+The 1008 cases cover heap/native component probes, nine raw byte/BE/LE operations,
+inside/cross-boundary positions, get/set/read/write, mutable roots, ordinary slice/
+duplicate, read-only view, fixed composite and internal independently counted pooled
+slice/duplicate kernels. Using a composite as the pooled kernel's generic root tests
+the actual original AbstractByteBuf-root contract, not public Composite.RetainedSlice
+factory selection. Before correction 864 cases fail; 144 read-only write controls
+pass. All 1008 pass after correction and on fresh byte-checked pinned Java Unsafe/NIO.
+Callbacks, exact first method/coordinate, unchanged bytes, claims and CLR cursors/
+marks are checked. The full existing wire/alias/failure suite is also retained.
+
+Two existing CLR adaptations stay explicit: failed relative writes publish no cursor
+change, whereas Java advances the writer before 28 failing relative WriteByte probes;
+Java FixedCompositeByteBuf reports isReadOnly=false despite rejecting writes, while
+CLR reports true. The oracle selects fixed write rejection by its actual behavior,
+not that Java flag. These differences are asserted/recorded rather than hidden.
+Original comments are preserved. Full net10.0 Debug/Release/rebuilt checked Release
+with SIMPLE sampling interval 1 each pass 13281/13281, no failures/skips; 51 existing
+Common warnings and zero Buffer/test warnings. All new native reservations return to
+zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956).
+Public API review counts, original fixture mappings and whole source/provider
+statuses are unchanged; segmented/bulk/I/O specialization review remains next.
+Evidence: artifacts/buffer-composite-scalar-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
