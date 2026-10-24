@@ -5230,6 +5230,68 @@ Buffer/test warnings. New native reservations return to zero. Isolated committed
 unrelated ByteOrder.cs edit (CS8956). Original fixture mappings and whole source
 statuses are unchanged. Evidence: artifacts/buffer-composite-bulk-validation (ignored).
 
+## Composite iteration and search
+
+The pinned CompositeByteBuf forEachByteAsc0/Desc0 kernels select the unwrapped
+component storage. AbstractByteBuf components bypass public iteration overrides;
+transparent/sliced/pooled layers adjust storage coordinates. CLR now has the same
+internal-loop distinction. Readable derived/read-only view iteration still uses its
+own scalar loop, while indexed view iteration delegates to its parent/root. Fixed
+composites inherit scalar iteration and keep component public GetByte behavior.
+The default CLR loop reads the bounded scalar kernel instead of a physical Span.
+No span survives a callback: resizing, exceptions and release retain the existing
+CLR safety, unchanged-cursor and early-stop policies.
+
+The pinned reverse component loop has a captured-range defect: localLength is bounded
+by localRStart rather than the component offset. With component readable starts 5
+and 3 and a descending composite range 14..18, original iteration visits raw values
+[70,69,68,67,66] instead of the logical [70,69,68,21,20]. Fresh original Unsafe/NIO
+executions independently reproduce this in 14 of the selected cases. CLR deliberately
+clamps each scan at component.Offset; this preserves the buffer's logical reverse
+order rather than copying the defect. Original loop comments remain beside the port.
+
+Byte IndexOf/BytesBefore now use logical scalar storage on aggregates, including
+single-component physical ranges and optimized views. Ordinary contiguous providers
+keep Span.IndexOf/LastIndexOf. ByteBufUtil pattern search materializes aggregate
+logical GetByte values for both needle and haystack before Span.IndexOf. The CLR
+linear-byte/materialization strategy does not reproduce JVM SWAR word-read callback
+widths, Two-Way O(1) space or gather/performance characteristics. Existing physical
+Memory/Sequence borrows keep their physical meaning. Scope is aggregate logical
+representation; public getter behavior of every provider is separate source review.
+
+A nested-component regression also exposed missing pooled-view storage forwarding:
+TryGetMemory/TryGetReadOnlyMemory tried to borrow a whole segmented root as one Memory,
+and Span writes/zero fill inherited the same contiguous assumption. Independently
+counted views now translate and forward those root kernels. Segmented Try borrows
+return false, writable operations cross component boundaries, read-only roots reject
+writes, and independent claims/relative cursor publication remain intact.
+
+Consumers checked in the pinned source include HttpObjectDecoder's LF/prefix scans,
+DelimiterBasedFrameDecoder's ByteBuf delimiter search, and KMP/Bitap/Aho processor
+sessions. The new 651 cases cover 252 iteration dispatch/coordinate/stop cases,
+84 logical byte/pattern searches, 96 nested storage/wrapper cases, 32 callback lifetime
+cases, 12 stateful search sessions, 48 pooled segmented operations and 98 segmented
+needle/haystack pairs, plus four sparse high-coordinate cases that translate stop
+indices near Int32.MaxValue by subtracting the local coordinate before addition.
+All four catch intermediate checked overflow before that grouping correction.
+Seventeen more high-coordinate operations cover scalar get/set, Span/ByteBuf copies,
+Memory/Sequence borrows, decomposition and flattening. All source-coordinate kernels
+now subtract the component offset before adding SourceIndex. Eight retained-component
+callback cases preserve the composite's own lifetime guard while allowing a final
+successful callback or early stop to complete without another access. No storage
+span is held across a processor callback. The initial committed runtime fails
+180/336 cases. Before the pooled forwarding correction, 20/48 explicit pooled cases and 24 nested pooled setups
+fail. Original Unsafe/NIO each check 438 cases: 424 match and 14 expose the declared
+reverse-boundary correction. A fresh compile byte-checks all 93 original Buffer
+sources against the pin. No production Java source is modified.
+
+Full net10.0 Debug, Release and rebuilt checked Release with SIMPLE sampling interval 1
+each pass 14308/14308, with no failures/skips. Native reservations return to zero;
+Common is unchanged. Original fixture mappings and source statuses remain unchanged;
+this completes the iteration/search unit, not the entire composite source or module.
+The existing manifest records the evidence and remaining source review. Evidence:
+artifacts/buffer-composite-iteration-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5254,8 +5316,8 @@ accounted for. AbstractByteBuf has no unreviewed declared public methods; its re
 internal kernels/fields and specialized providers still require source review.
 ByteBufUtil has no unreviewed public static methods; its remaining private/source
 review is separate. CompositeByteBuf now has all 114 declared public methods and three public constructor
-shapes accounted for; its remaining nonpublic component iteration/search and strategy/
-comment review is separate. The other 31 in-progress source files have no signature
+shapes accounted for; specialized iteration/search is reviewed, while remaining
+nonpublic strategy/comment and structural failure review is separate. The other 31 in-progress source files have no signature
 inventory yet. Finish composite internals, then allocator/cache lifecycle and provider/
 facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.

@@ -36,7 +36,7 @@ public partial class CompositeByteBuf
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (width <= component.EndOffset - index)
         {
-            int local = component.SourceIndex + index - component.Offset;
+            int local = component.SourceIndex + (index - component.Offset);
             ByteBuf source = component.Source;
             return width switch
             {
@@ -59,7 +59,7 @@ public partial class CompositeByteBuf
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (width <= component.EndOffset - index)
         {
-            int local = component.SourceIndex + index - component.Offset;
+            int local = component.SourceIndex + (index - component.Offset);
             ByteBuf source = component.Source;
             switch (width)
             {

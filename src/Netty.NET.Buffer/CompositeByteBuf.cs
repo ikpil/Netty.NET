@@ -286,7 +286,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             // It's important to use srcBuf and NOT buf as we need to return the "original" source buffer and not the
             // unwrapped one as otherwise we could loose the ability to correctly update the reference count on the
             // returned buffer.
-            result.Add(component.Source.Slice(component.SourceIndex + offset - component.Offset, count));
+            result.Add(component.Source.Slice(component.SourceIndex + (offset - component.Offset), count));
             offset += count; length -= count;
         }
         return result;
@@ -437,7 +437,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         if (length == 0) { memory = Memory<byte>.Empty; return true; }
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (length <= component.EndOffset - index)
-            return component.Source.TryGetMemory(component.SourceIndex + index - component.Offset, length, out memory);
+            return component.Source.TryGetMemory(component.SourceIndex + (index - component.Offset), length, out memory);
         memory = default; return false;
     }
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
@@ -445,7 +445,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         if (length == 0) { memory = ReadOnlyMemory<byte>.Empty; return true; }
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (length <= component.EndOffset - index)
-            return component.Source.TryGetReadOnlyMemory(component.SourceIndex + index - component.Offset, length, out memory);
+            return component.Source.TryGetReadOnlyMemory(component.SourceIndex + (index - component.Offset), length, out memory);
         memory = default; return false;
     }
 
@@ -457,7 +457,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, destination.Length);
-            component.Source.GetBytes(component.SourceIndex + index - component.Offset, destination[..count]);
+            component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination[..count]);
             index += count; destination = destination[count..];
         }
     }
@@ -469,7 +469,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, source.Length);
-            component.Source.SetBytes(component.SourceIndex + index - component.Offset, source[..count]);
+            component.Source.SetBytes(component.SourceIndex + (index - component.Offset), source[..count]);
             index += count; source = source[count..];
         }
     }
@@ -481,7 +481,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, length);
-            component.Source.SetZero(component.SourceIndex + index - component.Offset, count);
+            component.Source.SetZero(component.SourceIndex + (index - component.Offset), count);
             index += count; length -= count;
         }
     }
@@ -500,8 +500,8 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, length);
-            ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(component.SourceIndex + index - component.Offset, count)
-                : component.Source.AsReadOnlySequence(component.SourceIndex + index - component.Offset, count);
+            ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(component.SourceIndex + (index - component.Offset), count)
+                : component.Source.AsReadOnlySequence(component.SourceIndex + (index - component.Offset), count);
             foreach (ReadOnlyMemory<byte> memory in sequence)
             {
                 if (memory.IsEmpty) continue;

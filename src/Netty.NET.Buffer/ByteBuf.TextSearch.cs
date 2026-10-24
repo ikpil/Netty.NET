@@ -173,10 +173,11 @@ public abstract partial class ByteBuf
             fromIndex = Math.Max(fromIndex, 0);
             if (fromIndex >= toIndex || Capacity == 0) return -1;
             int length = checked(toIndex - fromIndex);
-            if (!TryGetReadOnlyMemory(fromIndex, length, out var memory))
+            CheckIndex(fromIndex, length);
+            if (!SupportsDirectSearch || !TryGetReadOnlyMemory(fromIndex, length, out var memory))
             {
                 // Match the original low-level search reads, independently of public GetByte overrides.
-                for (int i = fromIndex; i < toIndex; ++i) if (AsReadOnlySpan(i, 1)[0] == value) return i;
+                for (int i = fromIndex; i < toIndex; ++i) if (ReadByteCore(i) == value) return i;
                 return -1;
             }
             int found = memory.Span.IndexOf(value);
@@ -187,9 +188,10 @@ public abstract partial class ByteBuf
         if (fromIndex <= 0) return -1; // fromIndex is the exclusive upper bound.
         CheckIndex(toIndex, 0);
         int reverseLength = checked(fromIndex - toIndex);
-        if (!TryGetReadOnlyMemory(toIndex, reverseLength, out var reverseMemory))
+        CheckIndex(toIndex, reverseLength);
+        if (!SupportsDirectSearch || !TryGetReadOnlyMemory(toIndex, reverseLength, out var reverseMemory))
         {
-            for (int i = fromIndex - 1; i >= toIndex; --i) if (AsReadOnlySpan(i, 1)[0] == value) return i;
+            for (int i = fromIndex - 1; i >= toIndex; --i) if (ReadByteCore(i) == value) return i;
             return -1;
         }
         int reverseFound = reverseMemory.Span.LastIndexOf(value);
@@ -277,12 +279,19 @@ public abstract partial class ByteBuf
         return ForEachByteAscending(index, index + length, processor);
     }
 
-    private int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
+    // A physical aggregate borrow can differ from its logical scalar search representation.
+    internal virtual bool SupportsDirectSearch => SupportsDirectBulkCopy;
+
+    // Component iteration bypasses public iteration overrides after peeling transparent/derived layers.
+    // The original owner still holds the claim; no reference is transferred by this lookup.
+    internal virtual ByteBuf UnwrapIterationStorage(ref int index) => this;
+
+    internal virtual int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
     {
         // Use the storage kernel independently of public GetByte/indexed iteration overrides.
         // Reacquire each byte: a callback can resize or release native storage. Never retain a span across callbacks.
         for (int i = start; i < end; ++i)
-            if (!processor(AsReadOnlySpan(i, 1)[0])) return i;
+            if (!processor(ReadByteCore(i))) return i;
         return -1;
     }
 
@@ -314,10 +323,10 @@ public abstract partial class ByteBuf
         return ForEachByteDescending(index + length - 1, index, processor);
     }
 
-    private int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
+    internal virtual int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
     {
         for (int i = start; i >= end; --i)
-            if (!processor(AsReadOnlySpan(i, 1)[0])) return i;
+            if (!processor(ReadByteCore(i))) return i;
         return -1;
     }
 }

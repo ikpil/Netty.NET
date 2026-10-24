@@ -38,13 +38,20 @@ public static partial class ByteBufUtil
     {
         if (needle == null || haystack == null || needle.ReadableBytes > haystack.ReadableBytes) return -1;
         if (needle.ReadableBytes == 0) return 0;
-        // CLR: materialize only non-contiguous ranges; keep the contiguous Span search path.
-        ReadOnlySpan<byte> input = needle.TryGetReadOnlyMemory(needle.ReaderIndex, needle.ReadableBytes, out var needleMemory)
-            ? needleMemory.Span : needle.ReadableSequence.ToArray();
-        ReadOnlySpan<byte> data = haystack.TryGetReadOnlyMemory(haystack.ReaderIndex, haystack.ReadableBytes, out var haystackMemory)
-            ? haystackMemory.Span : haystack.ReadableSequence.ToArray();
+        // CLR: materialize logical scalar bytes for aggregates; keep the contiguous storage Span search path.
+        ReadOnlySpan<byte> input = needle.SupportsDirectSearch && needle.TryGetReadOnlyMemory(needle.ReaderIndex, needle.ReadableBytes, out var needleMemory)
+            ? needleMemory.Span : SearchBytes(needle);
+        ReadOnlySpan<byte> data = haystack.SupportsDirectSearch && haystack.TryGetReadOnlyMemory(haystack.ReaderIndex, haystack.ReadableBytes, out var haystackMemory)
+            ? haystackMemory.Span : SearchBytes(haystack);
         int found = data.IndexOf(input);
         return found < 0 ? -1 : haystack.ReaderIndex + found;
+    }
+
+    private static byte[] SearchBytes(ByteBuf buffer)
+    {
+        byte[] bytes = new byte[buffer.ReadableBytes];
+        for (int i = 0; i < bytes.Length; ++i) bytes[i] = buffer.GetByte(buffer.ReaderIndex + i);
+        return bytes;
     }
 
     /**

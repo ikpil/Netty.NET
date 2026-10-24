@@ -103,6 +103,13 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         }
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => Root.AsMemory(_offset + index, length);
+    protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
+        => Root.TryGetMemory(_offset + index, length, out memory);
+    protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
+        => Root.TryGetReadOnlyMemory(_offset + index, length, out memory);
+    protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
+        => Root.SetBytes(_offset + index, source);
+    protected override void SetZeroCore(int index, int length) => Root.SetZero(_offset + index, length);
     internal override byte ReadByteCore(int index)
     { CheckIndex(index, 1); return Root.ReadByteCore(_offset + index); }
     internal override void WriteByteCore(int index, int value)
@@ -117,6 +124,8 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         => Root.GetBytes(_offset + index, destination);
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => Root.AsReadOnlySequence(_offset + index, length);
+    internal override ByteBuf UnwrapIterationStorage(ref int index)
+    { index += _offset; return Root.UnwrapIterationStorage(ref index); }
     internal override bool SupportsDirectBulkCopy => Root.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return Root.BorrowCopySequence(_offset + index, length); }

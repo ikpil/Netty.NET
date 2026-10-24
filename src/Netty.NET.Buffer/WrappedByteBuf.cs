@@ -65,6 +65,8 @@ public class WrappedByteBuf : ByteBuf
     protected override void SetZeroCore(int index, int length) => Buffer.SetZero(index, length);
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => Buffer.AsReadOnlySequence(index, length);
+    internal override ByteBuf UnwrapIterationStorage(ref int index)
+    { return Buffer.UnwrapIterationStorage(ref index); }
     internal override bool SupportsDirectBulkCopy => Buffer.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return Buffer.BorrowCopySequence(index, length); }

@@ -55,6 +55,10 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     protected override void SetZeroCore(int index, int length) => Wrapped.SetZero(index, length);
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => Wrapped.AsReadOnlySequence(index, length);
+    internal override int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
+        => Wrapped.ForEachByteAscending(start, end, processor);
+    internal override int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
+        => Wrapped.ForEachByteDescending(start, end, processor);
     internal override bool SupportsDirectBulkCopy => Wrapped.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return Wrapped.BorrowCopySequence(index, length); }

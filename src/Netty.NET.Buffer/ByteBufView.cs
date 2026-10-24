@@ -137,6 +137,8 @@ internal sealed class ByteBufView : ByteBuf
         => _parent.GetBytes(_offset + index, destination);
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => _parent.AsReadOnlySequence(_offset + index, length);
+    internal override ByteBuf UnwrapIterationStorage(ref int index)
+    { index += _offset; return _parent.UnwrapIterationStorage(ref index); }
     internal override bool SupportsDirectBulkCopy => _parent.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return _parent.BorrowCopySequence(_offset + index, length); }

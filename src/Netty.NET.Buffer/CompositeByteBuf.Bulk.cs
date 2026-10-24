@@ -26,7 +26,7 @@ public partial class CompositeByteBuf
         if (destination.IsEmpty) return this;
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (destination.Length <= component.EndOffset - index)
-            component.Source.GetBytes(component.SourceIndex + index - component.Offset, destination);
+            component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination);
         else
         {
             // CLR snapshots preserve memmove semantics across aliased components.
@@ -58,7 +58,7 @@ public partial class CompositeByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(length, component.EndOffset - index);
-            component.Source.GetBytes(component.SourceIndex + index - component.Offset, destination, destinationIndex, count);
+            component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination, destinationIndex, count);
             index += count; destinationIndex += count; length -= count;
         }
     }
@@ -85,7 +85,7 @@ public partial class CompositeByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(length, component.EndOffset - index);
-            component.Source.SetBytes(component.SourceIndex + index - component.Offset, source, sourceIndex, count);
+            component.Source.SetBytes(component.SourceIndex + (index - component.Offset), source, sourceIndex, count);
             index += count; sourceIndex += count; length -= count;
         }
     }
