@@ -5535,6 +5535,55 @@ zero Buffer/test warnings, and CLR native reservations return to zero. Common is
 unchanged. Four sources advance to verified; remaining provider/facade review continues.
 Evidence: artifacts/buffer-provider-source-closure (ignored).
 
+## Composite wrapper polymorphic dispatch
+
+Source review found a gap in WrappedCompositeByteBuf's shared-component strategy.
+Ordinary values and shared indices worked, but inherited primitive/bulk/I/O/structural
+operations could execute against the component list instead of invoking the wrapped
+Composite override. This also bypassed inner AdvancedLeakAwareCompositeByteBuf access
+records when an ordinary/simple facade wrapped an advanced one.
+
+Added 133 public delegates in a partial source file, covering scalar absolute/relative
+operations, spans/memory/sequences, typed buffers, Stream/Socket/positioned file I/O
+and async companions, structural mutation and enumeration. Four internal byte/word
+delegates preserve protected-kernel dispatch independently of public primitives;
+bulk/search capability hooks follow the root. Nonvirtual cursor/mark/component state
+continues to share the original owner/list. No independent storage or reference owner
+is introduced. Advanced facades retain their direct single-record paths, and simple
+view factories/tracker closing remain unchanged.
+
+1330 heap/native and ordinary/simple/nested/advanced public-entry cases check the exact
+wrapped operation, original argument/peer identities, error identity and indices/marks.
+The committed runtime fails 1040 and passes 290; all pass after the fix. Added 36
+protected-kernel controls, 180 pending IValueTaskSource cases and 60 real nested-tracker
+cases, for 1606 new cases total. Pending operations cover short completion, relative
+publication once, exact cancellation tokens/failures and one source consumption. The
+existing ordinary-value/simple/advanced matrices remain in use.
+
+Fresh pinned Java Unsafe/NIO each pass 1256 cases: 1080 declared-entry counterparts,
+80 inherited LE helper cases, 36 protected kernels and 60 nested-tracker scenarios.
+All 93 original production sources are byte-checked and freshly compiled. Two indexed
+insertion counterparts omit Java's nonexistent increase flag; CLR keeps its existing
+optional flag. Arrays/Iterable become spans/IEnumerable. Twelve async companions and
+five borrowed-storage methods are CLR policies, not JVM method matches. Eight Java LE
+float helpers decompose into integer calls; CLR facades consistently forward the same
+virtual float helper, as the existing advanced facade does. Java LE setter/writer
+methods can return the underlying root; CLR fluent writes retain the outer facade so
+chaining preserves instrumentation. Those differences are explicit rather than
+normalized into an equivalence claim. Nested stream/sequence scenarios use the stated
+sync/async and NIO/ReadOnlySequence counterparts.
+
+WrappedCompositeByteBuf source is now verified, with all 213 declared public methods
+machine-checked and 18 protected primitive methods accounted for. Public Java deallocate
+remains a protected CLR lifetime hook, with consumers using Release. The original
+license/comment is retained. CompositeByteBuf, FixedCompositeByteBuf and the simple/
+advanced source entries keep their separate remaining review and fixture statuses.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling 1 each pass
+16678/16678, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings,
+and native reservations return to zero. Common and original test-method mappings are
+unchanged. No new Markdown file is added.
+Evidence: artifacts/buffer-composite-wrapper-dispatch (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5566,7 +5615,8 @@ arena, chunk, list, subpage and thread-cache sources are now verified under thei
 ownership/representation policies. AdaptivePoolingAllocator and the pooled base/heap/
 direct provider sources are now verified, with original fixture completeness tracked
 separately. UnpooledByteBufAllocator
-is verified under its CLR provider/instrumentation policies. The other 20 in-progress
+is verified under its CLR provider/instrumentation policies. WrappedCompositeByteBuf
+is verified under its shared-state/virtual-operation policies. The other 19 in-progress
 source files have no public signature inventory yet. Finish composite source closure and
 remaining provider/facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.

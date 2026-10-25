@@ -20,10 +20,10 @@ using System.Text;
 
 namespace Netty.NET.Buffer;
 
-// CLR: share the component list and index owner instead of duplicating every fluent
-// operation. Storage/view/reference hooks delegate to the original composite so views
+// CLR: share the component list and index owner for nonvirtual metadata. Public
+// virtual operations delegate to the original composite; storage/view/reference hooks
 // do not acquire an extra wrapper parent or close a leak tracker twice.
-internal class WrappedCompositeByteBuf : CompositeByteBuf
+internal partial class WrappedCompositeByteBuf : CompositeByteBuf
 {
     protected readonly CompositeByteBuf Wrapped;
     internal WrappedCompositeByteBuf(CompositeByteBuf wrapped) : base(wrapped) => Wrapped = wrapped;
@@ -53,6 +53,13 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     protected override void GetBytesCore(int index, Span<byte> destination) => Wrapped.GetBytes(index, destination);
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => Wrapped.SetBytes(index, source);
     protected override void SetZeroCore(int index, int length) => Wrapped.SetZero(index, length);
+    // Protected Java _get*/_set* delegates remain separate from public primitives.
+    // They are used by derived views and must preserve the wrapped storage kernels.
+    internal override byte ReadByteCore(int index) => Wrapped.ReadByteCore(index);
+    internal override void WriteByteCore(int index, int value) => Wrapped.WriteByteCore(index, value);
+    internal override ulong ReadWord(int index, int width, bool littleEndian) => Wrapped.ReadWord(index, width, littleEndian);
+    internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
+    { Wrapped.SetWord(index, value, width, littleEndian); return this; }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => Wrapped.AsReadOnlySequence(index, length);
     internal override int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
@@ -60,6 +67,7 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     internal override int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
         => Wrapped.ForEachByteDescending(start, end, processor);
     internal override bool SupportsDirectBulkCopy => Wrapped.SupportsDirectBulkCopy;
+    internal override bool SupportsDirectSearch => Wrapped.SupportsDirectSearch;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return Wrapped.BorrowCopySequence(index, length); }
     internal override BufferMemoryLease AcquireReadLease() => Wrapped.AcquireReadLease();
