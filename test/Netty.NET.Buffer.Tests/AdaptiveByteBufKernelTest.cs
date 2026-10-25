@@ -27,6 +27,7 @@ public partial class AdaptiveByteBufKernelTest
     {
         public bool Enabled, Fail = true;
         public int? IterationResult;
+        public byte? ReadFill;
         public readonly KernelFailure Failure = new();
         public readonly List<(string Method, int Index, int Width, object Peer)> Calls = [];
         public void Visit(string method, int index, int width, object peer = null)
@@ -45,7 +46,7 @@ public partial class AdaptiveByteBufKernelTest
         internal override ulong ReadWord(int index, int width, bool little) { o.Visit("Word", index, width); return base.ReadWord(index, width, little); }
         internal override ByteBuf SetWord(int index, ulong value, int width, bool little) { o.Visit("SetWord", index, width); return base.SetWord(index, value, width, little); }
         public override ByteBuf GetBytes(int index, Span<byte> destination)
-        { o.Visit("Span", index, destination.Length); return base.GetBytes(index, destination); }
+        { o.Visit("Span", index, destination.Length); if (o.ReadFill is byte fill) { destination.Fill(fill); return this; } return base.GetBytes(index, destination); }
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         { o.Visit("Buffer", index, length, destination); return base.GetBytes(index, destination, destinationIndex, length); }
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
@@ -64,7 +65,7 @@ public partial class AdaptiveByteBufKernelTest
         internal override ulong ReadWord(int index, int width, bool little) { o.Visit("Word", index, width); return base.ReadWord(index, width, little); }
         internal override ByteBuf SetWord(int index, ulong value, int width, bool little) { o.Visit("SetWord", index, width); return base.SetWord(index, value, width, little); }
         public override ByteBuf GetBytes(int index, Span<byte> destination)
-        { o.Visit("Span", index, destination.Length); return base.GetBytes(index, destination); }
+        { o.Visit("Span", index, destination.Length); if (o.ReadFill is byte fill) { destination.Fill(fill); return this; } return base.GetBytes(index, destination); }
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         { o.Visit("Buffer", index, length, destination); return base.GetBytes(index, destination, destinationIndex, length); }
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)

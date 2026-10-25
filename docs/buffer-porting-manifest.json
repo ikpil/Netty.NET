@@ -136,11 +136,21 @@
             "evidence": "docs/buffer-porting.md#pooled-storage-source-closure-and-adaptive-kernels",
             "regressionCases": 360,
             "originalFailures": 140
+          },
+          {
+            "id": "adaptive-reallocation-and-pooled-allocator-source",
+            "status": "complete",
+            "result": "Adaptive reallocation public-root bulk reads restored under CLR transaction; nested AdaptiveByteBuf source decisions complete. PooledByteBufAllocator static/constructor and complete source review finished.",
+            "regressionCases": 108,
+            "originalFailures": 30,
+            "sourcesVerified": [
+              "PooledByteBufAllocator.java"
+            ],
+            "evidence": "docs/buffer-porting.md#adaptive-reallocation-and-allocator-construction"
           }
         ],
         "remaining": [
-          "PooledByteBufAllocator static/default/constructor/JVM-finalizer source closure remains separate from its completed 17 public instance operation inventory.",
-          "AdaptivePoolingAllocator core policy/cache/chunk paths have existing evidence and all original comments retained; finish the nested AdaptiveByteBuf provider specialization, including remaining metadata/bulk/Encoding/I/O decisions, before marking the whole source verified."
+          "AdaptivePoolingAllocator nested buffer source is reviewed; aggregate the existing outer policy, group/magazine/cache/chunk/registry and explicit JVM replacement decisions before whole-source closure. Original fixture/provider source statuses remain independent."
         ]
       },
       {
@@ -2836,7 +2846,14 @@
         "test/Netty.NET.Buffer.Tests/AdaptiveAllocatorEventTest.cs",
         "src/Netty.NET.Buffer/AdaptiveByteBuf.Kernels.cs",
         "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.cs",
-        "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.Scenarios.cs"
+        "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.Scenarios.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+        "test/Netty.NET.Buffer.Tests/AdaptiveByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.Reallocation.cs"
       ],
       "evidence": [
         "Adaptive policy/buddy unit: the pinned size lookup, fixed-class geometry/fast-capacity decisions, low-memory/dedicated cutoffs, remembered buddy chunk sizing, first-fit split/coalesce flags and packed frees are ported as internal components. 64 new cases; net10.0 Debug/Release/rebuilt sampled checked Release pass 5095/5095, no failures/skips. Rechecked pinned Java controllers and actual BuddyChunk readInitInto/releaseSegment/accept paths yield 19025 normal-mode and 16978 low-memory-mode rows, each exactly matching Debug/Release and an independent aligned-interval/flag/controller model. Full classification and all 511 supported packed buddy intervals are covered; original Java chunk registries return to zero. C# widening/unsigned-byte masks and helper preconditions are checked. docs/buffer-porting.md#adaptive-allocation-policy-and-buddy-core; artifacts/buffer-adaptive-policy-validation (ignored); buffer-adaptive-policy-*.trx. Public adaptive allocator, runtime/default selection, magazines/caches, cross-thread return queues and storage/buffer lifecycle integration remain pending.",
@@ -2847,11 +2864,12 @@
         "Default allocator validation: 5355/5355 pass in Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1; 3540 exact Java/CLR executable rows across 40 isolated process configurations per Debug/Release. Independent factory/metric/large-allocation models and runtime policy adaptations are recorded on ByteBufUtil.java and docs/buffer-porting.md#global-allocator-selection-and-runtime-preferences; artifacts/buffer-default-allocator-validation (ignored), buffer-default-allocator-*.trx.",
         "Socket channel unit: four original channel contracts plus native ValueTask/CancellationToken counterparts; 71 new loopback/storage/lifetime/cancellation/nonblocking/leak cases. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463, no failures/skips. Six backing kinds, three offsets, eight lengths and four operations match 576 pinned Java/CLR final endpoint states per Debug/Release and sync/async mode, with independent bytes/cursors/capacity/reference models. TCP syscall split counts are deliberately not compared. All 93 original Buffer sources rechecked; CLR native reservations return to zero. docs/buffer-porting.md#socket-channel-transfers; artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx. Original sources/fixtures remain partial.",
         "Adaptive lifecycle unit: all five buffer/chunk events are connected for shared/local fixed classes, buddy, low-memory and dedicated fallback paths. 38 added cases; net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5761/5761, no failures/skips. All 10 original JfrEventsTest scenarios map to 92 CLR tracing cases across three fixtures. Per Debug/Release, 120 independent scenarios match 3000 ordered events and 120 byte/cursor/reference/burst states across normal/low-memory original Unsafe/NIO paths: 6240 applicable original matches. All 93 pinned Buffer sources were byte-checked and freshly compiled. Heap diagnostic addresses are intentionally zero; native addresses checked through live scoped pins, never compared across processes. CLR cleanup returns native reservations to zero; checked build has 51 existing Common warnings and zero Buffer/test warnings/errors, Common unchanged. docs/buffer-porting.md#adaptive-allocator-lifecycle-events; artifacts/buffer-adaptive-events-validation (ignored), buffer-adaptive-events-*.trx. Other allocator APIs and fixtures remain partial.",
-        "Pooled storage source closure: PoolArena, PoolChunk, PoolChunkList, PoolSubpage and PoolThreadCache responsibilities/CLR strategies and original comments fully accounted for, reusing existing allocation/bitmap/list/cache/metric/tracing/concurrency evidence. Adaptive root kernel unit adds 360 cases (140 committed-runtime failures plus 220 success/index/alias/borrow/pin/callback controls). Fresh pinned Java Unsafe/NIO each match 140 selected root dispatch, coordinate, peer, cursor and exception cases across shared/local fixed, buddy and normal/low-memory dedicated paths. Full rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 each pass 14842, no failures/skips; native reservations zero after cleanup; Common and original fixture mappings unchanged. docs/buffer-porting.md#pooled-storage-source-closure-and-adaptive-kernels; artifacts/buffer-allocator-source-closure (ignored)."
+        "Pooled storage source closure: PoolArena, PoolChunk, PoolChunkList, PoolSubpage and PoolThreadCache responsibilities/CLR strategies and original comments fully accounted for, reusing existing allocation/bitmap/list/cache/metric/tracing/concurrency evidence. Adaptive root kernel unit adds 360 cases (140 committed-runtime failures plus 220 success/index/alias/borrow/pin/callback controls). Fresh pinned Java Unsafe/NIO each match 140 selected root dispatch, coordinate, peer, cursor and exception cases across shared/local fixed, buddy and normal/low-memory dedicated paths. Full rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 each pass 14842, no failures/skips; native reservations zero after cleanup; Common and original fixture mappings unchanged. docs/buffer-porting.md#pooled-storage-source-closure-and-adaptive-kernels; artifacts/buffer-allocator-source-closure (ignored).",
+        "Pooled allocator static/constructor source and adaptive reallocation review: 30 old-runtime failures now pass; 78 constructor option combinations pass. All nested AdaptiveByteBuf responsibilities have explicit CLR policies. PooledByteBufAllocator source verified with 37 public declarations and all original comments accounted for. Java Unsafe/NIO each exercise 30 reallocation and 78 construction cases with explicit failure/alignment/preference differences. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 14950, no failures/skips. docs/buffer-porting.md#adaptive-reallocation-and-allocator-construction; artifacts/buffer-adaptive-reallocation-validation (ignored)."
       ],
-      "adaptation": "Pinned fixed-class/buddy/controller, chunk/region ownership, full-prefix resizing and real shared magazines remain implemented. Physical-thread local small-class magazine groups now dispatch through FastThreadLocal only when cleanup is guaranteed and an executor mapping or the explicit non-event-loop option permits them. Ordinary CLR workers, low-memory mode and buddy allocations use shared magazines; AsyncLocal/ExecutionContext never carries local ownership. Original ring layout, O(1) head selection, fallback scan, doubling/linearization, idle epochs, capacity-first/Dutch-flag partition, retention floor and per-class byte cap are ported. OnRemoval drains local current/next/cache chunks. An allocator-owned binding registry and lifetime write gate also allow off-thread Dispose; local return/retirement serialization clears owner identity and sends subsequent returns through the external queue. Live buffers/pins survive cleanup until final return. BCL Stack/ConcurrentQueue, Monitor, Interlocked and sorted maps replace JVM primitives; wrappers remain fresh and are deliberately never recycled. The low-memory disable flag is redundant on the pinned executable dispatch path, which always bypasses local groups in low-memory mode; CLR low-memory/native budgets stay explicit. JVM recycler queue/configuration comments and one duplicated shared-race comment merged into TakeNext remain unmatched by the duplicate-aware audit. Shared cache documentation omitted in the previous unit is now preserved. Per-instance CLR environment configuration replaces JVM class-initializer snapshots. Runtime/default selection, explicit low-memory environment settings and configured processor defaults are now connected. Remaining original fixture coverage stays pending; no performance equivalence is claimed. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Lifecycle update: all five buffer/chunk events are connected; shared/local/fallback metadata and native/heap addresses follow the explicit CLR tracing contract. See docs/buffer-porting.md#adaptive-allocator-lifecycle-events. Remaining original allocator surfaces/fixtures stay partial. Adaptive root kernels now forward internal byte/word operations, public Span/ByteBuf reads, indexed iteration and zero fill using the captured allocation offset. IsContiguous comes from the raw delegate. Indexed scans retain an internal region claim through callbacks and translate results with captured coordinates; ordinary readable iteration keeps its own internal scalar loop. Public Memory/Sequence borrows still pass through the allocation MemoryManager and invalidate on return; copied pins remain idempotent. Physical array/NIO/Encoding/I/O strategies and broader provider forwarding review are separate.",
+      "adaptation": "Pinned fixed-class/buddy/controller, chunk/region ownership, full-prefix resizing and real shared magazines remain implemented. Physical-thread local small-class magazine groups now dispatch through FastThreadLocal only when cleanup is guaranteed and an executor mapping or the explicit non-event-loop option permits them. Ordinary CLR workers, low-memory mode and buddy allocations use shared magazines; AsyncLocal/ExecutionContext never carries local ownership. Original ring layout, O(1) head selection, fallback scan, doubling/linearization, idle epochs, capacity-first/Dutch-flag partition, retention floor and per-class byte cap are ported. OnRemoval drains local current/next/cache chunks. An allocator-owned binding registry and lifetime write gate also allow off-thread Dispose; local return/retirement serialization clears owner identity and sends subsequent returns through the external queue. Live buffers/pins survive cleanup until final return. BCL Stack/ConcurrentQueue, Monitor, Interlocked and sorted maps replace JVM primitives; wrappers remain fresh and are deliberately never recycled. The low-memory disable flag is redundant on the pinned executable dispatch path, which always bypasses local groups in low-memory mode; CLR low-memory/native budgets stay explicit. JVM recycler queue/configuration comments and one duplicated shared-race comment merged into TakeNext remain unmatched by the duplicate-aware audit. Shared cache documentation omitted in the previous unit is now preserved. Per-instance CLR environment configuration replaces JVM class-initializer snapshots. Runtime/default selection, explicit low-memory environment settings and configured processor defaults are now connected. Remaining original fixture coverage stays pending; no performance equivalence is claimed. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Lifecycle update: all five buffer/chunk events are connected; shared/local/fallback metadata and native/heap addresses follow the explicit CLR tracing contract. See docs/buffer-porting.md#adaptive-allocator-lifecycle-events. Remaining original allocator surfaces/fixtures stay partial. Adaptive root kernels now forward internal byte/word operations, public Span/ByteBuf reads, indexed iteration and zero fill using the captured allocation offset. IsContiguous comes from the raw delegate. Indexed scans retain an internal region claim through callbacks and translate results with captured coordinates; ordinary readable iteration keeps its own internal scalar loop. Public Memory/Sequence borrows still pass through the allocation MemoryManager and invalidate on return; copied pins remain idempotent. Physical array/NIO/Encoding/I/O strategies and broader provider forwarding review are separate. Nested AdaptiveByteBuf review now records all metadata/borrow, bulk-input, Encoding and stream/channel replacement decisions. Reallocation reads the old root public bulk kernel into a bounded replacement Span before publication. JVM typed destination identity and publish-before-copy failure behavior are explicitly replaced by the CLR transaction. The broader policy/cache/chunk/registry outer source still needs aggregate closure.",
       "comments": {
-        "coverage": "All 164 original comments retained, including six explicit JVM-only/recycler/merged-helper references. Source remains partial while adaptive buffer/provider specialization is reviewed.",
+        "coverage": "Every original comment retained in implementation or explicit reference. Source/nested-source closure records distinguish portable semantics from JVM-only machinery and retired compatibility APIs.",
         "upstreamCount": 164,
         "preservedCount": 164,
         "missingCount": 0,
@@ -2869,6 +2887,74 @@
       "commentDecisions": {
         "reason": "Original JVM-only infrastructure comments and repeated comments merged into one CLR helper are retained verbatim; portable comments remain beside implementation.",
         "details": "The low-memory disable-thread-local setting has no additional allocation effect in the pin because IS_LOW_MEM independently rejects local groups; recycler queue settings/outer-object release/fast-thread-local recycler labels are replaced by fresh CLR wrappers. The duplicate stripe-resize race comment is represented once in TakeNext and once as reference."
+      },
+      "nestedBufferReview": {
+        "scope": "All source responsibilities of the nested AdaptiveByteBuf, including private initialization/root/index helpers and protected primitive kernels. Whole AdaptivePoolingAllocator source closure remains separate.",
+        "status": "verified",
+        "declaredPublicMethods": [
+          "capacity()",
+          "maxFastWritableBytes()",
+          "capacity(int)",
+          "alloc()",
+          "order()",
+          "unwrap()",
+          "isDirect()",
+          "arrayOffset()",
+          "hasMemoryAddress()",
+          "memoryAddress()",
+          "nioBuffer(int,int)",
+          "internalNioBuffer(int,int)",
+          "nioBuffers(int,int)",
+          "hasArray()",
+          "array()",
+          "copy(int,int)",
+          "nioBufferCount()",
+          "getBytes(int,ByteBuf,int,int)",
+          "getBytes(int,byte[],int,int)",
+          "getBytes(int,ByteBuffer)",
+          "setBytes(int,byte[],int,int)",
+          "setBytes(int,ByteBuf,int,int)",
+          "setBytes(int,ByteBuffer)",
+          "getBytes(int,OutputStream,int)",
+          "getBytes(int,GatheringByteChannel,int)",
+          "getBytes(int,FileChannel,long,int)",
+          "setBytes(int,InputStream,int)",
+          "setBytes(int,ScatteringByteChannel,int)",
+          "setBytes(int,FileChannel,long,int)",
+          "setCharSequence(int,CharSequence,Charset)",
+          "writeCharSequence(CharSequence,Charset)",
+          "forEachByte(int,int,ByteProcessor)",
+          "forEachByteDesc(int,int,ByteProcessor)",
+          "setZero(int,int)",
+          "writeZero(int)",
+          "isContiguous()"
+        ],
+        "groups": {
+          "initialization-and-lifetime": "Fresh CLR wrappers replace Recycler handles, avoiding stale-reference resurrection. Each allocation owns an offset/length and claim-gated MemoryManager; logical return invalidates Memory/Sequence while pins/operations delay reuse. Root access preserves reference checks. Reallocation keeps full logical prefix, indices and marks, and maxFastWritableBytes clamps the physical reservation to public max capacity. Root public GetBytes now supplies reallocation bytes; bounded destination Span replaces the already-published Java destination. CLR failure is transactional instead of Java publish-before-copy.",
+          "metadata-and-views": "Allocator comes from the raw delegate; IsDirect is captured from its immutable chunk kind and IsContiguous delegates to it. Unwrap returns null. Explicit BE/LE methods replace mutable ByteOrder facades. MemoryMarshal.TryGetArray on gated borrowed Memory supplies array/translated offset; Memory.Pin supplies native addresses/lifetimes instead of HasMemoryAddress/raw pointer APIs. Memory and ReadOnlySequence replace NIO cursor/buffer-count APIs; do not expose raw-root borrows or cache duplicate cursor state.",
+          "scalar-copy-scan-zero": "Internal byte/word reads/writes bypass public primitive overrides and translate root coordinates. Copy delegates root public Copy and retains its storage/maximum policy. Public Span/ByteBuf reads and indexed scans/zero fill retain root operation dispatch. Scan processor identity and stop coordinates are preserved; CLR operation claims and captured regions survive callback return/resize. Readable scans use their own scalar loops.",
+          "bulk-input": "Span and ByteBuf input copies operate on the bounded region, corresponding to original absolute NIO put optimizations rather than public root setBytes dispatch. The CLR uses overlap-safe span copies or staging, independently of JDK 13/16 availability; source/destination cursor semantics stay at the ByteBuf layer.",
+          "encoding": "Shared SetString/WriteString use exact caller Encoding length, preserve explicit fallback policy and emit no preamble. They deliberately do not adopt adaptive Java UTF8 worst-case reservation or ASCII/Latin1 low-byte mapping. Existing ByteBufUtil UTF8/ASCII helpers supply Netty-specific wire mappings. UTF16 alias growth is protected by region claims.",
+          "io": "Stream, Socket and positioned SafeFileHandle APIs replace streams/channels. Shared CLR staging snapshots output, validates input after one read and publishes only successful bytes; Java heap-only stream delegation is deliberately not copied around that policy. EOF is CLR zero, Socket closed-channel policy is explicit, and file positions do not include region offsets. Async APIs use ValueTask with cancellation and preserve staging/borrow policies; no temporary NIO cursor is retained."
+        },
+        "targetFiles": [
+          "src/Netty.NET.Buffer/AdaptiveByteBuf.cs",
+          "src/Netty.NET.Buffer/AdaptiveByteBuf.Kernels.cs",
+          "src/Netty.NET.Buffer/AdaptiveChunkAllocation.cs",
+          "src/Netty.NET.Buffer/AdaptiveChunk.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+          "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Files.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/AdaptiveByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.cs",
+          "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.Scenarios.cs",
+          "test/Netty.NET.Buffer.Tests/AdaptiveByteBufKernelTest.Reallocation.cs"
+        ]
       }
     },
     {
@@ -8599,7 +8685,7 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PooledByteBufAllocator.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
         "src/Netty.NET.Buffer/PooledByteBufAllocator.ThreadBindings.cs",
@@ -8610,7 +8696,14 @@
         "src/Netty.NET.Buffer/PooledByteBufAllocatorMetric.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufAllocationFailureTest.cs",
         "test/Netty.NET.Buffer.Tests/AllocatorLeakConstructionFailureTest.cs",
-        "test/Netty.NET.Buffer.Tests/PooledAllocatorBindingQueryTest.cs"
+        "test/Netty.NET.Buffer.Tests/PooledAllocatorBindingQueryTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledAllocatorConstructionTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledAllocatorConfigurationTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorThreadBindingTest.cs",
+        "test/Netty.NET.Buffer.Tests/PoolThreadCacheSchedulingTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledAllocatorDiagnosticsTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledChunkEventTest.cs"
       ],
       "evidence": [
         "Public pooled factory/metric unit: 59 added cases; net10.0 Debug/Release/rebuilt checked Release pass 2052/2052, no failures/skips. Fresh pinned Java and CLR public allocators agree on 31233 rows of 18 reservation-class/chunk/active/used/pinned/list metric fields per Debug/Release; 31230 matching capacity/cursor/SHA-256 rows plus three documented aligned-huge logical-capacity adaptations. Independent grouped-size/reservation/byte model derives metric transitions/invariants. All 27252 prior Java/model list rows remain unchanged per Debug/Release. Java zero-size-cache thread binding=1 versus CLR no binding/cache=0 is explicitly asserted separately. docs/buffer-porting.md#public-pooled-factories-and-reservation-metrics; artifacts/buffer-public-pool-validation (ignored); buffer-public-pool-*.trx. Single-arena cache-free subset only; multi-arena/cache/events/leaks/default selection/full fixtures remain pending.",
@@ -8623,14 +8716,17 @@
         "Pooled allocator diagnostics: original DumpStats and arena ToString list/subpage traversal are ported; existing chunk/subpage/metric diagnostics use invariant Java decimal syntax. 16 new cases cover empty/disabled/unequal arenas, utilization transitions/multiple chunks, full/fragmented subpages, cache retention/drain, disposal with live native pins, culture and concurrent allocate/return/shutdown. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5505/5505, no failures/skips. Six heap/direct/cache configurations match 206 exact full Java/CLR report/metric snapshots per Debug/Release after identity-hash normalization, with independent geometry, layout, capacity, pinned-byte and memory models. All 93 original Buffer sources rechecked; Common unchanged; CLR native reservations return to zero. docs/buffer-porting.md#pooled-allocator-state-diagnostics; artifacts/buffer-pool-diagnostics-validation (ignored), buffer-pool-diagnostics-*.trx.",
         "Pooled buffer lifecycle unit: 25 added cases; net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5694/5694, zero failures/skips. Per configuration, 144 independently modeled cases match 360 event payloads/order plus 144 byte/cursor/reference states per original Unsafe/NIO path (1008 matches). Reproduced/fixed load-context EventSource GUID collision; current native addresses checked locally; 93 original Buffer files checked; CLR cleanup zero, Common unchanged. docs/buffer-porting.md#pooled-buffer-lifecycle-events; artifacts/buffer-pooled-events-validation (ignored), buffer-pooled-events-*.trx. Chunk/adaptive integration and full sources/fixture remain partial.",
         "Pooled chunk lifecycle unit: AllocateChunk/FreeChunk with all five buffer/chunk events ordered at synchronous operation boundaries. 29 added cases; net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5723/5723, no failures/skips. Per Debug/Release, 160 independent cases match 652 ordered JFR payloads plus 160 byte/cursor/reference states per original Unsafe/NIO path (1624 original matches). Checks cover new/reused/huge/aligned storage, subpage retention, cache trim/close/cross-thread return, live leases/pins, failed reservations, keywords, listener reentry/failure and enable-during-allocation lock safety. Original event/schema/ChunkInfo comments retained; original teardown is explicitly invoked for oracle determinism. All 93 original Buffer source bytes rechecked; CLR native cleanup zero; Common unchanged. docs/buffer-porting.md#pooled-chunk-lifecycle-events; artifacts/buffer-pooled-chunk-events-validation (ignored), buffer-pooled-chunk-events-*.trx. Adaptive producers/full original fixture remain partial.",
-        "Allocation ownership unit: 72 new consolidation destination-write cases (all failed committed runtime), 54 isolated detector-failure cases (all failed committed runtime; 108 inner Track/IsRecordEnabled/secondary-close scenarios), and 48 physical-thread binding-query cases pass. Fresh pinned Java Unsafe/NIO each execute 180 selected source cases: 60 matching success/query cases; 48 original consolidation partial-release/leaked-result outcomes, 60 original unreturned leak-aware results, and 12 arena-free ThreadLocal versus CLR no-binding cases are explicitly distinguished. All rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 pass 14482, with zero failed/skipped and zero native reservations after cleanup. Four allocator facade inventories account for 45 declared public instance methods; this does not complete pooled/adaptive internal source review. docs/buffer-porting.md#allocation-ownership-and-allocator-api-review; artifacts/buffer-allocation-ownership-validation (ignored)."
+        "Allocation ownership unit: 72 new consolidation destination-write cases (all failed committed runtime), 54 isolated detector-failure cases (all failed committed runtime; 108 inner Track/IsRecordEnabled/secondary-close scenarios), and 48 physical-thread binding-query cases pass. Fresh pinned Java Unsafe/NIO each execute 180 selected source cases: 60 matching success/query cases; 48 original consolidation partial-release/leaked-result outcomes, 60 original unreturned leak-aware results, and 12 arena-free ThreadLocal versus CLR no-binding cases are explicitly distinguished. All rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 pass 14482, with zero failed/skipped and zero native reservations after cleanup. Four allocator facade inventories account for 45 declared public instance methods; this does not complete pooled/adaptive internal source review. docs/buffer-porting.md#allocation-ownership-and-allocator-api-review; artifacts/buffer-allocation-ownership-validation (ignored).",
+        "Pooled allocator static/constructor source and adaptive reallocation review: 30 old-runtime failures now pass; 78 constructor option combinations pass. All nested AdaptiveByteBuf responsibilities have explicit CLR policies. PooledByteBufAllocator source verified with 37 public declarations and all original comments accounted for. Java Unsafe/NIO each exercise 30 reallocation and 78 construction cases with explicit failure/alignment/preference differences. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 14950, no failures/skips. docs/buffer-porting.md#adaptive-reallocation-and-allocator-construction; artifacts/buffer-adaptive-reallocation-validation (ignored)."
       ],
-      "adaptation": "Pooled heap/native arenas, least-used physical-thread binding, shared-head subpages/bitmap and normal handles, chunk-list retirement, metrics, independent retained views, shared leak tracking, region FIFO caches, hit-budget/periodic trim and explicit Dispose remain implemented. The shared Default now snapshots portable runtime settings: page/alignment and maxOrder fallback, nonnegative arena counts, small/normal cache sizes, maximum cached capacity, trim threshold, current/deprecated millisecond period precedence and useCacheForAllThreads. PascalCase default getters expose the portable original settings. CLR defaults to one arena per storage kind because JVM heap/native-budget inference is not transferable; explicit constructor defaults and options stay unchanged. Shared runtime cache eligibility follows physical FastThreadLocalThread, executor mapping or explicit all-thread permission. Guaranteed cleanup scopes register weak allocator/binding callbacks; OnRemoval drains/detaches by binding identity without rooting the allocator or disturbing replacements. Other physical-thread assignments retain explicit/observed-termination cleanup. Eligible cache construction preserves original nonpositive-size disable and delayed invalid capacity/trim rejection, with stronger CLR binding/count rollback. Periodic trim uses the existing executor cancellation path; millisecond delays saturate to the representable TimeSpan range. JVM cache-finalizer switches are replaced by weak registration/explicit cleanup, and NIO ByteBuffer wrapper caching has no consumer in the Memory/Span storage path. The existing CLR rejection of alignment-truncated size tables remains; no throughput equivalence is claimed. Implemented-path comments/licenses are retained. Obsolete forwarding aliases are served through CLR metric/binding APIs; complete portable diagnostics, events and original fixtures remain pending. Pooled diagnostics update: DumpStats reports configured heap then direct arena order and original utilization group labels/list order/available size-class head-index lines. Empty lists report none; full subpages are omitted; multiple available subpages share a line without separators, as in Java. One arena Monitor plus ordered head locks gives safe traversal; the entire allocator is not a transactional snapshot and diagnostics reserve no buffer storage/create no thread binding. Environment.NewLine is the CLR counterpart of StringUtil.NEWLINE. RuntimeHelpers identity hashes preserve diagnostic identities but are normalized in comparisons. Integer formatting is invariant including negative sentinel/disabled-memory values. CLR disposal null heads/retired lists are supported: diagnostics stay readable while live allocations/pins can still hold memory. Original public DumpStats comment/licenses retained. The pooled metric facade now has all original configuration/arena/cache/chunk/used-memory properties and original string order, with BCL read-only lists and explicit existing lifetime/accounting adaptations. This verifies the facade only; allocator/kernel events, native provider variants and whole original fixtures remain partial. Public factory allocation events publish outside the allocator lock before leak wrapping. No-arena fallback retains the original allocation-only instrumentation. Pooled buffer events use the gated CLR EventSource schema and keywords. Full field, timestamp, pointer, callback and load-context adaptations: docs/buffer-porting.md#pooled-buffer-lifecycle-events. Chunk/adaptive integration remains partial. Factories, shutdown, binding trim/removal, terminated-thread metrics cleanup and FastThreadLocal cleanup establish outer callback boundaries. Disabled scopes are value guards with no event-list allocation. Policy/evidence: docs/buffer-porting.md#pooled-chunk-lifecycle-events. Adaptive chunk/buffer producers and remaining fixture coverage stay partial. Allocation ownership update: consolidation invokes the allocated receiver public WriteBytes(ByteBuf,int,int) kernel with captured original-source coordinates. CLR prepares all replacement bytes before publishing/releasing originals, and releases a failed destination. Leak-aware factory failures close an acquired tracker and release the unreturned buffer; secondary tracker-close exceptions do not mask the initial failure. Physical-thread binding presence has a side-effect-free CLR property; arena-free fallback intentionally creates no binding. Declared allocator public-instance availability is distinct from internal cache/provider source completion.",
+      "adaptation": "Pooled heap/native arenas, least-used physical-thread binding, shared-head subpages/bitmap and normal handles, chunk-list retirement, metrics, independent retained views, shared leak tracking, region FIFO caches, hit-budget/periodic trim and explicit Dispose remain implemented. The shared Default now snapshots portable runtime settings: page/alignment and maxOrder fallback, nonnegative arena counts, small/normal cache sizes, maximum cached capacity, trim threshold, current/deprecated millisecond period precedence and useCacheForAllThreads. PascalCase default getters expose the portable original settings. CLR defaults to one arena per storage kind because JVM heap/native-budget inference is not transferable; explicit constructor defaults and options stay unchanged. Shared runtime cache eligibility follows physical FastThreadLocalThread, executor mapping or explicit all-thread permission. Guaranteed cleanup scopes register weak allocator/binding callbacks; OnRemoval drains/detaches by binding identity without rooting the allocator or disturbing replacements. Other physical-thread assignments retain explicit/observed-termination cleanup. Eligible cache construction preserves original nonpositive-size disable and delayed invalid capacity/trim rejection, with stronger CLR binding/count rollback. Periodic trim uses the existing executor cancellation path; millisecond delays saturate to the representable TimeSpan range. JVM cache-finalizer switches are replaced by weak registration/explicit cleanup, and NIO ByteBuffer wrapper caching has no consumer in the Memory/Span storage path. The existing CLR rejection of alignment-truncated size tables remains; no throughput equivalence is claimed. Implemented-path comments/licenses are retained. Obsolete forwarding aliases are served through CLR metric/binding APIs; complete portable diagnostics, events and original fixtures remain pending. Pooled diagnostics update: DumpStats reports configured heap then direct arena order and original utilization group labels/list order/available size-class head-index lines. Empty lists report none; full subpages are omitted; multiple available subpages share a line without separators, as in Java. One arena Monitor plus ordered head locks gives safe traversal; the entire allocator is not a transactional snapshot and diagnostics reserve no buffer storage/create no thread binding. Environment.NewLine is the CLR counterpart of StringUtil.NEWLINE. RuntimeHelpers identity hashes preserve diagnostic identities but are normalized in comparisons. Integer formatting is invariant including negative sentinel/disabled-memory values. CLR disposal null heads/retired lists are supported: diagnostics stay readable while live allocations/pins can still hold memory. Original public DumpStats comment/licenses retained. The pooled metric facade now has all original configuration/arena/cache/chunk/used-memory properties and original string order, with BCL read-only lists and explicit existing lifetime/accounting adaptations. This verifies the facade only; allocator/kernel events, native provider variants and whole original fixtures remain partial. Public factory allocation events publish outside the allocator lock before leak wrapping. No-arena fallback retains the original allocation-only instrumentation. Pooled buffer events use the gated CLR EventSource schema and keywords. Full field, timestamp, pointer, callback and load-context adaptations: docs/buffer-porting.md#pooled-buffer-lifecycle-events. Chunk/adaptive integration remains partial. Factories, shutdown, binding trim/removal, terminated-thread metrics cleanup and FastThreadLocal cleanup establish outer callback boundaries. Disabled scopes are value guards with no event-list allocation. Policy/evidence: docs/buffer-porting.md#pooled-chunk-lifecycle-events. Adaptive chunk/buffer producers and remaining fixture coverage stay partial. Allocation ownership update: consolidation invokes the allocated receiver public WriteBytes(ByteBuf,int,int) kernel with captured original-source coordinates. CLR prepares all replacement bytes before publishing/releasing originals, and releases a failed destination. Leak-aware factory failures close an acquired tracker and release the unreturned buffer; secondary tracker-close exceptions do not mask the initial failure. Physical-thread binding presence has a side-effect-free CLR property; arena-free fallback intentionally creates no binding. Declared allocator public-instance availability is distinct from internal cache/provider source completion. Complete allocator source review now includes all 37 public instance/static/constructor declarations with machine-checked decisions. Obsolete overloads/accessors and JVM-only toggles are explicitly replaced or retired; native providers and original fixtures retain their independent statuses.",
       "comments": {
         "upstreamCount": 52,
-        "preservedCount": 32,
-        "missingCount": 20,
-        "coverage": "portable runtime getters/configuration/eligibility/cleanup comments retained; JVM-specific heuristics/wrappers/finalizers, obsolete aliases and remaining diagnostics/events explicitly pending or adapted"
+        "preservedCount": 52,
+        "missingCount": 0,
+        "coverage": "Every original comment retained in implementation or explicit reference. Source/nested-source closure records distinguish portable semantics from JVM-only machinery and retired compatibility APIs.",
+        "preservedInImplementationCount": 32,
+        "preservedAsReferenceCount": 20
       },
       "publicApiReview": {
         "scope": "declared-public-instance-methods",
@@ -8868,6 +8964,337 @@
           }
         ],
         "unreviewedMethods": []
+      },
+      "publicStaticApiReview": {
+        "scope": "declared-public-static-methods",
+        "methods": [
+          {
+            "upstream": "defaultNumHeapArena()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultNumHeapArena()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultNumDirectArena()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultNumDirectArena()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultPageSize()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultPageSize()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultMaxOrder()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultMaxOrder()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultDisableCacheFinalizersForFastThreadLocalThreads()",
+            "state": "jvm-only",
+            "group": "jvm-cache-finalizers",
+            "targets": []
+          },
+          {
+            "upstream": "defaultUseCacheForAllThreads()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultUseCacheForAllThreads()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultPreferDirect()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultPreferDirect()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultTinyCacheSize()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultTinyCacheSize()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultSmallCacheSize()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultSmallCacheSize()"
+              }
+            ]
+          },
+          {
+            "upstream": "defaultNormalCacheSize()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+                "member": "DefaultNormalCacheSize()"
+              }
+            ]
+          },
+          {
+            "upstream": "isDirectMemoryCacheAlignmentSupported()",
+            "state": "clr-replacement",
+            "group": "runtime-defaults",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "IsDirectMemoryCacheAlignmentSupported",
+                "accessor": "get"
+              }
+            ]
+          }
+        ],
+        "unreviewedMethods": [],
+        "groups": {
+          "runtime-defaults": {
+            "adaptation": "Shared Default lazily snapshots runtime settings; ordinary constructors retain explicit CLR named/optional options and cache-off defaults. Heap/native arena defaults are one per kind instead of JVM CPU/heap/direct-budget heuristics. Invalid page/order fallback, alignment validation timing, cache disable rules and deprecated millisecond property precedence remain explicit. The original DEFAULT field becomes a lazy property. NativeMemoryOwner supports deterministic release and alignment without JVM Unsafe/Cleaner gates.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/PooledAllocatorConfigurationTest.cs",
+              "test/Netty.NET.Buffer.Tests/DefaultByteBufAllocatorTest.cs",
+              "test/Netty.NET.Buffer.Tests/PooledAllocatorConstructionTest.cs",
+              "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorTest.cs"
+            ]
+          },
+          "jvm-cache-finalizers": {
+            "adaptation": "No CLR API for a JVM FastThreadLocalThread cache-finalizer toggle. Physical-thread bindings, weak cleanup registrations, explicit detach/dispose, terminated-thread scavenging and operation ownership replace JVM cache finalizers; changing the JVM-only switch would have no CLR meaning.",
+            "evidence": [
+              "src/Netty.NET.Buffer/PooledByteBufAllocator.ThreadBindings.cs",
+              "test/Netty.NET.Buffer.Tests/PooledAllocatorConfigurationTest.cs",
+              "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorThreadBindingTest.cs"
+            ]
+          }
+        },
+        "summary": {
+          "declared": 11,
+          "clr-replacement": 10,
+          "implementation-gap": 0,
+          "implemented": 0,
+          "unreviewed": 0,
+          "jvm-only": 1
+        }
+      },
+      "publicConstructorReview": {
+        "scope": "declared-public-constructors",
+        "methods": [
+          {
+            "upstream": "PooledByteBufAllocator()",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,bool,bool,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,bool,bool,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(int,int,int,int)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean,int,int,int,int)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean,int,int,int,int,int,int,int)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean,int,int,int,int,int,int,int,boolean)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean,int,int,int,int,int,int,boolean)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean,int,int,int,int,int,int,int,boolean,int)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          },
+          {
+            "upstream": "PooledByteBufAllocator(boolean,int,int,int,int,int,int,boolean,int)",
+            "state": "clr-replacement",
+            "group": "named-construction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+                "member": "PooledByteBufAllocator(bool,int,int,int,int,int,NativeMemoryAllocator,int,int,int,int,TimeSpan)"
+              }
+            ]
+          }
+        ],
+        "unreviewedMethods": [],
+        "groups": {
+          "named-construction": {
+            "adaptation": "Nine Java overloads collapse into two C# constructors with named/optional geometry, arena count or pool flags, alignment, native allocator and cache options. Obsolete tiny-cache arguments are omitted because tiny classes merged into small caches. Nonzero explicit cache sizes opt physical-thread bindings into caching; Java useCacheForAllThreads constructor flags are not cloned. Runtime defaults apply to shared Default only; explicit constructors default to one arena per enabled kind and disabled caches. Argument validation is eager for explicit cache options. Alignment promotes the page before geometry validation, and incomplete aligned size-class tables remain explicitly rejected. Native memory support does not depend on JVM Unsafe/Cleaner.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/PooledAllocatorConstructionTest.cs",
+              "test/Netty.NET.Buffer.Tests/PooledAllocatorConfigurationTest.cs",
+              "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorTest.cs",
+              "test/Netty.NET.Buffer.Tests/SizeClassesTest.cs"
+            ]
+          }
+        },
+        "summary": {
+          "declared": 9,
+          "clr-replacement": 9,
+          "implementation-gap": 0,
+          "implemented": 0,
+          "unreviewed": 0
+        }
+      },
+      "referenceComments": [
+        "// Determine reasonable default for nHeapArena and nDirectArena.",
+        "// Assuming each arena has 3 chunks, the pool should not consume more than 50% of max memory.",
+        "/*\n         * We use 2 * available processors by default to reduce contention as we use 2 * available processors for the\n         * number of EventLoops in NIO and EPOLL as well. If we choose a smaller number we will run into hot spots as\n         * allocation and de-allocation needs to be synchronized on the PoolArena.\n         *\n         * See https://github.com/netty/netty/issues/3888.\n         */",
+        "// Use 1023 by default as we use an ArrayDeque as backing storage which will then allocate an internal array",
+        "// of 1024 elements. Otherwise we would allocate 2048 and only use 1024 which is wasteful.",
+        "/**\n     * @deprecated use\n     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean)}\n     */",
+        "/**\n     * @deprecated use\n     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean)}\n     */",
+        "/**\n     * @deprecated use\n     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean)}\n     */",
+        "/**\n     * @deprecated use\n     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean, int)}\n     */",
+        "/**\n     * Default control creation of PoolThreadCache finalizers for FastThreadLocalThreads -\n     * System Property: io.netty.allocator.disableCacheFinalizersForFastThreadLocalThreads - default false\n     */",
+        "/**\n     * @deprecated will be removed\n     * Free all cached buffers for the calling {@link Thread}.\n     */",
+        "/**\n     * Return the number of heap arenas.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#numHeapArenas()}.\n     */",
+        "/**\n     * Return the number of direct arenas.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#numDirectArenas()}.\n     */",
+        "/**\n     * Return a {@link List} of all heap {@link PoolArenaMetric}s that are provided by this pool.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#heapArenas()}.\n     */",
+        "/**\n     * Return a {@link List} of all direct {@link PoolArenaMetric}s that are provided by this pool.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#directArenas()}.\n     */",
+        "/**\n     * Return the number of thread local caches used by this {@link PooledByteBufAllocator}.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#numThreadLocalCaches()}.\n     */",
+        "/**\n     * Return the size of the tiny cache.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#tinyCacheSize()}.\n     */",
+        "/**\n     * Return the size of the small cache.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#smallCacheSize()}.\n     */",
+        "/**\n     * Return the size of the normal cache.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#normalCacheSize()}.\n     */",
+        "/**\n     * Return the chunk size for an arena.\n     *\n     * @deprecated use {@link PooledByteBufAllocatorMetric#chunkSize()}.\n     */"
+      ],
+      "commentDecisions": {
+        "reason": "Original obsolete constructors/metric forwarding APIs and JVM-only CPU/memory-budget, NIO-container-cache and cache-finalizer comments remain verbatim references. CLR implementations retain portable comments next to the equivalent kernels.",
+        "details": "Named constructor options and Metric properties replace obsolete forwarding overloads/accessors; archived JavaDocs retain their deprecation links without introducing redundant CLR APIs. The old freeThreadLocalCache JavaDoc belongs to ReleaseCurrentThreadBinding. One arena per kind, Memory/Span and explicit thread cleanup replace the JVM heuristics/container caches/finalizers."
+      },
+      "sourceClosureReview": {
+        "scope": "Complete outer/nested allocator source responsibilities, 17 declared public instance methods, 11 static methods and nine constructors; fixture/provider completion is separate.",
+        "groups": {
+          "configuration-and-constructors": "Shared Default lazily snapshots runtime settings; ordinary constructors retain explicit CLR named/optional options and cache-off defaults. Heap/native arena defaults are one per kind instead of JVM CPU/heap/direct-budget heuristics. Invalid page/order fallback, alignment validation timing, cache disable rules and deprecated millisecond property precedence remain explicit. The original DEFAULT field becomes a lazy property. NativeMemoryOwner supports deterministic release and alignment without JVM Unsafe/Cleaner gates. Nine Java overloads collapse into two C# constructors with named/optional geometry, arena count or pool flags, alignment, native allocator and cache options. Obsolete tiny-cache arguments are omitted because tiny classes merged into small caches. Nonzero explicit cache sizes opt physical-thread bindings into caching; Java useCacheForAllThreads constructor flags are not cloned. Runtime defaults apply to shared Default only; explicit constructors default to one arena per enabled kind and disabled caches. Argument validation is eager for explicit cache options. Alignment promotes the page before geometry validation, and incomplete aligned size-class tables remain explicitly rejected. Native memory support does not depend on JVM Unsafe/Cleaner.",
+          "factory-and-ownership": "NewHeapBuffer/NewDirectBuffer bind least-used configured arenas or owned unpooled fallback storage, publish lifecycle events, then install leak wrappers outside allocator locks. Failed wrapping releases the just-created owner. Empty sentinels/composites allocate no arena storage or binding.",
+          "thread-cache-selection": "Physical Thread identity/weak registrations replace PoolThreadLocalCache; least-used ties preserve arena order. Runtime eligibility uses explicit all-thread settings, guaranteed cleanup scopes or mapped executors. Scheduled fixed-rate trim follows executor mapping and detaches on cleanup/Dispose; failed scheduling rolls back the binding. Public presence/trim queries do not create bindings.",
+          "metrics-diagnostics-events": "Configuration/arena/cache/used/pinned metrics and obsolete metric forwarding methods use the existing Metric facade and BCL read-only lists. Disabled memory uses -1 and overflow sums saturate. DumpStats and heap/direct chunk/buffer lifecycle publication retain established ordering/accounting policies; EventSource replaces JFR.",
+          "jvm-infrastructure-and-shutdown": "No CLR API for a JVM FastThreadLocalThread cache-finalizer toggle. Physical-thread bindings, weak cleanup registrations, explicit detach/dispose, terminated-thread scavenging and operation ownership replace JVM cache finalizers; changing the JVM-only switch would have no CLR meaning. Duplicate ByteBuffer cursor caches have no CLR counterpart. Explicit Dispose closes factories, detaches/drains bindings and arenas, and preserves live owner/operation/native-pin lifetimes. Shared default initialization remains lazy; private JVM debug log formats and fallback Throwable stack formatting are not public contracts."
+        },
+        "targetFiles": [
+          "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+          "src/Netty.NET.Buffer/PooledByteBufAllocator.ThreadBindings.cs",
+          "src/Netty.NET.Buffer/PooledByteBufAllocator.Configuration.cs",
+          "src/Netty.NET.Buffer/PooledByteBufAllocator.Diagnostics.cs",
+          "src/Netty.NET.Buffer/BufferAllocatorEventSource.cs",
+          "src/Netty.NET.Buffer/PooledByteBufAllocatorMetric.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/PooledBufferEventTest.cs",
+          "test/Netty.NET.Buffer.Tests/CompositeByteBufAllocationFailureTest.cs",
+          "test/Netty.NET.Buffer.Tests/AllocatorLeakConstructionFailureTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledAllocatorBindingQueryTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledAllocatorConstructionTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledAllocatorConfigurationTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledByteBufAllocatorThreadBindingTest.cs",
+          "test/Netty.NET.Buffer.Tests/PoolThreadCacheSchedulingTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledAllocatorDiagnosticsTest.cs",
+          "test/Netty.NET.Buffer.Tests/PooledChunkEventTest.cs"
+        ],
+        "originalPublicApiCount": 37
       }
     },
     {

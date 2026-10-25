@@ -107,9 +107,11 @@ internal sealed partial class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
             try
             {
                 // CLR: copy before publishing, so allocation/copy failure preserves the
-                // old region, logical capacity, data, indices and marks. Span copying
-                // needs no temporary NIO cursor. Both regions remain owned throughout.
-                previous.Memory.Span[.._length].CopyTo(replacement.Memory.Span);
+                // old region, logical capacity, data, indices and marks. Read through
+                // the old root's public bulk kernel, as oldRoot.getBytes does in Java.
+                // A bounded Span replaces the already-published destination wrapper:
+                // both regions remain owned and no temporary NIO cursor is needed.
+                previous.Root.GetBytes(previous.Offset, replacement.Memory.Span[.._length]);
             }
             catch
             {

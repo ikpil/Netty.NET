@@ -5440,6 +5440,52 @@ Encoding/bulk/I/O and source-specialization decisions remain separate. Existing 
 records the completed unit and residual work; no new Markdown document is added.
 Evidence: artifacts/buffer-allocator-source-closure (ignored).
 
+## Adaptive reallocation and allocator construction
+
+Adaptive capacity growth now reads the complete old logical prefix through the raw
+root's public bulk-read kernel. Previously it bypassed that kernel with a physical
+Memory copy. A bounded destination Span replaces Java's already-published destination
+wrapper; the CLR still publishes only after a successful copy and releases a failed
+replacement. Thirty regression cases fail the old runtime and pass the fix, covering
+root failure, transformed output and ordinary bytes across heap/native, shared/local
+fixed classes, buddy and normal/low-memory dedicated allocations. They check translated
+coordinates, hidden logical bytes, guard regions, indices/marks, cleanup and retry.
+
+Seventy-eight constructor cases cover both CLR constructor shapes, heap/direct arena
+counts 0/1/2, preference, page promotion and physical native alignment 0/64/8192.
+They verify factory provenance, literal wire bytes and zero native reservations after
+cleanup. maxOrder 4 keeps these geometries outside the existing explicitly rejected
+alignment-truncated-table cases. Shared runtime defaults and explicit constructor
+defaults remain separate, as verified by existing isolated configuration tests.
+
+Fresh pinned Java Unsafe/NIO each exercise 30 reallocation and 78 construction cases.
+This is a policy-aware comparison: Java publishes a replacement before a failing
+copy; CLR keeps the old owner intact. Java uses the typed destination wrapper, CLR a
+bounded Span. Java NIO rejects nonzero alignment (52 cases), while CLR NativeMemoryOwner
+supports it; Java's preferred factory also depends on reliable direct-buffer cleanup,
+while CLR native owners release deterministically. Original failure-oracle cleanup
+explicitly returns the old claim that Java's throwing copy strands. All 93 original
+Buffer sources are byte-checked against the pin and freshly compiled, without edits.
+
+PooledByteBufAllocator source is now verified: 17 public instance methods, 11 static
+methods and nine Java constructors have explicit decisions. Nine overloads collapse
+to two named/optional CLR constructors; tiny-cache overloads and deprecated metric
+forwarders are replaced by existing cache options and Metric properties. The JVM-only
+cache-finalizer toggle is retired explicitly. All 52 original comments are retained,
+including 20 reference comments for retired APIs/JVM policies. The API checker now
+validates supplementary static/constructor inventories and static property targets.
+
+The nested AdaptiveByteBuf review records its 36 public declarations plus private/
+protected responsibilities: metadata, gated Memory/Sequence/pins, raw kernels, input
+copies, Encoding and I/O. Existing exact Encoding/fallback/no-preamble policies,
+overlap-safe copies, staged one-read I/O, EOF zero and ValueTask adaptations stay
+explicit. The outer adaptive policy/group/cache/chunk/registry source still needs
+aggregate closure; whole AdaptivePoolingAllocator and original fixture statuses stay
+partial. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling 1
+each pass 14950/14950, no failures/skips; 51 existing Common warnings and zero Buffer/
+test warnings. Common and all original test-method mappings are unchanged.
+Evidence: artifacts/buffer-adaptive-reallocation-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5465,10 +5511,11 @@ internal kernels/fields and specialized providers still require source review.
 ByteBufUtil has no unreviewed public static methods; its remaining private/source
 review is separate. CompositeByteBuf now has all 114 declared public methods and three public constructor
 shapes accounted for; specialized iteration/search is reviewed, while remaining
-nonpublic strategy/comment and structural failure review is separate. PooledByteBufAllocator now accounts for its 17 declared public instance methods;
-its remaining static/default/constructor source review remains separate. The pooled
+nonpublic strategy/comment and structural failure review is separate. PooledByteBufAllocator
+is verified with its instance/static/constructor and nested thread-cache source decisions. The pooled
 arena, chunk, list, subpage and thread-cache sources are now verified under their CLR
-ownership/representation policies; adaptive nested-buffer source closure remains separate. UnpooledByteBufAllocator
+ownership/representation policies; adaptive nested-buffer review is complete while
+its outer allocator source closure remains separate. UnpooledByteBufAllocator
 is verified under its CLR provider/instrumentation policies. The other 24 in-progress
 source files have no public signature inventory yet. Finish composite source closure alongside allocator/cache lifecycle, then provider/
 facade specializations. No remaining test-method count is
