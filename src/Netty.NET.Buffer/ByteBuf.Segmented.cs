@@ -63,6 +63,10 @@ public abstract partial class ByteBuf
         => GetReadOnlyMemoryCore(index, destination.Length).Span.CopyTo(destination);
     protected virtual void SetBytesCore(int index, ReadOnlySpan<byte> source)
         => source.CopyTo(GetMemoryCore(index, source.Length).Span);
+    // CLR: publish staged input through the source's I/O kernel. Composite input
+    // skips empty components, while ordinary bulk setters preserve their dispatch.
+    protected internal virtual void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+        => SetBytes(index, source);
     // fast-path for small writes to avoid thread-state change JDK's handling
     // CLR: Span.Clear replaces the heap helper's manual batch/64-byte threshold strategy.
     protected virtual void SetZeroCore(int index, int length) => GetMemoryCore(index, length).Span.Clear();

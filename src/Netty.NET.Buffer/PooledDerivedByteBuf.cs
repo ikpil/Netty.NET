@@ -109,6 +109,8 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         => Root.TryGetReadOnlyMemory(_offset + index, length, out memory);
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
         => Root.SetBytes(_offset + index, source);
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+    { EnsureCanWrite(); CheckIndex(index, source.Length); Root.SetBytesFromIoCore(_offset + index, source); }
     protected override void SetZeroCore(int index, int length) => Root.SetZero(_offset + index, length);
     internal override byte ReadByteCore(int index)
     { CheckIndex(index, 1); return Root.ReadByteCore(_offset + index); }

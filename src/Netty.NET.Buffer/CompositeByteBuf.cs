@@ -31,6 +31,7 @@ namespace Netty.NET.Buffer;
 /// changes, storage resizing and release must be excluded while borrowing memory.</remarks>
 public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 {
+    // resized when needed
     private readonly List<ComponentEntry> _components;
     private int _deallocatedComponentCount;
     private readonly bool _direct;
@@ -65,6 +66,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     // CLR: transparent composite wrappers use the same component metadata and index
     // owner, without an empty side-list. This also makes existing flatten/enumeration
     // kernels see the real components. Reference ownership stays with the wrapped buffer.
+    // Special constructor used by WrappedCompositeByteBuf
     private protected CompositeByteBuf(CompositeByteBuf wrapped) : base(wrapped)
     {
         _components = wrapped._components;
@@ -143,6 +145,9 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         return this;
     }
 
+    /**
+     * Precondition is that {@code buffer != null}.
+     */
     private int AddComponentCore(int componentIndex, ByteBuf buffer, bool increaseWriterIndex)
     {
         ArgumentNullException.ThrowIfNull(buffer);
@@ -239,7 +244,13 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      * @return a duplicate of the underlying {@link ByteBuf} on the specified index
      */
     public ByteBuf Component(int componentIndex)
-    { CheckComponentRange(componentIndex, 1); return _components[componentIndex].Source.Duplicate(); }
+    {
+        CheckComponentRange(componentIndex, 1);
+        // It's important to use srcBuf and NOT buf as we need to return the "original" source buffer and not the
+        // unwrapped one as otherwise we could loose the ability to correctly update the reference count on the
+        // returned buffer.
+        return _components[componentIndex].Source.Duplicate();
+    }
     /**
      * Return a slice of the {@link ByteBuf} on the specified component index.
      * <p>
@@ -313,19 +324,24 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
                 ConsolidateIfNeeded();
                 return;
             }
-            int bytesToTrim = oldCapacity - value;
+            int bytesToTrim = oldCapacity - value, keepCount = _components.Count;
             for (int i = _components.Count - 1; i >= 0; --i)
             {
                 ComponentEntry component = _components[i];
                 if (bytesToTrim < component.Length)
                 {
                     // Trim the last component
+                    // CLR: prepare its cached slice before returning any tail owner.
+                    // Slice construction can throw; preserve the whole old layout,
+                    // indices and references until that preparation succeeds.
                     component.Trim(0, component.Length - bytesToTrim);
                     break;
                 }
                 bytesToTrim -= component.Length;
-                component.Free(); _components.RemoveAt(i);
+                keepCount = i;
             }
+            for (int i = _components.Count - 1; i >= keepCount; --i) _components[i].Free();
+            _components.RemoveRange(keepCount, _components.Count - keepCount);
             UpdateOffsets();
             TrimIndicesToCapacity(value);
         }
@@ -460,6 +476,22 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             index += count; destination = destination[count..];
         }
     }
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+    {
+        EnsureCanWrite(); CheckIndex(index, source.Length);
+        if (source.IsEmpty) return;
+        int componentIndex = FindComponentIndex(index);
+        while (!source.IsEmpty)
+        {
+            ComponentEntry component = _components[componentIndex++];
+            int count = Math.Min(component.EndOffset - index, source.Length);
+            // Skip empty buffer
+            if (count == 0) continue;
+            component.Source.SetBytesFromIoCore(component.SourceIndex + (index - component.Offset), source[..count]);
+            index += count;
+            source = source[count..];
+        }
+    }
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
     {
         if (source.IsEmpty) return;
@@ -499,6 +531,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, length);
+            // Some buffers override this so we must use srcBuf
             ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(component.SourceIndex + (index - component.Offset), count)
                 : component.Source.AsReadOnlySequence(component.SourceIndex + (index - component.Offset), count);
             foreach (ReadOnlyMemory<byte> memory in sequence)
@@ -531,6 +564,15 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         }
     }
 
+    /**
+     * Decreases the reference count by the specified {@code decrement} and deallocates this object if the reference
+     * count reaches at {@code 0}. At this point it will also decrement the reference count of each internal
+     * component by {@code 1}.
+     *
+     * @param decrement the number by which the reference count should be decreased
+     * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
+     */
+    // CLR: inherited Release invokes this protected owner-lifetime hook.
     protected override void Deallocate()
     {
         // CLR clears component references on release; preserve the original count for freed diagnostics.
@@ -575,10 +617,13 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     private sealed class ComponentEntry
     {
         internal readonly ByteBuf Source; // the originally added buffer
-        internal int SourceIndex; // captured readable start within the original source
+        // index of the start of this CompositeByteBuf relative to srcBuf
+        // CLR: store the captured source start and subtract Offset at each access.
+        internal int SourceIndex;
         internal int Offset; // offset of this component within this CompositeByteBuf
         internal int Length;
-        private ByteBuf _slice;
+        private ByteBuf _slice; // cached slice, may be null
+        // end offset of this component within this CompositeByteBuf
         internal int EndOffset => Offset + Length;
         internal ComponentEntry(ByteBuf source, int sourceIndex, int length, bool reuseWholeSource = true)
         {

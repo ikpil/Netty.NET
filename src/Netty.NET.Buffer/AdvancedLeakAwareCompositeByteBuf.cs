@@ -300,6 +300,8 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
 
     public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
     { RecordLeakNonRefCountingOperation(Leak); Wrapped.SetBytes(index, source); return this; }
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+    { RecordLeakNonRefCountingOperation(Leak); Wrapped.SetBytesFromIoCore(index, source); }
 
     public override ByteBuf ReadBytes(Span<byte> destination)
     { RecordLeakNonRefCountingOperation(Leak); Wrapped.ReadBytes(destination); return this; }

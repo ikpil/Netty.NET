@@ -52,6 +52,8 @@ internal partial class WrappedCompositeByteBuf : CompositeByteBuf
         => Wrapped.TryGetReadOnlyMemory(index, length, out memory);
     protected override void GetBytesCore(int index, Span<byte> destination) => Wrapped.GetBytes(index, destination);
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => Wrapped.SetBytes(index, source);
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+        => Wrapped.SetBytesFromIoCore(index, source);
     protected override void SetZeroCore(int index, int length) => Wrapped.SetZero(index, length);
     // Protected Java _get*/_set* delegates remain separate from public primitives.
     // They are used by derived views and must preserve the wrapped storage kernels.

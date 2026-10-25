@@ -314,6 +314,8 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
 
     public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
     { RecordLeakNonRefCountingOperation(_leak); Buffer.SetBytes(index, source); return this; }
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+    { RecordLeakNonRefCountingOperation(_leak); Buffer.SetBytesFromIoCore(index, source); }
 
     public override ByteBuf ReadBytes(Span<byte> destination)
     { RecordLeakNonRefCountingOperation(_leak); Buffer.ReadBytes(destination); return this; }

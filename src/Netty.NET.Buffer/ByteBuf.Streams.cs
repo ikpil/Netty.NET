@@ -99,7 +99,7 @@ public abstract partial class ByteBuf
             {
                 EnsureCanWrite();
                 CheckIndex(index, count);
-                SetBytesCore(index, bytes.AsSpan(0, count));
+                SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
             return count;
         }
@@ -204,7 +204,7 @@ public abstract partial class ByteBuf
                 // Resolve storage after I/O; no borrowed native span survives suspension.
                 EnsureCanWrite();
                 CheckIndex(index, count);
-                SetBytesCore(index, bytes.AsSpan(0, count));
+                SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
             return count;
         }

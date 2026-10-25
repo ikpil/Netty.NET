@@ -97,7 +97,7 @@ public abstract partial class ByteBuf
         try
         {
             int count = RandomAccess.Read(source, bytes.AsSpan(0, length), position);
-            if (count != 0) SetBytesCore(index, bytes.AsSpan(0, count));
+            if (count != 0) SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             return count;
         }
         finally { ArrayPool<byte>.Shared.Return(bytes); }
@@ -203,7 +203,7 @@ public abstract partial class ByteBuf
             {
                 EnsureCanWrite();
                 CheckIndex(index, count);
-                SetBytesCore(index, bytes.AsSpan(0, count));
+                SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
             return count;
         }

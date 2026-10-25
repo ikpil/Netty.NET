@@ -94,7 +94,7 @@ public abstract partial class ByteBuf
         {
             int count = source.Receive(bytes.AsSpan(0, length), SocketFlags.None, out SocketError error);
             count = SocketTransferCount(count, error);
-            if (count != 0) SetBytesCore(index, bytes.AsSpan(0, count));
+            if (count != 0) SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             return count;
         }
         finally { ArrayPool<byte>.Shared.Return(bytes); }
@@ -195,7 +195,7 @@ public abstract partial class ByteBuf
             {
                 EnsureCanWrite();
                 CheckIndex(index, count);
-                SetBytesCore(index, bytes.AsSpan(0, count));
+                SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
             return count;
         }

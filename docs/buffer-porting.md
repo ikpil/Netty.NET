@@ -5584,6 +5584,67 @@ and native reservations return to zero. Common and original test-method mappings
 unchanged. No new Markdown file is added.
 Evidence: artifacts/buffer-composite-wrapper-dispatch (ignored).
 
+## Composite and fixed source closure
+
+CompositeByteBuf and FixedCompositeByteBuf source reviews are complete under the
+recorded CLR policies. Composite retains its 114 public-method and three public
+constructor decisions; Fixed now has 39 machine-checked public-method decisions.
+The remaining private/protected helpers, fields, nested metadata/iterator types,
+constructor consumers and comments are accounted for in sourceClosureReview.
+All 107 Composite comments are preserved: 99 in code and eight references for
+merged input/removal helpers, weak caching, unwrapped coordinates and manual array
+growth. All six Fixed comments remain in code. Shared original fixture completeness
+is independent of these source decisions.
+
+Two confirmed runtime problems are corrected. Capacity shrink previously released
+tail owners before preparing a kept component's cached slice. A throwing Slice
+left released buffers in the old layout. Preparation now happens first; failure
+preserves layout, bytes, marks, cursors and claims, including pooled retained slices.
+Successful shrink still releases tails in the original reverse order. This is a
+stronger CLR failure policy: the pinned Java also frees tails and mutates the kept
+end offset before cached slicing succeeds. Arbitrarily throwing Release callbacks
+are outside the rollback guarantee.
+
+Stream/Socket/positioned-file input staging previously published through ordinary
+bulk setters, which attempted zero-byte writes to empty read-only components.
+Original Java input loops skip empty components. A separate protected-internal
+publication kernel now preserves that rule recursively through nested composites,
+wrappers and offset views, for synchronous and asynchronous input. Leaf publication
+retains public Span-setter dispatch; advanced component wrappers record access before
+forwarding. Ordinary Span/typed bulk setters retain their zero-length component
+calls, including their original partial-write failure behavior. Existing one-read,
+actual-count, borrowed ownership and nontransactional publication policies remain.
+
+Fixed's only original production constructor consumer is Unpooled with its default
+allocator; the original fixture uses the same allocator. CLR keeps that consumer's
+existing writable heap-copy policy, immutable descriptors and absolute-zero source
+mapping. Bounded ReadOnlyMemory/ReadOnlySequence/TryGetArray/scoped Pin replace raw
+array/address/NIO capabilities. Zero-length borrows pin to null; empty diagnostics
+report zero real inputs rather than Java's synthetic EMPTY component. First-input
+directness and read-only identity remain deliberate corrections of the original.
+
+All 36 declared FixedCompositeByteBufTest methods now map to 52 CLR cases: 12 setter
+rejections, 28 sync/async gathering cases, two copy/output-stream cases, segmented
+extraction and nine empty/single/multiple capability cases. Full gathering cases
+preserve the original fixture's use of mutable Composite. Partial gathering uses
+caller one-byte requests over a real loopback Socket; it does not claim that an
+8-byte OS send was forced to return one byte. Original raw capability assumptions
+are replaced by bounded memory tests that execute without skips.
+
+This unit adds 684 executed CLR cases: the 52 fixture cases, 144 trim cases and 488
+I/O/bulk cases. Initial probes against the committed runtime failed 64/144 trim
+cases and 336/344 input/bulk cases; subsequent nested-input cases add coverage.
+Fresh byte-exact pinned Java sources execute 428 scenarios per Unsafe/NIO profile:
+240 input, eight ordinary bulk, 144 trim and 36 original Fixed fixture bodies.
+Unsafe yields 332 passes and 96 confirmations of the original shrink-failure policy;
+NIO yields 331 passes, one original JVM address-assumption abort and the same 96
+policy confirmations. CLR retirement of that assumption has no skipped case.
+Rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling 1 each pass
+17362/17362, no failures/skips. Existing Common warnings remain 51 distinct warnings;
+Buffer/tests have none, and native reservations return to zero. Common is unchanged.
+The composite source stage is complete; provider/facade and module closure continue.
+Evidence: artifacts/buffer-composite-source-closure (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5607,24 +5668,26 @@ ByteBuf's abstract contract source is verified, with all 192 public declarations
 accounted for. AbstractByteBuf has no unreviewed declared public methods; its remaining
 internal kernels/fields and specialized providers still require source review.
 ByteBufUtil has no unreviewed public static methods; its remaining private/source
-review is separate. CompositeByteBuf now has all 114 declared public methods and three public constructor
-shapes accounted for; specialized iteration/search is reviewed, while remaining
-nonpublic strategy/comment and structural failure review is separate. PooledByteBufAllocator
+review is separate. CompositeByteBuf and FixedCompositeByteBuf sources are verified, including private/protected
+strategy, ownership/failure and original-comment decisions. Their public method
+inventories cover 114 and 39 declarations respectively; Composite also covers its
+three public constructor shapes. Fixed standalone original fixture methods are
+36/36 mapped; shared composite/base fixture mappings remain partial. PooledByteBufAllocator
 is verified with its instance/static/constructor and nested thread-cache source decisions. The pooled
 arena, chunk, list, subpage and thread-cache sources are now verified under their CLR
 ownership/representation policies. AdaptivePoolingAllocator and the pooled base/heap/
 direct provider sources are now verified, with original fixture completeness tracked
 separately. UnpooledByteBufAllocator
 is verified under its CLR provider/instrumentation policies. WrappedCompositeByteBuf
-is verified under its shared-state/virtual-operation policies. The other 19 in-progress
-source files have no public signature inventory yet. Finish composite source closure and
-remaining provider/facade specializations. No remaining test-method count is
+is verified under its shared-state/virtual-operation policies. The other 18 in-progress
+source files have no public signature inventory yet. Continue AbstractByteBuf, utility
+and remaining provider/facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
-inventory and four declared-test partitions. Next review targets AbstractByteBuf,
-CompositeByteBuf, utility and remaining provider/facade specializations. Implement confirmed portable gaps
+inventory and five declared-test partitions. Next review targets AbstractByteBuf,
+utility and remaining provider/facade specializations. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

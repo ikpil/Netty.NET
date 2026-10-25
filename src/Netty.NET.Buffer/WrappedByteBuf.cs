@@ -62,6 +62,8 @@ public class WrappedByteBuf : ByteBuf
         => Buffer.TryGetReadOnlyMemory(index, length, out memory);
     protected override void GetBytesCore(int index, Span<byte> destination) => Buffer.GetBytes(index, destination);
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => Buffer.SetBytes(index, source);
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+        => Buffer.SetBytesFromIoCore(index, source);
     protected override void SetZeroCore(int index, int length) => Buffer.SetZero(index, length);
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => Buffer.AsReadOnlySequence(index, length);

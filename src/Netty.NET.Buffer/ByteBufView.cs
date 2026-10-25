@@ -146,6 +146,8 @@ internal sealed class ByteBufView : ByteBuf
     protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
         => _parent.TryGetMemory(_offset + index, length, out memory);
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => _parent.SetBytes(_offset + index, source);
+    protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
+    { EnsureCanWrite(); CheckIndex(index, source.Length); _parent.SetBytesFromIoCore(_offset + index, source); }
     protected override void SetZeroCore(int index, int length) => _parent.SetZero(_offset + index, length);
     public override IByteBufAllocator Allocator => _parent.Allocator;
     public override bool IsContiguous => _parent.IsContiguous;
