@@ -28,11 +28,11 @@ namespace Netty.NET.Buffer;
  * indices on the fly because of internal optimizations made by {@link ByteBufUtil#writeAscii(ByteBuf, CharSequence)}
  * and {@link ByteBufUtil#writeUtf8(ByteBuf, CharSequence)}.
  */
-/// <remarks>CLR forwarding uses shared indices and bounded memory hooks rather than
-/// duplicating every primitive operation. Views returned by this base are unwrapped;
+/// <remarks>CLR forwarding shares nonvirtual index state and delegates public virtual
+/// operations to the wrapped buffer. Views returned by this base are unwrapped;
 /// lifetime-aware subclasses wrap them as needed. Endian access is explicit;
 /// storage metadata is borrowed through Memory and scoped pins.</remarks>
-public class WrappedByteBuf : ByteBuf
+public partial class WrappedByteBuf : ByteBuf
 {
     protected readonly ByteBuf Buffer;
 
@@ -54,6 +54,11 @@ public class WrappedByteBuf : ByteBuf
     public override ByteBuf Touch(object hint = null) { Buffer.Touch(hint); return this; }
 
     protected override Memory<byte> GetMemoryCore(int index, int length) => Buffer.AsMemory(index, length);
+    internal override byte ReadByteCore(int index) => Buffer.ReadByteCore(index);
+    internal override void WriteByteCore(int index, int value) => Buffer.WriteByteCore(index, value);
+    internal override ulong ReadWord(int index, int width, bool littleEndian) => Buffer.ReadWord(index, width, littleEndian);
+    internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
+    { Buffer.SetWord(index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         => Buffer.AsReadOnlyMemory(index, length);
     protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)

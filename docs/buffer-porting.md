@@ -5645,6 +5645,48 @@ Buffer/tests have none, and native reservations return to zero. Common is unchan
 The composite source stage is complete; provider/facade and module closure continue.
 Evidence: artifacts/buffer-composite-source-closure (ignored).
 
+## Generic wrapper and simple leak source closure
+
+WrappedByteBuf, UnreleasableByteBuf, SimpleLeakAwareByteBuf and
+SimpleLeakAwareCompositeByteBuf source reviews are complete under the existing
+CLR lifetime/representation policies. Their 186/16/16/12 declared public methods
+(230 total) have machine-checked CLR targets; constructors, fields and nonpublic
+helpers have explicit source decisions. Original fixture/provider completeness
+remains separate. All 31 original comments are accounted for: 29 in code, and
+the two repeated composite-release comment lines are references because two Java
+release overloads share one CLR optional-decrement method.
+
+Generic wrappers previously executed many inherited ByteBuf implementations instead
+of the wrapped public override. This bypassed custom operation behavior, selected
+component dispatch and inner advanced leak records. WrappedByteBuf now forwards 118
+additional public virtual methods and four internal byte/word kernels. Nonvirtual
+indices/marks still share the same state. Primitive, bulk convenience/range, borrow
+and sync/async I/O calls preserve exact arguments, failure identity and result.
+Pending ValueTask completion/cancellation has one consumer and the wrapped operation
+owns index publication. CLR LE float helpers intentionally forward the same public
+member rather than Java's inherited integer-helper decomposition; bounded borrows,
+async adapters and internal storage hooks retain separate CLR policies.
+
+UnreleasableByteBuf now inherits this common wrapper implementation. Its retain,
+release and touch no-ops, borrowed derived factories and ordinary owned copy/read
+results remain. No reference is acquired to make its parent immortal. Actual input
+and owner cleanup are checked through unreleasable, nested and offset wrappers,
+including empty read-only components. Simple leaf views still share the original
+tracker or forcibly track independently counted pooled children; final release and
+close-trace handling remain. Simple composite views retain their shared-counter
+tracker policy and capture the unwrapped owner before final release.
+
+The first 2360 public-entry probes reproduce 2070 committed-runtime failures.
+Additional 120 internal-kernel, 360 pending async, 60 real nested-leak and 144
+unreleasable I/O cases bring this unit to 3044 new cases. Pinned byte-exact Java
+Unsafe/NIO each pass 2080 public-entry/inherited-helper/nested-leak scenarios and
+72 unreleasable input scenarios; none are skipped. Rebuilt net10.0 Debug/Release/
+checked Release with SIMPLE sampling 1 each pass 20406/20406, no failures/skips.
+Native reservations return to zero. There are 51 existing Common warnings and no
+Buffer/test warnings; Common is unchanged. Source review continues for the remaining
+base/utility/providers/advanced facades. No new Markdown file is added.
+Evidence: artifacts/buffer-generic-wrapper-closure (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5679,7 +5721,9 @@ ownership/representation policies. AdaptivePoolingAllocator and the pooled base/
 direct provider sources are now verified, with original fixture completeness tracked
 separately. UnpooledByteBufAllocator
 is verified under its CLR provider/instrumentation policies. WrappedCompositeByteBuf
-is verified under its shared-state/virtual-operation policies. The other 18 in-progress
+is verified under its shared-state/virtual-operation policies. WrappedByteBuf,
+UnreleasableByteBuf and both simple leak-aware wrapper sources are also verified
+with 230 additional declared public-method decisions. The other 14 in-progress
 source files have no public signature inventory yet. Continue AbstractByteBuf, utility
 and remaining provider/facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.

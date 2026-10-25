@@ -49,6 +49,7 @@ public class CompositeByteBufIoEmptyComponentTest
         internal readonly IByteBufAllocator Allocator;
         internal readonly CompositeByteBuf Root;
         internal readonly ByteBuf Owner;
+        private readonly ByteBuf _lifetimeOwner;
         internal readonly EmptyReadOnly FirstEmpty = new(), SecondEmpty = new();
         internal readonly Tracker Tracker;
         internal readonly int Index;
@@ -58,7 +59,7 @@ public class CompositeByteBufIoEmptyComponentTest
                 : new UnpooledByteBufAllocator(false, Native);
             ByteBuf Data(int start) { ByteBuf b = direct ? Allocator.DirectBuffer(4, 4) : Allocator.HeapBuffer(4, 4); for (int i = 0; i < 4; ++i) b.WriteByte(start + i); return b; }
             Root = new CompositeByteBuf(Allocator, direct, 16, Data(1), FirstEmpty, Data(5), SecondEmpty, Data(9));
-            Root.SetIndex(0, 12); Tracker = new Tracker(Root); Index = facade is 5 or 6 or 9 ? 1 : 2;
+            Root.SetIndex(0, 12); Tracker = new Tracker(Root); Index = facade is 5 or 6 or 9 or 11 ? 1 : 2;
             CompositeByteBuf Nested(ByteBuf b) => new(Allocator, direct, 16, b);
             Owner = facade switch
             {
@@ -68,14 +69,18 @@ public class CompositeByteBufIoEmptyComponentTest
                 4 => new Wrapper(Root), 5 => Root.Slice(1, 10),
                 6 => new Wrapper(Root.Slice(1, 10)), 7 => Nested(Root),
                 8 => Nested(new AdvancedLeakAwareCompositeByteBuf(Root, Tracker)),
-                _ => new Wrapper(Nested(Root).Slice(1, 10))
+                9 => new Wrapper(Nested(Root).Slice(1, 10)),
+                10 => new UnreleasableByteBuf(Root),
+                11 => new Wrapper(new UnreleasableByteBuf(Nested(Root).Slice(1, 10))),
+                _ => new UnreleasableByteBuf(new AdvancedLeakAwareCompositeByteBuf(Root, Tracker))
             };
+            _lifetimeOwner = facade == 11 ? Owner.Unwrap().Unwrap() : facade is 10 or 12 ? Owner.Unwrap() : Owner;
             Root.SetIndex(2, 2);
             Owner.SetIndex(Index, Index).MarkReaderIndex().MarkWriterIndex();
         }
         public void Dispose()
         {
-            if (Owner.ReferenceCount > 0) Owner.Release();
+            if (_lifetimeOwner.ReferenceCount > 0) _lifetimeOwner.Release();
             (Allocator as IDisposable)?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -83,7 +88,7 @@ public class CompositeByteBufIoEmptyComponentTest
     {
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true })
-        for (int facade = 0; facade < 10; ++facade)
+        for (int facade = 0; facade < 13; ++facade)
         for (int input = 0; input < 3; ++input)
         foreach (bool asynchronous in new[] { false, true })
         foreach (bool relative in new[] { false, true }) yield return [pooled, direct, facade, input, asynchronous, relative];
@@ -124,7 +129,7 @@ public class CompositeByteBufIoEmptyComponentTest
             s.Owner.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((s.Index, s.Index), (s.Owner.ReaderIndex, s.Owner.WriterIndex));
         }
         finally { File.Delete(path); }
-        s.Dispose(); Assert.Equal(facade is 2 or 3 or 8 ? 1 : 0, s.Tracker.Closes);
+        s.Dispose(); Assert.Equal(facade is 2 or 3 or 8 or 12 ? 1 : 0, s.Tracker.Closes);
     }
     [Theory]
     [InlineData(false, false, false)] [InlineData(false, false, true)]
