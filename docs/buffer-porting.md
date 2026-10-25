@@ -5486,6 +5486,55 @@ each pass 14950/14950, no failures/skips; 51 existing Common warnings and zero B
 test warnings. Common and all original test-method mappings are unchanged.
 Evidence: artifacts/buffer-adaptive-reallocation-validation (ignored).
 
+## Adaptive and pooled provider source closure
+
+Completed the aggregate AdaptivePoolingAllocator source review. All 21 named nested
+classes/interfaces now map to CLR implementations or explicit replacements: routing/
+controllers, group expansion, magazine current/next handoff, fixed shared/local caches,
+buddy recovery/pressure, registry, chunk/free-list/tree ownership and nested buffer.
+Existing independent/differential cache, geometry, concurrency, teardown, tracing and
+borrow evidence is reused. Monitor/Interlocked/BCL containers replace JVM locks/queues/
+skip lists, fresh terminal wrappers replace Recycler, and explicit lifetime gates plus
+native SafeHandles replace finalizer fallback. Historical histogram prose remains
+preserved; pinned executable controllers use fixed classes and remembered buddy maxima.
+All 164 original comments remain accounted for. The allocator/cache source stage is
+complete under these policies; original allocator fixtures keep their independent status.
+
+Reviewed PooledByteBuf, PooledHeapByteBuf and PooledDirectByteBuf in full, including
+private/protected primitives, lifecycle fields, borrow/NIO strategies and I/O. Their
+20/15/18 declared public methods now have machine-checked CLR targets. Shared Memory/
+Span/BinaryPrimitives/staged I/O supply the portable provider kernels, with existing
+explicit Encoding, pointer/array, overlap, cursor and callback-lifetime policies.
+All eight original comments across these three sources are preserved; the obsolete
+reuse JavaDoc remains a reference beside the explicit fresh-wrapper policy.
+
+Found one copy specialization missing from the heap provider: the inherited Copy
+used destination SetBytes(ByteBuf), while Java calls destination writeBytes(byte[]).
+PooledHeapByteBuf now calls WriteBytes(ReadOnlySpan<byte>) on the new heap owner,
+preserving that extension point and translating the source region offset. Direct
+copies retain their typed source/index write path. Throwing writes, including writes
+that changed a prefix before throwing, release the new owner in CLR; original Java
+strands that destination claim. The source and sibling regions remain unchanged.
+
+Added 120 copy scenarios over heap/direct, small/normal/huge reservations, absolute/
+readable/sliced/retained views and success/pre-write/post-prefix failure. Before the
+fix all 60 heap cases failed and all 60 direct controls passed; after it all pass.
+Two inherited capacity-4 controls make the original isContiguous scenario exact.
+All six declared AbstractPooledByteBufTest methods now have individual mappings;
+its inherited AbstractByteBufTest coverage remains separate and the fixture is partial.
+The existing inventory checker now checks this fourth declared-method partition.
+
+Fresh pinned Java Unsafe/NIO each pass 120 copy scenarios and 12 original pooled
+fixture bodies over heap/direct. All 93 production sources plus four original fixture
+sources are byte-checked and freshly compiled. Array-to-Span representation and failed
+destination cleanup differences are explicit; original Java test bodies are unchanged.
+Both runtimes use page 8192/maxOrder 4 for these pooled scenarios, outside the known
+tiny-chunk subpage-run limit. Full net10.0 Debug/Release/rebuilt checked Release with
+SIMPLE sampling 1 each pass 15072/15072, no failures/skips; 51 existing Common warnings,
+zero Buffer/test warnings, and CLR native reservations return to zero. Common is
+unchanged. Four sources advance to verified; remaining provider/facade review continues.
+Evidence: artifacts/buffer-provider-source-closure (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5514,17 +5563,18 @@ shapes accounted for; specialized iteration/search is reviewed, while remaining
 nonpublic strategy/comment and structural failure review is separate. PooledByteBufAllocator
 is verified with its instance/static/constructor and nested thread-cache source decisions. The pooled
 arena, chunk, list, subpage and thread-cache sources are now verified under their CLR
-ownership/representation policies; adaptive nested-buffer review is complete while
-its outer allocator source closure remains separate. UnpooledByteBufAllocator
-is verified under its CLR provider/instrumentation policies. The other 24 in-progress
-source files have no public signature inventory yet. Finish composite source closure alongside allocator/cache lifecycle, then provider/
-facade specializations. No remaining test-method count is
+ownership/representation policies. AdaptivePoolingAllocator and the pooled base/heap/
+direct provider sources are now verified, with original fixture completeness tracked
+separately. UnpooledByteBufAllocator
+is verified under its CLR provider/instrumentation policies. The other 20 in-progress
+source files have no public signature inventory yet. Finish composite source closure and
+remaining provider/facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
-inventory and declared-test mappings. Next review targets ByteBuf/AbstractByteBuf,
-CompositeByteBuf and allocator/utility consumers. Implement confirmed portable gaps
+inventory and four declared-test partitions. Next review targets AbstractByteBuf,
+CompositeByteBuf, utility and remaining provider/facade specializations. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

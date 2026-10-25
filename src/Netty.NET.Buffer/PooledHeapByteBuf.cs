@@ -20,4 +20,14 @@ internal sealed class PooledHeapByteBuf : PooledByteBuf
         : base(arena, initialCapacity, maxCapacity, cache) { }
 
     public override bool IsDirect => false;
+
+    public override ByteBuf Copy(int index, int length)
+    {
+        CheckIndex(index, length);
+        ByteBuf copy = Allocator.HeapBuffer(length, MaxCapacity);
+        // CLR: Span preserves the original array-write extension point without
+        // exposing the pooled backing array. Release the new owner on failure.
+        try { return copy.WriteBytes(GetMemoryCore(index, length).Span); }
+        catch { copy.Release(); throw; }
+    }
 }

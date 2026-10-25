@@ -60,7 +60,7 @@ public abstract class AbstractPooledByteBufTest
         long maximumBytes = long.MaxValue) => new(Direct, shifts, order, alignment, maximumBytes);
 
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(150)] [InlineData(16384)] [InlineData(65536)] [InlineData(131073)]
+    [InlineData(0)] [InlineData(1)] [InlineData(4)] [InlineData(150)] [InlineData(16384)] [InlineData(65536)] [InlineData(131073)]
     public void OriginalInitialIndicesMarksAndStorage(int length)
     {
         using var allocator = NewAllocator();
