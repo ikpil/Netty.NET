@@ -52,6 +52,7 @@ using Microsoft.Win32.SafeHandles;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Buffers;
+using System.Text;
 
 namespace Netty.NET.Buffer;
 
@@ -164,6 +165,15 @@ internal sealed class ByteBufView : ByteBuf
         }
     }
     public override ByteBuf Unwrap() => _parent;
+    public override string GetString(int index, int length, Encoding encoding)
+    {
+        if (!_fixedCapacity) return base.GetString(index, length, encoding);
+        // AbstractUnpooledSlicedByteBuf.getCharSequence delegates to its parent.
+        // CLR merges String/CharSequence reads into this one string API.
+        ArgumentNullException.ThrowIfNull(encoding);
+        CheckIndex(index, length);
+        return _parent.GetString(_offset + index, length, encoding);
+    }
     // AbstractByteBuf's readable overload uses its own loop, not the indexed virtual delegate.
     public override int ForEachByte(Func<byte, bool> processor)
         => base.ForEachByte(ReaderIndex, ReadableBytes, processor);

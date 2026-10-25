@@ -22,6 +22,7 @@ using Microsoft.Win32.SafeHandles;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Text;
 using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
@@ -92,6 +93,15 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     public override bool IsDirect => Root.IsDirect;
     public override bool IsReadOnly => Root.IsReadOnly;
     public override bool IsContiguous => Root.IsContiguous;
+    public override string GetString(int index, int length, Encoding encoding)
+    {
+        // Only non-retained slices inherit the unpooled slice's character delegate.
+        // Independently counted pooled views and duplicates keep their local decoder.
+        if (IsIndependent || !_fixedCapacity) return base.GetString(index, length, encoding);
+        ArgumentNullException.ThrowIfNull(encoding);
+        CheckIndex(index, length);
+        return Root.GetString(_offset + index, length, encoding);
+    }
     public override int Capacity
     {
         get => _fixedCapacity ? MaxCapacity : Root.Capacity;

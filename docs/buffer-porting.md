@@ -5687,6 +5687,49 @@ Buffer/test warnings; Common is unchanged. Source review continues for the remai
 base/utility/providers/advanced facades. No new Markdown file is added.
 Evidence: artifacts/buffer-generic-wrapper-closure (ignored).
 
+## Derived and read-only source closure
+
+The AbstractDerivedByteBuf, AbstractUnpooledSlicedByteBuf, DuplicatedByteBuf,
+ReadOnlyByteBuf, AbstractPooledDerivedByteBuf, PooledSlicedByteBuf and
+PooledDuplicatedByteBuf source reviews are complete under the recorded CLR policies.
+Their 11/50/47/56/13/43/42 public declarations total 262 machine-checked methods.
+The 91 protected kernels/lifetime methods, constructors, fields and private/package
+helpers are accounted for. Two deprecated public constructors use existing CLR
+factories/internal views. All 23 original comments remain in implementation files.
+Original shared/inherited fixture completion is separate from source completion.
+
+Ordinary fixed slices and borrowed pooled slices now preserve the original
+getCharSequence parent callback with translated coordinates. The missing delegate
+previously bypassed custom character results/failures. Duplicate, read-only and
+independently counted pooled slice text reads retain local decoding. CLR GetString
+merges Java String/CharSequence, and readable/relative string helpers follow the
+character-read rule; distinct Java toString/readString decomposition is deliberately
+not reproduced. Encoding identity, custom return/failure, independent cursors/marks
+and the existing ownership chain are preserved, including empty reads.
+
+Existing bounded borrows, explicit BE/LE, checked range/argument/liveness, alias
+snapshots, allocator-aware copies and actual-count I/O policies remain. Original
+UTF8 heap decoding can access outside a captured pooled slice through its backing
+array; dead borrowed views may also read through a still-live root. These are
+confirmed original behaviors, not CLR requirements. CLR rejects both bypasses and
+null Encoding. Fresh pooled view wrappers retain/release their immediate parent and
+clear references instead of recycling/resurrecting wrapper objects. Metadata,
+custom delegate and physical storage guards retain their individually stated rules.
+
+Initial 740 probes expose 216 committed-runtime failures. Expanded empty/nonempty
+text, three encodings, callback success/failure and guard coverage adds 1316 CLR
+cases. Byte-exact pinned Java Unsafe/NIO each run 1315 scenarios: 1307 passes
+(1152 text, 124 range and 31 original fixture bodies), four array-range and four
+dead-view/live-root bypass confirmations. CLR also executes 32 null-Encoding guards.
+The existing ReadOnly 27 and Duplicated four fixture mappings are now machine-checked
+as two additional declared-test partitions; no original fixture status is advanced.
+Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 21722/21722,
+no failures/skips. Native reservations return to zero; Common is unchanged, with
+51 existing Common warnings and zero Buffer/test warnings. Nine source files still
+need source review, plus two package-info decisions and independent module closure;
+these are review counts, not confirmed missing runtime features.
+Evidence: artifacts/buffer-derived-source-closure (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5723,15 +5766,16 @@ separately. UnpooledByteBufAllocator
 is verified under its CLR provider/instrumentation policies. WrappedCompositeByteBuf
 is verified under its shared-state/virtual-operation policies. WrappedByteBuf,
 UnreleasableByteBuf and both simple leak-aware wrapper sources are also verified
-with 230 additional declared public-method decisions. The other 14 in-progress
-source files have no public signature inventory yet. Continue AbstractByteBuf, utility
+with 230 additional declared public-method decisions. The seven ordinary/pooled
+derived and read-only view sources are also verified with 262 public-method decisions.
+The other seven in-progress source files have no public signature inventory yet. Continue AbstractByteBuf, utility
 and remaining provider/facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
-inventory and five declared-test partitions. Next review targets AbstractByteBuf,
+inventory and seven declared-test partitions. Next review targets AbstractByteBuf,
 utility and remaining provider/facade specializations. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.
