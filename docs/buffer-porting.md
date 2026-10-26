@@ -6298,6 +6298,48 @@ Buffer/test warnings. Existing runtime behavior satisfies these selected contrac
 no runtime changes are needed. Other shared methods and the older 52 composite
 mappings still require review. Evidence: ignored artifacts/buffer-original-concurrent-io.
 
+## Original bounded memory transfer tests
+
+Ten further AbstractByteBufTest methods now retain named shared bodies on the
+seven actual inherited roots, in AbstractByteBufTest.MemoryTransfer.cs. The four
+heap/native destination tests preserve negative-index validation even for zero
+length, and the original zeroed four-byte destination, offset-one/two-byte transfer,
+two content bytes and two guard bytes. Scoped NativeMemory.AllocZeroed preserves
+the JVM direct buffer's initial zeroes. ArgumentOutOfRangeException follows the
+existing CLR argument-validation policy in place of IndexOutOfBoundsException.
+
+Random and sequential transfers keep the original 4096-byte source, 128-byte
+blocks, reused 256-byte external array, randomized window offsets and seed replay.
+Every original expected byte is checked. Span/Memory slicing replaces mutable
+ByteBuffer position/limit; CLR does not advance an external cursor, and no cursor
+object or test-side position increment is introduced. Additional real ByteBuf
+reader/writer checks and external prefix/suffix guards verify consumption and
+bounded writes. Random sequences are replayed within CLR, not equated with Java's
+different RNG algorithm.
+
+The exposed-region test keeps eight random bytes and the [1,7) range, using a real
+BCL SequenceReader over borrowed segments for initial consumed/remaining values
+and byte-by-byte iteration. Composite data stays segmented. The empty-output test
+checks a logical single-segment empty ReadOnlySequence instead of constructing a
+one-element ByteBuffer array; CLR enumeration count is not claimed equivalent.
+The allocated-read test preserves allocator identity, reader advancement and both
+original successful-release/zero-count sequences. The oversized destination test
+keeps abcdefg, an eight-byte destination and its original explanatory comment.
+
+Controlled changes independently remove relative reader advancement, expose the
+unrequested tail, and replace the source allocator with the default allocator.
+The first two fail all seven affected tests each. Allocator identity fails on the
+six scoped roots; the canonical composite already uses the default allocator, so
+that one case is correctly neutral to this mutation. All production source bytes
+are restored, and no runtime change is needed for the reviewed contracts.
+
+All 70 exact original method/provider pairs pass freshly compiled pinned Java
+Unsafe and forced-NIO runs. Full net10.0 Debug/Release each pass 27,791 tests;
+rebuilt checked Release with SIMPLE sampling one passes all 70 affected cases.
+There are zero failures/skips, 51 existing Common warnings and no Buffer/test
+warnings. Other shared NIO/type/cache and concurrency decisions remain partial.
+Evidence: ignored artifacts/buffer-original-memory-transfer.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6345,8 +6387,8 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. AbstractByteBufTest is now 376/408 mapped
-with 32 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
+consumer/module closure decisions remain. AbstractByteBufTest is now 386/408 mapped
+with 22 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
 with no unreviewed declarations, while 52 older mappings still require original-body
 fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is
