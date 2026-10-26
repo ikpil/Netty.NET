@@ -6221,6 +6221,37 @@ and no Buffer/test warnings. Of 121 original comments, 118 are in code; three or
 fixture/strict-mode comments remain with pending fidelity review. Evidence is in ignored
 artifacts/buffer-original-composite-gathering; tracking uses the existing JSON/Markdown.
 
+## Original scalar, endian and composite factory tests
+
+Seven further AbstractByteBufTest methods now retain their named original flows:
+short/medium/int/long consistency, zero-capacity LE growth and explicit LE reads/writes.
+Each consistency wrapper retains four heap/direct-reference x BE/LE helper calls and
+100 iterations, capacity-minus-width probes, masked 16/24-bit and full signed 32/64-bit
+inputs. Independent BCL BinaryPrimitives over managed arrays or system-native spans
+replaces Java ByteBuffer; native reference storage is freed in finally blocks.
+xUnit forbids overloaded test names, so only private helpers receive Assert prefixes.
+UInt32 expected literals and unchecked byte/short behavior follow CLR type semantics.
+
+Original value assertions remain, with extra raw wire comparisons against the BCL
+encoding. A deliberately paired wrong Int32 LE getter/setter still satisfies the
+original value assertions, then fails all seven fixtures at the wire comparison.
+The production source is restored byte-for-byte. Exact raw floating-point bit checks,
+LE literal bytes and both original zero-capacity issue comments are preserved; no
+mutable-order wrapper or fake ByteBuffer/cursor is introduced.
+
+The canonical Composite factory is now ported as an actual inherited fixture:
+empty entries and 1..9-byte blocks repeat every 45 bytes before capacity truncation.
+Original capacity/readable/writable and initial index assertions remain. Its final
+4096-byte tail makes all four scalar widths cross a component boundary. Seven real
+allocator/storage roots execute the new methods, and this composite root additionally
+executes the twelve prior transfer methods. This does not complete the entire
+inherited fixture or the older 52 Composite mappings. Java Unsafe/NIO each pass all
+61 original provider/method pairs. Full net10.0 Debug/Release each pass 27,665;
+rebuilt checked Release with SIMPLE sampling one passes all 61 affected inherited
+cases. All have zero failures/skips, 51 existing Common build warnings and no
+Buffer/test warnings. The existing runtime satisfies these contracts and is unchanged.
+Evidence: ignored artifacts/buffer-original-endian.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6268,8 +6299,8 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. AbstractByteBufTest is now 361/408 mapped
-with 47 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
+consumer/module closure decisions remain. AbstractByteBufTest is now 368/408 mapped
+with 40 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
 with no unreviewed declarations, while 52 older mappings still require original-body
 fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is

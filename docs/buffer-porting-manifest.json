@@ -360,10 +360,16 @@
             "status": "complete",
             "scope": "Remaining 26 declared methods mapped with deterministic partial-write mutation evidence; no runtime code change. Whole original fixture still requires older-mapping and inherited-provider review.",
             "evidence": "docs/buffer-porting.md#original-composite-gathering-and-wrapping-tests"
+          },
+          {
+            "id": "original-scalar-endian-and-composite-factory-tests",
+            "status": "complete",
+            "scope": "Seven selected shared bodies plus the actual canonical sparse composite factory; independent wire-byte mutation proof. No runtime code changes required.",
+            "evidence": "docs/buffer-porting.md#original-scalar-endian-and-composite-factory-tests"
           }
         ],
         "remaining": [
-          "Continue 47 unreviewed AbstractByteBufTest declarations; audit the 52 older AbstractCompositeByteBufTest mappings for original-body/helper fidelity, plus other partial fixtures and original inherited/provider configurations. All 85 Composite declarations have coverage decisions; counts do not establish complete port fidelity.",
+          "Continue 40 unreviewed AbstractByteBufTest declarations; audit the 52 older AbstractCompositeByteBufTest mappings for original-body/helper fidelity, plus other partial fixtures and original inherited/provider configurations. All 85 Composite declarations have coverage decisions; counts do not establish complete port fidelity.",
           "Run consumer and final module validation. All 93 production entries remain reviewed with the newly found internal constructor path implemented; ByteBufUtilTest original named-body/provider review and the standalone adaptive growth regression are complete."
         ],
         "productionSourceReview": {
@@ -32300,16 +32306,18 @@
         "Original test structure correction: replaces the recent method-name/case-index dispatch harness with individually named PascalCase test methods and source-derived bodies/helpers. Runtime and mapped-method counts do not change. Current targets supersede the earlier grouped harness; docs/buffer-porting.md#original-test-structure-correction.",
         "After direct-port correction: net10.0 full Debug/Release each pass 26983, zero failures/skips. Rebuilt checked Release with SIMPLE leak sampling 1 passes all 1789 affected cases under their individual original method names. Original 159-file inventory, method mapping targets and comment occurrences agree. Runtime/Common sources unchanged. artifacts/buffer-direct-test-port (ignored).",
         "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
-        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings.",
+        "Original scalar/endian unit: seven original shared methods x seven root fixtures, original typed helper order/reference combinations and 100 iterations. Independent heap/native BCL encoding preserves the Java reference role; raw wire comparisons catch paired LE read/write reversal, proven by seven controlled failures after original value assertions. Actual canonical sparse composite factory also executes twelve prior transfer bodies. Java Unsafe/NIO each pass all 61 selected provider/method pairs. Production source restored unchanged. docs/buffer-porting.md#original-scalar-endian-and-composite-factory-tests; artifacts/buffer-original-endian (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27665, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes all 61 affected inherited cases. Each method/provider identity matches pinned Java Unsafe/NIO runs. Paired wrong Int32 LE read/write fails all seven fixtures specifically at the extra wire assertion, after original value assertions. Production/Common source is unchanged; 51 existing Common build warnings and no Buffer/test warnings."
       ],
-      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial.",
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial. Seven further scalar/endian original methods now execute with independent BCL reference buffers and original helper combinations/iterations, including full-width signed random input and raw wire checks. The original empty-heavy composite factory adds a seventh actual inherited root for these methods and the twelve prior transfer bodies. See scalarEndianReview.",
       "comments": {
         "upstreamCount": 112,
-        "preservedCount": 98,
-        "missingCount": 14,
-        "preservedInImplementationCount": 95,
+        "preservedCount": 101,
+        "missingCount": 11,
+        "preservedInImplementationCount": 98,
         "preservedAsReferenceCount": 3,
-        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+        "coverage": "Original named transfer/scalar/endian bodies, required CLR adapters and factory scopes preserve source comments; other declared and inherited bodies remain partial."
       },
       "caseMappings": [
         {
@@ -36290,25 +36298,98 @@
             }
           ],
           "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testShortConsistentWithByteBuffer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestShortConsistentWithByteBuffer"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
+        },
+        {
+          "upstreamMethod": "testMediumConsistentWithByteBuffer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestMediumConsistentWithByteBuffer"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
+        },
+        {
+          "upstreamMethod": "testIntConsistentWithByteBuffer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestIntConsistentWithByteBuffer"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
+        },
+        {
+          "upstreamMethod": "testLongConsistentWithByteBuffer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestLongConsistentWithByteBuffer"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
+        },
+        {
+          "upstreamMethod": "testLittleEndianWithExpand",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestLittleEndianWithExpand"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
+        },
+        {
+          "upstreamMethod": "explicitLittleEndianReadMethodsMustAlwaysUseLittleEndianByteOrder",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "ExplicitLittleEndianReadMethodsMustAlwaysUseLittleEndianByteOrder"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
+        },
+        {
+          "upstreamMethod": "explicitLittleEndianWriteMethodsMustAlwaysUseLittleEndianByteOrder",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "ExplicitLittleEndianWriteMethodsMustAlwaysUseLittleEndianByteOrder"
+            }
+          ],
+          "adaptation": "Direct original wrapper/helper flow on seven actual inherited root fixtures. Four scalar consistency bodies retain all four direct/heap-reference x BE/LE combinations, 100 iterations each, and capacity-minus-width offsets. System NativeMemory/managed arrays and BinaryPrimitives replace the independent JVM ByteBuffer. Full signed 32/64-bit RNG input and unchecked short truncation preserve Java ranges; extra raw-byte comparison prevents paired getter/setter endian mistakes cancelling out. Explicit LE and zero-capacity expansion retain original literals, raw float/double bit checks and issue comments. UInt32 expected literals are typed uint in CLR. xUnit disallows overloaded test names, so only private helpers use Assert prefixes. No mutable byte-order facade is emulated."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 408,
-        "mappedCount": 361,
+        "mappedCount": 368,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 47,
+        "unreviewedCount": 40,
         "unreviewedMethods": [
           "getByteBufferBoundaryCheck",
           "getByteBufferState",
           "getDirectByteBufferBoundaryCheck",
           "getDirectByteBufferState",
-          "testShortConsistentWithByteBuffer",
-          "testMediumConsistentWithByteBuffer",
-          "testIntConsistentWithByteBuffer",
-          "testLongConsistentWithByteBuffer",
           "testRandomByteBufferTransfer",
           "testSequentialByteBufferTransfer",
           "testToStringMultipleThreads",
@@ -36325,7 +36406,6 @@
           "testSliceBytesInArrayMultipleThreads",
           "testSetCharSequenceMultipleThreads",
           "testNioBufferExposeOnlyRegion",
-          "testLittleEndianWithExpand",
           "testEmptyNioBuffers",
           "testGetReadOnlyDirectDst",
           "testGetReadOnlyHeapDst",
@@ -36333,8 +36413,6 @@
           "testGetBytesAndSetBytesWithFileChannel",
           "testReadBytes",
           "testGetBytesByteBuffer",
-          "explicitLittleEndianReadMethodsMustAlwaysUseLittleEndianByteOrder",
-          "explicitLittleEndianWriteMethodsMustAlwaysUseLittleEndianByteOrder",
           "testReadyOnlyNioBuffer",
           "testReadyOnlySliceNioBuffer",
           "testReadyOnlyDuplicateNioBuffer",
@@ -36789,6 +36867,44 @@
           "unchecked byte increment",
           "Scoped allocator teardown instead of JVM GC/global allocator lifetime"
         ]
+      },
+      "scalarEndianReview": {
+        "status": "complete-for-recorded-shared-body-and-provider-scope",
+        "upstreamMethods": [
+          "testShortConsistentWithByteBuffer",
+          "testMediumConsistentWithByteBuffer",
+          "testIntConsistentWithByteBuffer",
+          "testLongConsistentWithByteBuffer",
+          "testLittleEndianWithExpand",
+          "explicitLittleEndianReadMethodsMustAlwaysUseLittleEndianByteOrder",
+          "explicitLittleEndianWriteMethodsMustAlwaysUseLittleEndianByteOrder"
+        ],
+        "clrFixtureTypes": [
+          "BigEndianHeapByteBufTest",
+          "BigEndianDirectByteBufTest",
+          "PooledBigEndianHeapByteBufTest",
+          "PooledBigEndianDirectByteBufTest",
+          "AdaptiveBigEndianHeapByteBufTest",
+          "AdaptiveBigEndianDirectByteBufTest",
+          "BigEndianCompositeByteBufTest"
+        ],
+        "newNamedMethodInvocations": 49,
+        "originalReferenceStorageKinds": [
+          "managed heap",
+          "independent system native memory"
+        ],
+        "originalOrders": [
+          "big endian",
+          "little endian"
+        ],
+        "originalIterationsPerHelperCombination": 100,
+        "scalarReferenceIterationsAcrossProviders": 11200,
+        "mutationEvidence": {
+          "change": "Both Int32 LE getter and setter use BE, allowing the original scalar value roundtrip to cancel the paired error",
+          "failedFixturesAtAddedWireByteAssertion": 7,
+          "productionSourceRestoredByteForByte": true
+        },
+        "scope": "Selected seven shared declarations and canonical composite factory. Other shared declarations and all original concrete inherited suites remain incomplete."
       }
     },
     {
@@ -36807,7 +36923,8 @@
         "test/Netty.NET.Buffer.Tests/CompositeByteBufReferenceTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufFlatteningTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufBoundaryTest.cs",
-        "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs"
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractCompositeByteBufTest.cs"
       ],
       "evidence": [
         "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only.",
@@ -36825,16 +36942,18 @@
         "Original utility/growth/boundary unit: pinned Java ByteBufUtilTest bodies (56 methods, 249 executable tuples, 15 original provider assumptions), all 400 allocator-growth repetitions and seven composite boundary bodies run directly in Unsafe and NIO. CLR named fixture/growth/boundary tests use original inputs/workloads/helpers/comments. Confirmed internal array-offset constructor gap is implemented. artifacts/buffer-original-utility-growth (ignored); docs/buffer-porting.md#original-utility-growth-and-composite-boundary-ports.",
         "Full post-port validation: net10.0 Debug, Release and rebuilt checked Release each pass 27506, zero failures/skips; checked uses SIMPLE sampling interval 1 except the original isolated growth workload, which disables/restores slow leak instrumentation. The 249 named utility tuples, 400 growth repetitions and seven boundary tests are matched to TRX records and byte-exact Java Unsafe/NIO runs. 51 existing Common warnings, zero Buffer/test warnings. Shared test review remains partial; Common source/tests unchanged.",
         "Original composite gathering/wrapping unit: 26 named methods, eight full/single and twelve partial gathering cases, original wrapping/equality data and live bounded-memory replacement. Controlled incorrect requested-length reader advancement makes all twelve partial variants fail; source restored byte-for-byte. Byte-exact pinned Java Unsafe/NIO each pass all 52 big/little-endian provider/method pairs, zero skips. artifacts/buffer-original-composite-gathering (ignored); docs/buffer-porting.md#original-composite-gathering-and-wrapping-tests. Runtime implementation required no change.",
-        "Post-port validation: full net10.0 Debug/Release each pass 27604 with zero failures/skips; rebuilt checked Release with SIMPLE leak sampling interval 1 passes all 26 affected cases. Original source comments: 118 in code, three fixture-level comments remain with pending fidelity review. Controlled wrong reader advancement fails all twelve partial variants at the original-contract progress assertion; no production source changed. 51 existing Common build warnings, zero Buffer/test warnings."
+        "Post-port validation: full net10.0 Debug/Release each pass 27604 with zero failures/skips; rebuilt checked Release with SIMPLE leak sampling interval 1 passes all 26 affected cases. Original source comments: 118 in code, three fixture-level comments remain with pending fidelity review. Controlled wrong reader advancement fails all twelve partial variants at the original-contract progress assertion; no production source changed. 51 existing Common build warnings, zero Buffer/test warnings.",
+        "Original scalar/endian unit: seven original shared methods x seven root fixtures, original typed helper order/reference combinations and 100 iterations. Independent heap/native BCL encoding preserves the Java reference role; raw wire comparisons catch paired LE read/write reversal, proven by seven controlled failures after original value assertions. Actual canonical sparse composite factory also executes twelve prior transfer bodies. Java Unsafe/NIO each pass all 61 selected provider/method pairs. Production source restored unchanged. docs/buffer-porting.md#original-scalar-endian-and-composite-factory-tests; artifacts/buffer-original-endian (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27665, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes all 61 affected inherited cases. Each method/provider identity matches pinned Java Unsafe/NIO runs. Paired wrong Int32 LE read/write fails all seven fixtures specifically at the extra wire assertion, after original value assertions. Production/Common source is unchanged; 51 existing Common build warnings and no Buffer/test warnings."
       ],
       "adaptation": "Selected original empty/component/offset/index/ownership/auto/full/ranged consolidation/shrink/discard/decompose/nested word/visitor/overflow contracts run alongside CLR borrowed sequence, native pin/quota/failure and aliasing tests. Retained component coverage distinguishes shared unpooled counters from independent pooled parent/child counters in the explicit method mappings below. Old retained composite views fail checked access after all components are discarded rather than exposing freed storage. Two seeded 100-layout fixtures independently assemble word bytes and check discard/consolidate; 400 full pinned-Java/CLR rows cover heap/direct structural behaviors. Remaining original fixture, array/NIO/gathering/allocator/pooled cases remain pending; no stubs or skipped tests. Batch/flatten update adds 31 cases for array/streaming success and failure ownership, prefix writer updates, null/tail safe release, checked overflow with shared backing memory, one batch consolidation, disposed/throwing enumerators, enumerable ByteBuf dispatch, shallow readable intersections and original slice ownership, derived/read-only inputs, empty input, allocation/retain/source-read rollback, separately retained source already owned by destination, cycle rejection and issue 16799 offset/discard regression. The original mixed-retained WrappedCompositeByteBuf flattening variant is covered by the explicit mapping below; other wrapper scenarios retain their stated scope. Remaining original fixture cases stay pending. Enumeration/cache update adds 24 cases for original empty/normal/count-change iterator contracts, cached view identities, internal offset checks through empties, full/partial sources, native early-disposal ownership, readonly nested storage, cache replacement on shrink/discard, retained-vs-borrowed removal/consolidation, same-count mutation, failed materialization retry, ByteBuf+IEnumerable single-source dispatch, and the original flatten/componentSlice retain-remove-add-back regression on heap/native storage. Pooled flatten/componentSlice variants are now covered by the explicit mapping below; CLR enumerator protocol is validated separately. Constructor update adds 26 cases for array/enumerable/params and ByteBuf+IEnumerable inputs, captured ranges/marks and readonly aliases, mixed heap/native allocation provenance and metrics, null termination/tail ownership, empty components, argument validation, insertion/copy/allocation failures with retry, derived-constructor cleanup, recoverable/persistent enumeration failure and disposal, and checked overflow. Original constructor-bound/overflow scenarios inform these tests; synthetic logical buffers exercise Int32 capacity overflow without large allocations instead of the original repeated 1-MiB backing. No original test method or whole fixture is claimed newly complete. Original operation comments from reused batch/null handling remain retained. Policy: docs/buffer-porting.md#composite-buffer-construction. Decomposition/removal update maps eight declared test methods through deterministic data and explicit borrowed-list ownership, including independent retained source counters and shared-counter alternatives. Original byte-order facades add no additional byte-only ownership behavior; CLR wire endianness remains explicit. File/inherited test coverage remains partial. Shrink/discard ownership maps eight further declarations, including existing retained-slice range rejection and extended pooled flattening coverage. CLR binary-search lookup replaces the Java last-access cache. Independent retained child counters remain distinct from the shared unpooled model; byte order is explicit. File/inherited coverage remains partial. Lookup/limit update maps eight further declarations using original data, repeated empty-separated 1..9-byte fragments and nested one-byte readable windows. CLR validates invalid component indices and constructor limits with standard argument exceptions; the pinned Java null-slot dereference at cIndex=numComponents is recorded rather than reproduced. Valid component lookup and ownership agree across all four allocator/storage combinations. File/inherited coverage remains partial. Consolidation/copy update maps eight further declarations with original layouts and explicit allocator/storage ownership checks. Merged Java nioBuffer becomes an owned contiguous copy followed by scoped Memory borrowing; pooled array offsets may be nonzero. Copy allocator tests keep real 1/2/3/2-byte fragments without empty separators for all-native variants. Empty copies are independently owned and duplicates borrow the composite count. File/inherited coverage remains partial. Reference/empty update maps eight further declarations, preserving original component counts and both caller-first and nested-composite-first release order. CLR duplicate contracts replace Java implementation-class assertions; empty backing capacities are explicit. Owned empty-readable sources are deallocated, while the immutable empty singleton remains a slot but contributes no byte offsets. File/inherited coverage remains partial. Nested/flatten update maps four further declarations, including the original mixed independent pooled retained chain through transparent wrappers. Unpooled excluded views share the live root counter instead of a separate zero counter. ReadOnlySequence replaces nested nioBuffers and Func delegates replace ByteProcessor; temporary comparison copies are explicitly released. File/inherited coverage remains partial. Discard-marks/empty update maps four further declarations through original reader/writer marker transitions and empty-I/O regressions. Explicit BE/LE methods replace Java order facades for integer-tail cases, Array.Empty<byte> replaces EMPTY_BYTES, and source backing sizes are explicit. Discard preserves the unused grown tail while releasing consumed components. File/inherited coverage remains partial. Seven original null-tail, capacity-overflow, array-offset construction and source-offset discard regressions now have separate direct CLR bodies. Base/inherited and gathering-write coverage remains partial. All remaining 26 declared methods now have named original gathering/wrapping/equality bodies or explicit CLR Memory replacement. A deterministic one-byte virtual output hook and real TCP preserve the partial-write progress contract; requested-length mutation fails all twelve variants. All 85 declared methods are mapped, but 52 older mappings and full inherited/provider fixture closure remain in-progress.",
       "comments": {
         "upstreamCount": 121,
-        "preservedCount": 118,
-        "missingCount": 3,
-        "preservedInImplementationCount": 118,
+        "preservedCount": 119,
+        "missingCount": 2,
+        "preservedInImplementationCount": 119,
         "preservedAsReferenceCount": 0,
-        "coverage": "Original comments are retained beside their implementation or directly ported body, including the remaining wrapping/equality and NIO-replacement descriptions. Whole fixture fidelity/inheritance review remains separate. Three remaining comments describe the original abstract fixture and its discardReadBytes strict-mode override; they remain tracked with incomplete original-fixture review."
+        "coverage": "Original comments are retained for the mapped methods and actual canonical composite factory. Two remaining comments concern the original discardReadBytes strict-mode override and remain with incomplete fixture/fidelity review."
       },
       "caseMappings": [
         {
@@ -37822,6 +37941,14 @@
           }
         ],
         "partialWriteScope": "The output hook deterministically tests returned-count reader progress; existing nonblocking socket tests cover actual kernel backpressure separately."
+      },
+      "canonicalFactoryReview": {
+        "status": "complete-for-recorded-shared-bodies",
+        "target": "test/Netty.NET.Buffer.Tests/AbstractCompositeByteBufTest.cs",
+        "source": "Original newBuffer(int,int) factory, maximum-capacity precondition, 1..9-byte blocks with empty entries and 45-byte repetition, truncate-to-requested-capacity and initial index/writable assertions.",
+        "inheritedSharedBodiesExecuted": 19,
+        "runtimeKind": "Real CompositeByteBuf with original sparse component layout. Its final 4096-byte tail makes the 2/3/4/8-byte scalar probes cross a component boundary.",
+        "remaining": "Older 52 declared-method mappings and other inherited/factory/strict-mode cases remain under separate review; no whole-fixture completion is claimed."
       }
     },
     {
@@ -38193,10 +38320,30 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianCompositeByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractCompositeByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/BigEndianCompositeByteBufTest.cs"
+      ],
+      "evidence": [
+        "Original scalar/endian unit: seven original shared methods x seven root fixtures, original typed helper order/reference combinations and 100 iterations. Independent heap/native BCL encoding preserves the Java reference role; raw wire comparisons catch paired LE read/write reversal, proven by seven controlled failures after original value assertions. Actual canonical sparse composite factory also executes twelve prior transfer bodies. Java Unsafe/NIO each pass all 61 selected provider/method pairs. Production source restored unchanged. docs/buffer-porting.md#original-scalar-endian-and-composite-factory-tests; artifacts/buffer-original-endian (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27665, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes all 61 affected inherited cases. Each method/provider identity matches pinned Java Unsafe/NIO runs. Paired wrong Int32 LE read/write fails all seven fixtures specifically at the extra wire assertion, after original value assertions. Production/Common source is unchanged; 51 existing Common build warnings and no Buffer/test warnings."
+      ],
+      "adaptation": "Actual canonical composite subclass now inherits nineteen directly ported shared bodies (twelve transfer and seven scalar/endian). The original empty-heavy 1..9-byte construction, truncation and index setup are preserved. CLR default access is BE with explicit LE operations, so no mutable ByteOrder field is recreated. Other inherited declarations and the Java internal-NIO exception override retain their separate outstanding CLR decisions.",
+      "sharedBodyReview": {
+        "status": "partial",
+        "namedSharedBodiesExecuted": 19,
+        "scope": "Selected transfer and scalar/endian bodies only; neither the entire 408-method inherited fixture nor the original override is marked complete."
+      },
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Source class comments retained; inherited fixture remains partial."
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianDirectByteBufTest.java",
