@@ -5771,6 +5771,69 @@ Common warnings remain, with no Buffer/test warnings. Six source reviews remain,
 plus two package-info decisions and independent shared-fixture/module closure.
 Evidence: artifacts/buffer-unpooled-source-closure (ignored).
 
+## Empty and advanced leak facade source closure
+
+EmptyByteBuf, AdvancedLeakAwareByteBuf and AdvancedLeakAwareCompositeByteBuf now
+have complete declared source reviews, including 185, 150 and 169 public method
+decisions respectively. Constructors, fields, static initialization, nonpublic
+helpers and protected derived factories are accounted for. All six original
+comments are preserved: five in implementation, and the retired native-address
+discovery catch's `// Ignore` as an explicit manifest reference.
+
+This review found a runtime ownership defect. A retained pooled child returned by
+an inner leak facade was hidden inside that facade, so the outer facade treated
+its independent reference count as shared and reused a parent tracker. Releasing
+the child first could close an outer parent tracker while the root still had one
+reference. Owner discovery now follows known Simple/Advanced leak facades to the
+independent PooledDerivedByteBuf, preserves all returned wrappers/tracked
+identities, and reparents the existing parent claim to the current facade. Every
+independent child facade gets forced tracking. Ordinary/composite shared-counter
+views continue to share their actual root tracker. Existing factory-failure
+cleanup still releases the acquired child claim.
+
+The initial 576-case regression matrix reproduced 96 lifecycle failures. The
+final matrix covers heap/native unpooled, pooled and composite providers; two or
+three nested Simple/Advanced wrappers; all wrapper combinations; four retained
+factories and both parent/child release orders. It additionally checks independent
+child tracker identity, absence of parent access records from child reads,
+exactly-once parent closes and zero native reservations after allocator disposal.
+The byte-exact pinned Java source also exhibits this defect: Unsafe and forced
+NIO, each with both recording modes, confirm 96 premature outer-parent closes
+in the same 576 lifecycle scenarios. The innermost parent tracker stays open;
+the prematurely closed outer trackers close again at actual parent release.
+The CLR correction is deliberate; it does not claim fidelity to this Java bug.
+
+A 160-case recording matrix covers leaf/composite heap/native providers, one or
+two nested facades, successful/failed access, reference operations, local Touch,
+views/copy, text, bounded memory and synchronous/asynchronous streams. Two driver
+tests execute that same matrix in fresh processes with acquireAndReleaseOnly
+false and true, without changing the host environment (320 additional child
+executions, not additional parent-suite test cases). Non-reference records obey
+the flag; retain/release/touch always record. Touch records only the current
+facade. Leaf IsReadOnly does not record; the composite override does. Original
+Java passes 144 direct-counterpart probes per process/profile/mode; 16 CLR
+ValueTask cases have no direct Java member and are validated separately.
+
+Empty buffers retain permanent refcount one, allocator sentinel identity,
+zero-byte derived/copy/read behavior, strict search endpoints and hash seed one.
+Eight added tests make the unified CLR Encoding policy explicit: zero-length
+string reads return string.Empty, zero-byte text writes succeed, and Encoding
+controls replacement fallback. Null Encoding and invalid ranges still fail
+without index movement. The pinned Java's null getCharSequence and unconditional
+empty-text write failures are recorded differences. Java cached zero-length NIO
+addresses and swapped sentinels become bounded empty borrows/null scoped pins
+and explicit BE/LE. No permanent address capability or raw array exposure is
+promised by these CLR adapters.
+
+The unit adds 746 parent-suite cases. Forced net10.0 Debug, Release and checked
+Release with SIMPLE leak sampling interval 1 each pass 22,528 tests with zero
+failures/skips. The 51 existing Common warnings remain; Buffer/test warnings are
+zero and Common is unchanged. API/declaration and original-comment inventories
+are checked separately from behavioral tests. Provider/facade source review is
+complete. AbstractByteBuf, ByteBufUtil, Unpooled, package decisions and independent
+original shared fixture/module closure still remain. Evidence is under ignored
+`artifacts/buffer-empty-advanced-closure`; no new Markdown document is added.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5810,15 +5873,17 @@ UnreleasableByteBuf and both simple leak-aware wrapper sources are also verified
 with 230 additional declared public-method decisions. The seven ordinary/pooled
 derived and read-only view sources are also verified with 262 public-method decisions.
 Unpooled heap/direct and external readonly-memory provider sources are also verified
-with 161 public-method and two public-constructor decisions. The other four in-progress
-source files have no public signature inventory yet. Continue AbstractByteBuf, utility
-and remaining provider/facade specializations. No remaining test-method count is
+with 161 public-method and two public-constructor decisions. Empty and both advanced
+leak-aware sources are verified with another 504 public-method decisions and explicit
+private/helper/comment policies. Provider/facade source review is complete. The three
+remaining source reviews are AbstractByteBuf, ByteBufUtil and Unpooled; Unpooled still
+needs its public factory inventory. Package and original fixture decisions remain. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
 inventory and eight declared-test partitions. Next review targets AbstractByteBuf,
-utility and remaining provider/facade specializations. Implement confirmed portable gaps
+ByteBufUtil and Unpooled factory internals/public inventory. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

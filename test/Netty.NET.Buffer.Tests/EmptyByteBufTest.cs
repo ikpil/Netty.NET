@@ -255,4 +255,41 @@ public class EmptyByteBufTest
         }
         finally { buffer.Release(); }
     }
+
+    [Theory]
+    [InlineData(false, 0)] [InlineData(false, 1)] [InlineData(false, 2)]
+    [InlineData(true, 0)] [InlineData(true, 1)] [InlineData(true, 2)]
+    public void EmptyTextUsesTheClrEncodingAndZeroByteContract(bool pooled, int policy)
+    {
+        using var allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4) : null;
+        ByteBuf empty = (allocator as IByteBufAllocator ?? new UnpooledByteBufAllocator(false, true)).Buffer(0, 0);
+        Encoding encoding = policy == 0 ? Encoding.UTF8 : policy == 1 ? Encoding.Unicode
+            : Encoding.GetEncoding("us-ascii", new EncoderReplacementFallback(string.Empty), DecoderFallback.ExceptionFallback);
+        // Java's empty getCharSequence returns null and its text writes always throw.
+        // CLR unifies string reads and lets Encoding decide whether a write produces bytes.
+        string text = policy == 2 ? "\u00e9" : string.Empty;
+        Assert.Equal(string.Empty, empty.GetString(0, 0, encoding));
+        Assert.Equal(string.Empty, empty.ReadString(0, encoding));
+        Assert.Equal(0, empty.SetString(0, text, encoding));
+        Assert.Equal(0, empty.WriteString(text, encoding));
+        Assert.Throws<ArgumentOutOfRangeException>(() => empty.SetString(1, text, encoding));
+        Assert.Throws<ArgumentOutOfRangeException>(() => empty.WriteString("a", encoding));
+        Assert.Equal((0, 0, 1), (empty.ReaderIndex, empty.WriterIndex, empty.ReferenceCount));
+        Assert.False(empty.Release());
+    }
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void EmptyTextStillValidatesClrEncodingArguments(bool pooled)
+    {
+        using var allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4) : null;
+        ByteBuf empty = (allocator as IByteBufAllocator ?? new UnpooledByteBufAllocator(false, true)).Buffer(0, 0);
+        Assert.Throws<ArgumentNullException>(() => empty.GetString(0, 0, null));
+        Assert.Throws<ArgumentNullException>(() => empty.ReadString(0, null));
+        Assert.Throws<ArgumentNullException>(() => empty.SetString(0, string.Empty, null));
+        Assert.Throws<ArgumentNullException>(() => empty.WriteString(string.Empty, null));
+        Assert.Equal((0, 0, 1), (empty.ReaderIndex, empty.WriterIndex, empty.ReferenceCount));
+        Assert.False(empty.Release());
+    }
+
 }

@@ -113,7 +113,12 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
         // We only need to unwrap SwappedByteBuf implementations as these will be the only ones that may end up in
         // the AbstractLeakAwareByteBuf implementations beside slices / duplicates and "real" buffers.
         // CLR has explicit endian accessors, so no swapped facade needs unwrapping.
-        if (derived is not PooledDerivedByteBuf { IsIndependent: true } pooled)
+        // A nested leak factory can hide an independently counted child inside
+        // another leak facade. Keep that facade, but find its actual owner before
+        // choosing a shared tracker or replacing the immediate release parent.
+        ByteBuf unwrapped = derived;
+        while (unwrapped is SimpleLeakAwareByteBuf) unwrapped = unwrapped.Unwrap();
+        if (unwrapped is not PooledDerivedByteBuf { IsIndependent: true } pooled)
             return NewSharedLeakAwareByteBuf(derived);
 
         // Update the parent to point to this buffer so we correctly close the ResourceLeakTracker.
