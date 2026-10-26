@@ -6340,6 +6340,47 @@ There are zero failures/skips, 51 existing Common warnings and no Buffer/test
 warnings. Other shared NIO/type/cache and concurrency decisions remain partial.
 Evidence: ignored artifacts/buffer-original-memory-transfer.
 
+## Original channel and text concurrency tests
+
+Three remaining shared concurrency declarations now execute as named original
+bodies on seven actual inherited roots: fourteen duplicate/slice channel cases
+and forty-two charset/type/provider tuples. The channel tests keep eight random
+bytes, ten dedicated threads, the shared 60,000-completion target, in-flight
+overrun behavior, read-until-empty loop, complete output comparison and eleven-party
+completion barrier. Production Socket sends go over a private real TCP pair per
+worker. Fresh received arrays represent each original channel output; reusing the
+connection avoids 60,000 OS connections. Final send shutdown and receive EOF reject
+all trailing bytes, including whole repeated payloads that could otherwise be hidden
+across iteration boundaries. This tests the CLR socket replacement, without claiming
+Java native gathering behavior or performance. Worker errors reach the coordinator,
+and all workers finish before owner release. Original comments are retained.
+
+The character writer keeps sixteen independent 32-byte buffers, two semaphores,
+the all-workers-ready gate, 256 writes per worker and all six original tuples:
+UTF-8/US-ASCII/ISO-8859-1 times String/AsciiString. Java maxBytesPerChar gives
+10/32/32 `a` characters. Encoding.GetMaxByteCount includes fallback/flush overhead
+and is deliberately not used to change those inputs. Real Common.AsciiString is
+converted once before sharing the CLR string/span input; the unified SetString API
+has no separate AsciiString overload or fast-path claim. Dedicated LongRunning
+Tasks replace fixed executor workers and Futures. All worker failures are observed;
+CLR cancellation also drains started workers before freeing their borrowed storage.
+Original Future-success checks remain. Additional zero initialization, literal-byte
+checks and unchanged indices detect silent failures deterministically. A no-op setter
+leaves all Futures successful but fails all forty-two added content checks. Wire-byte
+corruption independently fails the fourteen original output comparisons. Production
+source is restored byte-for-byte; no runtime fix is needed for these reviewed inputs.
+
+Freshly compiled pinned Java Unsafe and forced-NIO each pass all 56 exact pairs and
+tuples. Full net10.0 Debug/Release each pass 27,847; rebuilt checked Release with
+SIMPLE sampling one passes all 56 affected invocations. The last missing source
+comment, the issue-325 link, is restored at the existing all-consumed discard branch;
+its executable code is unchanged and all 109 owning-fixture checked regressions pass.
+All 112 shared-source comments are now accounted for: 109 in code and three existing
+explicit references. This does not complete the remaining nineteen NIO/type/cache
+declarations or the older composite/inherited fidelity review. All runs have zero
+failures/skips, 51 existing Common build warnings and no Buffer/test warnings.
+Evidence: ignored artifacts/buffer-original-channel-text.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6387,8 +6428,8 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. AbstractByteBufTest is now 386/408 mapped
-with 22 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
+consumer/module closure decisions remain. AbstractByteBufTest is now 389/408 mapped
+with 19 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
 with no unreviewed declarations, while 52 older mappings still require original-body
 fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is

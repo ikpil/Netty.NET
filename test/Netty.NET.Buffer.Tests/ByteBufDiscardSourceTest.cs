@@ -82,6 +82,7 @@ public class ByteBufDiscardSourceTest
         }
         if (scenario == 2)
         {
+            // Test case for https://github.com/netty/netty/issues/325
             buffer.WriterIndex = buffer.Capacity;
             buffer.ReaderIndex = buffer.WriterIndex;
             Assert.Same(buffer, buffer.DiscardReadBytes());
