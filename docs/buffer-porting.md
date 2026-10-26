@@ -5730,6 +5730,47 @@ need source review, plus two package-info decisions and independent module closu
 these are review counts, not confirmed missing runtime features.
 Evidence: artifacts/buffer-derived-source-closure (ignored).
 
+## Unpooled and external read-only provider source closure
+
+UnpooledHeapByteBuf, UnpooledDirectByteBuf and ReadOnlyByteBufferBuf source reviews
+are complete under the existing CLR policies: 49/51/61 public methods (161 total),
+two public constructors and 65 protected methods are accounted for, including
+fields, allocation/free/capacity/copy helpers, cached NIO and nested readonly views.
+This unit found no additional runtime implementation gap and changes no execution
+logic. Two original allocation/free helper comments are restored beside their CLR
+roles; the retired NoCleaner private-field access comment is an explicit reference.
+All 15 original comments are preserved (14 in code, one reference).
+
+GC-managed arrays, NativeMemoryOwner/SafeHandle, allocator factory metrics and
+explicit native reservation domains replace Java allocation/free hooks and
+Cleaner/NoCleaner specializations. Actual instrumentation consumers are mapped;
+custom storage belongs behind ByteBuf/IByteBufAllocator. Existing bounded borrows,
+explicit BE/LE, alias-safe transfers, native copy leases and staged I/O rules remain.
+External native construction captures its bounded range without taking ownership;
+first resize detaches, later resize/release returns only owned storage. Logical
+factory metrics exclude borrowed storage and old pinned physical reservations.
+ReadOnlyMemory captures typed readonly access; known native and opaque managers
+retain their separately documented copy/storage policies and external lifetime rules.
+
+Sixty new deterministic pressure/shrink/retry cases cover owned/borrowed native
+storage, five facade/duplicate entries, pins and capacities 2/8/12. Failed reserve
+keeps old data, indices/marks, ownership and metrics; successful shrink clips root
+indices, preserves marks and leaves duplicate cursors independent. CLR complete
+index-pair guards require atomic repair of a stale duplicate when shrinking below
+its reader/marks. Old pins preserve only physical storage, and all native domains
+return to zero after final cleanup. The pinned Java instead clips root indices
+before allocation failure; this stronger CLR failure policy is intentional.
+
+Byte-exact Java Unsafe/NIO each run two original readonly copy fixture bodies and
+45 heap/owned-direct/borrowed-direct failure/retry scenarios confirming that policy.
+Both declared readonly copy methods now map to existing CLR cases; inherited
+ReadOnlyDirectByteBufferBufTest variants remain partial. The checker now validates
+eight declared-test partitions. Rebuilt net10.0 Debug/Release/checked Release SIMPLE
+sampling 1 each pass 21782/21782, no failures/skips. Common is unchanged; 51 existing
+Common warnings remain, with no Buffer/test warnings. Six source reviews remain,
+plus two package-info decisions and independent shared-fixture/module closure.
+Evidence: artifacts/buffer-unpooled-source-closure (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5768,14 +5809,16 @@ is verified under its shared-state/virtual-operation policies. WrappedByteBuf,
 UnreleasableByteBuf and both simple leak-aware wrapper sources are also verified
 with 230 additional declared public-method decisions. The seven ordinary/pooled
 derived and read-only view sources are also verified with 262 public-method decisions.
-The other seven in-progress source files have no public signature inventory yet. Continue AbstractByteBuf, utility
+Unpooled heap/direct and external readonly-memory provider sources are also verified
+with 161 public-method and two public-constructor decisions. The other four in-progress
+source files have no public signature inventory yet. Continue AbstractByteBuf, utility
 and remaining provider/facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
-inventory and seven declared-test partitions. Next review targets AbstractByteBuf,
+inventory and eight declared-test partitions. Next review targets AbstractByteBuf,
 utility and remaining provider/facade specializations. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

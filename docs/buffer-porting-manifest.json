@@ -249,10 +249,26 @@
             "originalFailures": 216,
             "originalFailuresScope": "First 740 text/range/null/lifetime probes against committed runtime; 576 empty-text cases add coverage.",
             "evidence": "docs/buffer-porting.md#derived-and-read-only-source-closure"
+          },
+          {
+            "id": "unpooled-and-external-read-only-providers",
+            "status": "complete",
+            "sourcesVerified": [
+              "UnpooledHeapByteBuf.java",
+              "UnpooledDirectByteBuf.java",
+              "ReadOnlyByteBufferBuf.java"
+            ],
+            "publicMethodsReviewed": 161,
+            "publicConstructorsReviewed": 2,
+            "protectedMethodsReviewed": 65,
+            "result": "Heap/direct/external-read-only provider fields, allocation/free/resize/copy/I/O and nested readonly-view strategies reviewed. Sixty added reservation-pressure/pin/owned-versus-borrowed tests validate existing CLR rollback and cleanup policies; this review found no new runtime implementation gap.",
+            "regressionCases": 60,
+            "runtimeBehaviorChanged": false,
+            "evidence": "docs/buffer-porting.md#unpooled-and-external-read-only-provider-source-closure"
           }
         ],
         "remaining": [
-          "Review remaining unpooled heap/direct/factory, empty, read-only external-memory and advanced leak-aware sources. Ordinary/pooled derived, read-only view, composite/fixed/wrapped/simple/unreleasable sources are verified; base/utility review and module closure remain independent. Shared/inherited original fixture mappings stay partial."
+          "Review EmptyByteBuf and the two advanced leak-aware facades, then determine provider/facade stage completion independently of original inherited fixtures. AbstractByteBuf, ByteBufUtil and Unpooled factory source reviews remain for module closure."
         ]
       },
       {
@@ -15576,7 +15592,7 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyByteBufferBuf.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.cs",
@@ -15585,20 +15601,878 @@
         "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
         "src/Netty.NET.Buffer/ByteBuf.Files.cs",
         "src/Netty.NET.Buffer/ByteBufView.cs",
-        "src/Netty.NET.Buffer/ByteBuf.Sockets.cs"
+        "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+        "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+        "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+        "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs"
       ],
       "evidence": [
         "External read-only memory unit: ReadOnlyMemoryByteBuf and Unpooled.WrappedBuffer(ReadOnlyMemory<byte>), original comments retained; arrays/native owners/custom memory managers, fixed captured ranges, writable independent copies, shared views, composite consolidation, streams and ownership. 28 new Buffer cases; net10.0 Debug/Release/rebuilt checked Release pass 1146/1146, no failures/skips. 2232 pinned Java/CLR rows match per Debug/Release and independent byte/lifetime models; negative/released ensureWritable status calls retain CLR guards. Common owner lookup has two new cases; full Common Debug/Release 2678 passed, zero failed, 14 existing skips. Checked native contract cases also pass. docs/buffer-porting.md#external-read-only-memory; artifacts/buffer-readonly-memory-validation (ignored); buffer-readonly-memory-*.trx. Partial original source/fixtures only.",
         "Decoder storage/read unit: 43 new cases; net10.0 Debug/Release/rebuilt checked Release 1597/1597, no failures/skips. 4032 pinned Java/CLR rows agree per Debug/Release with independent topology/capacity/bytes/cursors/marks/ownership/metric models. Pinned ByteToMessageDecoder uses both hints in MERGE_CUMULATOR and allocated ReadBytes in its documented decode example. docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads; artifacts/buffer-decoder-policy-validation (ignored); buffer-decoder-policy-*.trx. Whole source/fixture remains partial.",
         "Socket channel unit: four original channel contracts plus native ValueTask/CancellationToken counterparts; 71 new loopback/storage/lifetime/cancellation/nonblocking/leak cases. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463, no failures/skips. Six backing kinds, three offsets, eight lengths and four operations match 576 pinned Java/CLR final endpoint states per Debug/Release and sync/async mode, with independent bytes/cursors/capacity/reference models. TCP syscall split counts are deliberately not compared. All 93 original Buffer sources rechecked; CLR native reservations return to zero. docs/buffer-porting.md#socket-channel-transfers; artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx. Original sources/fixtures remain partial.",
-        "Native read-only provider unit: reproduced Copy(1,3) from an eight-byte captured native range returning MaxCapacity 2147483647 instead of pinned source 8; native Copy now passes captured root MaxCapacity and skips a write for empty copies. Twenty added cases plus updated native expectations cover three creators/four view forms, empty/ranged copy, growth cutoff, independence, offsets and pinned addresses, primitive/bulk reads, guarded destinations and failed-result cleanup. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5669/5669 on net10.0, no failures/skips. Per Debug/Release, 576 independent native/managed states produce 864 original aligned-Unsafe/bytewise-Unsafe/generic-heap matches; each process checks captured native pointer adjustment locally without emitting addresses. All 93 Buffer source bytes rechecked; CLR native reservations return to zero; Common unchanged. docs/buffer-porting.md#native-read-only-provider; artifacts/buffer-readonly-native-provider-validation (ignored), buffer-readonly-native-provider-*.trx."
+        "Native read-only provider unit: reproduced Copy(1,3) from an eight-byte captured native range returning MaxCapacity 2147483647 instead of pinned source 8; native Copy now passes captured root MaxCapacity and skips a write for empty copies. Twenty added cases plus updated native expectations cover three creators/four view forms, empty/ranged copy, growth cutoff, independence, offsets and pinned addresses, primitive/bulk reads, guarded destinations and failed-result cleanup. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5669/5669 on net10.0, no failures/skips. Per Debug/Release, 576 independent native/managed states produce 864 original aligned-Unsafe/bytewise-Unsafe/generic-heap matches; each process checks captured native pointer adjustment locally without emitting addresses. All 93 Buffer source bytes rechecked; CLR native reservations return to zero; Common unchanged. docs/buffer-porting.md#native-read-only-provider; artifacts/buffer-readonly-native-provider-validation (ignored), buffer-readonly-native-provider-*.trx.",
+        "Unpooled heap/direct/external-read-only source closure: 161 public methods, two public constructor decisions and 65 protected methods have source-backed CLR policies. Existing execution paths were already implemented; no additional runtime behavior is changed in this unit. Restored two original native allocation/free helper comments beside their CLR owner roles and retained the retired NoCleaner access comment as a reference. Sixty new native reservation/shrink/retry cases cover owned/borrowed storage, raw/wrapped/simple/advanced/duplicate entry, pins, shrink below reader/marks, stale duplicate repair, metrics and domain cleanup. Byte-exact pinned Java Unsafe/NIO each execute two original read-only copy bodies and 45 heap/owned/borrowed shrink failure/retry probes. Java trims root indices before allocation failure; CLR deliberately preserves old state until success. Borrowed external storage is never freed by resize/release, logical metrics separate from old pinned physical reservations, and opaque manager storage/copy policies are explicit. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 21782, no failures/skips; zero native reservations at cleanup; 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#unpooled-and-external-read-only-provider-source-closure; artifacts/buffer-unpooled-source-closure (ignored)."
       ],
-      "adaptation": "ReadOnlyMemory captures the external remaining range without mutable NIO cursor or copying. The wrapper owns a logical reference count, not its external storage owner: final release drops its memory reference without disposing borrowed owners. External writes remain visible. NativeMemoryOwner.TryGetOwner identifies this library native memory (including slices) without acquiring lifetime; other managers use heap copy policy. Copy preserves creating allocator and known heap/native policy, returns writable independent storage with the generic heap/default maximum or known-native captured root maximum, and cleans up post-allocation failure. Inherited bounded BE/LE, read-only views, read-only Memory/Sequence, Stream and positioned-file APIs replace Java NIO/channel providers. Caller keeps external storage valid during every borrowed access; source pins use Memory.Pin. Empty factory input shares the sentinel; explicit empty root is owned/read-only. Negative and released status-returning ensureWritable calls keep existing CLR validation instead of unconditional Java status 1. Raw-address/JVM provider APIs are not added; complete inherited/channel/fixture review is not claimed. Decoder storage/read update: ReadOnlyMemory-backed storage is contiguous. MaxFastWritableBytes remains capacity minus WriterIndex despite read-only permission, matching the original storage hint. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Native read-only provider update: ReadOnlyUnsafeDirectByteBuf is a complete CLR replacement through known NativeMemoryOwner-backed ReadOnlyMemoryByteBuf plus bounded primitive/bulk kernel and Memory.Pin. No separate Unsafe subclass or stale raw-address property is needed; TryGetOwner recognizes captured native slices, and borrowed pin addresses reflect the captured source plus derived adjustment. The full native provider Copy contract retains the root captured MaxCapacity (also through duplicate/slice delegation), returns creator-owned independent storage, preserves cursors/references and avoids a destination write for length zero. This supersedes earlier generic Int32.MaxValue native-copy expectations. Managed/opaque memory retains the generic heap/default maximum; arbitrary memory managers still lack reliable native metadata, and no JVM provider switch is exposed. ReadOnlyMemory expresses a readonly view without Java runtime writable-ByteBuffer rejection. Existing CLR permission/lifetime/range checks are retained; native copies cannot bypass a readonly or released destination as Java raw copyMemory paths can. Memory.Pin replaces naked memoryAddress access; the caller keeps external ownership valid during borrowed access, wrapper release does not dispose it, and native pin lifetimes can outlive explicit owner disposal. Existing snapshot/memmove and failed-result cleanup policies remain; undefined raw access/unsafe performance/atomicity equivalence are not claimed. Native source license, class description and both constructor offset comments are preserved. The Unsafe fixture maps its own pointer test/runtime assumption to CLR native pins and concrete owned allocation support; the broader inherited read-only fixture stays partial.",
+      "adaptation": "Complete declared source review under explicit CLR ownership/representation policies; 61 public declarations have machine-checked targets. Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy. Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain. ReadOnlyMemory captures a remaining range without mutable NIO position/limit state or an extra readonly-flag check. The caller keeps the external owner alive; final buffer release drops its range without disposing that owner. Writes and mutable borrows reject even empty requests; views preserve permission and shared reference count, copies are independent writable owners. Known native memory follows the established optimized native copy maximum and zero-length dispatch policy; generic/opaque managed memory uses the default heap-copy maximum. This deliberately unifies generic/Unsafe JVM provider selection instead of exposing runtime Unsafe gates. Private read-only slice/duplicate classes become existing typed CLR views and permission guards; repeated AsReadOnly is idempotent. Parallel reads/copies use local ranges rather than shared cached NIO cursors. Original inherited fixture completeness remains independent. This unit found no additional runtime implementation gap.",
       "comments": {
         "upstreamCount": 3,
         "preservedCount": 3,
         "missingCount": 0,
-        "coverage": "partial source; remaining operations not ported"
+        "coverage": "Complete declared source and original comment review under the explicit CLR provider/ownership policies. Original inherited fixture completeness is separate.",
+        "preservedInImplementationCount": 3,
+        "preservedAsReferenceCount": 0
+      },
+      "publicApiReview": {
+        "scope": "declared-public-instance-methods",
+        "methods": [
+          {
+            "upstream": "isWritable()",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "IsWritable",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "isWritable(int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "CanWrite(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "ensureWritable(int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "EnsureWritable(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "ensureWritable(int,boolean)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "EnsureWritable(int,bool)"
+              }
+            ]
+          },
+          {
+            "upstream": "getByte(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getShort(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetShort(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getShortLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetShortLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMedium(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetUnsignedMedium(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMediumLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetUnsignedMediumLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getInt(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetInt(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getIntLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getLong(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetLong(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getLongLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetLongLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadBytes(Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadBytes(Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setByte(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetByte(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShort(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetShort(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShortLE(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetShortLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMedium(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetMedium(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMediumLE(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetMediumLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setInt(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetInt(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setIntLE(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetIntLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLong(int,long)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetLong(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLongLE(int,long)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetLongLE(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity()",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity(int)",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "set"
+              }
+            ]
+          },
+          {
+            "upstream": "alloc()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "Allocator",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "order()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetInt(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetIntLE(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "WriteInt(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "WriteIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "unwrap()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "Unwrap()"
+              }
+            ]
+          },
+          {
+            "upstream": "isReadOnly()",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "IsReadOnly",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "isDirect()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "IsDirect",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,OutputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "GetBytes(int,Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(OutputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "ReadBytes(Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,GatheringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetBytes(int,Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(GatheringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetBytes(int,SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ReadOnlySpan<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ReadOnlySpan<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,InputStream,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "SetBytes(int,Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ScatteringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetBytes(int,Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetBytes(int,SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "copy(int,int)",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "Copy(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBufferCount()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlySequence(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBuffers(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlySequence(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBuffer(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlyMemory(int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "internalNioBuffer(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlyMemory(int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "isContiguous()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+                "member": "IsContiguous",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "hasArray()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "array()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "arrayOffset()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "hasMemoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "memoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "duplicate()",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "Duplicate()"
+              }
+            ]
+          },
+          {
+            "upstream": "slice(int,int)",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "Slice(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "asReadOnly()",
+            "state": "clr-replacement",
+            "group": "external-read-only",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "AsReadOnly()"
+              }
+            ]
+          }
+        ],
+        "groups": {
+          "external-read-only": {
+            "adaptation": "ReadOnlyMemory captures a remaining range without mutable NIO position/limit state or an extra readonly-flag check. The caller keeps the external owner alive; final buffer release drops its range without disposing that owner. Writes and mutable borrows reject even empty requests; views preserve permission and shared reference count, copies are independent writable owners. Known native memory follows the established optimized native copy maximum and zero-length dispatch policy; generic/opaque managed memory uses the default heap-copy maximum. This deliberately unifies generic/Unsafe JVM provider selection instead of exposing runtime Unsafe gates. Private read-only slice/duplicate classes become existing typed CLR views and permission guards; repeated AsReadOnly is idempotent. Parallel reads/copies use local ranges rather than shared cached NIO cursors.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "primitive-bulk-io": {
+            "adaptation": "Shared ByteBuf storage kernels implement primitive BE/LE access, ranged/relative Span and typed copies, text/search, I/O and views. BinaryPrimitives/Span replace duplicated Java per-provider word loops. Existing logical composite dispatch, alias snapshots, checked bounds/argument/lifetime and failure-index policies remain. The pinned safe-direct segmented-destination defect retains the existing CLR segmented-transfer correction documented in the derived bulk review. CLR unsigned bytes and safe-direct medium callback-width differences are deliberate. Stream/Socket/SafeFileHandle and ValueTask replace Java stream/channel/NIO overloads with one-read/actual-count/staged-publication rules; no zero-copy, syscall-count, arbitrary custom channel or JVM callback-fanout/performance equivalence is claimed.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "resize-copy-and-ownership": {
+            "adaptation": "Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "bounded-storage": {
+            "adaptation": "Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          }
+        },
+        "unreviewedMethods": [],
+        "summary": {
+          "declared": 61,
+          "implemented": 0,
+          "clr-replacement": 61,
+          "implementation-gap": 0,
+          "unreviewed": 0
+        }
+      },
+      "sourceClosureReview": {
+        "scope": "Complete declared public methods, protected primitives/allocation/lifetime helpers, constructors, fields and private/nested strategy decisions. Building selected fixture cases does not complete inherited fixtures.",
+        "constructorFieldsAndHelpers": "allocator, buffer and tmpNioBuf become creator allocator, immutable ReadOnlyMemory range and local cursorless borrows. Constructor readonly ByteBuffer validation becomes the CLR readonly memory type; NativeMemoryOwner ranges retain source offset/directness. Deallocate drops the borrowed reference, never external ownership. Internal/public NIO and helper getBytes(bool internal) select bounded read-only spans/segments and shared transfers. Eighteen getter/setter kernels use shared BinaryPrimitives and readonly permission guards. ReadOnlySlicedByteBuf/ReadOnlyDuplicatedByteBuf become ByteBufView/read-only factories with inherited readonly flags and stable counter ownership. Thread-local scratch NIO/cached cursor state is unnecessary; copy concurrency is preserved by local ranges.",
+        "protectedMethods": [
+          "deallocate",
+          "_getByte",
+          "_getShort",
+          "_getShortLE",
+          "_getUnsignedMedium",
+          "_getUnsignedMediumLE",
+          "_getInt",
+          "_getIntLE",
+          "_getLong",
+          "_getLongLE",
+          "getBytes",
+          "getBytes",
+          "_setByte",
+          "_setShort",
+          "_setShortLE",
+          "_setMedium",
+          "_setMediumLE",
+          "_setInt",
+          "_setIntLE",
+          "_setLong",
+          "_setLongLE",
+          "internalNioBuffer"
+        ],
+        "groups": {
+          "bounded-storage": "Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy.",
+          "primitive-bulk-io": "Shared ByteBuf storage kernels implement primitive BE/LE access, ranged/relative Span and typed copies, text/search, I/O and views. BinaryPrimitives/Span replace duplicated Java per-provider word loops. Existing logical composite dispatch, alias snapshots, checked bounds/argument/lifetime and failure-index policies remain. The pinned safe-direct segmented-destination defect retains the existing CLR segmented-transfer correction documented in the derived bulk review. CLR unsigned bytes and safe-direct medium callback-width differences are deliberate. Stream/Socket/SafeFileHandle and ValueTask replace Java stream/channel/NIO overloads with one-read/actual-count/staged-publication rules; no zero-copy, syscall-count, arbitrary custom channel or JVM callback-fanout/performance equivalence is claimed.",
+          "resize-copy-and-ownership": "Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.",
+          "external-read-only": "ReadOnlyMemory captures a remaining range without mutable NIO position/limit state or an extra readonly-flag check. The caller keeps the external owner alive; final buffer release drops its range without disposing that owner. Writes and mutable borrows reject even empty requests; views preserve permission and shared reference count, copies are independent writable owners. Known native memory follows the established optimized native copy maximum and zero-length dispatch policy; generic/opaque managed memory uses the default heap-copy maximum. This deliberately unifies generic/Unsafe JVM provider selection instead of exposing runtime Unsafe gates. Private read-only slice/duplicate classes become existing typed CLR views and permission guards; repeated AsReadOnly is idempotent. Parallel reads/copies use local ranges rather than shared cached NIO cursors."
+        },
+        "targetFiles": [
+          "src/Netty.NET.Buffer/ReadOnlyMemoryByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+          "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+          "src/Netty.NET.Buffer/ByteBufView.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+          "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+          "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+          "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+          "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+        ]
       }
     },
     {
@@ -16456,7 +17330,7 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledDirectByteBuf.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.cs",
@@ -16465,7 +17339,20 @@
         "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
         "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
         "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+        "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+        "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+        "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.cs"
       ],
       "evidence": [
         "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only.",
@@ -16478,15 +17365,776 @@
         "Decoder storage/read unit: 43 new cases; net10.0 Debug/Release/rebuilt checked Release 1597/1597, no failures/skips. 4032 pinned Java/CLR rows agree per Debug/Release with independent topology/capacity/bytes/cursors/marks/ownership/metric models. Pinned ByteToMessageDecoder uses both hints in MERGE_CUMULATOR and allocated ReadBytes in its documented decode example. docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads; artifacts/buffer-decoder-policy-validation (ignored); buffer-decoder-policy-*.trx. Whole source/fixture remains partial.",
         "Native-address wrapping unit: WrappedBuffer(nint,int,bool) ports the original raw-address factory/comment and owned/borrowed release through MemoryManager/SafeHandle and the existing direct-buffer kernel. 32 added CLR cases; net10.0 Debug/Release/rebuilt sampled checked Release pass 4981/4981, no failures/skips. Rechecked pinned Java sources and Debug/Release each yield 166 exact address/view/reference/copy/shrink/regrow/borrowed-lifetime matches per targetRecords value 0/4, also validated by an independent model. CLR cases additionally verify pin-delayed free, copied-pin idempotence, concurrent pins, constructor/range validation, zero-length owners, failed-detach rollback and aliased composite consolidation. Checked build has 51 existing Common warnings and zero Buffer/test warnings/errors. Common source unchanged. docs/buffer-porting.md#native-address-wrapping; artifacts/buffer-native-address-validation (ignored); buffer-native-address-*.trx.",
         "Socket channel unit: four original channel contracts plus native ValueTask/CancellationToken counterparts; 71 new loopback/storage/lifetime/cancellation/nonblocking/leak cases. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463, no failures/skips. Six backing kinds, three offsets, eight lengths and four operations match 576 pinned Java/CLR final endpoint states per Debug/Release and sync/async mode, with independent bytes/cursors/capacity/reference models. TCP syscall split counts are deliberately not compared. All 93 original Buffer sources rechecked; CLR native reservations return to zero. docs/buffer-porting.md#socket-channel-transfers; artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx. Original sources/fixtures remain partial.",
-        "Native Copy read/lifetime unit: UnpooledDirectByteBuf.Copy now borrows ReadOnlySpan rather than a writable span and holds an existing physical read lease through allocator/write callbacks. 129 new cases: 105 portable range/view/read-only-subclass/allocation/write contracts plus 24 CLR native-lifetime cases; before 39 failed/90 passed, after 129/129. Fresh byte-checked pinned Java Unsafe/NIO each pass 105 cases: 84 matching contracts and 21 explicit CLR release-on-failed-write differences. CLR resize/release callback tests first assert an existing pin before mutating storage, avoiding deliberate freed-memory reads; reservation counts verify old storage survives and is freed on every success/failure exit. net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10560/10560 without failures/skips; 51 existing Common warnings, no Buffer/test warnings. Validation uses isolated committed Common, preserving the unrelated ByteOrder.cs edit (CS8956). docs/buffer-porting.md#native-copy-read-access-and-physical-lifetime; artifacts/buffer-native-copy-validation (ignored). No source/fixture status promotion."
+        "Native Copy read/lifetime unit: UnpooledDirectByteBuf.Copy now borrows ReadOnlySpan rather than a writable span and holds an existing physical read lease through allocator/write callbacks. 129 new cases: 105 portable range/view/read-only-subclass/allocation/write contracts plus 24 CLR native-lifetime cases; before 39 failed/90 passed, after 129/129. Fresh byte-checked pinned Java Unsafe/NIO each pass 105 cases: 84 matching contracts and 21 explicit CLR release-on-failed-write differences. CLR resize/release callback tests first assert an existing pin before mutating storage, avoiding deliberate freed-memory reads; reservation counts verify old storage survives and is freed on every success/failure exit. net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10560/10560 without failures/skips; 51 existing Common warnings, no Buffer/test warnings. Validation uses isolated committed Common, preserving the unrelated ByteOrder.cs edit (CS8956). docs/buffer-porting.md#native-copy-read-access-and-physical-lifetime; artifacts/buffer-native-copy-validation (ignored). No source/fixture status promotion.",
+        "Unpooled heap/direct/external-read-only source closure: 161 public methods, two public constructor decisions and 65 protected methods have source-backed CLR policies. Existing execution paths were already implemented; no additional runtime behavior is changed in this unit. Restored two original native allocation/free helper comments beside their CLR owner roles and retained the retired NoCleaner access comment as a reference. Sixty new native reservation/shrink/retry cases cover owned/borrowed storage, raw/wrapped/simple/advanced/duplicate entry, pins, shrink below reader/marks, stale duplicate repair, metrics and domain cleanup. Byte-exact pinned Java Unsafe/NIO each execute two original read-only copy bodies and 45 heap/owned/borrowed shrink failure/retry probes. Java trims root indices before allocation failure; CLR deliberately preserves old state until success. Borrowed external storage is never freed by resize/release, logical metrics separate from old pinned physical reservations, and opaque manager storage/copy policies are explicit. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 21782, no failures/skips; zero native reservations at cleanup; 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#unpooled-and-external-read-only-provider-source-closure; artifacts/buffer-unpooled-source-closure (ignored)."
       ],
-      "adaptation": "NativeMemoryAllocator/Owner provide storage, explicit budget, zeroed allocation and physical pin lifetime. Prefix-copy/resize publishes after success. Native copy has independent storage. Native-address wrapping is implemented; remaining provider/NIO/channel surfaces keep this source partial. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes Stream overloads are covered on this backing kind. One bounded input read, EOF=0, validated empty requests, pooled staging, borrowed ownership and success-only index publication follow the explicit CLR policy in docs/buffer-porting.md#synchronous-stream-transfers. Remaining channel/positioned-file and async transfer contracts stay pending. Positioned file update: inherited SafeFileHandle/RandomAccess sync and async transfers are reviewed on this backing kind. Position preservation, count/index publication and explicit CLR EOF/closed-handle/complete-write/staging policies are detailed in docs/buffer-porting.md#positioned-file-transfers. Readonly inputs reject setters. Other channel consumers and whole source remain incomplete. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. Writable-memory update: the existing-buffer constructor now accepts NativeMemoryOwner-backed Memory and an explicit maximum/optional replacement reservation domain. Initial storage is borrowed, replacements are owned. Same capacity retains aliases; changed capacity copies the prefix, publishes only on success, trims indices, and frees only prior owned storage. Final release drops captured memory and disposes only owned replacement. Copy preserves creator/direct policy and root maximum. Raw wraps/replacements remain excluded from factory capacity metrics. Allocation/copy failure retains prior indices, unlike Java shrink-before-allocation. This supersedes the earlier existing-byte-buffer wrapping pending note. Unknown managers are handled by the factory with fixed heap-copy policy, not accepted as proven native. Deprecated JVM allocation hooks and raw-address/provider contracts remain pending. Policy: docs/buffer-porting.md#writable-external-memory. Decoder storage/read update: IsContiguous is true for native storage; MaxFastWritableBytes uses logical WritableBytes because the unpooled owner has no hidden reservation. Native-address update: original raw-address factory is now WrappedBuffer(nint,int,bool), with original operation comment. MemoryManager/SafeHandle replace JVM direct buffers/Unsafe. Optional NativeMemory.Free ownership is transferred only after successful construction; borrowed pointers require external lifetime throughout access/pins. Capacity changes detach to existing owned-native allocation with rollback on failure. External address ranges do not charge reservations/factory metrics, and pins defer owned free after logical final release/detachment. Common source is unchanged. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Native Copy read/lifetime update: Copy requires read access only, including native subclasses reporting IsReadOnly. A scoped read pin keeps the captured native span physically valid through virtual allocation/write callbacks that detach or logically release the source; no source reference-count retain is added. Allocation failures and failed writes release this lease; existing CLR failed-result cleanup remains explicit. This callback lifetime guarantee is CLR-specific and does not assert Java reentrant-resize safety. Inherited source/fixture review remains partial.",
+      "adaptation": "Complete declared source review under explicit CLR ownership/representation policies; 51 public declarations have machine-checked targets. Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy. Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.  Original inherited fixture completeness remains independent. This unit found no additional runtime implementation gap.",
       "comments": {
         "upstreamCount": 7,
-        "preservedCount": 4,
-        "missingCount": 3,
-        "coverage": "partial source; remaining operations not ported"
-      }
+        "preservedCount": 7,
+        "missingCount": 0,
+        "coverage": "Complete declared source and original comment review under the explicit CLR provider/ownership policies. Original inherited fixture completeness is separate.",
+        "preservedInImplementationCount": 6,
+        "preservedAsReferenceCount": 1
+      },
+      "publicApiReview": {
+        "scope": "declared-public-instance-methods",
+        "methods": [
+          {
+            "upstream": "isDirect()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "IsDirect",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity()",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity(int)",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "set"
+              }
+            ]
+          },
+          {
+            "upstream": "alloc()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "Allocator",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "order()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetInt(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetIntLE(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "WriteInt(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "WriteIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "hasArray()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "array()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "arrayOffset()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "hasMemoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "memoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getByte(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getShortLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetShortLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getShort(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetShort(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMedium(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetUnsignedMedium(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getIntLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getInt(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetInt(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getLongLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetLongLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getLong(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetLong(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadBytes(Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadBytes(Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setByte(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetByte(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShortLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetShortLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShort(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetShort(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMediumLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetMediumLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMedium(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetMedium(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setIntLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetIntLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setInt(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetInt(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLong(int,long)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetLong(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLongLE(int,long)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetLongLE(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ReadOnlySpan<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ReadOnlySpan<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,OutputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "GetBytes(int,Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(OutputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "ReadBytes(Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,GatheringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetBytes(int,Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetBytes(int,SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(GatheringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,InputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "SetBytes(int,Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ScatteringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetBytes(int,Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetBytes(int,SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBufferCount()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlySequence(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBuffers(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlySequence(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "isContiguous()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "IsContiguous",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "copy(int,int)",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "Copy(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "internalNioBuffer(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlyMemory(int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBuffer(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlyMemory(int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "unwrap()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "Unwrap()"
+              }
+            ]
+          }
+        ],
+        "groups": {
+          "primitive-bulk-io": {
+            "adaptation": "Shared ByteBuf storage kernels implement primitive BE/LE access, ranged/relative Span and typed copies, text/search, I/O and views. BinaryPrimitives/Span replace duplicated Java per-provider word loops. Existing logical composite dispatch, alias snapshots, checked bounds/argument/lifetime and failure-index policies remain. The pinned safe-direct segmented-destination defect retains the existing CLR segmented-transfer correction documented in the derived bulk review. CLR unsigned bytes and safe-direct medium callback-width differences are deliberate. Stream/Socket/SafeFileHandle and ValueTask replace Java stream/channel/NIO overloads with one-read/actual-count/staged-publication rules; no zero-copy, syscall-count, arbitrary custom channel or JVM callback-fanout/performance equivalence is claimed.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "resize-copy-and-ownership": {
+            "adaptation": "Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "bounded-storage": {
+            "adaptation": "Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          }
+        },
+        "unreviewedMethods": [],
+        "summary": {
+          "declared": 51,
+          "implemented": 0,
+          "clr-replacement": 51,
+          "implementation-gap": 0,
+          "unreviewed": 0
+        }
+      },
+      "sourceClosureReview": {
+        "scope": "Complete declared public methods, protected primitives/allocation/lifetime helpers, constructors, fields and private/nested strategy decisions. Building selected fixture cases does not complete inherited fixtures.",
+        "constructorFieldsAndHelpers": "alloc, buffer, capacity, cleanable, doNotFree and tmpNioBuf become creator allocator, NativeMemoryOwner or borrowed Memory, logical capacity, optional raw-address owner and cursorless borrows. AllocateDirect/freeDirect/allocateDirectBuffer overloads and setByteBuffer overloads use existing native allocation, publication, disposal and optional factory metrics; custom providers belong behind IByteBufAllocator/ByteBuf, not an emulated JDK Cleaner hierarchy. Public owned and public CLR borrowed-native constructors retain explicit reservation-domain policy. Borrowed construction accepts NativeMemoryOwner memory, never frees it, and first resize detaches to owned storage. Raw-address wrapping uses the separately scoped NativeAddressMemoryManager consumer. NoCleaner reallocation uses allocate/copy/publish to preserve pin/failure semantics rather than in-place realloc. All 18 protected primitive kernels and private/internal I/O helpers map to shared bounded storage.",
+        "protectedMethods": [
+          "allocateDirect",
+          "freeDirect",
+          "allocateDirectBuffer",
+          "_getByte",
+          "_getShort",
+          "_getShortLE",
+          "_getUnsignedMedium",
+          "_getUnsignedMediumLE",
+          "_getInt",
+          "_getIntLE",
+          "_getLong",
+          "_getLongLE",
+          "_setByte",
+          "_setShort",
+          "_setShortLE",
+          "_setMedium",
+          "_setMediumLE",
+          "_setInt",
+          "_setIntLE",
+          "_setLong",
+          "_setLongLE",
+          "deallocate"
+        ],
+        "groups": {
+          "bounded-storage": "Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy.",
+          "primitive-bulk-io": "Shared ByteBuf storage kernels implement primitive BE/LE access, ranged/relative Span and typed copies, text/search, I/O and views. BinaryPrimitives/Span replace duplicated Java per-provider word loops. Existing logical composite dispatch, alias snapshots, checked bounds/argument/lifetime and failure-index policies remain. The pinned safe-direct segmented-destination defect retains the existing CLR segmented-transfer correction documented in the derived bulk review. CLR unsigned bytes and safe-direct medium callback-width differences are deliberate. Stream/Socket/SafeFileHandle and ValueTask replace Java stream/channel/NIO overloads with one-read/actual-count/staged-publication rules; no zero-copy, syscall-count, arbitrary custom channel or JVM callback-fanout/performance equivalence is claimed.",
+          "resize-copy-and-ownership": "Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.",
+          "external-read-only": "ReadOnlyMemory captures a remaining range without mutable NIO position/limit state or an extra readonly-flag check. The caller keeps the external owner alive; final buffer release drops its range without disposing that owner. Writes and mutable borrows reject even empty requests; views preserve permission and shared reference count, copies are independent writable owners. Known native memory follows the established optimized native copy maximum and zero-length dispatch policy; generic/opaque managed memory uses the default heap-copy maximum. This deliberately unifies generic/Unsafe JVM provider selection instead of exposing runtime Unsafe gates. Private read-only slice/duplicate classes become existing typed CLR views and permission guards; repeated AsReadOnly is idempotent. Parallel reads/copies use local ranges rather than shared cached NIO cursors."
+        },
+        "targetFiles": [
+          "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+          "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
+          "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+          "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+          "src/Netty.NET.Buffer/WrappedByteBuf.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+          "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+          "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+        ]
+      },
+      "publicConstructorReview": {
+        "scope": "declared-public-constructors",
+        "methods": [
+          {
+            "upstream": "UnpooledDirectByteBuf(ByteBufAllocator,int,int)",
+            "state": "clr-replacement",
+            "group": "creator-and-domain",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+                "member": "UnpooledDirectByteBuf(IByteBufAllocator,int,int,NativeMemoryAllocator)"
+              }
+            ]
+          }
+        ],
+        "groups": {
+          "creator-and-domain": {
+            "adaptation": "IByteBufAllocator replaces ByteBufAllocator; public typed constructors preserve initial/maximum capacity, null/range and initial cursor validation under CLR exception policy. Direct construction additionally exposes an optional native reservation domain. Existing-array/native-memory protected Java shapes are accounted for in sourceClosureReview and actual factory consumers.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          }
+        },
+        "unreviewedMethods": [],
+        "summary": {
+          "declared": 1,
+          "implemented": 0,
+          "clr-replacement": 1,
+          "implementation-gap": 0,
+          "unreviewed": 0
+        }
+      },
+      "referenceComments": [
+        "// accessed by UnpooledUnsafeNoCleanerDirectByteBuf.reallocateDirect()"
+      ],
+      "referenceCommentsDecision": "The private capacity field access by the JVM NoCleaner reallocation subtype has no CLR caller. The bounded allocate/copy/publish policy keeps capacity private and preserves native pins; its original access comment is retained here. Legacy allocation/free documentation stays beside corresponding owned construction/deallocation roles."
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledDuplicatedByteBuf.java",
@@ -16521,14 +18169,27 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledHeapByteBuf.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
         "src/Netty.NET.Buffer/ByteBuf.Files.cs",
         "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+        "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+        "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+        "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -16538,14 +18199,746 @@
         "Unpooled allocation metric unit: IByteBufAllocatorMetric and IByteBufAllocatorMetricProvider expose atomic heap/native owned-capacity counters with stable provider identity. Factory-created roots, successful resize, copies and composite-owned padding/consolidation are charged; views/retains, externally wrapped storage and explicit raw constructors are not separately charged. Final logical release removes capacity even when CLR pins retain physical native reservations. 21 new cases translate all four original unpooled-used-memory/32-MiB scenarios plus failure, zero-capacity, provenance, composite, utility cleanup, pin and concurrent ownership contracts. net10.0 Debug/Release/rebuilt checked Release pass 1097/1097, no failures/skips. 6144 exact pinned Java/CLR metric snapshots agree per Debug/Release and an independent owner-capacity ledger. Original two metric interface contracts/comments are complete; other allocator/source fixtures remain partial. docs/buffer-porting.md#unpooled-allocation-metrics; artifacts/buffer-metric-validation (ignored); buffer-metric-*.trx.",
         "Decoder storage/read unit: 43 new cases; net10.0 Debug/Release/rebuilt checked Release 1597/1597, no failures/skips. 4032 pinned Java/CLR rows agree per Debug/Release with independent topology/capacity/bytes/cursors/marks/ownership/metric models. Pinned ByteToMessageDecoder uses both hints in MERGE_CUMULATOR and allocated ReadBytes in its documented decode example. docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads; artifacts/buffer-decoder-policy-validation (ignored); buffer-decoder-policy-*.trx. Whole source/fixture remains partial.",
         "Socket channel unit: four original channel contracts plus native ValueTask/CancellationToken counterparts; 71 new loopback/storage/lifetime/cancellation/nonblocking/leak cases. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463, no failures/skips. Six backing kinds, three offsets, eight lengths and four operations match 576 pinned Java/CLR final endpoint states per Debug/Release and sync/async mode, with independent bytes/cursors/capacity/reference models. TCP syscall split counts are deliberately not compared. All 93 original Buffer sources rechecked; CLR native reservations return to zero. docs/buffer-porting.md#socket-channel-transfers; artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx. Original sources/fixtures remain partial.",
-        "Allocation/copy write-dispatch unit: allocated ReadBytes invokes the destination ByteBuf WriteBytes override before source reader commit; UnpooledHeapByteBuf.Copy uses the CLR span replacement for the original array write and preserves its return; transparent ordinary/composite/unreleasable whole Copy delegates to the parent Copy() override. Native provider Copy already matches the ByteBuffer-to-span path. Original comments and existing CLR release-on-failed-new-result policy retained. New set: 134 CLR cases (54 failed/80 passed before; all pass after), including 120 allocation/write/length/failure cases and 14 whole-copy facade cases. Fresh pinned Java Unsafe/NIO each pass 134 probes: 110 matching contracts and 24 explicit CLR failed-write cleanup differences. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 9475/9475 without failures/skips; 51 existing Common warnings, no Buffer/test warnings. Validation uses isolated committed HEAD Common plus exact Buffer changes, preserving the unrelated working ByteOrder.cs namespace edit (CS8956). No source/fixture status promotion. docs/buffer-porting.md#allocation-and-copy-write-extension-points; artifacts/buffer-allocation-write-validation (ignored)."
+        "Allocation/copy write-dispatch unit: allocated ReadBytes invokes the destination ByteBuf WriteBytes override before source reader commit; UnpooledHeapByteBuf.Copy uses the CLR span replacement for the original array write and preserves its return; transparent ordinary/composite/unreleasable whole Copy delegates to the parent Copy() override. Native provider Copy already matches the ByteBuffer-to-span path. Original comments and existing CLR release-on-failed-new-result policy retained. New set: 134 CLR cases (54 failed/80 passed before; all pass after), including 120 allocation/write/length/failure cases and 14 whole-copy facade cases. Fresh pinned Java Unsafe/NIO each pass 134 probes: 110 matching contracts and 24 explicit CLR failed-write cleanup differences. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 9475/9475 without failures/skips; 51 existing Common warnings, no Buffer/test warnings. Validation uses isolated committed HEAD Common plus exact Buffer changes, preserving the unrelated working ByteOrder.cs namespace edit (CS8956). No source/fixture status promotion. docs/buffer-porting.md#allocation-and-copy-write-extension-points; artifacts/buffer-allocation-write-validation (ignored).",
+        "Unpooled heap/direct/external-read-only source closure: 161 public methods, two public constructor decisions and 65 protected methods have source-backed CLR policies. Existing execution paths were already implemented; no additional runtime behavior is changed in this unit. Restored two original native allocation/free helper comments beside their CLR owner roles and retained the retired NoCleaner access comment as a reference. Sixty new native reservation/shrink/retry cases cover owned/borrowed storage, raw/wrapped/simple/advanced/duplicate entry, pins, shrink below reader/marks, stale duplicate repair, metrics and domain cleanup. Byte-exact pinned Java Unsafe/NIO each execute two original read-only copy bodies and 45 heap/owned/borrowed shrink failure/retry probes. Java trims root indices before allocation failure; CLR deliberately preserves old state until success. Borrowed external storage is never freed by resize/release, logical metrics separate from old pinned physical reservations, and opaque manager storage/copy policies are explicit. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 21782, no failures/skips; zero native reservations at cleanup; 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#unpooled-and-external-read-only-provider-source-closure; artifacts/buffer-unpooled-source-closure (ignored)."
       ],
-      "adaptation": "Heap allocation/wrapping, capacity replacement, raw byte access, copying and release implemented. CLR Memory/Span replace NIO/Unsafe; allocator and I/O overloads remain pending. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes Stream overloads are covered on this backing kind. One bounded input read, EOF=0, validated empty requests, pooled staging, borrowed ownership and success-only index publication follow the explicit CLR policy in docs/buffer-porting.md#synchronous-stream-transfers. Remaining channel/positioned-file and async transfer contracts stay pending. Positioned file update: inherited SafeFileHandle/RandomAccess sync and async transfers are reviewed on this backing kind. Position preservation, count/index publication and explicit CLR EOF/closed-handle/complete-write/staging policies are detailed in docs/buffer-porting.md#positioned-file-transfers. Readonly inputs reject setters. Other channel consumers and whole source remain incomplete. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. Decoder storage/read update: IsContiguous is true; MaxFastWritableBytes uses logical WritableBytes because the unpooled owner has no hidden reservation. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O.",
+      "adaptation": "Complete declared source review under explicit CLR ownership/representation policies; 49 public declarations have machine-checked targets. Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy. Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.  Original inherited fixture completeness remains independent. This unit found no additional runtime implementation gap.",
       "comments": {
         "upstreamCount": 5,
         "preservedCount": 5,
         "missingCount": 0,
-        "coverage": "partial source; remaining operations not ported"
+        "coverage": "Complete declared source and original comment review under the explicit CLR provider/ownership policies. Original inherited fixture completeness is separate.",
+        "preservedInImplementationCount": 5,
+        "preservedAsReferenceCount": 0
+      },
+      "publicApiReview": {
+        "scope": "declared-public-instance-methods",
+        "methods": [
+          {
+            "upstream": "alloc()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "Allocator",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "order()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetInt(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetIntLE(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "WriteInt(int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "WriteIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "isDirect()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "IsDirect",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity()",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity(int)",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "set"
+              }
+            ]
+          },
+          {
+            "upstream": "hasArray()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "array()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "arrayOffset()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "hasMemoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "memoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetBytes(int,Span<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,OutputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "GetBytes(int,Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,GatheringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetBytes(int,Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(int,FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetBytes(int,SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(GatheringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "ReadBytes(SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,byte[],int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ReadOnlySpan<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ByteBuffer)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetBytes(int,ReadOnlySpan<byte>)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,InputStream,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+                "member": "SetBytes(int,Stream,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,ScatteringByteChannel,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetBytes(int,Socket,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setBytes(int,FileChannel,long,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetBytes(int,SafeFileHandle,long,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBufferCount()",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlySequence(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBuffer(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlyMemory(int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "nioBuffers(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlySequence(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "internalNioBuffer(int,int)",
+            "state": "clr-replacement",
+            "group": "bounded-storage",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsReadOnlyMemory(int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "AsMemory(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "isContiguous()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "IsContiguous",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "getByte(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getShort(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetShort(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getShortLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetShortLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMedium(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetUnsignedMedium(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMediumLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetUnsignedMediumLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getInt(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetInt(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getIntLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getLong(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetLong(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getLongLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "GetLongLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setByte(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetByte(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShort(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetShort(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShortLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetShortLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMedium(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetMedium(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMediumLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetMediumLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setInt(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetInt(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setIntLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetIntLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLong(int,long)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetLong(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLongLE(int,long)",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+                "member": "SetLongLE(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "copy(int,int)",
+            "state": "clr-replacement",
+            "group": "resize-copy-and-ownership",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "Copy(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "unwrap()",
+            "state": "clr-replacement",
+            "group": "primitive-bulk-io",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/WrappedByteBuf.cs",
+                "member": "Unwrap()"
+              }
+            ]
+          }
+        ],
+        "groups": {
+          "primitive-bulk-io": {
+            "adaptation": "Shared ByteBuf storage kernels implement primitive BE/LE access, ranged/relative Span and typed copies, text/search, I/O and views. BinaryPrimitives/Span replace duplicated Java per-provider word loops. Existing logical composite dispatch, alias snapshots, checked bounds/argument/lifetime and failure-index policies remain. The pinned safe-direct segmented-destination defect retains the existing CLR segmented-transfer correction documented in the derived bulk review. CLR unsigned bytes and safe-direct medium callback-width differences are deliberate. Stream/Socket/SafeFileHandle and ValueTask replace Java stream/channel/NIO overloads with one-read/actual-count/staged-publication rules; no zero-copy, syscall-count, arbitrary custom channel or JVM callback-fanout/performance equivalence is claimed.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "bounded-storage": {
+            "adaptation": "Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          },
+          "resize-copy-and-ownership": {
+            "adaptation": "Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          }
+        },
+        "unreviewedMethods": [],
+        "summary": {
+          "declared": 49,
+          "implemented": 0,
+          "clr-replacement": 49,
+          "implementation-gap": 0,
+          "unreviewed": 0
+        }
+      },
+      "sourceClosureReview": {
+        "scope": "Complete declared public methods, protected primitives/allocation/lifetime helpers, constructors, fields and private/nested strategy decisions. Building selected fixture cases does not complete inherited fixtures.",
+        "constructorFieldsAndHelpers": "alloc/array/tmpNioBuf become creator allocator, managed array and cursorless bounded memory. AllocateArray/freeArray/setArray are represented by GC allocation/drop-reference and existing allocator metric hooks; no duplicate JVM protected hook hierarchy is added. InstrumentedUnpooledHeapByteBuf is the actual hook consumer and maps to optional factory metrics. The only original production existing-array constructor caller is Unpooled.wrappedBuffer(array), with maximum=array.length; the internal CLR array constructor matches that fixed borrowed range. Native/read-only/opaque destination adapters reuse shared transfers; capacity/copy/deallocation and all 18 primitive kernels are accounted for.",
+        "protectedMethods": [
+          "allocateArray",
+          "freeArray",
+          "_getByte",
+          "_getShort",
+          "_getShortLE",
+          "_getUnsignedMedium",
+          "_getUnsignedMediumLE",
+          "_getInt",
+          "_getIntLE",
+          "_getLong",
+          "_getLongLE",
+          "_setByte",
+          "_setShort",
+          "_setShortLE",
+          "_setMedium",
+          "_setMediumLE",
+          "_setInt",
+          "_setIntLE",
+          "_setLong",
+          "_setLongLE",
+          "deallocate"
+        ],
+        "groups": {
+          "bounded-storage": "Managed arrays/owned native or borrowed Memory/ReadOnlyMemory replace Java arrays/ByteBuffer cursors. Bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped Pin replace raw arrays/offsets/permanent addresses/NIO capabilities. Contiguous flags and allocator identity are retained; explicit BE/LE replaces mutable order. ReadOnlyMemory access permission does not imply immutable backing data, and TryGetArray is CLR interop rather than Java hasArray permission metadata. NativeMemoryOwner-backed external ranges are direct; opaque managers have no reliable native-kind metadata and use heap copy policy.",
+          "primitive-bulk-io": "Shared ByteBuf storage kernels implement primitive BE/LE access, ranged/relative Span and typed copies, text/search, I/O and views. BinaryPrimitives/Span replace duplicated Java per-provider word loops. Existing logical composite dispatch, alias snapshots, checked bounds/argument/lifetime and failure-index policies remain. The pinned safe-direct segmented-destination defect retains the existing CLR segmented-transfer correction documented in the derived bulk review. CLR unsigned bytes and safe-direct medium callback-width differences are deliberate. Stream/Socket/SafeFileHandle and ValueTask replace Java stream/channel/NIO overloads with one-read/actual-count/staged-publication rules; no zero-copy, syscall-count, arbitrary custom channel or JVM callback-fanout/performance equivalence is claimed.",
+          "resize-copy-and-ownership": "Growth/shrink copies the full retained capacity prefix. CLR allocates/copies before publishing capacity, metrics and clipped root indices; failure preserves old bytes, marks, cursors and owners, whereas the pinned Java trims indices before allocation failure. Duplicate capacity follows the root without repairing independent indices; CLR complete index-pair guards can require atomic SetIndex repair before mark restoration. Copy preserves creator/storage/default-maximum and public destination-write policies. Fresh destinations are released on write failure; direct copy captures a native lease/span across allocator callbacks. Managed GC replaces freeArray; NativeMemoryOwner/SafeHandle and explicit reservation domains replace CleanableDirectBuffer/Cleaner/NoCleaner. Limits must cover old/new/pinned allocations, including shrink. Metrics count logical factory-owned capacity, while reservation domains count physical retained storage and charge at least one byte for a zero-length native owner. Existing arbitrary throwing release/free callback limits remain.",
+          "external-read-only": "ReadOnlyMemory captures a remaining range without mutable NIO position/limit state or an extra readonly-flag check. The caller keeps the external owner alive; final buffer release drops its range without disposing that owner. Writes and mutable borrows reject even empty requests; views preserve permission and shared reference count, copies are independent writable owners. Known native memory follows the established optimized native copy maximum and zero-length dispatch policy; generic/opaque managed memory uses the default heap-copy maximum. This deliberately unifies generic/Unsafe JVM provider selection instead of exposing runtime Unsafe gates. Private read-only slice/duplicate classes become existing typed CLR views and permission guards; repeated AsReadOnly is idempotent. Parallel reads/copies use local ranges rather than shared cached NIO cursors."
+        },
+        "targetFiles": [
+          "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+          "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
+          "src/Netty.NET.Buffer/WrappedByteBuf.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+          "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+          "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+          "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+        ]
+      },
+      "publicConstructorReview": {
+        "scope": "declared-public-constructors",
+        "methods": [
+          {
+            "upstream": "UnpooledHeapByteBuf(ByteBufAllocator,int,int)",
+            "state": "clr-replacement",
+            "group": "creator-and-domain",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+                "member": "UnpooledHeapByteBuf(IByteBufAllocator,int,int)"
+              }
+            ]
+          }
+        ],
+        "groups": {
+          "creator-and-domain": {
+            "adaptation": "IByteBufAllocator replaces ByteBufAllocator; public typed constructors preserve initial/maximum capacity, null/range and initial cursor validation under CLR exception policy. Direct construction additionally exposes an optional native reservation domain. Existing-array/native-memory protected Java shapes are accounted for in sourceClosureReview and actual factory consumers.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
+              "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/WritableMemoryByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatorMetricTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/AllocatorStorageContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/UnpooledMemoryWrappingTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs"
+            ]
+          }
+        },
+        "unreviewedMethods": [],
+        "summary": {
+          "declared": 1,
+          "implemented": 0,
+          "clr-replacement": 1,
+          "implementation-gap": 0,
+          "unreviewed": 0
+        }
       }
     },
     {
@@ -27838,14 +30231,48 @@
         "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs"
       ],
       "evidence": [
-        "External read-only memory unit: ReadOnlyMemoryByteBuf and Unpooled.WrappedBuffer(ReadOnlyMemory<byte>), original comments retained; arrays/native owners/custom memory managers, fixed captured ranges, writable independent copies, shared views, composite consolidation, streams and ownership. 28 new Buffer cases; net10.0 Debug/Release/rebuilt checked Release pass 1146/1146, no failures/skips. 2232 pinned Java/CLR rows match per Debug/Release and independent byte/lifetime models; negative/released ensureWritable status calls retain CLR guards. Common owner lookup has two new cases; full Common Debug/Release 2678 passed, zero failed, 14 existing skips. Checked native contract cases also pass. docs/buffer-porting.md#external-read-only-memory; artifacts/buffer-readonly-memory-validation (ignored); buffer-readonly-memory-*.trx. Partial original source/fixtures only."
+        "External read-only memory unit: ReadOnlyMemoryByteBuf and Unpooled.WrappedBuffer(ReadOnlyMemory<byte>), original comments retained; arrays/native owners/custom memory managers, fixed captured ranges, writable independent copies, shared views, composite consolidation, streams and ownership. 28 new Buffer cases; net10.0 Debug/Release/rebuilt checked Release pass 1146/1146, no failures/skips. 2232 pinned Java/CLR rows match per Debug/Release and independent byte/lifetime models; negative/released ensureWritable status calls retain CLR guards. Common owner lookup has two new cases; full Common Debug/Release 2678 passed, zero failed, 14 existing skips. Checked native contract cases also pass. docs/buffer-porting.md#external-read-only-memory; artifacts/buffer-readonly-memory-validation (ignored); buffer-readonly-memory-*.trx. Partial original source/fixtures only.",
+        "Unpooled heap/direct/external-read-only source closure: 161 public methods, two public constructor decisions and 65 protected methods have source-backed CLR policies. Existing execution paths were already implemented; no additional runtime behavior is changed in this unit. Restored two original native allocation/free helper comments beside their CLR owner roles and retained the retired NoCleaner access comment as a reference. Sixty new native reservation/shrink/retry cases cover owned/borrowed storage, raw/wrapped/simple/advanced/duplicate entry, pins, shrink below reader/marks, stale duplicate repair, metrics and domain cleanup. Byte-exact pinned Java Unsafe/NIO each execute two original read-only copy bodies and 45 heap/owned/borrowed shrink failure/retry probes. Java trims root indices before allocation failure; CLR deliberately preserves old state until success. Borrowed external storage is never freed by resize/release, logical metrics separate from old pinned physical reservations, and opaque manager storage/copy policies are explicit. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 21782, no failures/skips; zero native reservations at cleanup; 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#unpooled-and-external-read-only-provider-source-closure; artifacts/buffer-unpooled-source-closure (ignored)."
       ],
-      "adaptation": "Selected original heap/direct copy, primitive/bulk reads, write rejection, nonzero position, NIO round-trip mapped to read-only Memory, shared derived release and concurrent copies are translated across arrays/native/custom managers. Both source fixture licenses and all three inline comments are retained. Added owner-lifetime, direct detection, allocator metrics/failure cleanup, Composite consolidation and async Stream consumers. Construction uses a read-only memory type instead of validating a mutable ByteBuffer flag. Mapped-file/native-address/channel concurrency and other inherited original scenarios remain pending; these fixtures stay partial.",
+      "adaptation": "Both declared copy methods now map to existing executed ReadOnlyMemoryByteBufTest native/managed copy cases. The standalone declarations preserve bytes, creator, storage kind and writable independent ownership. Inherited ReadOnlyDirectByteBufferBufTest tests/provider variants are not completed by these two mappings; fixture status remains in-progress.",
       "comments": {
         "upstreamCount": 1,
         "preservedCount": 1,
         "missingCount": 0,
         "coverage": "partial source; remaining operations not ported"
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCopyDirect",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "method": "OriginalCopiesKeepCreatorAndStoragePolicyButAreWritableAndIndependent"
+            }
+          ],
+          "adaptation": "Existing CLR kind 1 executes the original managed/native readonly copy storage/allocator/equality/independence contract. NativeMemoryOwner identifies native backing; known native copies use the previously reviewed optimized native maximum, while generic/opaque managed copies use factory default maximum. Other inherited ReadOnlyDirectByteBufferBufTest methods/providers remain separate."
+        },
+        {
+          "upstreamMethod": "testCopyHeap",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyMemoryByteBufTest.cs",
+              "method": "OriginalCopiesKeepCreatorAndStoragePolicyButAreWritableAndIndependent"
+            }
+          ],
+          "adaptation": "Existing CLR kind 0 executes the original managed/native readonly copy storage/allocator/equality/independence contract. NativeMemoryOwner identifies native backing; known native copies use the previously reviewed optimized native maximum, while generic/opaque managed copies use factory default maximum. Other inherited ReadOnlyDirectByteBufferBufTest methods/providers remain separate."
+        }
+      ],
+      "methodFindings": [],
+      "testMethodReview": {
+        "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
+        "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "testGapCount": 0,
+        "implementationGapCount": 0,
+        "unreviewedCount": 0,
+        "unreviewedMethods": []
       }
     },
     {

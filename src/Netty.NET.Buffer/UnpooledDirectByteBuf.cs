@@ -59,6 +59,11 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         NativeMemoryAllocator nativeAllocator = null)
         : this(bufferAllocator, initialCapacity, maxCapacity, nativeAllocator, null) { }
 
+    /**
+     * Allocate a new direct {@link ByteBuffer} with the given initialCapacity.
+     * @deprecated Use {@link #allocateDirectBuffer(int)} instead.
+     */
+    // CLR: the native reservation domain replaces the legacy allocation hook.
     internal UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, int initialCapacity, int maxCapacity,
         NativeMemoryAllocator nativeAllocator, UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric metric)
         : base(maxCapacity)
@@ -166,6 +171,11 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         try { return result.WriteBytes(source); }
         catch { result.Release(); throw; }
     }
+    /**
+     * Free a direct {@link ByteBuffer}
+     * @deprecated Use {@link #allocateDirectBuffer(int)} instead.
+     */
+    // CLR: dispose owned allocations and address facades; external memory stays borrowed.
     protected override void Deallocate()
     {
         _memory = default;
