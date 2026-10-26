@@ -9,6 +9,7 @@
     "objective": "Complete the portable Netty.Buffer contracts using idiomatic CLR APIs; determine remaining implementation work from original implementation and consumers, not original test-method counts.",
     "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
     "decisionOrder": [
+      "First understand the original test and the defect or contract it protects; preserve its validation strength throughout the port",
       "Identify the original contract and actual consumer",
       "Check the existing CLR implementation and recorded replacement",
       "Fix confirmed gaps before adding more fixture mappings",
@@ -16,9 +17,9 @@
       "Commit and push a coherent completed unit"
     ],
     "completionCriteria": [
+      "Porting rule 1: understand and preserve the original tests intent, preconditions and ability to detect defects. Preserve inputs, expected results, assertions, state transitions, ownership, execution order, concurrency boundaries, helper structure and explanatory comments. Do not weaken, merge away or replace these contracts to fit the CLR implementation or increase counts. Make only necessary Java-to-CLR adaptations, record their reason and establish equivalent validation. Keep individually named PascalCase tests traceable to the original; additional CLR regressions remain separately identifiable.",
       "Every reviewed contract has an implemented counterpart or an explicit CLR/JVM-only decision; unreviewed is not counted as missing.",
       "Ownership, indices/marks, failure effects and relevant virtual dispatch agree with the original or have an explicit consumer-supported CLR adaptation.",
-      "Port original unit tests as individually named PascalCase methods with original inputs, assertion order, helper structure and comments. Do not replace the original bodies with method-name/index dispatch or treat added cross-products as additional original methods. Add CLR-specific regression tests separately when needed.",
       "Reuse existing contract/differential evidence; add regression tests for confirmed gaps or uncovered required contracts, not merely to increase counts.",
       "Preserve original comments beside the implementation or as explicit references when the obsolete API itself is replaced.",
       "Validate net10.0 Debug, Release and rebuilt checked Release with SIMPLE sampling interval 1 for runtime changes; preserve unrelated workspace edits.",

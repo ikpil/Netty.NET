@@ -6084,6 +6084,14 @@ is updated; no new Markdown document or JVM placeholder type is added.
 
 ## Original test structure correction
 
+Porting rule 1: understand and preserve each original test's intent, preconditions
+and ability to detect defects. Inputs, expected results, assertions, state changes,
+ownership, execution order, concurrency boundaries, helpers and comments carry that
+contract. Preserve their meaning throughout the port. Make only necessary Java/CLR
+adaptations, explain the reason and establish equivalent validation. Weakening tests
+to fit the implementation, collapsing their contracts or inflating counts is not a
+valid port. This rule governs the Netty port, including subsequent modules.
+
 The recent shared lifetime and utility batches had grouped original methods into
 string/case-index dispatch and rewritten common bodies. They are now direct ports:
 69 lifetime methods and 33 utility methods each have their original PascalCase name,
