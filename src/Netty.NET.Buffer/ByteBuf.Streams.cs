@@ -43,6 +43,11 @@ public abstract partial class ByteBuf
     /// <remarks>The stream is borrowed. Temporary pooled storage prevents callbacks
     /// from invalidating native memory or later composite segments during the write.
     /// Exclude concurrent changes, release and external cursor mutation during I/O.</remarks>
+    // Original ByteBufUtil internal transfer contract; bounded ranges replace NIO cursor state.
+    /**
+     * Read bytes from the given {@link ByteBuffer} into the given {@link OutputStream} using the {@code position} and
+     * {@code length}. The position and limit of the given {@link ByteBuffer} may be adjusted.
+     */
     public virtual ByteBuf GetBytes(int index, Stream destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);

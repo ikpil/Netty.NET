@@ -5890,6 +5890,81 @@ Unpooled source and its standalone fixture are complete under these policies;
 AbstractByteBuf, ByteBufUtil, package decisions and independent remaining shared
 fixtures/consumer/module closure still require review. No new Markdown file is added.
 
+## Core source and namespace review closure
+
+AbstractByteBuf and ByteBufUtil now have complete source reviews under the recorded
+CLR contracts. Their existing public API inventories remain unchanged. The review
+accounts for 47 outer nonpublic methods and 12 fields in AbstractByteBuf, and 32
+outer nonpublic methods and 11 fields in ByteBufUtil, including static initialization
+and the nested hex/cache/anonymous processor strategies. No additional executable
+core-kernel change was needed in this unit.
+
+The CLR ByteBuf combines Java's contract and skeletal implementation. Fresh facades
+have an immutable maximum; JVM recycler maximum resets and mutable swapped-byte-order
+facades are replaced by construction and explicit BE/LE accessors. Ordinary wrappers
+share indices/marks through their index owner; derived/read-only views keep independent
+state. Shared scalar/word/segment kernels cover the 18 abstract getter/setter hooks.
+Bounds, readable ranges, readonly permissions and lifetime checks stay enabled even
+when the original checkBounds/checkAccessible/legacy properties are false. Checked
+subtraction guards avoid Java signed-overflow cases. Existing copy/resize failure,
+virtual dispatch, callback revalidation and ownership policies remain intact.
+
+ByteBufUtil's Two-Way/maximal-suffix, SWAR and endian/provider-specific helpers use
+the existing CLR Span search, logical aggregate snapshots and fixed-BE comparison
+kernels. Aggregate needle search can allocate O(n+m) scratch; Java O(1) auxiliary
+space, Unsafe/JIT inlining, callback width and performance claims do not apply.
+UTF-8/ASCII safe/unsafe/direct/array implementations share checked spans, segmented
+fallback and native alias leases. Raw AsciiString and character-input semantics stay
+distinct. Decoder validation uses fresh strict incremental state and a no-progress
+guard, while custom Encoding retains its decoder. Hex conversion/padding preserves
+the original row-label boundary. The existing native thread cache uses fresh facades,
+physical-thread cleanup, delayed pin reuse and explicit cross-thread disposal.
+
+The Java temporary-array/CharBuffer caches and NIO output chunk helper map to scoped
+ArrayPool snapshots, stack decoder scratch and immutable CLR ranges/strings. Output
+snapshots stage the requested full range to remain stable across native resize or
+later-component callbacks; they do not reproduce Java's 8192-byte chunks or its
+1024-byte thread-local/pooled-heap branch. This trades scratch size for callback
+safety. No allocation/chunk/syscall-count equivalence is claimed. Existing allocator,
+stream, file, socket, cache and failure fixtures remain the evidence for these paths.
+
+The two package-info files contain documentation rather than executable APIs or
+annotations. They map to the existing Netty.NET.Buffer and Netty.NET.Buffer.Search
+namespaces, with original JavaDoc retained in manifest references. JVM performance
+statements in that source text remain historical material rather than CLR benchmarks.
+All 186 original comments in these four source files are preserved: 141 in code and
+45 as explicit references for retired/merged JVM strategies or package documentation.
+No placeholder runtime namespace type or new Markdown file is introduced.
+
+Added 1,800 writer cases cover heap/native unpooled, pooled and adaptive providers;
+ordinary, wrapped, unreleasable, composite and wrapped-composite forms; ten exact
+original strings; and six character/raw AsciiString writer modes. Four seeded search
+cases retain the original 10,000-trial small-alphabet length/prefix contract and use
+an independent scalar oracle, totaling 40,000 trials (CLR/Java RNG streams differ).
+Another 384 provider/view overflow, range, readable, readonly and released guards run
+in the parent suite; two driver tests repeat all guards in fresh true/false JVM-flag
+processes, adding 768 child executions rather than parent-suite test cases. Java's
+separate disabled-bounds probe reads an unwritten heap byte; the CLR rejects it.
+
+Byte-exact pinned Java Unsafe and forced NIO each execute all 56 ByteBufUtilTest
+methods as 264 provider/parameter invocations: 249 pass and 15 abort on the original
+three heap-only/concurrency assumptions. The manifest now has per-method mappings
+for all 56 declarations, verified by the tenth declared-test partition. This ledger
+records the stated portable evidence; ByteBufUtilTest remains in-progress pending
+remaining exact-input/provider audits. The 29 original fixture comments are preserved
+as 23 code occurrences and six references for merged/unrepresented occurrences.
+
+The unit adds 2,190 parent-suite cases. Forced net10.0 Debug, Release and checked
+Release with SIMPLE sampling interval 1 each pass 25,194 tests, with zero failures
+or skips. Native reservations return to zero; the 51 existing Common warnings remain,
+Buffer/test warnings are zero and Common is unchanged. Evidence is in ignored
+`artifacts/buffer-core-source-closure`.
+
+All 93 production source entries now have completed implementation/CLR replacement
+reviews, including the two namespace descriptors. Source review completion remains
+separate from complete original fixture/provider coverage, consumer validation and
+performance parity; module closure is still in-progress.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5905,15 +5980,14 @@ CharSequence/CharBuffer become spans or strings, Charset becomes Encoding,
 copy=false uses whole-array Memory eligibility, and a bounded native storage cache
 replaces Java recycler object reuse. These are implemented alternatives, not gaps.
 
-This review checks API availability/representation. Existing tests validate their
-stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
-members, fields, provider details and callers still require separate review.
+Existing tests validate their stated scenarios. ByteBufUtilTest now has an individual
+56-method evidence ledger; its remaining exact-input/provider audit and consumer/module
+closure remain separate from the completed production source review.
 ByteBuf's abstract contract source is verified, with all 192 public declarations,
 12 concrete defaults, internal accessibility helper, interfaces and original comments
-accounted for. AbstractByteBuf has no unreviewed declared public methods; its remaining
-internal kernels/fields and specialized providers still require source review.
-ByteBufUtil has no unreviewed public static methods; its remaining private/source
-review is separate. CompositeByteBuf and FixedCompositeByteBuf sources are verified, including private/protected
+accounted for. AbstractByteBuf and ByteBufUtil now also have complete nonpublic,
+field/static/nested strategy and original-comment source reviews under explicit CLR
+policies. CompositeByteBuf and FixedCompositeByteBuf sources are verified, including private/protected
 strategy, ownership/failure and original-comment decisions. Their public method
 inventories cover 114 and 39 declarations respectively; Composite also covers its
 three public constructor shapes. Fixed standalone original fixture methods are
@@ -5934,14 +6008,15 @@ leak-aware sources are verified with another 504 public-method decisions and exp
 private/helper/comment policies. Provider/facade source review is complete. Unpooled
 now also has 49 public static factory decisions and complete private/helper/comment
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
-The two remaining source reviews are AbstractByteBuf and ByteBufUtil. Package and
-shared original fixture decisions remain. No remaining test-method count is
+Both remaining core sources and the two package descriptors are now reviewed. All
+93 production source entries are accounted for. Shared original fixture/provider and
+consumer/module closure decisions remain. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
-inventory and nine declared-test partitions. Next review targets the nonpublic
-kernels/fields/strategies and comments in AbstractByteBuf and ByteBufUtil. Implement confirmed portable gaps
+inventory and ten declared-test partitions. Next close the remaining original fixture
+provider/exact-input gaps and consumer/module validation. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

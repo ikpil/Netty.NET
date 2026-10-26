@@ -14,7 +14,9 @@ function Get-DeclaredJavaTests([string]$Source) {
         param($match)
         [regex]::Replace($match.Value, '[^\r\n]', ' ')
     })
-    $declarations = '(?m)^[ \t]*(?<annotations>(?:@[\w.]+(?:[ \t]*\([^{};]*?\))?[ \t\r\n]*)+)' +
+    # Annotation arrays (for example @ValueSource(ints = { 0, 1 })) contain
+    # braces inside their parentheses; they are not test method bodies.
+    $declarations = '(?m)^[ \t]*(?<annotations>(?:@[\w.]+(?:[ \t]*\([^();]*\))?[ \t\r\n]*)+)' +
         '(?:(?:public|protected|private|static|final|synchronized|abstract)[ \t]+)*' +
         'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]+throws[^{;]+)?[ \t\r\n]*\{'
     $names = [Collections.Generic.List[string]]::new()
@@ -102,7 +104,7 @@ $entries = foreach ($path in $upstreamFiles) {
     }
 }
 $entries = @($entries)
-$baseFixtures = @('AbstractByteBufTest', 'AbstractCompositeByteBufTest', 'AbstractByteBufAllocatorTest', 'AbstractPooledByteBufTest', 'FixedCompositeByteBufTest', 'ReadOnlyByteBufTest', 'DuplicatedByteBufTest', 'ReadOnlyByteBufferBufTest', 'UnpooledTest')
+$baseFixtures = @('AbstractByteBufTest', 'AbstractCompositeByteBufTest', 'AbstractByteBufAllocatorTest', 'AbstractPooledByteBufTest', 'FixedCompositeByteBufTest', 'ReadOnlyByteBufTest', 'DuplicatedByteBufTest', 'ReadOnlyByteBufferBufTest', 'UnpooledTest', 'ByteBufUtilTest')
 foreach ($name in $baseFixtures) {
     $path = "buffer/src/test/java/io/netty/buffer/$name.java"
     $entry = $entries | Where-Object upstream -eq $path

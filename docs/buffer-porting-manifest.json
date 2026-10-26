@@ -306,11 +306,35 @@
             "regressionCases": 476,
             "runtimeBehaviorChanged": true,
             "evidence": "docs/buffer-porting.md#unpooled-factory-and-standalone-fixture-source-closure"
+          },
+          {
+            "id": "core-source-and-namespace-review",
+            "status": "complete",
+            "sourcesVerified": [
+              "AbstractByteBuf.java",
+              "ByteBufUtil.java"
+            ],
+            "namespaceDescriptorsReviewed": 2,
+            "nonpublicMethodsReviewed": 79,
+            "fieldsReviewed": 23,
+            "regressionCases": 2190,
+            "runtimeBehaviorChanged": false,
+            "evidence": "docs/buffer-porting.md#core-source-and-namespace-review-closure"
           }
         ],
         "remaining": [
-          "Review AbstractByteBuf and ByteBufUtil nonpublic source/comment decisions, both package-info entries, remaining shared original fixtures and consumer/module validation. Standalone UnpooledTest completion does not complete inherited ByteBuf/provider fixtures."
-        ]
+          "Close remaining original fixture/provider matrices and standalone fixture decisions, including ByteBufUtilTest remaining variants and AbstractByteBufTest/AbstractCompositeByteBufTest method/provider coverage.",
+          "Run targeted consumer/module validation and report concrete residual gaps before moving to another module. All 93 production source entries, including two namespace descriptors, are reviewed; this is not a claim of full original fixture or performance parity."
+        ],
+        "productionSourceReview": {
+          "status": "complete-under-recorded-clr-policies",
+          "upstreamFiles": 93,
+          "statuses": {
+            "clr-replacement": 31,
+            "verified": 62
+          },
+          "meaning": "Complete source/representation/comment review is independent from full original fixture/provider, consumer and module completion."
+        }
       }
     ]
   },
@@ -362,7 +386,7 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/AbstractByteBuf.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "src/Netty.NET.Buffer/ByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
@@ -387,7 +411,38 @@
         "test/Netty.NET.Buffer.Tests/CompositeByteBufBulkKernelTest.Failures.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.Scenarios.cs",
-        "test/Netty.NET.Buffer.Tests/CompositeByteBufIoEmptyComponentTest.cs"
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufIoEmptyComponentTest.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Allocator.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.ArrayExtraction.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.AsciiCopy.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.LeakDetection.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.TextValidation.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.ThreadLocalDirect.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSafetySourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatedReadDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ThreadLocalDirectBufferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs",
+        "test/Netty.NET.Buffer.Tests/DefaultByteBufAllocatorTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufLeakListenerTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -428,14 +483,17 @@
         "Component scalar storage dispatch: 1008 source-contract cases expose 864 failures in the committed runtime; read-only write controls account for 144 passes. Fixed and mutable composites dispatch byte/BE/LE word operations to component public primitives, including boundary composition and optimized/independently-counted view kernels. All cases pass corrected CLR and fresh pinned Java Unsafe/NIO; full Debug/Release/rebuilt checked Release each pass 13281. Existing CLR failed-write cursor and truthful fixed read-only flag policies are explicit. No original fixture/status promotion. docs/buffer-porting.md#component-scalar-storage-dispatch; artifacts/buffer-composite-scalar-validation (ignored).",
         "Composite bulk/memory/I/O unit: 252 overload/coordinate/peer/failed-result regressions (186 committed-runtime failures) plus 72 alias/metadata guards, 24 real sync/async Stream/file/socket logical-byte outputs and 28 later-failure/alias-publication cases pass; pinned Java Unsafe/NIO each pass 252 selected cases with explicit heap-copy allocation and failed-result cleanup policy. Full rebuilt Debug/Release/checked Release each pass 13629 before the final 28 tests; all 376 focused cases pass in each configuration. All native cleanup zero; no new original fixture mapping or whole source completion. docs/buffer-porting.md#composite-bulk-memory-and-io-review; artifacts/buffer-composite-bulk-validation (ignored).",
         "Composite iteration/search unit: 651 CLR cases cover 252 iteration dispatch/coordinate/stop cases, 84 logical byte/pattern searches, 96 nested-component cases, 32 callback failure/resize/release cases, 12 stateful KMP/Bitap/Aho sessions, 48 pooled segmented borrow/write/zero cases, 98 segmented needle/haystack pairs, four high-coordinate checked iteration translations, 17 high-coordinate scalar/bulk/memory/flatten operations and eight externally-retained component lifetime cases. The committed runtime fails 180/336 initial cases; pooled hooks additionally fail 20/48 cases before correction and reject 24 nested pooled-view setups. Fresh pinned original Unsafe/NIO each check 438 selected cases: 424 match, 14 independently reproduce the original reverse-loop captured-boundary defect. CLR deliberately clamps at component.Offset and preserves logical reverse order. All rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 pass 14308; native cleanup zero, no Common changes. Source/fixture completion is not inferred. docs/buffer-porting.md#composite-iteration-and-search; artifacts/buffer-composite-iteration-validation (ignored).",
-        "Composite source closure: cached-slice preparation now precedes tail release on capacity shrink, retaining original reverse release order after success. A separate recursive staged-input publication kernel skips empty read-only components for Stream/Socket/positioned-file sync/async while ordinary bulk dispatch is unchanged. Added 684 CLR cases: 144 trim/ownership, 488 input/bulk and 52 original Fixed fixture adaptations. Initial committed-runtime probes reproduce 64 trim failures out of 144 and 336 input failures out of 344. Pinned Java Unsafe/NIO each execute 36 original Fixed test bodies, 240 input, 8 ordinary bulk and 144 trim scenarios: 332 passed/96 original failure-policy confirmations on Unsafe; 331 passed/1 JVM assumption aborted/96 policy confirmations on NIO. CLR original fixture adaptations have no skips. Full rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 17362; no failures/skips, native reservations zero, Common unchanged. docs/buffer-porting.md#composite-and-fixed-source-closure; artifacts/buffer-composite-source-closure (ignored)."
+        "Composite source closure: cached-slice preparation now precedes tail release on capacity shrink, retaining original reverse release order after success. A separate recursive staged-input publication kernel skips empty read-only components for Stream/Socket/positioned-file sync/async while ordinary bulk dispatch is unchanged. Added 684 CLR cases: 144 trim/ownership, 488 input/bulk and 52 original Fixed fixture adaptations. Initial committed-runtime probes reproduce 64 trim failures out of 144 and 336 input failures out of 344. Pinned Java Unsafe/NIO each execute 36 original Fixed test bodies, 240 input, 8 ordinary bulk and 144 trim scenarios: 332 passed/96 original failure-policy confirmations on Unsafe; 331 passed/1 JVM assumption aborted/96 policy confirmations on NIO. CLR original fixture adaptations have no skips. Full rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 17362; no failures/skips, native reservations zero, Common unchanged. docs/buffer-porting.md#composite-and-fixed-source-closure; artifacts/buffer-composite-source-closure (ignored).",
+        "Final core source/helper/namespace review: AbstractByteBuf 47 outer nonpublic methods/12 fields, ByteBufUtil 32 outer nonpublic methods/11 fields plus nested hex/cache/processor strategies now have explicit CLR policies. Existing public inventories are unchanged. JVM guard toggles, byte-order facades, unsafe/JIT/SWAR loops and transient scratch/cursor strategies are replaced explicitly; original comments preserved in code/reference multisets. Two documentation-only package descriptors map to existing CLR namespaces, with original package JavaDocs retained. No executable kernel change was necessary in this unit. Added 1800 six-provider/five-form/six-mode original writer cases, 40000 independent naive-search trials in four cases, 384 lifetime/overflow/readonly guards and two fresh-process flag drivers (768 child guard executions): 2190 added parent cases. Pinned byte-exact Java Unsafe/NIO each execute all 56 ByteBufUtilTest declarations as 264 invocations, 249 pass/15 original heap-only assumptions abort. Separate Java flag probes confirm disabled bounds reads unwritten bytes while CLR guards remain on in both fresh flag modes. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 25194, no failures/skips; native reservations zero, 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#core-source-and-namespace-review-closure; artifacts/buffer-core-source-closure (ignored)."
       ],
-      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Standalone ReadBytes now follows creator allocator Buffer policy; see decoder storage/read update below. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes Stream overloads are covered on this backing kind. One bounded input read, EOF=0, validated empty requests, pooled staging, borrowed ownership and success-only index publication follow the explicit CLR policy in docs/buffer-porting.md#synchronous-stream-transfers. Remaining channel/positioned-file and async transfer contracts stay pending. Async stream transfer update: GetBytesAsync/SetBytesAsync/ReadBytesAsync/WriteBytesAsync are CLR counterparts of the four synchronous stream contracts, using ValueTask, CancellationToken and the stream Memory-based asynchronous operations directly. Managed pooled staging survives suspension; no native memory is borrowed across await. One bounded input read, EOF=0, borrowed lifetime and success-only index publication follow the synchronous CLR policy. Pre-cancellation follows argument/permission validation and prevents growth/I/O; started growth is not rolled back. A valid stream result commits despite late token cancellation; a thrown cancellation or failure leaves active indices unchanged and does not publish staged input. Callers must keep streams/buffers alive and exclude concurrent mutation and external active-cursor changes through completion. Full cancellation, failure, alias and partial composite-commit limits: docs/buffer-porting.md#asynchronous-stream-transfers. Channel/positioned-file APIs and broader original source remain pending. Positioned file update: inherited SafeFileHandle/RandomAccess sync and async transfers are reviewed on this backing kind. Position preservation, count/index publication and explicit CLR EOF/closed-handle/complete-write/staging policies are detailed in docs/buffer-porting.md#positioned-file-transfers. Readonly inputs reject setters. Other channel consumers and whole source remain incomplete. Content comparison/hash update: inherited readable-content Equals/GetHashCode/CompareTo delegate to ByteBufUtil through CLR IEquatable<ByteBuf>/IComparable<ByteBuf>. Original implementation uses the same delegation. Full null/lifetime/hash/order policy and partial scope: docs/buffer-porting.md#content-comparison-and-hashing. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. Relative transfer update: default/length GetBytes append to destination WriterIndex without growing; default/length SetBytes consume source ReaderIndex without changing destination indices; default ReadBytes fills destination WritableBytes and moves both cursors; explicit-destination ReadBytes moves only source ReaderIndex; default WriteBytes consumes all readable source bytes; explicit-source WriteBytes grows destination and moves only its WriterIndex. All return the receiver, keep marks/reference counts, and delegate to the existing bounded bulk kernel. Explicit source write grows before source-range validation, as in Java. Failed copies publish no cursor changes but may leave increased capacity or partially changed composite bytes. Existing CLR snapshot/memmove overlap policy applies; Java can repeat overwritten bytes across composite self-copy boundaries. Default reads check destination lifetime before computing WritableBytes to retain IllegalReferenceCountException after native/heap storage is cleared on final release; Java reports bounds/argument errors in two such probes. Null arguments use early ArgumentNullException. Byte[] ranges remain native Span slices rather than duplicated Java array overloads. Policy: docs/buffer-porting.md#relative-buffer-transfers. Decoder storage/read update: ReadBytes(length) now uses the creator allocator Buffer factory instead of forcing a raw heap owner. It advances source ReaderIndex only after successful copy and initializes only the result readable range even if the allocator reserves extra capacity. Failed copies retain CLR result cleanup; pinned Java readBytes lacks that cleanup. Zero/invalid reads do not allocate. Policy: docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads. Pooled heap consumer: both EnsureWritable overloads now use MaxFastWritableBytes before the creator allocator growth hook, preserving existing normalized reservations as pinned Java requires. Unpooled defaults remain WritableBytes. Automatic leak integration: the combined ByteBuf type captures one factory-created ResourceLeakDetector<ByteBuf> at explicit CLR type initialization (including an empty sentinel), as the shared skeletal detector. Configure the factory before buffers/allocators; later replacement does not change it. All wrappers and supported allocator factories share this detector. Remaining source surfaces stay partial. Diagnostic update: The combined CLR kernel implements the original metadata/freed/unwrapped diagnostic without content reads or freed capacity/unwrap access. Whole source/fixture remains partial. Size-query update: CanRead(int) preserves original readable-index comparison, including nonpositive counts without validation; shared EmptyByteBuf always returns false. Transparent ordinary/composite/unreleasable facades forward virtual queries without leak recording. CanWrite(int) no longer rejects negative counts before its original comparison; read-only and empty-sentinel results remain false. Current CLR fixed-derived read-only policy is retained. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Scalar-dispatch update: public absolute parent delegates are distinct from bounded relative/slice kernels. Owned pooled duplicates preserve the pinned LongLE relative public-setter path; floating/boolean/char/signed-medium relative APIs preserve their integer composition and upstream receiver-return rules. CLR byte values are unsigned wire octets; existing Span/memory hooks replace JVM per-primitive protected kernel topology, including safe-direct medium byte callbacks. docs/buffer-porting.md#derived-scalar-dispatch. Component-scalar update: the bounded CLR byte/word storage kernels are internally virtual, preserving composite component-public dispatch through optimized ordinary/read-only/pooled views without invoking the view parent public primitive override. Default contiguous storage still uses Memory/Span/BinaryPrimitives. Public APIs and existing representation/permission/reference policies are unchanged; full policy and regression evidence are in docs/buffer-porting.md#component-scalar-storage-dispatch. Bulk update: a physically contiguous borrow from a composite no longer bypasses its logical component transfer kernel. Span and ByteBuf requests select their corresponding component overloads; mutable Copy uses the original private typed-copy loop. Aliased ranges keep the existing CLR snapshot policy, with scratch peers only for alias handling. Physical overlap inspection traverses internal borrowed sequences and transparent views without public memory-access/leak records. Opaque aggregate sources use the existing CLR span storage kernel where the receiver controls the transfer. I/O keeps its documented staged span policy. Iteration/search update: internal ascending/descending loops consume bounded scalar storage kernels rather than physical spans. Mutable composites peel transparent/sliced/pooled component storage before internal iteration, bypass public component iteration overrides and translate stop indices; read-only component storage and inherited readable view loops keep their distinct scalar behavior. Reverse scans are bounded by captured component offsets (an intentional correction of the pinned source defect). Indexed view/facade delegation, CLR guards, exception identity and cursor/claim rules remain. Byte search retains the Span fast path on direct storage and uses logical scalar kernels on aggregates; pattern search materializes aggregate logical GetByte values before Span.IndexOf. This is a CLR linear-byte/materialization strategy, without SWAR/Two-Way callback-width, O(1)-space or performance equivalence. Pooled views propagate segmented TryGetMemory/TryGetReadOnlyMemory and Span-write/zero kernels to their translated root instead of requiring contiguous memory.",
+      "adaptation": "Complete source/helper/comment review under explicit CLR policies; existing public API inventory is unchanged. Constructor validates maximum; per-instance maximum is immutable because CLR buffer facades are fresh rather than JVM Recycler-reinitialized. CheckIndices validates the complete reader/writer/capacity triple. CheckIndex, CheckReadableBytes and CheckNewCapacity always enforce lifetime/ranges, including empty requests. Subtraction avoids signed overflow in checked builds. Null/peer permission/range validation uses the existing typed transfer methods. JVM checkBounds/checkAccessible/legacy flags, logging and exported Composite checkAccessible boolean have no CLR opt-out. Fresh processes with all three flags true/false each pass all 384 provider/view guards; pinned Java false deliberately permits reading unwritten heap bytes. This is explicit stronger CLR behavior, not missing flag support. Reader/writer/marks are direct state or share an index owner only for transparent facades; derived/read-only views own independent indices. Constructor maximum, Clear/marks/reset, AdjustMarkers, TrimIndicesToCapacity, internal index publication and marker discard cover Java fields/final helpers. Fresh facade creation replaces mutable maxCapacity reset/recycler reuse. EnsureWritableCore retains final-helper semantics for primitive writes; public overloads return original four growth status codes under CLR readonly/liveness validation. Capacity hooks preserve allocator/native domain and failure-before-publication rollback policies already reviewed. No copied JVM object-recycling hierarchy is needed. All 18 abstract _get/_set byte/BE/LE word kernels map to shared ReadByteCore/WriteByteCore/ReadWord/WriteWord and bounded provider memory/segment hooks. Byte is unsigned in CLR; signed medium extension, low-bit truncation and IEEE raw payload policies remain explicit. Internal kernels stay distinct from public override dispatch. Existing derived/composite scalar/bulk source tests cover logical versus physical/component callback policies; no Java Unsafe access width or performance equivalence is claimed. newSwappedByteBuf and cached swapped facade are retired under explicit BE/LE accessors. Original normal/LE utility cases map to explicit pairs, without inventing mutable order state or Java final-getter helper behavior. setCharSequence0 unifies in GetString/ReadString/SetString/WriteString using stable UTF-16 spans, Encoding sizing/fallback and no preamble. Relative reads honor readable bounds; exact encoded byte reservation and failure-index behavior are deliberate CLR policies. Netty UTF-8/ASCII specialized malformed/raw-octet mappings remain in ByteBufUtil; general Encoding paths honor the caller. Original array/AsciiString charset specializations have explicit source policies rather than duplicate unchecked per-provider kernels. forEachByteAsc0/Desc0 become the existing Func<byte,bool> loops with per-callback storage reacquisition; resize/release cannot leave a stale native span. Logical scalar versus component/public callback behavior is already recorded in the composite iteration review. Absolute stop coordinates, exclusive reverse upper bound, range validation and readable-range convenience methods retain their reviewed CLR contracts. _memoryAddress/_isDirect/_internalNioBuffer become bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped pin/operation leases. IsDirect is storage policy; no unchecked permanent address or mutable scratch NIO cursor is exposed. Nested facade identity/indices, native pins, actual-counter ownership and deferred physical release remain per-provider decisions. JVM address shortcut rationale is preserved as a reference. Original fixture/provider completeness is tracked independently; this unit found no additional executable core-kernel gap.",
       "comments": {
         "upstreamCount": 17,
-        "preservedCount": 8,
-        "missingCount": 9,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "preservedCount": 17,
+        "missingCount": 0,
+        "coverage": "Complete original comment inventory under explicit CLR source/namespace decisions; individual fixture/provider completion remains independent.",
+        "preservedInImplementationCount": 13,
+        "preservedAsReferenceCount": 4
       },
       "publicApiReview": {
         "scope": "declared-public-instance-methods",
@@ -2412,7 +2470,328 @@
         ],
         "unreviewedMethods": []
       },
-      "stagedInputPublication": "A protected-internal CLR publication hook routes staged input through original coordinates/wrappers and nested composite empty-component skipping. Leaf providers retain public Span-setter dispatch. Advanced wrapper hook records the component I/O publication once before forwarding; simple wrappers preserve ownership. This is shared adapter plumbing required by Composite input contracts, not a source-status change for this entry."
+      "stagedInputPublication": "A protected-internal CLR publication hook routes staged input through original coordinates/wrappers and nested composite empty-component skipping. Leaf providers retain public Span-setter dispatch. Advanced wrapper hook records the component I/O publication once before forwarding; simple wrappers preserve ownership. This is shared adapter plumbing required by Composite input contracts, not a source-status change for this entry.",
+      "sourceClosureReview": {
+        "scope": "Complete existing declared public inventory plus constructors, all outer nonpublic methods/fields, static initialization and nested helper strategies; original fixture/provider closure remains independent.",
+        "publicDeclarationsPreviouslyReviewed": 149,
+        "fields": [
+          "logger",
+          "LEGACY_PROP_CHECK_ACCESSIBLE",
+          "PROP_CHECK_ACCESSIBLE",
+          "checkAccessible",
+          "PROP_CHECK_BOUNDS",
+          "checkBounds",
+          "leakDetector",
+          "readerIndex",
+          "writerIndex",
+          "markedReaderIndex",
+          "markedWriterIndex",
+          "maxCapacity"
+        ],
+        "nonpublicMethods": [
+          {
+            "upstream": "maxCapacity(int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "checkIndexBounds(int,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "adjustMarkers(int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "trimIndicesToCapacity(int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "ensureWritable0(int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "newSwappedByteBuf()",
+            "state": "clr-replacement",
+            "group": "byte-order"
+          },
+          {
+            "upstream": "_getByte(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getShort(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getShortLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getUnsignedMedium(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getUnsignedMediumLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getInt(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getIntLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getLong(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_getLongLE(int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setByte(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setShort(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setShortLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setMedium(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setMediumLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setInt(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setIntLE(int,int)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setLong(int,long)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "_setLongLE(int,long)",
+            "state": "clr-replacement",
+            "group": "primitive-kernels"
+          },
+          {
+            "upstream": "checkReadableBounds(ByteBuf,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "setCharSequence0(int,CharSequence,Charset,boolean)",
+            "state": "clr-replacement",
+            "group": "encoded-text"
+          },
+          {
+            "upstream": "forEachByteAsc0(int,int,ByteProcessor)",
+            "state": "clr-replacement",
+            "group": "iteration-and-search"
+          },
+          {
+            "upstream": "forEachByteDesc0(int,int,ByteProcessor)",
+            "state": "clr-replacement",
+            "group": "iteration-and-search"
+          },
+          {
+            "upstream": "checkIndex(int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkIndex(int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkRangeBoundsTrustedCapacity(String,int,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "isOutOfBoundsTrustedCapacity(int,int,int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "checkRangeBounds(String,int,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "rangeBoundsCheckFailed(String,int,int,int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "checkIndex0(int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkSrcIndex(int,int,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkDstIndex(int,int,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkDstIndex(int,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkReadableBytes(int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkNewCapacity(int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "checkReadableBytes0(int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "ensureAccessible()",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "setIndex0(int,int)",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "discardMarks()",
+            "state": "clr-replacement",
+            "group": "capacity-and-state"
+          },
+          {
+            "upstream": "_memoryAddress()",
+            "state": "clr-replacement",
+            "group": "bounded-storage"
+          },
+          {
+            "upstream": "_isDirect()",
+            "state": "clr-replacement",
+            "group": "bounded-storage"
+          },
+          {
+            "upstream": "_internalNioBuffer()",
+            "state": "clr-replacement",
+            "group": "bounded-storage"
+          }
+        ],
+        "groups": {
+          "validation": "Constructor validates maximum; per-instance maximum is immutable because CLR buffer facades are fresh rather than JVM Recycler-reinitialized. CheckIndices validates the complete reader/writer/capacity triple. CheckIndex, CheckReadableBytes and CheckNewCapacity always enforce lifetime/ranges, including empty requests. Subtraction avoids signed overflow in checked builds. Null/peer permission/range validation uses the existing typed transfer methods. JVM checkBounds/checkAccessible/legacy flags, logging and exported Composite checkAccessible boolean have no CLR opt-out. Fresh processes with all three flags true/false each pass all 384 provider/view guards; pinned Java false deliberately permits reading unwritten heap bytes. This is explicit stronger CLR behavior, not missing flag support.",
+          "capacity-and-state": "Reader/writer/marks are direct state or share an index owner only for transparent facades; derived/read-only views own independent indices. Constructor maximum, Clear/marks/reset, AdjustMarkers, TrimIndicesToCapacity, internal index publication and marker discard cover Java fields/final helpers. Fresh facade creation replaces mutable maxCapacity reset/recycler reuse. EnsureWritableCore retains final-helper semantics for primitive writes; public overloads return original four growth status codes under CLR readonly/liveness validation. Capacity hooks preserve allocator/native domain and failure-before-publication rollback policies already reviewed. No copied JVM object-recycling hierarchy is needed.",
+          "primitive-kernels": "All 18 abstract _get/_set byte/BE/LE word kernels map to shared ReadByteCore/WriteByteCore/ReadWord/WriteWord and bounded provider memory/segment hooks. Byte is unsigned in CLR; signed medium extension, low-bit truncation and IEEE raw payload policies remain explicit. Internal kernels stay distinct from public override dispatch. Existing derived/composite scalar/bulk source tests cover logical versus physical/component callback policies; no Java Unsafe access width or performance equivalence is claimed.",
+          "byte-order": "newSwappedByteBuf and cached swapped facade are retired under explicit BE/LE accessors. Original normal/LE utility cases map to explicit pairs, without inventing mutable order state or Java final-getter helper behavior.",
+          "encoded-text": "setCharSequence0 unifies in GetString/ReadString/SetString/WriteString using stable UTF-16 spans, Encoding sizing/fallback and no preamble. Relative reads honor readable bounds; exact encoded byte reservation and failure-index behavior are deliberate CLR policies. Netty UTF-8/ASCII specialized malformed/raw-octet mappings remain in ByteBufUtil; general Encoding paths honor the caller. Original array/AsciiString charset specializations have explicit source policies rather than duplicate unchecked per-provider kernels.",
+          "iteration-and-search": "forEachByteAsc0/Desc0 become the existing Func<byte,bool> loops with per-callback storage reacquisition; resize/release cannot leave a stale native span. Logical scalar versus component/public callback behavior is already recorded in the composite iteration review. Absolute stop coordinates, exclusive reverse upper bound, range validation and readable-range convenience methods retain their reviewed CLR contracts.",
+          "bounded-storage": "_memoryAddress/_isDirect/_internalNioBuffer become bounded Memory/ReadOnlyMemory/ReadOnlySequence/TryGetArray and scoped pin/operation leases. IsDirect is storage policy; no unchecked permanent address or mutable scratch NIO cursor is exposed. Nested facade identity/indices, native pins, actual-counter ownership and deferred physical release remain per-provider decisions. JVM address shortcut rationale is preserved as a reference."
+        },
+        "constructorsAndNestedHelpers": "ByteBuf combines Java abstract contract/skeleton and keeps a fixed maximum per fresh facade. No Java swapped/recycler-mutated maximum or unchecked address/NIO helper type is added.",
+        "targetFiles": [
+          "src/Netty.NET.Buffer/ByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+          "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Comparison.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Diagnostics.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+          "src/Netty.NET.Buffer/ByteBuf.BulkCopy.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Allocator.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.ArrayExtraction.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.AsciiCopy.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.LeakDetection.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.TextValidation.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.ThreadLocalDirect.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSafetySourceTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatedReadDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.cs",
+          "test/Netty.NET.Buffer.Tests/CompositeByteBufBulkKernelTest.cs",
+          "test/Netty.NET.Buffer.Tests/ThreadLocalDirectBufferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs",
+          "test/Netty.NET.Buffer.Tests/DefaultByteBufAllocatorTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufLeakListenerTest.cs"
+        ]
+      },
+      "referenceComments": [
+        "// accessed from CompositeByteBuf",
+        "/**\n     * Creates a new {@link SwappedByteBuf} for this {@link ByteBuf} instance.\n     */",
+        "// Not need to update the index as we not will use it after this.",
+        "/**\n     * Obtain the memory address without checking {@link #ensureAccessible()} first, if possible.\n     */"
+      ],
+      "referenceCommentsDecision": "Original comments for retired mutable byte-order/raw-address/configuration fields, JVM SWAR/Two-Way/JIT-inlining/Unsafe/provider duplicate paths, thread-local scratch and pooled heap scratch remain here. Applicable guard/stream/encoding comments remain beside CLR code. Groups identify the actual CLR replacement and its memory/ownership/performance limits; repeated comments from merged Java helpers are retained as separate original occurrences."
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/AbstractByteBufAllocator.java",
@@ -11102,7 +11481,7 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufUtil.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "src/Netty.NET.Buffer/ByteBufUtil.cs",
         "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
@@ -11120,7 +11499,39 @@
         "src/Netty.NET.Buffer/ThreadLocalDirectBufferCache.cs",
         "src/Netty.NET.Buffer/ThreadLocalDirectAllocation.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.cs",
-        "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.Scenarios.cs"
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.Scenarios.cs",
+        "src/Netty.NET.Buffer/ByteBuf.BulkCopy.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Comparison.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Diagnostics.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSafetySourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocatedReadDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufBulkKernelTest.cs",
+        "test/Netty.NET.Buffer.Tests/ThreadLocalDirectBufferTest.cs",
+        "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs",
+        "test/Netty.NET.Buffer.Tests/DefaultByteBufAllocatorTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufLeakListenerTest.cs"
       ],
       "evidence": [
         "Selected original UTF-8/ASCII and search scenarios in ByteBufTextSearchTest. Exact pinned scalar writer/count methods executed against 5000 input rows for both CLR storage backends; artifacts/buffer-text-search-validation.",
@@ -11137,14 +11548,17 @@
         "Default allocator unit: IByteBufAllocator.Default now implements pinned ByteBufUtil selection: adaptive when unset, exact unpooled/pooled/adaptive strings, pooled fallback for unknown/case/whitespace values. Separate CLR holders publish one process-owned instance and snapshot io.netty.noPreferDirect without cyclic singleton initialization or eagerly constructing an allocator for unrelated utilities. Native SafeHandle ownership replaces JVM Cleaner reliability detection. Unpooled/Pooled singleton preferences and adaptive nullable explicit overrides follow this setting; Unpooled.Buffer remains heap. Adaptive lowMemory null reads the explicit environment flag with false default, never inferring native budgets from CLR GC limits. NettyRuntime.AvailableProcessors controls adaptive stripes/reuse defaults, including programmatic override. 45 additional isolated-context/concurrency/configuration/factory cases; net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5355/5355, no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/errors; Common unchanged. Rechecked 93 pinned Java Buffer files byte-for-byte and three relevant Common sources after line-ending normalization. Forty isolated-process Java/CLR configurations match 3540 nonempty executable state rows per Debug/Release; independent models check 960 factory shapes/data/allocator identities, heap/native metric retention and 130 low/normal large-allocation decisions per configuration. Java pooled arena/cache settings are explicitly constrained to the existing CLR one-arena/cache-off policy; JVM automatic heap/native budget heuristics and remaining portable pooled runtime properties are not claimed. CLR explicit cleanup returns registries/native reservations to zero; Java adaptive registries also drain, and Java process-owned pooled defaults end with their process. docs/buffer-porting.md#global-allocator-selection-and-runtime-preferences; artifacts/buffer-default-allocator-validation (ignored); buffer-default-allocator-*.trx.",
         "Thread-local direct transport helper: original ByteBufUtil.threadLocalDirectBuffer contract/property/256-byte initial allocation/capacity cutoff and NIO absolute-source copy consumer are ported. 26 new cases cover configuration isolation, actual fast-thread/scope cleanup, fresh wrappers, bounded storage reuse, late/cross-thread returns, pins/leases, retained views, copy provenance, alias growth and failed reserve/resize retry. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5489/5489 on net10.0, no failures/skips. Nine isolated profiles match 114 executable Java Unsafe/NIO and CLR states per Debug/Release, with independent threshold/factory/wire/cursor/reference models. All 93 Buffer source bytes rechecked. Original public API comment/licenses retained; Common unchanged. docs/buffer-porting.md#thread-local-direct-transport-helper; artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx. Whole utility/source fixture remains partial.",
         "Public API availability review: all 53 declared public static ByteBufUtil signatures partition into 32 implemented portable operations and 21 explicit CLR replacements; zero confirmed public-signature gaps and zero unreviewed public signatures in this file only. Each signature records exact CLR member declarations and grouped existing contract-test/policy evidence. CharSequence/CharBuffer/Charset, whole-array sharing, generic leak listeners, Span search and bounded native caching have explicit adaptations. tools/Check-BufferPublicApi.py checks the pinned inventory and every registered target; it does not prove behavior equivalence. ByteBufUtilTest/internal/provider coverage and the other 34 partial runtime sources remain unreviewed at this level. No runtime behavior or source status change. docs/buffer-porting.md#remaining-work; artifacts/buffer-public-api-review-validation (ignored). Full net10.0 Debug/Release regression passes 9164/9164 per configuration, zero failures/skips; 51 existing Common warning lines per build, zero Buffer/test warnings. No tests added; the only runtime-source edit removes an outdated summary comment, with executable tokens unchanged. Independent javap metadata agrees with all 53 original signatures.",
-        "Composite iteration/search unit: 651 CLR cases cover 252 iteration dispatch/coordinate/stop cases, 84 logical byte/pattern searches, 96 nested-component cases, 32 callback failure/resize/release cases, 12 stateful KMP/Bitap/Aho sessions, 48 pooled segmented borrow/write/zero cases, 98 segmented needle/haystack pairs, four high-coordinate checked iteration translations, 17 high-coordinate scalar/bulk/memory/flatten operations and eight externally-retained component lifetime cases. The committed runtime fails 180/336 initial cases; pooled hooks additionally fail 20/48 cases before correction and reject 24 nested pooled-view setups. Fresh pinned original Unsafe/NIO each check 438 selected cases: 424 match, 14 independently reproduce the original reverse-loop captured-boundary defect. CLR deliberately clamps at component.Offset and preserves logical reverse order. All rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 pass 14308; native cleanup zero, no Common changes. Source/fixture completion is not inferred. docs/buffer-porting.md#composite-iteration-and-search; artifacts/buffer-composite-iteration-validation (ignored)."
+        "Composite iteration/search unit: 651 CLR cases cover 252 iteration dispatch/coordinate/stop cases, 84 logical byte/pattern searches, 96 nested-component cases, 32 callback failure/resize/release cases, 12 stateful KMP/Bitap/Aho sessions, 48 pooled segmented borrow/write/zero cases, 98 segmented needle/haystack pairs, four high-coordinate checked iteration translations, 17 high-coordinate scalar/bulk/memory/flatten operations and eight externally-retained component lifetime cases. The committed runtime fails 180/336 initial cases; pooled hooks additionally fail 20/48 cases before correction and reject 24 nested pooled-view setups. Fresh pinned original Unsafe/NIO each check 438 selected cases: 424 match, 14 independently reproduce the original reverse-loop captured-boundary defect. CLR deliberately clamps at component.Offset and preserves logical reverse order. All rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling interval 1 pass 14308; native cleanup zero, no Common changes. Source/fixture completion is not inferred. docs/buffer-porting.md#composite-iteration-and-search; artifacts/buffer-composite-iteration-validation (ignored).",
+        "Final core source/helper/namespace review: AbstractByteBuf 47 outer nonpublic methods/12 fields, ByteBufUtil 32 outer nonpublic methods/11 fields plus nested hex/cache/processor strategies now have explicit CLR policies. Existing public inventories are unchanged. JVM guard toggles, byte-order facades, unsafe/JIT/SWAR loops and transient scratch/cursor strategies are replaced explicitly; original comments preserved in code/reference multisets. Two documentation-only package descriptors map to existing CLR namespaces, with original package JavaDocs retained. No executable kernel change was necessary in this unit. Added 1800 six-provider/five-form/six-mode original writer cases, 40000 independent naive-search trials in four cases, 384 lifetime/overflow/readonly guards and two fresh-process flag drivers (768 child guard executions): 2190 added parent cases. Pinned byte-exact Java Unsafe/NIO each execute all 56 ByteBufUtilTest declarations as 264 invocations, 249 pass/15 original heap-only assumptions abort. Separate Java flag probes confirm disabled bounds reads unwritten bytes while CLR guards remain on in both fresh flag modes. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 25194, no failures/skips; native reservations zero, 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#core-source-and-namespace-review-closure; artifacts/buffer-core-source-closure (ignored)."
       ],
-      "adaptation": "Directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. C# callers can pass a ReadOnlySpan<char> slice directly; matching start/end overloads now reuse that kernel and share overflow-safe endpoint validation with raw AsciiString ranges. Allocator-returning operations are covered by the later allocation utility update; remaining I/O and utilities stay pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending. Hex update maps all 11 original public hex/pretty/decode operations to native byte[]/string APIs, with ReadOnlySpan<byte>/ReadOnlySpan<char> forms. Contiguous hex uses Convert.ToHexStringLower; segmented formatting walks ReadOnlySequence directly into the final string. Strict ASCII hex decoding reuses Common.StringUtil nibble decoding; no ICharSequence facade, substring copy or Common modification is needed. Pretty dumps copy at most 16 bytes to stack per row, preserve headers, lowercase octets, ASCII printable 32..126, padding, no trailing newline, append behavior and StringUtil.NEWLINE. Computed padding and existing Common byte conversion replace Java HexUtil lookup initialization; its original comments remain. The pinned cached-prefix quirk is preserved: row labels below row 4096 are relative to the dump start, while later labels use absolute buffer indices. Absolute ranges may extend past WriterIndex to Capacity; default ranges use readable bytes. Indices/marks/refcounts stay unchanged. Null/empty/dead/overflowing ranges are consistently checked before output, deliberately rejecting Java zero-length bypasses; hex output size uses checked arithmetic. Concurrent mutation/release must be excluded during formatting. Source and remaining utility operations remain partial. Content comparison/hash update: HashCode, both Equals forms and Compare retain signed wrapping Int32/signed-byte hashing, zero coercion, unsigned exact clamped word/tail comparisons and writer-bounded absolute equality. Explicit-endian primitives replace Java order branches; Span.SequenceEqual handles contiguous equality and bounded crossing words handle segmented storage without flattening. Self-reference/null identity fast paths remain; distinct released buffers consistently throw even on empty/mismatched ranges. No indices/marks/refcounts change. Full policy and remaining scope: docs/buffer-porting.md#content-comparison-and-hashing. Text validation update: both IsText overloads use Encoding rather than Charset. Explicit ranges are absolute, may precede ReaderIndex and end at WriterIndex. Canonical UTF8/ASCII use BCL Utf8.IsValid/Ascii.IsValid; segmented UTF8 and other/custom encodings use fresh Decoder state with ExceptionFallback and fixed 256-char scratch, flushing once after all segments. Caller Encoding/fallback stay unchanged; custom same-code-page decoders are honored. Original RFC/algorithm comments remain beside the BCL replacement. Released-empty UTF8 consistently throws rather than Java success. Indices/marks/refcounts stay unchanged; exclude concurrent content/layout/lifetime changes. Full policy and pending scope: docs/buffer-porting.md#text-validation. Array extraction update: all three GetBytes overloads return byte[]. Default/range overloads always snapshot; explicit ranges are capacity-bounded. Copy=false shares only a complete writable contiguous managed-array mapping, using existing Memory borrowing and MemoryMarshal.TryGetArray instead of Java hasArray/array/arrayOffset APIs. Read-only roots/components, native backing, partial arrays and segmented ranges copy through ReadOnlySequence.ToArray without a temporary flattening buffer. Contiguous composite views and empty-adjacent single-array composites may share where Java wrapper hasArray restrictions force copying; this is a deliberate CLR policy, not alias equivalence. Empty output uses Array.Empty. Bounds/lifetime checks include empty requests; indices/marks/refcounts stay unchanged and concurrent content/layout/lifetime changes are excluded. Full policy: docs/buffer-porting.md#array-extraction. AsciiString copying update: all three Copy overloads use AsciiString.AsSpan().Slice with logical bounds before destination validation/mutation, preserving raw octets and backing-array offsets without ASCII re-encoding. Absolute SetBytes is capacity-bounded and changes no indices; relative WriteBytes may grow and publishes WriterIndex only after success. Source null/range and destination null become CLR argument exceptions; lifetime/read-only guards include empty copies, while the shared empty sentinel accepts a valid zero-length copy. Existing span overlap semantics are retained: segmented writes snapshot the source, intentionally differing from Java sequential component writes for forward same-array overlap. Managed source remains alive through heap growth. No new Common/storage abstraction or retain; callers exclude concurrent source/destination mutation/lifetime changes. Composite failures may leave bytes/capacity changed while WriterIndex is unchanged. Full policy and consumer evidence: docs/buffer-porting.md#asciistring-copying. Allocator-returning update: IByteBufAllocator supplies the result and its creator policy; successful operations transfer one owned reference to the caller, and failure releases the new owner. ReadBytes consumes exactly the requested length, preventing Java writable-capacity overread for custom overallocating factories; source writer/marks/refcount stay unchanged. UTF-16 spans use existing Netty UTF8/ASCII octet mappings, while AsciiString uses offset-aware raw bytes and retains the original UTF8 length-then-3x reservation/growth quirk. UTF8/ASCII factory write failures now release their result, unlike pinned Java. EncodeString uses ReadOnlySpan<char> instead of a mutable CharBuffer cursor, caller Encoding/fallback without preamble, exact byte count plus checked nonnegative extraCapacity, and unwritten tail capacity for framing. Invalid null/negative/overflow/strict-encoding inputs fail before allocation; released/empty source bounds and failure cleanup remain checked. Heap/native/segmented factories are supported through existing ByteBuf writers. JVM charset/cursor/capacity equivalence is not claimed. Unpooled keeps its existing heap-only encoding path; no internal enforceHeap facade is needed. Unpooled metrics are covered separately; caches/leak wrappers and other original utilities remain pending. Full policy: docs/buffer-porting.md#allocator-returning-utilities. Scalar/endian update: BinaryPrimitives reverses signed 16/32/64-bit words; SwapMedium discards high bits and sign-extends the reversed 24-bit result. BE helpers call existing unsuffixed BE operations; explicit LE operations replace mutable Java byte-order views. ReadUnsignedShortBE returns ushort. Accessibility checks observe shared refcount without retaining; only ensureWritable status 0/2 means success. Null arguments fail with ArgumentNullException. Policy: docs/buffer-porting.md#scalar-and-endian-utilities. UTF-8 range update: Utf8Bytes/WriteUtf8/ReserveAndWriteUtf8 accept [start,end) over ReadOnlySpan<char> or AsciiString, and explicit full AsciiString reservations preserve raw 0x00-0xff octets and logical offsets. Span slices reuse the established encoding kernel without CharSequence/subsequence allocations. Endpoints are validated before subtraction and destination growth, including extreme Int32 values in checked builds. Worst-case WriteUtf8 reserves three bytes per selected UTF-16 unit even for AsciiString; explicit reservations may be exact or larger and never advance writer by the reserved surplus. Raw byte writes share a bounded kernel; failed writes leave writer unchanged, while composite writes may partially mutate earlier components. Undersized reservations uniformly fail before growth/mutation under existing CLR policy; pinned Java has storage-dependent partial-write/success behavior. Original range-operation documentation is preserved. Policy: docs/buffer-porting.md#utf-8-subsequences-and-ascii-reservations. Leak listener update: the public setter replaces/removes the existing shared detector listener without a second detector or callback scheduler. Collection queues, reporting gates, duplicate suppression and notification on the draining tracking thread remain Common contracts. Additional CLR fixture coverage is used because the pinned ByteBufUtilTest has no dedicated listener test; the original fixture remains partial. Global-default update: exact pinned allocator-type selection, unknown-to-pooled fallback, process instance publication and direct preference are implemented through independent lazy CLR holders. ByteBufUtil utility-only calls deliberately do not freeze global allocator/processor configuration; Java eagerly initializes them in its utility class initializer. Broader utility APIs remain partial. Thread-local direct helper update: ThreadLocalDirectBuffer defaults to null for unset/nonpositive/invalid io.netty.threadLocalDirectBufferSize; a positive value returns contiguous native storage, initially 256 bytes, maxCapacity int.MaxValue, and UnpooledByteBufAllocator.Default provenance without automatic leak wrapping. The property snapshots on the first helper call rather than Java eager ByteBufUtil initialization; unrelated utilities/global selector stay lazy. Guaranteed physical fast-thread cleanup scopes cache one idle owner, with final-capacity <= configured cutoff; ordinary/unguaranteed callers allocate uncached, and cross-thread returns free storage. Java recycler object reuse/ratio/multiple-idle retention become an explicit bounded CLR storage cache; wrappers/memory facades stay fresh, old references cannot resurrect, and borrowed Memory invalidates at release/resize. Pins/operation claims delay reuse, cached bytes are not cleared, indices/marks reset through fresh wrappers, old resized storage is freed when claims drain, and scope removal closes the gate/drains idle owners while preserving live buffers. Capacity copying/shrink retains the existing CLR full-prefix storage policy. The single-owner differential profiles set Java recycler ratio=1 and compare portable factory/capacity/bytes/cursors/references, not wrapper identity, OS addresses, performance, Java backing cleanup timing or multi-entry/cross-thread recycler policy. Actual pinned consumers: transport/src/main/java/io/netty/channel/nio/AbstractNioChannel.java:527,559; transport-native-unix-common/src/main/java/io/netty/channel/unix/SocketWritableByteChannel.java:54. Existing allocator pools/events and complete original fixtures are outside this unit. Iteration/search update: internal ascending/descending loops consume bounded scalar storage kernels rather than physical spans. Mutable composites peel transparent/sliced/pooled component storage before internal iteration, bypass public component iteration overrides and translate stop indices; read-only component storage and inherited readable view loops keep their distinct scalar behavior. Reverse scans are bounded by captured component offsets (an intentional correction of the pinned source defect). Indexed view/facade delegation, CLR guards, exception identity and cursor/claim rules remain. Byte search retains the Span fast path on direct storage and uses logical scalar kernels on aggregates; pattern search materializes aggregate logical GetByte values before Span.IndexOf. This is a CLR linear-byte/materialization strategy, without SWAR/Two-Way callback-width, O(1)-space or performance equivalence. Pooled views propagate segmented TryGetMemory/TryGetReadOnlyMemory and Span-write/zero kernels to their translated root instead of requiring contiguous memory.",
+      "adaptation": "Complete source/helper/comment review under explicit CLR policies; existing public API inventory is unchanged. logger/DEFAULT_ALLOCATOR map to the existing lazy CLR allocator selector, preserving adaptive/unpooled/pooled and unknown-value fallback and avoiding static cycles. BYTE_ARRAYS/MAX_TL_ARRAY_LEN/MAX_CHAR_BUFFER_SIZE and their JVM thread/virtual-thread temporary-array strategy are replaced by scoped ArrayPool buffers, stack char scratch and immutable strings, without retaining a per-JVM-thread char array limit. WRITE_UTF_UNKNOWN remains question-mark octet; UTF-8 max uses checked 3-per-code-unit with the AsciiString raw-count alternative. THREAD_LOCAL_BUFFER_SIZE uses the reviewed once-only native cache setting; SWAR_UNALIGNED lets BCL choose hardware strategy. Neither removed JIT flags nor allocation/callback-count parity is promised. maxSuf/Two-Way, endian-specific uint comparators and scalar/SWAR first/last search variants map to Span.IndexOf for contiguous storage and logical scalar byte snapshots for aggregates, plus fixed BE unsigned word comparisons/clamping and signed hash tails. Java mutable-endian comparators collapse into explicit accessors. Aggregated needle/haystack search can allocate O(n+m) bytes; Java O(1) auxiliary-space/JIT/performance claims do not apply. Four new original 10000-trial small-alphabet searches independently check the scalar answer with reader prefixes 0..3; CLR and Java RNG streams differ. Null/empty, ranges, forward/reverse and provider mutation policies remain as recorded. checkCharSequenceBounds, reserveAndWriteUtf8Seq, both unchecked writeUtf8 kernels, writeAsciiString and safe/unsafe array/direct variants share validated Span/segmented writers, explicit raw AsciiString paths and the checked UTF-16 byte counter. Insufficient reservation rejects before growth/mutation. Native alias leases survive destination growth; writer publication happens after successful output. JVM provider unwrapping, duplicate safe/unsafe loops, charAt inlining and access width specialize no CLR code. Original malformed surrogate rules, unsigned AsciiString offsets and exact counts are retained, with source/fixture byte-vector tests across six allocator/storage providers and all wrapper/composite forms. writeAscii/writeAsciiCharSequence share C2b low-octet-or-question-mark character writes; AsciiString writes its raw logical bytes. Bounded destination Span replaces unchecked _set loops. Readonly/empty permissions, aliasing, growth and success-only writer publication use existing common kernels. Explicit BE/LE removes swapped-facade special cases. encodeString0/decodeString become EncodeString, Unpooled.CopyEncodedText and ByteBuf GetString with Encoding and fresh decoder/string state. CharBuffer remaining position/limit becomes a stable UTF-16 span. CLR exact byte sizing, custom fallback/no implicit BOM and general empty-string rules are deliberate; no JVM ASCII decoding shortcut or encoder-cache capacity shape is claimed. Factory failure releases the allocated owner. FIND_NON_ASCII/isAscii/isUtf8 become BCL Ascii/Utf8 validation with a fresh strict incremental decoder across segments, flush at end, and a no-progress guard. Only canonical CLR instances use shortcuts; custom Encoding, even sharing a code page, retains its own decoder. Invalid data returns false, argument/lifetime failure throws; caller fallback/indices/marks remain unchanged. RFC syntax and original vectors/comments are retained. Internal readBytes(ByteBuffer,position,length,OutputStream)/getBytes chunk loop becomes the shared ByteBuf Stream snapshot/output path. Memory descriptors have no mutable NIO cursor; scoped ArrayPool snapshots stabilize native storage and later components across callbacks. This intentionally stages the requested full output range rather than Java 8192-byte chunks/1024-byte thread-local or pooled-heap branches; it trades scratch size for callback safety. Empty validation, borrowed stream ownership, thrown-I/O and success-only relative-index policies remain reviewed. Java allocator-heap-scratch choice and syscall/chunk/allocation-count equality are not claimed. Nested HexUtil tables/row-prefix cache become BCL conversion, computed padding and exact original row-label fallback, with existing pretty-hex golden tests. ThreadLocalUnsafeDirectByteBuf/ThreadLocalDirectByteBuf, Recycler handles/reset and idle deallocation map to fresh native buffer facades and the bounded physical-thread cleanup cache. Old borrows are invalidated on release; pins/leases delay reuse, cross-thread/oversized returns free storage and cleanup closes idle owners. No JVM wrapper-object reuse is claimed. Anonymous temp-array/non-ASCII processors are covered by scratch/BCL validation policies. Original fixture/provider completeness is tracked independently; this unit found no additional executable core-kernel gap.",
       "comments": {
         "upstreamCount": 165,
-        "preservedCount": 125,
-        "missingCount": 40,
-        "coverage": "Partial source/strategy/comment review; this is not a count of missing runtime operations. Public availability and source completion are tracked separately."
+        "preservedCount": 165,
+        "missingCount": 0,
+        "coverage": "Complete original comment inventory under explicit CLR source/namespace decisions; individual fixture/provider completion remains independent.",
+        "preservedInImplementationCount": 127,
+        "preservedAsReferenceCount": 38
       },
       "publicApiReview": {
         "scope": "declared-public-static-methods",
@@ -11888,7 +12302,290 @@
             ]
           }
         ]
-      }
+      },
+      "sourceClosureReview": {
+        "scope": "Complete existing declared public inventory plus constructors, all outer nonpublic methods/fields, static initialization and nested helper strategies; original fixture/provider closure remains independent.",
+        "publicDeclarationsPreviouslyReviewed": 53,
+        "fields": [
+          "logger",
+          "BYTE_ARRAYS",
+          "WRITE_UTF_UNKNOWN",
+          "MAX_CHAR_BUFFER_SIZE",
+          "THREAD_LOCAL_BUFFER_SIZE",
+          "MAX_BYTES_PER_CHAR_UTF8",
+          "WRITE_CHUNK_SIZE",
+          "DEFAULT_ALLOCATOR",
+          "SWAR_UNALIGNED",
+          "MAX_TL_ARRAY_LEN",
+          "FIND_NON_ASCII"
+        ],
+        "nonpublicMethods": [
+          {
+            "upstream": "threadLocalTempArray(int)",
+            "state": "clr-replacement",
+            "group": "settings-and-scratch"
+          },
+          {
+            "upstream": "maxSuf(ByteBuf,int,int,boolean)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "compareUintBigEndian(ByteBuf,ByteBuf,int,int,int)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "compareUintLittleEndian(ByteBuf,ByteBuf,int,int,int)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "compareUintBigEndianA(ByteBuf,ByteBuf,int,int,int)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "compareUintBigEndianB(ByteBuf,ByteBuf,int,int,int)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "uintFromLE(long)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "unrolledFirstIndexOf(AbstractByteBuf,int,int,byte)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "firstIndexOf(AbstractByteBuf,int,int,byte)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "linearFirstIndexOf(AbstractByteBuf,int,int,byte)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "lastIndexOf(AbstractByteBuf,int,int,byte)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "linearLastIndexOf(AbstractByteBuf,int,int,byte)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "unrolledLastIndexOf(AbstractByteBuf,int,int,byte)",
+            "state": "clr-replacement",
+            "group": "comparison-and-search"
+          },
+          {
+            "upstream": "checkCharSequenceBounds(CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "reserveAndWriteUtf8Seq(ByteBuf,CharSequence,int,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "writeUtf8(AbstractByteBuf,int,int,CharSequence,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "writeUtf8(AbstractByteBuf,int,int,CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "writeAsciiString(AbstractByteBuf,int,AsciiString,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "safeDirectWriteUtf8(ByteBuffer,int,CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "safeWriteUtf8(AbstractByteBuf,int,CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "safeArrayWriteUtf8(byte[],int,CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "unsafeWriteUtf8(byte[],long,int,CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "utf8ByteCount(CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "utf8BytesNonAscii(CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8-count-and-write"
+          },
+          {
+            "upstream": "writeAscii(AbstractByteBuf,int,CharSequence,int)",
+            "state": "clr-replacement",
+            "group": "ascii-write"
+          },
+          {
+            "upstream": "writeAsciiCharSequence(AbstractByteBuf,int,CharSequence,int)",
+            "state": "clr-replacement",
+            "group": "ascii-write"
+          },
+          {
+            "upstream": "encodeString0(ByteBufAllocator,boolean,CharBuffer,Charset,int)",
+            "state": "clr-replacement",
+            "group": "encoding-and-decoding"
+          },
+          {
+            "upstream": "decodeString(ByteBuf,int,int,Charset)",
+            "state": "clr-replacement",
+            "group": "encoding-and-decoding"
+          },
+          {
+            "upstream": "isAscii(ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "isUtf8(ByteBuf,int,int)",
+            "state": "clr-replacement",
+            "group": "validation"
+          },
+          {
+            "upstream": "readBytes(ByteBufAllocator,ByteBuffer,int,int,OutputStream)",
+            "state": "clr-replacement",
+            "group": "stream-transfer"
+          },
+          {
+            "upstream": "getBytes(ByteBuffer,byte[],int,int,OutputStream,int)",
+            "state": "clr-replacement",
+            "group": "stream-transfer"
+          }
+        ],
+        "groups": {
+          "settings-and-scratch": "logger/DEFAULT_ALLOCATOR map to the existing lazy CLR allocator selector, preserving adaptive/unpooled/pooled and unknown-value fallback and avoiding static cycles. BYTE_ARRAYS/MAX_TL_ARRAY_LEN/MAX_CHAR_BUFFER_SIZE and their JVM thread/virtual-thread temporary-array strategy are replaced by scoped ArrayPool buffers, stack char scratch and immutable strings, without retaining a per-JVM-thread char array limit. WRITE_UTF_UNKNOWN remains question-mark octet; UTF-8 max uses checked 3-per-code-unit with the AsciiString raw-count alternative. THREAD_LOCAL_BUFFER_SIZE uses the reviewed once-only native cache setting; SWAR_UNALIGNED lets BCL choose hardware strategy. Neither removed JIT flags nor allocation/callback-count parity is promised.",
+          "comparison-and-search": "maxSuf/Two-Way, endian-specific uint comparators and scalar/SWAR first/last search variants map to Span.IndexOf for contiguous storage and logical scalar byte snapshots for aggregates, plus fixed BE unsigned word comparisons/clamping and signed hash tails. Java mutable-endian comparators collapse into explicit accessors. Aggregated needle/haystack search can allocate O(n+m) bytes; Java O(1) auxiliary-space/JIT/performance claims do not apply. Four new original 10000-trial small-alphabet searches independently check the scalar answer with reader prefixes 0..3; CLR and Java RNG streams differ. Null/empty, ranges, forward/reverse and provider mutation policies remain as recorded.",
+          "utf8-count-and-write": "checkCharSequenceBounds, reserveAndWriteUtf8Seq, both unchecked writeUtf8 kernels, writeAsciiString and safe/unsafe array/direct variants share validated Span/segmented writers, explicit raw AsciiString paths and the checked UTF-16 byte counter. Insufficient reservation rejects before growth/mutation. Native alias leases survive destination growth; writer publication happens after successful output. JVM provider unwrapping, duplicate safe/unsafe loops, charAt inlining and access width specialize no CLR code. Original malformed surrogate rules, unsigned AsciiString offsets and exact counts are retained, with source/fixture byte-vector tests across six allocator/storage providers and all wrapper/composite forms.",
+          "ascii-write": "writeAscii/writeAsciiCharSequence share C2b low-octet-or-question-mark character writes; AsciiString writes its raw logical bytes. Bounded destination Span replaces unchecked _set loops. Readonly/empty permissions, aliasing, growth and success-only writer publication use existing common kernels. Explicit BE/LE removes swapped-facade special cases.",
+          "encoding-and-decoding": "encodeString0/decodeString become EncodeString, Unpooled.CopyEncodedText and ByteBuf GetString with Encoding and fresh decoder/string state. CharBuffer remaining position/limit becomes a stable UTF-16 span. CLR exact byte sizing, custom fallback/no implicit BOM and general empty-string rules are deliberate; no JVM ASCII decoding shortcut or encoder-cache capacity shape is claimed. Factory failure releases the allocated owner.",
+          "validation": "FIND_NON_ASCII/isAscii/isUtf8 become BCL Ascii/Utf8 validation with a fresh strict incremental decoder across segments, flush at end, and a no-progress guard. Only canonical CLR instances use shortcuts; custom Encoding, even sharing a code page, retains its own decoder. Invalid data returns false, argument/lifetime failure throws; caller fallback/indices/marks remain unchanged. RFC syntax and original vectors/comments are retained.",
+          "stream-transfer": "Internal readBytes(ByteBuffer,position,length,OutputStream)/getBytes chunk loop becomes the shared ByteBuf Stream snapshot/output path. Memory descriptors have no mutable NIO cursor; scoped ArrayPool snapshots stabilize native storage and later components across callbacks. This intentionally stages the requested full output range rather than Java 8192-byte chunks/1024-byte thread-local or pooled-heap branches; it trades scratch size for callback safety. Empty validation, borrowed stream ownership, thrown-I/O and success-only relative-index policies remain reviewed. Java allocator-heap-scratch choice and syscall/chunk/allocation-count equality are not claimed.",
+          "hex-and-native-cache": "Nested HexUtil tables/row-prefix cache become BCL conversion, computed padding and exact original row-label fallback, with existing pretty-hex golden tests. ThreadLocalUnsafeDirectByteBuf/ThreadLocalDirectByteBuf, Recycler handles/reset and idle deallocation map to fresh native buffer facades and the bounded physical-thread cleanup cache. Old borrows are invalidated on release; pins/leases delay reuse, cross-thread/oversized returns free storage and cleanup closes idle owners. No JVM wrapper-object reuse is claimed. Anonymous temp-array/non-ASCII processors are covered by scratch/BCL validation policies."
+        },
+        "constructorsAndNestedHelpers": "Static utility class replaces unused private constructor; HexUtil, two native thread-local recycler classes and anonymous BYTE_ARRAYS/FIND_NON_ASCII helpers follow the exact policies above. Existing cache/allocator/listener fixtures govern all remaining static lifecycle behavior.",
+        "targetFiles": [
+          "src/Netty.NET.Buffer/ByteBufUtil.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.TextValidation.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.ArrayExtraction.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.AsciiCopy.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.LeakDetection.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Allocator.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.ThreadLocalDirect.cs",
+          "src/Netty.NET.Buffer/ThreadLocalDirectByteBuf.cs",
+          "src/Netty.NET.Buffer/ThreadLocalDirectBufferCache.cs",
+          "src/Netty.NET.Buffer/ThreadLocalDirectAllocation.cs",
+          "src/Netty.NET.Buffer/ByteBuf.BulkCopy.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Comparison.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Diagnostics.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Files.cs",
+          "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+          "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+          "src/Netty.NET.Buffer/ByteBuf.Transfers.cs"
+        ],
+        "evidence": [
+          "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSafetySourceTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocatedReadDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufAllocationWriteDispatchTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufStreamTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufFileTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+          "test/Netty.NET.Buffer.Tests/CompositeByteBufIterationKernelTest.cs",
+          "test/Netty.NET.Buffer.Tests/CompositeByteBufBulkKernelTest.cs",
+          "test/Netty.NET.Buffer.Tests/ThreadLocalDirectBufferTest.cs",
+          "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs",
+          "test/Netty.NET.Buffer.Tests/DefaultByteBufAllocatorTest.cs",
+          "test/Netty.NET.Buffer.Tests/ByteBufLeakListenerTest.cs"
+        ]
+      },
+      "referenceComments": [
+        "/**\n     * Allocates a new array if minLength > {@link ByteBufUtil#MAX_TL_ARRAY_LEN}\n     */",
+        "// Only make use of ThreadLocal if we use a FastThreadLocalThread to make the implementation",
+        "// Virtual Thread friendly.",
+        "// See https://github.com/netty/netty/issues/14609",
+        "// When the needle has only one byte that can be read,",
+        "// the ByteBuf.indexOf() can be used",
+        "// j, k, ms and p are relative to start (the reader index of the needle), like the indexes in indexOf(...)",
+        "/**\n     * This is using a SWAR (SIMD Within A Register) batch read technique to minimize bound-checks and improve memory\n     * usage while searching for {@code value}.\n     */",
+        "// use the faster available getLong",
+        "// use the faster available getLong",
+        "// used the oppoiste endianness since we are looking for the last index.",
+        "// WrappedCompositeByteBuf is a sub-class of AbstractByteBuf so it needs special handling.",
+        "// Unwrap as the wrapped buffer may be an AbstractByteBuf and so we can use fast-path.",
+        "// Fast-Path implementation",
+        "// AsciiString Fast-Path implementation - no explicit bound-checks",
+        "// Safe off-heap Fast-Path implementation",
+        "// Safe off-heap Fast-Path implementation",
+        "// We can use the _set methods as these not need to do any index checks and reference checks.",
+        "// This is possible as we called ensureWritable(...) before.",
+        "// Extra method is copied here to NOT allow inlining of writeUtf8",
+        "// and increase the chance to inline CharSequence::charAt instead",
+        "// Surrogate Pair consumes 2 characters.",
+        "// Extra method is copied here to NOT allow inlining of writeUtf8",
+        "// and increase the chance to inline CharSequence::charAt instead",
+        "// See https://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G2630.",
+        "// unsafe Fast-Path implementation",
+        "// Surrogate Pair consumes 2 characters.",
+        "// Extra method is copied here to NOT allow inlining of writeUtf8",
+        "// and increase the chance to inline CharSequence::charAt instead",
+        "// See https://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G2630.",
+        "// Surrogate Pair consumes 2 characters.",
+        "// See https://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G2630.",
+        "// WrappedCompositeByteBuf is a sub-class of AbstractByteBuf so it needs special handling.",
+        "// Unwrap as the wrapped buffer may be an AbstractByteBuf and so we can use fast-path.",
+        "// We can use the _set methods as these not need to do any index checks and reference checks.",
+        "// This is possible as we called ensureWritable(...) before.",
+        "// Fast-path for US-ASCII which is used frequently.",
+        "// if direct buffers are pooled chances are good that heap buffers are pooled as well."
+      ],
+      "referenceCommentsDecision": "Original comments for retired mutable byte-order/raw-address/configuration fields, JVM SWAR/Two-Way/JIT-inlining/Unsafe/provider duplicate paths, thread-local scratch and pooled heap scratch remain here. Applicable guard/stream/encoding comments remain beside CLR code. Groups identify the actual CLR replacement and its memory/ownership/performance limits; repeated comments from merged Java helpers are retained as separate original occurrences."
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ChunkInfo.java",
@@ -31093,10 +31790,28 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/package-info.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/CompositeByteBuf.cs",
+        "src/Netty.NET.Buffer/Unpooled.cs"
+      ],
+      "evidence": [
+        "Final core source/helper/namespace review: AbstractByteBuf 47 outer nonpublic methods/12 fields, ByteBufUtil 32 outer nonpublic methods/11 fields plus nested hex/cache/processor strategies now have explicit CLR policies. Existing public inventories are unchanged. JVM guard toggles, byte-order facades, unsafe/JIT/SWAR loops and transient scratch/cursor strategies are replaced explicitly; original comments preserved in code/reference multisets. Two documentation-only package descriptors map to existing CLR namespaces, with original package JavaDocs retained. No executable kernel change was necessary in this unit. Added 1800 six-provider/five-form/six-mode original writer cases, 40000 independent naive-search trials in four cases, 384 lifetime/overflow/readonly guards and two fresh-process flag drivers (768 child guard executions): 2190 added parent cases. Pinned byte-exact Java Unsafe/NIO each execute all 56 ByteBufUtilTest declarations as 264 invocations, 249 pass/15 original heap-only assumptions abort. Separate Java flag probes confirm disabled bounds reads unwritten bytes while CLR guards remain on in both fresh flag modes. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 25194, no failures/skips; native reservations zero, 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#core-source-and-namespace-review-closure; artifacts/buffer-core-source-closure (ignored)."
+      ],
+      "adaptation": "Documentation-only Java package descriptor becomes the existing CLR namespace/API documentation. Netty.NET.Buffer provides extensible binary/text buffers, growable owners and composite/view zero-copy mechanisms under its recorded CLR lifetime/representation policies. Java/JVM ByteBuffer performance claims in the original package text are retained as historical source material, not CLR benchmarks.",
+      "referenceComments": [
+        "/**\n * Abstraction of a byte buffer - the fundamental data structure\n * to represent a low-level binary and text message.\n *\n * Netty uses its own buffer API instead of NIO {@link java.nio.ByteBuffer} to\n * represent a sequence of bytes. This approach has significant advantage over\n * using {@link java.nio.ByteBuffer}.  Netty's new buffer type,\n * {@link io.netty.buffer.ByteBuf}, has been designed from ground\n * up to address the problems of {@link java.nio.ByteBuffer} and to meet the\n * daily needs of network application developers.  To list a few cool features:\n * <ul>\n *   <li>You can define your buffer type if necessary.</li>\n *   <li>Transparent zero copy is achieved by built-in composite buffer type.</li>\n *   <li>A dynamic buffer type is provided out-of-the-box, whose capacity is\n *       expanded on demand, just like {@link java.lang.StringBuffer}.</li>\n *   <li>There's no need to call the {@code flip()} method anymore.</li>\n *   <li>It is often faster than {@link java.nio.ByteBuffer}.</li>\n * </ul>\n *\n * <h3>Extensibility</h3>\n *\n * {@link io.netty.buffer.ByteBuf} has rich set of operations\n * optimized for rapid protocol implementation.  For example,\n * {@link io.netty.buffer.ByteBuf} provides various operations\n * for accessing unsigned values and strings and searching for certain byte\n * sequence in a buffer.  You can also extend or wrap existing buffer type\n * to add convenient accessors.  The custom buffer type still implements\n * {@link io.netty.buffer.ByteBuf} interface rather than\n * introducing an incompatible type.\n *\n * <h3>Transparent Zero Copy</h3>\n *\n * To lift up the performance of a network application to the extreme, you need\n * to reduce the number of memory copy operation.  You might have a set of\n * buffers that could be sliced and combined to compose a whole message.  Netty\n * provides a composite buffer which allows you to create a new buffer from the\n * arbitrary number of existing buffers with no memory copy.  For example, a\n * message could be composed of two parts; header and body.  In a modularized\n * application, the two parts could be produced by different modules and\n * assembled later when the message is sent out.\n * <pre>\n * +--------+----------+\n * | header |   body   |\n * +--------+----------+\n * </pre>\n * If {@link java.nio.ByteBuffer} were used, you would have to create a new big\n * buffer and copy the two parts into the new buffer.   Alternatively, you can\n * perform a gathering write operation in NIO, but it restricts you to represent\n * the composite of buffers as an array of {@link java.nio.ByteBuffer}s rather\n * than a single buffer, breaking the abstraction and introducing complicated\n * state management.  Moreover, it's of no use if you are not going to read or\n * write from an NIO channel.\n * <pre>\n * // The composite type is incompatible with the component type.\n * ByteBuffer[] message = new ByteBuffer[] { header, body };\n * </pre>\n * By contrast, {@link io.netty.buffer.ByteBuf} does not have such\n * caveats because it is fully extensible and has a built-in composite buffer\n * type.\n * <pre>\n * // The composite type is compatible with the component type.\n * {@link io.netty.buffer.ByteBuf} message = {@link io.netty.buffer.Unpooled}.wrappedBuffer(header, body);\n *\n * // Therefore, you can even create a composite by mixing a composite and an\n * // ordinary buffer.\n * {@link io.netty.buffer.ByteBuf} messageWithFooter = {@link io.netty.buffer.Unpooled}.wrappedBuffer(message, footer);\n *\n * // Because the composite is still a {@link io.netty.buffer.ByteBuf}, you can access its content\n * // easily, and the accessor method will behave just like it's a single buffer\n * // even if the region you want to access spans over multiple components.  The\n * // unsigned integer being read here is located across body and footer.\n * messageWithFooter.getUnsignedInt(\n *     messageWithFooter.readableBytes() - footer.readableBytes() - 1);\n * </pre>\n *\n * <h3>Automatic Capacity Extension</h3>\n *\n * Many protocols define variable length messages, which means there's no way to\n * determine the length of a message until you construct the message or it is\n * difficult and inconvenient to calculate the length precisely.  It is just\n * like when you build a {@link java.lang.String}. You often estimate the length\n * of the resulting string and let {@link java.lang.StringBuffer} expand itself\n * on demand.\n * <pre>\n * // A new dynamic buffer is created.  Internally, the actual buffer is created\n * // lazily to avoid potentially wasted memory space.\n * {@link io.netty.buffer.ByteBuf} b = {@link io.netty.buffer.Unpooled}.buffer(4);\n *\n * // When the first write attempt is made, the internal buffer is created with\n * // the specified initial capacity (4).\n * b.writeByte('1');\n *\n * b.writeByte('2');\n * b.writeByte('3');\n * b.writeByte('4');\n *\n * // When the number of written bytes exceeds the initial capacity (4), the\n * // internal buffer is reallocated automatically with a larger capacity.\n * b.writeByte('5');\n * </pre>\n *\n * <h3>Better Performance</h3>\n *\n * Most frequently used buffer implementation of\n * {@link io.netty.buffer.ByteBuf} is a very thin wrapper of a\n * byte array (i.e. {@code byte[]}).  Unlike {@link java.nio.ByteBuffer}, it has\n * no complicated boundary check and index compensation, and therefore it is\n * easier for a JVM to optimize the buffer access.  More complicated buffer\n * implementation is used only for sliced or composite buffers, and it performs\n * as well as {@link java.nio.ByteBuffer}.\n */"
+      ],
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "Complete original comment inventory under explicit CLR source/namespace decisions; individual fixture/provider completion remains independent.",
+        "preservedInImplementationCount": 1,
+        "preservedAsReferenceCount": 1
+      },
+      "referenceCommentsDecision": "Original package JavaDoc is preserved verbatim here. Existing CLR namespace types provide the actual consumer API; no empty runtime type is introduced just to host Java package metadata."
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/AbstractMultiSearchProcessorFactory.java",
@@ -31263,10 +31978,30 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/package-info.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/AbstractSearchProcessorFactory.cs",
+        "src/Netty.NET.Buffer/Search/BitapSearchProcessorFactory.cs",
+        "src/Netty.NET.Buffer/Search/KmpSearchProcessorFactory.cs",
+        "src/Netty.NET.Buffer/Search/AhoCorasicSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Final core source/helper/namespace review: AbstractByteBuf 47 outer nonpublic methods/12 fields, ByteBufUtil 32 outer nonpublic methods/11 fields plus nested hex/cache/processor strategies now have explicit CLR policies. Existing public inventories are unchanged. JVM guard toggles, byte-order facades, unsafe/JIT/SWAR loops and transient scratch/cursor strategies are replaced explicitly; original comments preserved in code/reference multisets. Two documentation-only package descriptors map to existing CLR namespaces, with original package JavaDocs retained. No executable kernel change was necessary in this unit. Added 1800 six-provider/five-form/six-mode original writer cases, 40000 independent naive-search trials in four cases, 384 lifetime/overflow/readonly guards and two fresh-process flag drivers (768 child guard executions): 2190 added parent cases. Pinned byte-exact Java Unsafe/NIO each execute all 56 ByteBufUtilTest declarations as 264 invocations, 249 pass/15 original heap-only assumptions abort. Separate Java flag probes confirm disabled bounds reads unwritten bytes while CLR guards remain on in both fresh flag modes. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 25194, no failures/skips; native reservations zero, 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#core-source-and-namespace-review-closure; artifacts/buffer-core-source-closure (ignored)."
+      ],
+      "adaptation": "Documentation-only Java package descriptor becomes the existing CLR namespace/API documentation. Netty.NET.Buffer.Search exposes the existing substring processor factories/typed stateful processors; no runtime package-info type or empty NamespaceDoc helper is needed.",
+      "referenceComments": [
+        "/*\n * Copyright 2020 The Netty Project\n *\n * The Netty Project licenses this file to you under the Apache License,\n * version 2.0 (the \"License\"); you may not use this file except in compliance\n * with the License. You may obtain a copy of the License at:\n *\n *   https://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT\n * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the\n * License for the specific language governing permissions and limitations\n * under the License.\n */",
+        "/**\n * Utility classes for performing efficient substring search within {@link io.netty.buffer.ByteBuf}.\n */"
+      ],
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "Complete original comment inventory under explicit CLR source/namespace decisions; individual fixture/provider completion remains independent.",
+        "preservedInImplementationCount": 0,
+        "preservedAsReferenceCount": 2
+      },
+      "referenceCommentsDecision": "Original package JavaDoc is preserved verbatim here. Existing CLR namespace types provide the actual consumer API; no empty runtime type is introduced just to host Java package metadata."
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractAdaptiveByteBufTest.java",
@@ -35790,7 +36525,9 @@
         "test/Netty.NET.Buffer.Tests/ByteBufLeakListenerTest.cs",
         "test/Netty.NET.Buffer.Tests/DefaultByteBufAllocatorTest.cs",
         "test/Netty.NET.Buffer.Tests/ThreadLocalDirectBufferTest.cs",
-        "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs"
+        "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufSafetySourceTest.cs"
       ],
       "evidence": [
         "UTF-8 valid/malformed surrogate rows, ASCII/AsciiString mapping, worst-case/exact reservations and readable subsequence search on heap/native; original supported heap/native fixtures only.",
@@ -35802,15 +36539,615 @@
         "UTF-8 range/reservation unit: 44 new cases; net10.0 Debug/Release/rebuilt checked Release 1424/1424 with no failures/skips. 36536 pinned Java/CLR rows per Debug/Release match independent Unicode/octet, index/mark, capacity and reference models. Six Java undersized-reservation rows ground the explicit CLR preflight adaptation. Implemented original operation comments retained. docs/buffer-porting.md#utf-8-subsequences-and-ascii-reservations; artifacts/buffer-utf8-range-validation (ignored); buffer-utf8-range-*.trx. Whole original source/fixture remains partial.",
         "Leak-listener API unit: original ByteBufUtil.setLeakListener delegates to the shared factory-created ByteBuf detector through the existing Common listener interface. Eight added cases cover real-GC replacement/null removal after collection, payload/thread/single-notification contracts and normally released heap/native/composite allocations and retained views. net10.0 Debug/Release/rebuilt sampled checked Release pass 4843/4843, zero failures/skips. Real-GC isolated Java/CLR probes have 21 exact scenarios per targetRecords value 0/4 and Debug/Release: delivery, replacement/removal/registration after collection, reporting suppression, explicit final close and tracking-thread notification. Independent callback/report/active-tracker counts and exact resource type/creation hint checks agree. docs/buffer-porting.md#buffer-leak-listener; artifacts/buffer-leak-listener-validation (ignored); buffer-leak-listener-*.trx.",
         "Default allocator validation: 5355/5355 pass in Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1; 3540 exact Java/CLR executable rows across 40 isolated process configurations per Debug/Release. Independent factory/metric/large-allocation models and runtime policy adaptations are recorded on ByteBufUtil.java and docs/buffer-porting.md#global-allocator-selection-and-runtime-preferences; artifacts/buffer-default-allocator-validation (ignored), buffer-default-allocator-*.trx.",
-        "Thread-local direct transport helper: original ByteBufUtil.threadLocalDirectBuffer contract/property/256-byte initial allocation/capacity cutoff and NIO absolute-source copy consumer are ported. 26 new cases cover configuration isolation, actual fast-thread/scope cleanup, fresh wrappers, bounded storage reuse, late/cross-thread returns, pins/leases, retained views, copy provenance, alias growth and failed reserve/resize retry. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5489/5489 on net10.0, no failures/skips. Nine isolated profiles match 114 executable Java Unsafe/NIO and CLR states per Debug/Release, with independent threshold/factory/wire/cursor/reference models. All 93 Buffer source bytes rechecked. Original public API comment/licenses retained; Common unchanged. docs/buffer-porting.md#thread-local-direct-transport-helper; artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx. Whole utility/source fixture remains partial."
+        "Thread-local direct transport helper: original ByteBufUtil.threadLocalDirectBuffer contract/property/256-byte initial allocation/capacity cutoff and NIO absolute-source copy consumer are ported. 26 new cases cover configuration isolation, actual fast-thread/scope cleanup, fresh wrappers, bounded storage reuse, late/cross-thread returns, pins/leases, retained views, copy provenance, alias growth and failed reserve/resize retry. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5489/5489 on net10.0, no failures/skips. Nine isolated profiles match 114 executable Java Unsafe/NIO and CLR states per Debug/Release, with independent threshold/factory/wire/cursor/reference models. All 93 Buffer source bytes rechecked. Original public API comment/licenses retained; Common unchanged. docs/buffer-porting.md#thread-local-direct-transport-helper; artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx. Whole utility/source fixture remains partial.",
+        "Final core source/helper/namespace review: AbstractByteBuf 47 outer nonpublic methods/12 fields, ByteBufUtil 32 outer nonpublic methods/11 fields plus nested hex/cache/processor strategies now have explicit CLR policies. Existing public inventories are unchanged. JVM guard toggles, byte-order facades, unsafe/JIT/SWAR loops and transient scratch/cursor strategies are replaced explicitly; original comments preserved in code/reference multisets. Two documentation-only package descriptors map to existing CLR namespaces, with original package JavaDocs retained. No executable kernel change was necessary in this unit. Added 1800 six-provider/five-form/six-mode original writer cases, 40000 independent naive-search trials in four cases, 384 lifetime/overflow/readonly guards and two fresh-process flag drivers (768 child guard executions): 2190 added parent cases. Pinned byte-exact Java Unsafe/NIO each execute all 56 ByteBufUtilTest declarations as 264 invocations, 249 pass/15 original heap-only assumptions abort. Separate Java flag probes confirm disabled bounds reads unwritten bytes while CLR guards remain on in both fresh flag modes. Rebuilt net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 25194, no failures/skips; native reservations zero, 51 existing Common warnings, no Buffer/test warnings; Common unchanged. docs/buffer-porting.md#core-source-and-namespace-review-closure; artifacts/buffer-core-source-closure (ignored)."
       ],
-      "adaptation": "Selected text/search cases and additional native aliasing/safety contracts. Numeric UTF-16 units preserve malformed input across test discovery serialization. Composite/read-only/wrapped/pooled and remaining original fixture cases are pending. Hex update ports decodeRandomHexBytesWithEvenLength/OddLength and odd-length/invalid-character rejection, retaining the original suffix-loop comment. 42 executed cases add all octets, upper/lowercase decoding, string/span/array ranges, heap/native/mutable/fixed/readonly/slice/duplicate layouts, unchanged indices/marks/lifetime, exact header/padding/ASCII/append/row widths, 64KiB cached-prefix fallback, malformed Unicode, null/empty/dead/overflow guards and builder validation preflight. This completes selected hex scenarios, not the full original fixture or pooled/remaining utility cases. Content comparison/hash update: selected equalsBufferSubsections/notEqualsBufferSubsections/notEqualsBufferOverflow/notEqualsBufferUnderflow scenarios retain writer-bounded ranges and the original two-line mutation comment; deterministic input replaces randomness. Added signed/unsigned/overflow, bounds, marks/lifetime and CLR collection contracts: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Text validation update: testIsTextWithUtf8/testIsTextWithoutOptimization/testIsTextWithAscii/testIsTextWithInvalidIndexAndLength/testIsTextMultiThreaded scenarios retain all original vectors and inline comments across seven storage/view layouts. Added scalar/overlong/surrogate/truncation boundaries, every component split, UTF16/32 flush, large input, strict fallback isolation, custom encodings/failures/nonprogress, reader/writer/mark/ownership/null/dead guards and 60000 parallel validations per layout. Full policy: docs/buffer-porting.md#text-validation. Whole original fixture remains partial. Array extraction update: testGetBytes/testGetBytesHeapWithNonZeroArrayOffset/testGetBytesHeapWithArrayLengthGreaterThanCapacity and checkGetBytes scenarios are covered, with seven storage/view layouts. Added default/full/partial snapshot independence, capacity access past WriterIndex, 14 writable/readonly/native/view/composite sharing configurations, write-through checks, unchanged indices/marks/lifetime, null/dead/overflow/empty guards and managed sharing after unpooled resize/release. Full policy and runtime alias differences: docs/buffer-porting.md#array-extraction. Whole original fixture remains partial. Scalar/endian update: writeShortBE/setShortBE/writeMediumBE/readUnsignedShortBE/readIntBE scenarios and all four unsigned-short inline comments are covered using explicit CLR LE operations instead of deprecated Java order views. Additional truncation, 24-bit sign, exhaustive short, storage-boundary, marks, failure, ownership, status and HTTP delimiter contracts are exercised. Remaining fixture scenarios stay pending. UTF-8 range update adapts original testWriteUtf8Subsequence/testWriteUtf8SubsequenceSplitSurrogate/testReserveAndWriteUtf8Subsequence/testUtf8BytesSubsequence and three invalid-subsequence scenarios. Coverage includes six backing/view/wrapper kinds, all raw octets/nested AsciiString offsets, checked extreme ranges, exact/surplus/worst-case reservations, null/readonly/released/empty destinations, overlapping heap storage, native aliased character spans during growth and composite partial-write failures. Original inline surrogate-pair comment retained. The full original utility fixture remains incomplete. Leak listener update: the public setter replaces/removes the existing shared detector listener without a second detector or callback scheduler. Collection queues, reporting gates, duplicate suppression and notification on the draining tracking thread remain Common contracts. Additional CLR fixture coverage is used because the pinned ByteBufUtilTest has no dedicated listener test; the original fixture remains partial. Additional CLR runtime cases exercise exact selector branches, preference/low-memory explicit overrides, static initialization order and concurrency, configuration snapshotting, lazy utility initialization, configured processor defaults, creator/copy/native cleanup and Unpooled heap policy. Fresh collectible contexts isolate static state and a nonparallel collection restores process environment variables. The complete original utility fixture remains partial. Thread-local direct helper update: ThreadLocalDirectBuffer defaults to null for unset/nonpositive/invalid io.netty.threadLocalDirectBufferSize; a positive value returns contiguous native storage, initially 256 bytes, maxCapacity int.MaxValue, and UnpooledByteBufAllocator.Default provenance without automatic leak wrapping. The property snapshots on the first helper call rather than Java eager ByteBufUtil initialization; unrelated utilities/global selector stay lazy. Guaranteed physical fast-thread cleanup scopes cache one idle owner, with final-capacity <= configured cutoff; ordinary/unguaranteed callers allocate uncached, and cross-thread returns free storage. Java recycler object reuse/ratio/multiple-idle retention become an explicit bounded CLR storage cache; wrappers/memory facades stay fresh, old references cannot resurrect, and borrowed Memory invalidates at release/resize. Pins/operation claims delay reuse, cached bytes are not cleared, indices/marks reset through fresh wrappers, old resized storage is freed when claims drain, and scope removal closes the gate/drains idle owners while preserving live buffers. Capacity copying/shrink retains the existing CLR full-prefix storage policy. The single-owner differential profiles set Java recycler ratio=1 and compare portable factory/capacity/bytes/cursors/references, not wrapper identity, OS addresses, performance, Java backing cleanup timing or multi-entry/cross-thread recycler policy. Actual pinned consumers: transport/src/main/java/io/netty/channel/nio/AbstractNioChannel.java:527,559; transport-native-unix-common/src/main/java/io/netty/channel/unix/SocketWritableByteChannel.java:54. Existing allocator pools/events and complete original fixtures are outside this unit.",
+      "adaptation": "All 56 declared original fixture methods now have individual scenario/evidence mappings; original provider/parameter completeness remains in-progress. New 1800 writer cases cover all six original allocator/storage policies with five facade/composite forms, ten exact original text patterns and six char/raw AsciiString writer modes. Another four original 10000-trial seeded small-alphabet search cases use a scalar oracle. Existing general range, decoding, comparisons, hex, scalar and extraction fixtures remain linked. Original Java executes 264 invocations (249 pass, 15 heap-provider assumptions abort) on both Unsafe/NIO; JVM assumptions are not CLR skipped tests.",
       "comments": {
         "upstreamCount": 29,
-        "preservedCount": 21,
-        "missingCount": 8,
-        "coverage": "partial source; remaining operations not ported"
-      }
+        "preservedCount": 29,
+        "missingCount": 0,
+        "coverage": "Complete original comment inventory under explicit CLR source/namespace decisions; individual fixture/provider completion remains independent.",
+        "preservedInImplementationCount": 23,
+        "preservedAsReferenceCount": 6
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "decodeRandomHexBytesWithEvenLength",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+              "method": "OriginalDecodeRandomHexBytesIncludingEverySuffix"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "decodeRandomHexBytesWithOddLength",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+              "method": "OriginalDecodeRandomHexBytesIncludingEverySuffix"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "decodeHexDumpWithOddLength",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+              "method": "OriginalOddLengthAndInvalidHexAreRejected"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "decodeHexDumpWithInvalidChar",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs",
+              "method": "OriginalOddLengthAndInvalidHexAreRejected"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIndexOf",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "NeedleSearchUsesReadableIndicesAndOriginalEmptyNullContracts"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIndexOfNeedleWithReaderIndex",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "NeedleSearchUsesReadableIndicesAndOriginalEmptyNullContracts"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIndexOfMatchesNaiveSearch",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalSeededNeedleSearchAgreesWithAnIndependentNaiveLoop"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "equalsBufferSubsections",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+              "method": "OriginalSubsectionsEqualityDifferenceOverflowAndUnderflow"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "notEqualsBufferSubsections",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+              "method": "OriginalSubsectionsEqualityDifferenceOverflowAndUnderflow"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "notEqualsBufferOverflow",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+              "method": "OriginalSubsectionsEqualityDifferenceOverflowAndUnderflow"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "notEqualsBufferUnderflow",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
+              "method": "OriginalSubsectionsEqualityDifferenceOverflowAndUnderflow"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "writeShortBE",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+              "method": "OriginalWriteShortSetShortAndWriteMediumScenariosWithTruncation"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "setShortBE",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+              "method": "OriginalWriteShortSetShortAndWriteMediumScenariosWithTruncation"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "writeMediumBE",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+              "method": "OriginalWriteShortSetShortAndWriteMediumScenariosWithTruncation"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "readUnsignedShortBE",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+              "method": "OriginalUnsignedShortAndIntReadScenariosUseExplicitLeOperations"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "readIntBE",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs",
+              "method": "OriginalUnsignedShortAndIntReadScenariosUseExplicitLeOperations"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUsAscii",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUsAsciiSwapped",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUsAsciiWrapped",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUsAsciiComposite",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUsAsciiCompositeWrapped",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8Composite",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8CompositeWrapped",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8Surrogates",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidOnlyTrailingSurrogate",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidOnlyLeadingSurrogate",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidSurrogatesSwitched",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidTwoLeadingSurrogates",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidTwoTrailingSurrogates",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidEndOnLeadingSurrogate",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidEndOnTrailingSurrogate",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUsAsciiString",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8Wrapped",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtilitySourceTest.cs",
+              "method": "OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8Subsequence",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "OriginalSubsequenceAndSplitSurrogateScenariosPreserveIndicesAndMarks"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8SubsequenceSplitSurrogate",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "OriginalSubsequenceAndSplitSurrogateScenariosPreserveIndicesAndMarks"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testReserveAndWriteUtf8Subsequence",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "OriginalSubsequenceAndSplitSurrogateScenariosPreserveIndicesAndMarks"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testUtf8BytesSubsequence",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "OriginalSubsequenceAndSplitSurrogateScenariosPreserveIndicesAndMarks"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testWriteUtf8InvalidSubsequences",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "InvalidRangesFailBeforeDestinationValidationGrowthOrMutation"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testReserveAndWriteUtf8InvalidSubsequences",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "InvalidRangesFailBeforeDestinationValidationGrowthOrMutation"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testUtf8BytesInvalidSubsequences",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "method": "InvalidRangesFailBeforeDestinationValidationGrowthOrMutation"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testDecodeUsAscii",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "EncodesWithExplicitByteOrderNoPreambleAndIndependentIndices"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testDecodeUtf8",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "EncodesWithExplicitByteOrderNoPreambleAndIndependentIndices"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testToStringDoesNotThrowIndexOutOfBounds",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "EncodesWithExplicitByteOrderNoPreambleAndIndependentIndices"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIsTextWithUtf8",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+              "method": "OriginalUtf8AsciiAndGeneralDecoderVectors"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIsTextWithoutOptimization",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+              "method": "OriginalUtf8AsciiAndGeneralDecoderVectors"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIsTextWithAscii",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+              "method": "OriginalUtf8AsciiAndGeneralDecoderVectors"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIsTextWithInvalidIndexAndLength",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+              "method": "OriginalBoundsAndWriterBoundBeforeReaderKeepMarksAndLifetime"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testUtf8Bytes",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "NettyUtf8WireBytesAndExactCountsIncludeMalformedSurrogates"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testUtf8BytesWithSurrogates",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "NettyUtf8WireBytesAndExactCountsIncludeMalformedSurrogates"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testUtf8BytesWithNonSurrogates3Bytes",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "NettyUtf8WireBytesAndExactCountsIncludeMalformedSurrogates"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testUtf8BytesWithNonSurrogatesNonAscii",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "method": "NettyUtf8WireBytesAndExactCountsIncludeMalformedSurrogates"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testIsTextMultiThreaded",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs",
+              "method": "OriginalConcurrentValidationUsesIndependentDecoderState"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testGetBytes",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+              "method": "OriginalGetBytesScenarios"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testGetBytesHeapWithNonZeroArrayOffset",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+              "method": "OriginalNonzeroArrayOffsetAndArrayLongerThanSliceNeverLeakOtherBytes"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        },
+        {
+          "upstreamMethod": "testGetBytesHeapWithArrayLengthGreaterThanCapacity",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs",
+              "method": "OriginalNonzeroArrayOffsetAndArrayLongerThanSliceNeverLeakOtherBytes"
+            }
+          ],
+          "adaptation": "Maps the stated portable scenario to existing/new executed CLR evidence. New writer rows cover all six heap/native unpooled/pooled/adaptive providers, ordinary/wrapped/unreleasable/composite/wrapped-composite entry, original UTF-16 strings and explicit/raw AsciiString modes. Mutable order becomes explicit BE/LE. This ledger does not by itself close the complete original parameter/provider matrix; providerCoverageReview records residual work. Seeded search keeps trial count/alphabet/ranges/prefixes with an independent scalar oracle; CLR/Java RNG streams differ."
+        }
+      ],
+      "methodFindings": [],
+      "testMethodReview": {
+        "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
+        "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
+        "declaredCount": 56,
+        "mappedCount": 56,
+        "testGapCount": 0,
+        "implementationGapCount": 0,
+        "unreviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "providerCoverageReview": {
+        "status": "in-progress",
+        "completeNewWriterMatrix": {
+          "allocatorStorageProviders": 6,
+          "forms": 5,
+          "originalStrings": 10,
+          "writerModes": 6,
+          "cases": 1800
+        },
+        "seededNaiveSearchTrials": 40000,
+        "remaining": [
+          "Audit remaining numeric/validation/extraction/subsequence fixture provider variants and exact original table inputs; method availability/evidence mapping does not complete every provider invocation.",
+          "Original Java suppresses five providers for each of three heap-only/concurrency methods; CLR logical memory/decoder evidence has separate adaptation policies."
+        ]
+      },
+      "referenceComments": [
+        "// write some byte so we start writing with an offset.",
+        "// Skip the previously written byte.",
+        "// write some byte so we start writing with an offset.",
+        "// Skip the previously written byte.",
+        "// write some byte so we start writing with an offset.",
+        "// Skip the previously written byte."
+      ],
+      "referenceCommentsDecision": "Original repeated wrapper-prefix/surrogate/provider-specific fixture comments merge into shared theory rows; unrepresented occurrences remain verbatim here while provider completeness remains explicitly in-progress."
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ByteProcessorTest.java",

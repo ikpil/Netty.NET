@@ -244,6 +244,10 @@ namespace Netty.NET.Buffer;
  * All operations get and set as {@link ByteOrder#BIG_ENDIAN}.
  */
 // CLR: the helper's default wire order is BE; explicit LE methods share bounded scalar access.
+/**
+ * A skeletal implementation of a buffer.
+ */
+// CLR: ByteBuf combines the original abstract contract and its skeletal implementation.
 public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
 {
     // CLR: AbstractByteBuf's shared detector lives on the combined skeletal ByteBuf.
@@ -677,6 +681,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         return Math.Min(rounded, maximum);
     }
 
+    /**
+     * Should be called by every method that tries to access the buffers content to check
+     * if the buffer was released before.
+     */
+    // CLR range/lifetime checks stay enabled; JVM opt-out properties are not applied.
     protected void EnsureAccessible()
     {
         if (ReferenceCount == 0) throw new IllegalReferenceCountException(0);
@@ -687,6 +696,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         if (capacity < 0 || capacity > MaxCapacity)
             throw new ArgumentOutOfRangeException(nameof(capacity));
     }
+    /**
+     * Throws an {@link IndexOutOfBoundsException} if the current
+     * {@linkplain #readableBytes() readable bytes} of this buffer is less
+     * than the specified value.
+     */
     protected void CheckReadableBytes(int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(length);
@@ -696,7 +710,12 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     protected internal void CheckIndex(int index, int length)
     {
         EnsureAccessible();
-        // Subtraction avoids Java's signed index + length overflow boundary.
+        // Original trusted-capacity helper notes:
+        /**
+     * This is a simplified version of MathUtil.isOutOfBounds that does not check for capacity negative values.
+     */
+        // keep these as branches since would make it easier to be constant-folded
+        // CLR: subtraction avoids signed index + length overflow, including in checked builds.
         if (index < 0 || length < 0 || index > Capacity - length)
             throw new ArgumentOutOfRangeException(nameof(index));
     }
