@@ -6252,6 +6252,52 @@ cases. All have zero failures/skips, 51 existing Common build warnings and no
 Buffer/test warnings. The existing runtime satisfies these contracts and is unchanged.
 Evidence: ignored artifacts/buffer-original-endian.
 
+## Original concurrent and file I/O tests
+
+Eight more original AbstractByteBufTest methods now run as named inherited tests
+on the seven heap/direct, unpooled/pooled/adaptive and canonical composite roots.
+Their shared bodies live in AbstractByteBufTest.ConcurrentIo.cs, a partial of the
+existing fixture; its allocation, initialization and final native-reservation checks
+are unchanged. These tests replace no existing assertions or supplemental tests.
+
+The string and copy regressions keep ten dedicated workers, a ten-party start
+barrier with a ten-second wait, and 3,000 iterations per worker. Latin1 GetString
+replaces Java's charset toString. The copy test keeps eight random input bytes,
+the independently allocated expected copy, content equality and finally releases
+for every copy. Worker failures stop subsequent iterations and reach the test thread.
+Joins use the original 30-second string and 60-second copy limits; all workers
+finish before borrowed storage is released.
+
+The duplicate/slice array tests keep ten workers, both original barriers, 6,000
+iterations per worker, a fresh eight-byte array, relative read, zero-fill, absolute
+get and both content assertions. FutureTask plus a dedicated Java thread becomes
+a LongRunning Task on the default CLR scheduler. The coordinator observes every
+task before cleanup. The duplicate/slice stream tests keep ten dedicated threads
+and the original shared 60,000-completion target, including already-started work
+that may finish after zero. Each iteration gets a fresh borrowed view and output
+stream, reads until empty and compares the complete output. An atomic counter and
+ManualResetEventSlim replace CountDownLatch; this does not reduce the target to a
+smaller fixed quota per worker. Unexpected I/O errors are reported immediately
+instead of waiting for the original "Never happens" branch to time out. Original
+error-propagation and channel-position comments are retained beside CLR adaptations.
+
+Both file tests retain the original abcd payload, file offset 10, reset marks,
+individual byte assertions and ordered checks of file position and relative versus
+absolute buffer indices. FileStream plus its borrowed SafeFileHandle replaces
+RandomAccessFile/FileChannel. Cleanup uses finally blocks to also cover failed
+assertions. Existing broader sync/async file tests remain supplemental. Removing
+relative reader advancement fails all seven original file tests; adding writer
+advancement to absolute input independently fails the other seven. Production code
+is restored byte-for-byte after these controlled checks.
+
+Pinned Java Unsafe and forced-NIO each execute all 56 exact original method/provider
+pairs successfully. Full net10.0 Debug and Release each pass 27,721 tests; rebuilt
+checked Release with SIMPLE leak sampling one passes the 56 affected inherited
+cases. All have zero failures/skips, 51 existing Common build warnings and no
+Buffer/test warnings. Existing runtime behavior satisfies these selected contracts;
+no runtime changes are needed. Other shared methods and the older 52 composite
+mappings still require review. Evidence: ignored artifacts/buffer-original-concurrent-io.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6299,8 +6345,8 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. AbstractByteBufTest is now 368/408 mapped
-with 40 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
+consumer/module closure decisions remain. AbstractByteBufTest is now 376/408 mapped
+with 32 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
 with no unreviewed declarations, while 52 older mappings still require original-body
 fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is

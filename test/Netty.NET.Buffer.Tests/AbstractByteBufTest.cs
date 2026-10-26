@@ -25,7 +25,7 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * An abstract test class for channel buffers
  */
-public abstract class AbstractByteBufTest : IDisposable
+public abstract partial class AbstractByteBufTest : IDisposable
 {
     private const int CAPACITY = 4096; // Must be even
     private const int BLOCK_SIZE = 128;
