@@ -6021,6 +6021,67 @@ unreviewed declared-method decisions and AbstractCompositeByteBufTest has 33; th
 are review/coverage counts, not counts of missing runtime features. Consumer and
 final module validation remain separate.
 
+## Shared retained lifetime and released access fixture batch
+
+This unit ports 69 previously unreviewed AbstractByteBufTest declarations: 16
+released retained/borrowed factory chains, two exact handler-content propagation
+examples, four multi-level slice/duplicate combinations, 12 unreleasable-boundary
+combinations, two reference-visibility reproducers, 26 released bulk/I/O overloads
+and seven NIO/array/address replacement scenarios. Each body executes on eight
+heap/native unpooled, pooled, adaptive and composite providers, through raw,
+ordinary wrapped and borrowed-duplicate entry: 1,656 new CLR cases.
+
+The lifetime rows retain the original capacity-one release/factory setup and the
+8-byte payloads, 6/4/2/1-byte windows, comparison relations and release order. The
+one-release-per-live-alias helper distinguishes an actual owned claim from borrowed
+aliases that have already reached zero. Handler paths release the root before
+propagating children, and all parent, retained and borrowed counters end at zero.
+Unreleasable variants cover independently retained versus borrowed-plus-Retain
+construction on both sides of the no-op boundary, including empty readable slices.
+Managed expected arrays and short-lived comparison wrappers replace the original
+expected ByteBuf allocations without leaving fixture-owned claims behind.
+
+Released bulk rows preserve valid peer states and assert failure before peer cursor,
+array or output publication. Span/Memory replaces NIO ranges, Stream replaces byte
+array streams, and Socket replaces scattering/gathering channels; no real network
+operation can pass the released-receiver guard. Bounded Memory/ReadOnlyMemory,
+ReadOnlySequence and scoped pins replace single/internal/multiple NIO, array and
+permanent address exposure. CLR lifetime checks apply even to empty/unsupported
+borrows. The original composite internal-NIO override can throw UnsupportedOperation
+before checking lifetime; the CLR intentionally rejects released storage before a
+bounded borrow instead. These are recorded replacements, not JVM provider-capability
+claims.
+
+The two issue-2843 reference visibility bodies each run ten rounds per profile:
+Release() or Release(currentCount), followed by observation on another scheduled
+reader while the releaser stays pending. Task/TCS replaces Thread/latch and waits
+for all activity before allocator cleanup. Task continuations can change physical
+threads; CLR fresh facades and explicit native cache cleanup replace the original
+JVM recycler-thread survival requirement. Across 48 cases this produces 480
+release/reader rounds. Native reservation domains return to zero after disposal.
+
+Byte-exact pinned Java executes the same 69 original bodies on seven concrete
+fixtures (unpooled/pooled/adaptive heap/direct and canonical composite). Unsafe and
+NIO each pass all 483, with zero skips. The Java composite has its original mixed,
+empty-heavy topology; CLR adds pure heap/native composites and three entry forms.
+The original setup's unused common 4096-byte fixture buffer is unnecessary in the
+standalone CLR rows. Numeric case indices preserve complete test-row identities
+where runner display strings would truncate long original method names.
+
+All 280 existing method mappings remain unchanged. The shared fixture now has
+349/408 declared methods mapped and 59 unreviewed. Its comment inventory advances
+to 82 code occurrences and six scoped original references; 24 comments remain with
+the still-partial fixture. InterruptedException ignore/recycler and merged expected
+buffer rationale stay as scoped references where CLR cancellation/managed literals
+replace the original control flow. Complete inherited/concrete-provider closure
+remains separate from these shared-body/profile decisions.
+
+Forced net10.0 Debug, Release and checked Release with SIMPLE leak sampling one each
+pass 26,983 tests, zero failures/skips. The 51 existing Common warnings remain, with
+zero Buffer/test warnings and no runtime/Common source changes. Evidence is in
+ignored `artifacts/buffer-lifetime-fixture-batch`. Existing Markdown/JSON tracking
+is updated; no new Markdown document or JVM placeholder type is added.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6067,7 +6128,10 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. No remaining test-method count is
+consumer/module closure decisions remain. AbstractByteBufTest is now 349/408 mapped
+with 59 unreviewed declarations; AbstractCompositeByteBufTest remains 52/85 mapped
+with 33 unreviewed declarations. Inherited provider and other standalone fixture
+coverage are separate. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
