@@ -6185,6 +6185,42 @@ The shared fixture now maps 361/408 declarations with 47 unreviewed; no whole
 inherited/provider or module completion is inferred. Existing JSON/Markdown are
 updated; evidence is in ignored artifacts/buffer-original-transfer.
 
+## Original composite gathering and wrapping tests
+
+The remaining 26 AbstractCompositeByteBufTest declarations now have named C# ports:
+eight full/single-component gathering writes, twelve partial writes, four original
+wrapping/equality bodies, storage-kind transitions and an explicit Memory replacement.
+Original bytes, indices, source slices, pooled/unpooled heap/native choices, comparison
+cases, helper flow and comments remain. Socket output is captured through TCP EOF,
+so extra, missing or reordered output fails the original exact byte comparison.
+
+CLR Stream.Write cannot represent a short write, and Socket.Send is not overridable.
+A test-only ShortWriteComposite therefore caps the virtual GetBytes output hook to
+one byte, then calls the real base/socket transfer. Production ReadBytes still gets
+the full remaining request and updates its own reader by the actual returned count.
+The original six-byte ranges are drained without test-side cursor changes. Per-step
+progress assertions strengthen diagnosis. This hook verifies returned-count progress;
+existing nonblocking socket tests separately cover actual kernel backpressure.
+An intentionally incorrect requested-length
+reader advance makes all twelve variants fail at that assertion; production source
+is restored byte-for-byte afterward. No new production transport interface is added.
+
+Java internal-NIO cache/object identity has no meaning for CLR Memory values and is
+not emulated. Raw/slice/duplicate cases instead verify bounded live storage aliasing
+and a borrow that survives subsequent empty borrows without its range/data changing.
+Byte-only tests require no fabricated mutable byte-order wrapper. Byte-exact Java
+Unsafe/NIO each pass all 52 original big/little-endian provider/method pairs.
+
+All 85 Composite declarations now have coverage decisions, but the fixture remains
+in-progress: its 52 older mappings still need original-body/helper fidelity review
+and inherited/provider closure remains separate. This unit confirms existing runtime
+behavior and requires no runtime implementation change. Full net10.0 Debug/Release
+each pass 27,604; rebuilt checked Release with SIMPLE sampling one passes the 26
+affected cases, all with zero failures/skips. Builds have 51 existing Common warnings
+and no Buffer/test warnings. Of 121 original comments, 118 are in code; three original
+fixture/strict-mode comments remain with pending fidelity review. Evidence is in ignored
+artifacts/buffer-original-composite-gathering; tracking uses the existing JSON/Markdown.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6233,8 +6269,9 @@ review; its 41-method standalone fixture is verified under the explicit CLR poli
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
 consumer/module closure decisions remain. AbstractByteBufTest is now 361/408 mapped
-with 47 unreviewed declarations; AbstractCompositeByteBufTest is now 59/85 mapped
-with 26 unreviewed declarations. Inherited provider and other standalone fixture
+with 47 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
+with no unreviewed declarations, while 52 older mappings still require original-body
+fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 

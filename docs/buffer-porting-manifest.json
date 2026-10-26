@@ -354,10 +354,16 @@
             "status": "complete",
             "scope": "Twelve selected shared original bodies on six inherited allocator/storage variants; whole shared and concrete fixtures remain partial.",
             "evidence": "docs/buffer-porting.md#original-inherited-transfer-tests"
+          },
+          {
+            "id": "original-composite-gathering-and-wrapping-tests",
+            "status": "complete",
+            "scope": "Remaining 26 declared methods mapped with deterministic partial-write mutation evidence; no runtime code change. Whole original fixture still requires older-mapping and inherited-provider review.",
+            "evidence": "docs/buffer-porting.md#original-composite-gathering-and-wrapping-tests"
           }
         ],
         "remaining": [
-          "Continue 47 unreviewed AbstractByteBufTest and 26 unreviewed AbstractCompositeByteBufTest declarations, other partial fixtures and original inherited/provider configurations. Review previously mapped bodies against the first porting rule rather than inferring completion from counts.",
+          "Continue 47 unreviewed AbstractByteBufTest declarations; audit the 52 older AbstractCompositeByteBufTest mappings for original-body/helper fidelity, plus other partial fixtures and original inherited/provider configurations. All 85 Composite declarations have coverage decisions; counts do not establish complete port fidelity.",
           "Run consumer and final module validation. All 93 production entries remain reviewed with the newly found internal constructor path implemented; ByteBufUtilTest original named-body/provider review and the standalone adaptive growth regression are complete."
         ],
         "productionSourceReview": {
@@ -36800,7 +36806,8 @@
         "test/Netty.NET.Buffer.Tests/CompositeByteBufConsolidationTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufReferenceTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufFlatteningTest.cs",
-        "test/Netty.NET.Buffer.Tests/CompositeByteBufBoundaryTest.cs"
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufBoundaryTest.cs",
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs"
       ],
       "evidence": [
         "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only.",
@@ -36816,16 +36823,18 @@
         "Composite nested/flatten unit: four further declared methods mapped through 16 added CLR cases for original mixed retained-slice flattening with/without WrappedCompositeByteBuf, nested one-byte memory segments and full forward/reverse visitor content. Literal data/counter models distinguish pooled excluded-child deallocation from unpooled shared counts. All 93 pinned Buffer sources and two unchanged fixtures freshly compile; Unsafe/NIO each pass eight original runs (four methods, both byte orders) plus 16 supplemental scenarios with explicit heap/direct factories. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9144/9144 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. No runtime/Common change or fixture completion claim. docs/buffer-porting.md#nested-composite-flattening-and-borrowed-segments; artifacts/buffer-composite-flatten-validation (ignored), buffer-composite-flatten-*.trx.",
         "Composite discard-marks/empty unit: four further declared methods mapped through 20 added CLR cases in the existing discard fixture; 24 earlier cases remain in the 44-case focused run. Check original mark/reset parity with contiguous storage, issue 1976 grown-tail discard with explicit BE/LE, zero-length read at end and issue 1060 65 interleaved empty-composite writes/reads. All 93 pinned Buffer sources and two unchanged original fixtures freshly compile; Unsafe/NIO each pass eight original runs (four methods, both byte orders) plus 20 supplemental scenarios using explicit heap/direct factories. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9164/9164 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. No runtime/Common change or fixture completion claim. docs/buffer-porting.md#composite-discard-marks-and-empty-io; artifacts/buffer-composite-discard-marks-validation (ignored), buffer-composite-discard-marks-*.trx.",
         "Original utility/growth/boundary unit: pinned Java ByteBufUtilTest bodies (56 methods, 249 executable tuples, 15 original provider assumptions), all 400 allocator-growth repetitions and seven composite boundary bodies run directly in Unsafe and NIO. CLR named fixture/growth/boundary tests use original inputs/workloads/helpers/comments. Confirmed internal array-offset constructor gap is implemented. artifacts/buffer-original-utility-growth (ignored); docs/buffer-porting.md#original-utility-growth-and-composite-boundary-ports.",
-        "Full post-port validation: net10.0 Debug, Release and rebuilt checked Release each pass 27506, zero failures/skips; checked uses SIMPLE sampling interval 1 except the original isolated growth workload, which disables/restores slow leak instrumentation. The 249 named utility tuples, 400 growth repetitions and seven boundary tests are matched to TRX records and byte-exact Java Unsafe/NIO runs. 51 existing Common warnings, zero Buffer/test warnings. Shared test review remains partial; Common source/tests unchanged."
+        "Full post-port validation: net10.0 Debug, Release and rebuilt checked Release each pass 27506, zero failures/skips; checked uses SIMPLE sampling interval 1 except the original isolated growth workload, which disables/restores slow leak instrumentation. The 249 named utility tuples, 400 growth repetitions and seven boundary tests are matched to TRX records and byte-exact Java Unsafe/NIO runs. 51 existing Common warnings, zero Buffer/test warnings. Shared test review remains partial; Common source/tests unchanged.",
+        "Original composite gathering/wrapping unit: 26 named methods, eight full/single and twelve partial gathering cases, original wrapping/equality data and live bounded-memory replacement. Controlled incorrect requested-length reader advancement makes all twelve partial variants fail; source restored byte-for-byte. Byte-exact pinned Java Unsafe/NIO each pass all 52 big/little-endian provider/method pairs, zero skips. artifacts/buffer-original-composite-gathering (ignored); docs/buffer-porting.md#original-composite-gathering-and-wrapping-tests. Runtime implementation required no change.",
+        "Post-port validation: full net10.0 Debug/Release each pass 27604 with zero failures/skips; rebuilt checked Release with SIMPLE leak sampling interval 1 passes all 26 affected cases. Original source comments: 118 in code, three fixture-level comments remain with pending fidelity review. Controlled wrong reader advancement fails all twelve partial variants at the original-contract progress assertion; no production source changed. 51 existing Common build warnings, zero Buffer/test warnings."
       ],
-      "adaptation": "Selected original empty/component/offset/index/ownership/auto/full/ranged consolidation/shrink/discard/decompose/nested word/visitor/overflow contracts run alongside CLR borrowed sequence, native pin/quota/failure and aliasing tests. Retained component coverage distinguishes shared unpooled counters from independent pooled parent/child counters in the explicit method mappings below. Old retained composite views fail checked access after all components are discarded rather than exposing freed storage. Two seeded 100-layout fixtures independently assemble word bytes and check discard/consolidate; 400 full pinned-Java/CLR rows cover heap/direct structural behaviors. Remaining original fixture, array/NIO/gathering/allocator/pooled cases remain pending; no stubs or skipped tests. Batch/flatten update adds 31 cases for array/streaming success and failure ownership, prefix writer updates, null/tail safe release, checked overflow with shared backing memory, one batch consolidation, disposed/throwing enumerators, enumerable ByteBuf dispatch, shallow readable intersections and original slice ownership, derived/read-only inputs, empty input, allocation/retain/source-read rollback, separately retained source already owned by destination, cycle rejection and issue 16799 offset/discard regression. The original mixed-retained WrappedCompositeByteBuf flattening variant is covered by the explicit mapping below; other wrapper scenarios retain their stated scope. Remaining original fixture cases stay pending. Enumeration/cache update adds 24 cases for original empty/normal/count-change iterator contracts, cached view identities, internal offset checks through empties, full/partial sources, native early-disposal ownership, readonly nested storage, cache replacement on shrink/discard, retained-vs-borrowed removal/consolidation, same-count mutation, failed materialization retry, ByteBuf+IEnumerable single-source dispatch, and the original flatten/componentSlice retain-remove-add-back regression on heap/native storage. Pooled flatten/componentSlice variants are now covered by the explicit mapping below; CLR enumerator protocol is validated separately. Constructor update adds 26 cases for array/enumerable/params and ByteBuf+IEnumerable inputs, captured ranges/marks and readonly aliases, mixed heap/native allocation provenance and metrics, null termination/tail ownership, empty components, argument validation, insertion/copy/allocation failures with retry, derived-constructor cleanup, recoverable/persistent enumeration failure and disposal, and checked overflow. Original constructor-bound/overflow scenarios inform these tests; synthetic logical buffers exercise Int32 capacity overflow without large allocations instead of the original repeated 1-MiB backing. No original test method or whole fixture is claimed newly complete. Original operation comments from reused batch/null handling remain retained. Policy: docs/buffer-porting.md#composite-buffer-construction. Decomposition/removal update maps eight declared test methods through deterministic data and explicit borrowed-list ownership, including independent retained source counters and shared-counter alternatives. Original byte-order facades add no additional byte-only ownership behavior; CLR wire endianness remains explicit. File/inherited test coverage remains partial. Shrink/discard ownership maps eight further declarations, including existing retained-slice range rejection and extended pooled flattening coverage. CLR binary-search lookup replaces the Java last-access cache. Independent retained child counters remain distinct from the shared unpooled model; byte order is explicit. File/inherited coverage remains partial. Lookup/limit update maps eight further declarations using original data, repeated empty-separated 1..9-byte fragments and nested one-byte readable windows. CLR validates invalid component indices and constructor limits with standard argument exceptions; the pinned Java null-slot dereference at cIndex=numComponents is recorded rather than reproduced. Valid component lookup and ownership agree across all four allocator/storage combinations. File/inherited coverage remains partial. Consolidation/copy update maps eight further declarations with original layouts and explicit allocator/storage ownership checks. Merged Java nioBuffer becomes an owned contiguous copy followed by scoped Memory borrowing; pooled array offsets may be nonzero. Copy allocator tests keep real 1/2/3/2-byte fragments without empty separators for all-native variants. Empty copies are independently owned and duplicates borrow the composite count. File/inherited coverage remains partial. Reference/empty update maps eight further declarations, preserving original component counts and both caller-first and nested-composite-first release order. CLR duplicate contracts replace Java implementation-class assertions; empty backing capacities are explicit. Owned empty-readable sources are deallocated, while the immutable empty singleton remains a slot but contributes no byte offsets. File/inherited coverage remains partial. Nested/flatten update maps four further declarations, including the original mixed independent pooled retained chain through transparent wrappers. Unpooled excluded views share the live root counter instead of a separate zero counter. ReadOnlySequence replaces nested nioBuffers and Func delegates replace ByteProcessor; temporary comparison copies are explicitly released. File/inherited coverage remains partial. Discard-marks/empty update maps four further declarations through original reader/writer marker transitions and empty-I/O regressions. Explicit BE/LE methods replace Java order facades for integer-tail cases, Array.Empty<byte> replaces EMPTY_BYTES, and source backing sizes are explicit. Discard preserves the unused grown tail while releasing consumed components. File/inherited coverage remains partial. Seven original null-tail, capacity-overflow, array-offset construction and source-offset discard regressions now have separate direct CLR bodies. Base/inherited and gathering-write coverage remains partial.",
+      "adaptation": "Selected original empty/component/offset/index/ownership/auto/full/ranged consolidation/shrink/discard/decompose/nested word/visitor/overflow contracts run alongside CLR borrowed sequence, native pin/quota/failure and aliasing tests. Retained component coverage distinguishes shared unpooled counters from independent pooled parent/child counters in the explicit method mappings below. Old retained composite views fail checked access after all components are discarded rather than exposing freed storage. Two seeded 100-layout fixtures independently assemble word bytes and check discard/consolidate; 400 full pinned-Java/CLR rows cover heap/direct structural behaviors. Remaining original fixture, array/NIO/gathering/allocator/pooled cases remain pending; no stubs or skipped tests. Batch/flatten update adds 31 cases for array/streaming success and failure ownership, prefix writer updates, null/tail safe release, checked overflow with shared backing memory, one batch consolidation, disposed/throwing enumerators, enumerable ByteBuf dispatch, shallow readable intersections and original slice ownership, derived/read-only inputs, empty input, allocation/retain/source-read rollback, separately retained source already owned by destination, cycle rejection and issue 16799 offset/discard regression. The original mixed-retained WrappedCompositeByteBuf flattening variant is covered by the explicit mapping below; other wrapper scenarios retain their stated scope. Remaining original fixture cases stay pending. Enumeration/cache update adds 24 cases for original empty/normal/count-change iterator contracts, cached view identities, internal offset checks through empties, full/partial sources, native early-disposal ownership, readonly nested storage, cache replacement on shrink/discard, retained-vs-borrowed removal/consolidation, same-count mutation, failed materialization retry, ByteBuf+IEnumerable single-source dispatch, and the original flatten/componentSlice retain-remove-add-back regression on heap/native storage. Pooled flatten/componentSlice variants are now covered by the explicit mapping below; CLR enumerator protocol is validated separately. Constructor update adds 26 cases for array/enumerable/params and ByteBuf+IEnumerable inputs, captured ranges/marks and readonly aliases, mixed heap/native allocation provenance and metrics, null termination/tail ownership, empty components, argument validation, insertion/copy/allocation failures with retry, derived-constructor cleanup, recoverable/persistent enumeration failure and disposal, and checked overflow. Original constructor-bound/overflow scenarios inform these tests; synthetic logical buffers exercise Int32 capacity overflow without large allocations instead of the original repeated 1-MiB backing. No original test method or whole fixture is claimed newly complete. Original operation comments from reused batch/null handling remain retained. Policy: docs/buffer-porting.md#composite-buffer-construction. Decomposition/removal update maps eight declared test methods through deterministic data and explicit borrowed-list ownership, including independent retained source counters and shared-counter alternatives. Original byte-order facades add no additional byte-only ownership behavior; CLR wire endianness remains explicit. File/inherited test coverage remains partial. Shrink/discard ownership maps eight further declarations, including existing retained-slice range rejection and extended pooled flattening coverage. CLR binary-search lookup replaces the Java last-access cache. Independent retained child counters remain distinct from the shared unpooled model; byte order is explicit. File/inherited coverage remains partial. Lookup/limit update maps eight further declarations using original data, repeated empty-separated 1..9-byte fragments and nested one-byte readable windows. CLR validates invalid component indices and constructor limits with standard argument exceptions; the pinned Java null-slot dereference at cIndex=numComponents is recorded rather than reproduced. Valid component lookup and ownership agree across all four allocator/storage combinations. File/inherited coverage remains partial. Consolidation/copy update maps eight further declarations with original layouts and explicit allocator/storage ownership checks. Merged Java nioBuffer becomes an owned contiguous copy followed by scoped Memory borrowing; pooled array offsets may be nonzero. Copy allocator tests keep real 1/2/3/2-byte fragments without empty separators for all-native variants. Empty copies are independently owned and duplicates borrow the composite count. File/inherited coverage remains partial. Reference/empty update maps eight further declarations, preserving original component counts and both caller-first and nested-composite-first release order. CLR duplicate contracts replace Java implementation-class assertions; empty backing capacities are explicit. Owned empty-readable sources are deallocated, while the immutable empty singleton remains a slot but contributes no byte offsets. File/inherited coverage remains partial. Nested/flatten update maps four further declarations, including the original mixed independent pooled retained chain through transparent wrappers. Unpooled excluded views share the live root counter instead of a separate zero counter. ReadOnlySequence replaces nested nioBuffers and Func delegates replace ByteProcessor; temporary comparison copies are explicitly released. File/inherited coverage remains partial. Discard-marks/empty update maps four further declarations through original reader/writer marker transitions and empty-I/O regressions. Explicit BE/LE methods replace Java order facades for integer-tail cases, Array.Empty<byte> replaces EMPTY_BYTES, and source backing sizes are explicit. Discard preserves the unused grown tail while releasing consumed components. File/inherited coverage remains partial. Seven original null-tail, capacity-overflow, array-offset construction and source-offset discard regressions now have separate direct CLR bodies. Base/inherited and gathering-write coverage remains partial. All remaining 26 declared methods now have named original gathering/wrapping/equality bodies or explicit CLR Memory replacement. A deterministic one-byte virtual output hook and real TCP preserve the partial-write progress contract; requested-length mutation fails all twelve variants. All 85 declared methods are mapped, but 52 older mappings and full inherited/provider fixture closure remain in-progress.",
       "comments": {
         "upstreamCount": 121,
-        "preservedCount": 87,
-        "missingCount": 34,
-        "preservedInImplementationCount": 87,
+        "preservedCount": 118,
+        "missingCount": 3,
+        "preservedInImplementationCount": 118,
         "preservedAsReferenceCount": 0,
-        "coverage": "Original named test/helper comments retained in code. Shared composite fixture remains partial."
+        "coverage": "Original comments are retained beside their implementation or directly ported body, including the remaining wrapping/equality and NIO-replacement descriptions. Whole fixture fidelity/inheritance review remains separate. Three remaining comments describe the original abstract fixture and its discardReadBytes strict-mode override; they remain tracked with incomplete original-fixture review."
       },
       "caseMappings": [
         {
@@ -37476,44 +37485,343 @@
             }
           ],
           "adaptation": "Direct original body: one-MiB backing with repeated aliases crosses Int32 capacity without allocating a multi-GiB payload; the original null tail, constructor offset suffix and exact issue-16799 discard coordinates/bytes remain. The package-private array-offset constructor now has an internal CLR counterpart. Span replaces array offset/length writes; ArgumentOutOfRangeException replaces IllegalArgumentException. CLR array-preflight rejection leaves a caller claim, explicitly released after the original composite cleanup; the core overflow assertion is unchanged."
+        },
+        {
+          "upstreamMethod": "testCompositeWrappedBuffer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestCompositeWrappedBuffer"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. All original comparison/wrapping cases and native/mixed IsDirect transitions are retained; writable Memory replaces wrapped heap NIO arrays and an owned native buffer replaces the JVM direct ByteBuffer expression."
+        },
+        {
+          "upstreamMethod": "testSeveralBuffersEquals",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestSeveralBuffersEquals"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. All original comparison/wrapping cases and native/mixed IsDirect transitions are retained; writable Memory replaces wrapped heap NIO arrays and an owned native buffer replaces the JVM direct ByteBuffer expression."
+        },
+        {
+          "upstreamMethod": "testWrappedBuffer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestWrappedBuffer"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. All original comparison/wrapping cases and native/mixed IsDirect transitions are retained; writable Memory replaces wrapped heap NIO arrays and an owned native buffer replaces the JVM direct ByteBuffer expression."
+        },
+        {
+          "upstreamMethod": "testWrittenBuffersEquals",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestWrittenBuffersEquals"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. All original comparison/wrapping cases and native/mixed IsDirect transitions are retained; writable Memory replaces wrapped heap NIO arrays and an owned native buffer replaces the JVM direct ByteBuffer expression."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesHeap",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesHeap"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesDirect",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesDirect"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesMixes",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesMixes"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesHeapPooled",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesHeapPooled"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesDirectPooled",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesDirectPooled"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesMixesPooled",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesMixesPooled"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialHeap",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialHeap"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialDirect",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialDirect"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialMixes",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialMixes"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialHeapSlice",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialHeapSlice"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialDirectSlice",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialDirectSlice"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialMixesSlice",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialMixesSlice"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialHeapPooled",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialHeapPooled"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialDirectPooled",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialDirectPooled"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialMixesPooled",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialMixesPooled"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialHeapPooledSliced",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialHeapPooledSliced"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialDirectPooledSliced",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialDirectPooledSliced"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesPartialMixesPooledSliced",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesPartialMixesPooledSliced"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original one-byte channel progress is injected through a test-only CompositeByteBuf.GetBytes override because Socket.Send cannot be overridden. Every byte still traverses loopback TCP. Production ReadBytes receives the full remaining request and must advance by its actual returned one-byte count. Final six-byte payload and added per-step progress assertions are checked; no reader-index update is simulated by the test. Controlled requested-length mutation fails all twelve variants at the progress assertion."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesSingleHeap",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesSingleHeap"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testGatheringWritesSingleDirect",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestGatheringWritesSingleDirect"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original full/single-component two-byte range is sent via real Socket and captured to TCP EOF, preserving exact total output and bytes."
+        },
+        {
+          "upstreamMethod": "testInternalNioBuffer",
+          "disposition": "clr-replacement",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestInternalNioBuffer"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. Original mutable internal-NIO cache/object identity has no counterpart in immutable CLR Memory values and is explicitly not emulated. The raw/slice/duplicate cases check bounded live aliasing and independence from a subsequent empty borrow instead. These are CLR replacement contracts, not assertions of Java cache identity."
+        },
+        {
+          "upstreamMethod": "testisDirectMultipleBufs",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufGatheringTest.cs",
+              "method": "TestisDirectMultipleBufs"
+            }
+          ],
+          "adaptation": "Direct original named body/helper and original bytes, offsets, storage and cleanup. Byte-only behavior needs no mutable byte-order facade; Memory/ReadOnlySequence replace JVM buffers. Scoped public allocators replace shared JVM globals. All original comparison/wrapping cases and native/mixed IsDirect transitions are retained; writable Memory replaces wrapped heap NIO arrays and an owned native buffer replaces the JVM direct ByteBuffer expression."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 85,
-        "mappedCount": 59,
+        "mappedCount": 85,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 26,
-        "unreviewedMethods": [
-          "testCompositeWrappedBuffer",
-          "testSeveralBuffersEquals",
-          "testWrappedBuffer",
-          "testWrittenBuffersEquals",
-          "testGatheringWritesHeap",
-          "testGatheringWritesDirect",
-          "testGatheringWritesMixes",
-          "testGatheringWritesHeapPooled",
-          "testGatheringWritesDirectPooled",
-          "testGatheringWritesMixesPooled",
-          "testGatheringWritesPartialHeap",
-          "testGatheringWritesPartialDirect",
-          "testGatheringWritesPartialMixes",
-          "testGatheringWritesPartialHeapSlice",
-          "testGatheringWritesPartialDirectSlice",
-          "testGatheringWritesPartialMixesSlice",
-          "testGatheringWritesPartialHeapPooled",
-          "testGatheringWritesPartialDirectPooled",
-          "testGatheringWritesPartialMixesPooled",
-          "testGatheringWritesPartialHeapPooledSliced",
-          "testGatheringWritesPartialDirectPooledSliced",
-          "testGatheringWritesPartialMixesPooledSliced",
-          "testGatheringWritesSingleHeap",
-          "testGatheringWritesSingleDirect",
-          "testInternalNioBuffer",
-          "testisDirectMultipleBufs"
-        ]
+        "unreviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "testStructureReview": {
+        "status": "in-progress",
+        "scope": "All 85 declared methods now have coverage decisions. The 26 remaining declarations and seven preceding boundary bodies are directly named ports/replacements. The 52 older mappings still require original-body/helper fidelity review; neither this count nor selected provider cases completes the inherited fixture.",
+        "newDirectMethods": 26,
+        "previousDirectBoundaryMethods": 7,
+        "remainingExistingMethodMappingsToReview": 52
+      },
+      "gatheringAndWrappingReview": {
+        "status": "complete-for-recorded-methods",
+        "originalMethods": 26,
+        "originalFullOrSingleWrites": 8,
+        "originalPartialWrites": 12,
+        "originalWrappingAndEqualityMethods": 4,
+        "originalMemoryReplacementMethods": 1,
+        "originalStorageKindMethods": 1,
+        "partialWriteMechanism": "Test-only ShortWriteComposite caps the virtual output hook, then uses base GetBytes and real Socket.Send. Production ReadBytes retains its original requested length and advances by its actual count. No Stream partial-write contract or simulated reader cursor is introduced.",
+        "mutationEvidence": {
+          "mutation": "Advance reader by requested length instead of actual count in synchronous socket ReadBytes",
+          "selectedTests": 12,
+          "failedAtProgressAssertion": 12,
+          "productionSourceRestoredByteForByte": true
+        },
+        "javaProfiles": [
+          "Unsafe big/little endian",
+          "NIO big/little endian"
+        ],
+        "originalJavaPassesPerProfile": 52,
+        "intentionalClrReplacement": "Mutable internal-NIO buffer/cache identity is not ported; bounded live Memory aliasing for raw/slice/duplicate components is tested instead.",
+        "existingSocketEvidence": [
+          {
+            "path": "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+            "method": "NonblockingSendUsesActualCountAndStopsAtWouldBlock"
+          },
+          {
+            "path": "test/Netty.NET.Buffer.Tests/ByteBufSocketTransferTest.cs",
+            "method": "AbsoluteAndRelativeOutputPreserveBytesMarksAndBorrowedOwnership"
+          }
+        ],
+        "partialWriteScope": "The output hook deterministically tests returned-count reader progress; existing nonblocking socket tests cover actual kernel backpressure separately."
       }
     },
     {
