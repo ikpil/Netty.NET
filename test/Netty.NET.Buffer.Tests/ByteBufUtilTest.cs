@@ -770,4 +770,491 @@ public class ByteBufUtilTest
             }
         }
     }
+    [Fact]
+    public void DecodeRandomHexBytesWithEvenLength()
+    {
+        decodeRandomHexBytes(256);
+
+    }
+
+    [Fact]
+    public void DecodeRandomHexBytesWithOddLength()
+    {
+        decodeRandomHexBytes(257);
+
+    }
+
+    [Fact]
+    public void DecodeHexDumpWithOddLength()
+    {
+        Assert.Throws<ArgumentException>(() =>
+        {
+            ByteBufUtil.DecodeHexDump("abc");
+        });
+
+    }
+
+    [Fact]
+    public void DecodeHexDumpWithInvalidChar()
+    {
+        Assert.Throws<ArgumentException>(() =>
+        {
+            ByteBufUtil.DecodeHexDump("fg");
+        });
+
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void TestIndexOfMatchesNaiveSearch(int needleReaderIndex)
+    {
+        // CLR seeded RNG values differ from Java; keep all 10,000 trials, the small alphabet,
+        // original lengths/prefixes and the independent scalar oracle for every generated input.
+        Random random = new Random(needleReaderIndex);
+        for (int i = 0; i < 10000; i++)
+        {
+            byte[] needleBytes = new byte[2 + random.Next(5)];
+            byte[] haystackBytes = new byte[random.Next(16)];
+            byte[] prefix = new byte[needleReaderIndex];
+            foreach (byte[] bytes in new[] { needleBytes, haystackBytes, prefix })
+            {
+                for (int j = 0; j < bytes.Length; j++)
+                {
+                    bytes[j] = (byte)random.Next(3);
+                }
+            }
+            ByteBuf needle = Unpooled.Buffer().WriteBytes(prefix).WriteBytes(needleBytes);
+            needle.ReaderIndex = prefix.Length;
+            ByteBuf haystack = Unpooled.WrappedBuffer(haystackBytes);
+            Assert.Equal(naiveIndexOf(needleBytes, haystackBytes), ByteBufUtil.IndexOf(needle, haystack));
+            needle.Release();
+            haystack.Release();
+        }
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUsAscii(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string usAscii = "NettyRocks";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(Encoding.ASCII.GetBytes(usAscii));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteAscii(buf2, usAscii);
+
+        Assert.Equal(buf, buf2);
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUsAsciiSwapped(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        // CLR byte writes have no mutable order. Keep the forwarding facade exercised by the Java swapped view.
+        string usAscii = "NettyRocks";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(Encoding.ASCII.GetBytes(usAscii));
+        ByteBuf buf2 = new ByteBufUtilitySourceTest.Wrapper(owner.Buffer(16));
+        ByteBufUtil.WriteAscii(buf2, usAscii);
+
+        Assert.Equal(buf, buf2);
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUsAsciiWrapped(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string usAscii = "NettyRocks";
+        ByteBuf buf = Unpooled.UnreleasableBuffer(owner.Buffer(16));
+        AssertWrapped(buf);
+        buf.WriteBytes(Encoding.ASCII.GetBytes(usAscii));
+        ByteBuf buf2 = Unpooled.UnreleasableBuffer(owner.Buffer(16));
+        AssertWrapped(buf2);
+        ByteBufUtil.WriteAscii(buf2, usAscii);
+
+        Assert.Equal(buf, buf2);
+
+        buf.Unwrap().Release();
+        buf2.Unwrap().Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUsAsciiComposite(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string usAscii = "NettyRocks";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(Encoding.ASCII.GetBytes(usAscii));
+        ByteBuf buf2 = owner.Composite().AddComponent(
+                owner.Buffer(8)).AddComponent(owner.Buffer(24));
+        // write some byte so we start writing with an offset.
+        buf2.WriteByte(1);
+        ByteBufUtil.WriteAscii(buf2, usAscii);
+
+        // Skip the previously written byte.
+        Assert.Equal(buf, buf2.SkipBytes(1));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUsAsciiCompositeWrapped(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string usAscii = "NettyRocks";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(Encoding.ASCII.GetBytes(usAscii));
+        ByteBuf buf2 = new WrappedCompositeByteBuf(owner.Composite().AddComponent(
+                owner.Buffer(8)).AddComponent(owner.Buffer(24)));
+        // write some byte so we start writing with an offset.
+        buf2.WriteByte(1);
+        ByteBufUtil.WriteAscii(buf2, usAscii);
+
+        // Skip the previously written byte.
+        Assert.Equal(buf, buf2.SkipBytes(1));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string usAscii = "Some UTF-8 like äÄ∏ŒŒ";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(usAscii));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, usAscii);
+
+        Assert.Equal(buf, buf2);
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8Composite(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string utf8 = "Some UTF-8 like äÄ∏ŒŒ";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(utf8));
+        ByteBuf buf2 = owner.Composite().AddComponent(
+                owner.Buffer(8)).AddComponent(owner.Buffer(24));
+        // write some byte so we start writing with an offset.
+        buf2.WriteByte(1);
+        ByteBufUtil.WriteUtf8(buf2, utf8);
+
+        // Skip the previously written byte.
+        Assert.Equal(buf, buf2.SkipBytes(1));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8CompositeWrapped(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string utf8 = "Some UTF-8 like äÄ∏ŒŒ";
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(utf8));
+        ByteBuf buf2 = new WrappedCompositeByteBuf(owner.Composite().AddComponent(
+                owner.Buffer(8)).AddComponent(owner.Buffer(24)));
+        // write some byte so we start writing with an offset.
+        buf2.WriteByte(1);
+        ByteBufUtil.WriteUtf8(buf2, utf8);
+
+        // Skip the previously written byte.
+        Assert.Equal(buf, buf2.SkipBytes(1));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8Surrogates(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        // leading surrogate + trailing surrogate
+        string surrogateString = new StringBuilder(2)
+                                .Append('a')
+                                .Append('\uD800')
+                                .Append('\uDC00')
+                                .Append('b')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidOnlyTrailingSurrogate(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('a')
+                                .Append('\uDC00')
+                                .Append('b')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidOnlyLeadingSurrogate(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('a')
+                                .Append('\uD800')
+                                .Append('b')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidSurrogatesSwitched(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('a')
+                                .Append('\uDC00')
+                                .Append('\uD800')
+                                .Append('b')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidTwoLeadingSurrogates(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('a')
+                                .Append('\uD800')
+                                .Append('\uD800')
+                                .Append('b')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidTwoTrailingSurrogates(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('a')
+                                .Append('\uDC00')
+                                .Append('\uDC00')
+                                .Append('b')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidEndOnLeadingSurrogate(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('\uD800')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8InvalidEndOnTrailingSurrogate(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string surrogateString = new StringBuilder(2)
+                                .Append('\uDC00')
+                                .ToString();
+        ByteBuf buf = owner.Buffer(16);
+        buf.WriteBytes(NettyUtf8.GetBytes(surrogateString));
+        ByteBuf buf2 = owner.Buffer(16);
+        ByteBufUtil.WriteUtf8(buf2, surrogateString);
+
+        Assert.Equal(buf, buf2);
+        Assert.Equal(buf.ReadableBytes, ByteBufUtil.Utf8Bytes(surrogateString));
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUsAsciiString(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        AsciiString usAscii = new AsciiString("NettyRocks");
+        int expectedCapacity = usAscii.Length();
+        ByteBuf buf = owner.Buffer(expectedCapacity);
+        buf.WriteBytes(Encoding.ASCII.GetBytes(usAscii.ToString()));
+        ByteBuf buf2 = owner.Buffer(expectedCapacity);
+        ByteBufUtil.WriteAscii(buf2, usAscii);
+
+        Assert.Equal(buf, buf2);
+
+        buf.Release();
+        buf2.Release();
+
+    }
+
+    [Theory]
+    [MemberData(nameof(NoUnsafe))]
+    public void TestWriteUtf8Wrapped(BufferType bufferType)
+    {
+        using var owner = new Provider(bufferType);
+        string usAscii = "Some UTF-8 like äÄ∏ŒŒ";
+        ByteBuf buf = Unpooled.UnreleasableBuffer(owner.Buffer(16));
+        AssertWrapped(buf);
+        buf.WriteBytes(NettyUtf8.GetBytes(usAscii));
+        ByteBuf buf2 = Unpooled.UnreleasableBuffer(owner.Buffer(16));
+        AssertWrapped(buf2);
+        ByteBufUtil.WriteUtf8(buf2, usAscii);
+
+        Assert.Equal(buf, buf2);
+
+        buf.Unwrap().Release();
+        buf2.Unwrap().Release();
+
+    }
+
+    private static void decodeRandomHexBytes(int len)
+    {
+        byte[] b = new byte[len];
+        Random.Shared.NextBytes(b);
+        string hexDump = ByteBufUtil.HexDump(b);
+        for (int i = 0; i <= len; i++)
+        {  // going over sub-strings of various lengths including empty byte[].
+            byte[] b2 = b[i..];
+            byte[] decodedBytes = ByteBufUtil.DecodeHexDump(hexDump, i * 2, (len - i) * 2);
+            Assert.Equal(b2, decodedBytes);
+        }
+    }
+
+    private static int naiveIndexOf(byte[] needle, byte[] haystack)
+    {
+        for (int i = 0; i <= haystack.Length - needle.Length; i++)
+        {
+            int j = 0;
+            while (j < needle.Length && haystack[i + j] == needle[j])
+            {
+                j++;
+            }
+            if (j == needle.Length)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static void AssertWrapped(ByteBuf buf)
+    {
+        Assert.IsAssignableFrom<WrappedByteBuf>(buf);
+    }
+
 }

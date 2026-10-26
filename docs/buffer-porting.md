@@ -6113,6 +6113,49 @@ regressions must have their own names and an actual implementation reason.
 Full net10.0 Debug/Release each pass 26,983; rebuilt checked Release with SIMPLE
 leak sampling one passes the 1,789 affected cases. All have zero failures/skips.
 
+## Original utility, growth and composite boundary ports
+
+All 56 ByteBufUtilTest methods now have directly named C# bodies and original
+helpers in ByteBufUtilTest.cs. The remaining 23 matrix/other-fixture mappings are
+replaced by the original hex suffix/error, four-prefix 10,000-trial naive search,
+ASCII/UTF-8, surrogate, wrapper and offset-composite writer tests. Expected buffers,
+byte inputs, assertion order, release paths and all 29 original comments are in code.
+Six original allocator providers yield 249 executable invocations. The 15 Java
+heap-only assumption tuples remain explicitly accounted for; CLR uses three heap
+facts and has no skips. Seeded CLR/Java RNG streams differ, while each search trial
+keeps the original lengths/alphabet/prefix and its independent naive oracle. The
+retained writer matrix is supplemental and does not establish original-body closure.
+
+AdaptiveByteBufAllocatorGrowthTest now retains all 400 original repetitions, 20 jobs
+per repetition and 2,000 allocation/growth/finally-release cycles per job: 16 million
+cycles. Small and large sizes, a shared allocator/fixed concurrency bound, start
+latch, individual 30-second future deadlines and all 11 comments are preserved.
+Task/WaitAsync and a bounded scheduler replace the executor/Future; Random.Shared
+replaces unseeded SplittableRandom. A nonparallel collection disables and restores
+leak recording for this workload, corresponding to Isolated/DisabledForSlowLeakDetection;
+it does not skip or reduce the race. Other tests keep the configured leak settings.
+The shared RemainingCapacity paths are observational, and the regression completed
+without a chunk-state failure. This does not close the larger adaptive allocator suites.
+
+Seven original AbstractCompositeByteBufTest null-tail, overflow, constructor-offset
+and issue-16799 discard bodies are also ported directly. They retain one-MiB backing
+with repeated aliases, both offset-zero overflow and last-entry success, and the
+exact 9/32781/22519 discard coordinates and subsequent 0x03 byte. These exposed a
+missing package-private array-offset constructor entry in CLR: it is now internal,
+reuses suffix-only preflight/transfer, and the public params constructor delegates
+with offset zero. Public API is unchanged. CLR array-preflight failure retains caller
+ownership, so only its residual caller claim is additionally released after the
+original cleanup. Span replaces array ranges; overflow maps to ArgumentOutOfRangeException.
+
+Byte-exact pinned Java sources execute all the above in Unsafe and NIO: each has
+249 utility passes plus 15 original assumption-only invocations, seven boundary
+passes and 400 growth passes. Full net10.0 Debug/Release/rebuilt checked Release
+pass 27,506 each, with zero failures/skips. Checked uses SIMPLE sampling one except
+for the isolated growth fixture described above. Builds retain 51 existing Common
+warnings and no Buffer/test warnings. Evidence: artifacts/buffer-original-utility-growth
+(ignored). ByteBufUtilTest and the standalone growth fixture are verified; shared
+AbstractByteBufTest remains 349/408 and Composite is now 59/85 with 26 unreviewed.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6128,10 +6171,10 @@ CharSequence/CharBuffer become spans or strings, Charset becomes Encoding,
 copy=false uses whole-array Memory eligibility, and a bounded native storage cache
 replaces Java recycler object reuse. These are implemented alternatives, not gaps.
 
-ByteBufUtilTest has coverage mappings for all 56 original methods and 249 executable
-provider/value tuples, with 15 original assumption-only tuples accounted for and no
-CLR skips. Its whole-fixture status is in-progress pending the original-body/helper
-structure review of 23 older mappings; invocation coverage alone is not test-port completion. Its precise row selectors and provider parser are checked independently
+ByteBufUtilTest now has all 56 original methods directly ported with their original
+bodies/helpers and 249 executable provider/value tuples, plus 15 original assumption-only
+tuples explicitly accounted for. Its named-body/provider/comment review is verified;
+invocation counts alone were not used to establish that completion. Its precise row selectors and provider parser are checked independently
 from the remaining shared fixtures and consumer/module closure.
 ByteBuf's abstract contract source is verified, with all 192 public declarations,
 12 concrete defaults, internal accessibility helper, interfaces and original comments
@@ -6161,8 +6204,8 @@ review; its 41-method standalone fixture is verified under the explicit CLR poli
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
 consumer/module closure decisions remain. AbstractByteBufTest is now 349/408 mapped
-with 59 unreviewed declarations; AbstractCompositeByteBufTest remains 52/85 mapped
-with 33 unreviewed declarations. Inherited provider and other standalone fixture
+with 59 unreviewed declarations; AbstractCompositeByteBufTest is now 59/85 mapped
+with 26 unreviewed declarations. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 

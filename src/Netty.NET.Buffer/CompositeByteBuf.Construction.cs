@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Netty.NET.Common;
 
@@ -26,11 +27,20 @@ public partial class CompositeByteBuf
     /// failure releases acquired components and the unvisited tail, following AddComponents.
     /// Null terminates insertion. Consolidation runs once after the batch; all bytes are readable.</remarks>
     public CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents, params ByteBuf[] buffers)
+        : this(allocator, direct, maxNumComponents, buffers, 0) { }
+
+    // Original package-private array constructor. Only the suffix participates in
+    // capacity preflight and ownership transfer; preceding entries remain untouched.
+    internal CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents,
+        ByteBuf[] buffers, int offset)
         : this(allocator, direct, maxNumComponents)
     {
         try
         {
-            AddComponentsCore(0, buffers, 0, false);
+            ArgumentNullException.ThrowIfNull(buffers);
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(offset, buffers.Length);
+            AddComponentsCore(0, buffers, offset, false);
             SetIndex(0, Capacity);
         }
         catch
