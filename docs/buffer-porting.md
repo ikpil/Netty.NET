@@ -6156,6 +6156,35 @@ warnings and no Buffer/test warnings. Evidence: artifacts/buffer-original-utilit
 (ignored). ByteBufUtilTest and the standalone growth fixture are verified; shared
 AbstractByteBufTest remains 349/408 and Composite is now 59/85 with 26 unreviewed.
 
+## Original inherited transfer tests
+
+Twelve more AbstractByteBufTest methods now use their original directly named bodies:
+random heap/direct transfer, six sequential heap/direct/heap-memory transfers,
+independent copied-read mutation and two stream roundtrips. CAPACITY=4096,
+BLOCK_SIZE=128, seed/replay passes, exact offsets, peer/root index assertions and
+source comments remain. Six actual concrete classes inherit these bodies for
+unpooled, pooled and adaptive heap/native roots. The original pooled allocation
+helper checks indices before and after resetting marks; adaptive factories check
+storage kind. The narrow AbstractPooledByteBufTransferTest helper preserves the
+pre-existing AbstractPooledByteBufTest arena fixture and all its consumers unchanged.
+
+Memory<byte> replaces a heap ByteBuffer backing. CLR and Java RNG streams differ,
+but each preserves its original seed/replay test strategy. Explicit unchecked byte
+mutation preserves Java wrapping in checked builds. CLR Stream returns zero for a
+zero-length read, so the first original stream case additionally observes ReadByte
+EOF=-1; byte roundtrips and cursor assertions remain. Fixture-owned allocators and
+unpooled peers are released deterministically, including heap facade claims omitted
+by Java GC-style cleanup. Native reservation domains end at zero.
+
+Pinned Java Unsafe/NIO each pass all 72 original provider/method pairs, no skips.
+Full net10.0 Debug/Release each pass 27,578; rebuilt checked Release with SIMPLE
+sampling one passes all 72 affected cases. All have zero failures/skips. There are
+51 existing Common build warnings and no Buffer/test warnings. Production/Common
+code is unchanged for this unit.
+The shared fixture now maps 361/408 declarations with 47 unreviewed; no whole
+inherited/provider or module completion is inferred. Existing JSON/Markdown are
+updated; evidence is in ignored artifacts/buffer-original-transfer.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6203,8 +6232,8 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. AbstractByteBufTest is now 349/408 mapped
-with 59 unreviewed declarations; AbstractCompositeByteBufTest is now 59/85 mapped
+consumer/module closure decisions remain. AbstractByteBufTest is now 361/408 mapped
+with 47 unreviewed declarations; AbstractCompositeByteBufTest is now 59/85 mapped
 with 26 unreviewed declarations. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.

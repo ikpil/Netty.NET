@@ -348,10 +348,16 @@
             "status": "complete",
             "result": "All 56 original ByteBufUtilTest methods now directly ported; full 400-repetition adaptive growth regression ported; seven composite boundary bodies ported and internal array-offset constructor gap fixed.",
             "evidence": "docs/buffer-porting.md#original-utility-growth-and-composite-boundary-ports"
+          },
+          {
+            "id": "original-inherited-transfer-tests",
+            "status": "complete",
+            "scope": "Twelve selected shared original bodies on six inherited allocator/storage variants; whole shared and concrete fixtures remain partial.",
+            "evidence": "docs/buffer-porting.md#original-inherited-transfer-tests"
           }
         ],
         "remaining": [
-          "Continue 59 unreviewed AbstractByteBufTest and 26 unreviewed AbstractCompositeByteBufTest declarations, other partial fixtures and original inherited/provider configurations. Review previously mapped bodies against the first porting rule rather than inferring completion from counts.",
+          "Continue 47 unreviewed AbstractByteBufTest and 26 unreviewed AbstractCompositeByteBufTest declarations, other partial fixtures and original inherited/provider configurations. Review previously mapped bodies against the first porting rule rather than inferring completion from counts.",
           "Run consumer and final module validation. All 93 production entries remain reviewed with the newly found internal constructor path implemented; ByteBufUtilTest original named-body/provider review and the standalone adaptive growth regression are complete."
         ],
         "productionSourceReview": {
@@ -32041,10 +32047,30 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractAdaptiveByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractAdaptiveByteBufTest.cs"
+      ],
+      "evidence": [
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
+      ],
+      "adaptation": " The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
+      },
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "preservedInImplementationCount": 1,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractByteBufAllocatorTest.java",
@@ -32232,7 +32258,8 @@
         "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufMutationIterationSourceTest.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufLifetimeFixtureTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufLifetimeFixtureTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -32265,16 +32292,18 @@
         "Zero-fill/iteration/write-lifetime original-fixture unit: 28 previously unreviewed declared methods ported across five heap/native/mixed-composite/pooled providers (140 cases): four zero-fill methods, nine ByteProcessor methods and 15 scalar writes after release. All 140 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO. Java executes all 28 original bodies plus releasedBuffer and TestByteProcessor verbatim. CLR Func<byte,bool> and synchronous captured locals replace ByteProcessor/AtomicInteger; octet comparisons preserve signed Java byte patterns; Java argument errors map to CLR ArgumentOutOfRangeException. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 12205 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings and new provider native reservations zero. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No runtime/API/status change. docs/buffer-porting.md#zero-fill-iteration-and-write-lifetime-original-fixtures; artifacts/buffer-mutation-iteration-source-validation (ignored). Whole fixture/provider statuses remain partial.",
         "Shared lifetime fixture batch: 69 formerly unreviewed AbstractByteBufTest methods now map to 1656 actual CLR cases (8 allocator/storage providers x 3 entry forms). Exact retained handler contents, released factory chains, four nested slice/duplicate combinations, 12 unreleasable combinations, 26 released bulk I/O cases, seven bounded-borrow replacements and two ten-round cross-task reference-visibility bodies are ported. Pinned byte-exact Java 69 bodies execute on seven original concrete fixtures in Unsafe/NIO: each passes 483, no skips. CLR borrowed memory/pin lifetime checks intentionally replace JVM capability/internal-NIO differences; Task/TCS uses fresh-facade and allocator cleanup rather than JVM recycler thread identity. Full forced net10.0 Debug/Release/checked Release SIMPLE sampling 1 each pass 26983, zero failures/skips, native reservations zero. 51 existing Common warnings, no Buffer/test warnings; no runtime/Common source changed. AbstractByteBufTest: 349/408 declared methods mapped, 59 unreviewed; full inherited/provider closure remains separate. docs/buffer-porting.md#shared-retained-lifetime-and-released-access-fixture-batch; artifacts/buffer-lifetime-fixture-batch (ignored).",
         "Original test structure correction: replaces the recent method-name/case-index dispatch harness with individually named PascalCase test methods and source-derived bodies/helpers. Runtime and mapped-method counts do not change. Current targets supersede the earlier grouped harness; docs/buffer-porting.md#original-test-structure-correction.",
-        "After direct-port correction: net10.0 full Debug/Release each pass 26983, zero failures/skips. Rebuilt checked Release with SIMPLE leak sampling 1 passes all 1789 affected cases under their individual original method names. Original 159-file inventory, method mapping targets and comment occurrences agree. Runtime/Common sources unchanged. artifacts/buffer-direct-test-port (ignored)."
+        "After direct-port correction: net10.0 full Debug/Release each pass 26983, zero failures/skips. Rebuilt checked Release with SIMPLE leak sampling 1 passes all 1789 affected cases under their individual original method names. Original 159-file inventory, method mapping targets and comment occurrences agree. Runtime/Common sources unchanged. artifacts/buffer-direct-test-port (ignored).",
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
       ],
-      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed.",
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial.",
       "comments": {
         "upstreamCount": 112,
-        "preservedCount": 96,
-        "missingCount": 16,
-        "coverage": "Original comments remain beside the directly ported bodies/helpers; scoped references retain only comments whose JVM-only API/control flow has no CLR counterpart. Other shared fixture bodies remain partial.",
-        "preservedInImplementationCount": 93,
-        "preservedAsReferenceCount": 3
+        "preservedCount": 98,
+        "missingCount": 14,
+        "preservedInImplementationCount": 95,
+        "preservedAsReferenceCount": 3,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
       },
       "caseMappings": [
         {
@@ -36123,16 +36152,148 @@
             }
           ],
           "adaptation": "Direct PascalCase port of the named original method, preserving its inputs, assertion sequence, buffer allocations/releases, helper calls and comments. Only CLR API/ownership adapters differ. Heap/native allocator and entry-form parameters select storage, never the test body. NIO/channel APIs use bounded memory, Stream or Socket; reference-visibility uses dedicated threads and two latch boundaries."
+        },
+        {
+          "upstreamMethod": "testRandomHeapBufferTransfer1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestRandomHeapBufferTransfer1"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testRandomHeapBufferTransfer2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestRandomHeapBufferTransfer2"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testRandomDirectBufferTransfer",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestRandomDirectBufferTransfer"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialHeapBufferTransfer1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialHeapBufferTransfer1"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialHeapBufferTransfer2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialHeapBufferTransfer2"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialDirectBufferTransfer1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialDirectBufferTransfer1"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialDirectBufferTransfer2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialDirectBufferTransfer2"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialByteBufferBackedHeapBufferTransfer1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialByteBufferBackedHeapBufferTransfer1"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialByteBufferBackedHeapBufferTransfer2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialByteBufferBackedHeapBufferTransfer2"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testSequentialCopiedBufferTransfer1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestSequentialCopiedBufferTransfer1"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testStreamTransfer1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestStreamTransfer1"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
+        },
+        {
+          "upstreamMethod": "testStreamTransfer2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+              "method": "TestStreamTransfer2"
+            }
+          ],
+          "adaptation": "Direct original shared body inherited by six concrete unpooled/pooled/adaptive heap/native fixtures. Retains CAPACITY=4096, BLOCK_SIZE=128, seeded write/replay passes, all offset/index assertions, direct versus heap peers and copy mutation checks. CLR RNG streams differ but reset/replay uses the identical local seed. Memory<byte> replaces heap ByteBuffer backing. Stream zero-length result is 0 in CLR; TestStreamTransfer1 also checks ReadByte EOF=-1 so the original EOF observation is preserved. Explicit unchecked byte mutation preserves Java wrapping under checked builds. Peer cleanup releases Java GC-only heap facade claims without changing test assertions."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 408,
-        "mappedCount": 349,
+        "mappedCount": 361,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 59,
+        "unreviewedCount": 47,
         "unreviewedMethods": [
           "getByteBufferBoundaryCheck",
           "getByteBufferState",
@@ -36142,20 +36303,8 @@
           "testMediumConsistentWithByteBuffer",
           "testIntConsistentWithByteBuffer",
           "testLongConsistentWithByteBuffer",
-          "testRandomHeapBufferTransfer1",
-          "testRandomHeapBufferTransfer2",
-          "testRandomDirectBufferTransfer",
           "testRandomByteBufferTransfer",
-          "testSequentialHeapBufferTransfer1",
-          "testSequentialHeapBufferTransfer2",
-          "testSequentialDirectBufferTransfer1",
-          "testSequentialDirectBufferTransfer2",
-          "testSequentialByteBufferBackedHeapBufferTransfer1",
-          "testSequentialByteBufferBackedHeapBufferTransfer2",
           "testSequentialByteBufferTransfer",
-          "testSequentialCopiedBufferTransfer1",
-          "testStreamTransfer1",
-          "testStreamTransfer2",
           "testToStringMultipleThreads",
           "testCopyMultipleThreads0",
           "testNioBuffer1",
@@ -36597,7 +36746,44 @@
         "// Test-case trying to reproduce:",
         "// https://github.com/netty/netty/issues/2843"
       ],
-      "referenceCommentsDecision": "Retain only original comment occurrences absent from code. JVM interruption suppression and earlier merged writer variants remain explicit references; named test bodies/helpers now carry their original comments directly."
+      "referenceCommentsDecision": "Retain only original comment occurrences absent from code. JVM interruption suppression and earlier merged writer variants remain explicit references; named test bodies/helpers now carry their original comments directly.",
+      "transferFixtureReview": {
+        "status": "complete-for-recorded-inherited-transfer-providers",
+        "scope": "Twelve selected original shared bodies, six original concrete provider roles and original pooled/adaptive allocation-factory helper chain. All other declared/shared/inherited scenarios remain separately incomplete.",
+        "upstreamMethods": [
+          "testRandomHeapBufferTransfer1",
+          "testRandomHeapBufferTransfer2",
+          "testRandomDirectBufferTransfer",
+          "testSequentialHeapBufferTransfer1",
+          "testSequentialHeapBufferTransfer2",
+          "testSequentialDirectBufferTransfer1",
+          "testSequentialDirectBufferTransfer2",
+          "testSequentialByteBufferBackedHeapBufferTransfer1",
+          "testSequentialByteBufferBackedHeapBufferTransfer2",
+          "testSequentialCopiedBufferTransfer1",
+          "testStreamTransfer1",
+          "testStreamTransfer2"
+        ],
+        "clrFixtureTypes": [
+          "BigEndianHeapByteBufTest",
+          "BigEndianDirectByteBufTest",
+          "PooledBigEndianHeapByteBufTest",
+          "PooledBigEndianDirectByteBufTest",
+          "AdaptiveBigEndianHeapByteBufTest",
+          "AdaptiveBigEndianDirectByteBufTest"
+        ],
+        "actualInvocations": 72,
+        "capacity": 4096,
+        "blockSize": 128,
+        "rng": "Current-time seed, retained CLR seed and write/replay sequence. Java and CLR RNG bytes are not claimed identical.",
+        "ownership": "Six fixture-owned allocator/native domains; original buffer teardown plus owned unpooled peer cleanup. Existing unrelated pooled arena tests are byte-for-byte preserved.",
+        "languageAdapters": [
+          "Memory<byte> for heap ByteBuffer backing",
+          "CLR zero-length Stream read returns 0; separate ReadByte EOF -1 observation",
+          "unchecked byte increment",
+          "Scoped allocator teardown instead of JVM GC/global allocator lifetime"
+        ]
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractCompositeByteBufTest.java",
@@ -37337,23 +37523,27 @@
       "implementation": [
         "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs",
         "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs",
-        "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTransferTest.cs"
       ],
       "evidence": [
         "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
         "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending.",
         "Chunk-list integration unit: 21 added cases; net10.0 Debug/Release/rebuilt checked Release pass 1993/1993, no failures/skips. 27252 fresh pinned Java/CLR rows agree per Debug/Release across 18 heap/native/page/order/alignment domains with an independent page-occupancy/free-span/usage/list model. Checks selection/head order, promotion/demotion, fragmentation, retirement and one-chunk heap reuse; 5517 non-head removals and 834 heap reuses are included. Existing heap 6247 and native 24984 matching rows plus three explicit CLR logical-capacity adaptations remain unchanged per Debug/Release. docs/buffer-porting.md#chunk-utilization-lists-and-retirement; artifacts/buffer-chunk-list-validation (ignored); buffer-chunk-list-*.trx. Public pooled allocator, counters, thread caches, events/leak integration and full inherited fixtures remain pending.",
         "Pooled-derived update: existing fixture expectations now distinguish independent pooled retained counters/trackers from shared ordinary views; 5031/5031 pass in Debug/Release/rebuilt sampled checked Release. docs/buffer-porting.md#pooled-derived-ownership; artifacts/buffer-pooled-derived-validation (ignored).",
-        "Provider source closure: AdaptivePoolingAllocator and PooledByteBuf/Heap/Direct responsibilities closed under explicit CLR policies. Heap copy public array-write extension point restored as Span; 120 new copy cases (60 old-runtime failures), plus exact capacity-4 inherited controls. Fresh pinned Java Unsafe/NIO each pass 120 copy cases and 12 original pooled fixture bodies; Java throwing-copy destination leaks are explicit CLR cleanup differences. Full rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling 1 each pass 15072, no failures/skips, native reservations zero; Common unchanged. docs/buffer-porting.md#adaptive-and-pooled-provider-source-closure; artifacts/buffer-provider-source-closure (ignored)."
+        "Provider source closure: AdaptivePoolingAllocator and PooledByteBuf/Heap/Direct responsibilities closed under explicit CLR policies. Heap copy public array-write extension point restored as Span; 120 new copy cases (60 old-runtime failures), plus exact capacity-4 inherited controls. Fresh pinned Java Unsafe/NIO each pass 120 copy cases and 12 original pooled fixture bodies; Java throwing-copy destination leaks are explicit CLR cleanup differences. Full rebuilt net10.0 Debug/Release/checked Release with SIMPLE sampling 1 each pass 15072, no failures/skips, native reservations zero; Common unchanged. docs/buffer-porting.md#adaptive-and-pooled-provider-source-closure; artifacts/buffer-provider-source-closure (ignored).",
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
       ],
-      "adaptation": "All directly declared original pooled scenarios execute on both heap and native through the shared fixture: initial indices/marks, enough/insufficient ensureWritable, maxFastWritableBytes/same-reservation writes, precise fast-space growth, contiguous storage and nonoverlap. Shared CLR cases also cover resize thresholds, owner routing, views/copies, stale wrappers, alias/composite leases, primitive/stream offsets and concurrency. Factory providers remain test-only; the complete inherited AbstractByteBufTest suite, LE/swapped/leak wrappers and public allocator remain pending. Storage identity comparisons use region/storage objects rather than boxed Memory values or cross-chunk handles. Pooled-derived update: fixture expectations distinguish independent retained pooled views from shared-count ordinary views; root and descendant trackers close through the parent chain. Complete inherited fixtures remain partial. All six declared JUnit methods now have individual machine-checked mappings over heap/direct CLR providers; inherited AbstractByteBufTest completion remains separate and fixture stays partial.",
+      "adaptation": "All directly declared original pooled scenarios execute on both heap and native through the shared fixture: initial indices/marks, enough/insufficient ensureWritable, maxFastWritableBytes/same-reservation writes, precise fast-space growth, contiguous storage and nonoverlap. Shared CLR cases also cover resize thresholds, owner routing, views/copies, stale wrappers, alias/composite leases, primitive/stream offsets and concurrency. Factory providers remain test-only; the complete inherited AbstractByteBufTest suite, LE/swapped/leak wrappers and public allocator remain pending. Storage identity comparisons use region/storage objects rather than boxed Memory values or cross-chunk handles. Pooled-derived update: fixture expectations distinguish independent retained pooled views from shared-count ordinary views; root and descendant trackers close through the parent chain. Complete inherited fixtures remain partial. All six declared JUnit methods now have individual machine-checked mappings over heap/direct CLR providers; inherited AbstractByteBufTest completion remains separate and fixture stays partial. The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
       "comments": {
         "upstreamCount": 8,
         "preservedCount": 8,
         "missingCount": 0,
-        "coverage": "All original comments retained in implementation or explicit references. Source completeness and inherited fixture completeness are independent.",
         "preservedInImplementationCount": 7,
-        "preservedAsReferenceCount": 1
+        "preservedAsReferenceCount": 1,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
       },
       "caseMappings": [
         {
@@ -37432,6 +37622,12 @@
       ],
       "commentDecisions": {
         "reason": "The original swapped/leak-aware unwrap-helper comment is retained verbatim. The isolated CLR fixture allocates raw provider owners directly; explicit BE/LE APIs replace swapped wrappers."
+      },
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
       }
     },
     {
@@ -37455,18 +37651,58 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveBigEndianDirectByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AdaptiveBigEndianDirectByteBufTest.cs"
+      ],
+      "evidence": [
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
+      ],
+      "adaptation": " The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
+      },
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "preservedInImplementationCount": 1,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveBigEndianHeapByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AdaptiveBigEndianHeapByteBufTest.cs"
+      ],
+      "evidence": [
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
+      ],
+      "adaptation": " The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
+      },
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "preservedInImplementationCount": 1,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveByteBufAllocatorGrowthTest.java",
@@ -37659,26 +37895,58 @@
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/DirectByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/DirectByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/BigEndianDirectByteBufTest.cs"
       ],
       "evidence": [
-        "Scoped native-memory/empty integration tests in Buffer.Tests; docs/buffer-porting.md. No full original fixture coverage claim."
+        "Scoped native-memory/empty integration tests in Buffer.Tests; docs/buffer-porting.md. No full original fixture coverage claim.",
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
       ],
-      "adaptation": "The same selected AbstractByteBufTest scenarios run against native memory via the native fixture override; additional CLR ownership/quota/pin cases. Remaining original test methods and I/O are pending.",
+      "adaptation": "The same selected AbstractByteBufTest scenarios run against native memory via the native fixture override; additional CLR ownership/quota/pin cases. Remaining original test methods and I/O are pending. The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
       "comments": {
         "upstreamCount": 2,
-        "preservedCount": 1,
-        "missingCount": 1,
-        "coverage": "partial source; remaining operations not ported"
+        "preservedCount": 2,
+        "missingCount": 0,
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      },
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
       }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianHeapByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/BigEndianHeapByteBufTest.cs"
+      ],
+      "evidence": [
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
+      ],
+      "adaptation": " The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
+      },
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianUnsafeDirectByteBufTest.java",
@@ -42932,19 +43200,31 @@
       "status": "in-progress",
       "implementation": [
         "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs",
-        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledBigEndianDirectByteBufTest.cs"
       ],
       "evidence": [
         "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending.",
         "Chunk-list integration unit: 21 added cases; net10.0 Debug/Release/rebuilt checked Release pass 1993/1993, no failures/skips. 27252 fresh pinned Java/CLR rows agree per Debug/Release across 18 heap/native/page/order/alignment domains with an independent page-occupancy/free-span/usage/list model. Checks selection/head order, promotion/demotion, fragmentation, retirement and one-chunk heap reuse; 5517 non-head removals and 834 heap reuses are included. Existing heap 6247 and native 24984 matching rows plus three explicit CLR logical-capacity adaptations remain unchanged per Debug/Release. docs/buffer-porting.md#chunk-utilization-lists-and-retirement; artifacts/buffer-chunk-list-validation (ignored); buffer-chunk-list-*.trx. Public pooled allocator, counters, thread caches, events/leak integration and full inherited fixtures remain pending.",
-        "Pooled-derived update: existing fixture expectations now distinguish independent pooled retained counters/trackers from shared ordinary views; 5031/5031 pass in Debug/Release/rebuilt sampled checked Release. docs/buffer-porting.md#pooled-derived-ownership; artifacts/buffer-pooled-derived-validation (ignored)."
+        "Pooled-derived update: existing fixture expectations now distinguish independent pooled retained counters/trackers from shared ordinary views; 5031/5031 pass in Debug/Release/rebuilt sampled checked Release. docs/buffer-porting.md#pooled-derived-ownership; artifacts/buffer-pooled-derived-validation (ignored).",
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
       ],
-      "adaptation": "Direct child fixture runs the shared pooled scenarios against actual native arena storage, default BE plus explicit LE primitive access, copies, offsets and lifetime contracts. All original comments retained. Public DEFAULT allocator, full inherited AbstractByteBufTest and leak/swapped wrappers remain pending. Pooled-derived update: fixture expectations distinguish independent retained pooled views from shared-count ordinary views; root and descendant trackers close through the parent chain. Complete inherited fixtures remain partial.",
+      "adaptation": "Direct child fixture runs the shared pooled scenarios against actual native arena storage, default BE plus explicit LE primitive access, copies, offsets and lifetime contracts. All original comments retained. Public DEFAULT allocator, full inherited AbstractByteBufTest and leak/swapped wrappers remain pending. Pooled-derived update: fixture expectations distinguish independent retained pooled views from shared-count ordinary views; root and descendant trackers close through the parent chain. Complete inherited fixtures remain partial. The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 2,
         "missingCount": 0,
-        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      },
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
       }
     },
     {
@@ -42953,20 +43233,32 @@
       "status": "in-progress",
       "implementation": [
         "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs",
-        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledBigEndianHeapByteBufTest.cs"
       ],
       "evidence": [
         "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
         "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending.",
         "Chunk-list integration unit: 21 added cases; net10.0 Debug/Release/rebuilt checked Release pass 1993/1993, no failures/skips. 27252 fresh pinned Java/CLR rows agree per Debug/Release across 18 heap/native/page/order/alignment domains with an independent page-occupancy/free-span/usage/list model. Checks selection/head order, promotion/demotion, fragmentation, retirement and one-chunk heap reuse; 5517 non-head removals and 834 heap reuses are included. Existing heap 6247 and native 24984 matching rows plus three explicit CLR logical-capacity adaptations remain unchanged per Debug/Release. docs/buffer-porting.md#chunk-utilization-lists-and-retirement; artifacts/buffer-chunk-list-validation (ignored); buffer-chunk-list-*.trx. Public pooled allocator, counters, thread caches, events/leak integration and full inherited fixtures remain pending.",
-        "Pooled-derived update: existing fixture expectations now distinguish independent pooled retained counters/trackers from shared ordinary views; 5031/5031 pass in Debug/Release/rebuilt sampled checked Release. docs/buffer-porting.md#pooled-derived-ownership; artifacts/buffer-pooled-derived-validation (ignored)."
+        "Pooled-derived update: existing fixture expectations now distinguish independent pooled retained counters/trackers from shared ordinary views; 5031/5031 pass in Debug/Release/rebuilt sampled checked Release. docs/buffer-porting.md#pooled-derived-ownership; artifacts/buffer-pooled-derived-validation (ignored).",
+        "Inherited original transfer unit: 12 shared methods x 6 actual concrete provider classes, original 4096/128 geometry, replayed data/offsets, peer and root cursors, independent copy mutation, actual Stream I/O and pooled reset-mark initialization. Java Unsafe/NIO each pass all 72 original bodies, no skips; CLR new native domains return to zero. Original EOF -1 versus CLR zero-length 0 and managed-memory/RNG adaptations are explicit. docs/buffer-porting.md#original-inherited-transfer-tests; artifacts/buffer-original-transfer (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 27578, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes the affected 72 inherited cases. Each exact provider/method identity agrees with Java Unsafe/NIO execution. Existing pooled arena fixture is restored unchanged and production/Common sources are unchanged. 51 existing Common build warnings, zero Buffer/test warnings."
       ],
-      "adaptation": "Heap child fixture runs the shared pooled scenarios against the actual internal heap arena. All original comments retained. Public DEFAULT allocator and complete inherited AbstractByteBufTest suite remain pending. Pooled-derived update: fixture expectations distinguish independent retained pooled views from shared-count ordinary views; root and descendant trackers close through the parent chain. Complete inherited fixtures remain partial.",
+      "adaptation": "Heap child fixture runs the shared pooled scenarios against the actual internal heap arena. All original comments retained. Public DEFAULT allocator and complete inherited AbstractByteBufTest suite remain pending. Pooled-derived update: fixture expectations distinguish independent retained pooled views from shared-count ordinary views; root and descendant trackers close through the parent chain. Complete inherited fixtures remain partial. The original transfer allocation-factory chain now executes twelve directly ported shared bodies in actual inherited CLR fixtures. Scoped allocators replace JVM globals; explicit BE APIs replace mutable ByteOrder assertions. Full original declared/inherited fixture review remains incomplete.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 2,
         "missingCount": 0,
-        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 0,
+        "coverage": "Factory and selected shared transfer scopes preserve original comments. Other declared/inherited bodies remain partial."
+      },
+      "inheritedTransferReview": {
+        "status": "partial",
+        "scope": "Original allocation-factory helper and selected twelve inherited transfer bodies. Other declared/overridden/inherited tests are not completed by this unit.",
+        "sharedSource": "AbstractByteBufTest.java",
+        "helper": "AbstractPooledByteBufTransferTest is a separate narrow CLR base so the pre-existing AbstractPooledByteBufTest arena fixture and its consumers remain unchanged."
       }
     },
     {
