@@ -16,10 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Netty.NET.Common;
 
 namespace Netty.NET.Buffer.Tests;
@@ -45,7 +43,8 @@ public class ByteBufLifetimeFixtureTest
         {
             bool direct = (_provider & 1) != 0;
             ByteBuf Part(int size) => direct ? Allocator.DirectBuffer(size) : Allocator.HeapBuffer(size);
-            if (_provider < 6) return Part(capacity);
+            if (_provider < 6)
+                return Part(capacity);
             CompositeByteBuf result = direct ? Allocator.CompositeDirectBuffer() : Allocator.CompositeHeapBuffer();
             try
             {
@@ -60,319 +59,1195 @@ public class ByteBufLifetimeFixtureTest
     }
     private static ByteBuf Entry(ByteBuf root, int form) => form switch
     {
-        1 => new ByteBufUtilitySourceTest.Wrapper(root), 2 => root.Duplicate(), _ => root
+        1 => new ByteBufUtilitySourceTest.Wrapper(root),
+        2 => root.Duplicate(),
+        _ => root
     };
-    private static readonly string[] Methods =
-    [
-        "testGetBytesAfterRelease",
-        "testGetBytesAfterRelease2",
-        "testGetBytesAfterRelease3",
-        "testGetBytesAfterRelease6",
-        "testGetBytesAfterRelease7",
-        "testGetBytesAfterRelease8",
-        "testSetBytesAfterRelease",
-        "testSetBytesAfterRelease2",
-        "testSetBytesAfterRelease3",
-        "testSetBytesAfterRelease6",
-        "testSetBytesAfterRelease7",
-        "testSetBytesAfterRelease8",
-        "testReadBytesAfterRelease",
-        "testReadBytesAfterRelease2",
-        "testReadBytesAfterRelease3",
-        "testReadBytesAfterRelease4",
-        "testReadBytesAfterRelease7",
-        "testReadBytesAfterRelease8",
-        "testReadBytesAfterRelease9",
-        "testReadBytesAfterRelease10",
-        "testWriteBytesAfterRelease",
-        "testWriteBytesAfterRelease2",
-        "testWriteBytesAfterRelease3",
-        "testWriteBytesAfterRelease6",
-        "testWriteBytesAfterRelease7",
-        "testWriteBytesAfterRelease8",
-        "testNioBufferAfterRelease",
-        "testNioBufferAfterRelease1",
-        "testInternalNioBufferAfterRelease",
-        "testNioBuffersAfterRelease",
-        "testNioBuffersAfterRelease2",
-        "testArrayAfterRelease",
-        "testMemoryAddressAfterRelease",
-        "testSliceAfterReleaseRetainedSlice",
-        "testSliceAfterReleaseRetainedSliceDuplicate",
-        "testSliceAfterReleaseRetainedSliceRetainedDuplicate",
-        "testSliceAfterReleaseRetainedDuplicate",
-        "testSliceAfterReleaseRetainedDuplicateSlice",
-        "testRetainedSliceAfterReleaseRetainedSlice",
-        "testRetainedSliceAfterReleaseRetainedSliceDuplicate",
-        "testRetainedSliceAfterReleaseRetainedSliceRetainedDuplicate",
-        "testRetainedSliceAfterReleaseRetainedDuplicate",
-        "testRetainedSliceAfterReleaseRetainedDuplicateSlice",
-        "testDuplicateAfterReleaseRetainedSliceDuplicate",
-        "testDuplicateAfterReleaseRetainedDuplicate",
-        "testDuplicateAfterReleaseRetainedDuplicateSlice",
-        "testRetainedDuplicateAfterReleaseRetainedDuplicate",
-        "testRetainedDuplicateAfterReleaseDuplicate",
-        "testRetainedDuplicateAfterReleaseRetainedSlice",
-        "testRetainedSliceAndRetainedDuplicateContentIsExpected",
-        "testRetainedDuplicateAndRetainedSliceContentIsExpected",
-        "testMultipleLevelRetainedSlice1",
-        "testMultipleLevelRetainedSlice2",
-        "testMultipleLevelRetainedSlice3",
-        "testMultipleLevelRetainedSlice4",
-        "testRetainedSliceUnreleasable1",
-        "testRetainedSliceUnreleasable2",
-        "testRetainedSliceUnreleasable3",
-        "testRetainedSliceUnreleasable4",
-        "testReadRetainedSliceUnreleasable1",
-        "testReadRetainedSliceUnreleasable2",
-        "testReadRetainedSliceUnreleasable3",
-        "testReadRetainedSliceUnreleasable4",
-        "testRetainedDuplicateUnreleasable1",
-        "testRetainedDuplicateUnreleasable2",
-        "testRetainedDuplicateUnreleasable3",
-        "testRetainedDuplicateUnreleasable4",
-        "testRefCnt",
-        "testRefCnt2",
-    ];
-    public static IEnumerable<object[]> Cases()
+    public static IEnumerable<object[]> StorageCases()
     {
         for (int provider = 0; provider < 8; ++provider)
-        for (int form = 0; form < 3; ++form)
-        for (int caseIndex = 0; caseIndex < Methods.Length; ++caseIndex) yield return [provider, form, caseIndex];
+            for (int form = 0; form < 3; ++form)
+                yield return [provider, form];
     }
+
     [Theory]
-    [MemberData(nameof(Cases))]
-    public async Task OriginalLifetimeCases(int provider, int form, int caseIndex)
+    [MemberData(nameof(StorageCases))]
+    public void TestGetBytesAfterRelease(int provider, int form)
     {
-        string upstreamMethod = Methods[caseIndex];
         using var scope = new Scope(provider);
-        if (upstreamMethod is "testRefCnt" or "testRefCnt2") { await ReferenceVisibility(scope, form, upstreamMethod == "testRefCnt2"); return; }
-        if (upstreamMethod.Contains("Unreleasable", StringComparison.Ordinal)) { Unreleasable(scope, form, upstreamMethod); return; }
-        if (upstreamMethod.StartsWith("testMultipleLevel", StringComparison.Ordinal)) { MultipleLevels(scope, form, upstreamMethod[^1] - '1'); return; }
-        if (upstreamMethod.EndsWith("ContentIsExpected", StringComparison.Ordinal)) { HandlerContent(scope, form, upstreamMethod.StartsWith("testRetainedSlice", StringComparison.Ordinal)); return; }
-        if (upstreamMethod.Contains("BytesAfterRelease", StringComparison.Ordinal) || upstreamMethod.Contains("Nio", StringComparison.Ordinal)
-            || upstreamMethod is "testArrayAfterRelease" or "testMemoryAddressAfterRelease") { ReleasedAccess(scope, form, upstreamMethod); return; }
-        ReleasedFactories(scope, form, upstreamMethod);
-    }
-    private static void ReleaseOneEach(IEnumerable<ByteBuf> buffers)
-    {
-        // Matches the original helper: borrowed aliases share an actual counter and may already be at zero.
-        foreach (ByteBuf b in buffers) if (b != null && b.ReferenceCount > 0) b.Release();
-    }
-    private static void ReleasedFactories(Scope scope, int form, string method)
-    {
-        ByteBuf raw = scope.Buffer(1), b = Entry(raw, form); var all = new List<ByteBuf> { b };
+        ByteBuf buffer = Unpooled.Buffer(8);
         try
         {
-            string chain = method[(method.IndexOf("AfterRelease", StringComparison.Ordinal) + "AfterRelease".Length)..];
-            ByteBuf child;
-            if (chain.StartsWith("RetainedSlice", StringComparison.Ordinal)) { child = b.RetainedSlice(0, 1); chain = chain["RetainedSlice".Length..]; }
-            else if (chain.StartsWith("RetainedDuplicate", StringComparison.Ordinal)) { child = b.RetainedDuplicate(); chain = chain["RetainedDuplicate".Length..]; }
-            else { Assert.Equal("Duplicate", chain); child = b.Duplicate(); chain = string.Empty; }
-            all.Add(child);
-            if (chain.Length > 0) all.Add(chain switch { "Duplicate" => child.Duplicate(), "RetainedDuplicate" => child.RetainedDuplicate(), _ => child.Slice(0, 1) });
-            ReleaseOneEach(all);
-            foreach (ByteBuf dead in all)
-            {
-                Assert.Equal(0, dead.ReferenceCount);
-                Assert.Throws<IllegalReferenceCountException>(() =>
-                {
-                    if (method.StartsWith("testRetainedDuplicate", StringComparison.Ordinal)) dead.RetainedDuplicate();
-                    else if (method.StartsWith("testDuplicate", StringComparison.Ordinal)) dead.Duplicate();
-                    else if (method.StartsWith("testRetainedSlice", StringComparison.Ordinal)) dead.RetainedSlice();
-                    else dead.Slice();
-                });
-            }
-            Assert.Equal(0, raw.ReferenceCount);
-        }
-        finally { ReleaseOneEach(all); if (raw.ReferenceCount > 0) raw.Release(); }
-    }
-    private static void Content(ByteBuf b, byte[] expected)
-    {
-        ByteBuf comparison = Unpooled.WrappedBuffer(expected);
-        try { Assert.Equal(0, b.CompareTo(comparison)); Assert.Equal(expected, ByteBufUtil.GetBytes(b)); }
-        finally { comparison.Release(); }
-    }
-    private static void HandlerContent(Scope scope, int form, bool firstSlice)
-    {
-        ByteBuf raw = scope.Buffer(8), b = Entry(raw, form), first = null, second = null, borrowed = null, last = null;
-        bool rootReleased = false, firstReleased = false, secondReleased = false, lastReleased = false;
-        try
-        {
-            b.ResetWriterIndex().WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-            first = firstSlice ? b.RetainedSlice(b.ReaderIndex + 1, 6) : b.RetainedDuplicate();
-            Content(first, firstSlice ? new byte[] { 2, 3, 4, 5, 6, 7 } : new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-            Assert.Equal(0, first.CompareTo(firstSlice ? b.Slice(b.ReaderIndex + 1, 6) : b.Slice()));
-            // Simulate a handler that releases the original buffer, and propagates a slice.
-            b.Release(); rootReleased = true;
-            // Advance the reader index on the slice.
-            first.ReadByte();
-            second = firstSlice ? first.RetainedDuplicate() : first.RetainedSlice(first.ReaderIndex, 6);
-            // The duplicate-first path has its own reader coordinate on the captured six-byte slice.
-            if (firstSlice) Content(second, new byte[] { 3, 4, 5, 6, 7 });
-            else Content(second, new byte[] { 2, 3, 4, 5, 6, 7 });
-            Assert.Equal(0, second.CompareTo(firstSlice ? first.Duplicate() : second.Duplicate()));
-            // Advance the reader index on dup1.
-            second.ReadByte(); borrowed = second.Duplicate();
-            Content(borrowed, firstSlice ? new byte[] { 4, 5, 6, 7 } : new byte[] { 3, 4, 5, 6, 7 });
-            // Advance the reader index on dup2.
-            borrowed.ReadByte();
-            last = borrowed.RetainedSlice(borrowed.ReaderIndex + (firstSlice ? 0 : 1), 3);
-            Content(last, new byte[] { 5, 6, 7 });
-            Assert.Equal(0, last.CompareTo(borrowed.Slice(borrowed.ReaderIndex + (firstSlice ? 0 : 1), 3)));
-            // Cleanup the expected buffers used for testing.
-            // CLR expectations are managed arrays; the temporary comparison claims have already been released.
-            last.Release(); lastReleased = true;
-            if (firstSlice) borrowed.Release(); else second.Release(); secondReleased = true;
-            Assert.Equal(last.ReferenceCount, borrowed.ReferenceCount); Assert.Equal(borrowed.ReferenceCount, second.ReferenceCount);
-            // The handler is now done with the original slice
-            Assert.True(first.Release()); firstReleased = true;
-            Assert.All(new[] { b, first, second, borrowed, last }, x => Assert.Equal(0, x.ReferenceCount));
-        }
-        finally
-        {
-            if (!lastReleased && last?.ReferenceCount > 0) last.Release();
-            if (!secondReleased && second?.ReferenceCount > 0) second.Release();
-            if (!firstReleased && first?.ReferenceCount > 0) first.Release();
-            if (!rootReleased && b.ReferenceCount > 0) b.Release();
-        }
-    }
-    private static void MultipleLevels(Scope scope, int form, int combination)
-    {
-        bool doSlice1 = combination < 2, doSlice2 = combination % 2 == 0;
-        ByteBuf raw = scope.Buffer(8), b = Entry(raw, form), first = null, second = null;
-        bool rootReleased = false, firstReleased = false, secondReleased = false;
-        try
-        {
-            b.ResetWriterIndex().WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-            first = b.RetainedSlice(b.ReaderIndex + 1, 6); Content(first, new byte[] { 2, 3, 4, 5, 6, 7 });
-            // Simulate a handler that releases the original buffer, and propagates a slice.
-            b.Release(); rootReleased = true;
-            second = first.RetainedSlice(first.ReaderIndex + 1, 4); Content(second, new byte[] { 3, 4, 5, 6 });
-            Assert.Equal(0, second.CompareTo(second.Duplicate())); Assert.Equal(0, second.CompareTo(second.Slice()));
-            ByteBuf temporary = second.RetainedDuplicate(); try { Assert.Equal(0, second.CompareTo(temporary)); } finally { temporary.Release(); }
-            temporary = second.RetainedSlice(); try { Assert.Equal(0, second.CompareTo(temporary)); } finally { temporary.Release(); }
-            ByteBuf third = doSlice1 ? second.Slice(second.ReaderIndex + 1, 2) : second.Duplicate();
-            Content(third, doSlice1 ? new byte[] { 4, 5 } : new byte[] { 3, 4, 5, 6 });
-            ByteBuf fourth = doSlice2 ? third.Slice(third.ReaderIndex + 1, 1) : third.Duplicate();
-            if (doSlice2) Content(fourth, new byte[] { doSlice1 ? (byte)5 : (byte)4 }); else Assert.Equal(0, third.CompareTo(fourth));
-            // Slice 4, 3, and 2 should effectively "share" a reference count.
-            fourth.Release(); secondReleased = true;
-            Assert.Equal(third.ReferenceCount, second.ReferenceCount); Assert.Equal(third.ReferenceCount, fourth.ReferenceCount);
-            // Slice 1 should also release the original underlying buffer without throwing exceptions
-            Assert.True(first.Release()); firstReleased = true;
-            Assert.All(new[] { b, first, second, third, fourth }, x => Assert.Equal(0, x.ReferenceCount));
-        }
-        finally
-        {
-            if (!secondReleased && second?.ReferenceCount > 0) second.Release();
-            if (!firstReleased && first?.ReferenceCount > 0) first.Release();
-            if (!rootReleased && b.ReferenceCount > 0) b.Release();
-        }
-    }
-    private static void Unreleasable(Scope scope, int form, string method)
-    {
-        int combination = method[^1] - '1'; bool initialRetained = combination < 2, finalRetained = combination % 2 == 0;
-        bool duplicate = method.StartsWith("testRetainedDuplicate", StringComparison.Ordinal), read = method.StartsWith("testRead", StringComparison.Ordinal);
-        ByteBuf raw = scope.Buffer(8), b = Entry(raw, form), first = null; bool firstReleased = false, rootReleased = false;
-        try
-        {
-            first = duplicate ? (initialRetained ? b.RetainedDuplicate() : b.Duplicate().Retain()) : (initialRetained ? b.RetainedSlice() : b.Slice().Retain());
-            ByteBuf middle = Unpooled.UnreleasableBuffer(first);
-            ByteBuf last = duplicate ? (finalRetained ? middle.RetainedDuplicate() : middle.Duplicate().Retain())
-                : read ? (finalRetained ? middle.ReadRetainedSlice(middle.ReadableBytes) : middle.ReadSlice(middle.ReadableBytes).Retain())
-                : finalRetained ? middle.RetainedSlice() : middle.Slice().Retain();
-            Assert.False(last.Release()); Assert.False(middle.Release());
-            first.Release(); firstReleased = true; Assert.True(b.Release()); rootReleased = true;
-            Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, b.ReferenceCount); Assert.Equal(0, last.ReferenceCount);
-        }
-        finally { if (!firstReleased && first?.ReferenceCount > 0) first.Release(); if (!rootReleased && b.ReferenceCount > 0) b.Release(); }
-    }
-    private sealed class IoProbe : MemoryStream
-    {
-        internal int Reads, Writes;
-        public override int Read(Span<byte> bytes) { ++Reads; return base.Read(bytes); }
-        public override void Write(ReadOnlySpan<byte> bytes) { ++Writes; base.Write(bytes); }
-    }
-    private static void ReleasedAccess(Scope scope, int form, string method)
-    {
-        ByteBuf raw = scope.Buffer(8), dead = Entry(raw, form), peer = Unpooled.Buffer(8); byte[] bytes = new byte[8];
-        using var io = new IoProbe(); using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        try
-        {
-            // Clear the buffer so we are sure the reader and writer indices are 0.
-            // This is important as we may return a slice from newBuffer(...).
-            dead.Clear(); Assert.True(dead.Release());
-            if (method == "testWriteBytesAfterRelease2") peer.WriteBytes(bytes);
-            int peerReader = peer.ReaderIndex, peerWriter = peer.WriterIndex;
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
-                switch (method)
-                {
-                    case "testGetBytesAfterRelease": dead.GetBytes(0, peer); break;
-                    case "testGetBytesAfterRelease2": dead.GetBytes(0, peer, 1); break;
-                    case "testGetBytesAfterRelease3": dead.GetBytes(0, peer, 0, 1); break;
-                    case "testGetBytesAfterRelease6": dead.GetBytes(0, bytes.AsSpan()); break;
-                    case "testGetBytesAfterRelease7": dead.GetBytes(0, io, 1); break;
-                    case "testGetBytesAfterRelease8": dead.GetBytes(0, socket, 1); break;
-                    case "testSetBytesAfterRelease": dead.SetBytes(0, peer); break;
-                    case "testSetBytesAfterRelease2": dead.SetBytes(0, peer, 1); break;
-                    case "testSetBytesAfterRelease3": dead.SetBytes(0, peer, 0, 1); break;
-                    case "testSetBytesAfterRelease6": dead.SetBytes(0, bytes.AsSpan()); break;
-                    case "testSetBytesAfterRelease7": dead.SetBytes(0, io, 1); break;
-                    case "testSetBytesAfterRelease8": dead.SetBytes(0, socket, 1); break;
-                    case "testReadBytesAfterRelease": dead.ReadBytes(1); break;
-                    case "testReadBytesAfterRelease2": dead.ReadBytes(peer); break;
-                    case "testReadBytesAfterRelease3": dead.ReadBytes(peer, 1); break;
-                    case "testReadBytesAfterRelease4": dead.ReadBytes(peer, 0, 1); break;
-                    case "testReadBytesAfterRelease7": dead.ReadBytes(bytes.AsSpan()); break;
-                    case "testReadBytesAfterRelease8": case "testReadBytesAfterRelease9": dead.ReadBytes(io, 1); break;
-                    case "testReadBytesAfterRelease10": dead.ReadBytes(socket, 1); break;
-                    case "testWriteBytesAfterRelease": dead.WriteBytes(peer); break;
-                    case "testWriteBytesAfterRelease2": dead.WriteBytes(peer, 1); break;
-                    case "testWriteBytesAfterRelease3": dead.WriteBytes(peer, 0, 1); break;
-                    case "testWriteBytesAfterRelease6": dead.WriteBytes(bytes.AsSpan()); break;
-                    case "testWriteBytesAfterRelease7": dead.WriteBytes(io, 1); break;
-                    case "testWriteBytesAfterRelease8": dead.WriteBytes(socket, 1); break;
-                    case "testNioBufferAfterRelease": dead.AsReadOnlyMemory(dead.ReaderIndex, dead.ReadableBytes); break;
-                    case "testNioBufferAfterRelease1": dead.AsReadOnlyMemory(0, 1); break;
-                    case "testInternalNioBufferAfterRelease": dead.AsMemory(dead.ReaderIndex, 1); break;
-                    case "testNioBuffersAfterRelease": dead.AsReadOnlySequence(dead.ReaderIndex, dead.ReadableBytes); break;
-                    case "testNioBuffersAfterRelease2": dead.AsReadOnlySequence(0, 1); break;
-                    case "testArrayAfterRelease": dead.AsMemory(0, 0); break;
-                    default: Assert.Equal("testMemoryAddressAfterRelease", method); using (dead.AsReadOnlyMemory(0, 0).Pin()) { } break;
-                }
+                ReleasedBuffer(scope, form).GetBytes(0, buffer);
             });
-            Assert.Equal((0, 0, 0), (dead.ReaderIndex, dead.WriterIndex, dead.ReferenceCount));
-            Assert.Equal((peerReader, peerWriter, 1), (peer.ReaderIndex, peer.WriterIndex, peer.ReferenceCount));
-            Assert.Equal(0, io.Reads); Assert.Equal(0, io.Writes); Assert.False(socket.Connected); Assert.Equal(new byte[8], bytes);
         }
-        finally { if (dead.ReferenceCount > 0) dead.Release(); peer.Release(); }
-    }
-    private static async Task ReferenceVisibility(Scope scope, int form, bool parameter)
-    {
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(30));
-        for (int iteration = 0; iteration < 10; ++iteration)
+        finally
         {
-            ByteBuf raw = scope.Buffer(4), b = Entry(raw, form); Assert.Equal(1, b.ReferenceCount);
-            var observed = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var keepAlive = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            Task releaser = Task.Run(async () =>
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestGetBytesAfterRelease2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer();
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).GetBytes(0, buffer, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestGetBytesAfterRelease3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer();
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).GetBytes(0, buffer, 0, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestGetBytesAfterRelease6(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).GetBytes(0, new byte[8].AsSpan());
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestGetBytesAfterRelease7(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var stream = new MemoryStream(new byte[8]);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).GetBytes(0, stream, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestGetBytesAfterRelease8(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).GetBytes(0, socket, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSetBytesAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer();
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).SetBytes(0, buffer);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSetBytesAfterRelease2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer();
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).SetBytes(0, buffer, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSetBytesAfterRelease3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer();
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).SetBytes(0, buffer, 0, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSetBytesAfterRelease6(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).SetBytes(0, new byte[8].AsSpan());
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSetBytesAfterRelease7(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var stream = new MemoryStream(new byte[8]);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).SetBytes(0, stream, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSetBytesAfterRelease8(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).SetBytes(0, socket, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).ReadBytes(1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer(8);
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).ReadBytes(buffer);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer(8);
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).ReadBytes(buffer);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease4(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer(8);
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).ReadBytes(buffer, 0, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease7(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).ReadBytes(new byte[8].AsSpan());
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease8(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var stream = new MemoryStream(new byte[8]);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).ReadBytes(stream, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease9(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var stream = new MemoryStream(new byte[8]);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).ReadBytes(stream, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadBytesAfterRelease10(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).ReadBytes(socket, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestWriteBytesAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer(8);
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).WriteBytes(buffer);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestWriteBytesAfterRelease2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[8]);
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).WriteBytes(buffer, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestWriteBytesAfterRelease3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf buffer = Unpooled.Buffer(8);
+        try
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                ReleasedBuffer(scope, form).WriteBytes(buffer, 0, 1);
+            });
+        }
+        finally
+        {
+            buffer.Release();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestWriteBytesAfterRelease6(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).WriteBytes(new byte[8].AsSpan());
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestWriteBytesAfterRelease7(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var stream = new MemoryStream(new byte[8]);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).WriteBytes(stream, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestWriteBytesAfterRelease8(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            ReleasedBuffer(scope, form).WriteBytes(socket, 1);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestNioBufferAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        ByteBuf buffer = ReleasedBuffer(scope, form);
+        Assert.Throws<IllegalReferenceCountException>(() => buffer.AsReadOnlyMemory(buffer.ReaderIndex, buffer.ReadableBytes));
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestNioBufferAfterRelease1(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        Assert.Throws<IllegalReferenceCountException>(() => ReleasedBuffer(scope, form).AsReadOnlyMemory(0, 1));
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestInternalNioBufferAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        Assert.Throws<IllegalReferenceCountException>(() => ReleasedBuffer(scope, form).AsMemory(0, 1));
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestNioBuffersAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        ByteBuf buffer = ReleasedBuffer(scope, form);
+        Assert.Throws<IllegalReferenceCountException>(() => buffer.AsReadOnlySequence(buffer.ReaderIndex, buffer.ReadableBytes));
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestNioBuffersAfterRelease2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        Assert.Throws<IllegalReferenceCountException>(() => ReleasedBuffer(scope, form).AsReadOnlySequence(0, 1));
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestArrayAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        Assert.Throws<IllegalReferenceCountException>(() => ReleasedBuffer(scope, form).AsMemory(0, 0));
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestMemoryAddressAfterRelease(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        // CLR bounded borrows replace JVM NIO, array and permanent-address exposure.
+        Assert.Throws<IllegalReferenceCountException>(() =>
+        {
+            using var pin = ReleasedBuffer(scope, form).AsReadOnlyMemory(0, 0).Pin();
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSliceAfterReleaseRetainedSlice(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        AssertSliceFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSliceAfterReleaseRetainedSliceDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        ByteBuf buf3 = buf2.Duplicate();
+        AssertSliceFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSliceAfterReleaseRetainedSliceRetainedDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        ByteBuf buf3 = buf2.RetainedDuplicate();
+        AssertSliceFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSliceAfterReleaseRetainedDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        AssertSliceFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestSliceAfterReleaseRetainedDuplicateSlice(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        ByteBuf buf3 = buf2.Slice(0, 1);
+        AssertSliceFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceAfterReleaseRetainedSlice(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        AssertRetainedSliceFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceAfterReleaseRetainedSliceDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        ByteBuf buf3 = buf2.Duplicate();
+        AssertRetainedSliceFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceAfterReleaseRetainedSliceRetainedDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        ByteBuf buf3 = buf2.RetainedDuplicate();
+        AssertRetainedSliceFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceAfterReleaseRetainedDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        AssertRetainedSliceFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceAfterReleaseRetainedDuplicateSlice(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        ByteBuf buf3 = buf2.Slice(0, 1);
+        AssertRetainedSliceFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestDuplicateAfterReleaseRetainedSliceDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        ByteBuf buf3 = buf2.Duplicate();
+        AssertDuplicateFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestDuplicateAfterReleaseRetainedDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        AssertDuplicateFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestDuplicateAfterReleaseRetainedDuplicateSlice(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        ByteBuf buf3 = buf2.Slice(0, 1);
+        AssertDuplicateFailAfterRelease(buf, buf2, buf3);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateAfterReleaseRetainedDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedDuplicate();
+        AssertRetainedDuplicateFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateAfterReleaseDuplicate(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.Duplicate();
+        AssertRetainedDuplicateFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateAfterReleaseRetainedSlice(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(1);
+        ByteBuf buf2 = buf.RetainedSlice(0, 1);
+        AssertRetainedDuplicateFailAfterRelease(buf, buf2);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceAndRetainedDuplicateContentIsExpected(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(8).ResetWriterIndex();
+        ByteBuf expected1 = NewBuffer(6).ResetWriterIndex();
+        ByteBuf expected2 = NewBuffer(5).ResetWriterIndex();
+        ByteBuf expected3 = NewBuffer(4).ResetWriterIndex();
+        ByteBuf expected4 = NewBuffer(3).ResetWriterIndex();
+        buf.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+        expected1.WriteBytes(new byte[] { 2, 3, 4, 5, 6, 7 });
+        expected2.WriteBytes(new byte[] { 3, 4, 5, 6, 7 });
+        expected3.WriteBytes(new byte[] { 4, 5, 6, 7 });
+        expected4.WriteBytes(new byte[] { 5, 6, 7 });
+
+        ByteBuf slice1 = buf.RetainedSlice(buf.ReaderIndex + 1, 6);
+        Assert.Equal(0, slice1.CompareTo(expected1));
+        Assert.Equal(0, slice1.CompareTo(buf.Slice(buf.ReaderIndex + 1, 6)));
+        // Simulate a handler that releases the original buffer, and propagates a slice.
+        buf.Release();
+
+        // Advance the reader index on the slice.
+        slice1.ReadByte();
+
+        ByteBuf dup1 = slice1.RetainedDuplicate();
+        Assert.Equal(0, dup1.CompareTo(expected2));
+        Assert.Equal(0, dup1.CompareTo(slice1.Duplicate()));
+
+        // Advance the reader index on dup1.
+        dup1.ReadByte();
+
+        ByteBuf dup2 = dup1.Duplicate();
+        Assert.Equal(0, dup2.CompareTo(expected3));
+
+        // Advance the reader index on dup2.
+        dup2.ReadByte();
+
+        ByteBuf slice2 = dup2.RetainedSlice(dup2.ReaderIndex, 3);
+        Assert.Equal(0, slice2.CompareTo(expected4));
+        Assert.Equal(0, slice2.CompareTo(dup2.Slice(dup2.ReaderIndex, 3)));
+
+        // Cleanup the expected buffers used for testing.
+        Assert.True(expected1.Release());
+        Assert.True(expected2.Release());
+        Assert.True(expected3.Release());
+        Assert.True(expected4.Release());
+
+        slice2.Release();
+        dup2.Release();
+
+        Assert.Equal(slice2.ReferenceCount, dup2.ReferenceCount);
+        Assert.Equal(dup2.ReferenceCount, dup1.ReferenceCount);
+
+        // The handler is now done with the original slice
+        Assert.True(slice1.Release());
+
+        // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
+        // be deallocated and have a reference count of 0.
+        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, slice1.ReferenceCount);
+        Assert.Equal(0, slice2.ReferenceCount);
+        Assert.Equal(0, dup1.ReferenceCount);
+        Assert.Equal(0, dup2.ReferenceCount);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateAndRetainedSliceContentIsExpected(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(8).ResetWriterIndex();
+        ByteBuf expected1 = NewBuffer(6).ResetWriterIndex();
+        ByteBuf expected2 = NewBuffer(5).ResetWriterIndex();
+        ByteBuf expected3 = NewBuffer(4).ResetWriterIndex();
+        buf.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+        expected1.WriteBytes(new byte[] { 2, 3, 4, 5, 6, 7 });
+        expected2.WriteBytes(new byte[] { 3, 4, 5, 6, 7 });
+        expected3.WriteBytes(new byte[] { 5, 6, 7 });
+
+        ByteBuf dup1 = buf.RetainedDuplicate();
+        Assert.Equal(0, dup1.CompareTo(buf));
+        Assert.Equal(0, dup1.CompareTo(buf.Slice()));
+        // Simulate a handler that releases the original buffer, and propagates a slice.
+        buf.Release();
+
+        // Advance the reader index on the dup.
+        dup1.ReadByte();
+
+        ByteBuf slice1 = dup1.RetainedSlice(dup1.ReaderIndex, 6);
+        Assert.Equal(0, slice1.CompareTo(expected1));
+        Assert.Equal(0, slice1.CompareTo(slice1.Duplicate()));
+
+        // Advance the reader index on slice1.
+        slice1.ReadByte();
+
+        ByteBuf dup2 = slice1.Duplicate();
+        Assert.Equal(0, dup2.CompareTo(slice1));
+
+        // Advance the reader index on dup2.
+        dup2.ReadByte();
+
+        ByteBuf slice2 = dup2.RetainedSlice(dup2.ReaderIndex + 1, 3);
+        Assert.Equal(0, slice2.CompareTo(expected3));
+        Assert.Equal(0, slice2.CompareTo(dup2.Slice(dup2.ReaderIndex + 1, 3)));
+
+        // Cleanup the expected buffers used for testing.
+        Assert.True(expected1.Release());
+        Assert.True(expected2.Release());
+        Assert.True(expected3.Release());
+
+        slice2.Release();
+        slice1.Release();
+
+        Assert.Equal(slice2.ReferenceCount, dup2.ReferenceCount);
+        Assert.Equal(dup2.ReferenceCount, slice1.ReferenceCount);
+
+        // The handler is now done with the original slice
+        Assert.True(dup1.Release());
+
+        // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
+        // be deallocated and have a reference count of 0.
+        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, slice1.ReferenceCount);
+        Assert.Equal(0, slice2.ReferenceCount);
+        Assert.Equal(0, dup1.ReferenceCount);
+        Assert.Equal(0, dup2.ReferenceCount);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestMultipleLevelRetainedSlice1(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestMultipleLevelRetainedSliceWithNonRetained(scope, form, true, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestMultipleLevelRetainedSlice2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestMultipleLevelRetainedSliceWithNonRetained(scope, form, true, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestMultipleLevelRetainedSlice3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestMultipleLevelRetainedSliceWithNonRetained(scope, form, false, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestMultipleLevelRetainedSlice4(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestMultipleLevelRetainedSliceWithNonRetained(scope, form, false, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceUnreleasable1(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedSliceUnreleasable(scope, form, true, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceUnreleasable2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedSliceUnreleasable(scope, form, true, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceUnreleasable3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedSliceUnreleasable(scope, form, false, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedSliceUnreleasable4(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedSliceUnreleasable(scope, form, false, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadRetainedSliceUnreleasable1(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestReadRetainedSliceUnreleasable(scope, form, true, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadRetainedSliceUnreleasable2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestReadRetainedSliceUnreleasable(scope, form, true, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadRetainedSliceUnreleasable3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestReadRetainedSliceUnreleasable(scope, form, false, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestReadRetainedSliceUnreleasable4(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestReadRetainedSliceUnreleasable(scope, form, false, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateUnreleasable1(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedDuplicateUnreleasable(scope, form, true, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateUnreleasable2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedDuplicateUnreleasable(scope, form, true, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateUnreleasable3(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedDuplicateUnreleasable(scope, form, false, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRetainedDuplicateUnreleasable4(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRetainedDuplicateUnreleasable(scope, form, false, false);
+    }
+
+    // Test-case trying to reproduce:
+    // https://github.com/netty/netty/issues/2843
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRefCnt(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRefCnt0(scope, form, false);
+    }
+
+    [Theory]
+    [MemberData(nameof(StorageCases))]
+    public void TestRefCnt2(int provider, int form)
+    {
+        using var scope = new Scope(provider);
+        TestRefCnt0(scope, form, true);
+    }
+
+    private static void AssertSliceFailAfterRelease(params ByteBuf[] bufs)
+    {
+        foreach (ByteBuf buf in bufs)
+        {
+            if (buf.ReferenceCount > 0)
+            {
+                buf.Release();
+            }
+        }
+        foreach (ByteBuf buf in bufs)
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                Assert.Equal(0, buf.ReferenceCount);
+                buf.Slice();
+            });
+        }
+    }
+
+    private static void AssertRetainedSliceFailAfterRelease(params ByteBuf[] bufs)
+    {
+        foreach (ByteBuf buf in bufs)
+        {
+            if (buf.ReferenceCount > 0)
+            {
+                buf.Release();
+            }
+        }
+        foreach (ByteBuf buf in bufs)
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                Assert.Equal(0, buf.ReferenceCount);
+                buf.RetainedSlice();
+            });
+        }
+    }
+
+    private static void AssertDuplicateFailAfterRelease(params ByteBuf[] bufs)
+    {
+        foreach (ByteBuf buf in bufs)
+        {
+            if (buf.ReferenceCount > 0)
+            {
+                buf.Release();
+            }
+        }
+        foreach (ByteBuf buf in bufs)
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                Assert.Equal(0, buf.ReferenceCount);
+                buf.Duplicate();
+            });
+        }
+    }
+
+    private static void AssertRetainedDuplicateFailAfterRelease(params ByteBuf[] bufs)
+    {
+        foreach (ByteBuf buf in bufs)
+        {
+            if (buf.ReferenceCount > 0)
+            {
+                buf.Release();
+            }
+        }
+        foreach (ByteBuf buf in bufs)
+        {
+            Assert.Throws<IllegalReferenceCountException>(() =>
+            {
+                Assert.Equal(0, buf.ReferenceCount);
+                buf.RetainedDuplicate();
+            });
+        }
+    }
+
+    private static void TestRetainedSliceUnreleasable(Scope scope, int form, bool initRetainedSlice, bool finalRetainedSlice)
+    {
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(8);
+        ByteBuf buf1 = initRetainedSlice ? buf.RetainedSlice() : buf.Slice().Retain();
+        ByteBuf buf2 = Unpooled.UnreleasableBuffer(buf1);
+        ByteBuf buf3 = finalRetainedSlice ? buf2.RetainedSlice() : buf2.Slice().Retain();
+        Assert.False(buf3.Release());
+        Assert.False(buf2.Release());
+        buf1.Release();
+        Assert.True(buf.Release());
+        Assert.Equal(0, buf1.ReferenceCount);
+        Assert.Equal(0, buf.ReferenceCount);
+    }
+
+    private static void TestReadRetainedSliceUnreleasable(Scope scope, int form, bool initRetainedSlice, bool finalRetainedSlice)
+    {
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(8);
+        ByteBuf buf1 = initRetainedSlice ? buf.RetainedSlice() : buf.Slice().Retain();
+        ByteBuf buf2 = Unpooled.UnreleasableBuffer(buf1);
+        ByteBuf buf3 = finalRetainedSlice ? buf2.ReadRetainedSlice(buf2.ReadableBytes)
+                                          : buf2.ReadSlice(buf2.ReadableBytes).Retain();
+        Assert.False(buf3.Release());
+        Assert.False(buf2.Release());
+        buf1.Release();
+        Assert.True(buf.Release());
+        Assert.Equal(0, buf1.ReferenceCount);
+        Assert.Equal(0, buf.ReferenceCount);
+    }
+
+    private static void TestRetainedDuplicateUnreleasable(Scope scope, int form, bool initRetainedDuplicate, bool finalRetainedDuplicate)
+    {
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(8);
+        ByteBuf buf1 = initRetainedDuplicate ? buf.RetainedDuplicate() : buf.Duplicate().Retain();
+        ByteBuf buf2 = Unpooled.UnreleasableBuffer(buf1);
+        ByteBuf buf3 = finalRetainedDuplicate ? buf2.RetainedDuplicate() : buf2.Duplicate().Retain();
+        Assert.False(buf3.Release());
+        Assert.False(buf2.Release());
+        buf1.Release();
+        Assert.True(buf.Release());
+        Assert.Equal(0, buf1.ReferenceCount);
+        Assert.Equal(0, buf.ReferenceCount);
+    }
+
+    private static void TestMultipleLevelRetainedSliceWithNonRetained(Scope scope, int form, bool doSlice1, bool doSlice2)
+    {
+        ByteBuf NewBuffer(int capacity) => Entry(scope.Buffer(capacity), form);
+        ByteBuf buf = NewBuffer(8).ResetWriterIndex();
+        ByteBuf expected1 = NewBuffer(6).ResetWriterIndex();
+        ByteBuf expected2 = NewBuffer(4).ResetWriterIndex();
+        ByteBuf expected3 = NewBuffer(2).ResetWriterIndex();
+        ByteBuf expected4SliceSlice = NewBuffer(1).ResetWriterIndex();
+        ByteBuf expected4DupSlice = NewBuffer(1).ResetWriterIndex();
+        buf.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+        expected1.WriteBytes(new byte[] { 2, 3, 4, 5, 6, 7 });
+        expected2.WriteBytes(new byte[] { 3, 4, 5, 6 });
+        expected3.WriteBytes(new byte[] { 4, 5 });
+        expected4SliceSlice.WriteBytes(new byte[] { 5 });
+        expected4DupSlice.WriteBytes(new byte[] { 4 });
+
+        ByteBuf slice1 = buf.RetainedSlice(buf.ReaderIndex + 1, 6);
+        Assert.Equal(0, slice1.CompareTo(expected1));
+        // Simulate a handler that releases the original buffer, and propagates a slice.
+        buf.Release();
+
+        ByteBuf slice2 = slice1.RetainedSlice(slice1.ReaderIndex + 1, 4);
+        Assert.Equal(0, slice2.CompareTo(expected2));
+        Assert.Equal(0, slice2.CompareTo(slice2.Duplicate()));
+        Assert.Equal(0, slice2.CompareTo(slice2.Slice()));
+
+        ByteBuf tmpBuf = slice2.RetainedDuplicate();
+        Assert.Equal(0, slice2.CompareTo(tmpBuf));
+        tmpBuf.Release();
+        tmpBuf = slice2.RetainedSlice();
+        Assert.Equal(0, slice2.CompareTo(tmpBuf));
+        tmpBuf.Release();
+
+        ByteBuf slice3 = doSlice1 ? slice2.Slice(slice2.ReaderIndex + 1, 2) : slice2.Duplicate();
+        if (doSlice1)
+        {
+            Assert.Equal(0, slice3.CompareTo(expected3));
+        }
+        else
+        {
+            Assert.Equal(0, slice3.CompareTo(expected2));
+        }
+
+        ByteBuf slice4 = doSlice2 ? slice3.Slice(slice3.ReaderIndex + 1, 1) : slice3.Duplicate();
+        if (doSlice1 && doSlice2)
+        {
+            Assert.Equal(0, slice4.CompareTo(expected4SliceSlice));
+        }
+        else if (doSlice2)
+        {
+            Assert.Equal(0, slice4.CompareTo(expected4DupSlice));
+        }
+        else
+        {
+            Assert.Equal(0, slice3.CompareTo(slice4));
+        }
+
+        // Cleanup the expected buffers used for testing.
+        Assert.True(expected1.Release());
+        Assert.True(expected2.Release());
+        Assert.True(expected3.Release());
+        Assert.True(expected4SliceSlice.Release());
+        Assert.True(expected4DupSlice.Release());
+
+        // Slice 4, 3, and 2 should effectively "share" a reference count.
+        slice4.Release();
+        Assert.Equal(slice3.ReferenceCount, slice2.ReferenceCount);
+        Assert.Equal(slice3.ReferenceCount, slice4.ReferenceCount);
+
+        // Slice 1 should also release the original underlying buffer without throwing exceptions
+        Assert.True(slice1.Release());
+
+        // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
+        // be deallocated and have a reference count of 0.
+        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, slice1.ReferenceCount);
+        Assert.Equal(0, slice2.ReferenceCount);
+        Assert.Equal(0, slice3.ReferenceCount);
+    }
+
+    private static ByteBuf ReleasedBuffer(Scope scope, int form)
+    {
+        ByteBuf buffer = Entry(scope.Buffer(8), form);
+        // Clear the buffer so we are sure the reader and writer indices are 0.
+        // This is important as we may return a slice from newBuffer(...).
+        buffer.Clear();
+        Assert.True(buffer.Release());
+        return buffer;
+    }
+
+    private static void TestRefCnt0(Scope scope, int form, bool parameter)
+    {
+        for (int i = 0; i < 10; ++i)
+        {
+            using var latch = new ManualResetEventSlim();
+            using var innerLatch = new ManualResetEventSlim();
+            ByteBuf buffer = Entry(scope.Buffer(4), form);
+            Assert.Equal(1, buffer.ReferenceCount);
+            Exception innerThrowable = null;
+            int count = int.MaxValue;
+            Thread reader = null;
+            var releaser = new Thread(() =>
             {
                 try
                 {
-                    Assert.True(parameter ? b.Release(b.ReferenceCount) : b.Release());
-                    observed.TrySetResult(await Task.Run(() => b.ReferenceCount, timeout.Token));
+                    Assert.True(parameter ? buffer.Release(buffer.ReferenceCount) : buffer.Release());
+                    reader = new Thread(() =>
+                    {
+                        count = buffer.ReferenceCount;
+                        latch.Set();
+                    });
+                    reader.Start();
                     // Keep Thread alive a bit so the ThreadLocal caches are not freed
-                    // CLR tasks may hop physical threads; explicit allocator cleanup and fresh facades replace JVM recycler lifetime.
-                    await keepAlive.Task.WaitAsync(timeout.Token);
+                    innerLatch.Wait();
                 }
-                catch (Exception failure) { observed.TrySetException(failure); throw; }
-            }, timeout.Token);
-            try { Assert.Equal(0, await observed.Task.WaitAsync(timeout.Token)); }
-            finally { keepAlive.TrySetResult(); await releaser; if (b.ReferenceCount > 0) b.Release(); }
-            Assert.Equal(0, raw.ReferenceCount);
+                catch (Exception cause)
+                {
+                    innerThrowable = cause;
+                    latch.Set();
+                }
+            });
+            releaser.Start();
+            try
+            {
+                Assert.True(latch.Wait(TimeSpan.FromSeconds(30)));
+                Assert.Null(innerThrowable);
+                Assert.Equal(0, count);
+            }
+            finally
+            {
+                innerLatch.Set();
+                releaser.Join();
+                reader?.Join();
+                if (buffer.ReferenceCount > 0)
+                    buffer.Release();
+            }
         }
     }
 }

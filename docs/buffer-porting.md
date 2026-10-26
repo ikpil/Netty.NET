@@ -6082,6 +6082,29 @@ zero Buffer/test warnings and no runtime/Common source changes. Evidence is in
 ignored `artifacts/buffer-lifetime-fixture-batch`. Existing Markdown/JSON tracking
 is updated; no new Markdown document or JVM placeholder type is added.
 
+## Original test structure correction
+
+The recent shared lifetime and utility batches had grouped original methods into
+string/case-index dispatch and rewritten common bodies. They are now direct ports:
+69 lifetime methods and 33 utility methods each have their original PascalCase name,
+body or original helper call. No test body is selected by its name or ordinal.
+ByteBufUtilTest.cs restores the original BufferType enum and NoUnsafe provider order.
+The three original heap-only methods are heap-specific facts. Expected ByteBufs,
+release order, numeric/text inputs and comments are retained beside their assertions.
+The reference-count reproducer uses two dedicated threads and two latch boundaries;
+CLR APIs replace JVM APIs only where necessary. Existing extra storage/entry profiles
+remain parameterized coverage, not additional original methods.
+
+This corrects test fidelity and maintainability; it adds no runtime feature and does
+not advance the mapped-method totals. ByteBufUtilTest is reopened to in-progress:
+its other 23 existing mappings still need original-body/helper-structure review, even
+though provider invocation coverage is accounted for. Older batch descriptions above record their
+historical grouped form; the named methods and current JSON targets supersede it.
+Remaining original tests must follow the same direct-port rule. Additional CLR
+regressions must have their own names and an actual implementation reason.
+Full net10.0 Debug/Release each pass 26,983; rebuilt checked Release with SIMPLE
+leak sampling one passes the 1,789 affected cases. All have zero failures/skips.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6097,9 +6120,10 @@ CharSequence/CharBuffer become spans or strings, Charset becomes Encoding,
 copy=false uses whole-array Memory eligibility, and a bounded native storage cache
 replaces Java recycler object reuse. These are implemented alternatives, not gaps.
 
-ByteBufUtilTest is now verified for all 56 original methods and 249 executable
+ByteBufUtilTest has coverage mappings for all 56 original methods and 249 executable
 provider/value tuples, with 15 original assumption-only tuples accounted for and no
-CLR skips. Its precise row selectors and provider parser are checked independently
+CLR skips. Its whole-fixture status is in-progress pending the original-body/helper
+structure review of 23 older mappings; invocation coverage alone is not test-port completion. Its precise row selectors and provider parser are checked independently
 from the remaining shared fixtures and consumer/module closure.
 ByteBuf's abstract contract source is verified, with all 192 public declarations,
 12 concrete defaults, internal accessibility helper, interfaces and original comments
