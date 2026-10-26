@@ -20,6 +20,13 @@ namespace Netty.NET.Buffer;
 
 public static partial class Unpooled
 {
+    // Original deprecated alias documentation; both array policies use the CLR snapshot factory.
+    /**
+     * Wrap the given {@link ByteBuf}s in an unmodifiable {@link ByteBuf}. Be aware the returned {@link ByteBuf} will
+     * not try to slice the given {@link ByteBuf}s to reduce GC-Pressure.
+     *
+     * @deprecated Use {@link #wrappedUnmodifiableBuffer(ByteBuf...)}.
+     */
     /**
      * Wrap the given {@link ByteBuf}s in an unmodifiable {@link ByteBuf}. Be aware the returned {@link ByteBuf} will
      * not try to slice the given {@link ByteBuf}s to reduce GC-Pressure.

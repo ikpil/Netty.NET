@@ -102,7 +102,7 @@ $entries = foreach ($path in $upstreamFiles) {
     }
 }
 $entries = @($entries)
-$baseFixtures = @('AbstractByteBufTest', 'AbstractCompositeByteBufTest', 'AbstractByteBufAllocatorTest', 'AbstractPooledByteBufTest', 'FixedCompositeByteBufTest', 'ReadOnlyByteBufTest', 'DuplicatedByteBufTest', 'ReadOnlyByteBufferBufTest')
+$baseFixtures = @('AbstractByteBufTest', 'AbstractCompositeByteBufTest', 'AbstractByteBufAllocatorTest', 'AbstractPooledByteBufTest', 'FixedCompositeByteBufTest', 'ReadOnlyByteBufTest', 'DuplicatedByteBufTest', 'ReadOnlyByteBufferBufTest', 'UnpooledTest')
 foreach ($name in $baseFixtures) {
     $path = "buffer/src/test/java/io/netty/buffer/$name.java"
     $entry = $entries | Where-Object upstream -eq $path

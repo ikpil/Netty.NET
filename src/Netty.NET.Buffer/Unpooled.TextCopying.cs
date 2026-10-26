@@ -16,6 +16,7 @@
 
 using System;
 using System.Text;
+using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
 
@@ -97,6 +98,38 @@ public static partial class Unpooled
     {
         ArgumentNullException.ThrowIfNull(encoding);
         return text.IsEmpty ? EmptyBuffer : CopyEncodedText(text, encoding);
+    }
+
+    /// <summary>Copies the logical AsciiString range into independent heap storage.</summary>
+    /// <remarks>Like Netty's whole-CharSequence factory, UTF-8 and ASCII preserve raw
+    /// AsciiString octets, including values above 127, without character fallback.
+    /// Other encodings widen each unsigned octet to a character and honor Encoding.
+    /// Even an empty whole value has an independently releasable, growable owner.</remarks>
+    public static ByteBuf CopiedBuffer(AsciiString text, Encoding encoding)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(encoding);
+        if (encoding.CodePage is not (65001 or 20127))
+            return CopyEncodedText(text.ToString(0, text.Length()).AsSpan(), encoding);
+
+        // Mimic the same behavior as other copiedBuffer implementations.
+        ByteBuf copy = Buffer(text.Length());
+        try { return copy.WriteBytes(text.AsSpan()); }
+        catch { copy.Release(); throw; }
+    }
+
+    /// <summary>Encodes a logical AsciiString subregion as unsigned-octet characters.</summary>
+    /// <remarks>Netty's ranged factory uses character encoding, even for UTF-8/ASCII;
+    /// it does not take the whole-value raw-octet shortcuts. Empty ranges return
+    /// the shared sentinel. CLR validates null/range arguments for empty input too.
+    /// Read the live backing range rather than AsciiString's cached whole string.</remarks>
+    public static ByteBuf CopiedBuffer(AsciiString text, int offset, int length, Encoding encoding)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(encoding);
+        if (offset < 0 || length < 0 || offset > text.Length() - length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        return CopiedBuffer(text.ToString(offset, offset + length).AsSpan(), encoding);
     }
 
     private static ByteBuf CopyEncodedText(ReadOnlySpan<char> text, Encoding encoding)

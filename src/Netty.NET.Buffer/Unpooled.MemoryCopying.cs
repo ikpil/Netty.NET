@@ -50,6 +50,17 @@ public static partial class Unpooled
     /// <remarks>ReadOnlyMemory has no byte-order metadata. Bytes are copied unchanged;
     /// use explicit BE/LE operations on the result. Empty ranges are not accessed.
     /// Input owners must remain valid during the call and are never disposed.</remarks>
+    // Original varargs overload documentation; CLR uses immutable range descriptors.
+    /**
+     * Creates a new buffer whose content is a merged copy of the specified
+     * {@code buffers}' slices.  The new buffer's {@code readerIndex} and
+     * {@code writerIndex} are {@code 0} and the sum of all buffers'
+     * {@code remaining} respectively.
+     *
+     * @throws IllegalArgumentException
+     *         if the specified buffers' endianness are different from each
+     *         other
+     */
     public static ByteBuf CopiedBuffer(params ReadOnlyMemory<byte>[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);

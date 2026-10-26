@@ -5834,6 +5834,62 @@ complete. AbstractByteBuf, ByteBufUtil, Unpooled, package decisions and independ
 original shared fixture/module closure still remain. Evidence is under ignored
 `artifacts/buffer-empty-advanced-closure`; no new Markdown document is added.
 
+## Unpooled factory and standalone fixture source closure
+
+Unpooled now has a complete source review: all 49 public static declarations,
+allocator/byte-order/empty fields, static initialization, generic wrapper scan,
+UTF-8/ASCII/CharBuffer copy helpers, readonly construction and both fixed-wrapper
+array strategies have explicit CLR targets and policies. Optional parameters
+merge default/capacity overloads; bounded Memory descriptors, scoped pins,
+Encoding and explicit BE/LE replace JVM cursors, permanent addresses and mutable
+order. Deprecated singular readonly construction uses ByteBuf.AsReadOnly; both
+plural aliases use the existing snapshotting WrappedUnmodifiableBuffer. The API
+checker now explicitly supports that static-to-instance replacement and correctly
+ignores calls inside public static field initializers.
+
+The review found missing typed Common.AsciiString copy entry points. Converting
+that value through a cached string would lose the original distinction: whole
+UTF-8/ASCII factory copies preserve its raw logical octets, including values above
+127, while the ranged factory encodes each unsigned octet as a character. Added
+whole and offset/length AsciiString overloads implement those branches. Other
+encodings and all ranged character paths honor the supplied CLR Encoding and
+fallback without a preamble. Whole raw-octet UTF-8/ASCII paths select by CodePage
+and intentionally bypass character fallback. These match Netty's specialized
+AsciiString contract; existing string/span fallback behavior remains unchanged.
+Live logical ranges account for backing offsets and bypass cached whole strings.
+Empty whole values have a growable independent owner; empty ranges use the shared
+sentinel. Failure releases any newly allocated owner.
+
+The unit adds 347 original fixture table cases and 129 AsciiString encoding,
+all-octet, offset, cached-string mutation, subregion, ownership, fallback and bounds
+cases. All 41 original standalone UnpooledTest methods are individually mapped:
+new tables retain 8 hash rows, 9 equality rows, the full 16-by-16 ordered comparison
+table, 26 empty factories and wrapping/copy/reference/permission/native scenarios.
+Existing primitive and text tests retain the original scalar, sequence, null/empty
+and three charset-string bodies. NIO ranges become bounded Memory, source address
+checks become scoped native pins, scattering input becomes Socket, and mutable
+little-endian facade expectations merge into explicit BE/LE width tests. Cleanup
+also releases source references left unowned by the Java copy fixture. This
+standalone fixture completion does not finish inherited shared ByteBuf fixtures.
+
+All 67 source comments and 18 standalone fixture comments are preserved: source
+64 in implementation plus three retired byte-order/private-constructor references;
+fixture 17 in implementation plus one repeated destination-size comment merged
+into theory rows. The manifest checker now verifies nine declared-test partitions,
+including UnpooledTest. Byte-exact pinned Java Unsafe executes all 41 original test
+bodies; forced NIO executes 40, with the original native-address capability
+assumption aborting one. Both execute another 126 AsciiString counterpart cases.
+The CLR native pin scenario runs without a skip; custom CLR Encoding fallback
+policies and stricter empty-range validation are tested separately.
+
+Forced net10.0 Debug, Release and checked Release with SIMPLE leak sampling 1 each
+pass 23,004 tests, zero failures/skips. Native reservation domains return to zero;
+51 existing Common warnings remain and Buffer/test warnings are zero. Common is
+unchanged. Evidence is under ignored `artifacts/buffer-factory-source-closure`.
+Unpooled source and its standalone fixture are complete under these policies;
+AbstractByteBuf, ByteBufUtil, package decisions and independent remaining shared
+fixtures/consumer/module closure still require review. No new Markdown file is added.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5875,15 +5931,17 @@ derived and read-only view sources are also verified with 262 public-method deci
 Unpooled heap/direct and external readonly-memory provider sources are also verified
 with 161 public-method and two public-constructor decisions. Empty and both advanced
 leak-aware sources are verified with another 504 public-method decisions and explicit
-private/helper/comment policies. Provider/facade source review is complete. The three
-remaining source reviews are AbstractByteBuf, ByteBufUtil and Unpooled; Unpooled still
-needs its public factory inventory. Package and original fixture decisions remain. No remaining test-method count is
+private/helper/comment policies. Provider/facade source review is complete. Unpooled
+now also has 49 public static factory decisions and complete private/helper/comment
+review; its 41-method standalone fixture is verified under the explicit CLR policies.
+The two remaining source reviews are AbstractByteBuf and ByteBufUtil. Package and
+shared original fixture decisions remain. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
 Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
-inventory and eight declared-test partitions. Next review targets AbstractByteBuf,
-ByteBufUtil and Unpooled factory internals/public inventory. Implement confirmed portable gaps
+inventory and nine declared-test partitions. Next review targets the nonpublic
+kernels/fields/strategies and comments in AbstractByteBuf and ByteBufUtil. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

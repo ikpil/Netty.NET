@@ -63,6 +63,9 @@ def declarations(source, static=True):
                  r'(?:(?:abstract|final|virtual|override|sealed|new|unsafe|async)[ \t]+)*'
                  r'[\w.<>,\[\]?]+[ \t]+\w+[ \t]*\(')
     for match in re.finditer(candidate, masked):
+        # A public static field initializer may call a method (for example
+        # Unpooled.EMPTY_BUFFER = ALLOC.buffer(...)); it is not a declaration.
+        if static and '=' in match.group().split('(', 1)[0]: continue
         if depths[match.start()] == 1 and not pattern.match(masked, match.start()):
             raise ValueError('Unparsed public method declaration at line ' +
                              str(source.count('\n', 0, match.start()) + 1))
@@ -168,13 +171,19 @@ def check():
                 path = target['path']
                 if path not in entry['implementation']: raise ValueError('Unregistered CLR target: ' + path)
                 source = (ROOT / path).read_text(encoding='utf-8-sig')
+                # CLR replacements may move a Java static factory onto its owner
+                # (Unpooled.unmodifiableBuffer -> ByteBuf.AsReadOnly). Default
+                # to the reviewed declaration kind unless explicitly recorded.
+                target_static = target.get('static', static)
+                if type(target_static) is not bool or construction and 'static' in target:
+                    raise ValueError('Unsupported CLR target dispatch: ' + str(target_static))
                 accessor = target.get('accessor')
                 if accessor is not None:
                     if construction or accessor not in {'get', 'set'}:
                         raise ValueError('Unsupported CLR property accessor: ' + str(accessor))
-                    if accessor not in property_accessors(source, static).get(target['member'], set()):
+                    if accessor not in property_accessors(source, target_static).get(target['member'], set()):
                         raise ValueError('Missing public CLR accessor: ' + path + ':' + target['member'] + '.' + accessor)
-                elif target['member'] not in (constructors(source, class_name) if construction else declarations(source, static)):
+                elif target['member'] not in (constructors(source, class_name) if construction else declarations(source, target_static)):
                     raise ValueError('Missing CLR declaration: ' + path + ':' + target['member'])
         summary = {'declared': len(original), **{state: counts[state] for state in sorted(STATES)}}
         if counts['jvm-only']: summary['jvm-only'] = counts['jvm-only']
