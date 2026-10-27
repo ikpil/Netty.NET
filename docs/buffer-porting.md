@@ -6432,6 +6432,53 @@ warnings. Runtime/Common sources are restored unchanged after controlled mutatio
 no implementation fix is needed for these reviewed contracts. Whole fixture/module
 status remains in progress. Evidence: ignored artifacts/buffer-original-nio-contracts.
 
+## Composite declared-body fidelity review
+
+The former 52 older AbstractCompositeByteBufTest mappings are now checked against
+the actual original bodies and helpers, across enumeration, decomposition/removal,
+lookup/limits, consolidation/copy, reference claims, discard/lifetime and flattening/
+visitors. Existing substantive assertions and wider CLR variants remain. Eight
+original setups are restored separately: untouched empty iteration, three removals
+with WriterIndex still zero, independent empty Copy/Duplicate, and both allocator-copy
+forms using the actual sparse NewBuffer(8) factory. The prior tests remain supplemental.
+
+Concrete input/helper differences are corrected. The flattened component view
+actually reads and checks the three-byte `---` header before transferring `01234`;
+pooled variants use their pooled allocator for both composites. Decomposition uses
+random 1024-byte input instead of a period-256 pattern. Original default buffer
+capacities/maxima are restored, including cached-discard sources whose original
+four readable bytes sit inside larger owners. Mixed allocator roles are preserved:
+pooled retained-slice roots with unpooled composites/prefixes where the original
+specifies them. Ordinary and retained chains keep their distinct counter semantics.
+
+Already faithful lookup, boundary, per-component consolidation, array metadata,
+nested segment and visitor assertions require no additional duplicate tests. CLR
+IEnumerator exhaustion, explicit exception/parameter policies, integer rather than
+boxed-Integer equality, Memory/Sequence exposure and independent array comparison
+over borrowed decomposition views remain documented adaptations. The original two
+strict-discard comments already live at the corresponding CLR composite policy
+branch; registering that actual implementation accounts for all 121 source comments
+without adding an unused override. Exact canonical inherited-policy coverage is
+still separate.
+
+Differential controls demonstrate the restored test intent: a wrong ReadString
+return passes all four old component-view cases, then fails all four after restoring
+the original header assertion. Skipping removal when the composite is unreadable
+passes twelve existing nonempty/offset cases, then fails all three restored original
+setups. These are controlled mutations, with runtime sources restored byte-for-byte;
+no runtime correction is needed for the reviewed positive contracts.
+
+Fresh pinned Java Unsafe/forced-NIO each pass all 104 big/little-endian original
+executions. Full net10.0 Debug/Release each pass 27,978, retaining all 27,970 previous
+identities and adding eight exact setups. Rebuilt checked Release with SIMPLE
+sampling one passes all 209 selected current mapping/policy invocations. All runs
+have zero failures/skips, 51 existing Common warnings and no Buffer/test warnings.
+The 85 declared Composite decisions have now completed their recorded body/helper
+review. Whole inherited/concrete fixture and module status remain in progress;
+older shared-mapping fidelity and final consumers are still separate. Evidence:
+ignored artifacts/buffer-composite-fidelity. Group rationale is stored once in the
+existing JSON manifest, with each method referring to its reviewed group.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6483,8 +6530,8 @@ consumer/module closure decisions remain. AbstractByteBufTest is now 408/408 map
 with zero unreviewed declarations. Older shared mappings still need exact-body and
 provider fidelity review; declaration accounting does not complete the fixture.
 AbstractCompositeByteBufTest is now 85/85 mapped
-with no unreviewed declarations, while 52 older mappings still require original-body
-fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
+with no unreviewed declarations; the 52 older mappings have completed their recorded
+original-body/helper fidelity review. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 

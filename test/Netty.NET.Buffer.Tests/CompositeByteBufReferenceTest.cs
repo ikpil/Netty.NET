@@ -63,9 +63,9 @@ public class CompositeByteBufReferenceTest
         bool pooled, bool direct, int mode)
     {
         using var storage = new Storage(pooled, direct);
-        ByteBuf c1 = storage.Allocator.Buffer(16, 16).WriteByte(1);
-        ByteBuf c2 = storage.Allocator.Buffer(16, 16).WriteByte(2).Retain();
-        ByteBuf c3 = storage.Allocator.Buffer(16, 16).WriteByte(3).Retain(2);
+        ByteBuf c1 = storage.Allocator.Buffer().WriteByte(1);
+        ByteBuf c2 = storage.Allocator.Buffer().WriteByte(2).Retain();
+        ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
         ByteBuf[] sources = [c1, c2, c3];
         CompositeByteBuf inner = storage.Allocator.CompositeBuffer(), outer = null;
         try
@@ -157,9 +157,9 @@ public class CompositeByteBufReferenceTest
     public void OwnedEmptySourcesAreTransferredAndReleasedEvenWithoutReadableBytes(bool pooled, bool direct, bool multiple)
     {
         using var storage = new Storage(pooled, direct);
-        ByteBuf empty = storage.Allocator.Buffer(16, 16);
+        ByteBuf empty = storage.Allocator.Buffer();
         ByteBuf[] sources = multiple
-            ? [empty, storage.Allocator.Buffer(16, 16).WriteInt(1), storage.Allocator.Buffer(16, 16)]
+            ? [empty, storage.Allocator.Buffer().WriteInt(1), storage.Allocator.Buffer()]
             : [empty];
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
         try
@@ -182,8 +182,8 @@ public class CompositeByteBufReferenceTest
     public void AppendedAndInsertedEmptySingletonsKeepSlotsButConsumeNoByteOffsets(bool pooled, bool direct, bool insert)
     {
         using var storage = new Storage(pooled, direct);
-        ByteBuf first = storage.Allocator.Buffer(1, 1).WriteByte(1);
-        ByteBuf second = storage.Allocator.Buffer(1, 1).WriteByte(2);
+        ByteBuf first = storage.Allocator.Buffer().WriteByte(1);
+        ByteBuf second = storage.Allocator.Buffer().WriteByte(2);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponent(first, true);
         try
         {

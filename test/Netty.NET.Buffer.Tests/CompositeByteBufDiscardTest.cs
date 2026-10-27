@@ -59,7 +59,7 @@ public class CompositeByteBufDiscardTest
     public void BorrowedSliceChainReleasesAllFourTransferredClaims(bool pooled, bool direct)
     {
         using var s = new Storage(pooled, direct);
-        ByteBuf buffer = s.Allocator.Buffer(16, 16); // 1
+        ByteBuf buffer = s.Allocator.Buffer(); // 1
         buffer.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         ByteBuf s1 = buffer.ReadSlice(2).Retain(); // 2
         ByteBuf s2 = s1.ReadSlice(2).Retain(); // 3
@@ -101,14 +101,15 @@ public class CompositeByteBufDiscardTest
         // PooledSlicedByteBuf, which maintains an independent refcount
         // (so that we can be sure to cover this case)
         // CLR: additionally verify the shared-counter unpooled alternative.
-        ByteBuf buffer = s.Allocator.Buffer(16, 16); // 1
+        ByteBuf buffer = s.Allocator.Buffer(); // 1
         buffer.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         // use readRetainedSlice this time - produces different kind of slices
         ByteBuf s1 = buffer.ReadRetainedSlice(2); // 2
         ByteBuf s2 = s1.ReadRetainedSlice(2); // 3
         ByteBuf s3 = s2.ReadRetainedSlice(2); // 4
         ByteBuf s4 = s3.ReadRetainedSlice(2); // 5
-        CompositeByteBuf composite = s.Allocator.CompositeBuffer().AddComponent(s1).AddComponents(s2, s3, s4);
+        CompositeByteBuf composite = new UnpooledByteBufAllocator(direct, s.Native).CompositeBuffer()
+            .AddComponent(s1).AddComponents(s2, s3, s4);
         try
         {
             Assert.Equal(1, composite.ReferenceCount);
@@ -139,8 +140,8 @@ public class CompositeByteBufDiscardTest
     public void ShrinkingReleasesTheRemovedTailAndKeepsTheRemainingClaim(bool pooled, bool direct)
     {
         using var s = new Storage(pooled, direct);
-        ByteBuf b1 = s.Allocator.Buffer(2, 2).WriteShort(1);
-        ByteBuf b2 = s.Allocator.Buffer(2, 2).WriteShort(2);
+        ByteBuf b1 = s.Allocator.Buffer(2).WriteShort(1);
+        ByteBuf b2 = s.Allocator.Buffer(2).WriteShort(2);
         // composite takes ownership of s1 and s2
         CompositeByteBuf composite = s.Allocator.CompositeBuffer().AddComponents(b1, b2);
         try
@@ -171,11 +172,11 @@ public class CompositeByteBufDiscardTest
         // the slices returned by readRetainedSlice are of type
         // PooledSlicedByteBuf, which maintains an independent refcount
         // (so that we can be sure to cover this case)
-        ByteBuf buffer = s.Allocator.Buffer(4, 4).WriteShort(1).WriteShort(2);
+        ByteBuf buffer = s.Allocator.Buffer().WriteShort(1).WriteShort(2);
         ByteBuf b1 = buffer.ReadRetainedSlice(2);
         ByteBuf b2 = b1.RetainedSlice(b1.ReaderIndex, 2);
         // composite takes ownership of b1 and b2
-        CompositeByteBuf composite = s.Allocator.CompositeBuffer().AddComponents(b1, b2);
+        CompositeByteBuf composite = new UnpooledByteBufAllocator(direct, s.Native).CompositeBuffer().AddComponents(b1, b2);
         try
         {
             Assert.Equal(4, composite.Capacity);
@@ -217,7 +218,7 @@ public class CompositeByteBufDiscardTest
         {
             for (int i = 0; i < 4; ++i)
             {
-                ByteBuf source = s.Allocator.Buffer(4, 4).WriteInt(i);
+                ByteBuf source = s.Allocator.Buffer().WriteInt(i);
                 sources.Add(source); composite.AddComponent(source, true);
             }
             // Skip the first 2 bytes which means even if we call discard*ReadBytes() later we can no drop the first
@@ -310,7 +311,7 @@ public class CompositeByteBufDiscardTest
             var expected = new byte[length];
             for (int i = 0; i < length; i += 4)
             {
-                ByteBuf source = storage.Allocator.Buffer(16, 16);
+                ByteBuf source = storage.Allocator.Buffer();
                 sources.Add(source);
                 if (littleEndian) source.WriteIntLE(i); else source.WriteInt(i);
                 composite.Capacity = composite.WriterIndex;

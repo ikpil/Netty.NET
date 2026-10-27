@@ -66,6 +66,20 @@ public class CompositeByteBufEnumerationTest
         Assert.Throws<IllegalReferenceCountException>(() => ((IEnumerable)buffer).GetEnumerator());
     }
 
+    [Fact]
+    public void TestEmptyIterator()
+    {
+        var buffer = new CompositeByteBuf();
+        try
+        {
+            using IEnumerator<ByteBuf> iterator = buffer.GetEnumerator();
+            Assert.False(iterator.MoveNext());
+            // IEnumerator combines Java hasNext/next; Current is invalid after exhaustion.
+            Assert.Throws<InvalidOperationException>(() => iterator.Current);
+        }
+        finally { buffer.Release(); }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -438,10 +452,10 @@ public class CompositeByteBufEnumerationTest
         try
         {
             source.WriteBytes(Encoding.ASCII.GetBytes("---01234"));
-            first = new CompositeByteBuf(8).AddFlattenedComponents(source, true);
+            first = (pooled ? pool.CompositeBuffer(8) : new CompositeByteBuf(8)).AddFlattenedComponents(source, true);
             source = null;
-            first.ReaderIndex = 3;
-            second = new CompositeByteBuf(8).AddFlattenedComponents(first, true);
+            Assert.Equal("---", first.ReadString(3, Encoding.ASCII));
+            second = (pooled ? pool.CompositeBuffer(8) : new CompositeByteBuf(8)).AddFlattenedComponents(first, true);
             first = null;
             Assert.Equal("01234", Encoding.ASCII.GetString(Bytes(second)));
 

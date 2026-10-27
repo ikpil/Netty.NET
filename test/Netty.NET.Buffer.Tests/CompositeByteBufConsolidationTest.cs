@@ -212,4 +212,32 @@ public class CompositeByteBufConsolidationTest
             if (composite.ReferenceCount > 0) composite.Release();
         }
     }
+
+    [Fact]
+    public void TestCopyEmpty()
+    {
+        using var storage = new Storage(false, false);
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+        ByteBuf copy = null;
+        try
+        {
+            Assert.Equal(0, buf.NumComponents);
+            copy = buf.Copy();
+            Assert.Equal(0, copy.ReadableBytes);
+        }
+        finally { buf.Release(); copy?.Release(); }
+    }
+
+    [Fact]
+    public void TestDuplicateEmpty()
+    {
+        using var storage = new Storage(false, false);
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+        try
+        {
+            Assert.Equal(0, buf.NumComponents);
+            Assert.Equal(0, buf.Duplicate().ReadableBytes);
+        }
+        finally { buf.Release(); }
+    }
 }

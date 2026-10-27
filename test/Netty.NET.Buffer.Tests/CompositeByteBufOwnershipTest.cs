@@ -76,7 +76,7 @@ public class CompositeByteBufOwnershipTest
         try
         {
             byte[] bytes = new byte[1024];
-            for (int i = 0; i < bytes.Length; ++i) bytes[i] = unchecked((byte)(i * 37 + 11));
+            Random.Shared.NextBytes(bytes);
             root.WriteBytes(bytes);
             foreach ((int offset, int length) in new[] { (100, 200), (300, 400), (700, 100) })
             {
@@ -143,8 +143,9 @@ public class CompositeByteBufOwnershipTest
     public void DecomposeDelegatesReferenceOperationsToTheOriginalRetainedComponents(bool pooled, bool direct, int count)
     {
         using var s = new Storage(pooled, direct);
-        ByteBuf root = s.Allocator.Buffer(1024, 1024).WriteZero(1024);
-        CompositeByteBuf composite = s.Allocator.CompositeBuffer();
+        ByteBuf root = s.Allocator.Buffer(1024).WriteZero(1024);
+        // Original pooled retained components are decomposed by an unpooled composite.
+        CompositeByteBuf composite = new UnpooledByteBufAllocator(direct, s.Native).CompositeBuffer();
         var components = new List<ByteBuf>();
         try
         {
@@ -231,5 +232,53 @@ public class CompositeByteBufOwnershipTest
         }
         finally { composite.Release(); }
         Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+    }
+
+    [Fact]
+    public void TestRemoveLastComponent()
+    {
+        using var storage = new Storage(false, false);
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+        try
+        {
+            buf.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            Assert.Equal(1, buf.NumComponents);
+            buf.RemoveComponent(0);
+            Assert.Equal(0, buf.NumComponents);
+        }
+        finally { buf.Release(); }
+    }
+
+    [Fact]
+    public void TestRemoveLastComponentWithOthersLeft()
+    {
+        using var storage = new Storage(false, false);
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+        try
+        {
+            buf.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            buf.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            Assert.Equal(2, buf.NumComponents);
+            buf.RemoveComponent(1);
+            Assert.Equal(1, buf.NumComponents);
+        }
+        finally { buf.Release(); }
+    }
+
+    [Fact]
+    public void TestRemoveComponents()
+    {
+        using var storage = new Storage(false, false);
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+        try
+        {
+            for (int i = 0; i < 10; i++) buf.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            Assert.Equal(10, buf.NumComponents);
+            Assert.Equal(20, buf.Capacity);
+            buf.RemoveComponents(4, 3);
+            Assert.Equal(7, buf.NumComponents);
+            Assert.Equal(14, buf.Capacity);
+        }
+        finally { buf.Release(); }
     }
 }

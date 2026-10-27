@@ -20,7 +20,7 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * An abstract test class for composite channel buffers
  */
-public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
+public abstract partial class AbstractCompositeByteBufTest : AbstractByteBufTest
 {
     protected override ByteBuf NewBuffer(int length, int maxCapacity)
     {

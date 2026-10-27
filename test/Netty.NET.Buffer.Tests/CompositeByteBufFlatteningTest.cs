@@ -58,14 +58,16 @@ public class CompositeByteBufFlatteningTest
         bool pooled, bool direct, bool wrapped)
     {
         using var storage = new Storage(pooled, direct);
-        CompositeByteBuf target = storage.Allocator.CompositeBuffer();
+        // The original composites/prefix are unpooled; only the retained-slice root must be pooled.
+        var compositeAllocator = new UnpooledByteBufAllocator(direct, storage.Native);
+        CompositeByteBuf target = compositeAllocator.CompositeBuffer();
         CompositeByteBuf source = null;
         ByteBuf root = null, copy = null, prefix = null;
         ByteBuf s1 = null, s2 = null, s3 = null, s4 = null;
         bool rootOwned = false;
         try
         {
-            prefix = storage.Allocator.Buffer(3, 3).WriteBytes(new byte[] { 1, 2, 3 });
+            prefix = compositeAllocator.Buffer(3, 3).WriteBytes(new byte[] { 1, 2, 3 });
             target.AddComponent(prefix, true).AddFlattenedComponents(prefix.Retain(), true)
                 .AddFlattenedComponents(Unpooled.EmptyBuffer, true);
             Assert.Equal(2, target.NumComponents);
@@ -76,7 +78,7 @@ public class CompositeByteBufFlatteningTest
             // PooledSlicedByteBuf, which maintains an independent refcount
             // (so that we can be sure to cover this case)
             // CLR: also verify the shared-counter unpooled alternative.
-            root = storage.Allocator.Buffer(16, 16).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+            root = storage.Allocator.Buffer().WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
             rootOwned = true;
             // use mixture of slice and retained slice
             s1 = root.ReadRetainedSlice(2);
@@ -86,7 +88,7 @@ public class CompositeByteBufFlatteningTest
             bool deallocated = root.Release();
             rootOwned = false;
             Assert.False(deallocated);
-            source = storage.Allocator.CompositeBuffer().AddComponent(s1).AddComponent(Unpooled.EmptyBuffer)
+            source = compositeAllocator.CompositeBuffer().AddComponent(s1).AddComponent(Unpooled.EmptyBuffer)
                 .AddComponents(s2, s3, s4);
             // set readable range to be from middle of first component
             // to middle of penultimate component
