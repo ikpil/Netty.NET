@@ -53,34 +53,36 @@ public class ByteBufDiscardSourceTest
         }
     }
 
-    public static IEnumerable<object[]> OriginalCases()
+    // Supplemental state/array model; original bodies execute on the inherited root fixtures.
+    public enum DiscardCase
     {
-        for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 5; ++scenario) yield return [provider, scenario];
+        SmallPrefix, LargePrefix, AllReadable, ReadBytesAfterRelease, SomeReadBytesAfterRelease
     }
 
-    /**
-     * The similar test case with {@link #testDiscardReadBytes()} but this one
-     * discards a large chunk at once.
-     */
+    public static IEnumerable<object[]> SupplementalCases()
+    {
+        for (int provider = 0; provider < 5; ++provider)
+        foreach (DiscardCase scenario in Enum.GetValues<DiscardCase>()) yield return [provider, scenario];
+    }
+
     [Theory]
-    [MemberData(nameof(OriginalCases))]
-    public void OriginalDiscardFixtures(int provider, int scenario)
+    [MemberData(nameof(SupplementalCases))]
+    public void DiscardPreservesArrayModelAndOwnership(int provider, DiscardCase scenario)
     {
         const int capacity = 4096;
-        using var s = new Storage(provider, scenario >= 3 ? 8 : capacity);
+        using var s = new Storage(provider, scenario is DiscardCase.ReadBytesAfterRelease or DiscardCase.SomeReadBytesAfterRelease ? 8 : capacity);
         ByteBuf buffer = s.Root;
-        if (scenario >= 3)
+        if (scenario is DiscardCase.ReadBytesAfterRelease or DiscardCase.SomeReadBytesAfterRelease)
         {
             // Clear the buffer so we are sure the reader and writer indices are 0.
             // This is important as we may return a slice from newBuffer(...).
             buffer.Clear();
             Assert.True(buffer.Release());
-            if (scenario == 3) Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardReadBytes());
+            if (scenario == DiscardCase.ReadBytesAfterRelease) Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardReadBytes());
             else Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardSomeReadBytes());
             return;
         }
-        if (scenario == 2)
+        if (scenario == DiscardCase.AllReadable)
         {
             // Test case for https://github.com/netty/netty/issues/325
             buffer.WriterIndex = buffer.Capacity;
@@ -90,7 +92,7 @@ public class ByteBufDiscardSourceTest
             return;
         }
         buffer.WriterIndex = 0;
-        if (scenario == 0)
+        if (scenario == DiscardCase.SmallPrefix)
         {
             for (int i = 0; i < buffer.Capacity; i += 4) buffer.WriteInt(i);
         }
@@ -100,7 +102,7 @@ public class ByteBufDiscardSourceTest
         }
         // CLR: independent managed bytes replace the original allocated comparison buffer.
         byte[] copy = ByteBufUtil.GetBytes(buffer, 0, capacity);
-        if (scenario == 0)
+        if (scenario == DiscardCase.SmallPrefix)
         {
             // Make sure there's no effect if called when readerIndex is 0.
             buffer.ReaderIndex = capacity / 4; buffer.MarkReaderIndex();

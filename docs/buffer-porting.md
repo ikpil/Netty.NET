@@ -6521,6 +6521,37 @@ other prior identities and checks remain. Shared declared decisions stay 408/408
 while other older body mappings and concrete/inherited/module closure remain partial.
 Evidence: ignored artifacts/buffer-original-scalar-roundtrip.
 
+## Original index and discard test bodies
+
+Seventeen selected AbstractByteBufTest declarations now execute their named original
+bodies on all seven real inherited roots (119 invocations). Index tests retain the
+original setter sequence, try/catch/fail scope, invalid inputs, empty write at full
+capacity and skip failure check. CLR property setters, ArgumentOutOfRangeException
+and an empty ReadOnlySpan<byte> replace their Java-specific equivalents.
+
+Discard tests again allocate an actual CopiedBuffer(ByteBuf) owner and compare
+nonretained Slice views through ByteBuf equality. Both original fill loops, all 2048
+overlapping suffix comparisons, exact saved/reset marks, writable-region policy and
+issue-325 body remain. Copy owners use existing teardown registration for assertion
+failure cleanup and still release at the original endpoint. The original releasedBuffer
+helper retains NewBuffer(8), Clear, successful Release and return. Source comments and
+discard2 Javadoc are retained. The original true virtual discard policy and Composite
+false override, including its two comments, now select the inherited original body.
+
+Previous 60 index and 25 discard state/array cases retain every assertion, with typed
+supplemental axes and names. Existing 30 index-mark/view, 80 discard-mark and four
+copy-hook cases remain unchanged. These 199 supplemental cases have a separate role
+from the directly ported original bodies. Other older body mappings and complete
+concrete/inherited/factory and consumer/module validation remain partial.
+
+Pinned Java production and fixtures were compiled afresh; Unsafe and forced-NIO each
+pass all 119 exact original pairs. Full net10.0 Debug/Release each pass 28,349;
+rebuilt checked Release with SIMPLE sampling one passes all 318 original/supplemental
+cases, with zero failures/skips. The build retains 51 existing Common warnings and
+has no Buffer/test warnings. All prior identities survive except the 85 deliberately
+retyped supplemental rows; no runtime correction was required for these contracts.
+Evidence: ignored artifacts/buffer-original-index-discard.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

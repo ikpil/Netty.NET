@@ -74,4 +74,11 @@ public abstract partial class AbstractCompositeByteBufTest : AbstractByteBufTest
         buffer.WriterIndex = 0;
         return buffer;
     }
+
+    // Composite buffer does not waste bandwidth on discardReadBytes, but
+    // the test will fail in strict mode.
+    protected override bool DiscardReadBytesDoesNotMoveWritableBytes()
+    {
+        return false;
+    }
 }

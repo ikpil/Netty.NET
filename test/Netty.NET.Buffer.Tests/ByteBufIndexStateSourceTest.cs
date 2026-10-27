@@ -53,69 +53,75 @@ public class ByteBufIndexStateSourceTest
         }
     }
 
-    public static IEnumerable<object[]> OriginalCases()
+    // Supplemental state/array model; original bodies execute on the inherited root fixtures.
+    public enum IndexCase
+    {
+        ReaderNegative, ReaderAboveCapacity, ReaderAboveWriter, ReaderAtWriter, WriterNegative, WriterAboveCapacity, WriterBelowReader, EmptyWriteAtCapacity, SetNegativeReader, SetReaderAboveWriter, SetWriterAboveCapacity, SkipBeyondReadable
+    }
+
+    public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 12; ++scenario) yield return [provider, scenario];
+        foreach (IndexCase scenario in Enum.GetValues<IndexCase>()) yield return [provider, scenario];
     }
 
     [Theory]
-    [MemberData(nameof(OriginalCases))]
-    public void OriginalIndexBoundariesAndSkipPreserveValidState(int provider, int scenario)
+    [MemberData(nameof(SupplementalCases))]
+    public void IndexBoundariesAndSkipPreserveValidState(int provider, IndexCase scenario)
     {
         const int capacity = 4096;
         using var s = new Storage(provider, capacity);
         switch (scenario)
         {
-            case 0:
+            case IndexCase.ReaderNegative:
                 s.Root.WriterIndex = 0;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReaderIndex = -1);
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
                 break;
-            case 1:
+            case IndexCase.ReaderAboveCapacity:
                 s.Root.WriterIndex = capacity;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReaderIndex = capacity + 1);
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
-            case 2:
+            case IndexCase.ReaderAboveWriter:
                 s.Root.WriterIndex = capacity / 2;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReaderIndex = capacity * 3 / 2);
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(capacity / 2, s.Root.WriterIndex);
                 break;
-            case 3:
+            case IndexCase.ReaderAtWriter:
                 s.Root.WriterIndex = 0; s.Root.ReaderIndex = 0;
                 s.Root.WriterIndex = capacity; s.Root.ReaderIndex = capacity;
                 Assert.Equal(capacity, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
-            case 4:
+            case IndexCase.WriterNegative:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.WriterIndex = -1);
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
                 break;
-            case 5:
+            case IndexCase.WriterAboveCapacity:
                 s.Root.WriterIndex = capacity; s.Root.ReaderIndex = capacity;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.WriterIndex = capacity + 1);
                 Assert.Equal(capacity, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
-            case 6:
+            case IndexCase.WriterBelowReader:
                 s.Root.WriterIndex = capacity; s.Root.ReaderIndex = capacity / 2;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.WriterIndex = capacity / 4);
                 Assert.Equal(capacity / 2, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
-            case 7:
+            case IndexCase.EmptyWriteAtCapacity:
                 s.Root.WriterIndex = 0; s.Root.ReaderIndex = 0; s.Root.WriterIndex = capacity;
                 // CLR span replaces the original empty ByteBuffer without a separate position/limit.
                 s.Root.WriteBytes(ReadOnlySpan<byte>.Empty);
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
-            case 8:
+            case IndexCase.SetNegativeReader:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.SetIndex(-1, capacity));
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
                 break;
-            case 9:
+            case IndexCase.SetReaderAboveWriter:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.SetIndex(capacity / 2, capacity / 4));
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
                 break;
-            case 10:
+            case IndexCase.SetWriterAboveCapacity:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.SetIndex(0, capacity + 1));
                 Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
                 break;
