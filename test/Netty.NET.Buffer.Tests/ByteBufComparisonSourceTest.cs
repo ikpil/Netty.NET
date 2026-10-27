@@ -60,7 +60,7 @@ public class ByteBufComparisonSourceTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void OriginalComparableInterfaceDoesNotOverflowUnsignedWords(int provider)
+    public void ComparableInterfaceDoesNotOverflowUnsignedWords(int provider)
     {
         using var first = new Storage(provider, 4096);
         using var second = new Storage(provider, 4096);

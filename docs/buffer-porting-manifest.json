@@ -414,10 +414,16 @@
             "status": "complete",
             "scope": "Nine shared and six pooled declared bodies, helpers and original provider selections; 73 unique executable pairs, six original assumptions, four original disabled pairs. Whole-module closure remains separate.",
             "evidence": "docs/buffer-porting.md#original-capacity-bodies-and-provider-selection"
+          },
+          {
+            "id": "original-snapshot-hash-and-initial-state-bodies",
+            "status": "complete",
+            "scope": "12 selected portable original bodies on seven actual roots; two Java-only metadata assertions explicitly excluded and all existing supplemental checks retained. Whole shared/concrete/inherited/module closure remains separate.",
+            "evidence": "docs/buffer-porting.md#original-snapshot-hash-and-initial-state-bodies"
           }
         ],
         "remaining": [
-          "All 408 AbstractByteBufTest declarations and all 85 AbstractCompositeByteBufTest declarations have coverage/CLR-representation decisions. The 52 older Composite declared mappings have also completed recorded body/helper fidelity review. The 36 shared scalar round-trip bodies now have directly ported inherited executions. The 17 shared index/discard bodies also have direct original-body executions. Nine shared capacity and six pooled bodies now also have exact named bodies with original provider selections. Continue other older shared-mapping fidelity, other partial concrete/standalone fixtures, exact inherited/provider/factory configurations and consumer/module closure. Declared accounting and selected-body review do not certify the whole module.",
+          "All 408 AbstractByteBufTest declarations and all 85 AbstractCompositeByteBufTest declarations have coverage/CLR-representation decisions. The 52 older Composite declared mappings have also completed recorded body/helper fidelity review. The 36 shared scalar round-trip bodies now have directly ported inherited executions. The 17 shared index/discard bodies also have direct original-body executions. Nine shared capacity and six pooled bodies now also have exact named bodies with original provider selections. Twelve shared snapshot/hash/initial-state portable bodies now also have direct seven-root executions. Continue other older shared-mapping fidelity, other partial concrete/standalone fixtures, exact inherited/provider/factory configurations and consumer/module closure. Declared accounting and selected-body review do not certify the whole module.",
           "Run consumer and final module validation. All 93 production entries remain reviewed with the newly found internal constructor path implemented; ByteBufUtilTest original named-body/provider review and the standalone adaptive growth regression are complete."
         ],
         "productionSourceReview": {
@@ -32350,7 +32356,8 @@
         "test/Netty.NET.Buffer.Tests/BigEndianHeapByteBufTest.cs",
         "test/Netty.NET.Buffer.Tests/BigEndianDirectByteBufTest.cs",
         "test/Netty.NET.Buffer.Tests/PooledBigEndianHeapByteBufTest.cs",
-        "test/Netty.NET.Buffer.Tests/PooledBigEndianDirectByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/PooledBigEndianDirectByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -32399,9 +32406,10 @@
         "Original scalar round-trip unit: 36 declared bodies plus 16 original typed helpers execute on seven actual inherited roots (252 new cases). Original 4096-byte capacity, medium tail, float eight-byte stride, 0.01 double tolerance, full signed input, seed replay and all cursor/writable/readable assertions retained. The independent BCL oracle retains 180 typed wire cases and five explicit LE cases without claiming to stand for original bodies. A cross-component 16-bit merge error passes those 180 aligned-layout wire cases but fails all eight original canonical-composite short methods. Fresh pinned Java Unsafe/NIO each pass the 252 exact pairs. Source restored unchanged. docs/buffer-porting.md#original-scalar-round-trip-bodies-and-typed-wire-oracle; artifacts/buffer-original-scalar-roundtrip (ignored).",
         "Post-port validation: full net10.0 Debug/Release each pass 28230; rebuilt checked Release with SIMPLE sampling interval 1 passes all 437 selected invocations (252 original, 180 typed BCL, five explicit LE). Fresh pinned Java Unsafe/NIO each pass the 252 exact original method/provider pairs. Compiled float helper verifies f2d/f2d/Assertions.assertEquals(DDD), mirrored by CLR double promotion. Cross-boundary merge mutation passes 180 aligned-layout BCL cases but fails all eight canonical original short methods; production source restored. The supplemental 180 rows are relabeled by meaningful typed inputs; every other prior identity remains. No runtime/Common changes; 51 existing Common warnings and zero Buffer/test warnings.",
         "Original index/discard bodies: 17 declarations and original releasedBuffer/virtual discard policies execute directly on seven actual roots (119 cases). Restores original ByteBuf comparison owners, Slice/Equals calls and 2048 overlapping suffix comparisons, preserves exact index exceptions and mark sequence. Prior 85 state/array cases remain under typed supplemental axes; 114 existing mark/view/copy-hook cases are unchanged. Java Unsafe/NIO each pass all 119 exact pairs. See indexDiscardBodyReview and docs/buffer-porting.md#original-index-and-discard-test-bodies; ignored artifacts/buffer-original-index-discard.",
-        "Original capacity/provider body unit: 73 unique executable pairs across seven actual roots; Java Unsafe and forced-NIO each pass the same 73, with six original Composite assumption pairs and four original Adaptive Disabled pairs explicitly accounted for. Existing capacity and arena supplemental checks remain. docs/buffer-porting.md#original-capacity-bodies-and-provider-selection; ignored artifacts/buffer-original-capacity."
+        "Original capacity/provider body unit: 73 unique executable pairs across seven actual roots; Java Unsafe and forced-NIO each pass the same 73, with six original Composite assumption pairs and four original Adaptive Disabled pairs explicitly accounted for. Existing capacity and arena supplemental checks remain. docs/buffer-porting.md#original-capacity-bodies-and-provider-selection; ignored artifacts/buffer-original-capacity.",
+        "Original snapshot/hash/initial-state unit: 12 named portable original bodies execute on all seven actual roots (84 cases). Restores every original copy-byte comparison, exact mutable sharing/copy independence, actual canonical/adaptive probes and HashSet lookup sequence. The two order-identity assertions are explicitly Java-only metadata exclusions; no fake facade is created. Existing state/array, index, comparison and heap HashSet/default-sort tests remain supplemental. Java Unsafe/NIO each pass all 84 exact original pairs. docs/buffer-porting.md#original-snapshot-hash-and-initial-state-bodies; ignored artifacts/buffer-original-snapshots."
       ],
-      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial. Seven further scalar/endian original methods now execute with independent BCL reference buffers and original helper combinations/iterations, including full-width signed random input and raw wire checks. The original empty-heavy composite factory adds a seventh actual inherited root for these methods and the twelve prior transfer bodies. See scalarEndianReview. Eight original concurrent-copy/string/borrowed-view and positioned-file bodies now execute on seven real inherited roots, retaining original synchronization/work counts and individual data/cursor assertions. See concurrentIoReview. Ten further original bounded-memory transfer, exposure, empty-range and allocated-read methods now execute on seven inherited roots. Span/Memory replace external mutable ByteBuffer metadata, while a real SequenceReader models the original returned-data cursor. Native destination zero-initialization, replayed windows, individual guard/data checks, allocator identity and original release assertions are retained. See memoryTransferReview. The remaining three original concurrency declarations now have named shared bodies and exact seven-root executions: two duplicate/slice channel methods and the six-tuple character-sequence writer. Real private TCP connections replace the Java in-memory gathering channel, while fixed dedicated Tasks and Encoding/span inputs replace Java executor/Charset/CharSequence roles. Original thread counts, completion targets, input lengths and Future observation remain. See channelTextConcurrencyReview. The final nineteen unreviewed NIO declarations now have explicit decisions: eighteen named shared-body adaptations and one order-metadata CLR replacement using existing real endian/wire tests. Original contiguous assumptions are represented by six-root fixture selection, and Composite internal-NIO override is validated as its own different original body. Growth retains every input through 64 MiB and every byte comparison; readonly contracts combine actual factory/write-denial tests and compiler-enforced readonly projections. See nioBorrowReview. Mapping all 408 declarations does not certify older mappings or the complete inherited suites. Scalar round-trip fidelity unit now directly ports all 36 named wrappers and 16 original typed helpers on the actual seven root fixtures. The former method-index implementation is retained only as a separately named, typed BCL wire model. All original ranges/masks/replay/cursor checks and float stride/tolerance are explicit; the pinned unsigned-short-LE helper-call quirk remains unchanged. See scalarRoundTripReview. Original index/discard body review now directly ports 17 declarations, releasedBuffer and virtual discard policies on seven actual root factories. Existing state/array assertions remain separately labeled supplemental checks. See indexDiscardBodyReview.",
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial. Seven further scalar/endian original methods now execute with independent BCL reference buffers and original helper combinations/iterations, including full-width signed random input and raw wire checks. The original empty-heavy composite factory adds a seventh actual inherited root for these methods and the twelve prior transfer bodies. See scalarEndianReview. Eight original concurrent-copy/string/borrowed-view and positioned-file bodies now execute on seven real inherited roots, retaining original synchronization/work counts and individual data/cursor assertions. See concurrentIoReview. Ten further original bounded-memory transfer, exposure, empty-range and allocated-read methods now execute on seven inherited roots. Span/Memory replace external mutable ByteBuffer metadata, while a real SequenceReader models the original returned-data cursor. Native destination zero-initialization, replayed windows, individual guard/data checks, allocator identity and original release assertions are retained. See memoryTransferReview. The remaining three original concurrency declarations now have named shared bodies and exact seven-root executions: two duplicate/slice channel methods and the six-tuple character-sequence writer. Real private TCP connections replace the Java in-memory gathering channel, while fixed dedicated Tasks and Encoding/span inputs replace Java executor/Charset/CharSequence roles. Original thread counts, completion targets, input lengths and Future observation remain. See channelTextConcurrencyReview. The final nineteen unreviewed NIO declarations now have explicit decisions: eighteen named shared-body adaptations and one order-metadata CLR replacement using existing real endian/wire tests. Original contiguous assumptions are represented by six-root fixture selection, and Composite internal-NIO override is validated as its own different original body. Growth retains every input through 64 MiB and every byte comparison; readonly contracts combine actual factory/write-denial tests and compiler-enforced readonly projections. See nioBorrowReview. Mapping all 408 declarations does not certify older mappings or the complete inherited suites. Scalar round-trip fidelity unit now directly ports all 36 named wrappers and 16 original typed helpers on the actual seven root fixtures. The former method-index implementation is retained only as a separately named, typed BCL wire model. All original ranges/masks/replay/cursor checks and float stride/tolerance are explicit; the pinned unsigned-short-LE helper-call quirk remains unchanged. See scalarRoundTripReview. Original index/discard body review now directly ports 17 declarations, releasedBuffer and virtual discard policies on seven actual root factories. Existing state/array assertions remain separately labeled supplemental checks. See indexDiscardBodyReview. Twelve selected snapshot/hash/initial-state declarations now have direct portable original bodies on all seven actual roots. Exact byte loops, ownership and HashSet lookup assertions are retained with two explicit Java-only order-identity exclusions. See snapshotBodyReview.",
       "comments": {
         "upstreamCount": 112,
         "preservedCount": 112,
@@ -32669,11 +32677,15 @@
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
               "method": "InitialState"
             }
           ],
-          "adaptation": "Original capacity=4096 and reader=0 assertions; shared fixture additionally verifies writer/readable/writable/ownership/storage state. Inherited providers are separate from the declared-method inventory."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testSWARIndexOf",
@@ -34402,11 +34414,15 @@
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufComparisonSourceTest.cs",
-              "method": "OriginalComparableInterfaceDoesNotOverflowUnsignedWords"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "ComparableInterfaceNotViolated"
             }
           ],
-          "adaptation": "Preserve original CAPACITY=4096, two 64-bit writes 0/0xF0000000L, writable/non-read-only preconditions and both comparison signs. Original unsigned-int overflow comments retained. Five storage providers; final reference/native cleanup checked."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testEquals",
@@ -34446,11 +34462,15 @@
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs",
-              "method": "OriginalHashSetScenarioAndClrDefaultSortUseContent"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "TestHashCode"
             }
           ],
-          "adaptation": "Reuse the existing exact 15-byte key arrays, heap/native keys, independent copies, HashSet membership checks, and removals using a cleared/written heap probe. Probe capacity 15 replaces the unused CAPACITY=4096 fixture capacity; the copied readable content and set operations are unchanged. CLR HashSet<T>, EqualityComparer and List.Sort also verify IEquatable/IComparable and null ordering. This mapping covers the existing heap probe with heap/native keys, not every inherited provider combination. Fresh Java executes this original body once with a heap probe."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testSetUsAsciiCharSequenceAfterRelease",
@@ -35338,66 +35358,90 @@
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "CopyBoundaryCheck1"
             }
           ],
-          "adaptation": "scenario=0; Copy(-1,0) rejects a negative index; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "copyBoundaryCheck2",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "CopyBoundaryCheck2"
             }
           ],
-          "adaptation": "scenario=1; Copy(0,capacity+1) rejects an excessive length; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "copyBoundaryCheck3",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "CopyBoundaryCheck3"
             }
           ],
-          "adaptation": "scenario=2; Copy(capacity+1,0) rejects an excessive index; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "copyBoundaryCheck4",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "CopyBoundaryCheck4"
             }
           ],
-          "adaptation": "scenario=3; Copy(capacity,1) rejects an end-overrun; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testCopy",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "TestCopy"
             }
           ],
-          "adaptation": "scenario=4; Readable Copy preserves bytes and returns independent storage with normalized indices; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testDuplicate",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "TestDuplicate"
             }
           ],
-          "adaptation": "scenario=5; Duplicate preserves readable contents and shares mutations while maintaining independent indices; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testSliceEndianness",
@@ -35405,47 +35449,55 @@
           "clrTests": [
             {
               "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "method": "SnapshotsPreserveArrayModelAndOwnership"
             }
           ],
-          "adaptation": "scenario=6; four original slice windows across five providers. Explicit BE/LE wire accessors replace Java mutable order-identity assertions; this is a CLR representation adaptation."
+          "adaptation": "scenario=6; four original slice windows across five providers. Explicit BE/LE wire accessors replace Java mutable order-identity assertions; this is a CLR representation adaptation. The same supplemental row is now named SnapshotCase.ExplicitEndianSlice; its BCL BE/LE and view-index assertions are unchanged. This is an explicit-accessor CLR policy, not a mutable byte-order facade or a direct original-body claim."
         },
         {
           "upstreamMethod": "testCopyAfterRelease",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "TestCopyAfterRelease"
             }
           ],
-          "adaptation": "scenario=7; both original declared methods call whole copy(), including testCopyAfterRelease1. Preserve this exact original path across five providers."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testCopyAfterRelease1",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
-            },
-            {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "IndexedCopyRejectsReleasedStorageIncludingEmptyCapacityRanges"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "TestCopyAfterRelease1"
             }
           ],
-          "adaptation": "scenario=8; both original declared methods call whole copy(), including testCopyAfterRelease1. Preserve this exact original path across five providers. Five additional cases check indexed copies of (0,0), (0,1) and (capacity,0) after release; these are additional coverage, not the original method body."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testReadOnlyRelease",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufSnapshotSourceTest.cs",
-              "method": "OriginalCopyDuplicateAndReadOnlyFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.Snapshots.cs",
+              "method": "TestReadOnlyRelease"
             }
           ],
-          "adaptation": "scenario=9; A borrowed read-only view releases the shared root claim; five unpooled heap/native, mixed-composite and pooled heap/native providers. Explicit BE/LE accessors replace Java order facades."
+          "adaptation": "Named original portable body on all seven actual inherited root fixtures, preserving exact inputs, loops, call/assertion order and release roles. Signed random-byte narrowing is unchecked; the existing peer allocator and owner cleanup register independent copies/keys. Two Java order-identity assertions have no mutable CLR metadata counterpart. See snapshotBodyReview for the explicit source/CLR partition, HashSet semantics and pinned after-release alias.",
+          "bodyFidelityReview": {
+            "status": "direct-portable-body-with-recorded-clr-metadata-exclusion",
+            "scope": "12 selected declarations and seven actual roots; other shared/comparison/view/concrete/inherited closure remains separate."
+          }
         },
         {
           "upstreamMethod": "testSetZero",
@@ -38219,6 +38271,75 @@
           "checkedReleaseAffectedPassed": 110,
           "uniqueNewOriginalInvocations": 73,
           "retainedSupplementalCases": 37,
+          "failed": 0,
+          "skipped": 0,
+          "existingCommonWarnings": 51,
+          "bufferWarnings": 0,
+          "testWarnings": 0,
+          "runtimeSourceChanged": false
+        }
+      },
+      "snapshotBodyReview": {
+        "status": "complete-for-recorded-12-portable-body-and-seven-root-scope",
+        "upstreamMethods": [
+          "initialState",
+          "comparableInterfaceNotViolated",
+          "copyBoundaryCheck1",
+          "copyBoundaryCheck2",
+          "copyBoundaryCheck3",
+          "copyBoundaryCheck4",
+          "testCopy",
+          "testDuplicate",
+          "testHashCode",
+          "testCopyAfterRelease",
+          "testCopyAfterRelease1",
+          "testReadOnlyRelease"
+        ],
+        "clrFixtureTypes": [
+          "BigEndianHeapByteBufTest",
+          "BigEndianDirectByteBufTest",
+          "PooledBigEndianHeapByteBufTest",
+          "PooledBigEndianDirectByteBufTest",
+          "AdaptiveBigEndianHeapByteBufTest",
+          "AdaptiveBigEndianDirectByteBufTest",
+          "BigEndianCompositeByteBufTest"
+        ],
+        "newDirectOriginalInvocations": 84,
+        "originalSetup": "Uses the actual CAPACITY=4096 fixture, original per-byte signed-random input, reader=CAPACITY/3 and writer=CAPACITY*2/3, all copied-byte comparisons and exact shared/independent mutation checks. Initial state, four copy-boundary declarations and read-only release keep their exact calls and inputs.",
+        "metadataPartition": {
+          "upstreamAssertions": [
+            "assertSame(buffer.order(), copy.order())",
+            "assertSame(buffer.order(), duplicate.order())"
+          ],
+          "disposition": "CLR-representation-exclusion",
+          "reason": "CLR ByteBuf exposes fixed explicit BE/LE accessors and has no mutable order identity. These two Java-only metadata assertions are replaced by explanatory comments; no fake order property/duplicate facade or synthetic replacement assertion is introduced. All portable original assertions remain. Existing typed slice cases independently test both wire interpretations."
+        },
+        "comparableAssumptions": "The selected seven actual roots are mutable and satisfy the original >=4 writable-byte assumption; ported precondition assertions verify that selection. Both original long values, comparison directions and NewBuffer(CAPACITY) peer remain.",
+        "hashSet": "Exact two 15-byte key arrays, heap/native key roles, independent copies and all Add/Contains/Remove/Count operations are retained. The probe is now the actual 4096-byte inherited root. BCL HashSet<ByteBuf> exercises virtual content hashing/equality; xUnit2013/2017 are suppressed only around this body so lookup assertions are not replaced by collection-enumeration assertions.",
+        "ownership": "Nonretained Duplicate views share their owners and are not independently released. Own registers comparison copies/hash keys for failure cleanup while keeping the original successful releases. Existing independent unpooled peer allocator tracks direct native ownership. Existing original ReleasedBuffer helper is reused for both after-release methods.",
+        "pinnedQuirk": {
+          "method": "testCopyAfterRelease1",
+          "originalCall": "releasedBuffer().copy()",
+          "policy": "Retain the same nonindexed Copy call as testCopyAfterRelease; existing indexed released-copy checks remain supplemental."
+        },
+        "supplemental": "All 50 prior snapshot model cases are retained under typed SnapshotCase axes. Five comparison-overflow cases are relabeled supplemental; the remaining 15 comparison cases, 30 indexed snapshots and five indexed-released-copy cases are unchanged. The existing heap HashSet/default-sort scenario remains unchanged. These models do not stand in for the named original bodies.",
+        "javaEvidence": {
+          "freshPinnedProductionSources": 93,
+          "freshPinnedFixtureAndSupportSources": 14,
+          "profiles": [
+            "Unsafe",
+            "forced NIO"
+          ],
+          "passedPerProfile": 84,
+          "originalAssumptionsTriggered": 0
+        },
+        "scope": "Selected bodies only. Other older shared/comparison/view mappings and complete concrete/inherited/provider/factory/consumer closure remain partial.",
+        "validation": {
+          "debugPassed": 28506,
+          "releasePassed": 28506,
+          "checkedReleaseAffectedPassed": 189,
+          "newOriginalInvocations": 84,
+          "retainedSupplementalCases": 105,
           "failed": 0,
           "skipped": 0,
           "existingCommonWarnings": 51,

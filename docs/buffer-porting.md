@@ -6581,6 +6581,39 @@ warnings. The only prior identity changes are the 37 retyped supplemental rows, 
 no runtime correction was required for these contracts.
 Evidence: ignored artifacts/buffer-original-capacity.
 
+## Original snapshot, hash and initial-state bodies
+
+Twelve selected AbstractByteBufTest portable bodies now execute on all seven actual
+inherited roots (84 invocations). Original 4096-byte setup, per-byte random fill,
+CAPACITY/3 and CAPACITY*2/3 indices, every copied-byte comparison, independent/shared
+mutation assertions and release roles remain. Four copy-boundary declarations,
+initial state, read-only release and both after-release methods retain their calls.
+The pinned testCopyAfterRelease1 also calls nonindexed copy(); that quirk remains,
+with existing indexed released-copy regressions retained separately.
+
+The two Java order-identity assertions in copy/duplicate are explicitly excluded:
+CLR ByteBuf uses fixed explicit BE/LE accessors and has no mutable order identity.
+Explanatory comments record the partition; no fake order facade or synthetic assertion
+stands in for these metadata checks. Existing slice model rows still check both wire
+interpretations. The comparison-overflow fixture uses the actual second root and both
+original long values; all selected roots satisfy the original mutable/writable assumptions.
+
+HashSet keeps both original 15-byte key arrays, independent heap/native copies and
+every lookup/removal/count operation, now with the actual inherited 4096-byte probe.
+Only xUnit2013/2017 are suppressed around that method to preserve hash lookups instead
+of collection-enumeration assertions. Existing owner registration handles failure
+cleanup without changing successful releases. All prior 50 snapshot rows and five
+overflow rows retain their assertions under supplemental names/typed axes. Other
+comparison, indexed-snapshot, released-indexed-copy and heap HashSet/sort tests remain.
+Fresh pinned Java Unsafe and forced-NIO each pass all 84 exact original pairs.
+Other shared/comparison/view/concrete/inherited/consumer closure remains partial.
+Full net10.0 Debug/Release each pass 28,506; rebuilt checked Release with SIMPLE
+sampling one passes all 84 original plus 105 retained model/contract invocations.
+All have zero failures/skips, 51 existing Common warnings and no Buffer/test warnings.
+Only 55 deliberately relabeled supplemental identities change; all remaining prior
+identities survive. No runtime correction is required for these reviewed contracts.
+Evidence: ignored artifacts/buffer-original-snapshots.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

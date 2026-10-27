@@ -54,22 +54,30 @@ public class ByteBufSnapshotSourceTest
         }
     }
 
-    public static IEnumerable<object[]> OriginalCases()
+    // Supplemental state/array model; original snapshot bodies execute on all seven real roots.
+    public enum SnapshotCase
+    {
+        CopyNegativeIndex, CopyBeyondCapacity, CopyIndexBeyondCapacity, CopyAtCapacity,
+        CopyIndependence, DuplicateSharing, ExplicitEndianSlice, CopyAfterRelease,
+        CopyAfterReleaseAlias, ReadOnlyRelease
+    }
+
+    public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 10; ++scenario) yield return [provider, scenario];
+        foreach (SnapshotCase scenario in Enum.GetValues<SnapshotCase>()) yield return [provider, scenario];
     }
 
     [Theory]
-    [MemberData(nameof(OriginalCases))]
-    public void OriginalCopyDuplicateAndReadOnlyFixtures(int provider, int scenario)
+    [MemberData(nameof(SupplementalCases))]
+    public void SnapshotsPreserveArrayModelAndOwnership(int provider, SnapshotCase scenario)
     {
         const int capacity = 4096;
-        using var s = new Storage(provider, scenario >= 7 ? 8 : capacity);
+        using var s = new Storage(provider, scenario is SnapshotCase.CopyAfterRelease or SnapshotCase.CopyAfterReleaseAlias or SnapshotCase.ReadOnlyRelease ? 8 : capacity);
         ByteBuf buffer = s.Root;
-        if (scenario >= 7)
+        if (scenario is SnapshotCase.CopyAfterRelease or SnapshotCase.CopyAfterReleaseAlias or SnapshotCase.ReadOnlyRelease)
         {
-            if (scenario == 9)
+            if (scenario == SnapshotCase.ReadOnlyRelease)
             {
                 Assert.Equal(1, buffer.ReferenceCount);
                 Assert.True(buffer.AsReadOnly().Release());
@@ -85,10 +93,10 @@ public class ByteBufSnapshotSourceTest
             }
             return;
         }
-        if (scenario < 4)
+        if (scenario is SnapshotCase.CopyNegativeIndex or SnapshotCase.CopyBeyondCapacity or SnapshotCase.CopyIndexBeyondCapacity or SnapshotCase.CopyAtCapacity)
         {
             (int index, int length) = scenario switch
-            { 0 => (-1, 0), 1 => (0, capacity + 1), 2 => (capacity + 1, 0), _ => (capacity, 1) };
+            { SnapshotCase.CopyNegativeIndex => (-1, 0), SnapshotCase.CopyBeyondCapacity => (0, capacity + 1), SnapshotCase.CopyIndexBeyondCapacity => (capacity + 1, 0), _ => (capacity, 1) };
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Copy(index, length));
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
             Assert.Equal(1, buffer.ReferenceCount);
@@ -96,7 +104,7 @@ public class ByteBufSnapshotSourceTest
         }
         byte[] bytes = new byte[capacity]; new Random(12345).NextBytes(bytes);
         for (int i = 0; i < bytes.Length; ++i) buffer.SetByte(i, bytes[i]);
-        if (scenario == 6)
+        if (scenario == SnapshotCase.ExplicitEndianSlice)
         {
             foreach ((int offset, int length) in new[] { (0, capacity), (0, capacity - 1), (1, capacity - 1), (1, capacity - 2) })
             {
@@ -111,7 +119,7 @@ public class ByteBufSnapshotSourceTest
         }
         const int reader = capacity / 3, writer = capacity * 2 / 3;
         buffer.SetIndex(reader, writer);
-        if (scenario == 4)
+        if (scenario == SnapshotCase.CopyIndependence)
         {
             // Make sure all properties are copied.
             ByteBuf copy = buffer.Copy();
