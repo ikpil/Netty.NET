@@ -39,4 +39,20 @@ public abstract class AbstractContiguousByteBufTest : AbstractByteBufTest
         try { AssertOriginalInternalNioBufferGrowth(); }
         finally { InternalBorrowGrowthGate.Release(); }
     }
+
+    [Fact]
+    public void TestCapacityEnforceMaxCapacity() => AssertOriginalCapacityEnforceMaxCapacity();
+
+    [Fact]
+    public void TestCapacityNegative() => AssertOriginalCapacityNegative();
+
+    [Fact]
+    public void TestCapacityDecrease() => AssertOriginalCapacityDecrease();
+
+    [Fact]
+    public void TestCapacityIncrease() => AssertOriginalCapacityIncrease();
+
+    [Fact]
+    public void TestMaxFastWritableBytesTracksWrittenBytes() => AssertOriginalMaxFastWritableBytesTracksWrittenBytes();
+
 }

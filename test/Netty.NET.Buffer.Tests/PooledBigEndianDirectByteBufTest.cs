@@ -28,4 +28,11 @@ public class PooledBigEndianDirectByteBufTest : AbstractPooledByteBufTransferTes
         // CLR default multibyte access is always big-endian; no mutable order facade exists.
         return result;
     }
+
+    [Fact]
+    public void TestMaxFastWritableBytes() => AssertOriginalPooledMaxFastWritableBytes();
+
+    [Fact]
+    public void TestEnsureWritableDoesntGrowTooMuch() => AssertOriginalPooledEnsureWritableDoesntGrowTooMuch();
+
 }

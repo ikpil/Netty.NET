@@ -28,4 +28,8 @@ public class BigEndianHeapByteBufTest : AbstractContiguousByteBufTest
         Assert.Equal(0, result.WriterIndex);
         return result;
     }
+
+    [Fact]
+    public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
+
 }

@@ -56,46 +56,53 @@ public class ByteBufCapacitySourceTest
         }
     }
 
-    public static IEnumerable<object[]> OriginalCases()
+    // Supplemental state/ownership checks; named original bodies use the actual inherited roots.
+    public enum CapacityCase
+    {
+        AboveMaximum, NegativeCapacity, Decrease, Increase, Slice, RetainedSlice,
+        DefaultFastWritable, FastWritableAfterWrite, ReaderPastSavedWriter
+    }
+
+    public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 9; ++scenario)
+        foreach (CapacityCase scenario in Enum.GetValues<CapacityCase>())
         {
             // The original composite fixture requires an unlimited maximum.
-            if (provider == 2 && (scenario < 4 || scenario is 6 or 7)) continue;
+            if (provider == 2 && (scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase || scenario is CapacityCase.DefaultFastWritable or CapacityCase.FastWritableAfterWrite)) continue;
             // The pooled fixture overrides the default fast-writable test.
-            if (provider >= 3 && scenario == 6) continue;
+            if (provider >= 3 && scenario == CapacityCase.DefaultFastWritable) continue;
             yield return [provider, scenario];
         }
     }
 
     [Theory]
-    [MemberData(nameof(OriginalCases))]
-    public void OriginalCapacityAndFastWritableFixtures(int provider, int scenario)
+    [MemberData(nameof(SupplementalCases))]
+    public void CapacityAndFastWritablePreserveStateAndOwnership(int provider, CapacityCase scenario)
     {
         (int initial, int maximum) = scenario switch
         {
-            < 4 => (3, 13), 6 => (150, 500), 7 => (4, 10), 8 => (10, int.MaxValue), _ => (8, int.MaxValue)
+            CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase => (3, 13), CapacityCase.DefaultFastWritable => (150, 500), CapacityCase.FastWritableAfterWrite => (4, 10), CapacityCase.ReaderPastSavedWriter => (10, int.MaxValue), _ => (8, int.MaxValue)
         };
         using var s = new Storage(provider, initial, maximum);
         ByteBuf buffer = s.Root;
-        if (scenario < 4)
+        if (scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase)
         {
             Assert.Equal(13, buffer.MaxCapacity); Assert.Equal(3, buffer.Capacity);
             switch (scenario)
             {
-                case 0: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 14); break;
-                case 1: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = -1); break;
-                case 2: buffer.Capacity = 2; break;
+                case CapacityCase.AboveMaximum: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 14); break;
+                case CapacityCase.NegativeCapacity: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = -1); break;
+                case CapacityCase.Decrease: buffer.Capacity = 2; break;
                 default: buffer.Capacity = 4; break;
             }
-            Assert.Equal(scenario < 2 ? 3 : scenario == 2 ? 2 : 4, buffer.Capacity);
+            Assert.Equal(scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity ? 3 : scenario == CapacityCase.Decrease ? 2 : 4, buffer.Capacity);
             Assert.Equal(13, buffer.MaxCapacity);
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
         }
-        else if (scenario is 4 or 5)
+        else if (scenario is CapacityCase.Slice or CapacityCase.RetainedSlice)
         {
-            bool retained = scenario == 5;
+            bool retained = scenario == CapacityCase.RetainedSlice;
             ByteBuf slice = retained ? buffer.RetainedSlice(buffer.ReaderIndex + 1, 3)
                 : buffer.Slice(buffer.ReaderIndex + 1, 3);
             int rootCount = buffer.ReferenceCount, sliceCount = slice.ReferenceCount;
@@ -108,7 +115,7 @@ public class ByteBufCapacitySourceTest
             }
             finally { if (retained) slice.Release(); }
         }
-        else if (scenario == 6)
+        else if (scenario == CapacityCase.DefaultFastWritable)
         {
             buffer.WriterIndex = 100;
             Assert.Equal(50, buffer.WritableBytes); Assert.Equal(150, buffer.Capacity);
@@ -116,7 +123,7 @@ public class ByteBufCapacitySourceTest
             // Default implementation has fast writable == writable
             Assert.Equal(50, buffer.MaxFastWritableBytes);
         }
-        else if (scenario == 7)
+        else if (scenario == CapacityCase.FastWritableAfterWrite)
         {
             int max = buffer.MaxFastWritableBytes;
             buffer.WriteByte(1);

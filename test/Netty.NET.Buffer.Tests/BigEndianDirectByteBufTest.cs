@@ -31,4 +31,8 @@ public class BigEndianDirectByteBufTest : AbstractContiguousByteBufTest
     }
     protected virtual ByteBuf NewDirectBuffer(int length, int maxCapacity)
         => Allocator.DirectBuffer(length, maxCapacity);
+
+    [Fact]
+    public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
+
 }

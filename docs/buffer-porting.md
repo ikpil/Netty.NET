@@ -6552,6 +6552,35 @@ has no Buffer/test warnings. All prior identities survive except the 85 delibera
 retyped supplemental rows; no runtime correction was required for these contracts.
 Evidence: ignored artifacts/buffer-original-index-discard.
 
+## Original capacity bodies and provider selection
+
+Nine shared capacity declarations and all six declared pooled bodies now retain their
+original named bodies/helpers on actual allocator roots. The selection has 73 unique
+executable provider/method pairs. Finite-capacity bodies run on six contiguous roots;
+slice capacity and hello/world saved-writer tests run on all seven. Two unpooled roots
+execute the default fast-writable body, while two pooled roots execute its original
+override. The four common pooled bodies also execute on both Adaptive roots.
+
+Pinned Composite NewBuffer assumes an unlimited maximum, excluding six finite-input
+pairs. Adaptive explicitly disables max-fast-writable and precise-growth overrides
+because they require a PooledByteBuf cast, excluding four pairs. These selections are
+recorded without empty passing CLR bodies. Java Unsafe and forced-NIO freshly compile
+and independently report the same 73 passed, six assumption and four disabled pairs.
+
+Original capacity inputs, assertions, retained-slice release scopes, unwrap loop and
+comments remain. Java maxLength/handle map to actual Allocation.ReservedLength/Handle;
+raw long handle comparisons are preserved. CLR properties, supported exceptions and
+WriteString adapt the Java setters/exceptions/writeCharSequence. Existing 37 typed
+capacity state/ownership cases and the independent TestAllocator arena tests remain
+supplemental. The formerly reference-only unwrap comment now sits in the actual helper.
+Other shared bodies and complete concrete/inherited/factory/consumer closure remain
+partial. Full net10.0 Debug/Release each pass 28,422; rebuilt checked Release with
+SIMPLE sampling one passes the 73 original and 37 supplemental invocations. All have
+zero failures/skips; the build retains 51 existing Common warnings and no Buffer/test
+warnings. The only prior identity changes are the 37 retyped supplemental rows, and
+no runtime correction was required for these contracts.
+Evidence: ignored artifacts/buffer-original-capacity.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
