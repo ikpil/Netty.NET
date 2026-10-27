@@ -396,10 +396,16 @@
             "status": "complete",
             "scope": "52 older declared mappings audited; eight exact setups restored, original helper roles/inputs/assertions corrected, differential mutation controls prove former blind spots. Other inherited/concrete and shared-mapping scopes remain partial.",
             "evidence": "docs/buffer-porting.md#composite-declared-body-fidelity-review"
+          },
+          {
+            "id": "original-scalar-round-trip-bodies-and-typed-wire-oracle",
+            "status": "complete",
+            "scope": "36 original wrappers and 16 typed helpers on seven real inherited roots; original quirks preserved and independent typed wire evidence retained. Other shared/concrete/inherited closure remains separate.",
+            "evidence": "docs/buffer-porting.md#original-scalar-round-trip-bodies-and-typed-wire-oracle"
           }
         ],
         "remaining": [
-          "All 408 AbstractByteBufTest declarations and all 85 AbstractCompositeByteBufTest declarations have coverage/CLR-representation decisions. The 52 older Composite declared mappings have also completed recorded body/helper fidelity review. Continue older shared-mapping fidelity, other partial concrete/standalone fixtures, exact inherited/provider/factory configurations and consumer/module closure. Declared accounting and selected-body review do not certify the whole module.",
+          "All 408 AbstractByteBufTest declarations and all 85 AbstractCompositeByteBufTest declarations have coverage/CLR-representation decisions. The 52 older Composite declared mappings have also completed recorded body/helper fidelity review. The 36 shared scalar round-trip bodies now have directly ported inherited executions. Continue other older shared-mapping fidelity, other partial concrete/standalone fixtures, exact inherited/provider/factory configurations and consumer/module closure. Declared accounting and selected-body review do not certify the whole module.",
           "Run consumer and final module validation. All 93 production entries remain reviewed with the newly found internal constructor path implemented; ByteBufUtilTest original named-body/provider review and the standalone adaptive growth regression are complete."
         ],
         "productionSourceReview": {
@@ -32306,7 +32312,8 @@
         "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.MemoryTransfer.cs",
         "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ConcurrentChannelText.cs",
         "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.NioBorrow.cs",
-        "test/Netty.NET.Buffer.Tests/AbstractContiguousByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/AbstractContiguousByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -32351,9 +32358,11 @@
         "Original channel/text concurrency unit: three declared shared methods produce fourteen channel pairs plus forty-two exact charset/type/provider tuples. Preserve 10 workers with 60000 shared channel completions and 16 workers x 256 absolute text writes, 32-byte buffers and exact Java 10/32/32-character inputs. Real Socket output plus final EOF covers all emitted bytes. Original Future observation is supplemented with deterministic literal byte/index checks. Fresh pinned Java Unsafe/NIO each pass the same 56 original pairs/tuples. Wire corruption fails fourteen original output comparisons; no-op setter fails forty-two supplemental byte assertions after successful Futures. Runtime source restored unchanged. docs/buffer-porting.md#original-channel-and-text-concurrency-tests; artifacts/buffer-original-channel-text (ignored).",
         "Post-port validation: full net10.0 Debug/Release each pass 27847, zero failures/skips; rebuilt checked Release with SIMPLE sampling interval 1 passes all 56 affected exact invocations. Fresh pinned Java Unsafe/NIO each pass 14 channel pairs plus 42 exact charset/type/provider tuples. The sole remaining original comment, issue 325, is restored at the old all-consumed discard branch; its executable source is unchanged and all 109 owning-fixture checked Release regressions pass. All 112 shared-source comment occurrences are accounted for (109 code, three existing references), without promoting whole-fixture status. Production/Common unchanged; 51 existing Common warnings and no Buffer/test warnings.",
         "Original NIO contract unit: final nineteen shared declarations reviewed. Eighteen named adaptations add 123 exact CLR invocations; existing 28 scalar/endian cases replace order metadata and the separately ported Composite override adds one check. Fresh pinned Java Unsafe/NIO each pass 130 original executions and record three original Composite assumptions. Native/heap readonly destinations, all twelve output-view variants, original 32/64-MiB growth and capacity-based internal helper semantics retained under explicit type/range/cursor policies. Compiler accepts writable/readonly-read control and rejects readonly memory/segment writes, readonly Span destination and nonexistent order metadata. Wrong readonly factory fails 98 cases; final 64-MiB byte corruption fails all six growth bodies. Source restored unchanged. docs/buffer-porting.md#original-nio-borrow-and-read-only-decisions; artifacts/buffer-original-nio-contracts (ignored).",
-        "Post-port validation: full net10.0 Debug/Release each pass 27970 with all 27847 prior identities retained plus exactly 123 new identities. Rebuilt checked Release with SIMPLE sampling interval 1 passes all 152 affected new/reused identities. Fresh pinned Java Unsafe/NIO each pass 130 exact original executions and record three original Composite assumptions. Compiler control succeeds; four negative type/order probes fail with expected CS8331/CS1503/CS1061. Wrong readonly factory fails 98 cases and corrupting only the final 64-MiB byte fails all six complete growth helpers. Source restored byte-for-byte; 51 existing Common warnings, zero Buffer/test warnings. All 408 declared decisions are mapped, while whole-fixture status and older body/provider review remain in-progress."
+        "Post-port validation: full net10.0 Debug/Release each pass 27970 with all 27847 prior identities retained plus exactly 123 new identities. Rebuilt checked Release with SIMPLE sampling interval 1 passes all 152 affected new/reused identities. Fresh pinned Java Unsafe/NIO each pass 130 exact original executions and record three original Composite assumptions. Compiler control succeeds; four negative type/order probes fail with expected CS8331/CS1503/CS1061. Wrong readonly factory fails 98 cases and corrupting only the final 64-MiB byte fails all six complete growth helpers. Source restored byte-for-byte; 51 existing Common warnings, zero Buffer/test warnings. All 408 declared decisions are mapped, while whole-fixture status and older body/provider review remain in-progress.",
+        "Original scalar round-trip unit: 36 declared bodies plus 16 original typed helpers execute on seven actual inherited roots (252 new cases). Original 4096-byte capacity, medium tail, float eight-byte stride, 0.01 double tolerance, full signed input, seed replay and all cursor/writable/readable assertions retained. The independent BCL oracle retains 180 typed wire cases and five explicit LE cases without claiming to stand for original bodies. A cross-component 16-bit merge error passes those 180 aligned-layout wire cases but fails all eight original canonical-composite short methods. Fresh pinned Java Unsafe/NIO each pass the 252 exact pairs. Source restored unchanged. docs/buffer-porting.md#original-scalar-round-trip-bodies-and-typed-wire-oracle; artifacts/buffer-original-scalar-roundtrip (ignored).",
+        "Post-port validation: full net10.0 Debug/Release each pass 28230; rebuilt checked Release with SIMPLE sampling interval 1 passes all 437 selected invocations (252 original, 180 typed BCL, five explicit LE). Fresh pinned Java Unsafe/NIO each pass the 252 exact original method/provider pairs. Compiled float helper verifies f2d/f2d/Assertions.assertEquals(DDD), mirrored by CLR double promotion. Cross-boundary merge mutation passes 180 aligned-layout BCL cases but fails all eight canonical original short methods; production source restored. The supplemental 180 rows are relabeled by meaningful typed inputs; every other prior identity remains. No runtime/Common changes; 51 existing Common warnings and zero Buffer/test warnings."
       ],
-      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial. Seven further scalar/endian original methods now execute with independent BCL reference buffers and original helper combinations/iterations, including full-width signed random input and raw wire checks. The original empty-heavy composite factory adds a seventh actual inherited root for these methods and the twelve prior transfer bodies. See scalarEndianReview. Eight original concurrent-copy/string/borrowed-view and positioned-file bodies now execute on seven real inherited roots, retaining original synchronization/work counts and individual data/cursor assertions. See concurrentIoReview. Ten further original bounded-memory transfer, exposure, empty-range and allocated-read methods now execute on seven inherited roots. Span/Memory replace external mutable ByteBuffer metadata, while a real SequenceReader models the original returned-data cursor. Native destination zero-initialization, replayed windows, individual guard/data checks, allocator identity and original release assertions are retained. See memoryTransferReview. The remaining three original concurrency declarations now have named shared bodies and exact seven-root executions: two duplicate/slice channel methods and the six-tuple character-sequence writer. Real private TCP connections replace the Java in-memory gathering channel, while fixed dedicated Tasks and Encoding/span inputs replace Java executor/Charset/CharSequence roles. Original thread counts, completion targets, input lengths and Future observation remain. See channelTextConcurrencyReview. The final nineteen unreviewed NIO declarations now have explicit decisions: eighteen named shared-body adaptations and one order-metadata CLR replacement using existing real endian/wire tests. Original contiguous assumptions are represented by six-root fixture selection, and Composite internal-NIO override is validated as its own different original body. Growth retains every input through 64 MiB and every byte comparison; readonly contracts combine actual factory/write-denial tests and compiler-enforced readonly projections. See nioBorrowReview. Mapping all 408 declarations does not certify older mappings or the complete inherited suites.",
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete. Shared lifetime batch now accounts for 69 additional declared bodies through the recorded eight-provider/three-entry profile matrix; see lifetimeFixtureReview. This does not mark the shared fixture or all inherited concrete fixtures complete. Current recent fixture ports use one named C# test per original method, with original helper structure and assertion order; former string/index dispatch is removed. Twelve further transfer methods now have directly ported shared bodies and actual inherited executions on the original six storage/provider roles, with the pooled/adaptive factory helper chain retained. See transferFixtureReview; full shared/provider coverage stays partial. Seven further scalar/endian original methods now execute with independent BCL reference buffers and original helper combinations/iterations, including full-width signed random input and raw wire checks. The original empty-heavy composite factory adds a seventh actual inherited root for these methods and the twelve prior transfer bodies. See scalarEndianReview. Eight original concurrent-copy/string/borrowed-view and positioned-file bodies now execute on seven real inherited roots, retaining original synchronization/work counts and individual data/cursor assertions. See concurrentIoReview. Ten further original bounded-memory transfer, exposure, empty-range and allocated-read methods now execute on seven inherited roots. Span/Memory replace external mutable ByteBuffer metadata, while a real SequenceReader models the original returned-data cursor. Native destination zero-initialization, replayed windows, individual guard/data checks, allocator identity and original release assertions are retained. See memoryTransferReview. The remaining three original concurrency declarations now have named shared bodies and exact seven-root executions: two duplicate/slice channel methods and the six-tuple character-sequence writer. Real private TCP connections replace the Java in-memory gathering channel, while fixed dedicated Tasks and Encoding/span inputs replace Java executor/Charset/CharSequence roles. Original thread counts, completion targets, input lengths and Future observation remain. See channelTextConcurrencyReview. The final nineteen unreviewed NIO declarations now have explicit decisions: eighteen named shared-body adaptations and one order-metadata CLR replacement using existing real endian/wire tests. Original contiguous assumptions are represented by six-root fixture selection, and Composite internal-NIO override is validated as its own different original body. Growth retains every input through 64 MiB and every byte comparison; readonly contracts combine actual factory/write-denial tests and compiler-enforced readonly projections. See nioBorrowReview. Mapping all 408 declarations does not certify older mappings or the complete inherited suites. Scalar round-trip fidelity unit now directly ports all 36 named wrappers and 16 original typed helpers on the actual seven root fixtures. The former method-index implementation is retained only as a separately named, typed BCL wire model. All original ranges/masks/replay/cursor checks and float stride/tolerance are explicit; the pinned unsigned-short-LE helper-call quirk remains unchanged. See scalarRoundTripReview.",
       "comments": {
         "upstreamCount": 112,
         "preservedCount": 112,
@@ -34634,400 +34643,540 @@
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomByteAccess"
             }
           ],
-          "adaptation": "operation=0, kind=0, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedByteAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedByteAccess"
             }
           ],
-          "adaptation": "operation=1, kind=1, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomShortAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomShortAccess"
             }
           ],
-          "adaptation": "operation=2, kind=2, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomShortLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomShortLEAccess"
             }
           ],
-          "adaptation": "operation=3, kind=2, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedShortAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedShortAccess"
             }
           ],
-          "adaptation": "operation=4, kind=3, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedShortLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedShortLEAccess"
             }
           ],
-          "adaptation": "operation=5, kind=3, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomMediumAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomMediumAccess"
             }
           ],
-          "adaptation": "operation=6, kind=4, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomMediumLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomMediumLEAccess"
             }
           ],
-          "adaptation": "operation=7, kind=4, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedMediumAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedMediumAccess"
             }
           ],
-          "adaptation": "operation=8, kind=5, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedMediumLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedMediumLEAccess"
             }
           ],
-          "adaptation": "operation=9, kind=5, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomIntAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomIntAccess"
             }
           ],
-          "adaptation": "operation=10, kind=6, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomIntLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomIntLEAccess"
             }
           ],
-          "adaptation": "operation=11, kind=6, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedIntAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedIntAccess"
             }
           ],
-          "adaptation": "operation=12, kind=7, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomUnsignedIntLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomUnsignedIntLEAccess"
             }
           ],
-          "adaptation": "operation=13, kind=7, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomLongAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomLongAccess"
             }
           ],
-          "adaptation": "operation=14, kind=8, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomLongLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomLongLEAccess"
             }
           ],
-          "adaptation": "operation=15, kind=8, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomFloatAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomFloatAccess"
             }
           ],
-          "adaptation": "operation=16, kind=9, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomFloatLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomFloatLEAccess"
             }
           ],
-          "adaptation": "operation=17, kind=9, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomDoubleAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomDoubleAccess"
             }
           ],
-          "adaptation": "operation=18, kind=10, little=false, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testRandomDoubleLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestRandomDoubleLEAccess"
             }
           ],
-          "adaptation": "operation=19, kind=10, little=true, sequential=false; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialByteAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialByteAccess"
             }
           ],
-          "adaptation": "operation=20, kind=0, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedByteAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedByteAccess"
             }
           ],
-          "adaptation": "operation=21, kind=1, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialShortAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialShortAccess"
             }
           ],
-          "adaptation": "operation=22, kind=2, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialShortLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialShortLEAccess"
             }
           ],
-          "adaptation": "operation=23, kind=2, little=true, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedShortAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedShortAccess"
             }
           ],
-          "adaptation": "operation=24, kind=3, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedShortLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
-            },
-            {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "ActualUnsignedShortLittleEndianClosesTheOriginalFixtureFlagGap"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedShortLEAccess"
             }
           ],
-          "adaptation": "operation=25, kind=3, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures. Pinned original passes true (BE). Preserve it; the second CLR target and the separate Java false-helper invocation close actual LE coverage with full-capacity and 18-byte literal-vector checks."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialMediumAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialMediumAccess"
             }
           ],
-          "adaptation": "operation=26, kind=4, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialMediumLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialMediumLEAccess"
             }
           ],
-          "adaptation": "operation=27, kind=4, little=true, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedMediumAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedMediumAccess"
             }
           ],
-          "adaptation": "operation=28, kind=5, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedMediumLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedMediumLEAccess"
             }
           ],
-          "adaptation": "operation=29, kind=5, little=true, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialIntAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialIntAccess"
             }
           ],
-          "adaptation": "operation=30, kind=6, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialIntLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialIntLEAccess"
             }
           ],
-          "adaptation": "operation=31, kind=6, little=true, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedIntAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedIntAccess"
             }
           ],
-          "adaptation": "operation=32, kind=7, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialUnsignedIntLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialUnsignedIntLEAccess"
             }
           ],
-          "adaptation": "operation=33, kind=7, little=true, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialLongAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialLongAccess"
             }
           ],
-          "adaptation": "operation=34, kind=8, little=false, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "testSequentialLongLEAccess",
           "disposition": "clr-adaptation",
           "clrTests": [
             {
-              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
-              "method": "OriginalRandomAndSequentialScalarFixtures"
+              "path": "test/Netty.NET.Buffer.Tests/AbstractByteBufTest.ScalarRoundTrip.cs",
+              "method": "TestSequentialLongLEAccess"
             }
           ],
-          "adaptation": "operation=35, kind=8, little=true, sequential=true; five providers. Shared 4096-byte setup, float stride 8, medium tail, PRNG/narrowing/state and independent wire-oracle policies are specified in the scalar round-trip evidence and docs/buffer-porting.md#random-and-sequential-scalar-original-fixtures."
+          "adaptation": "Directly named original wrapper/body and original typed helper are now inherited by all seven actual root fixtures. Exact setup, loop bounds/strides, masks, replay and ordered cursor/readable/writable assertions are retained. Full signed Int32/Int64 input uses existing random-byte helpers; per-runtime Random(seed) replay replaces Java setSeed. CLR byte accessors are naturally unsigned, so signed Java byte equality is adapted by its unchanged eight-bit representation; ushort/uint results use their CLR numeric types. Float remains every eight bytes and both floating helpers retain the original double-valued 0.01 tolerance (float operands promoted to double). No method-name/index dispatcher represents the original test. See scalarRoundTripReview for the pinned helper-call quirk and independent wire evidence.",
+          "bodyFidelityReview": {
+            "status": "direct-original-body-and-helper-port",
+            "scope": "Selected seven inherited allocator/storage roots, not every original concrete fixture."
+          }
         },
         {
           "upstreamMethod": "copyBoundaryCheck1",
@@ -37680,6 +37829,109 @@
           "newExactIdentities": 123,
           "failed": 0,
           "clrSkipped": 0,
+          "existingCommonWarnings": 51,
+          "bufferWarnings": 0,
+          "testWarnings": 0
+        }
+      },
+      "scalarRoundTripReview": {
+        "status": "complete-for-recorded-36-declaration-and-seven-root-scope",
+        "upstreamMethods": [
+          "testRandomByteAccess",
+          "testRandomUnsignedByteAccess",
+          "testRandomShortAccess",
+          "testRandomShortLEAccess",
+          "testRandomUnsignedShortAccess",
+          "testRandomUnsignedShortLEAccess",
+          "testRandomMediumAccess",
+          "testRandomMediumLEAccess",
+          "testRandomUnsignedMediumAccess",
+          "testRandomUnsignedMediumLEAccess",
+          "testRandomIntAccess",
+          "testRandomIntLEAccess",
+          "testRandomUnsignedIntAccess",
+          "testRandomUnsignedIntLEAccess",
+          "testRandomLongAccess",
+          "testRandomLongLEAccess",
+          "testRandomFloatAccess",
+          "testRandomFloatLEAccess",
+          "testRandomDoubleAccess",
+          "testRandomDoubleLEAccess",
+          "testSequentialByteAccess",
+          "testSequentialUnsignedByteAccess",
+          "testSequentialShortAccess",
+          "testSequentialShortLEAccess",
+          "testSequentialUnsignedShortAccess",
+          "testSequentialUnsignedShortLEAccess",
+          "testSequentialMediumAccess",
+          "testSequentialMediumLEAccess",
+          "testSequentialUnsignedMediumAccess",
+          "testSequentialUnsignedMediumLEAccess",
+          "testSequentialIntAccess",
+          "testSequentialIntLEAccess",
+          "testSequentialUnsignedIntAccess",
+          "testSequentialUnsignedIntLEAccess",
+          "testSequentialLongAccess",
+          "testSequentialLongLEAccess"
+        ],
+        "originalTypedHelpers": 16,
+        "clrFixtureTypes": [
+          "BigEndianHeapByteBufTest",
+          "BigEndianDirectByteBufTest",
+          "PooledBigEndianHeapByteBufTest",
+          "PooledBigEndianDirectByteBufTest",
+          "AdaptiveBigEndianHeapByteBufTest",
+          "AdaptiveBigEndianDirectByteBufTest",
+          "BigEndianCompositeByteBufTest"
+        ],
+        "newDirectOriginalInvocations": 252,
+        "originalCapacity": 4096,
+        "originalFloatStride": 8,
+        "originalMediumTailBytes": 1,
+        "integerInput": "Full signed Int32/Int64 via random bytes, unchecked byte/short narrowing and original signed/unsigned masks. RNG sequence is replayed within CLR; no cross-runtime RNG stream identity is claimed.",
+        "floatingInput": "NextSingle/NextDouble with original 0.01 double-valued tolerance; float operands promoted to double for the comparison.",
+        "pinnedQuirk": {
+          "method": "testSequentialUnsignedShortLEAccess",
+          "originalHelperCall": "testSequentialUnsignedShortAccess(true)",
+          "clrHelperCall": "AssertSequentialUnsignedShortAccess(true)",
+          "policy": "Preserve the original body; the independently typed wire matrix executes real LE and the existing explicit-LE literal tests remain."
+        },
+        "supplementalWireModel": {
+          "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarRoundTripSourceTest.cs",
+          "method": "ScalarWireEncodingMatchesIndependentBclModel",
+          "typedRows": 180,
+          "sourceProviders": 5,
+          "dispatch": "Typed scalar kind/endian/absolute-relative data axes replace the former original-method operation-index table. This is an independent BCL oracle, not an original-body port.",
+          "explicitLittleEndianGapCases": 5,
+          "allExistingWireAndRawBitAssertionsRetained": true
+        },
+        "crossBoundaryControl": {
+          "mutation": "Flip a bit only in a 16-bit cross-component read merge",
+          "independentTwoHalfWireRowsPassed": 180,
+          "canonicalOriginalShortRowsFailed": 8,
+          "meaning": "The old split at 2048 aligns 16/32/64-bit words; canonical 1..9-byte/empty-separated source layout exercises the original crossing path. The separate explicit-LE regression was not part of this control.",
+          "runtimeSourceRestoredByteForByte": true
+        },
+        "javaEvidence": {
+          "pinnedProductionSourcesFreshlyCompiled": 93,
+          "pinnedFixtureAndSupportSourcesFreshlyCompiled": 14,
+          "passedPerProfile": 252,
+          "profiles": [
+            "Unsafe",
+            "forced NIO"
+          ]
+        },
+        "scope": "36 selected shared declarations only. Older shared body/helper mappings, complete concrete/inherited/factory configurations and consumer/module closure remain partial.",
+        "floatingAssertionEvidence": "Pinned Java bytecode uses f2d for both float operands and invokes Assertions.assertEquals(DDD), preserving double-valued 0.01 tolerance.",
+        "validation": {
+          "debugPassed": 28230,
+          "releasePassed": 28230,
+          "checkedReleaseAffectedPassed": 437,
+          "newOriginalInvocations": 252,
+          "typedBclRows": 180,
+          "explicitLERows": 5,
+          "failed": 0,
+          "skipped": 0,
           "existingCommonWarnings": 51,
           "bufferWarnings": 0,
           "testWarnings": 0

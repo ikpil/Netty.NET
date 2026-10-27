@@ -6479,6 +6479,48 @@ older shared-mapping fidelity and final consumers are still separate. Evidence:
 ignored artifacts/buffer-composite-fidelity. Group rationale is stored once in the
 existing JSON manifest, with each method referring to its reviewed group.
 
+## Original scalar round-trip bodies and typed wire oracle
+
+Thirty-six original AbstractByteBufTest scalar declarations now retain individually
+named shared bodies and sixteen original typed helpers, inherited by all seven
+actual roots. This adds 252 original invocations, including adaptive providers and
+the actual empty-heavy canonical Composite factory. Original random/relative setup,
+4096-byte capacity, every loop bound/stride, medium remainder, signed/unsigned masks,
+seed replay and ordered index/readable/writable assertions remain. Full signed Int32/
+Int64 inputs use the existing random-byte helpers; each runtime replays its own RNG.
+CLR byte accessors expose unsigned octets, so Java signed byte assertions preserve
+their eight-bit representation rather than adding a duplicate signed API.
+
+Float still accesses four bytes at every eight-byte offset. Both floating helpers
+retain the original 0.01 double-valued tolerance. The original float helper's compiled
+bytecode promotes both operands with f2d and calls Assertions.assertEquals(DDD);
+the CLR assertion explicitly promotes them to double as well. The pinned original
+testSequentialUnsignedShortLEAccess calls its BE helper with true. The named port
+keeps that exact call, and independent real-LE cases continue to cover the LE path.
+
+The former method-index table no longer represents original test execution. Its
+independent BCL wire model remains as 180 typed scalar/endian/absolute-relative rows
+and five existing explicit-LE regressions, with all wire/raw-bit assertions retained.
+Typed rows include real unsigned-short LE rather than duplicating the pinned BE
+wrapper quirk. These supplemental cases use their original five storage models;
+the newly ported original bodies use all seven real inherited factories.
+
+This distinction is observable: flipping a bit only when merging a 16-bit value
+across components passes the 180 wire-model rows whose two-half split aligns those
+words, but fails all eight original short methods on the canonical sparse composite.
+The separate explicit-LE regression is outside this control; no claim is made that
+the entire previous suite would pass the mutation. Runtime source is restored
+byte-for-byte, and no implementation correction is needed for the reviewed contracts.
+
+Fresh pinned Java Unsafe and forced-NIO each pass all 252 exact original pairs.
+Full net10.0 Debug/Release each pass 28,230; rebuilt checked Release with SIMPLE
+sampling one passes the 252 original plus 185 independent/explicit-LE invocations.
+All have zero failures/skips, 51 existing Common warnings and no Buffer/test warnings.
+The 180 supplemental identities are deliberately relabeled by typed inputs; all
+other prior identities and checks remain. Shared declared decisions stay 408/408,
+while other older body mappings and concrete/inherited/module closure remain partial.
+Evidence: ignored artifacts/buffer-original-scalar-roundtrip.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

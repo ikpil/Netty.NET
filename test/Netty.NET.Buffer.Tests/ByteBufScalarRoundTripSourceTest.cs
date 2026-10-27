@@ -54,50 +54,24 @@ public class ByteBufScalarRoundTripSourceTest
         }
     }
 
-    private static readonly (int Kind, bool Little, bool Sequential)[] Operations =
-    [
-        (0, false, false), // testRandomByteAccess
-        (1, false, false), // testRandomUnsignedByteAccess
-        (2, false, false), // testRandomShortAccess
-        (2, true, false), // testRandomShortLEAccess
-        (3, false, false), // testRandomUnsignedShortAccess
-        (3, true, false), // testRandomUnsignedShortLEAccess
-        (4, false, false), // testRandomMediumAccess
-        (4, true, false), // testRandomMediumLEAccess
-        (5, false, false), // testRandomUnsignedMediumAccess
-        (5, true, false), // testRandomUnsignedMediumLEAccess
-        (6, false, false), // testRandomIntAccess
-        (6, true, false), // testRandomIntLEAccess
-        (7, false, false), // testRandomUnsignedIntAccess
-        (7, true, false), // testRandomUnsignedIntLEAccess
-        (8, false, false), // testRandomLongAccess
-        (8, true, false), // testRandomLongLEAccess
-        (9, false, false), // testRandomFloatAccess
-        (9, true, false), // testRandomFloatLEAccess
-        (10, false, false), // testRandomDoubleAccess
-        (10, true, false), // testRandomDoubleLEAccess
-        (0, false, true), // testSequentialByteAccess
-        (1, false, true), // testSequentialUnsignedByteAccess
-        (2, false, true), // testSequentialShortAccess
-        (2, true, true), // testSequentialShortLEAccess
-        (3, false, true), // testSequentialUnsignedShortAccess
-        (3, false, true), // testSequentialUnsignedShortLEAccess
-        (4, false, true), // testSequentialMediumAccess
-        (4, true, true), // testSequentialMediumLEAccess
-        (5, false, true), // testSequentialUnsignedMediumAccess
-        (5, true, true), // testSequentialUnsignedMediumLEAccess
-        (6, false, true), // testSequentialIntAccess
-        (6, true, true), // testSequentialIntLEAccess
-        (7, false, true), // testSequentialUnsignedIntAccess
-        (7, true, true), // testSequentialUnsignedIntLEAccess
-        (8, false, true), // testSequentialLongAccess
-        (8, true, true), // testSequentialLongLEAccess
-    ];
+    // Supplemental independent BCL wire model; original bodies live in AbstractByteBufTest.ScalarRoundTrip.cs.
+    public enum ScalarKind
+    {
+        SignedByte, UnsignedByte, SignedShort, UnsignedShort, SignedMedium, UnsignedMedium,
+        SignedInt, UnsignedInt, Long, Float, Double
+    }
 
-    public static IEnumerable<object[]> OriginalCases()
+    public static IEnumerable<object[]> WireCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int operation = 0; operation < Operations.Length; ++operation) yield return [provider, operation];
+        foreach (ScalarKind kind in Enum.GetValues<ScalarKind>())
+        foreach (bool sequential in new[] { false, true })
+        {
+            if (sequential && kind is ScalarKind.Float or ScalarKind.Double) continue;
+            yield return [provider, kind, false, sequential];
+            if (kind is not (ScalarKind.SignedByte or ScalarKind.UnsignedByte))
+                yield return [provider, kind, true, sequential];
+        }
     }
 
     private static int Width(int kind) => kind switch
@@ -253,11 +227,10 @@ public class ByteBufScalarRoundTripSourceTest
     }
 
     [Theory]
-    [MemberData(nameof(OriginalCases))]
-    public void OriginalRandomAndSequentialScalarFixtures(int provider, int operation)
+    [MemberData(nameof(WireCases))]
+    public void ScalarWireEncodingMatchesIndependentBclModel(int provider, ScalarKind kind, bool littleEndian, bool sequential)
     {
-        var item = Operations[operation];
-        RunCase(provider, item.Kind, item.Little, item.Sequential);
+        RunCase(provider, (int)kind, littleEndian, sequential);
     }
 
     [Theory]
@@ -265,7 +238,7 @@ public class ByteBufScalarRoundTripSourceTest
     public void ActualUnsignedShortLittleEndianClosesTheOriginalFixtureFlagGap(int provider)
     {
         // The pinned testSequentialUnsignedShortLEAccess calls its helper with true (big endian).
-        // Retain that original mapping and separately execute the real little-endian path here.
+        // The named shared wrapper retains that original call; independently execute the real LE path here.
         RunCase(provider, 3, true, true);
         using var s = new Storage(provider, 18);
         ushort[] values = [0, 1, 127, 128, 255, 256, 32767, 32768, 65535];
