@@ -15,7 +15,7 @@
  */
 namespace Netty.NET.Buffer.Tests;
 
-public abstract class AbstractPooledByteBufTransferTest : AbstractByteBufTest
+public abstract class AbstractPooledByteBufTransferTest : AbstractContiguousByteBufTest
 {
     protected abstract ByteBuf Alloc(int length, int maxCapacity);
 

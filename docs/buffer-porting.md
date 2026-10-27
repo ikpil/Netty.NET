@@ -6381,6 +6381,57 @@ declarations or the older composite/inherited fidelity review. All runs have zer
 failures/skips, 51 existing Common build warnings and no Buffer/test warnings.
 Evidence: ignored artifacts/buffer-original-channel-text.
 
+## Original NIO borrow and read-only decisions
+
+The final nineteen unreviewed AbstractByteBufTest declarations now have explicit
+coverage/CLR-representation decisions. Eighteen named body adaptations add 123
+executions. The order-metadata method is a language replacement, using the existing
+28 scalar/endian executions rather than adding a meaningless Memory order property.
+All 408 declared methods now have decisions; this does not certify older mappings,
+their exact bodies, all inherited variants or the whole module.
+
+The original single-NIO-region assumption selects six contiguous roots. A narrow
+inherited fixture adds whole-memory and 128-byte-window comparisons on those roots,
+retaining original random data, clear/write setup and independent-array helper
+assertion order. Composite has three original assumption-only rows, recorded as
+such. Its internal-NIO test is a different original override, already ported in
+CompositeByteBufGatheringTest; it is validated separately instead of running the
+shared growth body on the wrong provider.
+
+Growth starts at two bytes and preserves all original lengths: 128, 1024, 4096,
+65536, 33554432 and 67108864. Each helper checks its initial one-byte borrow,
+writes the complete random array, reacquires current Memory, checks length,
+compares every byte through a real SequenceReader and verifies exhaustion. Only
+the generic assertion dispatch is conditional on a mismatch; each byte comparison
+and first-failure order remains. Across six roots this is 604,404,480 byte comparisons
+per configuration, without sampling or smaller inputs. A shared test gate bounds
+concurrent large allocations. Corrupting only the last byte of 64 MiB fails all six
+helpers. The internal whole-capacity helper also retains allocation (8,16), initial
+zero cursor, at least eight remaining bytes and finally release, without adding a
+JVM cache object or subtype marker.
+
+Both original heap/native readonly destinations retain abcd, four-byte source and
+destination, write rejection and unchanged receiving cursor. ByteBuf.AsReadOnly is
+the dynamic CLR counterpart, with extra unchanged destination bytes. The twelve
+readonly-output methods retain all raw/slice/duplicate constructions and the first
+IsReadOnly assertion. ReadOnlyMemory/Span/Sequence carry write prohibition in their
+types; actual writable-borrow denial and returned ranges are also checked. Indexed
+multi-component data uses the documented Sequence alternative, without flattening
+or inventing a contiguous Memory borrow. A valid consumer compilation succeeds;
+readonly Memory/segment writes fail CS8331, readonly Span destinations fail CS1503,
+and nonexistent Memory order metadata fails CS1061. Returning the mutable original
+from the readonly factory fails all 98 output/destination executions.
+
+Fresh pinned Java Unsafe and forced-NIO each pass 130 original executions and record
+three original Composite assumptions, including the actual overridden method owner.
+Full net10.0 Debug/Release each pass 27,970, retaining every previous 27,847 test
+identity plus the 123 new identities. Rebuilt checked Release with SIMPLE sampling
+one passes all 152 affected executions, including reused endian and Composite cases.
+There are zero CLR failures/skips, 51 existing Common warnings and no Buffer/test
+warnings. Runtime/Common sources are restored unchanged after controlled mutations;
+no implementation fix is needed for these reviewed contracts. Whole fixture/module
+status remains in progress. Evidence: ignored artifacts/buffer-original-nio-contracts.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -6428,8 +6479,10 @@ now also has 49 public static factory decisions and complete private/helper/comm
 review; its 41-method standalone fixture is verified under the explicit CLR policies.
 Both remaining core sources and the two package descriptors are now reviewed. All
 93 production source entries are accounted for. Shared original fixture/provider and
-consumer/module closure decisions remain. AbstractByteBufTest is now 389/408 mapped
-with 19 unreviewed declarations; AbstractCompositeByteBufTest is now 85/85 mapped
+consumer/module closure decisions remain. AbstractByteBufTest is now 408/408 mapped
+with zero unreviewed declarations. Older shared mappings still need exact-body and
+provider fidelity review; declaration accounting does not complete the fixture.
+AbstractCompositeByteBufTest is now 85/85 mapped
 with no unreviewed declarations, while 52 older mappings still require original-body
 fidelity review before whole-fixture completion. Inherited provider and other standalone fixture
 coverage are separate. No remaining test-method count is

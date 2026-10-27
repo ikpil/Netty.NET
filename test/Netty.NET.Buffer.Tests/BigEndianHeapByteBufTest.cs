@@ -18,7 +18,7 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * Tests big-endian heap channel buffers
  */
-public class BigEndianHeapByteBufTest : AbstractByteBufTest
+public class BigEndianHeapByteBufTest : AbstractContiguousByteBufTest
 {
     public BigEndianHeapByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
 
