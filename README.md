@@ -3,12 +3,14 @@
 
 The buffer port has started; see [buffer porting status](docs/buffer-porting.md).
 The transport port is in progress; its [source and test manifest](docs/transport-porting-manifest.json)
-distinguishes implemented channel dependencies from pending Channel/Pipeline, EventLoop and socket work.
+records channel dependencies, Channel/Pipeline, event loops, Embedded/Local channels,
+Bootstrap/Resolver integration and native TCP/UDP work, with original test mappings
+and explicit remaining implementation, test and comment review. Transport is not complete.
 The resolver port implements the basic OS-backed resolver module; see its
 [source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).
 It uses Task/CancellationToken, DnsEndPoint/IPEndPoint and IDisposable; executor-affine
-consumers dispatch explicitly through Common. The separate resolver-dns module and
-Transport integration are outside this port. Check the pinned sources, original
+consumers dispatch explicitly through Common. The separate resolver-dns module
+is outside the basic resolver port. Check the pinned sources, original
 test mappings and preserved comments with `powershell -NoProfile -File tools/Test-ResolverPortingManifest.ps1`.
 The common port is in progress. See [porting status](docs/common-porting.md),
 [CLR design decisions](docs/common-clr-design.md),

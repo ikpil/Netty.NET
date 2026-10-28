@@ -6,56 +6,66 @@
   ],
   "objective": "Port portable Transport behavior and original tests using CLR-native Tasks, delegates, sockets and explicit executor dispatch; preserve original comments and test intent.",
   "status": "in-progress",
-  "statusMeaning": "pending means unreviewed and is not proof of a missing CLR feature. clr-adapted accounts only for the named source contract, not future channel/socket integration. verified test entries preserve the original complete fixture body/helper contract. Placeholder implementations do not count as ported.",
+  "statusMeaning": "pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported.",
   "stages": [
     {
       "name": "Channel dependencies",
       "status": "in-progress",
-      "completedUnit": "Receive allocation, message sizing, options, metadata and portable file regions",
-      "next": "DefaultChannelConfig and its actual channel ownership"
+      "completedUnit": "Receive allocation, options, metadata, file regions and DefaultChannelConfig integration",
+      "next": "Remaining config edge cases and original fixture review"
     },
     {
       "name": "Channel, Pipeline and executor ordering",
-      "status": "pending"
+      "status": "in-progress",
+      "completedUnit": "Native Task lifecycle, bidirectional handlers, seven original tail callbacks and all 15 original ChannelOutboundBuffer tests including gathering segments and reentrant cancelled-write release/flush/close; all nine ChannelInitializer tests, asynchronous initializer state removal and executor-aware pipeline destruction",
+      "next": "Remaining DefaultChannelPipeline/SingleThreadEventLoop original fixtures, config and separate-executor shutdown cases"
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
-      "status": "pending"
+      "status": "in-progress",
+      "completedUnit": "All 36 EmbeddedChannel original tests and three LocalChannel scenarios; local registry/handshake/heap reads",
+      "next": "Remaining LocalChannel fixture, close/read races and auxiliary embedded fixtures"
     },
     {
       "name": "Bootstrap, Resolver integration and TCP",
-      "status": "pending"
+      "status": "in-progress",
+      "completedUnit": "Bootstrap and ServerBootstrap, actual TCP accept/connect/read/write, all five tests declared by NioSocketChannelTest (inherited AbstractNioChannel fixtures remain open)",
+      "next": "Full bootstrap/inherited socket tests, half closure, config options, connect cancellation and resolver failure paths"
     },
     {
       "name": "UDP and remaining portable transport contracts",
-      "status": "pending"
+      "status": "in-progress",
+      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations",
+      "next": "UDP/multicast and group fixture review, PendingWriteQueue/CoalescingBufferQueue, channel pools and remaining portable inventory"
     }
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 15,
+    "javaOriginalPassed": 101,
+    "mappedOriginalMethods": 101,
+    "supplementalExecutedCases": 51,
     "debug": {
-      "total": 43,
-      "passed": 43,
+      "total": 152,
+      "passed": 152,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 43,
-      "passed": 43,
+      "total": 152,
+      "passed": 152,
       "failed": 0,
       "skipped": 0
     },
     "solutionRelease": {
-      "Netty.NET.Transport.Tests": {
-        "total": 43,
-        "passed": 43,
-        "failed": 0,
-        "skipped": 0
-      },
       "Netty.NET.Resolver.Tests": {
         "total": 64,
         "passed": 64,
+        "failed": 0,
+        "skipped": 0
+      },
+      "Netty.NET.Transport.Tests": {
+        "total": 152,
+        "passed": 152,
         "failed": 0,
         "skipped": 0
       },
@@ -72,13 +82,22 @@
         "skipped": 14
       }
     },
-    "note": "The unused AssertMessages reference was removed after the full solution run; final checked rebuild/tests cover the resulting project. Common, Buffer and Resolver sources remain unchanged.",
+    "solutionPassed": 32450,
+    "solutionSkipped": 14,
+    "warnings": {
+      "transportImplementation": 0,
+      "transportTests": 0,
+      "existingCommonCheckedRebuild": 51
+    },
+    "javaEvidence": "Executed unchanged pinned Java fixture methods using a local reflection runner with BeforeAll/BeforeEach/AfterEach/AfterAll lifecycle callbacks, assertions enabled and a process timeout. The selected sources were compared with git show at the pinned revision before compilation. All 101 tests passed; this is not a whole Java transport-module run.",
+    "note": "Original Java tests and CLR supplemental tests are counted separately. Complete declared fixtures include EmbeddedChannel (36), ChannelOutboundBuffer (15), ChannelInitializer (9), tail callbacks (7), NioSocketChannel declarations (5), allocator (2), user-event handler (2), UDP bind (1), group (1), plus the previous 15 foundation tests. NioSocketChannel inherited fixtures are not included. Final checked rebuild/tests include cleanup/comment alignment after the full solution run. Runtime changes stay within Transport; Common, Buffer and Resolver sources are unchanged.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
-      "dotnet test Netty.NET.sln -c Release",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug",
-      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release -t:Rebuild -p:CheckForOverflowUnderflow=true",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build"
+      "python artifacts/transport-core/run-originals.py",
+      "dotnet test Netty.NET.sln -c Release --no-restore",
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore"
     ]
   },
   "entries": [
@@ -87,8 +106,25 @@
       "sha256": "0a15ae050ebb6e8ab21770437e0fe820f63c449bcb27d437fe6ee0480193b7d6",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs",
+        "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 45,
+        "preservedCount": 13,
+        "unreviewedCount": 32,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs",
+          "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/bootstrap/AbstractBootstrapConfig.java",
@@ -103,8 +139,23 @@
       "sha256": "44a6da95ebf7f968d151bbc5d9327772829f81a4e7f130a0ce3cdac898e04c5c",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 25,
+        "preservedCount": 7,
+        "unreviewedCount": 18,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/bootstrap/BootstrapConfig.java",
@@ -159,8 +210,23 @@
       "sha256": "b6e622bca5ba0c0f063ded57407b3d32a7c9dd89c071e2eda8d7a6a2fc127f19",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 18,
+        "preservedCount": 6,
+        "unreviewedCount": 12,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/bootstrap/ServerBootstrapConfig.java",
@@ -175,16 +241,46 @@
       "sha256": "6a3cbb52b4e19b71a6bcd6f586a110aac0e8dec6b1f9f859c3c6968cd6ac4abc",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 98,
+        "preservedCount": 12,
+        "unreviewedCount": 86,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/AbstractChannelHandlerContext.java",
       "sha256": "fe968be8593d8d7124b5845b5b1a7ca9ba6b1e5edceb8505db2d033d8251829c",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 47,
+        "preservedCount": 1,
+        "unreviewedCount": 46,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/AbstractCoalescingBufferQueue.java",
@@ -238,16 +334,46 @@
       "sha256": "6e94bbcb1eeacbf9253737fded9a5ee4506e05e6a29055644b601344a20e1b5c",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IAddressedEnvelope.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IAddressedEnvelope.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/Channel.java",
       "sha256": "7169cb0bd1fb32bfe2d462fd54eb8a1b6eada18e891afe770c57a9cd4304b76a",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 39,
+        "preservedCount": 22,
+        "unreviewedCount": 17,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelConfig.java",
@@ -269,16 +395,46 @@
       "sha256": "7dfe92ba2d573b2e354e36cdc6617bd52ee8b81d6a7e3361d56a76e9c2ed7a86",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelDuplexHandler.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelDuplexHandler.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelException.java",
       "sha256": "5e352c26b3ba907bf44fa8166f2a41465398e004bbc4cadad4b9a96f52a4c2ba",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelException.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 5,
+        "preservedCount": 3,
+        "unreviewedCount": 2,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelException.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelFactory.java",
@@ -317,24 +473,69 @@
       "sha256": "a240cd5358ef0818574bc4b512833be78d1778a2fa00e5f70e7c7de5c368b160",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IChannelHandler.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 7,
+        "preservedCount": 5,
+        "unreviewedCount": 2,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IChannelHandler.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelHandlerAdapter.java",
       "sha256": "8b47eb9a469ad2f79ee7a306a4e8c68735c44164ba8e0c26340843c7f509f8b5",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 9,
+        "preservedCount": 6,
+        "unreviewedCount": 3,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelHandlerContext.java",
       "sha256": "105e7792283e056c51de50ecbb2c1bd7771f38988e8053bc4f43d9b768fb0d2e",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 11,
+        "preservedCount": 11,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelHandlerMask.java",
@@ -349,24 +550,69 @@
       "sha256": "f09034b587639243e7e99752d514fb864cc5d40d448a813cbbd571f3da1b6f63",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IChannelId.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IChannelId.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelInboundHandler.java",
       "sha256": "1bebe0f7ecc6f7431421926517911eeef113312389a423c0af81e2d823e99f42",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IChannelInboundHandler.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 11,
+        "preservedCount": 10,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IChannelInboundHandler.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelInboundHandlerAdapter.java",
       "sha256": "3cad277277d0c791545626ca3800a4be6782f1fc19133c72800ee7b4ba1eaa82",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelInboundHandlerAdapter.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 11,
+        "preservedCount": 10,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelInboundHandlerAdapter.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelInboundInvoker.java",
@@ -381,8 +627,23 @@
       "sha256": "673c04a07623c720d36ee95800bcf5f1de7a9d4fbb98b1d105368b2793363d33",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelInitializer.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 24,
+        "preservedCount": 24,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelInitializer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelMetadata.java",
@@ -419,48 +680,138 @@
       "sha256": "35894a55084315ce5fcbc4891a31750cc8a994b9546ccb0190ca0301ef4b11d7",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 98,
+        "preservedCount": 27,
+        "unreviewedCount": 71,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelOutboundHandler.java",
       "sha256": "11a97ec623e88115b6782a7dd6684e7229884248ae859381035c5c23fa905aec",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelOutboundHandlerAdapter.java",
       "sha256": "4b79bde298744dc1c7571144cbaa0addd80d8cc30e7ecdc9c39e2cd8915751ad",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelOutboundHandlerAdapter.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelOutboundHandlerAdapter.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelOutboundInvoker.java",
       "sha256": "03129da18ed7c1a2d9a18230711ae9e40e3ae016ac480165cfc6e0c029674783",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 23,
+        "preservedCount": 18,
+        "unreviewedCount": 5,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelPipeline.java",
       "sha256": "4038c16b275ff655b35d33aff91d1c6f6e14cd43ed84d1847598914fc41b7b61",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 34,
+        "preservedCount": 30,
+        "unreviewedCount": 4,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelPipelineException.java",
       "sha256": "87ec8fcc150d0ccce8530350032324fcd50eeb2c9fff2ae6ceb3a35b090ed1c0",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelPipelineException.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelPipelineException.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelProgressiveFuture.java",
@@ -539,24 +890,69 @@
       "sha256": "53592a0537432e8194d2d1d8908119447c2f29f5fc0e5fd846b6ddc991a5eaaf",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ConnectTimeoutException.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ConnectTimeoutException.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultAddressedEnvelope.java",
       "sha256": "3eb3c1068451264f49fc47dc5d757ec0c1ce4c1ce00a862ba26c97ea0b9823e7",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultAddressedEnvelope.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultAddressedEnvelope.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultChannelConfig.java",
       "sha256": "ea4a0c8ba7a7cdcc28c91fb52d38ec9bbc49d4f4296f0da41460bd418f98c376",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultChannelConfig.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 11,
+        "preservedCount": 6,
+        "unreviewedCount": 5,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultChannelConfig.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultChannelHandlerContext.java",
@@ -571,16 +967,46 @@
       "sha256": "9b3622f84efa2b2f69851617497f2716134e3225436e35949832e72c70b1dca7",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultChannelId.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 10,
+        "preservedCount": 3,
+        "unreviewedCount": 7,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultChannelId.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultChannelPipeline.java",
       "sha256": "370924e858dca26f2ff6e1007facc10dbd752a876ecafc624903c7d1ee7cd59e",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 61,
+        "preservedCount": 12,
+        "unreviewedCount": 49,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultChannelProgressivePromise.java",
@@ -603,16 +1029,46 @@
       "sha256": "8901da67f179b77f8f079b06b0aa188f25fc9687539c73390530dbf3a9fb002f",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultEventLoopGroup.java",
       "sha256": "3d08868b25a1b7ae15246f2702f0eb4cdbde773ebdff0aec68a589dbf3331a51",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 7,
+        "preservedCount": 5,
+        "unreviewedCount": 2,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultFileRegion.java",
@@ -703,8 +1159,23 @@
       "sha256": "030841bd35a95426f90a5f7cc8fd46a83f3c14ee1db3c34388109cd0e57ba372",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 64,
+        "preservedCount": 33,
+        "unreviewedCount": 31,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/embedded/EmbeddedChannelId.java",
@@ -719,16 +1190,46 @@
       "sha256": "e898478c92d0387fcb135463cfa042a568a0055925b5883c95d9fb7bd4aa45ca",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Embedded/EmbeddedEventLoop.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 10,
+        "preservedCount": 1,
+        "unreviewedCount": 9,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedEventLoop.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/embedded/EmbeddedSocketAddress.java",
       "sha256": "4526f088ad5a2c76ca9e0bf1222552b339524de1d90ce8b87cc9e4ac8df5c319",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Embedded/EmbeddedSocketAddress.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedSocketAddress.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/embedded/package-info.java",
@@ -743,24 +1244,69 @@
       "sha256": "747107df52bad5fa451aa11114e4da92f13942a8fd9e31082038ab83fbd88dec",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IEventLoop.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IEventLoop.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/EventLoopException.java",
       "sha256": "f1e9e5e5e4982d1c8933b17a94e29cf6a51373dd8c25507e378dfad0e38913de",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/EventLoopException.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/EventLoopException.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/EventLoopGroup.java",
       "sha256": "d2113b5901a1d074e01ec43a5bfd72edd09ee96355825c69746330b0bf2b0e32",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IEventLoopGroup.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 6,
+        "preservedCount": 5,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IEventLoopGroup.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/EventLoopTaskQueueFactory.java",
@@ -821,8 +1367,23 @@
       "sha256": "539ca5e8439c1e33e780c8f81fc75a941b3381a249945fb3eaf1f5c01a1631ae",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 21,
+        "preservedCount": 14,
+        "unreviewedCount": 7,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/group/ChannelGroupException.java",
@@ -877,8 +1438,23 @@
       "sha256": "919315626ee8db519d24f43b14e24b487c6048d96a612727e5b43b03805131b5",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 21,
+        "preservedCount": 5,
+        "unreviewedCount": 16,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/group/DefaultChannelGroupFuture.java",
@@ -997,24 +1573,69 @@
       "sha256": "3f2a6805a6d69353d65d2fde3513d774fff9a2ee9818e5cd1d896e3f99f966ac",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Local/LocalAddress.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Local/LocalAddress.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/local/LocalChannel.java",
       "sha256": "09507dbb3fc363f94e4e1aefe162280cf264904a1c0185419742a6b15c83f45e",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 64,
+        "preservedCount": 4,
+        "unreviewedCount": 60,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/local/LocalChannelRegistry.java",
       "sha256": "c4cb3fe39adcc6683b1fa86a8729f8d410d2c96dd4eb0679b76fe69467f16567",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Local/LocalChannelRegistry.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 2,
+        "preservedCount": 1,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Local/LocalChannelRegistry.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/local/LocalEventLoopGroup.java",
@@ -1053,8 +1674,23 @@
       "sha256": "124edd94f51d69e7f2327913c80b054b6235955f0ad3cfe50c4bd87d37734995",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Local/LocalServerChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 8,
+        "preservedCount": 5,
+        "unreviewedCount": 3,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Local/LocalServerChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/local/package-info.java",
@@ -1122,8 +1758,23 @@
       "sha256": "1e62a7bfe744a387ca671bc5d1e09a106e64ebb422d4be0c90e1ac18edaefdba",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 5,
+        "preservedCount": 1,
+        "unreviewedCount": 4,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/MultiThreadIoEventLoopGroup.java",
@@ -1138,8 +1789,23 @@
       "sha256": "1e5a028e43218126fa70304ca144b308be8222ae11d145f1c6b2d1b42330bf52",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 32,
+        "preservedCount": 1,
+        "unreviewedCount": 31,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/nio/AbstractNioChannel.java",
@@ -1394,8 +2060,23 @@
       "sha256": "b6a47b99fc2478205e545bdd29c58650abd6c13b33b5a2e2a9b68cf5be6945fc",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/PreferHeapByteBufAllocator.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/PreferHeapByteBufAllocator.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/RecvByteBufAllocator.java",
@@ -1441,40 +2122,115 @@
       "sha256": "a9219f5b5e632e3bc2e39184bd1541a18ef5c2d9efbaeedc3966b2c2cb0dfd60",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/IServerChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 3,
+        "preservedCount": 2,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/IServerChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ServerChannelRecvByteBufAllocator.java",
       "sha256": "692b1593aeed1b6d33a1122a02e5ec901b35f643ac05523407175a97366d7998",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ServerChannelRecvByteBufAllocator.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ServerChannelRecvByteBufAllocator.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/SimpleChannelInboundHandler.java",
       "sha256": "3db32fdae194e8aceb378fdcebc4f0176cb6bdc9359bfd632b89f19c64fb6279",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/SimpleChannelInboundHandler.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 8,
+        "preservedCount": 7,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/SimpleChannelInboundHandler.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/SimpleUserEventChannelHandler.java",
       "sha256": "c61f2b2a818602759fbeb4f4c33b1dae23a22dd05339dfbcfa1d09b84a73b70c",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/SimpleUserEventChannelHandler.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 8,
+        "preservedCount": 7,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/SimpleUserEventChannelHandler.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/SingleThreadEventLoop.java",
       "sha256": "5a417575a2a2dc758eed8513a071ec0e7eae7a2b5b293379c95759f05477fdf9",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/SingleThreadIoEventLoop.java",
@@ -1489,8 +2245,23 @@
       "sha256": "95f901c22b07389617f1f8ae15b38b748a96bdf058fcc9b96fb0cde230e862e3",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/ChannelInputShutdownEvent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/ChannelInputShutdownEvent.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/ChannelInputShutdownReadComplete.java",
@@ -1505,8 +2276,23 @@
       "sha256": "ec6d7bdaf90119f866298c451cd2e45f1522b19df9a04bfe131805e9fbd4f1ba",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/ChannelOutputShutdownEvent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/ChannelOutputShutdownEvent.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/ChannelOutputShutdownException.java",
@@ -1521,8 +2307,23 @@
       "sha256": "748d93db4613defcde954d51e313852aea564dd583b338ac99ab6465a869c9d6",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 15,
+        "preservedCount": 2,
+        "unreviewedCount": 13,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DatagramChannelConfig.java",
@@ -1537,32 +2338,92 @@
       "sha256": "49ea32b4f1115e8aeabc96d10870c911b5cedf63258b751124ef7b01385ef004",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramPacket.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramPacket.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DefaultDatagramChannelConfig.java",
       "sha256": "0703fb4b1e680766673b638d7bdb62a33684573e90ea9822c6883a8b5ad59ab1",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 6,
+        "preservedCount": 1,
+        "unreviewedCount": 5,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DefaultServerSocketChannelConfig.java",
       "sha256": "aef539f8e2c52d86b40a95f1f5d4494b145bafd6a35d6a833e10b2cccd7afacd",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 3,
+        "preservedCount": 2,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DefaultSocketChannelConfig.java",
       "sha256": "8e5c7078321cc88576be4fd25e5fce0103c64d8e76ee369fa64f8f5c7c68c365",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 5,
+        "preservedCount": 3,
+        "unreviewedCount": 2,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DuplexChannel.java",
@@ -1601,8 +2462,23 @@
       "sha256": "805ad71e0c31d43adbd2ab1b17bd2caaed7c48b1adecb2dfbd08ebc94dca62df",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 20,
+        "preservedCount": 2,
+        "unreviewedCount": 18,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioDatagramChannelConfig.java",
@@ -1641,16 +2517,46 @@
       "sha256": "c31fd2b2c27021a31eb655077cbf779ab83d1c6cf09c9fb0c49397ca32ef7a7f",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 11,
+        "preservedCount": 2,
+        "unreviewedCount": 9,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioSocketChannel.java",
       "sha256": "9232c58bef1d9ef9fd7c300377407546a302b7d1ee3d48ea3c2b551ac2b869a3",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 29,
+        "preservedCount": 2,
+        "unreviewedCount": 27,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/package-info.java",
@@ -1761,8 +2667,23 @@
       "sha256": "32d12675321fbae4f69297248ddfbdd345d32eca1471dc5d27474023278723df",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 2,
+        "preservedCount": 1,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/ServerSocketChannelConfig.java",
@@ -1777,8 +2698,23 @@
       "sha256": "a84de699ccb0481b718bcf496c29c2eb39c78120e4c9f97cdc744580a4c9cc4d",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 2,
+        "preservedCount": 1,
+        "unreviewedCount": 1,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/SocketChannelConfig.java",
@@ -1989,8 +2925,76 @@
       "sha256": "8838427aab29365f3680ca9ff697e4417103124e435c7377ed99f8ccb9e99b1a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ChannelInitializerTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ChannelInitializerTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testInitChannelThrowsRegisterFirst",
+          "clrMethod": "TestInitChannelThrowsRegisterFirst",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testInitChannelThrowsRegisterAfter",
+          "clrMethod": "TestInitChannelThrowsRegisterAfter",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testChannelInitializerInInitializerCorrectOrdering",
+          "clrMethod": "TestChannelInitializerInInitializerCorrectOrdering",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testChannelInitializerReentrance",
+          "clrMethod": "TestChannelInitializerReentrance",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "firstHandlerInPipelineShouldReceiveChannelRegisteredEvent",
+          "clrMethod": "FirstHandlerInPipelineShouldReceiveChannelRegisteredEvent",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "lastHandlerInPipelineShouldReceiveChannelRegisteredEvent",
+          "clrMethod": "LastHandlerInPipelineShouldReceiveChannelRegisteredEvent",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testAddFirstChannelInitializer",
+          "clrMethod": "TestAddFirstChannelInitializer",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testAddLastChannelInitializer",
+          "clrMethod": "TestAddLastChannelInitializer",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testChannelInitializerEventExecutor",
+          "clrMethod": "TestChannelInitializerEventExecutor",
+          "adaptation": "Original one-time invocation/completion/context/removal assertions and executor offloading intent. A composed CLR single-worker executor alternates its public InEventLoop admission check without falsifying the actual worker shutdown identity; Task/CountdownEvent replace Future/latches."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 9,
+        "mappedCount": 9,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/ChannelOptionTest.java",
@@ -2026,8 +3030,106 @@
       "sha256": "bcb50bcc458d7fe466fb59cbe82fde3421d7cd89d62b6cf864ff80666adb3db6",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ChannelOutboundBufferTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 30,
+        "preservedCount": 30,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ChannelOutboundBufferTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testEmptyNioBuffers",
+          "clrMethod": "TestEmptyNioBuffers",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testNioBuffersCancelledRemoveBytes",
+          "clrMethod": "TestNioBuffersCancelledRemoveBytes",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testNioBuffersSingleBacked",
+          "clrMethod": "TestNioBuffersSingleBacked",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testNioBuffersExpand",
+          "clrMethod": "TestNioBuffersExpand",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testNioBuffersExpand2",
+          "clrMethod": "TestNioBuffersExpand2",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testNioBuffersMaxCount",
+          "clrMethod": "TestNioBuffersMaxCount",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testWritability",
+          "clrMethod": "TestWritability",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testUserDefinedWritability",
+          "clrMethod": "TestUserDefinedWritability",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testUserDefinedWritability2",
+          "clrMethod": "TestUserDefinedWritability2",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testMixedWritability",
+          "clrMethod": "TestMixedWritability",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testWriteAndFlushFromWritabilityChangedCausedByCancelledWrite",
+          "clrMethod": "TestWriteAndFlushFromWritabilityChangedCausedByCancelledWrite",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testCloseFromWritabilityChangedCausedByCancelledWrite",
+          "clrMethod": "TestCloseFromWritabilityChangedCausedByCancelledWrite",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testMultipleCancelledWritesWithEarlierFlush",
+          "clrMethod": "TestMultipleCancelledWritesWithEarlierFlush",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testWriteAndFlushFromReleaseOfCancelledWrite",
+          "clrMethod": "TestWriteAndFlushFromReleaseOfCancelledWrite",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testWriteTaskRejected",
+          "clrMethod": "TestWriteTaskRejected",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 15,
+        "mappedCount": 15,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/CoalescingBufferQueueTest.java",
@@ -2066,16 +3168,190 @@
       "sha256": "a8beb3a04a96d4aa262fb1d4ba48b74da18b436c9338a17c112785f7806d86d5",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineTailTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DefaultChannelPipelineTailTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testOnUnhandledInboundChannelActive",
+          "clrMethod": "TestOnUnhandledInboundChannelActive",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testOnUnhandledInboundChannelInactive",
+          "clrMethod": "TestOnUnhandledInboundChannelInactive",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testOnUnhandledInboundException",
+          "clrMethod": "TestOnUnhandledInboundException",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testOnUnhandledInboundMessage",
+          "clrMethod": "TestOnUnhandledInboundMessage",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testOnUnhandledInboundReadComplete",
+          "clrMethod": "TestOnUnhandledInboundReadComplete",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testOnUnhandledInboundUserEventTriggered",
+          "clrMethod": "TestOnUnhandledInboundUserEventTriggered",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testOnUnhandledInboundWritabilityChanged",
+          "clrMethod": "TestOnUnhandledInboundWritabilityChanged",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 7,
+        "mappedCount": 7,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/DefaultChannelPipelineTest.java",
       "sha256": "2c38530ea2b7abb6d633f7dc95fcdbf44edc6ee1877dfdbb999196cc41cfa696",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ChannelPipelineSourceTest.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 32,
+        "preservedCount": 9,
+        "unreviewedCount": 23,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ChannelPipelineSourceTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testHandlerAddedReplacesItselfAndThrows",
+          "clrMethod": "TestHandlerAddedReplacesItselfAndThrows",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testHandlerAddedRemovesItselfAndThrows",
+          "clrMethod": "TestHandlerAddedRemovesItselfAndThrows",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testHandlerReplacedBeforeRegistrationAndHandlerAddedThrows",
+          "clrMethod": "TestHandlerReplacedBeforeRegistrationAndHandlerAddedThrows",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testCloseWhenHandlerRemovedReplacesOtherHandler",
+          "clrMethod": "TestCloseWhenHandlerRemovedReplacesOtherHandler",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testRemoveOfHandlerReplacedConcurrently",
+          "clrMethod": "TestRemoveOfHandlerReplacedConcurrently",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 72,
+        "mappedCount": 5,
+        "unreviewedMethods": [
+          "testFreeCalled",
+          "testRemoveChannelHandler",
+          "testRemoveIfExists",
+          "testRemoveIfExistsDoesNotThrowException",
+          "testRemoveThrowNoSuchElementException",
+          "testReplaceChannelHandler",
+          "testReplaceHandlerChecksDuplicateNames",
+          "testReplaceNameWithGenerated",
+          "testRenameChannelHandler",
+          "testChannelHandlerContextNavigation",
+          "testThrowInExceptionCaught",
+          "testThrowInOtherHandlerAfterInvokedFromExceptionCaught",
+          "testFireChannelRegistered",
+          "testInboundOperationsViaContext",
+          "testOutboundOperationsViaContext",
+          "testPipelineOperation",
+          "testChannelHandlerContextOrder",
+          "testLifeCycleAwareness",
+          "testRemoveAndForwardInbound",
+          "testRemoveAndForwardOutbound",
+          "testReplaceAndForwardOutbound",
+          "testReplaceAndForwardInboundAndOutbound",
+          "testRemoveAndForwardInboundOutbound",
+          "testCancelBind",
+          "testCancelConnect",
+          "testCancelDisconnect",
+          "testCancelClose",
+          "testWrongPromiseChannel",
+          "testPromiseCorrectExecutor",
+          "testUnexpectedVoidChannelPromise",
+          "testUnexpectedVoidChannelPromiseCloseFuture",
+          "testCancelDeregister",
+          "testCancelWrite",
+          "testCancelWriteAndFlush",
+          "testFirstContextEmptyPipeline",
+          "testLastContextEmptyPipeline",
+          "testFirstHandlerEmptyPipeline",
+          "testLastHandlerEmptyPipeline",
+          "testChannelInitializerException",
+          "testChannelUnregistrationWithCustomExecutor",
+          "testAddHandlerBeforeRegisteredThenRemove",
+          "testAddHandlerBeforeRegisteredThenReplace",
+          "testAddRemoveHandlerNotRegistered",
+          "testAddReplaceHandlerNotRegistered",
+          "testHandlerAddedAndRemovedCalledInCorrectOrder",
+          "testHandlerAddedExceptionFromChildHandlerIsPropagated",
+          "testHandlerRemovedExceptionFromChildHandlerIsPropagated",
+          "testHandlerAddedThrowsAndRemovedThrowsException",
+          "testAddRemoveHandlerCalledOnceRegistered",
+          "testAddReplaceHandlerCalledOnceRegistered",
+          "testAddBefore",
+          "testAddInListenerNio",
+          "testAddInListenerOio",
+          "testAddInListenerLocal",
+          "testNullName",
+          "testUnorderedEventExecutor",
+          "testPinExecutor",
+          "testNotPinExecutor",
+          "testVoidPromiseNotify",
+          "testHandlerRemovedOnlyCalledWhenHandlerAddedCalled",
+          "testSkipHandlerMethodsIfAnnotated",
+          "testWriteThrowsReleaseMessage",
+          "testWriteAndFlushThrowsReleaseMessage",
+          "testHandlerAddedFailedButHandlerStillRemoved",
+          "testHandlerAddedFailedButHandlerStillRemovedWithLaterRegister",
+          "handlerAddedStateUpdatedBeforeHandlerAddedDoneForceEventLoop",
+          "handlerAddedStateUpdatedBeforeHandlerAddedDoneOnCallingThread"
+        ],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/DefaultChannelPromiseTest.java",
@@ -2119,8 +3395,41 @@
       "sha256": "0cd638ebc9ae3ffcc382be5119308b949b10931c10c017c3a8c003b2e24874d2",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DefaultMaxMessagesRecvByteBufAllocatorTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DefaultMaxMessagesRecvByteBufAllocatorTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testRespectReadBytes",
+          "clrMethod": "TestRespectReadBytes",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testIgnoreReadBytes",
+          "clrMethod": "TestIgnoreReadBytes",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/DelegatingChannelPromiseNotifierTest.java",
@@ -2135,8 +3444,30 @@
       "sha256": "56f5c32612f801dfd1bf430720731f5ace4aec1c7344761b4ba3e089e9e7240a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/CustomChannelId.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/CustomChannelId.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/embedded/EmbeddedChannelIdTest.java",
@@ -2151,8 +3482,211 @@
       "sha256": "ee2f56187083eb4fb6377f80beb3afb2d5c66b2ef9ffebf9fff2e0d82736d74a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/EmbeddedChannelTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 15,
+        "preservedCount": 15,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/EmbeddedChannelTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testParent",
+          "clrMethod": "TestParent",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testNotRegistered",
+          "clrMethod": "TestNotRegistered",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testRegistered",
+          "clrMethod": "TestRegistered",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "promiseDoesNotInfiniteLoop",
+          "clrMethod": "PromiseDoesNotInfiniteLoop",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testConstructWithChannelInitializer",
+          "clrMethod": "TestConstructWithChannelInitializer",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testScheduling",
+          "clrMethod": "TestScheduling",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testScheduledCancelled",
+          "clrMethod": "TestScheduledCancelled",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHandlerAddedExecutedInEventLoop",
+          "clrMethod": "TestHandlerAddedExecutedInEventLoop",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testConstructWithOutHandler",
+          "clrMethod": "TestConstructWithOutHandler",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testConstructWithChannelId",
+          "clrMethod": "TestConstructWithChannelId",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testFireChannelInactiveAndUnregisteredOnClose",
+          "clrMethod": "TestFireChannelInactiveAndUnregisteredOnClose",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testFireChannelInactiveAndUnregisteredOnDisconnect",
+          "clrMethod": "TestFireChannelInactiveAndUnregisteredOnDisconnect",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHasDisconnect",
+          "clrMethod": "TestHasDisconnect",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHasNoDisconnect",
+          "clrMethod": "TestHasNoDisconnect",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHasNoDisconnectSkipDisconnect",
+          "clrMethod": "TestHasNoDisconnectSkipDisconnect",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testFinishAndReleaseAll",
+          "clrMethod": "TestFinishAndReleaseAll",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testReleaseInbound",
+          "clrMethod": "TestReleaseInbound",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testReleaseOutbound",
+          "clrMethod": "TestReleaseOutbound",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testWriteLater",
+          "clrMethod": "TestWriteLater",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testWriteScheduled",
+          "clrMethod": "TestWriteScheduled",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testFlushInbound",
+          "clrMethod": "TestFlushInbound",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testWriteOneInbound",
+          "clrMethod": "TestWriteOneInbound",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testFlushOutbound",
+          "clrMethod": "TestFlushOutbound",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testWriteOneOutbound",
+          "clrMethod": "TestWriteOneOutbound",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testEnsureOpen",
+          "clrMethod": "TestEnsureOpen",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHandleInboundMessage",
+          "clrMethod": "TestHandleInboundMessage",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHandleOutboundMessage",
+          "clrMethod": "TestHandleOutboundMessage",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testChannelInactiveFired",
+          "clrMethod": "TestChannelInactiveFired",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testReRegisterEventLoop",
+          "clrMethod": "TestReRegisterEventLoop",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testRunPendingTasksForNotRegisteredChannel",
+          "clrMethod": "TestRunPendingTasksForNotRegisteredChannel",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testAdvanceTime",
+          "clrMethod": "TestAdvanceTime",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testFreezeTime",
+          "clrMethod": "TestFreezeTime",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testCustomTicker",
+          "clrMethod": "TestCustomTicker",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testDefaultTickerCannotSleep",
+          "clrMethod": "TestDefaultTickerCannotSleep",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testHasPendingTasks",
+          "clrMethod": "TestHasPendingTasks",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        },
+        {
+          "upstreamMethod": "testReentrantClose",
+          "clrMethod": "TestReentrantClose",
+          "adaptation": "Original inputs, ordering, ownership and assertions; Task/CountdownEvent and explicit executors replace Future/Promise and anonymous classes. CLR timing boundaries use TimeSpan ticks."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 36,
+        "mappedCount": 36,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/FailedChannelFutureTest.java",
@@ -2167,8 +3701,36 @@
       "sha256": "98d10abc91e393fa533a3c78aae0c581bdf86f91fcb3765e597857a40f8fd0a9",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DefaultChannelGroupTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DefaultChannelGroupTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testNotThrowBlockingOperationException",
+          "clrMethod": "TestNotThrowBlockingOperationException",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/IoEventLoopGroupTest.java",
@@ -2183,8 +3745,76 @@
       "sha256": "96d8a6421a2681228328e82dea5fb43749f9aad5f620a0052f15fbe5a62f42fe",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs"
+      ],
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 41,
+        "preservedCount": 5,
+        "unreviewedCount": 36,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testLocalAddressReuse",
+          "clrMethod": "TestLocalAddressReuse",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testConnectionRefused",
+          "clrMethod": "TestConnectionRefused",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testConnectedAlready",
+          "clrMethod": "TestConnectedAlready",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 32,
+        "mappedCount": 3,
+        "unreviewedMethods": [
+          "testWriteFailsFastOnClosedChannel",
+          "testServerCloseChannelSameEventLoop",
+          "localChannelRaceCondition",
+          "testReRegister",
+          "testCloseInWritePromiseCompletePreservesOrder",
+          "testCloseAfterWriteInSameEventLoopPreservesOrder",
+          "testWriteInWritePromiseCompletePreservesOrder",
+          "testPeerWriteInWritePromiseCompleteDifferentEventLoopPreservesOrder",
+          "testPeerWriteInWritePromiseCompleteSameEventLoopPreservesOrder",
+          "testWriteWhilePeerIsClosedReleaseObjectAndFailPromise",
+          "testConnectFutureBeforeChannelActive",
+          "testNotLeakBuffersWhenCloseByRemotePeer",
+          "testAutoReadDisabledSharedGroup",
+          "testAutoReadDisabledDifferentGroup",
+          "testMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
+          "testMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
+          "testMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
+          "testMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
+          "testServerMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
+          "testServerMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
+          "testServerMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
+          "testServerMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
+          "testServerMaxMessagesPerReadRespectedWithQueuedConnections",
+          "testConnectFailsWhenServerClosedWithQueuedConnection",
+          "testClientCloseAfterServerClosedWithQueuedConnection",
+          "testClientCloseWhileConnectionIsQueued",
+          "testConnectFailsWhenServerClosesBeforeConnectionArrives",
+          "testConnectFailsWhenAcceptedChannelCannotBeRegistered",
+          "testReadCompleteCalledOnHandle"
+        ],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/local/LocalTransportThreadModelTest.java",
@@ -2359,8 +3989,41 @@
       "sha256": "21ac3d7eb128fdfcf5297503bef80df64d15a544ba7d27ddde1c22e2382d9796",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SimpleUserEventChannelHandlerTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SimpleUserEventChannelHandlerTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testTypeMatch",
+          "clrMethod": "TestTypeMatch",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testTypeMismatch",
+          "clrMethod": "TestTypeMismatch",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/SingleThreadEventLoopTest.java",
@@ -2407,8 +4070,36 @@
       "sha256": "3916fef19d46f67633199fa17f43da2387b548cd80c6513cb8a9b484c5f8e9b0",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DatagramChannelSourceTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DatagramChannelSourceTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testBindMultiple",
+          "clrMethod": "TestBindMultiple",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/socket/nio/NioDomainSocketChannelTest.java",
@@ -2439,8 +4130,56 @@
       "sha256": "1ce6c824f7d2abb45c84a5769789086fca28b2462b753b3c1ad910c897c86927",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 14,
+        "preservedCount": 14,
+        "unreviewedCount": 0,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+      },
+      "review": {
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testFlushCloseReentrance",
+          "clrMethod": "TestFlushCloseReentrance",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testFlushAfterGatheredFlush",
+          "clrMethod": "TestFlushAfterGatheredFlush",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testChannelReRegisterReadSameEventLoop",
+          "clrMethod": "TestChannelReRegisterReadSameEventLoop",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testChannelReRegisterReadDifferentEventLoop",
+          "clrMethod": "TestChannelReRegisterReadDifferentEventLoop",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testShutdownOutputAndClose",
+          "clrMethod": "TestShutdownOutputAndClose",
+          "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 5,
+        "unreviewedMethods": [],
+        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/SucceededChannelFutureTest.java",
@@ -2474,5 +4213,144 @@
     "portedOriginalMethods": 15,
     "supplementalClrCases": 28,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features."
-  }
+  },
+  "clrDecisions": [
+    {
+      "subject": "Future/Promise/listeners",
+      "decision": "Task/TaskCompletionSource and CancellationToken, Task.WhenAll and native delegates. Handler state and completion mutations reenter the explicit executor; native Task continuations do not implicitly inherit event-loop affinity."
+    },
+    {
+      "subject": "NIO/OIO selector and local IoHandler",
+      "decision": "CLR asynchronous Socket operations plus ordered DefaultEventLoop workers; selector classes are not mechanically recreated. Shared observable contracts still require their original tests; unreviewed selector-era contracts remain pending."
+    },
+    {
+      "subject": "ChannelId",
+      "decision": "Guid identity and ordinal text ordering replace the Java MAC/PID/time layout. The Java binary layout is not a wire format; short/long string layout tests remain unreviewed, not marked ported."
+    },
+    {
+      "subject": "Embedded scheduling resolution",
+      "decision": "The public Common scheduling API takes TimeSpan (100 ns ticks). Original EmbeddedChannel testFreezeTime/testCustomTicker use one CLR tick in place of 1 ns; exact-at vs strictly-after deadline checks and all three futures remain."
+    },
+    {
+      "subject": "Windows UDP truncation",
+      "decision": "ReceiveFromAsync does not publish the sender endpoint on WSAEMSGSIZE. Rent 64 KiB while each receive is pending, receive the whole datagram, then truncate to the configured ByteBuf and preserve sender/recipient metadata. This bounds staging per outstanding Windows receive but adds a copy; no platform-performance parity claim.",
+      "runtimeSource": "https://source.dot.net/System.Net.Sockets/System/Net/Sockets/SocketAsyncEventArgs.cs.html"
+    },
+    {
+      "subject": "FileRegion socket transfer",
+      "decision": "Use the portable Stream implementation on a worker when transferring a file region; no event-loop blocking and no Java FileChannel/zero-copy parity claim."
+    },
+    {
+      "subject": "ChannelGroup futures",
+      "decision": "Native Task.WhenAll covers currently implemented aggregate operations. Per-channel result/failure inspection remains open; it is not silently excluded as JVM-only."
+    },
+    {
+      "subject": "Output gathering and cancellation",
+      "decision": "Borrowed ReadOnlyMemory arrays and ReadOnlySequence segments replace NIO buffers. Cancellation atomically claims an unflushed Task but retains an empty queue entry until flush; every entry is made consistent before cancelled messages are released or writability callbacks run. TCP sends composite segments; UDP copies segmented content into a single pooled borrow to preserve datagram boundaries."
+    }
+  ],
+  "openWork": [
+    {
+      "area": "Socket read admission",
+      "state": "implementation-gap",
+      "detail": "Review AutoRead=false while an async receive/accept is already pending, and deregister/re-register during pending I/O. Initial manual-read operation is tested; late native completions still need equivalent Java admission handling."
+    },
+    {
+      "area": "Pipeline executor lifecycle",
+      "state": "implementation-gap",
+      "detail": "ChannelInitializer tests now cover asynchronous removal state and forward-executor barrier/reverse destruction ordering. Remaining: rejection and queued inbound reference ownership on separate executor shutdown, full pipeline fixtures and further executor variants."
+    },
+    {
+      "area": "Outbound buffer",
+      "state": "review-gap",
+      "detail": "All 15 declared original tests are ported. Remaining internal comments/helpers, progressive reporting through native CLR APIs and cross-executor enqueue byte accounting still require review; passing the fixture is not whole-class completion."
+    },
+    {
+      "area": "TCP and UDP",
+      "state": "test-and-implementation-review",
+      "detail": "Half-closure/read-complete events, output shutdown, timeout/cancellation, full platform socket options, multicast/source-specific membership and all remaining original socket fixtures."
+    },
+    {
+      "area": "Bootstrap and groups",
+      "state": "test-and-implementation-review",
+      "detail": "Full original Bootstrap/ServerBootstrap/ChannelGroup fixtures, config views/extensions and per-channel group failure results. All nine ChannelInitializer tests and the original group-close regression are now ported."
+    },
+    {
+      "area": "Portable remaining inventory",
+      "state": "unreviewed",
+      "detail": "PendingWriteQueue, AbstractCoalescingBufferQueue/CoalescingBufferQueue, channel pools, their original tests, and remaining pending entries. Existing APIs do not prove this module complete."
+    },
+    {
+      "area": "Comments",
+      "state": "review-gap",
+      "detail": "Each partial entry records exact original vs preserved comment counts. Complete original comments at all applicable declarations/implementation sites as their contracts are reviewed; a copied detached comment archive is not completion."
+    }
+  ],
+  "supplementalTests": [
+    "test/Netty.NET.Transport.Tests/ChannelCoreContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketTransportContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs",
+    "test/Netty.NET.Transport.Tests/LocalTransportContractTest.cs",
+    "test/Netty.NET.Transport.Tests/TransportFoundationContractTest.cs"
+  ],
+  "validationHistory": [
+    {
+      "checkpoint": "37889a6f6a0c52a572fbf8c594af4d7ea7103b80",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 15,
+        "debug": {
+          "total": 43,
+          "passed": 43,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 43,
+          "passed": 43,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Transport.Tests": {
+            "total": 43,
+            "passed": 43,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "note": "The unused AssertMessages reference was removed after the full solution run; final checked rebuild/tests cover the resulting project. Common, Buffer and Resolver sources remain unchanged.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "dotnet test Netty.NET.sln -c Release",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build"
+        ]
+      }
+    }
+  ],
+  "nextWork": [
+    "Late native receive/accept completion after AutoRead=false or deregistration: preserve input and gate delivery on read/registration admission.",
+    "Continue the remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declared methods, with source helpers/order/assertions intact.",
+    "Port PendingWriteQueue, coalescing queues and channel pools with their original tests; review remaining portable inventory and partial comments."
+  ]
 }

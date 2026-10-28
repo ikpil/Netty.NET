@@ -36,6 +36,7 @@ namespace Netty.NET.Transport.Channels;
 // CLR: the registry and built-in fields live on a non-generic base. A name cannot be rebound to a different T.
 public abstract class ChannelOption : AbstractConstant<ChannelOption>
 {
+    internal abstract void ValidateValue(object value);
     private static readonly ConcurrentDictionary<string, ChannelOption> Pool = new();
     private static int _nextId;
     protected ChannelOption(int id, string name) : base(id, name) { }
@@ -160,6 +161,12 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
 
 public class ChannelOption<T> : ChannelOption
 {
+    internal override void ValidateValue(object value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (value is not T typed) throw new ArgumentException("Invalid option value type.", nameof(value));
+        Validate(typed);
+    }
     /**
      * Creates a new {@link ChannelOption} with the specified unique {@code name}.
      */
