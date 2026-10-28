@@ -2,6 +2,12 @@
 - https://github.com/netty/netty/commit/64cc10f38ea5f5bd7eae48507817c66680d0afdc
 
 The buffer port has started; see [buffer porting status](docs/buffer-porting.md).
+The resolver port implements the basic OS-backed resolver module; see its
+[source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).
+It uses Task/CancellationToken, DnsEndPoint/IPEndPoint and IDisposable; executor-affine
+consumers dispatch explicitly through Common. The separate resolver-dns module and
+Transport integration are outside this port. Check the pinned sources, original
+test mappings and preserved comments with `powershell -NoProfile -File tools/Test-ResolverPortingManifest.ps1`.
 The common port is in progress. See [porting status](docs/common-porting.md),
 [CLR design decisions](docs/common-clr-design.md),
 [native Task scheduling](docs/common-native-scheduling.md),

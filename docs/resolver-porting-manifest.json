@@ -1,0 +1,561 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "scope": [
+    "resolver/src/main/java",
+    "resolver/src/test/java",
+    "resolver/src/test/resources"
+  ],
+  "status": "portable-contracts-implemented",
+  "summary": {
+    "implementationFiles": 19,
+    "namespaceDocumentation": 1,
+    "originalTestFiles": 4,
+    "originalTestMethods": 17,
+    "originalMethodsPorted": 17,
+    "missingOriginalMethods": 0
+  },
+  "contractPolicy": "Preserve original test intent, preconditions, inputs, assertions, helpers, ordering and explanatory comments. Record CLR adaptations explicitly; supplemental tests remain separate. Original comments from replaced Promise/Class overloads remain beside their CLR replacement. Normalized comment coverage is content coverage, not duplicate occurrence count.",
+  "consumerBoundary": "Basic resolver only; resolver-dns is a separate upstream module. Transport is not yet implemented. Channel/bootstrap integration and runtime-specific DNS semantics must be checked when Transport consumes this module; module verification does not certify future Transport behavior.",
+  "validation": {
+    "framework": "net10.0",
+    "originalJavaTestsPassed": 17,
+    "resolverDebug": {
+      "total": 64,
+      "passed": 64,
+      "failed": 0,
+      "skipped": 0
+    },
+    "resolverRelease": {
+      "total": 64,
+      "passed": 64,
+      "failed": 0,
+      "skipped": 0
+    },
+    "resolverCheckedRelease": {
+      "total": 64,
+      "passed": 64,
+      "failed": 0,
+      "skipped": 0
+    },
+    "solutionRelease": {
+      "common": {
+        "total": 2692,
+        "passed": 2678,
+        "failed": 0,
+        "skipped": 14
+      },
+      "buffer": {
+        "total": 29556,
+        "passed": 29556,
+        "failed": 0,
+        "skipped": 0
+      },
+      "resolverAtSolutionRun": {
+        "total": 63,
+        "passed": 63,
+        "failed": 0,
+        "skipped": 0
+      },
+      "note": "Common/Buffer sources unchanged. Final Resolver-only lifecycle cleanup refinement and one additional test were validated afterward by the 64-case Debug/Release/checked runs above."
+    },
+    "newResolverWarnings": 0,
+    "checkedBuildExistingCommonWarnings": 51,
+    "commands": [
+      "powershell -NoProfile -File tools/Test-ResolverPortingManifest.ps1",
+      "dotnet test Netty.NET.sln -c Release",
+      "dotnet test test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Debug",
+      "dotnet test test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Release",
+      "dotnet build test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Release -t:Rebuild -p:CheckForOverflowUnderflow=true",
+      "dotnet test test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Release --no-build"
+    ]
+  },
+  "entries": [
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/AbstractAddressResolver.java",
+      "sha256": "954a52ae127243c8ff2f10b6741df01b937c120ad565074a89911c03b5fa9a85",
+      "implementation": [
+        "src/Netty.NET.Resolver/AbstractAddressResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 16,
+        "uniquePreservedCount": 10,
+        "uniqueCount": 10
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "CLR reified T replaces TypeParameterMatcher/Class overload; EndPoint input may differ from the resolved T. Unsupported addresses fail Tasks, while null arguments throw synchronously. Task completion replaces both Promise overloads."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/AddressResolver.java",
+      "sha256": "9b6fcc0f24718af6b3b497b6305821821d99e7d930b20dcb0c5f546cc5fd6d37",
+      "implementation": [
+        "src/Netty.NET.Resolver/IAddressResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 9,
+        "uniquePreservedCount": 9,
+        "uniqueCount": 9
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "EndPoint input and typed resolved endpoint results; Task and CancellationToken replace Future/Promise; IDisposable replaces Closeable."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/AddressResolverGroup.java",
+      "sha256": "6dc9f7cd038d337eef16b505b24d0134c6cf7fb3b631c140224f3fc6cd3f8cde",
+      "implementation": [
+        "src/Netty.NET.Resolver/AddressResolverGroup.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 6,
+        "uniquePreservedCount": 6,
+        "uniqueCount": 6
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "ReferenceEqualityComparer dictionary preserves executor identity. A detachable, clearable continuation state replaces lifecycle Future listeners; cleanup runs without dispatch to an already-terminated executor, closes each resolver once and isolates close failures. Dispose clears current entries and permits reuse, as upstream."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/CompositeNameResolver.java",
+      "sha256": "162fb6b112ef5e2abc8cb3137b8d8cdf6464a5c3fed217d8a78d1f2c02ff246b",
+      "implementation": [
+        "src/Netty.NET.Resolver/CompositeNameResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 3,
+        "uniquePreservedCount": 3,
+        "uniqueCount": 3
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Cloned component array, sequential asynchronous fallback, first success including an empty all-result, last failure preserved; composite does not own delegates. Caller cancellation stops fallback."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/DefaultAddressResolverGroup.java",
+      "sha256": "b852f0e0ede3503462325751cfca34c497d34d09f3f548e4cbaef1ccd75dd583",
+      "implementation": [
+        "src/Netty.NET.Resolver/DefaultAddressResolverGroup.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 2,
+        "uniquePreservedCount": 2,
+        "uniqueCount": 2
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Singleton per-executor group creates DefaultNameResolver address adapters."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/DefaultHostsFileEntriesResolver.java",
+      "sha256": "9c63e9c4faba525214507b774171a8d40336fa88721594c877d8bad5809fc13d",
+      "implementation": [
+        "src/Netty.NET.Resolver/DefaultHostsFileEntriesResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 9,
+        "uniquePreservedCount": 9,
+        "uniqueCount": 9
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Nanosecond refresh interval environment setting, monotonic Common ticker and CAS admission. A single volatile provider snapshot publishes both families together. Invariant normalization and family ordering preserve original contracts. Windows tries both explicit UTF-16 byte orders."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/DefaultNameResolver.java",
+      "sha256": "65be07e4bd1b64bf129e48be531937b992b33e07a86ff4a051d80b0344d344fb",
+      "implementation": [
+        "src/Netty.NET.Resolver/DefaultNameResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 2,
+        "uniquePreservedCount": 2,
+        "uniqueCount": 2
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "System.Net.Dns async OS lookup replaces blocking JDK lookup. Null/empty names map to loopback rather than the CLR empty-host machine lookup. Literal fast path and mapped-IPv6 classification avoid reverse DNS. OS address order is retained; exact platform DNS results are environment-dependent."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileEntries.java",
+      "sha256": "e2636621059e49e833108cd6bbc558790b081ad7a3099b0402c3faa187527798",
+      "implementation": [
+        "src/Netty.NET.Resolver/HostsFileEntries.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 5,
+        "uniquePreservedCount": 5,
+        "uniqueCount": 5
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "ReadOnlyDictionary snapshots preserve first-entry-only maps; IPAddress represents both Java Inet4Address and Inet6Address."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileEntriesProvider.java",
+      "sha256": "6a790385b7844f590a76c89985f982afd4de88e7689033b9dff00d4185b6d0a2",
+      "implementation": [
+        "src/Netty.NET.Resolver/HostsFileEntriesProvider.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 20,
+        "uniquePreservedCount": 20,
+        "uniqueCount": 20
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "TextReader, FileInfo and Encoding replace Reader/File/Charset. Parser owns supplied reader. Common NetUtil strict literal parsing, aliases, duplicate order and IPv4-mapped classification retained. Try encodings until first nonempty parse; UTF-16 BOM consumed only for a matching explicitly selected byte order. IPAddress has no attached hostname; dictionary aliases retain lookup names."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileEntriesResolver.java",
+      "sha256": "9f62b69818b5c58e547870771ac3133fb3829c2eafc82183021763cb83271298",
+      "implementation": [
+        "src/Netty.NET.Resolver/IHostsFileEntriesResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 4,
+        "uniquePreservedCount": 4,
+        "uniqueCount": 4
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Default instance and IPAddress result, matching nullable no-entry behavior."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileParser.java",
+      "sha256": "2a7116147c2e072b16fc9fbf28adc03e3acce0122548d962db792f2ffb0b0a71",
+      "implementation": [
+        "src/Netty.NET.Resolver/HostsFileParser.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 9,
+        "uniquePreservedCount": 9,
+        "uniqueCount": 9
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Static compatibility API retains first value only; no instantiable utility class."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/InetNameResolver.java",
+      "sha256": "8cdd9cdd3334e536a8a27ce9a0b8ff8a8a86cbdd22344cdccb105a3352074228",
+      "implementation": [
+        "src/Netty.NET.Resolver/InetNameResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 4,
+        "uniquePreservedCount": 4,
+        "uniqueCount": 4
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Cached address adapter protected by a lock; one adapter per resolver."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/InetSocketAddressResolver.java",
+      "sha256": "8b3ca13c90a9dab5b7a4e71bb98fad5c499f8c06403454d750c81fcc02b9dc1a",
+      "implementation": [
+        "src/Netty.NET.Resolver/InetSocketAddressResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 7,
+        "uniquePreservedCount": 5,
+        "uniqueCount": 5
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "DnsEndPoint is unresolved input and IPEndPoint is resolved input/output. Preserve resolved object identity, input port, lookup order, failure identity and delegated disposal. CLR DnsEndPoint.AddressFamily filters results and rejects an empty single result."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/NameResolver.java",
+      "sha256": "ac3be74c1c90cef66b542de9d02450dbefefd33a088011a0f70b6482c91af7c3",
+      "implementation": [
+        "src/Netty.NET.Resolver/INameResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 7,
+        "uniquePreservedCount": 7,
+        "uniqueCount": 7
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Task<T>/Task<IReadOnlyList<T>> own completion instead of Future/Promise overloads. Cooperative CancellationToken; consumers explicitly dispatch executor-affine work through Common. No custom synchronization context is imposed."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/NoopAddressResolver.java",
+      "sha256": "dcc7edbc2b82d2e27c7994881d69d88bffb3c8320591bed6c159d041d3d42262",
+      "implementation": [
+        "src/Netty.NET.Resolver/NoopAddressResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 2,
+        "uniquePreservedCount": 2,
+        "uniqueCount": 2
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Pass any EndPoint through unchanged, including DnsEndPoint, for proxy/pipeline consumers."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/NoopAddressResolverGroup.java",
+      "sha256": "c822792a938773695b21bcd0e82722c75674f2aaa2153d0068e2606c094a120c",
+      "implementation": [
+        "src/Netty.NET.Resolver/NoopAddressResolverGroup.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 2,
+        "uniquePreservedCount": 2,
+        "uniqueCount": 2
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Singleton per-executor group of NoopAddressResolver instances."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/package-info.java",
+      "sha256": "7058510a685022d2f1970f658cb35d9fb0a11b973721ab3d93f96aa96b80db6e",
+      "implementation": [
+        "src/Netty.NET.Resolver/ResolverNamespace.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 2,
+        "uniquePreservedCount": 2,
+        "uniqueCount": 2
+      },
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "decision": "Package documentation retained as namespace documentation."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/ResolvedAddressTypes.java",
+      "sha256": "e9cb2c15cc829a719e4e77608cf4519a63316de38619d2328af42dc7af1e3090",
+      "implementation": [
+        "src/Netty.NET.Resolver/ResolvedAddressTypes.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 6,
+        "uniquePreservedCount": 6,
+        "uniqueCount": 6
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "PascalCase enum values preserve IPv4-only, IPv6-only and preferred ordering choices."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/RoundRobinInetAddressResolver.java",
+      "sha256": "19552a0637353276a338699c6fe4b45987bedd0e2e504eb6c3ae2d44a2e556df",
+      "implementation": [
+        "src/Netty.NET.Resolver/RoundRobinInetAddressResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 10,
+        "uniquePreservedCount": 10,
+        "uniqueCount": 10
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Random.Shared replaces ThreadLocalRandom; select a random single address, or right-rotate a copy without mutating the delegate list. Empty single lookup fails; empty all lookup succeeds. Delegate is owned and disposed."
+    },
+    {
+      "upstream": "resolver/src/main/java/io/netty/resolver/SimpleNameResolver.java",
+      "sha256": "de41ed0c299254b3cc05aa42f761245446cad5c25a5bf03a347686fdb7236ca7",
+      "implementation": [
+        "src/Netty.NET.Resolver/SimpleNameResolver.cs"
+      ],
+      "status": "clr-adapted",
+      "comments": {
+        "count": 6,
+        "uniquePreservedCount": 6,
+        "uniqueCount": 6
+      },
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "decision": "Task-producing protected hooks replace Promise mutation, capture synchronous lookup exceptions into failed Tasks, preserve matching cancellation tokens and do not start pre-canceled lookups."
+    },
+    {
+      "upstream": "resolver/src/test/java/io/netty/resolver/DefaultHostsFileEntriesResolverTest.java",
+      "sha256": "900e1f85217a09d50c5a27ef1b9f2058d84d92b8964c7a39ccfdfc03d4655a67",
+      "implementation": [
+        "test/Netty.NET.Resolver.Tests/DefaultHostsFileEntriesResolverTest.cs"
+      ],
+      "status": "verified",
+      "comments": {
+        "count": 5,
+        "uniquePreservedCount": 5,
+        "uniqueCount": 5
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCaseInsensitivity",
+          "clrMethod": "TestCaseInsensitivity"
+        },
+        {
+          "upstreamMethod": "shouldntFindWhenAddressTypeDoesntMatch",
+          "clrMethod": "ShouldntFindWhenAddressTypeDoesntMatch"
+        },
+        {
+          "upstreamMethod": "shouldPickIpv4WhenBothAreDefinedButIpv4IsPreferred",
+          "clrMethod": "ShouldPickIpv4WhenBothAreDefinedButIpv4IsPreferred"
+        },
+        {
+          "upstreamMethod": "shouldPickIpv6WhenBothAreDefinedButIpv6IsPreferred",
+          "clrMethod": "ShouldPickIpv6WhenBothAreDefinedButIpv6IsPreferred"
+        },
+        {
+          "upstreamMethod": "shouldntFindWhenAddressesTypeDoesntMatch",
+          "clrMethod": "ShouldntFindWhenAddressesTypeDoesntMatch"
+        },
+        {
+          "upstreamMethod": "shouldPickIpv4FirstWhenBothAreDefinedButIpv4IsPreferred",
+          "clrMethod": "ShouldPickIpv4FirstWhenBothAreDefinedButIpv4IsPreferred"
+        },
+        {
+          "upstreamMethod": "shouldPickIpv6FirstWhenBothAreDefinedButIpv6IsPreferred",
+          "clrMethod": "ShouldPickIpv6FirstWhenBothAreDefinedButIpv6IsPreferred"
+        },
+        {
+          "upstreamMethod": "shouldNotRefreshHostsFileContentBeforeRefreshIntervalElapsed",
+          "clrMethod": "ShouldNotRefreshHostsFileContentBeforeRefreshIntervalElapsed"
+        },
+        {
+          "upstreamMethod": "shouldRefreshHostsFileContentAfterRefreshInterval",
+          "clrMethod": "ShouldRefreshHostsFileContentAfterRefreshInterval"
+        }
+      ],
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+    },
+    {
+      "upstream": "resolver/src/test/java/io/netty/resolver/HostsFileEntriesProviderTest.java",
+      "sha256": "8b08f1460956441e7c6c41e3d3ce72af8bb42fe27c2f3d1295a396211c0d0ecf",
+      "implementation": [
+        "test/Netty.NET.Resolver.Tests/HostsFileEntriesProviderTest.cs"
+      ],
+      "status": "verified",
+      "comments": {
+        "count": 12,
+        "uniquePreservedCount": 12,
+        "uniqueCount": 12
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testParse",
+          "clrMethod": "TestParse"
+        },
+        {
+          "upstreamMethod": "testCharsetInputValidation",
+          "clrMethod": "TestCharsetInputValidation"
+        },
+        {
+          "upstreamMethod": "testFileInputValidation",
+          "clrMethod": "TestFileInputValidation"
+        },
+        {
+          "upstreamMethod": "testReaderInputValidation",
+          "clrMethod": "TestReaderInputValidation"
+        }
+      ],
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+    },
+    {
+      "upstream": "resolver/src/test/java/io/netty/resolver/HostsFileParserTest.java",
+      "sha256": "693f334904f4976b907499ff7d898c977532d689a70ab0a6e7d746c68d2e3492",
+      "implementation": [
+        "test/Netty.NET.Resolver.Tests/HostsFileParserTest.cs"
+      ],
+      "status": "verified",
+      "comments": {
+        "count": 12,
+        "uniquePreservedCount": 12,
+        "uniqueCount": 12
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testParse",
+          "clrMethod": "TestParse"
+        },
+        {
+          "upstreamMethod": "testParseUnicode",
+          "clrMethod": "TestParseUnicode"
+        },
+        {
+          "upstreamMethod": "testParseMultipleCharsets",
+          "clrMethod": "TestParseMultipleCharsets"
+        }
+      ],
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+    },
+    {
+      "upstream": "resolver/src/test/java/io/netty/resolver/InetSocketAddressResolverTest.java",
+      "sha256": "9043ae174150aecb88db5e970f944b3a47878ae1ef26fa1e117a8a413e7c8403",
+      "implementation": [
+        "test/Netty.NET.Resolver.Tests/InetSocketAddressResolverTest.cs"
+      ],
+      "status": "verified",
+      "comments": {
+        "count": 1,
+        "uniquePreservedCount": 1,
+        "uniqueCount": 1
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCloseDelegates",
+          "clrMethod": "TestCloseDelegates"
+        }
+      ],
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+    },
+    {
+      "upstream": "resolver/src/main/java/module-info.yml",
+      "sha256": "7baa66f2a8306aded7640f2098d4d62042deef7462be44bd891d6fc0ff599226",
+      "hashMode": "utf8-lf",
+      "implementation": [
+        "src/Netty.NET.Resolver/Netty.NET.Resolver.csproj"
+      ],
+      "kind": "metadata",
+      "status": "clr-replacement",
+      "decision": "JVM module descriptor replaced by CLR assembly/project reference to Common."
+    },
+    {
+      "upstream": "resolver/src/test/resources/io/netty/resolver/hosts-unicode",
+      "sha256": "dce6a40487f08bf7420630a5bd0aacf8152786f50484cb2399f80e444a82b528",
+      "hashMode": "binary",
+      "implementation": [
+        "test/Netty.NET.Resolver.Tests/Resources/hosts-unicode"
+      ],
+      "kind": "resource",
+      "status": "verified",
+      "decision": "Original UTF-16 big-endian fixture copied byte-for-byte; no transcoding."
+    }
+  ],
+  "statusMeaning": {
+    "clr-adapted": "Portable implementation contract reviewed and implemented with the per-entry CLR decision; does not certify future Transport integration or identical platform DNS data.",
+    "verified": "Original test bodies/helpers are ported and pass, or the unchanged resource/documentation is accounted for.",
+    "clr-replacement": "JVM metadata replaced by the explicit CLR project/assembly equivalent."
+  }
+}

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Netty.NET.Common\Netty.NET.Common.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Resolver.Tests" />
+  </ItemGroup>
+</Project>
