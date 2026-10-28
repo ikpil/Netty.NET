@@ -6675,6 +6675,35 @@ supplemental rows are deliberately relabeled by typed inputs; all other prior te
 identities survive. No runtime correction is required for these reviewed contracts.
 Evidence: ignored artifacts/buffer-original-mutation-iteration.
 
+## Original array-transfer bodies and CLR span boundaries
+
+Seventeen selected shared declarations now execute as named portable original bodies
+on all seven actual roots (119 invocations). Five separate transfer bodies retain
+4096-byte roots, 128-byte blocks, original 128/256-byte arrays, every random-byte and
+offset call in order, seed replay, wrapped expected ByteBuf comparisons, per-byte
+assertions and relative cursors. Four named bounds bodies and eight array release
+guards keep the exact inputs, exception scopes, comments and individual assertions.
+
+Java array offset/count arguments become bounded Span/ReadOnlySpan call-site views.
+Invalid array ranges are rejected by AsSpan before invoking ByteBuf. These destination
+bounds bodies validate the consumer-side binding/no-partial-copy contract, not a CLR
+ByteBuf array-overload guard. No duplicate Java-style overload is introduced. An
+ignored five-case console observation uses an actual GetBytes override: invalid buffer
+indices dispatch once each, invalid destination ranges dispatch zero times, and a valid
+four-byte copy dispatches once. Every outcome, destination and final release is checked.
+
+Array.Empty<byte>, runtime-local RNG replay and existing expected-peer cleanup adapt
+Java details. All 85 existing transfer/release model rows remain with typed ArrayCase
+inputs; all 20 existing bounded-span/guard/mark cases and their assertions are unchanged.
+Fresh pinned Java Unsafe and forced-NIO each pass all 119 exact original pairs. Other
+shared/concrete/inherited/provider/consumer closure remains partial.
+Full net10.0 Debug/Release each pass 28,982; rebuilt checked Release with SIMPLE
+sampling one passes all 119 original plus 105 supplemental invocations. All have zero
+failures/skips, 51 existing Common warnings and no Buffer/test warnings. Only the 85
+retyped supplemental identities change; all other prior identities survive. No runtime
+correction is required for these reviewed contracts.
+Evidence: ignored artifacts/buffer-original-array-transfers.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

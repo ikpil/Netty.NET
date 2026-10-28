@@ -53,20 +53,26 @@ public class ByteBufArraySourceTest
         }
     }
 
-    public static IEnumerable<object[]> OriginalCases()
+    // Supplemental span/state model; original named bodies use all seven actual root fixtures.
+    public enum ArrayCase
+    {
+        NegativeBufferIndex, NegativeBufferIndexEmptyRange, NegativeDestinationIndex, DestinationRangeTooLong, RandomArrayRange, RandomArray, RandomWrappedArrayRange, SequentialArray, SequentialArrayRange, GetReleasedArray, GetReleasedRange, SetReleasedArray, SetReleasedRange, ReadReleasedArray, ReadReleasedRange, WriteReleasedArray, WriteReleasedRange
+    }
+
+    public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 17; ++scenario) yield return [provider, scenario];
+        foreach (ArrayCase scenario in Enum.GetValues<ArrayCase>()) yield return [provider, scenario];
     }
 
     [Theory]
-    [MemberData(nameof(OriginalCases))]
-    public void OriginalArrayBoundsTransfersAndReleasedAccess(int provider, int scenario)
+    [MemberData(nameof(SupplementalCases))]
+    public void ArrayTransfersPreserveSpanModelAndOwnership(int provider, ArrayCase scenario)
     {
         const int capacity = 4096, blockSize = 128, seed = 12345;
-        using var s = new Storage(provider, scenario >= 9 ? 8 : capacity);
+        using var s = new Storage(provider, scenario is ArrayCase.GetReleasedArray or ArrayCase.GetReleasedRange or ArrayCase.SetReleasedArray or ArrayCase.SetReleasedRange or ArrayCase.ReadReleasedArray or ArrayCase.ReadReleasedRange or ArrayCase.WriteReleasedArray or ArrayCase.WriteReleasedRange ? 8 : capacity);
         ByteBuf buffer = s.Root;
-        if (scenario >= 9)
+        if (scenario is ArrayCase.GetReleasedArray or ArrayCase.GetReleasedRange or ArrayCase.SetReleasedArray or ArrayCase.SetReleasedRange or ArrayCase.ReadReleasedArray or ArrayCase.ReadReleasedRange or ArrayCase.WriteReleasedArray or ArrayCase.WriteReleasedRange)
         {
             // Clear the buffer so we are sure the reader and writer indices are 0.
             // This is important as we may return a slice from newBuffer(...).
@@ -74,29 +80,29 @@ public class ByteBufArraySourceTest
             byte[] bytes = new byte[8];
             switch (scenario)
             {
-                case 9: Assert.Throws<IllegalReferenceCountException>(() => buffer.GetBytes(0, bytes)); break;
-                case 10: Assert.Throws<IllegalReferenceCountException>(() => buffer.GetBytes(0, bytes.AsSpan(0, 1))); break;
-                case 11: Assert.Throws<IllegalReferenceCountException>(() => buffer.SetBytes(0, bytes)); break;
-                case 12: Assert.Throws<IllegalReferenceCountException>(() => buffer.SetBytes(0, bytes.AsSpan(0, 1))); break;
-                case 13: Assert.Throws<IllegalReferenceCountException>(() => buffer.ReadBytes(bytes)); break;
-                case 14: Assert.Throws<IllegalReferenceCountException>(() => buffer.ReadBytes(bytes.AsSpan(0, 1))); break;
-                case 15: Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteBytes(bytes)); break;
+                case ArrayCase.GetReleasedArray: Assert.Throws<IllegalReferenceCountException>(() => buffer.GetBytes(0, bytes)); break;
+                case ArrayCase.GetReleasedRange: Assert.Throws<IllegalReferenceCountException>(() => buffer.GetBytes(0, bytes.AsSpan(0, 1))); break;
+                case ArrayCase.SetReleasedArray: Assert.Throws<IllegalReferenceCountException>(() => buffer.SetBytes(0, bytes)); break;
+                case ArrayCase.SetReleasedRange: Assert.Throws<IllegalReferenceCountException>(() => buffer.SetBytes(0, bytes.AsSpan(0, 1))); break;
+                case ArrayCase.ReadReleasedArray: Assert.Throws<IllegalReferenceCountException>(() => buffer.ReadBytes(bytes)); break;
+                case ArrayCase.ReadReleasedRange: Assert.Throws<IllegalReferenceCountException>(() => buffer.ReadBytes(bytes.AsSpan(0, 1))); break;
+                case ArrayCase.WriteReleasedArray: Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteBytes(bytes)); break;
                 default: Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteBytes(bytes.AsSpan(0, 1))); break;
             }
             Assert.Equal(new byte[8], bytes);
             return;
         }
-        if (scenario < 4)
+        if (scenario is ArrayCase.NegativeBufferIndex or ArrayCase.NegativeBufferIndexEmptyRange or ArrayCase.NegativeDestinationIndex or ArrayCase.DestinationRangeTooLong)
         {
-            if (scenario == 0)
+            if (scenario == ArrayCase.NegativeBufferIndex)
                 Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(-1, Span<byte>.Empty));
-            else if (scenario == 1)
+            else if (scenario == ArrayCase.NegativeBufferIndexEmptyRange)
                 Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(-1, Array.Empty<byte>().AsSpan(0, 0)));
             else
             {
                 byte[] destination = new byte[4];
                 buffer.SetInt(0, 0x01020304);
-                if (scenario == 2)
+                if (scenario == ArrayCase.NegativeDestinationIndex)
                 {
                     Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(0, destination.AsSpan(-1, 4)));
                     // No partial copy is expected.
@@ -112,7 +118,7 @@ public class ByteBufArraySourceTest
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
             return;
         }
-        bool sequential = scenario >= 7, ranged = scenario is 4 or 6 or 8;
+        bool sequential = scenario is ArrayCase.SequentialArray or ArrayCase.SequentialArrayRange or ArrayCase.GetReleasedArray or ArrayCase.GetReleasedRange or ArrayCase.SetReleasedArray or ArrayCase.SetReleasedRange or ArrayCase.ReadReleasedArray or ArrayCase.ReadReleasedRange or ArrayCase.WriteReleasedArray or ArrayCase.WriteReleasedRange, ranged = scenario is ArrayCase.RandomArrayRange or ArrayCase.RandomWrappedArrayRange or ArrayCase.SequentialArrayRange;
         byte[] value = new byte[ranged ? blockSize * 2 : blockSize];
         var random = new Random(seed);
         if (sequential) buffer.WriterIndex = 0;
