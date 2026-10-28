@@ -151,7 +151,7 @@ public class ByteBufWritableKernelTest
     private static ByteBuf NewBuffer(bool direct, int length, NativeMemoryAllocator native)
         => direct ? new UnpooledDirectByteBuf(length, int.MaxValue, native) : new UnpooledHeapByteBuf(length);
 
-    // AbstractByteBufTest.ensureWritableWithForceDoesNotThrow / ensureWritableWithOutForceDoesNotThrow.
+    // Supplemental growth/state check for the two force modes on heap/native storage.
     [Theory]
     [InlineData(false, false)] [InlineData(false, true)]
     [InlineData(true, false)] [InlineData(true, true)]
@@ -168,7 +168,7 @@ public class ByteBufWritableKernelTest
         finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
     }
 
-    // AbstractByteBufTest.ensureWritableWithForceAsReadyOnly / ensureWritableWithOutForceAsReadOnly.
+    // Supplemental read-only status/state check for the two force modes.
     [Theory]
     [InlineData(false, false)] [InlineData(false, true)]
     [InlineData(true, false)] [InlineData(true, true)]
@@ -185,7 +185,7 @@ public class ByteBufWritableKernelTest
         finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
     }
 
-    // AbstractByteBufTest.testEnsureWritableAfterRelease and its releasedBuffer helper.
+    // Supplemental released-storage check with independent native-accounting verification.
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void EnsureWritableAfterRelease(bool direct)
@@ -200,7 +200,7 @@ public class ByteBufWritableKernelTest
         Assert.Equal(0, native.ReservedBytes);
     }
 
-    // AbstractByteBufTest.testEnsureWritableIntegerOverflow.
+    // Supplemental overflow/state check on heap/native storage.
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void EnsureWritableIntegerOverflow(bool direct)

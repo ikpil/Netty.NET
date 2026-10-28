@@ -53,6 +53,7 @@ public class ByteBufScalarSourceTest
         }
     }
 
+    // Supplemental operation/state table; named original bodies execute on the seven actual root fixtures.
     private static readonly Action<ByteBuf>[] ReleasedOperations =
     [
         b => b.GetBoolean(0),
@@ -121,7 +122,7 @@ public class ByteBufScalarSourceTest
 
     [Theory]
     [MemberData(nameof(ReleasedCases))]
-    public void OriginalScalarOperationsRejectReleasedStorage(int provider, int operation)
+    public void ScalarOperationsRejectReleasedStorageAndPreserveOwnership(int provider, int operation)
     {
         using var s = new Storage(provider, 8);
         // Clear the buffer so we are sure the reader and writer indices are 0.
@@ -151,7 +152,7 @@ public class ByteBufScalarSourceTest
         }
     }
 
-    // The original twelve getBoolean/Byte/Short/Medium/Int/LongBoundaryCheck methods.
+    // Supplemental incomplete-word/state checks; the twelve original boundary bodies execute individually.
     [Theory]
     [MemberData(nameof(BoundaryCases))]
     public void AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices(int provider, int operation, bool negative)

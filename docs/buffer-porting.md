@@ -6735,6 +6735,36 @@ Only the 30 relabeled supplemental identities change; all other prior identities
 survive. No runtime correction is required for these reviewed contracts.
 Evidence: ignored artifacts/buffer-original-search-comparison.
 
+## Original scalar and writable guard bodies
+
+Seventy-five selected declarations and two original helpers now execute as named
+portable original bodies on all seven actual roots (525 invocations). All 56 scalar
+get/set/read release declarations retain original argument values and exception scopes.
+The twelve absolute bounds tests keep -1 and the exact last incomplete-word index.
+The read-byte failure body keeps WriteByte, the successful read assertion and second
+read inside the original outer exception scope, followed by finally release. Its
+stronger existing cursor regression still verifies setup outside the failure assertion.
+
+Four force/read-only wrappers retain both original helpers, flags, 8-byte root, full
+writer index, EnsureWritable(8, force), read-only status 1 and release. The released
+EnsureWritable(16) and 4096-byte overflow-root sequence with int.MaxValue remain.
+CLR bounds exceptions/properties, unsigned byte aliases and SetChar(0,(char)1) adapt
+Java types without adding a redundant signed-byte facade. Every original declaration
+remains traceable and no test is excluded. Existing ReleasedBuffer is reused.
+
+All 355 scalar plus 132 writable state/wire/ownership/dispatch witnesses remain;
+only 280 released-scalar identities are relabeled as supplemental. Fresh pinned
+Java Unsafe and forced-NIO each pass all 525 exact original pairs. Checked validation
+splits exact names into four disjoint batches and one supplemental batch to stay
+within Windows command-line limits. Other shared/concrete/inherited/provider/consumer
+closure remains partial.
+Full net10.0 Debug/Release each pass 29,556; rebuilt checked Release with SIMPLE
+sampling one passes all 525 original plus 487 supplemental invocations in five disjoint
+batches (1,012 total). All have zero failures/skips, 51 existing Common warnings and
+no Buffer/test warnings. Only the 280 relabeled supplemental identities change; all
+other prior identities survive. No runtime correction is required for these contracts.
+Evidence: ignored artifacts/buffer-original-scalar-guards.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
