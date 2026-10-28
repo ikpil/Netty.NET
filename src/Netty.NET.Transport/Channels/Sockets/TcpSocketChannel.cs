@@ -21,6 +21,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
+using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
@@ -38,7 +39,7 @@ public class TcpSocketChannel : AbstractChannel
     public TcpSocketChannel() : this(new Socket(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), null)
     { if (Socket.AddressFamily == AddressFamily.InterNetworkV6) Socket.DualMode = true; }
     public TcpSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp), null) { }
-    internal TcpSocketChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false))
+    internal TcpSocketChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false, 16))
     {
         Socket = socket;
         Socket.NoDelay = true;
@@ -113,11 +114,13 @@ public class TcpSocketChannel : AbstractChannel
     protected override void DoBeginRead()
     {
         _readRequested = true;
+        ResumeRead();
         if (_reading || _inputShutdown)
             return;
         _reading = true;
-        _ = ReadLoopAsync();
+        EventLoop.Execute(() => _ = ReadLoopAsync());
     }
+    protected override void DoClearReadPending() => _readRequested = false;
     private async Task ReadLoopAsync()
     {
         bool cycle = false;
@@ -131,22 +134,22 @@ public class TcpSocketChannel : AbstractChannel
                 {
                     await OnLoopAsync(() =>
                     {
-                        if (!IsOpen || _inputShutdown || (!Config.IsAutoRead() && !_readRequested))
+                        if (!IsOpen || !IsRegistered || _inputShutdown || (!Config.IsAutoRead() && !_readRequested))
                             return;
                         if (!cycle)
                         { ReceiveHandle.Reset(Config); cycle = true; }
                         buffer = ReceiveHandle.Allocate(Allocator);
                         ReceiveHandle.AttemptedBytesRead(buffer.WritableBytes);
-                        _readRequested = false;
                         admitted = true;
                     }).ConfigureAwait(false);
                     if (!admitted)
                         break;
                     int read = await Socket.ReceiveAsync(buffer.AsMemory(buffer.WriterIndex, buffer.WritableBytes), SocketFlags.None).ConfigureAwait(false);
-                    await OnLoopAsync(() =>
+                    await DispatchReadAsync(() => _readRequested || _inputShutdown, () =>
                     {
-                        if (!IsOpen)
+                        if (!IsOpen || _inputShutdown)
                             return;
+                        _readRequested = false;
                         ReceiveHandle.LastBytesRead(read == 0 ? -1 : read);
                         if (read > 0)
                         {
@@ -177,6 +180,10 @@ public class TcpSocketChannel : AbstractChannel
                 finally { buffer?.Release(); }
                 if (!again)
                     break;
+                // A synchronous CLR receive must yield after the configured read batch, just as
+                // returning from the NIO read-ready callback lets the event loop process other work.
+                if (!cycle)
+                    await EventLoop.SubmitAsync(() => { }).ConfigureAwait(false);
             }
         }
         catch (Exception error)
@@ -204,6 +211,6 @@ public class TcpSocketChannel : AbstractChannel
         Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
     });
     public Task ShutdownInputAsync() => OnLoopAsync(() =>
-    { if (!_inputShutdown) { Socket.Shutdown(SocketShutdown.Receive); _inputShutdown = true; } });
+    { if (!_inputShutdown) { Socket.Shutdown(SocketShutdown.Receive); _inputShutdown = true; ResumeRead(); } });
     public Task ShutdownAsync() => Task.WhenAll(ShutdownInputAsync(), ShutdownOutputAsync());
 }

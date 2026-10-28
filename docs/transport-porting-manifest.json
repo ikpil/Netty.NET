@@ -43,16 +43,16 @@
     "framework": "net10.0",
     "javaOriginalPassed": 101,
     "mappedOriginalMethods": 101,
-    "supplementalExecutedCases": 51,
+    "supplementalExecutedCases": 59,
     "debug": {
-      "total": 152,
-      "passed": 152,
+      "total": 160,
+      "passed": 160,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 152,
-      "passed": 152,
+      "total": 160,
+      "passed": 160,
       "failed": 0,
       "skipped": 0
     },
@@ -64,8 +64,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 152,
-        "passed": 152,
+        "total": 159,
+        "passed": 159,
         "failed": 0,
         "skipped": 0
       },
@@ -82,18 +82,20 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32450,
+    "solutionPassed": 32457,
     "solutionSkipped": 14,
+    "baselineNativeReadAdmissionFailed": 4,
+    "currentNativeReadAdmissionPassed": 8,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
     "javaEvidence": "Executed unchanged pinned Java fixture methods using a local reflection runner with BeforeAll/BeforeEach/AfterEach/AfterAll lifecycle callbacks, assertions enabled and a process timeout. The selected sources were compared with git show at the pinned revision before compilation. All 101 tests passed; this is not a whole Java transport-module run.",
-    "note": "Original Java tests and CLR supplemental tests are counted separately. Complete declared fixtures include EmbeddedChannel (36), ChannelOutboundBuffer (15), ChannelInitializer (9), tail callbacks (7), NioSocketChannel declarations (5), allocator (2), user-event handler (2), UDP bind (1), group (1), plus the previous 15 foundation tests. NioSocketChannel inherited fixtures are not included. Final checked rebuild/tests include cleanup/comment alignment after the full solution run. Runtime changes stay within Transport; Common, Buffer and Resolver sources are unchanged.",
+    "note": "The unchanged pinned Java original suite remains 101 passed from this implementation session. The complete Release solution run passed 159 Transport cases plus Common/Buffer/Resolver. One additional explicit-input-shutdown cleanup case and final stream-fragmentation handling in the test helper were then checked with all 160 Transport tests in Debug and a checked Release rebuild. CLR-specific admission/cleanup cases are supplemental, not newly ported Java tests. No Common/Buffer/Resolver source was changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
-      "python artifacts/transport-core/run-originals.py",
+      "python artifacts/transport-core/test-admission-baseline.py",
       "dotnet test Netty.NET.sln -c Release --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
@@ -116,7 +118,7 @@
         "uniqueCount": 45,
         "preservedCount": 13,
         "unreviewedCount": 32,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -148,7 +150,7 @@
         "uniqueCount": 25,
         "preservedCount": 7,
         "unreviewedCount": 18,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -219,7 +221,7 @@
         "uniqueCount": 18,
         "preservedCount": 6,
         "unreviewedCount": 12,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -250,7 +252,7 @@
         "uniqueCount": 98,
         "preservedCount": 12,
         "unreviewedCount": 86,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -273,7 +275,7 @@
         "uniqueCount": 47,
         "preservedCount": 1,
         "unreviewedCount": 46,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -366,7 +368,7 @@
         "uniqueCount": 39,
         "preservedCount": 22,
         "unreviewedCount": 17,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -427,7 +429,7 @@
         "uniqueCount": 5,
         "preservedCount": 3,
         "unreviewedCount": 2,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -482,7 +484,7 @@
         "uniqueCount": 7,
         "preservedCount": 5,
         "unreviewedCount": 2,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -505,7 +507,7 @@
         "uniqueCount": 9,
         "preservedCount": 6,
         "unreviewedCount": 3,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -582,7 +584,7 @@
         "uniqueCount": 11,
         "preservedCount": 10,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -605,7 +607,7 @@
         "uniqueCount": 11,
         "preservedCount": 10,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -689,7 +691,7 @@
         "uniqueCount": 98,
         "preservedCount": 27,
         "unreviewedCount": 71,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -758,7 +760,7 @@
         "uniqueCount": 23,
         "preservedCount": 18,
         "unreviewedCount": 5,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -781,7 +783,7 @@
         "uniqueCount": 34,
         "preservedCount": 30,
         "unreviewedCount": 4,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -945,7 +947,7 @@
         "uniqueCount": 11,
         "preservedCount": 6,
         "unreviewedCount": 5,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -976,7 +978,7 @@
         "uniqueCount": 10,
         "preservedCount": 3,
         "unreviewedCount": 7,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -999,7 +1001,7 @@
         "uniqueCount": 61,
         "preservedCount": 12,
         "unreviewedCount": 49,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1061,7 +1063,7 @@
         "uniqueCount": 7,
         "preservedCount": 5,
         "unreviewedCount": 2,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1168,7 +1170,7 @@
         "uniqueCount": 64,
         "preservedCount": 33,
         "unreviewedCount": 31,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1199,7 +1201,7 @@
         "uniqueCount": 10,
         "preservedCount": 1,
         "unreviewedCount": 9,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1299,7 +1301,7 @@
         "uniqueCount": 6,
         "preservedCount": 5,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1376,7 +1378,7 @@
         "uniqueCount": 21,
         "preservedCount": 14,
         "unreviewedCount": 7,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1447,7 +1449,7 @@
         "uniqueCount": 21,
         "preservedCount": 5,
         "unreviewedCount": 16,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1605,7 +1607,7 @@
         "uniqueCount": 64,
         "preservedCount": 4,
         "unreviewedCount": 60,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1628,7 +1630,7 @@
         "uniqueCount": 2,
         "preservedCount": 1,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1683,7 +1685,7 @@
         "uniqueCount": 8,
         "preservedCount": 5,
         "unreviewedCount": 3,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1767,7 +1769,7 @@
         "uniqueCount": 5,
         "preservedCount": 1,
         "unreviewedCount": 4,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1798,7 +1800,7 @@
         "uniqueCount": 32,
         "preservedCount": 1,
         "unreviewedCount": 31,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -1812,8 +1814,36 @@
       "sha256": "ff056bc48388f914a20a0329b8b5b9fab80c614d5f16b5c3e7d9b62807b3f18d",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "review": {
+        "scope": "Only clearReadPending, read/registration admission and native callback ownership are mapped here. Selector/IoRegistration/interest-op implementation is not mechanically reproduced; the rest of this original class remains under review.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs"
+        ],
+        "originalMethods": [
+          "clearReadPending",
+          "doDeregister",
+          "doBeginRead"
+        ],
+        "clrAdaptation": "An outstanding native receive/accept can finish after readiness was revoked. Retain that completed operation until a read request or registration resumes, and recheck the current worker before dispatch. Close/input shutdown releases the retained borrow."
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 60,
+        "preservedCount": 5,
+        "unreviewedCount": 55,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/nio/AbstractNioMessageChannel.java",
@@ -2131,7 +2161,7 @@
         "uniqueCount": 3,
         "preservedCount": 2,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2177,7 +2207,7 @@
         "uniqueCount": 8,
         "preservedCount": 7,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2200,7 +2230,7 @@
         "uniqueCount": 8,
         "preservedCount": 7,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2316,7 +2346,7 @@
         "uniqueCount": 15,
         "preservedCount": 2,
         "unreviewedCount": 13,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2370,7 +2400,7 @@
         "uniqueCount": 6,
         "preservedCount": 1,
         "unreviewedCount": 5,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2393,7 +2423,7 @@
         "uniqueCount": 3,
         "preservedCount": 2,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2416,7 +2446,7 @@
         "uniqueCount": 5,
         "preservedCount": 3,
         "unreviewedCount": 2,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2471,7 +2501,7 @@
         "uniqueCount": 20,
         "preservedCount": 2,
         "unreviewedCount": 18,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2526,7 +2556,7 @@
         "uniqueCount": 11,
         "preservedCount": 2,
         "unreviewedCount": 9,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2549,7 +2579,7 @@
         "uniqueCount": 29,
         "preservedCount": 2,
         "unreviewedCount": 27,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2676,7 +2706,7 @@
         "uniqueCount": 2,
         "preservedCount": 1,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2707,7 +2737,7 @@
         "uniqueCount": 2,
         "preservedCount": 1,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -3243,7 +3273,7 @@
         "uniqueCount": 32,
         "preservedCount": 9,
         "unreviewedCount": 23,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -3754,7 +3784,7 @@
         "uniqueCount": 41,
         "preservedCount": 5,
         "unreviewedCount": 36,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -4247,13 +4277,17 @@
     {
       "subject": "Output gathering and cancellation",
       "decision": "Borrowed ReadOnlyMemory arrays and ReadOnlySequence segments replace NIO buffers. Cancellation atomically claims an unflushed Task but retains an empty queue entry until flush; every entry is made consistent before cancelled messages are released or writability callbacks run. TCP sends composite segments; UDP copies segmented content into a single pooled borrow to preserve datagram boundaries."
+    },
+    {
+      "subject": "Late native I/O completion",
+      "decision": "Unlike selector readiness, a CLR receive/accept may already have consumed input when AutoRead or registration is revoked. Keep at most one completed native input operation per channel and dispatch it only after read/registration admission; a close wakes the waiter and releases borrowed memory or the accepted socket. Resume and callback ownership follow the currently registered worker. The source default receive-message limit is 16 for TCP, UDP and server channels; LocalChannel remains 1."
     }
   ],
   "openWork": [
     {
       "area": "Socket read admission",
-      "state": "implementation-gap",
-      "detail": "Review AutoRead=false while an async receive/accept is already pending, and deregister/re-register during pending I/O. Initial manual-read operation is tested; late native completions still need equivalent Java admission handling."
+      "state": "partially-verified",
+      "detail": "TCP receive, TCP accept and UDP receive now withhold a completed native operation after AutoRead=false; read resumes without dropping input. Deregistered TCP input waits for registration and moves to the new worker. Native integration tests also cover buffer/socket cleanup while paused. Remaining: further registration/rejection and half-closure variants, complete read-batch budgets, and original socket/IoHandler fixture review."
     },
     {
       "area": "Pipeline executor lifecycle",
@@ -4291,7 +4325,8 @@
     "test/Netty.NET.Transport.Tests/SocketTransportContractTest.cs",
     "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs",
     "test/Netty.NET.Transport.Tests/LocalTransportContractTest.cs",
-    "test/Netty.NET.Transport.Tests/TransportFoundationContractTest.cs"
+    "test/Netty.NET.Transport.Tests/TransportFoundationContractTest.cs",
+    "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -4346,11 +4381,90 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build"
         ]
       }
+    },
+    {
+      "checkpoint": "724616639ef87b0886778c143626d263a2595b3f",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 101,
+        "mappedOriginalMethods": 101,
+        "supplementalExecutedCases": 51,
+        "debug": {
+          "total": 152,
+          "passed": 152,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 152,
+          "passed": 152,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 152,
+            "passed": 152,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32450,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed unchanged pinned Java fixture methods using a local reflection runner with BeforeAll/BeforeEach/AfterEach/AfterAll lifecycle callbacks, assertions enabled and a process timeout. The selected sources were compared with git show at the pinned revision before compilation. All 101 tests passed; this is not a whole Java transport-module run.",
+        "note": "Original Java tests and CLR supplemental tests are counted separately. Complete declared fixtures include EmbeddedChannel (36), ChannelOutboundBuffer (15), ChannelInitializer (9), tail callbacks (7), NioSocketChannel declarations (5), allocator (2), user-event handler (2), UDP bind (1), group (1), plus the previous 15 foundation tests. NioSocketChannel inherited fixtures are not included. Final checked rebuild/tests include cleanup/comment alignment after the full solution run. Runtime changes stay within Transport; Common, Buffer and Resolver sources are unchanged.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Late native receive/accept completion after AutoRead=false or deregistration: preserve input and gate delivery on read/registration admission.",
-    "Continue the remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declared methods, with source helpers/order/assertions intact.",
-    "Port PendingWriteQueue, coalescing queues and channel pools with their original tests; review remaining portable inventory and partial comments."
-  ]
+    "Continue remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declarations, preserving helpers/order/assertions.",
+    "Port PendingWriteQueue, coalescing queues and channel pools with their original tests.",
+    "Review socket read-batch budgets, half closure, cancellation/rejection, unreviewed options and remaining partial comments."
+  ],
+  "nativeAdmissionEvidence": {
+    "sourceContracts": [
+      "AbstractNioChannel.clearReadPending/doDeregister/doBeginRead",
+      "AbstractChannel.register0",
+      "AbstractNioByteChannel.METADATA",
+      "NioDatagramChannel.METADATA",
+      "AbstractServerChannel.METADATA"
+    ],
+    "originalRevision": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+    "clrTest": "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs",
+    "priorRuntimeRevision": "724616639ef87b0886778c143626d263a2595b3f",
+    "regressionsReproduced": 4,
+    "newAdmissionAndCleanupCases": 8,
+    "baselineResult": "All four late receive/accept/re-registration cases fail against the prior committed runtime. Eight current admission/resource cleanup cases pass, including explicit input shutdown while the channel stays open. These CLR-specific cases are supplemental; no Java-original count is added."
+  }
 }

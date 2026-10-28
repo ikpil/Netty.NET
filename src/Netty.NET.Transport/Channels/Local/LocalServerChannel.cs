@@ -30,7 +30,7 @@ public class LocalServerChannel : AbstractChannel, IServerChannel
     private readonly Queue<LocalChannel> _inbound = new();
     private LocalAddress _local;
     private bool _acceptPending;
-    public LocalServerChannel() : base(null, new ChannelMetadata(false)) { }
+    public LocalServerChannel() : base(null, new ChannelMetadata(false, 16)) { }
     protected override IChannelConfig NewConfig() => new ServerConfig(this);
     public override EndPoint LocalAddress => _local;
     public override EndPoint RemoteAddress => null;

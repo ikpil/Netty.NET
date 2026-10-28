@@ -26,6 +26,8 @@ namespace Netty.NET.Transport.Channels.Sockets;
  */
 public class DefaultSocketChannelConfig : DefaultChannelConfig
 {
+    protected override void AutoReadCleared()
+    { if (Channel is AbstractChannel channel) channel.ClearReadPending(); }
     protected readonly Socket Socket;
     private volatile bool _halfClosure;
     private int _backlog = 128;

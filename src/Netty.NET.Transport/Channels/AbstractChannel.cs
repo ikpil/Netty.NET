@@ -36,8 +36,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private readonly object _registrationGate = new();
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Lazy<IChannelConfig> _config;
-    private IEventLoop _eventLoop;
+    private volatile IEventLoop _eventLoop;
     private bool _registering;
+    private int _registrationEpoch;
+    private TaskCompletionSource _readResumed;
     private volatile bool _open = true;
     private volatile bool _active;
     private volatile bool _registered;
@@ -91,6 +93,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     public Task RegisterAsync(IEventLoop eventLoop, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(eventLoop);
+        int epoch;
         lock (_registrationGate)
         {
             if (_registered || _registering)
@@ -99,6 +102,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 return Task.FromException(new InvalidOperationException("Incompatible event loop."));
             _eventLoop = eventLoop;
             _registering = true;
+            epoch = ++_registrationEpoch;
         }
         return RegisterCoreAsync();
         async Task RegisterCoreAsync()
@@ -113,6 +117,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     bool firstRegistration = !_everRegistered;
                     _everRegistered = true;
                     _registered = true;
+                    // Registration is committed before user lifecycle callbacks; those callbacks may
+                    // deregister and register this channel again, as in AbstractChannel.register0.
+                    lock (_registrationGate)
+                        _registering = false;
                     if (eventLoop is SingleThreadEventExecutor worker)
                         worker.AddShutdownHook(OnLoopShutdown);
                     Pipeline.Registered();
@@ -124,29 +132,93 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         if (Config.IsAutoRead())
                             BeginRead();
                     }
+                    ResumeRead();
                 }).ConfigureAwait(false);
             }
             catch
             {
                 // Registration rejection cannot rely on another task being admitted by the rejected executor.
                 _open = _active = false;
+                ResumeRead();
                 try
                 { DoClose(); }
-                finally { _closed.TrySetResult(); }
+                finally { OutboundBuffer.Close(new IOException("Channel registration failed.")); _closed.TrySetResult(); }
                 throw;
             }
-            finally { lock (_registrationGate) _registering = false; }
+            finally
+            {
+                lock (_registrationGate)
+                    if (epoch == _registrationEpoch)
+                        _registering = false;
+            }
         }
     }
     protected internal Task OnLoopAsync(Action action)
     {
-        if (EventLoop.InEventLoop())
+        var loop = EventLoop;
+        if (loop.InEventLoop())
         {
             try
             { action(); return Task.CompletedTask; }
             catch (Exception error) { return Task.FromException(error); }
         }
-        return EventLoop.SubmitAsync(action);
+        return loop.SubmitAsync(() =>
+        {
+            // A native completion queued before deregistration may reach the old worker after
+            // registration has moved. Follow the current owner before touching transport state.
+            if (!ReferenceEquals(loop, _eventLoop))
+                return OnLoopAsync(action);
+            action();
+            return Task.CompletedTask;
+        });
+    }
+    protected void ResumeRead() => Interlocked.Exchange(ref _readResumed, null)?.TrySetResult();
+    protected virtual void DoClearReadPending() { }
+    /**
+     * Set read pending to {@code false}.
+     */
+    internal void ClearReadPending()
+    {
+        if (!_registered)
+        {
+            // Best effort if we are not registered yet clear readPending. This happens during channel initialization.
+            // NB: We only set the boolean field instead of calling clearReadPending0(), because the SelectionKey is
+            // not set yet so it would produce an assertion failure.
+            // CLR: there is no SelectionKey; each native backend clears its pending-read flag.
+            DoClearReadPending();
+        }
+        else
+            _ = OnLoopAsync(DoClearReadPending);
+    }
+    protected async Task DispatchReadAsync(Func<bool> readPending, Action read)
+    {
+        // Unlike readiness-based NIO, a native receive can consume input before AutoRead is disabled.
+        // Keep that single completed operation's borrow until registration and read admission resume.
+        // Never discard bytes/datagrams or dispatch user callbacks from a stale event-loop owner.
+        for (; ; )
+        {
+            bool finished = false;
+            Task resumed = null;
+            await OnLoopAsync(() =>
+            {
+                if (!_open)
+                { finished = true; return; }
+                if (_registered && (Config.IsAutoRead() || readPending()))
+                { read(); finished = true; }
+                else
+                {
+                    var waiter = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    resumed = (Interlocked.CompareExchange(ref _readResumed, waiter, null) ?? waiter).Task;
+                    // A forced close may run outside the owner during registration rejection.
+                    // Recheck after publication so it cannot miss a newly installed waiter.
+                    if (!_open)
+                        ResumeRead();
+                }
+            }).ConfigureAwait(false);
+            if (finished)
+                return;
+            await resumed.ConfigureAwait(false);
+        }
     }
     protected internal void ExecuteOnLoop(Action action)
     { if (EventLoop.InEventLoop()) action(); else EventLoop.Execute(action); }
@@ -154,6 +226,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     internal void CloseForcibly()
     {
         _open = _active = false;
+        ResumeRead();
         try
         { DoClose(); }
         finally { OutboundBuffer.Close(new IOException("Channel is closed.")); _closed.TrySetResult(); }
@@ -211,6 +284,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return Task.CompletedTask;
         bool wasActive = _active;
         _open = _active = false;
+        ResumeRead();
         Exception failure = null;
         try
         { DoClose(); }

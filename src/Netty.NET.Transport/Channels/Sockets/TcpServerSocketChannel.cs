@@ -55,11 +55,13 @@ public class TcpServerSocketChannel : AbstractChannel, IServerChannel
     protected override void DoBeginRead()
     {
         _readRequested = true;
+        ResumeRead();
         if (_accepting)
             return;
         _accepting = true;
-        _ = AcceptLoopAsync();
+        EventLoop.Execute(() => _ = AcceptLoopAsync());
     }
+    protected override void DoClearReadPending() => _readRequested = false;
     private async Task AcceptLoopAsync()
     {
         try
@@ -70,7 +72,7 @@ public class TcpServerSocketChannel : AbstractChannel, IServerChannel
                 Socket accepted = await _socket.AcceptAsync().ConfigureAwait(false);
                 try
                 {
-                    await OnLoopAsync(() =>
+                    await DispatchReadAsync(() => _readRequested, () =>
                     {
                         if (!IsOpen)
                         { accepted.Dispose(); return; }

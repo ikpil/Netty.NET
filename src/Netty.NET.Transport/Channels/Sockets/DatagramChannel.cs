@@ -44,7 +44,7 @@ public class DatagramChannel : AbstractChannel
     private bool _reading;
     private bool _readRequested;
     public DatagramChannel() : this(AddressFamily.InterNetwork) { }
-    public DatagramChannel(AddressFamily family) : base(null, new ChannelMetadata(true))
+    public DatagramChannel(AddressFamily family) : base(null, new ChannelMetadata(true, 16))
     { _socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp); }
     public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(_socket.LocalEndPoint) : null;
     public override EndPoint RemoteAddress => IsOpen && _socket.Connected ? TcpSocketChannel.Normalize(_socket.RemoteEndPoint) : null;
@@ -97,11 +97,13 @@ public class DatagramChannel : AbstractChannel
     protected override void DoBeginRead()
     {
         _readRequested = true;
+        ResumeRead();
         if (_reading)
             return;
         _reading = true;
-        _ = ReadLoopAsync();
+        EventLoop.Execute(() => _ = ReadLoopAsync());
     }
+    protected override void DoClearReadPending() => _readRequested = false;
     private async Task ReadLoopAsync()
     {
         try
@@ -119,16 +121,16 @@ public class DatagramChannel : AbstractChannel
                         ReceiveHandle.Reset(Config);
                         data = ReceiveHandle.Allocate(Allocator);
                         ReceiveHandle.AttemptedBytesRead(data.WritableBytes);
-                        _readRequested = false;
                     }).ConfigureAwait(false);
                     if (data == null)
                         return;
                     EndPoint any = _socket.AddressFamily == AddressFamily.InterNetworkV6 ? new IPEndPoint(IPAddress.IPv6Any, 0) : new IPEndPoint(IPAddress.Any, 0);
                     var result = await ReceiveDatagramAsync(data.AsMemory(data.WriterIndex, data.WritableBytes), any).ConfigureAwait(false);
-                    await OnLoopAsync(() =>
+                    await DispatchReadAsync(() => _readRequested, () =>
                     {
                         if (!IsOpen)
                             return;
+                        _readRequested = false;
                         ReceiveHandle.LastBytesRead(result.ReceivedBytes);
                         ReceiveHandle.IncMessagesRead(1);
                         data.WriterIndex += result.ReceivedBytes;
@@ -190,6 +192,7 @@ public class DatagramChannel : AbstractChannel
     { _socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, new IPv6MulticastOption(multicastAddress, interfaceIndex)); });
     private sealed class DatagramConfig : DefaultChannelConfig
     {
+        protected override void AutoReadCleared() => ((AbstractChannel)Channel).ClearReadPending();
         private readonly Socket _socket;
         internal DatagramConfig(IChannel channel, Socket socket) : base(channel, new FixedRecvByteBufAllocator(2048)) { _socket = socket; }
         protected override bool TryGetValue(ChannelOption option, out object value)
