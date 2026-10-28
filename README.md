@@ -2,6 +2,8 @@
 - https://github.com/netty/netty/commit/64cc10f38ea5f5bd7eae48507817c66680d0afdc
 
 The buffer port has started; see [buffer porting status](docs/buffer-porting.md).
+The transport port is in progress; its [source and test manifest](docs/transport-porting-manifest.json)
+distinguishes implemented channel dependencies from pending Channel/Pipeline, EventLoop and socket work.
 The resolver port implements the basic OS-backed resolver module; see its
 [source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).
 It uses Task/CancellationToken, DnsEndPoint/IPEndPoint and IDisposable; executor-affine

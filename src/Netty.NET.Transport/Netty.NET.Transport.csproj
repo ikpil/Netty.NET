@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Netty.NET.Buffer\Netty.NET.Buffer.csproj" />
+    <ProjectReference Include="..\Netty.NET.Resolver\Netty.NET.Resolver.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Transport.Tests" />
+  </ItemGroup>
+</Project>
