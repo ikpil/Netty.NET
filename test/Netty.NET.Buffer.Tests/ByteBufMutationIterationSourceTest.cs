@@ -61,36 +61,42 @@ public class ByteBufMutationIterationSourceTest
         Assert.True(buffer.Release());
     }
 
+    // Supplemental state/ownership checks; named original bodies execute on the actual seven roots.
+    public enum ZeroCase
+    {
+        Set, Write, SetAfterRelease, WriteAfterRelease
+    }
+
     public static IEnumerable<object[]> ZeroCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 4; ++scenario) yield return [provider, scenario];
+        foreach (ZeroCase scenario in Enum.GetValues<ZeroCase>()) yield return [provider, scenario];
     }
 
     [Theory]
     [MemberData(nameof(ZeroCases))]
-    public void OriginalZeroFillFixtures(int provider, int scenario)
+    public void ZeroFillPreservesStateAndOwnership(int provider, ZeroCase scenario)
     {
         const int capacity = 4096;
-        using var s = new Storage(provider, scenario >= 2 ? 8 : capacity);
+        using var s = new Storage(provider, scenario is ZeroCase.SetAfterRelease or ZeroCase.WriteAfterRelease ? 8 : capacity);
         ByteBuf buffer = s.Root;
-        if (scenario >= 2)
+        if (scenario is ZeroCase.SetAfterRelease or ZeroCase.WriteAfterRelease)
         {
             ReleaseBuffer(buffer);
-            if (scenario == 2) Assert.Throws<IllegalReferenceCountException>(() => buffer.SetZero(0, 1));
+            if (scenario == ZeroCase.SetAfterRelease) Assert.Throws<IllegalReferenceCountException>(() => buffer.SetZero(0, 1));
             else Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteZero(1));
             Assert.Equal(0, buffer.WriterIndex);
             return;
         }
-        if (scenario == 1) Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
+        if (scenario == ZeroCase.Write) Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
         buffer.Clear();
         while (buffer.IsWritable) buffer.WriteByte(0xFF);
-        if (scenario == 1) buffer.Clear();
+        if (scenario == ZeroCase.Write) buffer.Clear();
         var random = new Random(12345);
         for (int i = 0; i < buffer.Capacity;)
         {
             int length = Math.Min(buffer.Capacity - i, random.Next(32));
-            if (scenario == 0) Assert.Same(buffer, buffer.SetZero(i, length));
+            if (scenario == ZeroCase.Set) Assert.Same(buffer, buffer.SetZero(i, length));
             else Assert.Same(buffer, buffer.WriteZero(length));
             i += length;
         }
@@ -99,20 +105,26 @@ public class ByteBufMutationIterationSourceTest
         Assert.Equal(1, buffer.ReferenceCount);
     }
 
+    // Supplemental state/ownership checks; named original bodies execute on the actual seven roots.
+    public enum IterationCase
+    {
+        ReadableForward, AbortAtMiddle, IndexedDescending, FourBytesDescending, FourBytesForward, ForwardAfterRelease, IndexedForwardAfterRelease, DescendingAfterRelease, IndexedDescendingAfterRelease
+    }
+
     public static IEnumerable<object[]> IterationCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int scenario = 0; scenario < 9; ++scenario) yield return [provider, scenario];
+        foreach (IterationCase scenario in Enum.GetValues<IterationCase>()) yield return [provider, scenario];
     }
 
     [Theory]
     [MemberData(nameof(IterationCases))]
-    public void OriginalByteProcessorFixtures(int provider, int scenario)
+    public void IterationPreservesOctetSequenceStateAndOwnership(int provider, IterationCase scenario)
     {
         const int capacity = 4096;
-        using var s = new Storage(provider, scenario >= 5 ? 8 : scenario >= 3 ? 4 : capacity);
+        using var s = new Storage(provider, scenario is IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease ? 8 : scenario is IterationCase.FourBytesDescending or IterationCase.FourBytesForward or IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease ? 4 : capacity);
         ByteBuf buffer = s.Root;
-        if (scenario >= 5)
+        if (scenario is IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease)
         {
             ReleaseBuffer(buffer);
             int calls = 0;
@@ -121,38 +133,38 @@ public class ByteBufMutationIterationSourceTest
             {
                 _ = scenario switch
                 {
-                    5 => buffer.ForEachByte(processor),
-                    6 => buffer.ForEachByte(0, 1, processor),
-                    7 => buffer.ForEachByteDesc(processor),
+                    IterationCase.ForwardAfterRelease => buffer.ForEachByte(processor),
+                    IterationCase.IndexedForwardAfterRelease => buffer.ForEachByte(0, 1, processor),
+                    IterationCase.DescendingAfterRelease => buffer.ForEachByteDesc(processor),
                     _ => buffer.ForEachByteDesc(0, 1, processor)
                 };
             });
             Assert.Equal(0, calls); Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
             return;
         }
-        if (scenario >= 3)
+        if (scenario is IterationCase.FourBytesDescending or IterationCase.FourBytesForward or IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease)
         {
             byte[] expected = [1, 2, 3, 4];
             buffer.WriteBytes(expected);
             byte[] bytes = new byte[expected.Length];
-            int index = scenario == 3 ? bytes.Length - 1 : 0;
+            int index = scenario == IterationCase.FourBytesDescending ? bytes.Length - 1 : 0;
             Func<byte, bool> processor = value =>
             {
                 bytes[index] = value;
-                index += scenario == 3 ? -1 : 1;
+                index += scenario == IterationCase.FourBytesDescending ? -1 : 1;
                 return true;
             };
-            Assert.Equal(-1, scenario == 3 ? buffer.ForEachByteDesc(processor) : buffer.ForEachByte(processor));
+            Assert.Equal(-1, scenario == IterationCase.FourBytesDescending ? buffer.ForEachByteDesc(processor) : buffer.ForEachByte(processor));
             Assert.Equal(expected, bytes);
-            Assert.Equal(scenario == 3 ? -1 : bytes.Length, index);
+            Assert.Equal(scenario == IterationCase.FourBytesDescending ? -1 : bytes.Length, index);
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex);
         }
         else
         {
             for (int i = 0; i < capacity; ++i) buffer.WriteByte(i + 1);
-            if (scenario == 0) buffer.SetIndex(capacity / 4, capacity * 3 / 4);
+            if (scenario == IterationCase.ReadableForward) buffer.SetIndex(capacity / 4, capacity * 3 / 4);
             int reader = buffer.ReaderIndex, writer = buffer.WriterIndex;
-            int index = scenario switch { 0 => capacity / 4, 1 => capacity / 3, _ => capacity * 3 / 4 - 1 };
+            int index = scenario switch { IterationCase.ReadableForward => capacity / 4, IterationCase.AbortAtMiddle => capacity / 3, _ => capacity * 3 / 4 - 1 };
             int lastIndex = 0, calls = 0;
             // ByteProcessor becomes a synchronous Func<byte, bool>; captured locals replace AtomicInteger.
             // Compare octet patterns explicitly because Java byte is signed and CLR byte is unsigned.
@@ -160,19 +172,19 @@ public class ByteBufMutationIterationSourceTest
             {
                 Assert.Equal(unchecked((byte)(index + 1)), value);
                 lastIndex = index; ++calls;
-                if (scenario == 1 && index == capacity / 2) return false;
-                index += scenario == 2 ? -1 : 1;
+                if (scenario == IterationCase.AbortAtMiddle && index == capacity / 2) return false;
+                index += scenario == IterationCase.IndexedDescending ? -1 : 1;
                 return true;
             };
             int result = scenario switch
             {
-                0 => buffer.ForEachByte(processor),
-                1 => buffer.ForEachByte(capacity / 3, capacity / 3, processor),
+                IterationCase.ReadableForward => buffer.ForEachByte(processor),
+                IterationCase.AbortAtMiddle => buffer.ForEachByte(capacity / 3, capacity / 3, processor),
                 _ => buffer.ForEachByteDesc(capacity / 4, capacity * 2 / 4, processor)
             };
-            Assert.Equal(scenario == 1 ? capacity / 2 : -1, result);
-            Assert.Equal(scenario switch { 0 => capacity * 3 / 4 - 1, 1 => capacity / 2, _ => capacity / 4 }, lastIndex);
-            Assert.Equal(scenario == 1 ? capacity / 2 - capacity / 3 + 1 : capacity / 2, calls);
+            Assert.Equal(scenario == IterationCase.AbortAtMiddle ? capacity / 2 : -1, result);
+            Assert.Equal(scenario switch { IterationCase.ReadableForward => capacity * 3 / 4 - 1, IterationCase.AbortAtMiddle => capacity / 2, _ => capacity / 4 }, lastIndex);
+            Assert.Equal(scenario == IterationCase.AbortAtMiddle ? capacity / 2 - capacity / 3 + 1 : capacity / 2, calls);
             Assert.Equal(reader, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
         }
         Assert.Equal(1, buffer.ReferenceCount);
@@ -197,19 +209,24 @@ public class ByteBufMutationIterationSourceTest
         b => b.WriteDoubleLE(1)
     ];
 
+    public enum ReleasedWrite
+    {
+        Boolean, Byte, Short, ShortLE, Medium, MediumLE, Int, IntLE, Long, LongLE, Char, Float, FloatLE, Double, DoubleLE
+    }
+
     public static IEnumerable<object[]> ReleasedWriteCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int operation = 0; operation < ReleasedWrites.Length; ++operation) yield return [provider, operation];
+        foreach (ReleasedWrite operation in Enum.GetValues<ReleasedWrite>()) yield return [provider, operation];
     }
 
     [Theory]
     [MemberData(nameof(ReleasedWriteCases))]
-    public void OriginalScalarWriteAfterReleaseFixtures(int provider, int operation)
+    public void ScalarWriteAfterReleasePreservesState(int provider, ReleasedWrite operation)
     {
         using var s = new Storage(provider, 8);
         ReleaseBuffer(s.Root);
-        Assert.Throws<IllegalReferenceCountException>(() => ReleasedWrites[operation](s.Root));
+        Assert.Throws<IllegalReferenceCountException>(() => ReleasedWrites[(int)operation](s.Root));
         Assert.Equal(0, s.Root.ReferenceCount);
         Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
     }

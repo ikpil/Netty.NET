@@ -6645,6 +6645,36 @@ retyped released-factory identities change; all other prior identities survive. 
 runtime correction is required for these reviewed contracts.
 Evidence: ignored artifacts/buffer-original-view-factories.
 
+## Original zero-fill, iteration and released-write bodies
+
+Twenty-eight selected shared declarations now execute as named original portable
+bodies on all seven actual roots (196 invocations). Zero-fill retains 4096 bytes,
+the original clear/0xFF-fill order, negative length check, random blocks in [0,32),
+zero-length iterations and every per-byte zero assertion. Iteration preserves exact
+readable/indexed ascending/descending calls, ranges, CAPACITY/2 stop, last index and
+comparison/update/return order. Four-byte scans retain their own actual root, output
+array, directional callback writes, end sentinel, equality and finally release.
+
+The production iteration loops call Func<byte,bool> synchronously. Anonymous Java
+processor fields become captured processorIndex values; AtomicInteger used only for
+callback-visible state becomes a captured int. Signed Java byte expectations use their
+unchanged unchecked eight-bit pattern in CLR. The original always-true TestByteProcessor
+becomes an always-true lambda. This preserves callback behavior without atomic or
+worker infrastructure. After-release bodies retain every overload and literal input;
+writeChar(1) becomes WriteChar((char)1), the same UTF-16 code unit. Existing original
+ReleasedBuffer is reused and all source comments remain. No original test is excluded.
+
+All previous 140 zero-fill/callback-count/cursor/fluent-return/release state and
+ownership cases remain with typed supplemental axes. Fresh pinned Java Unsafe and
+forced-NIO each pass all 196 exact original pairs. Other shared/concrete/inherited/
+provider/consumer closure remains partial.
+Full net10.0 Debug/Release each pass 28,863; rebuilt checked Release with SIMPLE
+sampling one passes all 196 original plus 140 supplemental invocations. All have zero
+failures/skips, 51 existing Common warnings and no Buffer/test warnings. The 140
+supplemental rows are deliberately relabeled by typed inputs; all other prior test
+identities survive. No runtime correction is required for these reviewed contracts.
+Evidence: ignored artifacts/buffer-original-mutation-iteration.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
