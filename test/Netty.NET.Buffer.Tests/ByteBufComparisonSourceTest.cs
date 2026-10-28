@@ -82,7 +82,7 @@ public class ByteBufComparisonSourceTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void OriginalEqualityUsesContentAndRejectsNullAndOtherObjects(int provider)
+    public void EqualityMatchesClrContentAndDuplicateContracts(int provider)
     {
         using var s = new Storage(provider, 4096);
         ByteBuf buffer = s.Root;
@@ -108,7 +108,7 @@ public class ByteBufComparisonSourceTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void OriginalComparisonUsesUnsignedContentPrefixesAndRetainedWindows(int provider)
+    public void ComparisonUsesUnsignedContentPrefixesAndRetainedWindows(int provider)
     {
         using var s = new Storage(provider, 4096);
         ByteBuf buffer = s.Root;
@@ -149,7 +149,7 @@ public class ByteBufComparisonSourceTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void OriginalComparisonIsIndependentOfEndianInterpretation(int provider)
+    public void ComparisonUsesFixedWireContent(int provider)
     {
         byte[] bytes = [1, 2, 3, 4], bytesReversed = [4, 3, 2, 1];
         using var first = new Storage(provider, 4);

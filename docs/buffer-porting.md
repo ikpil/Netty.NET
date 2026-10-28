@@ -6704,6 +6704,37 @@ retyped supplemental identities change; all other prior identities survive. No r
 correction is required for these reviewed contracts.
 Evidence: ignored artifacts/buffer-original-array-transfers.
 
+## Original search and content-comparison partition
+
+Five search and two supported equality/comparison bodies now execute on all seven
+actual roots (49 invocations). Search retains original 16/15-byte factory input,
+4096-byte fixture cases, zero-fill/literal writes, forward/reverse ranges, expected
+indices and release/zero-capacity branch. These validate observable search behavior,
+without claiming SWAR/BCL algorithm or performance identity. Equality/comparison retain
+the 32-byte random input, wrapping mutations, unsigned ordering, prefix views and releases.
+CLR byte.MaxValue represents Java byte -1, and explicit unchecked increments preserve bits.
+
+Existing CLR IComparable null ranking replaces Java's NullPointerException expectation;
+object-null equality is exercised explicitly. Eight assertions which only change a
+Java mutable endian facade are recorded as CLR representation exclusions. The second
+retained-prefix lifetime dedicated to the LE variant is excluded with that variant.
+testCompareTo2's pure order-state matrix has no mutable CLR counterpart. Its existing
+fixed-wire comparison and explicit GetInt/GetIntLE witness remains; no empty passing
+test or Duplicate-as-endian facade is introduced. Seven Java-only reference executions
+of that method are kept separate from the 49 applicable CLR original-body executions.
+
+All 105 previous search literal/kernel/delegation and 20 comparison/duplicate/null/wire
+checks retain their bodies and assertions. Thirty identities are renamed to identify
+their supplemental role. Fresh pinned Java Unsafe/forced-NIO each pass all 56 original
+pairs, including the seven pure facade references. Other shared/concrete/inherited/
+provider/consumer closure remains partial.
+Full net10.0 Debug/Release each pass 29,031; rebuilt checked Release with SIMPLE
+sampling one passes all 49 applicable original plus 125 supplemental invocations. All
+have zero failures/skips, 51 existing Common warnings and no Buffer/test warnings.
+Only the 30 relabeled supplemental identities change; all other prior identities
+survive. No runtime correction is required for these reviewed contracts.
+Evidence: ignored artifacts/buffer-original-search-comparison.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

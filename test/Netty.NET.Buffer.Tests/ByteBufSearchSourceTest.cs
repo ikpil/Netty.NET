@@ -37,12 +37,12 @@ public class ByteBufSearchSourceTest
         return result.Clear();
     }
 
-    // AbstractByteBufTest.testSWARIndexOf; identical original ranges and expected positions.
+    // Supplemental literal-position check on three simplified storage models.
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
-    public void TestSWARIndexOf(int provider)
+    public void SupplementalSWARIndexOf(int provider)
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
@@ -86,12 +86,12 @@ public class ByteBufSearchSourceTest
         }
     }
 
-    // AbstractByteBufTest.testUnrolledSWARIndexOf; identical original ranges and expected positions.
+    // Supplemental literal-position check on three simplified storage models.
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
-    public void TestUnrolledSWARIndexOf(int provider)
+    public void SupplementalUnrolledSWARIndexOf(int provider)
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 15, native);
@@ -133,12 +133,12 @@ public class ByteBufSearchSourceTest
         }
     }
 
-    // AbstractByteBufTest.testIndexOf; identical original ranges and expected positions.
+    // Supplemental literal-position check on three simplified storage models.
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
-    public void TestIndexOf(int provider)
+    public void SupplementalIndexOf(int provider)
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
@@ -174,12 +174,12 @@ public class ByteBufSearchSourceTest
         }
     }
 
-    // AbstractByteBufTest.testIndexOfReleaseBuffer; identical original ranges and expected positions.
+    // Supplemental literal-position check on three simplified storage models.
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
-    public void TestIndexOfReleaseBuffer(int provider)
+    public void SupplementalIndexOfReleaseBuffer(int provider)
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
@@ -200,12 +200,12 @@ public class ByteBufSearchSourceTest
         }
     }
 
-    // AbstractByteBufTest.testEndiannessIndexOf; identical original ranges and expected positions.
+    // Supplemental literal-position check on three simplified storage models.
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
-    public void TestEndiannessIndexOf(int provider)
+    public void SupplementalEndiannessIndexOf(int provider)
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
