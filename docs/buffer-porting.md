@@ -6614,6 +6614,37 @@ Only 55 deliberately relabeled supplemental identities change; all remaining pri
 identities survive. No runtime correction is required for these reviewed contracts.
 Evidence: ignored artifacts/buffer-original-snapshots.
 
+## Original view-factory bodies and helper order
+
+Twenty-three selected shared view-factory declarations and four original helpers now
+execute as named bodies on all seven actual roots (161 invocations). Eight nested-bound
+wrappers keep their original flag triples and outer exception scope; the 8-byte root,
+offset-one 2-byte view, capacity assertions, index/length failures and finally release
+order remain. Both read-bound wrappers retain the 100-byte root, 50-byte zero write,
+51-byte read, explicit fail and finally release. Six released-view declarations reuse
+the existing original ReleasedBuffer helper, and SliceRelease keeps its independent owner.
+
+All eight retained-slice index lifetimes and the four original sequences in each
+duplicate-of-slice body remain, including releasing a retained slice before its retained
+duplicate. The two original static helpers retain content comparisons before/after
+ReadByte over nested derived views, readable lengths, Slice equality and release scopes.
+Sequential slicing retains 4096 bytes, 128-byte blocks, fresh write arrays, seed replay,
+original cursor checks, WrappedBuffer equality and mutation of the shared slice.
+
+CLR properties/exceptions and unchecked byte narrowing adapt Java APIs. One sequential
+order-identity assertion is explicitly excluded because CLR accessors have fixed BE/LE
+semantics and no mutable order metadata. All source comments remain. Existing 115
+supplemental state/ownership tests are unchanged except typed labels for the 30 release
+factory rows; their independent BE/LE checks remain. Fresh pinned Java Unsafe and
+forced-NIO each pass the same 161 exact original pairs. Other shared/concrete/inherited/
+view/provider/consumer closure remains partial.
+Full net10.0 Debug/Release each pass 28,667; rebuilt checked Release with SIMPLE
+sampling one passes all 161 original plus 115 supplemental invocations. All have zero
+failures/skips, 51 existing Common warnings and no Buffer/test warnings. Only the 30
+retyped released-factory identities change; all other prior identities survive. No
+runtime correction is required for these reviewed contracts.
+Evidence: ignored artifacts/buffer-original-view-factories.
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed

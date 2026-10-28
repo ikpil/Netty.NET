@@ -75,8 +75,8 @@ public class ByteBufViewFactorySourceTest
             yield return [provider, initialRetained, finalRetained, invalidIndex];
     }
 
-    // The eight declared testSlice*/testMixedSlice*/testRetainedSlice* bounds
-    // tests all call AbstractByteBufTest.testSliceOutOfBounds with these flags.
+    // Supplemental ownership/mark checks use the original nested-slice helper's flag combinations.
+    // Named original bodies execute in AbstractByteBufTest.ViewFactories.cs on seven actual roots.
     [Theory]
     [MemberData(nameof(NestedBoundsCases))]
     public void NestedSliceBoundsDoNotEscapeTheOriginalWindow(int provider, bool initialRetained, bool finalRetained, bool invalidIndex)
@@ -127,14 +127,19 @@ public class ByteBufViewFactorySourceTest
         Assert.Equal(new byte[50], ByteBufUtil.GetBytes(s.Root));
     }
 
+    public enum ReleasedFactory
+    {
+        Slice, IndexedSlice, RetainedSlice, IndexedRetainedSlice, Duplicate, RetainedDuplicate
+    }
+
     public static IEnumerable<object[]> ReleasedCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int factory = 0; factory < 6; ++factory) yield return [provider, factory];
+        foreach (ReleasedFactory factory in Enum.GetValues<ReleasedFactory>()) yield return [provider, factory];
     }
     [Theory]
     [MemberData(nameof(ReleasedCases))]
-    public void ViewFactoriesRejectReleasedOwners(int provider, int factory)
+    public void ViewFactoriesRejectReleasedOwners(int provider, ReleasedFactory factory)
     {
         using var s = new Storage(provider, 8);
         // Clear the buffer so we are sure the reader and writer indices are 0.
@@ -142,11 +147,11 @@ public class ByteBufViewFactorySourceTest
         s.Root.Clear(); Assert.True(s.Root.Release());
         Assert.Throws<IllegalReferenceCountException>(() => factory switch
         {
-            0 => s.Root.Slice(),
-            1 => s.Root.Slice(0, 1),
-            2 => s.Root.RetainedSlice(),
-            3 => s.Root.RetainedSlice(0, 1),
-            4 => s.Root.Duplicate(),
+            ReleasedFactory.Slice => s.Root.Slice(),
+            ReleasedFactory.IndexedSlice => s.Root.Slice(0, 1),
+            ReleasedFactory.RetainedSlice => s.Root.RetainedSlice(),
+            ReleasedFactory.IndexedRetainedSlice => s.Root.RetainedSlice(0, 1),
+            ReleasedFactory.Duplicate => s.Root.Duplicate(),
             _ => s.Root.RetainedDuplicate()
         });
         Assert.Equal(0, s.Root.ReferenceCount);
