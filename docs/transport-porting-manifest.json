@@ -41,18 +41,18 @@
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 101,
-    "mappedOriginalMethods": 101,
-    "supplementalExecutedCases": 59,
+    "javaOriginalPassed": 113,
+    "mappedOriginalMethods": 113,
+    "supplementalExecutedCases": 65,
     "debug": {
-      "total": 160,
-      "passed": 160,
+      "total": 178,
+      "passed": 178,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 160,
-      "passed": 160,
+      "total": 178,
+      "passed": 178,
       "failed": 0,
       "skipped": 0
     },
@@ -64,8 +64,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 159,
-        "passed": 159,
+        "total": 177,
+        "passed": 177,
         "failed": 0,
         "skipped": 0
       },
@@ -82,24 +82,22 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32457,
+    "solutionPassed": 32475,
     "solutionSkipped": 14,
-    "baselineNativeReadAdmissionFailed": 4,
-    "currentNativeReadAdmissionPassed": 8,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed unchanged pinned Java fixture methods using a local reflection runner with BeforeAll/BeforeEach/AfterEach/AfterAll lifecycle callbacks, assertions enabled and a process timeout. The selected sources were compared with git show at the pinned revision before compilation. All 101 tests passed; this is not a whole Java transport-module run.",
-    "note": "The unchanged pinned Java original suite remains 101 passed from this implementation session. The complete Release solution run passed 159 Transport cases plus Common/Buffer/Resolver. One additional explicit-input-shutdown cleanup case and final stream-fragmentation handling in the test helper were then checked with all 160 Transport tests in Debug and a checked Release rebuild. CLR-specific admission/cleanup cases are supplemental, not newly ported Java tests. No Common/Buffer/Resolver source was changed.",
+    "javaEvidence": "Executed unchanged pinned Java fixture methods using the local reflection runner with setup/teardown lifecycle callbacks, assertions enabled and a bounded process. Source fixtures were compared with git show at the pinned revision before compilation. All 113 original methods passed, including all 12 PendingWriteQueue methods; this is not a whole Java transport-module run.",
+    "note": "Original Java cases and CLR-specific cases remain separate. The full Release solution passed 177 Transport cases plus Common/Buffer/Resolver. A final output-shutdown/pending-accounting case and the native malformed-estimator guard were then validated with all 178 Transport tests in Debug and checked Release (final checked incremental run follows the earlier full checked rebuild). Task/TCS propagation awaits only replace Java listener timing; original queue order, byte counts, output, reference ownership and reentrant scenarios remain. No Common/Buffer/Resolver sources were changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
-      "python artifacts/transport-core/test-admission-baseline.py",
+      "python artifacts/transport-core/run-originals.py",
       "dotnet test Netty.NET.sln -c Release --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore"
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -p:CheckForOverflowUnderflow=true"
     ]
   },
   "entries": [
@@ -2002,16 +2000,48 @@
       "sha256": "01e6ee22bf8eeb1d71d8c8004ac169188727f63c7cfae8e02e71b91e4e09c1ea",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/PendingBytesTracker.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original pending FIFO, total estimated bytes, writability, unlink-before-notification and reentrant drain order. CLR Task/TCS producer ownership and cancellation replace mutable Java promises; managed entries replace Recycler bookkeeping.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/PendingBytesTracker.cs",
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueTest.cs",
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/PendingWriteQueue.java",
       "sha256": "fa5226a301f316916689eed15fd4c4ae4480be97f4da91c9bce0ab879c7ee609",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/PendingWriteQueue.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 31,
+        "preservedCount": 31,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original pending FIFO, total estimated bytes, writability, unlink-before-notification and reentrant drain order. CLR Task/TCS producer ownership and cancellation replace mutable Java promises; managed entries replace Recycler bookkeeping.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/PendingWriteQueue.cs",
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueTest.cs",
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/AbstractChannelPoolHandler.java",
@@ -3955,8 +3985,92 @@
       "sha256": "77119d89d4f031e75e0bccd9c9d624e3a891fb377dfe159494d8a2547b739998",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/PendingWriteQueueTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 12,
+        "preservedCount": 12,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original pending FIFO, total estimated bytes, writability, unlink-before-notification and reentrant drain order. CLR Task/TCS producer ownership and cancellation replace mutable Java promises; managed entries replace Recycler bookkeeping.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueTest.cs",
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueTest.cs",
+          "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testRemoveAndWrite",
+          "clrMethod": "TestRemoveAndWrite",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndWriteAll",
+          "clrMethod": "TestRemoveAndWriteAll",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndFail",
+          "clrMethod": "TestRemoveAndFail",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndFailAll",
+          "clrMethod": "TestRemoveAndFailAll",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "shouldFireChannelWritabilityChangedAfterRemoval",
+          "clrMethod": "ShouldFireChannelWritabilityChangedAfterRemoval",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndFailAllReentrantFailAll",
+          "clrMethod": "TestRemoveAndFailAllReentrantFailAll",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndFailReentrantRemoveAndFail",
+          "clrMethod": "TestRemoveAndFailReentrantRemoveAndFail",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndWriteAllReentrantWrite",
+          "clrMethod": "TestRemoveAndWriteAllReentrantWrite",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndWriteAllWithVoidPromise",
+          "clrMethod": "TestRemoveAndWriteAllWithVoidPromise",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndFailAllReentrantWrite",
+          "clrMethod": "TestRemoveAndFailAllReentrantWrite",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testRemoveAndWriteAllReentrance",
+          "clrMethod": "TestRemoveAndWriteAllReentrance",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        },
+        {
+          "upstreamMethod": "testCloseChannelOnCreation",
+          "clrMethod": "TestCloseChannelOnCreation",
+          "adaptation": "Original inputs/helpers/output/ref-count/byte-count/order assertions. TaskCompletionSource and ExecuteSynchronously continuations preserve reentrant producers; native asynchronous completion bridges are awaited. The voidPromise case discards a native consumer Task rather than creating a JVM facade."
+        }
+      ],
+      "methodReview": {
+        "scope": "All twelve declared JUnit methods; native completion observation explicitly awaited where Java listeners were synchronous.",
+        "declaredCount": 12,
+        "mappedCount": 12,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/pool/AbstractChannelPoolMapTest.java",
@@ -4281,6 +4395,10 @@
     {
       "subject": "Late native I/O completion",
       "decision": "Unlike selector readiness, a CLR receive/accept may already have consumed input when AutoRead or registration is revoked. Keep at most one completed native input operation per channel and dispatch it only after read/registration admission; a close wakes the waiter and releases borrowed memory or the accepted socket. Resume and callback ownership follow the currently registered worker. The source default receive-message limit is 16 for TCP, UDP and server channels; LocalChannel remains 1."
+    },
+    {
+      "subject": "Pending write producers",
+      "decision": "Use native TaskCompletionSource for producer identity/Remove ownership and Task for consumers, Task.WhenAll for aggregation, and CancellationToken for queue/transport cancellation. Queue cancellation retains message ownership until removal and stops at transport flush. Producers are completed on the assigned executor when asynchronous writes finish; Task continuations themselves still require caller-selected dispatch. No Future/Promise/voidPromise facade or JVM Recycler is introduced. The original accounting estimate remains configurable and is not a CLR object-size claim. All source listener reentrance scenarios use default TCS producers and ExecuteSynchronously continuations; consumers await the native bridge when required."
     }
   ],
   "openWork": [
@@ -4312,7 +4430,7 @@
     {
       "area": "Portable remaining inventory",
       "state": "unreviewed",
-      "detail": "PendingWriteQueue, AbstractCoalescingBufferQueue/CoalescingBufferQueue, channel pools, their original tests, and remaining pending entries. Existing APIs do not prove this module complete."
+      "detail": "PendingWriteQueue/PendingBytesTracker are now ported with all 12 original tests. AbstractCoalescingBufferQueue/CoalescingBufferQueue, channel pools, their original tests and remaining pending entries still require review/implementation."
     },
     {
       "area": "Comments",
@@ -4326,7 +4444,8 @@
     "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs",
     "test/Netty.NET.Transport.Tests/LocalTransportContractTest.cs",
     "test/Netty.NET.Transport.Tests/TransportFoundationContractTest.cs",
-    "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs"
+    "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs",
+    "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -4445,12 +4564,78 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore"
         ]
       }
+    },
+    {
+      "checkpoint": "9eb49081203434ef00d010f3b9765f28ce38b31f",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 101,
+        "mappedOriginalMethods": 101,
+        "supplementalExecutedCases": 59,
+        "debug": {
+          "total": 160,
+          "passed": 160,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 160,
+          "passed": 160,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 159,
+            "passed": 159,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32457,
+        "solutionSkipped": 14,
+        "baselineNativeReadAdmissionFailed": 4,
+        "currentNativeReadAdmissionPassed": 8,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed unchanged pinned Java fixture methods using a local reflection runner with BeforeAll/BeforeEach/AfterEach/AfterAll lifecycle callbacks, assertions enabled and a process timeout. The selected sources were compared with git show at the pinned revision before compilation. All 101 tests passed; this is not a whole Java transport-module run.",
+        "note": "The unchanged pinned Java original suite remains 101 passed from this implementation session. The complete Release solution run passed 159 Transport cases plus Common/Buffer/Resolver. One additional explicit-input-shutdown cleanup case and final stream-fragmentation handling in the test helper were then checked with all 160 Transport tests in Debug and a checked Release rebuild. CLR-specific admission/cleanup cases are supplemental, not newly ported Java tests. No Common/Buffer/Resolver source was changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/test-admission-baseline.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore"
+        ]
+      }
     }
   ],
   "nextWork": [
+    "Port AbstractCoalescingBufferQueue/CoalescingBufferQueue and channel pools with original tests.",
     "Continue remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declarations, preserving helpers/order/assertions.",
-    "Port PendingWriteQueue, coalescing queues and channel pools with their original tests.",
-    "Review socket read-batch budgets, half closure, cancellation/rejection, unreviewed options and remaining partial comments."
+    "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -4466,5 +4651,18 @@
     "regressionsReproduced": 4,
     "newAdmissionAndCleanupCases": 8,
     "baselineResult": "All four late receive/accept/re-registration cases fail against the prior committed runtime. Eight current admission/resource cleanup cases pass, including explicit input shutdown while the channel stays open. These CLR-specific cases are supplemental; no Java-original count is added."
+  },
+  "pendingWriteEvidence": {
+    "sourceContracts": [
+      "PendingWriteQueue",
+      "PendingBytesTracker",
+      "DefaultChannelPipeline.estimatorHandle",
+      "Channel.isWritable/bytesBeforeUnwritable/bytesBeforeWritable"
+    ],
+    "originalTests": 12,
+    "nativeSupplementalCases": 6,
+    "preserved": "FIFO/resurrection ordering, two-phase fail-all, unlink-before-notification, original message references/counts, queue bytes/writability and already-closed construction.",
+    "nativeAdaptation": "TaskCompletionSource is the producer role and Task is the consumer role. Default producers with ExecuteSynchronously continuations exercise original listener reentrance; consumer bridges are explicitly awaited where native Task completion is asynchronous. The voidPromise scenario discards the native returned Task. Cancellation is retained across pending-to-transport handoff and becomes uncancellable at transport flush.",
+    "integration": "Actual TCP completion returns producer completion to its executor. Output shutdown disables writability and detaches pending-byte accounting. The estimator handle is cached once per pipeline and shared with pending-byte trackers, matching the source."
   }
 }

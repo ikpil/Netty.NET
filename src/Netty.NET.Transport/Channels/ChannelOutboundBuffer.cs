@@ -57,6 +57,8 @@ public sealed class ChannelOutboundBuffer
     private long _pendingBytes;
     private int _unwritable;
     private int _flushed;
+    private volatile bool _closed;
+    internal bool IsClosed => _closed;
     public ChannelOutboundBuffer(IChannel channel) { ArgumentNullException.ThrowIfNull(channel); _channel = channel; }
     /**
      * Returns {@code true} if and only if {@linkplain #totalPendingWriteBytes() the total number of pending bytes} did
@@ -322,6 +324,7 @@ public sealed class ChannelOutboundBuffer
     }
     internal void Close(Exception cause)
     {
+        _closed = true;
         var entries = new List<Entry>(_entries);
         _entries.Clear();
         _flushed = 0;

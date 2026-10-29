@@ -41,6 +41,18 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
     internal readonly ChannelHandlerContext Head;
     internal readonly ChannelHandlerContext Tail;
     private bool _registered;
+    private IMessageSizeEstimator.IHandle _estimatorHandle;
+    internal IMessageSizeEstimator.IHandle EstimatorHandle
+    {
+        get
+        {
+            var handle = Volatile.Read(ref _estimatorHandle);
+            if (handle != null)
+                return handle;
+            handle = Channel.Config.GetMessageSizeEstimator().NewHandle();
+            return Interlocked.CompareExchange(ref _estimatorHandle, handle, null) ?? handle;
+        }
+    }
     internal AbstractChannel Owner { get; }
     /**
      * Returns the {@link Channel} that this pipeline is attached to.

@@ -76,9 +76,9 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     public abstract EndPoint RemoteAddress { get; }
     public Task CloseCompletion => _closed.Task;
     public ChannelOutboundBuffer OutboundBuffer { get; }
-    public bool IsWritable => _open && OutboundBuffer.IsWritable;
-    public long BytesBeforeUnwritable => _open ? OutboundBuffer.BytesBeforeUnwritable : 0;
-    public long BytesBeforeWritable => _open ? OutboundBuffer.BytesBeforeWritable : long.MaxValue;
+    public bool IsWritable => _open && !OutboundBuffer.IsClosed && OutboundBuffer.IsWritable;
+    public long BytesBeforeUnwritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeUnwritable : 0;
+    public long BytesBeforeWritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeWritable : long.MaxValue;
     protected virtual IChannelConfig NewConfig() => new DefaultChannelConfig(this);
     /**
      * Returns a new {@link DefaultChannelPipeline} instance.
@@ -328,7 +328,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         try
         {
             message = FilterOutboundMessage(message);
-            int size = Math.Max(0, Config.GetMessageSizeEstimator().NewHandle().Size(message));
+            int size = Math.Max(0, Pipeline.EstimatorHandle.Size(message));
             return OutboundBuffer.AddMessage(message, size, cancellationToken);
         }
         catch (Exception error) { ReferenceCountUtil.Release(message); return Task.FromException(error); }
@@ -368,7 +368,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     await OnLoopAsync(() =>
                     {
                         OutboundBuffer.Remove(error);
-                        if (Config.IsAutoClose())
+                        if (Config.IsAutoClose() && !OutboundBuffer.IsClosed)
                             _ = CloseTransportAsync();
                     }).ConfigureAwait(false);
                 }
