@@ -35,24 +35,24 @@
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations",
-      "next": "UDP/multicast and group fixture review, PendingWriteQueue/CoalescingBufferQueue, channel pools and remaining portable inventory"
+      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures",
+      "next": "UDP/multicast and group fixture review, channel pools and remaining portable inventory"
     }
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 113,
-    "mappedOriginalMethods": 113,
-    "supplementalExecutedCases": 65,
+    "javaOriginalPassed": 132,
+    "mappedOriginalMethods": 132,
+    "supplementalExecutedCases": 68,
     "debug": {
-      "total": 178,
-      "passed": 178,
+      "total": 200,
+      "passed": 200,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 178,
-      "passed": 178,
+      "total": 200,
+      "passed": 200,
       "failed": 0,
       "skipped": 0
     },
@@ -64,8 +64,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 177,
-        "passed": 177,
+        "total": 200,
+        "passed": 200,
         "failed": 0,
         "skipped": 0
       },
@@ -82,22 +82,22 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32475,
+    "solutionPassed": 32498,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed unchanged pinned Java fixture methods using the local reflection runner with setup/teardown lifecycle callbacks, assertions enabled and a bounded process. Source fixtures were compared with git show at the pinned revision before compilation. All 113 original methods passed, including all 12 PendingWriteQueue methods; this is not a whole Java transport-module run.",
-    "note": "Original Java cases and CLR-specific cases remain separate. The full Release solution passed 177 Transport cases plus Common/Buffer/Resolver. A final output-shutdown/pending-accounting case and the native malformed-estimator guard were then validated with all 178 Transport tests in Debug and checked Release (final checked incremental run follows the earlier full checked rebuild). Task/TCS propagation awaits only replace Java listener timing; original queue order, byte counts, output, reference ownership and reentrant scenarios remain. No Common/Buffer/Resolver sources were changed.",
+    "javaEvidence": "Executed 132 unchanged pinned Java fixture methods including all 19 declared coalescing-queue cases using the local reflection runner with setup/teardown lifecycle callbacks, assertions enabled and a bounded process. Fixtures were compared with git show at the pinned revision before compilation. This is not a whole Java transport-module run.",
+    "note": "All 200 CLR Transport cases passed in Debug, full-solution Release and checked Release following a full checked rebuild. Original 132 cases remain separate from 68 CLR-specific cases. Coalescing original helpers/inputs/ref-counts/identity/reentrant assertions remain; the native asynchronous write result is explicitly awaited. No Common/Buffer/Resolver sources were changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
       "dotnet test Netty.NET.sln -c Release --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -p:CheckForOverflowUnderflow=true"
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
     ]
   },
   "entries": [
@@ -287,8 +287,23 @@
       "sha256": "69121ea24cc92b611251d9fa844919a642b6c8c37bf4bd9daeea6b31d44a175f",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/AbstractCoalescingBufferQueue.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 36,
+        "preservedCount": 36,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original deque ordering, retained partial slices, exact-size identity, empty buffer completion, composition failure ownership, byte reconciliation and reentrant draining. Native TaskCompletionSource producers and Action<Task> callbacks replace ChannelPromise/ChannelFutureListener; BCL LinkedList replaces ArrayDeque.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/AbstractCoalescingBufferQueue.cs",
+          "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/AbstractEventLoop.java",
@@ -866,8 +881,24 @@
       "sha256": "5157dbd021d2e4888e9fd7ddb0af70b93906fafb4891363d99ed4b7e5720c768",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/CoalescingBufferQueue.cs",
+        "src/Netty.NET.Transport/Channels/AbstractCoalescingBufferQueue.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original deque ordering, retained partial slices, exact-size identity, empty buffer completion, composition failure ownership, byte reconciliation and reentrant draining. Native TaskCompletionSource producers and Action<Task> callbacks replace ChannelPromise/ChannelFutureListener; BCL LinkedList replaces ArrayDeque.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/CoalescingBufferQueue.cs",
+          "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/CombinedChannelDuplexHandler.java",
@@ -2900,8 +2931,46 @@
       "sha256": "806a541937569c3c1dce6b091c46ba216140658e550f4a18a9741df79808f2b2",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/AbstractCoalescingBufferQueueTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original deque ordering, retained partial slices, exact-size identity, empty buffer completion, composition failure ownership, byte reconciliation and reentrant draining. Native TaskCompletionSource producers and Action<Task> callbacks replace ChannelPromise/ChannelFutureListener; BCL LinkedList replaces ArrayDeque.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/AbstractCoalescingBufferQueueTest.cs",
+          "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testDecrementAllWhenWriteAndRemoveAll",
+          "clrMethod": "TestDecrementAllWhenWriteAndRemoveAll",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testDecrementAllWhenReleaseAndFailAll",
+          "clrMethod": "TestDecrementAllWhenReleaseAndFailAll",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testKeepStateConsistentOnError",
+          "clrMethod": "TestKeepStateConsistentOnError",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        }
+      ],
+      "methodReview": {
+        "scope": "All declared JUnit cases, original helpers and teardown; no original scenario replaced by supplemental CLR tests.",
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/AbstractEventLoopTest.java",
@@ -3196,8 +3265,111 @@
       "sha256": "5ea064b047f926aa5d812a102a9c178a3cd4428a175041b62934b16d91ddaeb4",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/CoalescingBufferQueueTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 9,
+        "preservedCount": 9,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original deque ordering, retained partial slices, exact-size identity, empty buffer completion, composition failure ownership, byte reconciliation and reentrant draining. Native TaskCompletionSource producers and Action<Task> callbacks replace ChannelPromise/ChannelFutureListener; BCL LinkedList replaces ArrayDeque.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/CoalescingBufferQueueTest.cs",
+          "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAddFirstPromiseRetained",
+          "clrMethod": "TestAddFirstPromiseRetained",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testAddFirstVoidPromise",
+          "clrMethod": "TestAddFirstVoidPromise",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testAggregateWithFullRead",
+          "clrMethod": "TestAggregateWithFullRead",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testWithVoidPromise",
+          "clrMethod": "TestWithVoidPromise",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testAggregateWithPartialRead",
+          "clrMethod": "TestAggregateWithPartialRead",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReadExactAddedBufferSizeReturnsOriginal",
+          "clrMethod": "TestReadExactAddedBufferSizeReturnsOriginal",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReadEmptyQueueReturnsEmptyBuffer",
+          "clrMethod": "TestReadEmptyQueueReturnsEmptyBuffer",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReleaseAndFailAll",
+          "clrMethod": "TestReleaseAndFailAll",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testEmptyBuffersAreCoalesced",
+          "clrMethod": "TestEmptyBuffersAreCoalesced",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReadableBytesResetWhenQueuedBufferConsumedExternally",
+          "clrMethod": "TestReadableBytesResetWhenQueuedBufferConsumedExternally",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReadableBytesResetWhenReleaseAndFailAllSeesConsumedBuffer",
+          "clrMethod": "TestReadableBytesResetWhenReleaseAndFailAllSeesConsumedBuffer",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReadableBytesResetWhenWriteAndRemoveAllSeesConsumedBuffer",
+          "clrMethod": "TestReadableBytesResetWhenWriteAndRemoveAllSeesConsumedBuffer",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testReadableBytesResetWhenRemoveFirstSeesConsumedBuffer",
+          "clrMethod": "TestReadableBytesResetWhenRemoveFirstSeesConsumedBuffer",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testMerge",
+          "clrMethod": "TestMerge",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testWritabilityChanged",
+          "clrMethod": "TestWritabilityChanged",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        },
+        {
+          "upstreamMethod": "testWritabilityChangedFailAll",
+          "clrMethod": "TestWritabilityChangedFailAll",
+          "adaptation": "Preserve original buffer inputs, helpers, queue bytes, writability, completion timing, reference counts, same-instance assertions and reentrant enqueue. Native Task/TCS/delegate replace future/promise/listener; missing producer represents void completion. Await native write aggregation. ThrowsAny preserves JUnit subtype exception matching."
+        }
+      ],
+      "methodReview": {
+        "scope": "All declared JUnit cases, original helpers and teardown; no original scenario replaced by supplemental CLR tests.",
+        "declaredCount": 16,
+        "mappedCount": 16,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/CombinedChannelDuplexHandlerTest.java",
@@ -4399,6 +4571,10 @@
     {
       "subject": "Pending write producers",
       "decision": "Use native TaskCompletionSource for producer identity/Remove ownership and Task for consumers, Task.WhenAll for aggregation, and CancellationToken for queue/transport cancellation. Queue cancellation retains message ownership until removal and stops at transport flush. Producers are completed on the assigned executor when asynchronous writes finish; Task continuations themselves still require caller-selected dispatch. No Future/Promise/voidPromise facade or JVM Recycler is introduced. The original accounting estimate remains configurable and is not a CLR object-size claim. All source listener reentrance scenarios use default TCS producers and ExecuteSynchronously continuations; consumers await the native bridge when required."
+    },
+    {
+      "subject": "Coalescing queue completions",
+      "decision": "BCL LinkedList stores buffers and native TaskCompletionSource/Action<Task> metadata; no DelegatingChannelPromiseNotifier or Future/Promise/voidPromise facade. Source initial capacity is only a sizing hint, which LinkedList does not use. AddFirst without a producer represents void completion. ReleaseAndFailAll uses Task.FromException and is inherited by CoalescingBufferQueue. WriteAndRemoveAllAsync drains synchronously then exposes native asynchronous write completion with Task.WhenAll. Bridges dispatch notifications to the assigned executor; rejected dispatch fails the native producer and returned Task instead of leaving it pending. Aggregate continuations use ExecuteSynchronously for original inline reentrance; callers selecting asynchronous TCS continuations must await their work. CopyTo intentionally keeps the source shallow-copy ownership contract."
     }
   ],
   "openWork": [
@@ -4430,7 +4606,7 @@
     {
       "area": "Portable remaining inventory",
       "state": "unreviewed",
-      "detail": "PendingWriteQueue/PendingBytesTracker are now ported with all 12 original tests. AbstractCoalescingBufferQueue/CoalescingBufferQueue, channel pools, their original tests and remaining pending entries still require review/implementation."
+      "detail": "Pending write and coalescing queues are ported with all 31 original tests across their three fixtures. Channel pools, their original tests and remaining pending entries still require review/implementation."
     },
     {
       "area": "Comments",
@@ -4445,7 +4621,8 @@
     "test/Netty.NET.Transport.Tests/LocalTransportContractTest.cs",
     "test/Netty.NET.Transport.Tests/TransportFoundationContractTest.cs",
     "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs",
-    "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs"
+    "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs",
+    "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -4630,10 +4807,74 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore"
         ]
       }
+    },
+    {
+      "checkpoint": "d072736dacacb326f9a7fd4c271331fa82e8ea22",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 113,
+        "mappedOriginalMethods": 113,
+        "supplementalExecutedCases": 65,
+        "debug": {
+          "total": 178,
+          "passed": 178,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 178,
+          "passed": 178,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 177,
+            "passed": 177,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32475,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed unchanged pinned Java fixture methods using the local reflection runner with setup/teardown lifecycle callbacks, assertions enabled and a bounded process. Source fixtures were compared with git show at the pinned revision before compilation. All 113 original methods passed, including all 12 PendingWriteQueue methods; this is not a whole Java transport-module run.",
+        "note": "Original Java cases and CLR-specific cases remain separate. The full Release solution passed 177 Transport cases plus Common/Buffer/Resolver. A final output-shutdown/pending-accounting case and the native malformed-estimator guard were then validated with all 178 Transport tests in Debug and checked Release (final checked incremental run follows the earlier full checked rebuild). Task/TCS propagation awaits only replace Java listener timing; original queue order, byte counts, output, reference ownership and reentrant scenarios remain. No Common/Buffer/Resolver sources were changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Port AbstractCoalescingBufferQueue/CoalescingBufferQueue and channel pools with original tests.",
+    "Port channel pools and their original tests using native Task, CancellationToken and BCL collections.",
     "Continue remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declarations, preserving helpers/order/assertions.",
     "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments."
   ],
@@ -4664,5 +4905,11 @@
     "preserved": "FIFO/resurrection ordering, two-phase fail-all, unlink-before-notification, original message references/counts, queue bytes/writability and already-closed construction.",
     "nativeAdaptation": "TaskCompletionSource is the producer role and Task is the consumer role. Default producers with ExecuteSynchronously continuations exercise original listener reentrance; consumer bridges are explicitly awaited where native Task completion is asynchronous. The voidPromise scenario discards the native returned Task. Cancellation is retained across pending-to-transport handoff and becomes uncancellable at transport flush.",
     "integration": "Actual TCP completion returns producer completion to its executor. Output shutdown disables writability and detaches pending-byte accounting. The estimator handle is cached once per pipeline and shared with pending-byte trackers, matching the source."
+  },
+  "coalescingEvidence": {
+    "originalTests": 19,
+    "nativeSupplementalCases": 3,
+    "preserved": "Partial-read retained slices, full-read original object identity, empty-buffer notifications, aggregate completion order, queue copies, original 292-byte externally-consumed buffer regressions, composition failure state and reentrant enqueue while draining.",
+    "nativeAdaptation": "TaskCompletionSource producer identity and Action<Task> listener roles; Task aggregation exposes asynchronous write completion. All native callback failures/rejected completion dispatch are observed without stranding other producers or buffer ownership."
   }
 }
