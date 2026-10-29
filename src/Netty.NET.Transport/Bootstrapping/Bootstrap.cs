@@ -37,6 +37,7 @@ namespace Netty.NET.Transport.Bootstrapping;
 public class Bootstrap
 {
     private IEventLoopGroup _group;
+    private IEventLoop _registrationLoop;
     private Func<IChannel> _factory;
     private IChannelHandler _handler;
     private EndPoint _remote;
@@ -158,10 +159,24 @@ public class Bootstrap
      */
     public Bootstrap Clone()
     {
-        var copy = new Bootstrap { _group = _group, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _resolve = _resolve, _disableResolver = _disableResolver };
+        var copy = new Bootstrap { _group = _group, _registrationLoop = _registrationLoop, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _resolve = _resolve, _disableResolver = _disableResolver };
         foreach (var option in _options)
             copy._options.Add(option.Key, option.Value);
         copy._attributes.AddRange(_attributes);
+        return copy;
+    }
+    // CLR: EventLoop is not an EventLoopGroup facade. An explicit registration owner provides
+    // the original clone(eventLoop) behavior while keeping group lifecycle ownership shared.
+    /**
+     * Returns a deep clone of this bootstrap which has the identical configuration except that it uses
+     * the given {@link EventLoopGroup}. This method is useful when making multiple {@link Channel}s with similar
+     * settings.
+     */
+    public Bootstrap Clone(IEventLoop eventLoop)
+    {
+        ArgumentNullException.ThrowIfNull(eventLoop);
+        var copy = Clone();
+        copy._registrationLoop = eventLoop;
         return copy;
     }
     /**
@@ -178,7 +193,7 @@ public class Bootstrap
             foreach (var attribute in _attributes)
                 attribute(channel);
             channel.Pipeline.AddLast(_handler);
-            await _group.RegisterAsync(channel, token).ConfigureAwait(false);
+            await (_registrationLoop == null ? _group.RegisterAsync(channel, token) : _registrationLoop.RegisterAsync(channel, token)).ConfigureAwait(false);
             return channel;
         }
         catch { await CleanupAsync(channel).ConfigureAwait(false); throw; }

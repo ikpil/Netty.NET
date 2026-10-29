@@ -35,24 +35,24 @@
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures",
-      "next": "UDP/multicast and group fixture review, channel pools and remaining portable inventory"
+      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures; SimpleChannelPool and key-based pool map with all 15 declared original tests",
+      "next": "FixedChannelPool and its original cancellation/timeout/deadlock cases; UDP/multicast and group fixture review; remaining portable inventory"
     }
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 132,
-    "mappedOriginalMethods": 132,
-    "supplementalExecutedCases": 68,
+    "javaOriginalPassed": 147,
+    "mappedOriginalMethods": 147,
+    "supplementalExecutedCases": 74,
     "debug": {
-      "total": 200,
-      "passed": 200,
+      "total": 221,
+      "passed": 221,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 200,
-      "passed": 200,
+      "total": 221,
+      "passed": 221,
       "failed": 0,
       "skipped": 0
     },
@@ -64,8 +64,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 200,
-        "passed": 200,
+        "total": 220,
+        "passed": 220,
         "failed": 0,
         "skipped": 0
       },
@@ -82,15 +82,15 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32498,
+    "solutionPassed": 32518,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 132 unchanged pinned Java fixture methods including all 19 declared coalescing-queue cases using the local reflection runner with setup/teardown lifecycle callbacks, assertions enabled and a bounded process. Fixtures were compared with git show at the pinned revision before compilation. This is not a whole Java transport-module run.",
-    "note": "All 200 CLR Transport cases passed in Debug, full-solution Release and checked Release following a full checked rebuild. Original 132 cases remain separate from 68 CLR-specific cases. Coalescing original helpers/inputs/ref-counts/identity/reentrant assertions remain; the native asynchronous write result is explicitly awaited. No Common/Buffer/Resolver sources were changed.",
+    "javaEvidence": "Executed 147 unchanged pinned Java fixture methods including all 12 SimpleChannelPoolTest and 3 AbstractChannelPoolMapTest declarations with setup/teardown lifecycle callbacks and assertions enabled. Fixtures were compared with git show before compilation. The isolated runner exits only after all expected methods/lifecycle callbacks complete because original map cases leave local groups running; an earlier run passed assertions but timed out waiting for those threads. No original test source/assertion was altered. This is not a whole Java transport-module run.",
+    "note": "The full Release solution passed 220 Transport cases plus Common/Buffer/Resolver (32518 passed / 14 skipped). A final explicit-bootstrap-event-loop integration case was then added; all 221 Transport cases passed in Debug and checked Release following a full checked rebuild. Original 147 cases remain separate from 74 CLR-specific cases. Pool task producer ownership stays private; cancellation cannot abandon a later successful connection/health result. Health checks and notifications dispatch to the actual channel event loop. No Common/Buffer/Resolver sources were changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
@@ -146,8 +146,8 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 25,
-        "preservedCount": 7,
-        "unreviewedCount": 18,
+        "preservedCount": 8,
+        "unreviewedCount": 17,
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
@@ -2079,48 +2079,150 @@
       "sha256": "6c55cfb9c8814cd90f05e755fa7d606e92423675618d3838a8800764dbefadb1",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/AbstractChannelPoolHandler.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/AbstractChannelPoolHandler.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/AbstractChannelPoolMap.java",
       "sha256": "1295c1bb16a8a0e417af565ae76a539117d731df708787e0ba4e7f0b6dd5fb3c",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/AbstractChannelPoolMap.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/AbstractChannelPoolMap.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/ChannelHealthChecker.java",
       "sha256": "266acd0715ede457047a0f1b6a0ec921df0f2ac1b3967ffb3784975e468bc45d",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/ChannelHealthChecker.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/ChannelHealthChecker.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/ChannelPool.java",
       "sha256": "d7523c72194e48b6970ab9262624a694f600461079dea9b5d3ad2071462a385a",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/IChannelPool.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/IChannelPool.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/ChannelPoolHandler.java",
       "sha256": "24e71773596929fdeffc0178c1a0f8ca2a874abfed3c34d919ef1630c3cb56db",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/IChannelPoolHandler.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/IChannelPoolHandler.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/ChannelPoolMap.java",
       "sha256": "1aacc71d3ea89a832ae2991cf593ee9ca4f8e9d0af61f87d7cd988b9cc140249",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/IChannelPoolMap.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/IChannelPoolMap.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/FixedChannelPool.java",
@@ -2143,8 +2245,25 @@
       "sha256": "c8f518f60879540fc2eb8eed7b560f9995a92a19ad881735ec2695e920aac59b",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/SimpleChannelPool.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 27,
+        "preservedCount": 27,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/SimpleChannelPool.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/PreferHeapByteBufAllocator.java",
@@ -4249,24 +4368,112 @@
       "sha256": "4b3f7e8cf181b16136c9be4658e74471022caea18e04a2227a6c16c454b8c0b1",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testMap",
+          "clrMethod": "TestMap",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testRemoveClosesChannelPool",
+          "clrMethod": "TestRemoveClosesChannelPool",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testCloseClosesPoolsImmediately",
+          "clrMethod": "TestCloseClosesPoolsImmediately",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        }
+      ],
+      "methodReview": {
+        "scope": "All declared original tests or helper-only source with no declared cases.",
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/pool/ChannelPoolTestUtils.java",
       "sha256": "c23a38ea0af34b38a0a2f58b460bf6cdb059c162854af6f26b99eb7c0fb562f9",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ChannelPoolTestUtils.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ChannelPoolTestUtils.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "scope": "All declared original tests or helper-only source with no declared cases.",
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/pool/CountingChannelPoolHandler.java",
       "sha256": "d0e1cc0e942c89aff9b9c87bb5f76b0e4709c0e39c044d95cce372f9f3067ca0",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/CountingChannelPoolHandler.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/CountingChannelPoolHandler.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "scope": "All declared original tests or helper-only source with no declared cases.",
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/pool/FixedChannelPoolMapDeadlockTest.java",
@@ -4289,8 +4496,93 @@
       "sha256": "5b84427b3b37f4c5bc22aa885ba6313e45b1eb33415633971b54a7b176f60b1d",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 22,
+        "preservedCount": 22,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Named native channel-pool contract: event-loop callbacks, cancel/release ownership, concurrent storage/map lifecycle; JVM mutable producer overloads replaced by native Task/CancellationToken and health checker delegate.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/SimpleChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractChannelPoolMapTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAcquire",
+          "clrMethod": "TestAcquire",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testBoundedChannelPoolSegment",
+          "clrMethod": "TestBoundedChannelPoolSegment",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testUnhealthyChannelIsNotOffered",
+          "clrMethod": "TestUnhealthyChannelIsNotOffered",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testActiveUnhealthyChannelIsClosedOnRelease",
+          "clrMethod": "TestActiveUnhealthyChannelIsClosedOnRelease",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testUnhealthyChannelIsOfferedWhenNoHealthCheckRequested",
+          "clrMethod": "TestUnhealthyChannelIsOfferedWhenNoHealthCheckRequested",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testBootstrap",
+          "clrMethod": "TestBootstrap",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testHandler",
+          "clrMethod": "TestHandler",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testHealthChecker",
+          "clrMethod": "TestHealthChecker",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testReleaseHealthCheck",
+          "clrMethod": "TestReleaseHealthCheck",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testCloseAsync",
+          "clrMethod": "TestCloseAsync",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testChannelAcquiredException",
+          "clrMethod": "TestChannelAcquiredException",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        },
+        {
+          "upstreamMethod": "testAcquireCancelledDuringHealthCheckOffersChannelBack",
+          "clrMethod": "TestAcquireCancelledDuringHealthCheckOffersChannelBack",
+          "adaptation": "Original local-channel bootstrap, handler counters, object identity, bounded segment, error/unhealthy release, asynchronous close and cancellation-during-health-check scenarios/assertions preserved. Native Task/TCS/CancellationToken/delegates replace futures/promises; explicit completion observation replaces Java executor-listener barriers. Identical bootstrap boilerplate is shared by a scoped test setup; group shutdown is awaited."
+        }
+      ],
+      "methodReview": {
+        "scope": "All declared original tests or helper-only source with no declared cases.",
+        "declaredCount": 12,
+        "mappedCount": 12,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/ReentrantChannelTest.java",
@@ -4575,6 +4867,10 @@
     {
       "subject": "Coalescing queue completions",
       "decision": "BCL LinkedList stores buffers and native TaskCompletionSource/Action<Task> metadata; no DelegatingChannelPromiseNotifier or Future/Promise/voidPromise facade. Source initial capacity is only a sizing hint, which LinkedList does not use. AddFirst without a producer represents void completion. ReleaseAndFailAll uses Task.FromException and is inherited by CoalescingBufferQueue. WriteAndRemoveAllAsync drains synchronously then exposes native asynchronous write completion with Task.WhenAll. Bridges dispatch notifications to the assigned executor; rejected dispatch fails the native producer and returned Task instead of leaving it pending. Aggregate continuations use ExecuteSynchronously for original inline reentrance; callers selecting asynchronous TCS continuations must await their work. CopyTo intentionally keeps the source shallow-copy ownership contract."
+    },
+    {
+      "subject": "Native channel pools",
+      "decision": "AcquireAsync returns Task<IChannel> and uses CancellationToken; the pool keeps its native TCS producer private. Cancelled consumers still trigger release when pending connect/health checks finish. Async health is Func<IChannel,Task<bool>>, with health invocation and all pool notifications on the channel event loop. BCL LinkedList under a short storage lock replaces a concurrent deque; no user callback runs under that lock. ConcurrentDictionary insertion closes discarded pools outside map operations. Native CloseAsync/DisposeAsync replace GlobalEventExecutor blocking bridges; synchronous Close retains the source blocking caller contract. SimpleChannelPool Close drains available channels and intentionally does not become a permanently closed pool. Bootstrap.Clone(IEventLoop) supplies the source explicit registration owner without making native IEventLoop a fake IEventLoopGroup. JVM stacktrace suppression and mutable Promise overloads are not reproduced."
     }
   ],
   "openWork": [
@@ -4606,7 +4902,7 @@
     {
       "area": "Portable remaining inventory",
       "state": "unreviewed",
-      "detail": "Pending write and coalescing queues are ported with all 31 original tests across their three fixtures. Channel pools, their original tests and remaining pending entries still require review/implementation."
+      "detail": "Pending/coalescing queues, SimpleChannelPool and AbstractChannelPoolMap with their interfaces/handlers/health checks are ported. FixedChannelPool and its original timeout/cancellation/deadlock tests, remaining pending entries and broader original fixtures still require review/implementation."
     },
     {
       "area": "Comments",
@@ -4622,7 +4918,8 @@
     "test/Netty.NET.Transport.Tests/TransportFoundationContractTest.cs",
     "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs",
     "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs",
-    "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs"
+    "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -4871,10 +5168,74 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "abf5fc35d5fbd21720eedcefd4b0e8a68b1f2b2d",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 132,
+        "mappedOriginalMethods": 132,
+        "supplementalExecutedCases": 68,
+        "debug": {
+          "total": 200,
+          "passed": 200,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 200,
+          "passed": 200,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 200,
+            "passed": 200,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32498,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 132 unchanged pinned Java fixture methods including all 19 declared coalescing-queue cases using the local reflection runner with setup/teardown lifecycle callbacks, assertions enabled and a bounded process. Fixtures were compared with git show at the pinned revision before compilation. This is not a whole Java transport-module run.",
+        "note": "All 200 CLR Transport cases passed in Debug, full-solution Release and checked Release following a full checked rebuild. Original 132 cases remain separate from 68 CLR-specific cases. Coalescing original helpers/inputs/ref-counts/identity/reentrant assertions remain; the native asynchronous write result is explicitly awaited. No Common/Buffer/Resolver sources were changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Port channel pools and their original tests using native Task, CancellationToken and BCL collections.",
+    "Port FixedChannelPool with original queue capacity, timeout actions, cancellation accounting and deadlock tests.",
     "Continue remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declarations, preserving helpers/order/assertions.",
     "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments."
   ],
@@ -4911,5 +5272,12 @@
     "nativeSupplementalCases": 3,
     "preserved": "Partial-read retained slices, full-read original object identity, empty-buffer notifications, aggregate completion order, queue copies, original 292-byte externally-consumed buffer regressions, composition failure state and reentrant enqueue while draining.",
     "nativeAdaptation": "TaskCompletionSource producer identity and Action<Task> listener roles; Task aggregation exposes asynchronous write completion. All native callback failures/rejected completion dispatch are observed without stranding other producers or buffer ownership."
+  },
+  "simplePoolEvidence": {
+    "originalTests": 15,
+    "nativeSupplementalCases": 6,
+    "preserved": "All twelve SimpleChannelPoolTest and three AbstractChannelPoolMapTest methods, original CountingChannelPoolHandler and address helper. Acquisition identity/counters, duplicate release, bounded segment, release-health-check option, active-but-unhealthy close, failed acquired callback, cancellation during pending health and map removal/close timing remain.",
+    "nativeSupplemental": "Cancellation during incomplete connection returns the channel after success; worker ownership after asynchronous health completion; failed health closes/reconnects; FIFO/LIFO identity; concurrent map creation closes discarded pools; cloned pool bootstrap registers on the explicit event loop.",
+    "remaining": "FixedChannelPool, its source test fixture and FixedChannelPoolMapDeadlockTest remain pending; SimpleChannelPool success is not all channel-pool completion."
   }
 }
