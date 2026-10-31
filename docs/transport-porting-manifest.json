@@ -23,8 +23,8 @@
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
       "status": "in-progress",
-      "completedUnit": "All 36 EmbeddedChannel original tests and three LocalChannel scenarios; local registry/handshake/heap reads",
-      "next": "Remaining LocalChannel fixture, close/read races and auxiliary embedded fixtures"
+      "completedUnit": "All 36 EmbeddedChannel original tests and 16/32 LocalChannel original methods, including manual echo, client/server read budgets, queued 2/2/1 acceptance, allocator completion, address/connection checks and close-owned buffers; segmented local coalescing fixed against indexed source transfers",
+      "next": "Remaining 16 LocalChannel methods, close/write/re-registration ordering and auxiliary embedded fixtures"
     },
     {
       "name": "Bootstrap, Resolver integration and TCP",
@@ -41,19 +41,19 @@
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 167,
-    "mappedOriginalMethods": 166,
-    "originalExecutedCases": 167,
-    "supplementalExecutedCases": 76,
+    "javaOriginalPassed": 180,
+    "mappedOriginalMethods": 179,
+    "originalExecutedCases": 180,
+    "supplementalExecutedCases": 78,
     "debug": {
-      "total": 243,
-      "passed": 243,
+      "total": 258,
+      "passed": 258,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 243,
-      "passed": 243,
+      "total": 258,
+      "passed": 258,
       "failed": 0,
       "skipped": 0
     },
@@ -65,8 +65,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 243,
-        "passed": 243,
+        "total": 258,
+        "passed": 258,
         "failed": 0,
         "skipped": 0
       },
@@ -83,20 +83,21 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32541,
+    "solutionPassed": 32556,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 167 unchanged pinned original Java cases with setup/teardown and assertions enabled. This includes 16 fixed-pool @Test declarations, both boolean inputs of its @ParameterizedTest, and two map-deadlock declarations. The runner now explicitly rejects unsupported parameter providers instead of silently skipping them. Source fixtures were compared with git show before compilation. As with a forked test runner, exit occurs only after every expected case/lifecycle callback, because some original map cases leave local groups running. This is not a whole Java transport-module run.",
-    "note": "All 243 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 166 mapped original methods execute 167 original cases; the remaining 76 are explicitly supplemental CLR cases. All declared channel/pool fixtures now have counterparts, including real blocked-worker cancellation and the original four-worker map insertion/two-worker removal barriers. TimeSpan, native private TCS producers, Task scheduling/affinity and disposal replace JVM facades. No Common/Buffer/Resolver sources were changed.",
+    "javaEvidence": "Executed 180 unchanged pinned Java cases with lifecycle callbacks, assertions and both boolean parameter inputs. The LocalChannel selection now includes 16/32 original declarations: 13 read/close-ownership/allocator-completion declarations added to the prior three. Fixtures were compared with git show before compilation. Isolated runner exit occurs only after every expected case/lifecycle callback. This is not the entire upstream transport suite.",
+    "note": "All 258 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 179 mapped original methods execute 180 original cases; 78 cases remain explicitly supplemental. Before fixes, segmented local coalescing failed with NotSupportedException, and a gated stale-empty peer notification deterministically lost the next manual read and timed out. The initial full Debug run exposed the same manual-read race in the original 100-echo DifferentGroup case. Its 5-second deadline and 100 echoes were preserved; after the source guard was restored, that original case also passed five additional focused process runs. No Common/Buffer/Resolver sources were changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
       "dotnet test Netty.NET.sln -c Release --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-build --no-restore --filter FullyQualifiedName~TestAutoReadDisabledDifferentGroup (five focused runs after the race fix)",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
     ]
@@ -1635,9 +1636,9 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 64,
-        "preservedCount": 4,
-        "unreviewedCount": 60,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 7,
+        "unreviewedCount": 57,
+        "scope": "Original comments preserved at reviewed CLR counterparts; comments for unmapped original contracts remain open."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -4127,19 +4128,23 @@
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 41,
-        "preservedCount": 5,
-        "unreviewedCount": 36,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 13,
+        "unreviewedCount": 28,
+        "scope": "Original comments preserved at reviewed CLR counterparts; comments for unmapped original contracts remain open."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Sixteen of 32 declared original methods are mapped, including all original read budgets/allocator completion wrappers, manual-read echoes and retained-slice remote-close cleanup. Remaining original order/write-close/connection/registration cases stay explicit.",
         "sourceEvidence": [
-          "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
+          "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs"
         ]
       },
       "caseMappings": [
@@ -4157,11 +4162,76 @@
           "upstreamMethod": "testConnectedAlready",
           "clrMethod": "TestConnectedAlready",
           "adaptation": "Original scenario and assertions; native Tasks, delegates, socket endpoints and executor dispatch replace Java-specific APIs."
+        },
+        {
+          "upstreamMethod": "testNotLeakBuffersWhenCloseByRemotePeer",
+          "clrMethod": "TestNotLeakBuffersWhenCloseByRemotePeer",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testAutoReadDisabledSharedGroup",
+          "clrMethod": "TestAutoReadDisabledSharedGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testAutoReadDisabledDifferentGroup",
+          "clrMethod": "TestAutoReadDisabledDifferentGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
+          "clrMethod": "TestMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
+          "clrMethod": "TestMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
+          "clrMethod": "TestMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
+          "clrMethod": "TestMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testServerMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
+          "clrMethod": "TestServerMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testServerMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
+          "clrMethod": "TestServerMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testServerMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
+          "clrMethod": "TestServerMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testServerMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
+          "clrMethod": "TestServerMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testServerMaxMessagesPerReadRespectedWithQueuedConnections",
+          "clrMethod": "TestServerMaxMessagesPerReadRespectedWithQueuedConnections",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testReadCompleteCalledOnHandle",
+          "clrMethod": "TestReadCompleteCalledOnHandle",
+          "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
         }
       ],
       "methodReview": {
         "declaredCount": 32,
-        "mappedCount": 3,
+        "mappedCount": 16,
         "unreviewedMethods": [
           "testWriteFailsFastOnClosedChannel",
           "testServerCloseChannelSameEventLoop",
@@ -4174,26 +4244,13 @@
           "testPeerWriteInWritePromiseCompleteSameEventLoopPreservesOrder",
           "testWriteWhilePeerIsClosedReleaseObjectAndFailPromise",
           "testConnectFutureBeforeChannelActive",
-          "testNotLeakBuffersWhenCloseByRemotePeer",
-          "testAutoReadDisabledSharedGroup",
-          "testAutoReadDisabledDifferentGroup",
-          "testMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
-          "testMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
-          "testMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
-          "testMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
-          "testServerMaxMessagesPerReadRespectedWithAutoReadSharedGroup",
-          "testServerMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup",
-          "testServerMaxMessagesPerReadRespectedWithAutoReadDifferentGroup",
-          "testServerMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup",
-          "testServerMaxMessagesPerReadRespectedWithQueuedConnections",
           "testConnectFailsWhenServerClosedWithQueuedConnection",
           "testClientCloseAfterServerClosedWithQueuedConnection",
           "testClientCloseWhileConnectionIsQueued",
           "testConnectFailsWhenServerClosesBeforeConnectionArrives",
-          "testConnectFailsWhenAcceptedChannelCannotBeRegistered",
-          "testReadCompleteCalledOnHandle"
+          "testConnectFailsWhenAcceptedChannelCannotBeRegistered"
         ],
-        "scope": "Declared JUnit methods only. Inherited tests and parameter-provider invocations require separate review; an unreviewed name is not an automatic implementation-gap claim."
+        "scope": "Sixteen of 32 declared original methods are mapped, including all original read budgets/allocator completion wrappers, manual-read echoes and retained-slice remote-close cleanup. Remaining original order/write-close/connection/registration cases stay explicit."
       }
     },
     {
@@ -5061,6 +5118,10 @@
     {
       "subject": "Fixed pool ownership and deadlines",
       "decision": "Use a private native TCS per acquisition, CancellationToken for consumer cancellation, TimeSpan for configured durations, a BCL linked pending queue, and ScheduleAsync with a cancellation source per deadline. All count/queue mutations run on one configured event executor. Inner base acquisition remains uncancelled so a cancelled consumer still returns a later successful channel. Base results are explicitly queued back to the pool executor, supplying bounded completion depth when many cancelled requests drain. Handler exceptions return a slot, but ChannelNotAcquiredFromPoolException does not. Native async close replaces the source GlobalEventExecutor blocking bridge and keeps map Get/Remove nonblocking across workers. Monotonic executor ticker and unchecked deadline subtraction preserve wrap-safe expiry; duration conversion saturates rather than overflows. JVM fillInStackTrace suppression is omitted while preserving its comment and native stacks."
+    },
+    {
+      "subject": "Local segmented reads and original read budgets",
+      "decision": "Use the existing indexed ByteBuf.WriteBytes overload for coalescing, exactly as upstream: a live CLR ReadOnlyMemory can describe only contiguous storage, so treating every ByteBuf as one memory is invalid. Indexed transfer supports every segment and preserves source reader indices. Restore the source nonempty-inbound condition before consuming a pending read, so a late empty peer notification cannot lose the next manual Read. Original concurrency/read count inputs and 5-second deadlines stay unchanged; native async test signals replace blocking latches and Task continuations explicitly regain executor ownership before Read. The package-visible inbound queue is exposed to the original friend-assembly test by an internal read-only empty-state property, without exposing a mutable public collection."
     }
   ],
   "openWork": [
@@ -5110,7 +5171,8 @@
     "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs",
     "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs",
-    "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs"
+    "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs",
+    "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -5487,10 +5549,75 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "1f22dbb83bc72b399d9fa8c7815d94fc06efade7",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 167,
+        "mappedOriginalMethods": 166,
+        "originalExecutedCases": 167,
+        "supplementalExecutedCases": 76,
+        "debug": {
+          "total": 243,
+          "passed": 243,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 243,
+          "passed": 243,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 243,
+            "passed": 243,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32541,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 167 unchanged pinned original Java cases with setup/teardown and assertions enabled. This includes 16 fixed-pool @Test declarations, both boolean inputs of its @ParameterizedTest, and two map-deadlock declarations. The runner now explicitly rejects unsupported parameter providers instead of silently skipping them. Source fixtures were compared with git show before compilation. As with a forked test runner, exit occurs only after every expected case/lifecycle callback, because some original map cases leave local groups running. This is not a whole Java transport-module run.",
+        "note": "All 243 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 166 mapped original methods execute 167 original cases; the remaining 76 are explicitly supplemental CLR cases. All declared channel/pool fixtures now have counterparts, including real blocked-worker cancellation and the original four-worker map insertion/two-worker removal barriers. TimeSpan, native private TCS producers, Task scheduling/affinity and disposal replace JVM facades. No Common/Buffer/Resolver sources were changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Continue remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declarations, preserving helpers/order/assertions.",
+    "Continue remaining 67 DefaultChannelPipelineTest and 16 LocalChannelTest declarations, preserving helpers/order/assertions.",
     "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts."
   ],
@@ -5542,5 +5669,26 @@
     "preserved": "Seventeen FixedChannelPoolTest methods (18 executions including both boolean order inputs) and both cross-worker map deadlock methods. Four workers/two barriers/one-second waits, blocked single-worker cancellation, counts/callbacks, same-instance ownership, bounded queue, NEW/FAIL/zero timeout, callback exception identity and closed pool behavior remain.",
     "nativeSupplemental": "1024 cancelled pending requests preserve all acquisition/release callbacks with bounded native completion depth; admitting a queued request cancels its timer without creating an extra connection.",
     "inventory": "All channel/pool implementation and original test entries now have CLR counterparts. This does not complete the rest of Transport."
+  },
+  "localReadEvidence": {
+    "newOriginalMethods": 13,
+    "localFixtureMapped": 16,
+    "localFixtureDeclared": 32,
+    "nativeSupplementalCases": 2,
+    "preserved": "Original 100-round manual-read echoes, shared 1-worker vs separate 2-worker groups, auto/manual read budgets and 100ms delay, five queued connections drained 2/2/1, receive allocator ReadComplete notifications, 100 retained one-byte slices and closed peer inbound queue assertion.",
+    "sourceContract": "LocalChannel.readInbound uses output.writeBytes(msg, msg.readerIndex(), msg.readableBytes()) for both the first and subsequent buffers. The native port incorrectly used ReadableMemory, which rejects multi-component ranges.",
+    "regression": {
+      "priorRuntimeRevision": "1f22dbb83bc72b399d9fa8c7815d94fc06efade7",
+      "baselineResult": "The added native integration failed with NotSupportedException at CompositeByteBuf.GetReadOnlyMemoryCore -> LocalChannel.ReadInbound. Indexed ByteBuf transfer fixes both coalescing positions without advancing retained source reader indices.",
+      "inputs": "Two segmented composite buffers (first has readerIndex=1/writerIndex=5) plus a final contiguous byte, all queued before an explicit peer Read. Expected bytes 1..7, original reader indices unchanged and retained source counts exactly one after receiver release."
+    },
+    "latePeerNotification": {
+      "sourceContract": "LocalChannel.finishPeerRead0 checks that inboundBuffer is not empty before consuming readInProgress. A stale empty notification must leave the next explicit read armed.",
+      "originalFailure": "The first full Debug run failed the unchanged 100-echo DifferentGroup scenario at its 5-second deadline, while the first narrow/Release runs happened to pass.",
+      "baselineResult": "With only the segmented-copy fix present, a gated sender forced enqueue -> explicit receiver read -> second read armed -> old empty notification -> second write. The receiver deterministically timed out before the missing empty-queue guard was restored. No original timeout was increased.",
+      "nativeInputs": "Two independent workers, first completion paused before notifying the peer, explicit receiver reads on its owner, sender and receiver barriers, then a second integer. Expected sequence is exactly 1,2 without a third manual Read."
+    },
+    "remaining": "16 original LocalChannelTest methods and further close/re-registration/write ordering contracts remain unreviewed. This does not mark LocalChannel or Transport complete.",
+    "focusedManualEchoRepeats": 5
   }
 }

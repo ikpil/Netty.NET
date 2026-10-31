@@ -33,6 +33,8 @@ namespace Netty.NET.Transport.Channels.Local;
 public class LocalChannel : AbstractChannel
 {
     private readonly ConcurrentQueue<object> _inbound = new();
+    // The source's package-visible inboundBuffer is observed by its original close-ownership test.
+    internal bool IsInboundBufferEmpty => _inbound.IsEmpty;
     private LocalChannel _peer;
     private LocalAddress _local;
     private LocalAddress _remote;
@@ -128,7 +130,9 @@ public class LocalChannel : AbstractChannel
     {
         if (!IsOpen)
         { while (_inbound.TryDequeue(out var message)) ReferenceCountUtil.Release(message); return; }
-        if (_readPending && IsActive && IsRegistered)
+        // We should only set readInProgress to false if there is any data that was read as otherwise we may miss to
+        // forward data later on.
+        if (_readPending && IsActive && IsRegistered && !_inbound.IsEmpty)
             ReadInbound();
     }
     protected override void DoBeginRead()
@@ -156,16 +160,17 @@ public class LocalChannel : AbstractChannel
                     if (buffer.ReadableBytes < output.WritableBytes)
                     {
                         // We have an opportunity to coalesce buffers.
-                        output.WriteBytes(buffer.ReadableMemory.Span);
+                        // CLR: indexed transfer handles segmented storage and preserves the source reader index.
+                        output.WriteBytes(buffer, buffer.ReaderIndex, buffer.ReadableBytes);
                         buffer.Release();
                         while (_inbound.TryPeek(out next) && next is ByteBuf more && more.ReadableBytes < output.WritableBytes)
                         {
                             _inbound.TryDequeue(out _);
-                            output.WriteBytes(more.ReadableMemory.Span);
+                            output.WriteBytes(more, more.ReaderIndex, more.ReadableBytes);
                             more.Release();
                         }
                         handle.LastBytesRead(output.ReadableBytes);
-                        received = output;
+                        received = output; // Send the coalesced buffer down the pipeline.
                     }
                     else
                     {

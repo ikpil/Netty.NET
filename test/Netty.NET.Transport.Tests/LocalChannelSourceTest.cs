@@ -26,7 +26,7 @@ using Netty.NET.Transport.Channels.Local;
 namespace Netty.NET.Transport.Tests;
 
 #pragma warning disable xUnit1051
-public class LocalChannelSourceTest
+public partial class LocalChannelSourceTest
 {
     private static readonly LocalAddress TestAddress = new(typeof(LocalChannelSourceTest));
     [Fact]
@@ -101,6 +101,7 @@ public class LocalChannelSourceTest
     {
         internal readonly DefaultEventLoopGroup First = new(2);
         internal readonly DefaultEventLoopGroup Second = new(2);
-        public async ValueTask DisposeAsync() => await Task.WhenAll(First.StopAsync(), Second.StopAsync()).WaitAsync(TimeSpan.FromSeconds(10));
+        internal readonly DefaultEventLoopGroup Shared = new(1);
+        public async ValueTask DisposeAsync() => await Task.WhenAll(First.StopAsync(), Second.StopAsync(), Shared.StopAsync()).WaitAsync(TimeSpan.FromSeconds(10));
     }
 }
