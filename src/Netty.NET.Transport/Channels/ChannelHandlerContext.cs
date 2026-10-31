@@ -89,9 +89,9 @@ namespace Netty.NET.Transport.Channels;
  */
 public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
 {
-    internal ChannelHandlerContext Previous;
-    internal ChannelHandlerContext Next;
-    internal int State; // 0 pending, 1 added, 2 removed.
+    internal volatile ChannelHandlerContext Previous;
+    internal volatile ChannelHandlerContext Next;
+    internal volatile int State; // 0 pending, 1 added, 2 removed.
     internal bool Linked = true;
     private readonly IEventExecutor _executor;
     internal IEventExecutor AssignedExecutor => _executor;
@@ -140,15 +140,17 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
 
     private ChannelHandlerContext FindInbound(bool exception = false)
     {
+        // Like source findContextInbound/fireChannelRegistered, select pending handlers before dispatch.
+        // Their owner must run queued HandlerAdded callbacks before deciding whether to invoke or forward.
         var context = Next;
-        while (context != null && (context.State != 1 || (!exception && context.Handler is not IChannelInboundHandler)))
+        while (context != null && (context.State == 2 || (!exception && context.Handler is not IChannelInboundHandler)))
             context = context.Next;
         return context;
     }
     private ChannelHandlerContext FindOutbound()
     {
         var context = Previous;
-        while (context != null && (context.State != 1 || context.Handler is not IChannelOutboundHandler))
+        while (context != null && (context.State == 2 || context.Handler is not IChannelOutboundHandler))
             context = context.Previous;
         return context;
     }
@@ -186,7 +188,12 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         var next = FindInbound(true);
         if (next == null)
         { Pipeline.Owner.OnUnhandledException(cause); return this; }
-        void Invoke() => next.NotifyException(cause);
+        void Invoke()
+        {
+            if (next.State != 1)
+            { next.FireExceptionCaught(cause); return; }
+            next.NotifyException(cause);
+        }
         if (next.Executor.InEventLoop())
             Invoke();
         else

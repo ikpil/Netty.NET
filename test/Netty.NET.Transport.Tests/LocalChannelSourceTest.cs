@@ -93,7 +93,7 @@ public partial class LocalChannelSourceTest
         finally { await CloseChannel(client); await CloseChannel(server); }
     }
     private static Task CloseChannel(IChannel channel) => channel?.CloseAsync() ?? Task.CompletedTask;
-    private sealed class TestHandler : ChannelInboundHandlerAdapter
+    private class TestHandler : ChannelInboundHandlerAdapter
     { public override void ChannelRead(ChannelHandlerContext context, object message) => ReferenceCountUtil.SafeRelease(message); }
     private sealed class ExceptionCatcher(Action<Exception> caught) : ChannelInboundHandlerAdapter
     { public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => caught(cause); }

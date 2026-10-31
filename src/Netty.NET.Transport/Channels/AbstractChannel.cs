@@ -264,11 +264,36 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     internal Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
     {
         bool wasActive = _active;
-        return Operation(() => DoConnectAsync(remote, local, cancellationToken), () =>
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _ = ConnectCoreAsync();
+        return completion.Task;
+        async Task ConnectCoreAsync()
         {
-            if (!wasActive && _active)
-            { Pipeline.FireChannelActive(); if (Config.IsAutoRead()) BeginRead(); }
-        });
+            try
+            {
+                EnsureOpen();
+                await DoConnectAsync(remote, local, cancellationToken).ConfigureAwait(false);
+                await OnLoopAsync(() =>
+                {
+                    EnsureOpen();
+                    // Source connect completion precedes ChannelActive. Keep the native producer's asynchronous
+                    // continuation policy; completion itself is committed on this owner.
+                    completion.TrySetResult();
+                    if (!wasActive && _active)
+                    { Pipeline.FireChannelActive(); if (Config.IsAutoRead()) BeginRead(); }
+                }).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException canceled)
+            {
+                if (!completion.TrySetCanceled(canceled.CancellationToken))
+                    OnUnhandledException(canceled);
+            }
+            catch (Exception error)
+            {
+                if (!completion.TrySetException(error))
+                    OnUnhandledException(error);
+            }
+        }
     }
     internal virtual Task DisconnectTransportAsync(CancellationToken cancellationToken)
     {

@@ -23,8 +23,8 @@
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
       "status": "in-progress",
-      "completedUnit": "All 36 EmbeddedChannel original tests and 16/32 LocalChannel original methods, including manual echo, client/server read budgets, queued 2/2/1 acceptance, allocator completion, address/connection checks and close-owned buffers; segmented local coalescing fixed against indexed source transfers",
-      "next": "Remaining 16 LocalChannel methods, close/write/re-registration ordering and auxiliary embedded fixtures"
+      "completedUnit": "All 36 EmbeddedChannel original tests and all 32 LocalChannel original methods; original read budgets, queued acceptance, connect/close ownership and completion/write/read/inactive ordering. Native segmented local coalescing, late empty read wakeups, reentrant peer write ordering and close-owned references fixed against source contracts.",
+      "next": "Further LocalChannel runtime comment/contract review and auxiliary embedded fixtures; this fixture completion does not close the stage"
     },
     {
       "name": "Bootstrap, Resolver integration and TCP",
@@ -41,19 +41,19 @@
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 180,
-    "mappedOriginalMethods": 179,
-    "originalExecutedCases": 180,
-    "supplementalExecutedCases": 78,
+    "javaOriginalPassed": 196,
+    "mappedOriginalMethods": 195,
+    "originalExecutedCases": 196,
+    "supplementalExecutedCases": 82,
     "debug": {
-      "total": 258,
-      "passed": 258,
+      "total": 278,
+      "passed": 278,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 258,
-      "passed": 258,
+      "total": 278,
+      "passed": 278,
       "failed": 0,
       "skipped": 0
     },
@@ -65,8 +65,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 258,
-        "passed": 258,
+        "total": 278,
+        "passed": 278,
         "failed": 0,
         "skipped": 0
       },
@@ -83,21 +83,24 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32556,
+    "solutionPassed": 32576,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
-      "existingCommonCheckedRebuild": 51
+      "existingCommonCheckedRebuild": 51,
+      "existingCommonTestsSolutionRebuild": 1020,
+      "solutionRebuildTotal": 1071
     },
-    "javaEvidence": "Executed 180 unchanged pinned Java cases with lifecycle callbacks, assertions and both boolean parameter inputs. The LocalChannel selection now includes 16/32 original declarations: 13 read/close-ownership/allocator-completion declarations added to the prior three. Fixtures were compared with git show before compilation. Isolated runner exit occurs only after every expected case/lifecycle callback. This is not the entire upstream transport suite.",
-    "note": "All 258 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 179 mapped original methods execute 180 original cases; 78 cases remain explicitly supplemental. Before fixes, segmented local coalescing failed with NotSupportedException, and a gated stale-empty peer notification deterministically lost the next manual read and timed out. The initial full Debug run exposed the same manual-read race in the original 100-echo DifferentGroup case. Its 5-second deadline and 100 echoes were preserved; after the source guard was restored, that original case also passed five additional focused process runs. No Common/Buffer/Resolver sources were changed.",
+    "javaEvidence": "Executed 196 unchanged pinned Java cases with lifecycle callbacks, assertions and both boolean parameter inputs. All 32 LocalChannelTest methods are now selected, adding 16 original cases. Fixture bytes were compared with git show before compilation. The isolated runner exits only after every expected assertion/lifecycle callback. This is not the entire upstream Transport suite.",
+    "note": "All 278 CLR Transport cases passed in final Debug, full-solution Release after a full solution rebuild, and checked Release after a full checked Transport/dependency rebuild. 195 mapped original methods execute 196 original cases; 82 cases remain explicitly supplemental. Original LocalChannel tests exposed incorrect refused-connection failures and connect completion after ChannelActive. Deterministic native cases exposed reversed reentrant receive order and a retained reference published after receiver close/drain. One earlier Debug run timed out in the existing original ChannelInitializer executor case; a gated native reproduction confirmed pending HandlerAdded contexts were incorrectly skipped before dispatch. Select pending contexts before owner dispatch and check invocation state there; preserve volatile source link/state visibility. The unchanged original initializer case plus gated supplement passed five additional process runs after the fix, without increased timeouts. Native cancellation preserves IsCanceled/token and closes the pending local client on its owner so later accepted registration cannot reopen it. No Common/Buffer/Resolver source was changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
-      "dotnet test Netty.NET.sln -c Release --no-restore",
+      "dotnet build Netty.NET.sln -c Release --no-restore -t:Rebuild",
+      "dotnet test Netty.NET.sln -c Release --no-build --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-build --no-restore --filter FullyQualifiedName~TestAutoReadDisabledDifferentGroup (five focused runs after the race fix)",
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-build --no-restore --filter \"FullyQualifiedName~TestChannelInitializerEventExecutor|FullyQualifiedName~PendingInitializerReceivesRegisteredBeforePipelineDestruction\" (five focused runs)",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
     ]
@@ -278,9 +281,11 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs"
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "test/Netty.NET.Transport.Tests/ChannelInitializerTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs"
         ]
       }
     },
@@ -1636,14 +1641,17 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 64,
-        "preservedCount": 7,
-        "unreviewedCount": 57,
-        "scope": "Original comments preserved at reviewed CLR counterparts; comments for unmapped original contracts remain open."
+        "preservedCount": 24,
+        "unreviewedCount": 40,
+        "scope": "Original comments retained at reviewed CLR counterparts; remaining runtime comment/contract review is explicit. All original LocalChannelTest methods are now mapped."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Reviewed original read budgets/coalescing/manual-read wakeups plus connect/close ownership and write ordering against all 32 LocalChannelTest declarations. Native cancellation closes a pending client without touching the server-owned queued peer. Remaining source comments and runtime contracts are still in-progress; source JVM machinery is not automatically classified as unnecessary.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs"
+          "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelWriteSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs"
         ]
       }
     },
@@ -4126,25 +4134,30 @@
       "sha256": "96d8a6421a2681228328e82dea5fb43749f9aad5f620a0052f15fbe5a62f42fe",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/LocalChannelWriteSourceTest.cs"
       ],
       "comments": {
-        "status": "partial",
+        "status": "preserved",
         "uniqueCount": 41,
-        "preservedCount": 13,
-        "unreviewedCount": 28,
-        "scope": "Original comments preserved at reviewed CLR counterparts; comments for unmapped original contracts remain open."
+        "preservedCount": 41,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at reviewed CLR counterparts; remaining runtime comment/contract review is explicit. All original LocalChannelTest methods are now mapped."
       },
       "review": {
-        "scope": "Sixteen of 32 declared original methods are mapped, including all original read budgets/allocator completion wrappers, manual-read echoes and retained-slice remote-close cleanup. Remaining original order/write-close/connection/registration cases stay explicit.",
+        "scope": "All 32 declared LocalChannelTest methods and corresponding helper assertions are mapped. Source test inputs, comments, close/write/completion order, worker sharing and timeouts are retained with the explicit CLR operation-task, exception and final-cleanup adaptations below. This does not imply all LocalChannel runtime or Transport contracts are reviewed.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
           "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelWriteSourceTest.cs",
           "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
-          "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs"
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs"
         ]
       },
       "caseMappings": [
@@ -4227,30 +4240,93 @@
           "upstreamMethod": "testReadCompleteCalledOnHandle",
           "clrMethod": "TestReadCompleteCalledOnHandle",
           "adaptation": "Preserve original 100-echo/manual-read, single- and separate-worker groups, five read cycles, ten integer writes, maxMessagesPerRead=1, 100ms read rearming, five queued connections drained 2/2/1, allocator ReadComplete callbacks and retained-slice close ownership assertions. Native Task/TCS/count fields and System.Threading.Channels replace latch/queue blocking waits; successful async writes explicitly dispatch Read back to the context executor. Source @Timeout cases keep a 5000ms Fact timeout. Capture pre-completion channels through the factory solely for failure cleanup because Task<IChannel> exposes only completed results."
+        },
+        {
+          "upstreamMethod": "testWriteFailsFastOnClosedChannel",
+          "clrMethod": "TestWriteFailsFastOnClosedChannel",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. The original JVM synthetic stack assertion proves that the transport write was never attempted. Assert IOException and an instrumented DoWriteAsync call count of zero instead."
+        },
+        {
+          "upstreamMethod": "testServerCloseChannelSameEventLoop",
+          "clrMethod": "TestServerCloseChannelSameEventLoop",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve the original listener-triggered close/write, buffer equality and receive-count assertions; await native callback completion explicitly."
+        },
+        {
+          "upstreamMethod": "localChannelRaceCondition",
+          "clrMethod": "LocalChannelRaceCondition",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve the 2000ms completion deadline, accepted-channel close gate and delayed LocalChannel-owned callbacks. Delegate Method.DeclaringType replaces Java anonymous-class enclosing-class reflection. Completion may succeed or fail, exactly as Future.await()."
+        },
+        {
+          "upstreamMethod": "testReRegister",
+          "clrMethod": "TestReRegister",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. The original method only deregisters the connected client; do not invent a re-registration assertion from its name."
+        },
+        {
+          "upstreamMethod": "testConnectFutureBeforeChannelActive",
+          "clrMethod": "TestConnectFutureBeforeChannelActive",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. The original supplies a mutable promise before starting connect. Capture the actual native connect Task on the channel owner before the asynchronous local handshake and assert IsCompleted inside ChannelActive. Off-owner dispatch/Bootstrap wrapper Tasks and user await continuations have their own scheduling and are not promised to complete/run before this event. Preserve the original 3-second outer timeout."
+        },
+        {
+          "upstreamMethod": "testConnectFailsWhenServerClosedWithQueuedConnection",
+          "clrMethod": "TestConnectFailsWhenServerClosedWithQueuedConnection",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve the original listener-triggered close/write, buffer equality and receive-count assertions; await native callback completion explicitly."
+        },
+        {
+          "upstreamMethod": "testClientCloseAfterServerClosedWithQueuedConnection",
+          "clrMethod": "TestClientCloseAfterServerClosedWithQueuedConnection",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Keep server close and subsequent client close in the same owner callback. Explicitly await the Bootstrap dispatch wrapper failure before inspecting its result; native continuation dispatch is asynchronous."
+        },
+        {
+          "upstreamMethod": "testClientCloseWhileConnectionIsQueued",
+          "clrMethod": "TestClientCloseWhileConnectionIsQueued",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve queued acceptance, client close before server AutoRead is enabled, eventual accepted-channel close and all open/active assertions. CLR IOException represents local close, whereas refused remote acceptance uses SocketException(ConnectionRefused)."
+        },
+        {
+          "upstreamMethod": "testConnectFailsWhenServerClosesBeforeConnectionArrives",
+          "clrMethod": "TestConnectFailsWhenServerClosesBeforeConnectionArrives",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve the blocked real server worker, queued close ahead of serve, client worker barrier, failed connection and closed client assertions."
+        },
+        {
+          "upstreamMethod": "testConnectFailsWhenAcceptedChannelCannotBeRegistered",
+          "clrMethod": "TestConnectFailsWhenAcceptedChannelCannotBeRegistered",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Terminate the actual child group before binding. Require SocketException(ConnectionRefused) and eventual closed client, preserving the source expected warning/error explanation."
+        },
+        {
+          "upstreamMethod": "testCloseInWritePromiseCompletePreservesOrder",
+          "clrMethod": "TestCloseInWritePromiseCompletePreservesOrder",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve the original listener-triggered close/write, buffer equality and receive-count assertions; await native callback completion explicitly."
+        },
+        {
+          "upstreamMethod": "testCloseAfterWriteInSameEventLoopPreservesOrder",
+          "clrMethod": "TestCloseAfterWriteInSameEventLoopPreservesOrder",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Keep the original 1024-byte duplicate/echo flow and three receive/inactive signals on the single shared worker. The original callback leaves one inbound duplicate owned by the fixture; release that reference only in final cleanup, after every original assertion and close ordering."
+        },
+        {
+          "upstreamMethod": "testWriteInWritePromiseCompletePreservesOrder",
+          "clrMethod": "TestWriteInWritePromiseCompletePreservesOrder",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Preserve the original listener-triggered close/write, buffer equality and receive-count assertions; await native callback completion explicitly."
+        },
+        {
+          "upstreamMethod": "testPeerWriteInWritePromiseCompleteDifferentEventLoopPreservesOrder",
+          "clrMethod": "TestPeerWriteInWritePromiseCompleteDifferentEventLoopPreservesOrder",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Keep the distinct worker groups, original 1024/512-byte payloads and both receives. The source deliberately does not assert cross-worker receive order."
+        },
+        {
+          "upstreamMethod": "testPeerWriteInWritePromiseCompleteSameEventLoopPreservesOrder",
+          "clrMethod": "TestPeerWriteInWritePromiseCompleteSameEventLoopPreservesOrder",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Keep 1024/512-byte messages and server count==2 before client count==1 assertions on the one shared worker. Asynchronous native completion callbacks regain owner access explicitly; the separate deterministic CLR supplement also forces reentrance before DoWriteComplete returns."
+        },
+        {
+          "upstreamMethod": "testWriteWhilePeerIsClosedReleaseObjectAndFailPromise",
+          "clrMethod": "TestWriteWhilePeerIsClosedReleaseObjectAndFailPromise",
+          "adaptation": "Keep the original data, worker sharing, completion/read/inactive ordering and bounded waits. Task/TCS and explicit owner dispatch replace mutable Java promises/listeners/latches. Native Tasks expose consumer completion; no JVM promise facade is introduced. Keep both payload sizes, the actual server-worker wait for client closure (50ms polling with the original waitCount<=5 bound; latch deadlines remain 5 seconds), failed write, message/close signals and duplicate ownership. IOException replaces ClosedChannelException."
         }
       ],
       "methodReview": {
         "declaredCount": 32,
-        "mappedCount": 16,
-        "unreviewedMethods": [
-          "testWriteFailsFastOnClosedChannel",
-          "testServerCloseChannelSameEventLoop",
-          "localChannelRaceCondition",
-          "testReRegister",
-          "testCloseInWritePromiseCompletePreservesOrder",
-          "testCloseAfterWriteInSameEventLoopPreservesOrder",
-          "testWriteInWritePromiseCompletePreservesOrder",
-          "testPeerWriteInWritePromiseCompleteDifferentEventLoopPreservesOrder",
-          "testPeerWriteInWritePromiseCompleteSameEventLoopPreservesOrder",
-          "testWriteWhilePeerIsClosedReleaseObjectAndFailPromise",
-          "testConnectFutureBeforeChannelActive",
-          "testConnectFailsWhenServerClosedWithQueuedConnection",
-          "testClientCloseAfterServerClosedWithQueuedConnection",
-          "testClientCloseWhileConnectionIsQueued",
-          "testConnectFailsWhenServerClosesBeforeConnectionArrives",
-          "testConnectFailsWhenAcceptedChannelCannotBeRegistered"
-        ],
-        "scope": "Sixteen of 32 declared original methods are mapped, including all original read budgets/allocator completion wrappers, manual-read echoes and retained-slice remote-close cleanup. Remaining original order/write-close/connection/registration cases stay explicit."
+        "mappedCount": 32,
+        "unreviewedMethods": [],
+        "scope": "All 32 declared LocalChannelTest methods and corresponding helper assertions are mapped. Source test inputs, comments, close/write/completion order, worker sharing and timeouts are retained with the explicit CLR operation-task, exception and final-cleanup adaptations below. This does not imply all LocalChannel runtime or Transport contracts are reviewed."
       }
     },
     {
@@ -5122,6 +5198,10 @@
     {
       "subject": "Local segmented reads and original read budgets",
       "decision": "Use the existing indexed ByteBuf.WriteBytes overload for coalescing, exactly as upstream: a live CLR ReadOnlyMemory can describe only contiguous storage, so treating every ByteBuf as one memory is invalid. Indexed transfer supports every segment and preserves source reader indices. Restore the source nonempty-inbound condition before consuming a pending read, so a late empty peer notification cannot lose the next manual Read. Original concurrency/read count inputs and 5-second deadlines stay unchanged; native async test signals replace blocking latches and Task continuations explicitly regain executor ownership before Read. The package-visible inbound queue is exposed to the original friend-assembly test by an internal read-only empty-state property, without exposing a mutable public collection."
+    },
+    {
+      "subject": "Local lifecycle, native connect completion and close-owned writes",
+      "decision": "Keep native Task/TCS producers, consumer cancellation and explicit owner dispatch. Complete the on-owner connect operation before ChannelActive while retaining asynchronous continuation scheduling. SocketException(ConnectionRefused) represents failed remote acceptance and IOException represents own/closed-channel failure. Never touch a pending accepted peer owned by a server or registration loop. Finish peer reads using the source writeInProgress ordering. A short CLR inbound acceptance gate joins publication with close/seal, with no user retain/release callbacks under it. Preserve original write/close test assertions; use deterministic CLR supplements for inline write finalization reentrance and retained-reference handoff races. CLR pending-connect cancellation cancels the private producer and closes on its owner; later server acceptance cannot reactivate the client. A delayed separate-executor initializer must still receive Registered/read/removal after close; pending-context admission happens before executor dispatch and invocation-state filtering after it. Source volatile link/state visibility is retained."
     }
   ],
   "openWork": [
@@ -5172,7 +5252,8 @@
     "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs",
     "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs",
-    "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs"
+    "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs",
+    "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -5614,10 +5695,77 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "1916f33cb33f147324b012747cd66313393a069c",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 180,
+        "mappedOriginalMethods": 179,
+        "originalExecutedCases": 180,
+        "supplementalExecutedCases": 78,
+        "debug": {
+          "total": 258,
+          "passed": 258,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 258,
+          "passed": 258,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 258,
+            "passed": 258,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32556,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 180 unchanged pinned Java cases with lifecycle callbacks, assertions and both boolean parameter inputs. The LocalChannel selection now includes 16/32 original declarations: 13 read/close-ownership/allocator-completion declarations added to the prior three. Fixtures were compared with git show before compilation. Isolated runner exit occurs only after every expected case/lifecycle callback. This is not the entire upstream transport suite.",
+        "note": "All 258 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 179 mapped original methods execute 180 original cases; 78 cases remain explicitly supplemental. Before fixes, segmented local coalescing failed with NotSupportedException, and a gated stale-empty peer notification deterministically lost the next manual read and timed out. The initial full Debug run exposed the same manual-read race in the original 100-echo DifferentGroup case. Its 5-second deadline and 100 echoes were preserved; after the source guard was restored, that original case also passed five additional focused process runs. No Common/Buffer/Resolver sources were changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-build --no-restore --filter FullyQualifiedName~TestAutoReadDisabledDifferentGroup (five focused runs after the race fix)",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Continue remaining 67 DefaultChannelPipelineTest and 16 LocalChannelTest declarations, preserving helpers/order/assertions.",
+    "Continue the remaining 67 DefaultChannelPipelineTest declarations, preserving original helpers, executor ordering and assertions.",
+    "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
     "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts."
   ],
@@ -5688,7 +5836,41 @@
       "baselineResult": "With only the segmented-copy fix present, a gated sender forced enqueue -> explicit receiver read -> second read armed -> old empty notification -> second write. The receiver deterministically timed out before the missing empty-queue guard was restored. No original timeout was increased.",
       "nativeInputs": "Two independent workers, first completion paused before notifying the peer, explicit receiver reads on its owner, sender and receiver barriers, then a second integer. Expected sequence is exactly 1,2 without a third manual Read."
     },
-    "remaining": "16 original LocalChannelTest methods and further close/re-registration/write ordering contracts remain unreviewed. This does not mark LocalChannel or Transport complete.",
+    "remaining": "Historical read batch completed 16/32 methods at its checkpoint. The subsequent localLifecycleEvidence unit maps all 32; further LocalChannel runtime comment/contract review and the rest of Transport remain open.",
     "focusedManualEchoRepeats": 5
+  },
+  "localLifecycleEvidence": {
+    "priorRuntimeRevision": "1916f33cb33f147324b012747cd66313393a069c",
+    "newOriginalMethods": 16,
+    "localFixtureMapped": 32,
+    "localFixtureDeclared": 32,
+    "nativeSupplementalCases": 4,
+    "sourceContracts": [
+      "LocalChannel.doClose/tryClose/finishPeerRead/doWrite/LocalUnsafe.registered",
+      "AbstractChannel connect completion before ChannelActive",
+      "All 32 LocalChannelTest declarations"
+    ],
+    "preserved": "Closed-write transport bypass, pending accepted-channel ownership, refused connection vs local close, deregistration, completion before active, close/write/read/inactive ordering, source payloads and original timeouts. The source re-register method only deregisters. JVM-specific stack/class reflection is adapted to actual CLR transport call observation and delegate declaring types.",
+    "originalFailures": "Three original pending/failed-accept scenarios initially received IOException(Peer is closed) instead of a refused-connection SocketException. The original connect-before-active assertion also initially failed. Neither original expected exception nor ordering assertion was weakened.",
+    "writeReentrance": {
+      "baselineResult": "The deterministic CLR supplement failed with [client, server] instead of [server, client] when a peer write reentered the original write finalization frame.",
+      "fix": "Retain a LocalChannel writeInProgress flag through transport completion and use the source direct same-owner finish-peer-read path only while the peer is not writing. During close, finish the current peer read before queuing peer close.",
+      "nativeAdaptation": "Default native completion producers remain RunContinuationsAsynchronously. An instrumented DoWriteComplete frame independently exercises the original inline-listener hazard; ordinary ported Task callback tests are not claimed to force that reentrant frame."
+    },
+    "closedInboundOwnership": {
+      "baselineResult": "A gated second Retain paused the peer ownership transfer. Receiver close and all pending notifications drained first, then sender close reentered Retain. Returning from Retain incorrectly published into the already drained receiver queue.",
+      "fix": "Seal inbound acceptance under the same short gate used for queue publication; release rejected retained references outside the gate. Retain callbacks also run outside it. Assert empty closed queue, zero remaining references and exactly one deallocation.",
+      "sourceMeaning": "A successful local write does not promise remote delivery, but every accepted or rejected retained reference must have a single release owner. BCL ConcurrentQueue safety alone does not make close/drain/publication atomic."
+    },
+    "nativeCompletion": "Complete the actual on-owner connect Task before ChannelActive; off-owner proxy/Bootstrap Tasks and await continuations retain native scheduling. Preserve Task.IsCanceled and cancellation token. Unlike Java setUncancellable, the CLR API accepts CancellationToken during pending connection: cancel the private producer and close the client on its owner, leave the server-owned queued peer alone, then assert that enabling server acceptance closes that peer without reactivating either endpoint.",
+    "remaining": "The LocalChannelTest fixture is mapped completely. Further LocalChannel runtime comments/contracts, other embedded fixtures, 67 DefaultChannelPipeline methods, socket/half-close/config/bootstrap and remaining portable inventory remain open. Transport is in-progress.",
+    "pendingInitializer": {
+      "sourceContract": "AbstractChannelHandlerContext.findContextInbound/findContextOutbound/fireChannelRegistered/invokeHandler and volatile next/prev/handlerState; ChannelInitializerTest.testChannelInitializerEventExecutor.",
+      "originalFailure": "An earlier full Debug run timed out in the unchanged original initializer executor scenario, including a cancellation cleanup failure. Release/checked and narrower runs had passed; these passes were not treated as sufficient evidence.",
+      "deterministicFailure": "Block the real separate executor until the accepted channel is closed/unregistered. The pre-fix runtime skips the pending initializer before dispatching Registered; HandlerAdded then observes an unregistered channel, initialization never runs, and the required removal signal times out.",
+      "fix": "Select pending handlers before crossing their executor boundary; decide invocation vs forwarding on that owner after prior HandlerAdded work. Apply the matching outbound selection rule and exception invocation-state check. Preserve source volatile visibility for links and handler state.",
+      "assertions": "The queued original Hello World read, exactly one initialization and exactly one removal must survive even when HandlerAdded first runs after close. The initializer observes IsRegistered=false, proving the delayed path ran.",
+      "focusedProcessRepeats": 5
+    }
   }
 }
