@@ -46,6 +46,8 @@ public class Bootstrap
     private readonly Dictionary<ChannelOption, object> _options = new();
     private readonly List<Action<IChannel>> _attributes = new();
     private Func<IEventExecutor, EndPoint, CancellationToken, Task<EndPoint>> _resolve = DefaultResolveAsync;
+    // Select the configured owner without pretending that a native EventLoop is an EventLoopGroup.
+    internal IEventLoop NextEventLoop() => _registrationLoop ?? (_group ?? throw new InvalidOperationException("Group not set.")).Next();
     /**
      * The {@link EventLoopGroup} which is used to handle all the events for the to-be-created
      * {@link Channel}

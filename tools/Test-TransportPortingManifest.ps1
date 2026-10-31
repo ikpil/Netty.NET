@@ -104,8 +104,24 @@ foreach ($entry in $manifest.entries) {
                 [regex]::Replace($match.Value, '[^\r\n]', ' ')
             })
         foreach ($mapping in $entry.caseMappings) {
-            if ($testCode -notmatch ('\[Fact(?:\([^\]]*\))?\]\s*public\s+(?:async\s+)?(?:void|Task)\s+' + [regex]::Escape($mapping.clrMethod) + '\(')) {
+            $nativeDeclaration = '\[(?:Fact|Theory)(?:\([^\]]*\))?\]\s*(?:\[[^\]]+\]\s*)*public\s+(?:async\s+)?(?:void|Task)\s+' +
+                [regex]::Escape($mapping.clrMethod) + '\('
+            if ($testCode -notmatch $nativeDeclaration) {
                 throw "Missing original test body: $($mapping.clrMethod)"
+            }
+            if ($mapping.parameterCases) {
+                # A mapped parameterized method must retain every declared input, not just its method name.
+                $theory = [regex]::Match($testCode, '\[Theory\]\s*(?<rows>(?:\[InlineData\([^\]]*\)\]\s*)+)public\s+(?:async\s+)?Task\s+' +
+                    [regex]::Escape($mapping.clrMethod) + '\(')
+                if (-not $theory.Success) { throw 'Missing native parameter cases.' }
+                $rows = @([regex]::Matches($theory.Groups['rows'].Value, '\[InlineData\((?<input>[^)]*)\)\]') |
+                    ForEach-Object { $_.Groups['input'].Value.Trim().ToLowerInvariant() } | Sort-Object)
+                $expectedRows = @($mapping.parameterCases | ForEach-Object { ([string]::Join(', ', @($_.arguments))).ToLowerInvariant() } | Sort-Object)
+                if (Compare-Object $rows $expectedRows) { throw 'Native parameter cases differ from their mapping.' }
+                $javaRows = @([regex]::Matches($source, '@ValueSource\(booleans\s*=\s*\{([^}]*)\}\)\s*public\s+void\s+' +
+                    [regex]::Escape($mapping.upstreamMethod) + '\(') | ForEach-Object { $_.Groups[1].Value.Split(',') } |
+                    ForEach-Object { $_.Trim().ToLowerInvariant() } | Sort-Object)
+                if (-not $javaRows.Count -or (Compare-Object $javaRows $expectedRows)) { throw 'Original parameter inputs differ from their mapping.' }
             }
             $mappedCount++
         }

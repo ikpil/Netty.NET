@@ -18,6 +18,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+/**
+ * Implementations and API for {@link io.netty.channel.Channel} pools.
+ */
 namespace Netty.NET.Transport.Channels.Pool;
 
 // CLR: callers consume Tasks and cancel acquisition through CancellationToken. There is no

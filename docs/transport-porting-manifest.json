@@ -35,24 +35,25 @@
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures; SimpleChannelPool and key-based pool map with all 15 declared original tests",
-      "next": "FixedChannelPool and its original cancellation/timeout/deadlock cases; UDP/multicast and group fixture review; remaining portable inventory"
+      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures; SimpleChannelPool and key-based pool map with all 15 declared original tests; FixedChannelPool with all 20 original fixed-pool/map-deadlock executions",
+      "next": "UDP/multicast and group fixture review; remaining portable inventory"
     }
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 147,
-    "mappedOriginalMethods": 147,
-    "supplementalExecutedCases": 74,
+    "javaOriginalPassed": 167,
+    "mappedOriginalMethods": 166,
+    "originalExecutedCases": 167,
+    "supplementalExecutedCases": 76,
     "debug": {
-      "total": 221,
-      "passed": 221,
+      "total": 243,
+      "passed": 243,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 221,
-      "passed": 221,
+      "total": 243,
+      "passed": 243,
       "failed": 0,
       "skipped": 0
     },
@@ -64,8 +65,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 220,
-        "passed": 220,
+        "total": 243,
+        "passed": 243,
         "failed": 0,
         "skipped": 0
       },
@@ -82,15 +83,15 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32518,
+    "solutionPassed": 32541,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 147 unchanged pinned Java fixture methods including all 12 SimpleChannelPoolTest and 3 AbstractChannelPoolMapTest declarations with setup/teardown lifecycle callbacks and assertions enabled. Fixtures were compared with git show before compilation. The isolated runner exits only after all expected methods/lifecycle callbacks complete because original map cases leave local groups running; an earlier run passed assertions but timed out waiting for those threads. No original test source/assertion was altered. This is not a whole Java transport-module run.",
-    "note": "The full Release solution passed 220 Transport cases plus Common/Buffer/Resolver (32518 passed / 14 skipped). A final explicit-bootstrap-event-loop integration case was then added; all 221 Transport cases passed in Debug and checked Release following a full checked rebuild. Original 147 cases remain separate from 74 CLR-specific cases. Pool task producer ownership stays private; cancellation cannot abandon a later successful connection/health result. Health checks and notifications dispatch to the actual channel event loop. No Common/Buffer/Resolver sources were changed.",
+    "javaEvidence": "Executed 167 unchanged pinned original Java cases with setup/teardown and assertions enabled. This includes 16 fixed-pool @Test declarations, both boolean inputs of its @ParameterizedTest, and two map-deadlock declarations. The runner now explicitly rejects unsupported parameter providers instead of silently skipping them. Source fixtures were compared with git show before compilation. As with a forked test runner, exit occurs only after every expected case/lifecycle callback, because some original map cases leave local groups running. This is not a whole Java transport-module run.",
+    "note": "All 243 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 166 mapped original methods execute 167 original cases; the remaining 76 are explicitly supplemental CLR cases. All declared channel/pool fixtures now have counterparts, including real blocked-worker cancellation and the original four-worker map insertion/two-worker removal barriers. TimeSpan, native private TCS producers, Task scheduling/affinity and disposal replace JVM facades. No Common/Buffer/Resolver sources were changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
@@ -2229,16 +2230,44 @@
       "sha256": "279e2a9acf996c562d6edda162809664e0f2a31aba237ad8ee23deb3ed054547",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/FixedChannelPool.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 38,
+        "preservedCount": 38,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original fixed pool capacity, FIFO pending queue, FAIL/NEW deadlines, independent producer completion, cancelled acquire reclamation, release failure classification, count reset and cross-worker asynchronous map close.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Pool/FixedChannelPool.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolMapDeadlockTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/package-info.java",
       "sha256": "e04e32d7c1f11ca5dc323192775adea1082bd40adaa9e78c4d2f69d7ae6e90af",
       "hashMode": "utf8-lf",
       "kind": "documentation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Pool/IChannelPool.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original pool package documentation at the native namespace/API; no runtime Java package-info class is needed."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/pool/SimpleChannelPool.java",
@@ -4480,16 +4509,173 @@
       "sha256": "d48049c2b5dd759e561f7f8a4d760ad700733c5e4d9fbae3bcf75ac25edffe40",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/FixedChannelPoolMapDeadlockTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 32,
+        "preservedCount": 32,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original fixed pool capacity, FIFO pending queue, FAIL/NEW deadlines, independent producer completion, cancelled acquire reclamation, release failure classification, count reset and cross-worker asynchronous map close.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolMapDeadlockTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolMapDeadlockTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testDeadlockOnAcquire",
+          "clrMethod": "TestDeadlockOnAcquire",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testDeadlockOnRemove",
+          "clrMethod": "TestDeadlockOnRemove",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        }
+      ],
+      "methodReview": {
+        "scope": "All declared original methods; the boolean parameterized method executes both original inputs.",
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/pool/FixedChannelPoolTest.java",
       "sha256": "5b2559b0a53fd9bd92c3c6416f8cc9d7bb3ed60df071d3e96532b6128c03fc12",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/FixedChannelPoolTest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 17,
+        "preservedCount": 17,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Original fixed pool capacity, FIFO pending queue, FAIL/NEW deadlines, independent producer completion, cancelled acquire reclamation, release failure classification, count reset and cross-worker asynchronous map close.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolMapDeadlockTest.cs",
+          "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAcquire",
+          "clrMethod": "TestAcquire",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testCancelledAcquireReleasesChannel",
+          "clrMethod": "TestCancelledAcquireReleasesChannel",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testCancelledPendingAcquireRunsNextTask",
+          "clrMethod": "TestCancelledPendingAcquireRunsNextTask",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testCancelledAcquireChannelClosedWhenPoolCloses",
+          "clrMethod": "TestCancelledAcquireChannelClosedWhenPoolCloses",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testAcquireTimeout",
+          "clrMethod": "TestAcquireTimeout",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testAcquireWithZeroTimeout",
+          "clrMethod": "TestAcquireWithZeroTimeout",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testAcquireNewConnection",
+          "clrMethod": "TestAcquireNewConnection",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testAcquireNewConnectionWhen",
+          "clrMethod": "TestAcquireNewConnectionWhen",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testAcquireBoundQueue",
+          "clrMethod": "TestAcquireBoundQueue",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testReleaseDifferentPool",
+          "clrMethod": "TestReleaseDifferentPool",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testReleaseAfterClosePool",
+          "clrMethod": "TestReleaseAfterClosePool",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testReleaseClosed",
+          "clrMethod": "TestReleaseClosed",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testReleaseFailsWithIllegalArgumentExceptionFromHandler",
+          "clrMethod": "TestReleaseFailsWithIllegalArgumentExceptionFromHandler",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testCloseAsync",
+          "clrMethod": "TestCloseAsync",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testChannelAcquiredException",
+          "clrMethod": "TestChannelAcquiredException",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testChannelReleaseHealthCheck",
+          "clrMethod": "TestChannelReleaseHealthCheck",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required."
+        },
+        {
+          "upstreamMethod": "testChannelProcessingOrder",
+          "clrMethod": "TestChannelProcessingOrder",
+          "adaptation": "Preserve original local-channel inputs, pool/queue limits, 0/500ms deadlines, channel identity, handler counters, exception instances, genuinely blocked single-worker acquisition and source barrier ordering. Task/CancellationToken/TimeSpan replace futures/promises/TimeUnit; native asynchronous cleanup is awaited. JUnit subtype checks use ThrowsAnyAsync where required.",
+          "parameterCases": [
+            {
+              "arguments": [
+                true
+              ]
+            },
+            {
+              "arguments": [
+                false
+              ]
+            }
+          ]
+        }
+      ],
+      "methodReview": {
+        "scope": "All declared original methods; the boolean parameterized method executes both original inputs.",
+        "declaredCount": 17,
+        "mappedCount": 17,
+        "unreviewedMethods": []
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/pool/SimpleChannelPoolTest.java",
@@ -4871,6 +5057,10 @@
     {
       "subject": "Native channel pools",
       "decision": "AcquireAsync returns Task<IChannel> and uses CancellationToken; the pool keeps its native TCS producer private. Cancelled consumers still trigger release when pending connect/health checks finish. Async health is Func<IChannel,Task<bool>>, with health invocation and all pool notifications on the channel event loop. BCL LinkedList under a short storage lock replaces a concurrent deque; no user callback runs under that lock. ConcurrentDictionary insertion closes discarded pools outside map operations. Native CloseAsync/DisposeAsync replace GlobalEventExecutor blocking bridges; synchronous Close retains the source blocking caller contract. SimpleChannelPool Close drains available channels and intentionally does not become a permanently closed pool. Bootstrap.Clone(IEventLoop) supplies the source explicit registration owner without making native IEventLoop a fake IEventLoopGroup. JVM stacktrace suppression and mutable Promise overloads are not reproduced."
+    },
+    {
+      "subject": "Fixed pool ownership and deadlines",
+      "decision": "Use a private native TCS per acquisition, CancellationToken for consumer cancellation, TimeSpan for configured durations, a BCL linked pending queue, and ScheduleAsync with a cancellation source per deadline. All count/queue mutations run on one configured event executor. Inner base acquisition remains uncancelled so a cancelled consumer still returns a later successful channel. Base results are explicitly queued back to the pool executor, supplying bounded completion depth when many cancelled requests drain. Handler exceptions return a slot, but ChannelNotAcquiredFromPoolException does not. Native async close replaces the source GlobalEventExecutor blocking bridge and keeps map Get/Remove nonblocking across workers. Monotonic executor ticker and unchecked deadline subtraction preserve wrap-safe expiry; duration conversion saturates rather than overflows. JVM fillInStackTrace suppression is omitted while preserving its comment and native stacks."
     }
   ],
   "openWork": [
@@ -4902,7 +5092,7 @@
     {
       "area": "Portable remaining inventory",
       "state": "unreviewed",
-      "detail": "Pending/coalescing queues, SimpleChannelPool and AbstractChannelPoolMap with their interfaces/handlers/health checks are ported. FixedChannelPool and its original timeout/cancellation/deadlock tests, remaining pending entries and broader original fixtures still require review/implementation."
+      "detail": "Channel pools and their declared original fixtures are now ported, including fixed capacity/deadlines/cancellation/deadlock cases. Remaining pending entries outside channel/pool, broader Local/Pipeline fixtures and socket edge contracts still require review/implementation."
     },
     {
       "area": "Comments",
@@ -4919,7 +5109,8 @@
     "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs",
     "test/Netty.NET.Transport.Tests/PendingWriteQueueContractTest.cs",
     "test/Netty.NET.Transport.Tests/CoalescingBufferQueueContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ChannelPoolContractTest.cs",
+    "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -5232,12 +5423,76 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "78e36a89e1ebbaaa5b5816e8b30253bb0c1a7add",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 147,
+        "mappedOriginalMethods": 147,
+        "supplementalExecutedCases": 74,
+        "debug": {
+          "total": 221,
+          "passed": 221,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 221,
+          "passed": 221,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 220,
+            "passed": 220,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32518,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 147 unchanged pinned Java fixture methods including all 12 SimpleChannelPoolTest and 3 AbstractChannelPoolMapTest declarations with setup/teardown lifecycle callbacks and assertions enabled. Fixtures were compared with git show before compilation. The isolated runner exits only after all expected methods/lifecycle callbacks complete because original map cases leave local groups running; an earlier run passed assertions but timed out waiting for those threads. No original test source/assertion was altered. This is not a whole Java transport-module run.",
+        "note": "The full Release solution passed 220 Transport cases plus Common/Buffer/Resolver (32518 passed / 14 skipped). A final explicit-bootstrap-event-loop integration case was then added; all 221 Transport cases passed in Debug and checked Release following a full checked rebuild. Original 147 cases remain separate from 74 CLR-specific cases. Pool task producer ownership stays private; cancellation cannot abandon a later successful connection/health result. Health checks and notifications dispatch to the actual channel event loop. No Common/Buffer/Resolver sources were changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Port FixedChannelPool with original queue capacity, timeout actions, cancellation accounting and deadlock tests.",
     "Continue remaining 67 DefaultChannelPipelineTest and 29 LocalChannelTest declarations, preserving helpers/order/assertions.",
-    "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments."
+    "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments.",
+    "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -5279,5 +5534,13 @@
     "preserved": "All twelve SimpleChannelPoolTest and three AbstractChannelPoolMapTest methods, original CountingChannelPoolHandler and address helper. Acquisition identity/counters, duplicate release, bounded segment, release-health-check option, active-but-unhealthy close, failed acquired callback, cancellation during pending health and map removal/close timing remain.",
     "nativeSupplemental": "Cancellation during incomplete connection returns the channel after success; worker ownership after asynchronous health completion; failed health closes/reconnects; FIFO/LIFO identity; concurrent map creation closes discarded pools; cloned pool bootstrap registers on the explicit event loop.",
     "remaining": "FixedChannelPool, its source test fixture and FixedChannelPoolMapDeadlockTest remain pending; SimpleChannelPool success is not all channel-pool completion."
+  },
+  "fixedPoolEvidence": {
+    "originalMethods": 19,
+    "originalExecutedCases": 20,
+    "nativeSupplementalCases": 2,
+    "preserved": "Seventeen FixedChannelPoolTest methods (18 executions including both boolean order inputs) and both cross-worker map deadlock methods. Four workers/two barriers/one-second waits, blocked single-worker cancellation, counts/callbacks, same-instance ownership, bounded queue, NEW/FAIL/zero timeout, callback exception identity and closed pool behavior remain.",
+    "nativeSupplemental": "1024 cancelled pending requests preserve all acquisition/release callbacks with bounded native completion depth; admitting a queued request cancels its timer without creating an extra connection.",
+    "inventory": "All channel/pool implementation and original test entries now have CLR counterparts. This does not complete the rest of Transport."
   }
 }
