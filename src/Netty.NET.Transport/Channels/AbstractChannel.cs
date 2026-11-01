@@ -393,7 +393,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     await OnLoopAsync(() =>
                     {
                         OutboundBuffer.Remove(error);
-                        if (Config.IsAutoClose() && !OutboundBuffer.IsClosed)
+                        if (Config.IsAutoClose() && !ContinueOnWriteError && !OutboundBuffer.IsClosed)
                             _ = CloseTransportAsync();
                     }).ConfigureAwait(false);
                 }
@@ -422,6 +422,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * the {@link Channel} implementation converts the message to another. (e.g. heap buffer -> direct buffer)
      */
     protected virtual object FilterOutboundMessage(object message) => message;
+    protected virtual bool ContinueOnWriteError => false;
     /**
      * Is called after the {@link Channel} is registered with its {@link EventLoop} as part of the register process.
      * Subclasses may override this method

@@ -29,33 +29,38 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Bootstrap and ServerBootstrap, actual TCP accept/connect/read/write, all five tests declared by NioSocketChannelTest (inherited AbstractNioChannel fixtures remain open)",
+      "completedUnit": "Bootstrap and ServerBootstrap, actual TCP accept/connect/read/write, all five tests declared by NioSocketChannelTest (inherited AbstractNioChannel fixtures remain open) Added server registration-only API with five original ServerBootstrap cases; initializer extension fixture remains open.",
       "next": "Full bootstrap/inherited socket tests, half closure, config options, connect cancellation and resolver failure paths"
     },
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures; SimpleChannelPool and key-based pool map with all 15 declared original tests; FixedChannelPool with all 20 original fixed-pool/map-deadlock executions. Corrected IPv4/IPv6 multicast TTL mapping with two native regression cases; interface/address options and original multicast fixtures remain pending.",
+      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures; SimpleChannelPool and key-based pool map with all 15 declared original tests; FixedChannelPool with all 20 original fixed-pool/map-deadlock executions. Corrected IPv4/IPv6 multicast TTL mapping with two native regression cases; interface/address options and original multicast fixtures remain pending. Ported all ten DatagramUnicast methods, Inet port-only binding and IPv4 multicast with 46 explicit family/allocator cases; six native cases cover socket config, membership idempotence and live receive through reconnect.",
       "next": "UDP/multicast and group fixture review; remaining portable inventory"
     }
   ],
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 275,
-    "mappedOriginalMethods": 264,
-    "originalExecutedCases": 267,
+    "javaOriginalPassed": 303,
+    "transportJavaOriginalPassed": 280,
+    "testsuiteJavaJUnitInvocations": 23,
+    "testsuiteJavaAllocatorExecutions": 46,
+    "mappedOriginalMethods": 281,
+    "originalExecutedCases": 318,
+    "transportMappedOriginalExecutions": 272,
+    "testsuiteMappedOriginalExecutions": 46,
     "javaOnlyReviewedCases": 8,
-    "supplementalExecutedCases": 98,
+    "supplementalExecutedCases": 104,
     "debug": {
-      "total": 365,
-      "passed": 365,
+      "total": 422,
+      "passed": 422,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 365,
-      "passed": 365,
+      "total": 422,
+      "passed": 422,
       "failed": 0,
       "skipped": 0
     },
@@ -67,8 +72,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 365,
-        "passed": 365,
+        "total": 422,
+        "passed": 422,
         "failed": 0,
         "skipped": 0
       },
@@ -85,23 +90,32 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32663,
+    "solutionPassed": 32720,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 275 unchanged pinned Java cases, including all ten CombinedChannelDuplexHandlerTest methods, with original assertions and lifecycle callbacks. Source bytes are checked against pinned git revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc before compilation. The mapped CLR original subset is 267 executions/264 methods; eight previously reviewed Pipeline Java-only scenarios remain separate, with no new exclusions.",
-    "note": "All 365 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild: 267 mapped original executions plus 98 native supplemental cases. This unit adds all ten original combined-handler tests, six native context/lifecycle/controlled-completion cases and two IPv4/IPv6 multicast TTL regression cases. Combined handler runtime preserves current-neighbor delegation, outer context identity, independent owner-executor removal, both-child lifecycle finally semantics and original exception routing/logging. All 11 unique original production comments and all three unique fixture comments remain at applicable counterparts. testPromisesPassed retains the six-operation order and three-second timeout using returned Tasks; separate native checks hold each downstream task pending and preserve success, original fault and cancellation. No mutable Promise facade and no new skips. Both TTL cases fail against the previous unicast-TTL mapping and pass with the actual multicast socket option. Full solution passed 32663 with 14 pre-existing Common skips. Runtime validation here is Windows; multicast interface/address options, remaining socket/Bootstrap/SingleThreadEventLoop fixtures and Transport implementation comments remain open. No Common/Buffer/Resolver source changes or new Markdown files.",
+    "javaEvidence": "Executed 280 unchanged pinned Transport Java cases plus 23 unchanged testsuite JUnit wrapper calls. Each testsuite wrapper runs its original pooled/adaptive allocator loop: 46 allocator executions across inherited IPv4/IPv6 unicast, Inet port-only bind and IPv4 multicast. Distinguish Java wrapper count (303 total) from allocator execution count. CLR splits the original testsuite family/allocator loops into 46 explicit Theory cases: 272 mapped Transport executions plus 46 testsuite executions = 318. Eight previously reviewed Pipeline Java-only cases remain separate. Source bytes/hashes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc; original assertions and actual packet exchanges executed.",
+    "note": "All 422 CLR Transport cases passed in final Debug, final full-solution Release and checked Release following a full checked rebuild: 318 mapped original executions and 104 supplemental native cases. This unit adds 17 mapped source declarations/51 CLR original executions and six native cases. Runtime changes cover registered-only UDP activity/implicit bind, unresolved endpoint rejection without closing, write-error continuation, actual Windows UDP disconnect/reconnect, port-only wildcard bind conversion, kernel-backed multicast interface/address/loop options, idempotent ASM membership and registration-only ServerBootstrap initialization. The first connected-send port run found four failures at Socket.Disconnect; source assertions were retained and the Windows path corrected to documented zero-address datagram connect. Native receive tests also accept a DIFFERENT peer after disconnect and retain local endpoint through reconnect; config tests independently inspect actual socket options, not only config symmetry. Original UDP tests retain direct/heap/composite/mixed buffers, four wrap variants, counts 1/4, three ten-second retry attempts, 100 empty packets, bad-prefix reader-index slicing and reference-count assertions. Corresponding original comments remain at reviewed declarations/branches/test helpers. Source-specific multicast/block, ICMP/read-error continuation, platform packet variants and initializer-extension design remain open. Five of six ServerBootstrap declarations are mapped; mustCallInitializerExtensions is unreviewed, not excluded or counted ported. No new xUnit skips, Common/Buffer/Resolver source changes, packages or Markdown files. Full solution passed 32720 with 14 existing Common skips; checked rebuild retains 51 existing Common warnings and zero Transport warnings.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
+      "python artifacts/transport-core/run-datagram-originals.py",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
-      "dotnet test Netty.NET.sln -c Release --no-restore",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
-    ]
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+      "dotnet test Netty.NET.sln -c Release --no-restore"
+    ],
+    "executionCountAudit": {
+      "earlierSolutionBufferSummary": 29462,
+      "standaloneBufferPassed": 29556,
+      "finalSolutionBufferPassed": 29556,
+      "identicalBufferTestNames": 29556,
+      "missingOrExtraNames": 0,
+      "note": "An earlier solution run printed a lower Buffer total despite passing. Re-executed unchanged Buffer and final solution with detailed TRX. Both contain exactly the same 29556 distinct passed Buffer test names and no missing/extra names. Cause of the earlier summary difference is unconfirmed; no Buffer code was changed."
+    }
   },
   "entries": [
     {
@@ -347,8 +361,11 @@
       ],
       "decision": "Use existing Common.AdaptiveCalculator, including its documented CLR small-range bounds policy. Full-read and read-complete feedback, per-handle state and all nine original tests retained. Pinned DEFAULT_INITIAL=2048 takes precedence over the stale Javadoc value 1024, with both documented.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 10,
-        "uniquePreservedCount": 10
+        "preservedCount": 10,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -408,8 +425,11 @@
       ],
       "decision": "Complete interface contract translated. TryGetOption distinguishes unsupported options from supported default-valued structs. CLR dictionaries replace Java maps. Generic recv allocator cast is explicit at the consumer. DefaultChannelConfig and concrete Channel integration are still pending.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 28,
-        "uniquePreservedCount": 28
+        "preservedCount": 28,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -695,8 +715,11 @@
       ],
       "decision": "Disconnect capability and positive default read quantum retained. This does not implement channel lifecycle.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 6,
-        "uniquePreservedCount": 6
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -710,8 +733,11 @@
       ],
       "decision": "One non-generic registry shares name/id identity across closed generic T. Conflicting CLR value types fail explicitly. Built-in constants and deprecated aliases retained. Type-qualified names use CLR FullName. Socket-specific options are keys only; runtime application is pending socket configuration.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 14,
-        "uniquePreservedCount": 14
+        "preservedCount": 14,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1158,8 +1184,11 @@
       ],
       "decision": "FileInfo lazy opening or owned FileStream. RandomAccess.Read preserves source cursor; pooled bounded staging provides a Stream fallback. Zero-length transfer precedes refcount validation as upstream. Partial file data returns before a later zero-byte read detects truncation. Release closes the file; accepted writes increment progress. CLR adds overflow-safe offset/end validation. Stream fallback can block; later asynchronous socket/file backends must not invoke it directly on an EventLoop.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 12,
-        "uniquePreservedCount": 12
+        "preservedCount": 12,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1173,8 +1202,11 @@
       ],
       "decision": "Byte budget and per-read prediction retained, with locked pair mutations/snapshots and independent volatile getters. Reset does not consult ChannelConfig. Negative EOF signals remain externally handled, as upstream. Explicit unchecked arithmetic preserves source behavior in checked builds.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 7,
-        "uniquePreservedCount": 7
+        "preservedCount": 7,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1188,8 +1220,11 @@
       ],
       "decision": "Live config IsAutoRead check, handle-construction respectMaybeMoreData snapshot, reset-time message budget, source Int32 overflow behavior and saturated protected byte observation retained. Extended suppliers use Func<bool>. Original EmbeddedChannel-dependent fixture remains pending; CLR regressions are separate.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 6,
-        "uniquePreservedCount": 6
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1203,8 +1238,11 @@
       ],
       "decision": "Actual Buffer readable bytes and holder content are counted; FileRegion estimates zero memory bytes, unknown defaults to eight. Immutable handle is shared.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 4,
-        "uniquePreservedCount": 4
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1420,8 +1458,11 @@
       ],
       "decision": "Reference-counted ownership remains required for queued I/O. Stream replaces WritableByteChannel for portable synchronous fallback. Misspelled deprecated transfered alias is folded into Transferred with original documentation preserved. No zero-copy socket transport is claimed.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 7,
-        "uniquePreservedCount": 7
+        "preservedCount": 7,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1435,8 +1476,11 @@
       ],
       "decision": "Constant size and independent per-handle read-loop accounting retained.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 3,
-        "uniquePreservedCount": 3
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1799,8 +1843,11 @@
       ],
       "decision": "Named ValueTuple replaces a Java mutable Map.Entry snapshot. Both pair fields are copied atomically.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 8,
-        "uniquePreservedCount": 8
+        "preservedCount": 8,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1814,8 +1861,11 @@
       ],
       "decision": "Owner-local positive read-loop quantum preserved.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 4,
-        "uniquePreservedCount": 4
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -1829,8 +1879,11 @@
       ],
       "decision": "Estimator/handle contracts translated without inventing a channel abstraction.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 4,
-        "uniquePreservedCount": 4
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -2376,8 +2429,11 @@
       ],
       "decision": "Per-read handles retained with real Buffer allocation and full delegation. Func<bool> replaces UncheckedBooleanSupplier; no placeholder Channel or config implementation.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 17,
-        "uniquePreservedCount": 17
+        "preservedCount": 17,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -2601,9 +2657,9 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 15,
-        "preservedCount": 2,
-        "unreviewedCount": 13,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 7,
+        "unreviewedCount": 8,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2617,8 +2673,25 @@
       "sha256": "171b86860b4605376f56ce2f66dd8d81079c6d3305032ddfacf6690eba8d7c31",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "review": {
+        "scope": "Reviewed multicast interface/address/TTL/loop, standard UDP buffers/reuse/broadcast/traffic class and registration-only activity through typed ChannelOption values on the existing native config. All reviewed option getter/setter comments stay at matching dispatch branches. Native address-family conversion and kernel option reads replace NIO NetworkInterface/socket-option objects. Remaining fluent/extended configuration comments and NioChannelOption-specific arbitrary option behavior stay open.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 19,
+        "preservedCount": 19,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DatagramPacket.java",
@@ -2756,9 +2829,9 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 20,
-        "preservedCount": 2,
-        "unreviewedCount": 18,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 5,
+        "unreviewedCount": 15,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2772,8 +2845,25 @@
       "sha256": "476f07137d3a632d3c06929c8e9847813e14129763669a6bc0ca7d4c6e74ad40",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "review": {
+        "scope": "Reviewed multicast interface/address/TTL/loop, standard UDP buffers/reuse/broadcast/traffic class and registration-only activity through typed ChannelOption values on the existing native config. All reviewed option getter/setter comments stay at matching dispatch branches. Native address-family conversion and kernel option reads replace NIO NetworkInterface/socket-option objects. Remaining fluent/extended configuration comments and NioChannelOption-specific arbitrary option behavior stay open.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 2,
+        "preservedCount": 1,
+        "unreviewedCount": 1,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioDomainSocketChannel.java",
@@ -3070,8 +3160,11 @@
       ],
       "decision": "Immutable low/high thresholds and validation retained; actual outbound accounting/writability events await ChannelOutboundBuffer/Pipeline.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 6,
-        "uniquePreservedCount": 6
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -3095,8 +3188,61 @@
       "sha256": "9c401df31fea96bfb0818b20995fedaeb166e1aea978da05ebb5c68711a37fe9",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ServerBootstrapSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SourceTestChannel.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSetOptionsThrow",
+          "clrMethod": "TestSetOptionsThrow",
+          "adaptation": "Original scenario, option value 4242, attribute value, callback owner assertions and parent/direct-initializer variants. Task/TCS replace futures/latches and volatile state replaces AtomicBoolean. Original five/three-second deadlines remain."
+        },
+        {
+          "upstreamMethod": "testHandlerRegister",
+          "clrMethod": "TestHandlerRegister",
+          "adaptation": "Original scenario, option value 4242, attribute value, callback owner assertions and parent/direct-initializer variants. Task/TCS replace futures/latches and volatile state replaces AtomicBoolean. Original five/three-second deadlines remain."
+        },
+        {
+          "upstreamMethod": "testParentHandler",
+          "clrMethod": "TestParentHandler",
+          "adaptation": "Original scenario, option value 4242, attribute value, callback owner assertions and parent/direct-initializer variants. Task/TCS replace futures/latches and volatile state replaces AtomicBoolean. Original five/three-second deadlines remain."
+        },
+        {
+          "upstreamMethod": "testParentHandlerViaChannelInitializer",
+          "clrMethod": "TestParentHandlerViaChannelInitializer",
+          "adaptation": "Original scenario, option value 4242, attribute value, callback owner assertions and parent/direct-initializer variants. Task/TCS replace futures/latches and volatile state replaces AtomicBoolean. Original five/three-second deadlines remain."
+        },
+        {
+          "upstreamMethod": "optionsAndAttributesMustBeAvailableOnChildChannelInit",
+          "clrMethod": "OptionsAndAttributesMustBeAvailableOnChildChannelInit",
+          "adaptation": "Original scenario, option value 4242, attribute value, callback owner assertions and parent/direct-initializer variants. Task/TCS replace futures/latches and volatile state replaces AtomicBoolean. Original five/three-second deadlines remain."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 5,
+        "reviewedCount": 5,
+        "unreviewedMethods": [
+          "mustCallInitializerExtensions"
+        ]
+      },
+      "review": {
+        "scope": "Five original methods ported and executed unchanged in Java. mustCallInitializerExtensions remains genuinely unreviewed: ServiceLoader discovery and listener/child/client extension notification need a deliberate CLR extension design; it is neither marked inapplicable nor replaced by an unrelated test.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ServerBootstrapSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SourceTestChannel.cs",
+          "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/bootstrap/StubChannelInitializerExtension.java",
@@ -3111,8 +3257,30 @@
       "sha256": "dd92307cf68e70dbc68c9f59d1aa7a75ee01aaa556d33ea7268126913138fbe4",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SourceTestChannel.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Original option-failing test-channel helper: initial active state, no-op bind/read/write, cleanup inactive state and option rejection. CLR DefaultChannelConfig.SetOptions dispatches SetValue, so the helper overrides this hook instead of Java setOption. AbstractChannel owns CLR close flags/Tasks.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SourceTestChannel.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/AbstractChannelTest.java",
@@ -3233,8 +3401,11 @@
       ],
       "decision": "Original names, inputs, assertions, helper call sequence and comments retained. JUnit BeforeEach becomes xUnit per-test construction; Mockito config becomes Moq. Java assignable IllegalArgumentException assertion maps to ThrowsAny<ArgumentException>. File tests keep original 10 MiB input and exact transfer/truncation assertions; additional finally Release replaces Java deleteOnExit cleanup so Windows can delete lazily opened files.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 6,
-        "uniquePreservedCount": 6
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -3346,8 +3517,11 @@
       ],
       "decision": "Original names, inputs, assertions, helper call sequence and comments retained. JUnit BeforeEach becomes xUnit per-test construction; Mockito config becomes Moq. Java assignable IllegalArgumentException assertion maps to ThrowsAny<ArgumentException>. File tests keep original 10 MiB input and exact transfer/truncation assertions; additional finally Release replaces Java deleteOnExit cleanup so Windows can delete lazily opened files.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 1,
-        "uniquePreservedCount": 1
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -4260,8 +4434,11 @@
       ],
       "decision": "Original names, inputs, assertions, helper call sequence and comments retained. JUnit BeforeEach becomes xUnit per-test construction; Mockito config becomes Moq. Java assignable IllegalArgumentException assertion maps to ThrowsAny<ArgumentException>. File tests keep original 10 MiB input and exact transfer/truncation assertions; additional finally Release replaces Java deleteOnExit cleanup so Windows can delete lazily opened files.",
       "comments": {
+        "status": "preserved",
         "uniqueCount": 1,
-        "uniquePreservedCount": 1
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
       }
     },
     {
@@ -5621,11 +5798,12 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 28,
-    "portedOriginalFixtures": 22,
-    "portedOriginalMethods": 264,
-    "supplementalClrCases": 98,
+    "portedOriginalFixtures": 25,
+    "portedOriginalMethods": 281,
+    "supplementalClrCases": 104,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
-    "countsBasis": "Current entries and method mappings, including explicitly documented CLR adaptations. Fully classified implementation entries exclude in-progress entries; original case totals and separately reviewed CLR-inapplicable methods are recorded in validation."
+    "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
+    "testsuiteSources": 7
   },
   "clrDecisions": [
     {
@@ -5708,6 +5886,16 @@
     {
       "subject": "Datagram multicast TTL option",
       "decision": "DefaultDatagramChannelConfig.getTimeToLive/setTimeToLive and the NIO IP_MULTICAST_TTL option concern multicast, not Socket.Ttl. Use SocketOptionName.MulticastTimeToLive at the socket family IP/IPv6 level with 0..255 validation. Two supplemental CLR cases independently read the actual socket option, preserve unicast TTL, round-trip 0/17/255 and reject -1/256/int.MaxValue. Both fail against the former unicast mapping. Multicast interface/address options and membership fixtures remain open."
+    },
+    {
+      "subject": "UDP testsuite, multicast selection and connected lifecycle",
+      "decision": "Track selected testsuite originals separately from the exhaustive 274-file Transport inventory. Preserve both pooled/adaptive allocators, IPv4/IPv6 families, all buffer representations/wraps and original helper assertions. Config options reflect actual socket state. Track ASM memberships with BCL tuple keys to preserve repeated join/leave behavior. Source-specific membership/block and Windows-excluded IPv6 multicast packet fixtures remain open. Use the documented Winsock zero-address UDP connect to disconnect without replacing its bound socket; retain channel peer state separately from Socket cached connection state. Datagram individual write failures do not close a channel that may send to another peer; unresolved endpoints fail before native send and release ownership. Registered-only activity defers CLR receive until a first send implicitly binds the socket. The public DatagramChannelConfig disabled-loopback contract and DefaultDatagramChannelConfig behavior are retained using !Socket.MulticastLoopback. NioDatagramChannelConfig forwards IP_MULTICAST_LOOP directly despite that disabled-name contract; native tests independently verify actual kernel loopback state, not just getter/setter symmetry.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs"
+      ],
+      "platformEvidence": "https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-connect"
     }
   ],
   "openWork": [
@@ -5764,7 +5952,8 @@
     "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs",
     "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs",
     "test/Netty.NET.Transport.Tests/CombinedChannelDuplexHandlerContractTest.cs",
-    "test/Netty.NET.Transport.Tests/DatagramMulticastConfigContractTest.cs"
+    "test/Netty.NET.Transport.Tests/DatagramMulticastConfigContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -6537,13 +6726,81 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "168cc9819b117aadb0bd7859da8a2c5f2814b073",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 275,
+        "mappedOriginalMethods": 264,
+        "originalExecutedCases": 267,
+        "javaOnlyReviewedCases": 8,
+        "supplementalExecutedCases": 98,
+        "debug": {
+          "total": 365,
+          "passed": 365,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 365,
+          "passed": 365,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 365,
+            "passed": 365,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32663,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 275 unchanged pinned Java cases, including all ten CombinedChannelDuplexHandlerTest methods, with original assertions and lifecycle callbacks. Source bytes are checked against pinned git revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc before compilation. The mapped CLR original subset is 267 executions/264 methods; eight previously reviewed Pipeline Java-only scenarios remain separate, with no new exclusions.",
+        "note": "All 365 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild: 267 mapped original executions plus 98 native supplemental cases. This unit adds all ten original combined-handler tests, six native context/lifecycle/controlled-completion cases and two IPv4/IPv6 multicast TTL regression cases. Combined handler runtime preserves current-neighbor delegation, outer context identity, independent owner-executor removal, both-child lifecycle finally semantics and original exception routing/logging. All 11 unique original production comments and all three unique fixture comments remain at applicable counterparts. testPromisesPassed retains the six-operation order and three-second timeout using returned Tasks; separate native checks hold each downstream task pending and preserve success, original fault and cancellation. No mutable Promise facade and no new skips. Both TTL cases fail against the previous unicast-TTL mapping and pass with the actual multicast socket option. Full solution passed 32663 with 14 pre-existing Common skips. Runtime validation here is Windows; multicast interface/address options, remaining socket/Bootstrap/SingleThreadEventLoop fixtures and Transport implementation comments remain open. No Common/Buffer/Resolver source changes or new Markdown files.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
     "Continue concrete portable runtime/fixture gaps after the 72-method Pipeline review and complete ten-method CombinedChannelDuplexHandler fixture port. Remaining Pipeline implementation comments/contracts and SingleThreadEventLoop fixtures stay open.",
     "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
-    "Port multicast interface/address options with corresponding original multicast tests; continue socket half closure/read-batch budgets/cancellation/rejection and remaining partial comments. Multicast TTL now targets the correct IPv4/IPv6 socket option.",
-    "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts."
+    "Continue source-specific multicast membership/block and IPv6 multicast packet platform review, UDP ICMP/read-error continuation, socket half closure/read budgets and remaining socket fixtures. IP multicast interface/address/TTL/loop options, ASM membership, registered-only sends and reconnect paths now have original/native coverage.",
+    "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts.",
+    "Finish ServerBootstrap initializer-extension semantics and the remaining original Bootstrap/config fixtures; five of six ServerBootstrap declarations are now mapped, not a full fixture completion."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -6755,5 +7012,404 @@
       "solutionPassed": 32645,
       "solutionSkipped": 14
     }
-  }
+  },
+  "testsuiteEntries": [
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/DatagramUnicastTest.java",
+      "sha256": "96c1c758130c15288eb317b4f541e789fb16853a2016fba9d1f77a5344279b3d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSimpleSendDirectByteBuf",
+          "clrMethod": "TestSimpleSendDirectByteBuf",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSimpleSendHeapByteBuf",
+          "clrMethod": "TestSimpleSendHeapByteBuf",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSimpleSendCompositeDirectByteBuf",
+          "clrMethod": "TestSimpleSendCompositeDirectByteBuf",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSimpleSendCompositeHeapByteBuf",
+          "clrMethod": "TestSimpleSendCompositeHeapByteBuf",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSimpleSendCompositeMixedByteBuf",
+          "clrMethod": "TestSimpleSendCompositeMixedByteBuf",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSimpleSendWithoutBind",
+          "clrMethod": "TestSimpleSendWithoutBind",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSimpleSendWithConnect",
+          "clrMethod": "TestSimpleSendWithConnect",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testReceiveEmptyDatagrams",
+          "clrMethod": "TestReceiveEmptyDatagrams",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testSendToUnresolvableAddress",
+          "clrMethod": "TestSendToUnresolvableAddress",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        },
+        {
+          "upstreamMethod": "testWriteOffsetBytebuf",
+          "clrMethod": "TestWriteOffsetBytebuf",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 10,
+        "mappedCount": 10,
+        "reviewedCount": 10,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 14,
+        "preservedCount": 14,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/DatagramUnicastInetTest.java",
+      "sha256": "d8b9ae1e5b76a4c196a72e23cc7e47451bcddf874c4772070f01a9f7283c89bc",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testBindWithPortOnly",
+          "clrMethod": "TestBindWithPortOnly",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/DatagramMulticastTest.java",
+      "sha256": "002a5e6a498ba6490eaeae883c105c58987e33977745f1e61da55fd05d96be21",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testMulticast",
+          "clrMethod": "TestMulticast",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Preserve original helper assertions, payloads, all four buffer wraps, counts 1/4, three UDP attempts with ten-second waits, ownership and event order where used. Explicit bool rows replace inherited IPv4/IPv6 fixtures and the original pooled/adaptive allocator loop. CLR EndPoint envelopes represent unresolved destinations; SocketError.HostNotFound and NotConnected replace matching Java socket failures. Windows multicast IPv6 subclass remains outside this selected IPv4 fixture."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 11,
+        "preservedCount": 11,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractDatagramTest.java",
+      "sha256": "d51ac598dbdc6fc89c61a8c696cb6ed871729f8e5b9f5a05904813d52a1c5ea4",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/DatagramUnicastIPv6Test.java",
+      "sha256": "be23cc4ddcf8285ddc78fc4f72f9dd94ddcaef488af2314b7a08ef9ed417acda",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractComboTestsuiteTest.java",
+      "sha256": "23afea64acccab64c69f0f4f9c7e8907c60f7d29bf3a114a476438d98a5e1600",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/TestsuitePermutation.java",
+      "sha256": "412ae509cbd52fb1924837f1bf9e75fde20841f01da234770e7debc03c984aa1",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported."
+    }
+  ]
 }

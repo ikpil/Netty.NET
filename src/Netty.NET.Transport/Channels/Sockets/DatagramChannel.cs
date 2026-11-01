@@ -18,6 +18,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -41,35 +42,79 @@ namespace Netty.NET.Transport.Channels.Sockets;
 public class DatagramChannel : AbstractChannel
 {
     private readonly Socket _socket;
+    private EndPoint _connectedAddress;
+    private readonly Dictionary<(IPAddress Group, long Index), IPAddress> _memberships = new();
     private bool _reading;
     private bool _readRequested;
     public DatagramChannel() : this(AddressFamily.InterNetwork) { }
     public DatagramChannel(AddressFamily family) : base(null, new ChannelMetadata(true, 16))
     { _socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp); }
     public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(_socket.LocalEndPoint) : null;
-    public override EndPoint RemoteAddress => IsOpen && _socket.Connected ? TcpSocketChannel.Normalize(_socket.RemoteEndPoint) : null;
+    public override EndPoint RemoteAddress => IsOpen ? Volatile.Read(ref _connectedAddress) : null;
     protected override IChannelConfig NewConfig() => new DatagramConfig(this, _socket);
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
-    { token.ThrowIfCancellationRequested(); _socket.Bind(address); SetActive(true); return Task.CompletedTask; }
+    {
+        token.ThrowIfCancellationRequested();
+        if (_socket.AddressFamily == AddressFamily.InterNetworkV6 && address is IPEndPoint ip && ip.Address.Equals(IPAddress.Any))
+            address = new IPEndPoint(IPAddress.IPv6Any, ip.Port);
+        _socket.Bind(address);
+        SetActive(true);
+        return Task.CompletedTask;
+    }
     protected override async Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
     {
         if (local != null)
             _socket.Bind(local);
         await _socket.ConnectAsync(remote, token).ConfigureAwait(false);
-        await OnLoopAsync(() => { EnsureOpen(); SetActive(true); }).ConfigureAwait(false);
+        await OnLoopAsync(() => { EnsureOpen(); Volatile.Write(ref _connectedAddress, TcpSocketChannel.Normalize(remote)); SetActive(true); }).ConfigureAwait(false);
     }
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
-    { cancellationToken.ThrowIfCancellationRequested(); _socket.Disconnect(true); SetActive(_socket.IsBound); return Task.CompletedTask; }
-    protected override void DoClose() => _socket.Dispose();
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (IsConnected)
+        {
+            // Winsock DisconnectEx is for connection-oriented sockets. Connecting a datagram socket
+            // to a zero address removes its default peer without replacing the bound socket.
+            // https://learn.microsoft.com/windows/win32/api/winsock2/nf-winsock2-connect
+            if (OperatingSystem.IsWindows())
+                _socket.Connect(new IPEndPoint(_socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0));
+            else
+                _socket.Disconnect(true);
+            Volatile.Write(ref _connectedAddress, null);
+            SetActive(_socket.IsBound || ((DatagramConfig)Config).ActiveOnRegistration);
+        }
+        return Task.CompletedTask;
+    }
+    /**
+     * Return {@code true} if the {@link DatagramChannel} is connected to the remote peer.
+     */
+    public bool IsConnected => RemoteAddress != null;
+    protected override void DoRegister() => SetActive(_socket.IsBound || ((DatagramConfig)Config).ActiveOnRegistration);
+    protected override void DoDeregister() => SetActive(_socket.IsBound);
+    protected override void DoClose() { _memberships.Clear(); _socket.Dispose(); }
+    protected override bool ContinueOnWriteError
+    {
+        get
+        {
+            // Continue on write error as a DatagramChannel can write to multiple remote peers
+            //
+            // See https://github.com/netty/netty/issues/2665
+            return true;
+        }
+    }
     protected override object FilterOutboundMessage(object message)
     {
-        if (message is DatagramPacket or ByteBuf or IAddressedEnvelope<ByteBuf, IPEndPoint>)
+        if (message is IAddressedEnvelope<ByteBuf, EndPoint> envelope && envelope.Recipient is DnsEndPoint)
+            throw new SocketException((int)SocketError.HostNotFound);
+        if (message is ByteBuf or IAddressedEnvelope<ByteBuf, EndPoint>)
             return message;
         throw new NotSupportedException("UDP writes require a ByteBuf or an addressed ByteBuf envelope.");
     }
     protected override async Task DoWriteAsync(object message)
     {
-        var envelope = message as IAddressedEnvelope<ByteBuf, IPEndPoint>;
+        var envelope = message as IAddressedEnvelope<ByteBuf, EndPoint>;
+        if (envelope?.Recipient == null && !IsConnected)
+            throw new SocketException((int)SocketError.NotConnected);
         ByteBuf data = envelope?.Content ?? (ByteBuf)message;
         int length = data.ReadableBytes;
         var sequence = data.ReadableSequence;
@@ -90,7 +135,13 @@ public class DatagramChannel : AbstractChannel
                 : await _socket.SendAsync(memory, SocketFlags.None).ConfigureAwait(false);
             if (sent != length)
                 throw new IOException("A UDP datagram was only partially accepted.");
-            await OnLoopAsync(() => OutboundBuffer.Progress(sent)).ConfigureAwait(false);
+            await OnLoopAsync(() =>
+            {
+                OutboundBuffer.Progress(sent);
+                // CLR receive cannot start on an unbound socket. A first send can implicitly bind it.
+                if (!_reading && _readRequested && IsOpen)
+                    DoBeginRead();
+            }).ConfigureAwait(false);
         }
         finally { if (staging != null) ArrayPool<byte>.Shared.Return(staging); }
     }
@@ -98,6 +149,8 @@ public class DatagramChannel : AbstractChannel
     {
         _readRequested = true;
         ResumeRead();
+        if (!_socket.IsBound)
+            return;
         if (_reading)
             return;
         _reading = true;
@@ -177,36 +230,221 @@ public class DatagramChannel : AbstractChannel
         }
         return await _socket.ReceiveFromAsync(memory, SocketFlags.None, remote).ConfigureAwait(false);
     }
-    public Task JoinGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null) => OnLoopAsync(() =>
+    /**
+     * Joins a multicast group and notifies the {@link ChannelFuture} once the operation completes.
+     */
+    public Task JoinGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null)
+        => ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, true);
+    /**
+     * Leaves a multicast group and notifies the {@link ChannelFuture} once the operation completes.
+     */
+    public Task LeaveGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null)
+        => ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, false);
+    private Task ChangeIPv4MembershipAsync(IPAddress multicastAddress, IPAddress interfaceAddress, bool join) => OnLoopAsync(() =>
     {
         ArgumentNullException.ThrowIfNull(multicastAddress);
         if (multicastAddress.AddressFamily != AddressFamily.InterNetwork)
-            throw new NotSupportedException("Use the IPv6 interface-index overload.");
-        _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(multicastAddress, interfaceAddress ?? IPAddress.Any));
+            throw new NotSupportedException("Use the IPv6 interface-index or network-interface overload.");
+        NetworkInterface networkInterface = interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any)
+            ? ((DatagramConfig)Config).GetNetworkInterface() : FindInterface(interfaceAddress);
+        var address = networkInterface != null && (interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any))
+            ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork)
+            : interfaceAddress ?? (_socket.LocalEndPoint as IPEndPoint)?.Address;
+        address ??= IPAddress.Any;
+        networkInterface ??= FindInterface(address);
+        ChangeMembership(multicastAddress, networkInterface?.GetIPProperties().GetIPv4Properties()?.Index ?? 0, address, join);
     });
-    public Task LeaveGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null) => OnLoopAsync(() =>
-    { _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, new MulticastOption(multicastAddress, interfaceAddress ?? IPAddress.Any)); });
-    public Task JoinGroupAsync(IPAddress multicastAddress, long interfaceIndex) => OnLoopAsync(() =>
-    { _socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(multicastAddress, interfaceIndex)); });
-    public Task LeaveGroupAsync(IPAddress multicastAddress, long interfaceIndex) => OnLoopAsync(() =>
-    { _socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, new IPv6MulticastOption(multicastAddress, interfaceIndex)); });
+    public Task JoinGroupAsync(IPAddress multicastAddress, long interfaceIndex)
+        => OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, true));
+    public Task LeaveGroupAsync(IPAddress multicastAddress, long interfaceIndex)
+        => OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, false));
+    /**
+     * Joins the specified multicast group at the specified interface and notifies the {@link ChannelFuture}
+     * once the operation completes.
+     */
+    public Task JoinGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
+    {
+        ArgumentNullException.ThrowIfNull(multicastAddress);
+        return ChangeMembershipAsync(multicastAddress.Address, networkInterface, true);
+    }
+    /**
+     * Leaves a multicast group on a specified local interface and notifies the {@link ChannelFuture} once the
+     * operation completes.
+     */
+    public Task LeaveGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
+    {
+        ArgumentNullException.ThrowIfNull(multicastAddress);
+        return ChangeMembershipAsync(multicastAddress.Address, networkInterface, false);
+    }
+    private Task ChangeMembershipAsync(IPAddress address, NetworkInterface networkInterface, bool join)
+    {
+        ArgumentNullException.ThrowIfNull(networkInterface);
+        return OnLoopAsync(() => ChangeMembership(address, InterfaceIndex(networkInterface, _socket.AddressFamily),
+            _socket.AddressFamily == AddressFamily.InterNetworkV6 ? null : InterfaceAddress(networkInterface, _socket.AddressFamily), join));
+    }
+    private void ChangeMembership(IPAddress group, long index, IPAddress address, bool join)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+        if (group.AddressFamily != _socket.AddressFamily)
+            throw new ArgumentException("Multicast group and socket families differ.", nameof(group));
+        if (_socket.AddressFamily == AddressFamily.InterNetwork && address == null)
+            throw new ArgumentException("IPv4 membership requires an interface address; the numeric-index overload is for IPv6.", nameof(address));
+        if (!(group.IsIPv6Multicast || group.AddressFamily == AddressFamily.InterNetwork && group.GetAddressBytes()[0] is >= 224 and <= 239))
+            throw new ArgumentException("A multicast address is required.", nameof(group));
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, uint.MaxValue);
+        var key = (group, index);
+        if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key))
+            return;
+        if (!join)
+            address = _memberships[key];
+        var option = join ? SocketOptionName.AddMembership : SocketOptionName.DropMembership;
+        if (_socket.AddressFamily == AddressFamily.InterNetworkV6)
+            _socket.SetSocketOption(SocketOptionLevel.IPv6, option, new IPv6MulticastOption(group, index));
+        else
+            _socket.SetSocketOption(SocketOptionLevel.IP, option, new MulticastOption(group, address ?? IPAddress.Any));
+        if (join)
+            _memberships.Add(key, address);
+        else
+            _memberships.Remove(key);
+    }
+    private static NetworkInterface FindInterface(IPAddress address) => NetworkInterface.GetAllNetworkInterfaces()
+        .FirstOrDefault(n => n.GetIPProperties().UnicastAddresses.Any(a => a.Address.Equals(address)));
+    private static IPAddress InterfaceAddress(NetworkInterface networkInterface, AddressFamily family)
+        => networkInterface.GetIPProperties().UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == family)?.Address
+            ?? throw new ArgumentException("The interface has no address for the socket family.", nameof(networkInterface));
+    private static int InterfaceIndex(NetworkInterface networkInterface, AddressFamily family)
+        => family == AddressFamily.InterNetworkV6 ? networkInterface.GetIPProperties().GetIPv6Properties()?.Index
+            ?? throw new ArgumentException("The interface does not support IPv6.", nameof(networkInterface))
+            : networkInterface.GetIPProperties().GetIPv4Properties()?.Index
+            ?? throw new ArgumentException("The interface does not support IPv4.", nameof(networkInterface));
+    #pragma warning disable CS0612, CS0618 // The source config supports the deprecated active-on-registration option.
+    /**
+ * A {@link ChannelConfig} for a {@link DatagramChannel}.
+ *
+ * <h3>Available options</h3>
+ *
+ * In addition to the options provided by {@link ChannelConfig},
+ * {@link DatagramChannelConfig} allows the following options in the option map:
+ *
+ * <table border="1" cellspacing="0" cellpadding="6">
+ * <tr>
+ * <th>Name</th><th>Associated setter method</th>
+ * </tr><tr>
+ * <td>{@link ChannelOption#SO_BROADCAST}</td><td>{@link #setBroadcast(boolean)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#IP_MULTICAST_ADDR}</td><td>{@link #setInterface(InetAddress)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#IP_MULTICAST_LOOP_DISABLED}</td>
+ * <td>{@link #setLoopbackModeDisabled(boolean)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#IP_MULTICAST_IF}</td>
+ * <td>{@link #setNetworkInterface(NetworkInterface)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#SO_REUSEADDR}</td><td>{@link #setReuseAddress(boolean)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#SO_RCVBUF}</td><td>{@link #setReceiveBufferSize(int)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#SO_SNDBUF}</td><td>{@link #setSendBufferSize(int)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#IP_MULTICAST_TTL}</td><td>{@link #setTimeToLive(int)}</td>
+ * </tr><tr>
+ * <td>{@link ChannelOption#IP_TOS}</td><td>{@link #setTrafficClass(int)}</td>
+ * </tr>
+ * </table>
+ */
     private sealed class DatagramConfig : DefaultChannelConfig
     {
+        internal bool ActiveOnRegistration { get; private set; }
+        public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
+        {
+            var options = new Dictionary<ChannelOption, object>(base.GetOptions());
+            foreach (var option in new ChannelOption[] { ChannelOption.SO_BROADCAST, ChannelOption.SO_RCVBUF,
+                ChannelOption.SO_SNDBUF, ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED,
+                ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL,
+                ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION })
+                if (TryGetValue(option, out var value)) options[option] = value;
+            return options;
+        }
+        /**
+     * Gets the {@link StandardSocketOptions#IP_MULTICAST_IF} option.
+     */
+        internal NetworkInterface GetNetworkInterface()
+        {
+            if (_socket.AddressFamily == AddressFamily.InterNetwork)
+            {
+                var address = new IPAddress(_socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, 4));
+                return address.Equals(IPAddress.Any) ? null : FindInterface(address);
+            }
+            int index = (int)_socket.GetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface);
+            return index == 0 ? null : NetworkInterface.GetAllNetworkInterfaces()
+                .FirstOrDefault(n => n.Supports(NetworkInterfaceComponent.IPv6) && n.GetIPProperties().GetIPv6Properties()?.Index == index);
+        }
+        /**
+     * Sets the {@link StandardSocketOptions#IP_MULTICAST_IF} option.
+     */
+        private void SetNetworkInterface(NetworkInterface networkInterface)
+        {
+            ArgumentNullException.ThrowIfNull(networkInterface);
+            if (_socket.AddressFamily == AddressFamily.InterNetwork)
+                _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface,
+                    InterfaceAddress(networkInterface, AddressFamily.InterNetwork).GetAddressBytes());
+            else
+                _socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface,
+                    InterfaceIndex(networkInterface, AddressFamily.InterNetworkV6));
+        }
         protected override void AutoReadCleared() => ((AbstractChannel)Channel).ClearReadPending();
         private readonly Socket _socket;
         internal DatagramConfig(IChannel channel, Socket socket) : base(channel, new FixedRecvByteBufAllocator(2048)) { _socket = socket; }
         protected override bool TryGetValue(ChannelOption option, out object value)
         {
+            /**
+     * Gets the {@link StandardSocketOptions#SO_BROADCAST} option.
+     */
             if (ReferenceEquals(option, ChannelOption.SO_BROADCAST))
                 value = _socket.EnableBroadcast;
+            /**
+     * Gets the {@link StandardSocketOptions#SO_RCVBUF} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
                 value = _socket.ReceiveBufferSize;
+            /**
+     * Gets the {@link StandardSocketOptions#SO_SNDBUF} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
                 value = _socket.SendBufferSize;
+            /**
+     * Gets the {@link StandardSocketOptions#SO_REUSEADDR} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
                 value = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
+            else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_IF))
+                value = GetNetworkInterface();
+            /**
+     * Gets the address of the network interface used for multicast packets.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_ADDR))
+            {
+                var networkInterface = GetNetworkInterface();
+                value = networkInterface == null ? null : InterfaceAddress(networkInterface, _socket.AddressFamily);
+            }
+            /**
+     * Gets the {@link StandardSocketOptions#IP_TOS} option.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_TOS))
+                value = (int)_socket.GetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService);
+            else if (ReferenceEquals(option, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION))
+                value = ActiveOnRegistration;
+            /**
+     * Gets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_TTL))
                 value = (int)_socket.GetSocketOption(MulticastOptionLevel, SocketOptionName.MulticastTimeToLive);
+            /**
+     * Gets the {@link StandardSocketOptions#IP_MULTICAST_LOOP} option.
+     *
+     * @return {@code true} if and only if the loopback mode has been disabled
+     */
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_LOOP_DISABLED))
                 value = !_socket.MulticastLoopback;
             else
@@ -215,14 +453,52 @@ public class DatagramChannel : AbstractChannel
         }
         protected override bool SetValue(ChannelOption option, object value)
         {
+            /**
+     * Sets the {@link StandardSocketOptions#SO_BROADCAST} option.
+     */
             if (ReferenceEquals(option, ChannelOption.SO_BROADCAST))
                 _socket.EnableBroadcast = (bool)value;
+            /**
+     * Sets the {@link StandardSocketOptions#SO_RCVBUF} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
                 _socket.ReceiveBufferSize = (int)value;
+            /**
+     * Sets the {@link StandardSocketOptions#SO_SNDBUF} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
                 _socket.SendBufferSize = (int)value;
+            /**
+     * Gets the {@link StandardSocketOptions#SO_REUSEADDR} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
                 _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, (bool)value);
+            else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_IF))
+                SetNetworkInterface((NetworkInterface)value);
+            /**
+     * Sets the address of the network interface used for multicast packets.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_ADDR))
+                SetNetworkInterface(FindInterface((IPAddress)value) ?? throw new ArgumentException("Address does not belong to a local network interface.", nameof(value)));
+            /**
+     * Sets the {@link StandardSocketOptions#IP_TOS} option.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_TOS))
+            {
+                int trafficClass = (int)value;
+                ArgumentOutOfRangeException.ThrowIfNegative(trafficClass);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(trafficClass, 255);
+                _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService, trafficClass);
+            }
+            else if (ReferenceEquals(option, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION))
+            {
+                if (Channel.IsRegistered)
+                    throw new InvalidOperationException("Can only change before channel is registered.");
+                ActiveOnRegistration = (bool)value;
+            }
+            /**
+     * Sets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
+     */
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_TTL))
             {
                 int ttl = (int)value;
@@ -230,6 +506,12 @@ public class DatagramChannel : AbstractChannel
                 ArgumentOutOfRangeException.ThrowIfGreaterThan(ttl, 255);
                 _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.MulticastTimeToLive, ttl);
             }
+            /**
+     * Sets the {@link StandardSocketOptions#IP_MULTICAST_LOOP} option.
+     *
+     * @param loopbackModeDisabled
+     *        {@code true} if and only if the loopback mode has been disabled
+     */
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_LOOP_DISABLED))
                 _socket.MulticastLoopback = !(bool)value;
             else

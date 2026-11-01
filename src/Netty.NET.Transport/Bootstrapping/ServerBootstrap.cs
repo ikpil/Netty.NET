@@ -151,9 +151,20 @@ public class ServerBootstrap
     {
         Validate();
         ArgumentNullException.ThrowIfNull(address);
+        var channel = await InitAndRegisterAsync(cancellationToken).ConfigureAwait(false);
+        try { await channel.BindAsync(address, cancellationToken).ConfigureAwait(false); return channel; }
+        catch { await Bootstrap.CleanupAsync(channel).ConfigureAwait(false); throw; }
+    }
+    /**
+     * Create a new {@link Channel} and register it with an {@link EventLoop}.
+     */
+    public Task<IChannel> RegisterAsync(CancellationToken cancellationToken = default)
+    { Validate(); return InitAndRegisterAsync(cancellationToken); }
+    private async Task<IChannel> InitAndRegisterAsync(CancellationToken cancellationToken)
+    {
         cancellationToken.ThrowIfCancellationRequested();
         var channel = _factory();
-        // Capture child configuration at bind time; later bootstrap mutation must not reconfigure an existing listener.
+        // Capture child configuration during initialization; later bootstrap mutation must not reconfigure an existing listener.
         var childOptions = new Dictionary<ChannelOption, object>(_childOptions);
         var childAttributes = _childAttributes.ToArray();
         var childHandler = _childHandler;
@@ -171,7 +182,6 @@ public class ServerBootstrap
                 server.EventLoop.Execute(() => server.Pipeline.AddLast(new Acceptor(childGroup, childHandler, childOptions, childAttributes)));
             }));
             await _parentGroup.RegisterAsync(channel, cancellationToken).ConfigureAwait(false);
-            await channel.BindAsync(address, cancellationToken).ConfigureAwait(false);
             return channel;
         }
         catch { await Bootstrap.CleanupAsync(channel).ConfigureAwait(false); throw; }

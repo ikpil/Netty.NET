@@ -47,7 +47,14 @@ if (Compare-Object $expected $actual) { throw 'Transport inventory changed.' }
 $mappedCount = 0
 $notApplicableCount = 0
 $partialCommentCount = 0
-foreach ($entry in $manifest.entries) {
+$testsuiteEntries = @($manifest.testsuiteEntries | Where-Object { $null -ne $_ })
+if (@($testsuiteEntries.upstream | Select-Object -Unique).Count -ne $testsuiteEntries.Count) {
+    throw 'Duplicate testsuite source inventory.'
+}
+foreach ($entry in $testsuiteEntries) {
+    if (-not $entry.upstream.StartsWith('testsuite/src/main/java/')) { throw 'Unexpected testsuite source path.' }
+}
+foreach ($entry in (@($manifest.entries) + $testsuiteEntries)) {
     $path = Join-Path $UpstreamRoot $entry.upstream
     $bytes = [IO.File]::ReadAllBytes($path)
     if ($entry.hashMode -eq 'utf8-lf') {
@@ -143,8 +150,17 @@ foreach ($entry in $manifest.entries) {
                     ForEach-Object { $_.Trim().ToLowerInvariant() } | Sort-Object)
                 if (-not $javaRows.Count -or (Compare-Object $javaRows $expectedRows)) { throw 'Original parameter inputs differ from their mapping.' }
             }
+            if ($mapping.nativeCases) {
+                $theory = [regex]::Match($testCode, '\[Theory(?:\([^\]]*\))?\]\s*(?<rows>(?:\[InlineData\([^\]]*\)\]\s*)+)public\s+(?:async\s+)?Task\s+' +
+                    [regex]::Escape($mapping.clrMethod) + '\(')
+                if (-not $theory.Success) { throw 'Missing testsuite CLR permutation rows.' }
+                $rows = @([regex]::Matches($theory.Groups['rows'].Value, '\[InlineData\((?<input>[^)]*)\)\]') |
+                    ForEach-Object { $_.Groups['input'].Value.Replace(' ', '').ToLowerInvariant() } | Sort-Object)
+                $expectedRows = @($mapping.nativeCases | ForEach-Object { ([string]::Join(',', @($_))).ToLowerInvariant() } | Sort-Object)
+                if (Compare-Object $rows $expectedRows) { throw 'Testsuite CLR permutation rows differ from the manifest.' }
+            }
             $mappedCount++
         }
     }
 }
-Write-Output "Transport manifest verified: $($manifest.entries.Count) inventory entries, $mappedCount mapped original methods, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries and $($testsuiteEntries.Count) selected testsuite sources, $mappedCount mapped original methods, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."

@@ -223,6 +223,11 @@ public class Bootstrap
      */
     public Task<IChannel> BindAsync(CancellationToken cancellationToken = default)
     { Validate(); if (_local == null) throw new InvalidOperationException("Local address not set."); return BindAsync(_local, cancellationToken); }
+    /**
+     * Create a new {@link Channel} and bind it.
+     */
+    public Task<IChannel> BindAsync(int port, CancellationToken cancellationToken = default)
+        => BindAsync(new IPEndPoint(IPAddress.Any, port), cancellationToken);
     public async Task<IChannel> BindAsync(EndPoint local, CancellationToken cancellationToken = default)
     {
         Validate();
