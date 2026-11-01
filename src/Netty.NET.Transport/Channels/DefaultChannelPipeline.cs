@@ -368,7 +368,11 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
      */
     public DefaultChannelPipeline Remove(IChannelHandler handler) { RemoveContext(Context(handler) ?? throw new KeyNotFoundException()); return this; }
     public T Remove<T>() where T : class, IChannelHandler => (T)RemoveContext(Context(typeof(T)) ?? throw new KeyNotFoundException());
-    public IChannelHandler RemoveIfExists(string name) { var c = Context(name); return c == null ? null : RemoveContext(c); }
+    public IChannelHandler RemoveIfExists(string name) => RemoveIfExistsContext(Context(name));
+    public IChannelHandler RemoveIfExists(Type handlerType) => RemoveIfExistsContext(Context(handlerType));
+    public IChannelHandler RemoveIfExists(IChannelHandler handler) => RemoveIfExistsContext(Context(handler));
+    private IChannelHandler RemoveIfExistsContext(ChannelHandlerContext context)
+        => context != null && TryRemoveContext(context) ? context.Handler : null;
     /**
      * Removes the first {@link ChannelHandler} in this pipeline.
      *
@@ -389,19 +393,42 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
     public IChannelHandler RemoveLast() => RemoveContext(LastContext ?? throw new InvalidOperationException("Empty pipeline."));
     private IChannelHandler RemoveContext(ChannelHandlerContext context)
     {
+        if (!TryRemoveContext(context))
+            // The context was removed or replaced concurrently after it was looked up.
+            throw new KeyNotFoundException(context.Name);
+        return context.Handler;
+    }
+    /**
+     * Removes the given context from the pipeline and schedules the call of
+     * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)}.
+     *
+     * @return {@code false} if the context was not part of the pipeline anymore, in which case nothing is done.
+     */
+    private bool TryRemoveContext(ChannelHandlerContext context)
+    {
         lock (_gate)
         {
             if (!context.Linked)
-                throw new KeyNotFoundException(context.Name);
+                return false;
             context.Previous.Next = context.Next;
             context.Next.Previous = context.Previous;
             context.Linked = false;
             if (!_registered)
+            {
+                // If the registered is false it means that the channel was not registered on an eventloop yet.
+                // In this case we remove the context from the pipeline and add a task that will call
+                // ChannelHandler.handlerRemoved(...) once the channel is registered.
                 _pendingCallbacks.Add((context, false));
+                return true;
+            }
+            if (!context.Executor.InEventLoop())
+            {
+                context.Executor.Execute(() => CallRemoved0(context));
+                return true;
+            }
         }
-        if (_registered)
-            CallRemoved(context);
-        return context.Handler;
+        CallRemoved0(context);
+        return true;
     }
     /**
      * Replaces the {@link ChannelHandler} of the specified name with a new handler in this pipeline.
