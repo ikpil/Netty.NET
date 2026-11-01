@@ -45,6 +45,7 @@ $actual = @(Get-ChildItem (Join-Path $UpstreamRoot 'transport/src') -Recurse -Fi
 if (Compare-Object $expected $actual) { throw 'Transport inventory changed.' }
 
 $mappedCount = 0
+$notApplicableCount = 0
 $partialCommentCount = 0
 foreach ($entry in $manifest.entries) {
     $path = Join-Path $UpstreamRoot $entry.upstream
@@ -89,7 +90,9 @@ foreach ($entry in $manifest.entries) {
         $methods = @(Get-DeclaredJavaTests $source | Sort-Object)
         $mapped = @($entry.caseMappings | ForEach-Object { $_.upstreamMethod } | Sort-Object)
         $unreviewed = @($entry.methodReview.unreviewedMethods | Where-Object { $null -ne $_ })
-        $accounted = @($mapped) + @($unreviewed)
+        $notApplicable = @($entry.methodReview.notApplicableMethods | Where-Object { $null -ne $_ })
+        $notApplicableCount += $notApplicable.Count
+        $accounted = @($mapped) + @($unreviewed) + @($notApplicable | ForEach-Object { $_.upstreamMethod })
         if (@($accounted | Select-Object -Unique).Count -ne $accounted.Count -or
             ($methods.Count -ne $accounted.Count) -or
             ($methods.Count -gt 0 -and (Compare-Object $methods ($accounted | Sort-Object)))) {
@@ -98,6 +101,23 @@ foreach ($entry in $manifest.entries) {
         if ($entry.methodReview -and ($entry.methodReview.declaredCount -ne $methods.Count -or
             $entry.methodReview.mappedCount -ne $mapped.Count)) { throw 'Incorrect method review counts.' }
         if ($unreviewed.Count -gt 0 -and $entry.status -ne 'in-progress') { throw 'Incomplete fixture marked complete.' }
+        if ($notApplicable.Count -gt 0 -and $entry.status -notin @('in-progress', 'clr-adapted')) {
+            throw 'Fixture with CLR-inapplicable source tests must not claim full original test equivalence.'
+        }
+        foreach ($decision in $notApplicable) {
+            if ($decision.disposition -ne 'clr-not-applicable' -or -not $decision.reason -or
+                -not $decision.sourceContract -or @($decision.clrEvidence).Count -eq 0) {
+                throw 'Every CLR-inapplicable original method needs its source contract, reason and concrete CLR evidence.'
+            }
+            foreach ($evidencePath in $decision.clrEvidence) {
+                if (-not (Test-Path (Join-Path $repositoryRoot $evidencePath) -PathType Leaf)) {
+                    throw "Missing CLR decision evidence: $evidencePath"
+                }
+            }
+        }
+        if ($entry.methodReview.PSObject.Properties.Name -contains 'reviewedCount') {
+            if ($entry.methodReview.reviewedCount -ne $mapped.Count + $notApplicable.Count) { throw 'Incorrect reviewed method count.' }
+        }
         $testCode = [regex]::Replace($implementation,
             '(?s)"(?:\\.|[^"\\])*"|''(?:\\.|[^''\\])*''|/\*.*?\*/|//[^\r\n]*', {
                 param($match)
@@ -127,4 +147,4 @@ foreach ($entry in $manifest.entries) {
         }
     }
 }
-Write-Output "Transport manifest verified: $($manifest.entries.Count) inventory entries, $mappedCount mapped original tests, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) inventory entries, $mappedCount mapped original methods, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."

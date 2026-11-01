@@ -30,6 +30,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken) => context.BindAsync(localAddress, cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#connect(SocketAddress, SocketAddress, ChannelPromise)} to forward
@@ -37,6 +38,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken) => context.ConnectAsync(remoteAddress, localAddress, cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#disconnect(ChannelPromise)} to forward
@@ -44,6 +46,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => context.DisconnectAsync(cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#close(ChannelPromise)} to forward
@@ -51,6 +54,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => context.CloseAsync(cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#deregister(ChannelPromise)} to forward
@@ -58,6 +62,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => context.DeregisterAsync(cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#write(Object, ChannelPromise)} to forward
@@ -65,6 +70,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken) => context.WriteAsync(message, cancellationToken);
 
     /**
@@ -73,6 +79,7 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void Read(ChannelHandlerContext context) => context.Read();
     /**
      * Calls {@link ChannelHandlerContext#flush()} to forward
@@ -80,5 +87,6 @@ public class ChannelOutboundHandlerAdapter : ChannelHandlerAdapter, IChannelOutb
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void Flush(ChannelHandlerContext context) => context.Flush();
 }

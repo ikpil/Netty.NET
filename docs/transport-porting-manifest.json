@@ -6,7 +6,7 @@
   ],
   "objective": "Port portable Transport behavior and original tests using CLR-native Tasks, delegates, sockets and explicit executor dispatch; preserve original comments and test intent.",
   "status": "in-progress",
-  "statusMeaning": "pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported.",
+  "statusMeaning": "pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported. A clr-adapted fixture may contain per-method clr-not-applicable decisions only with source contract/reason/real CLR evidence. These methods are reviewed but never counted as mapped original cases or skipped CLR tests.",
   "stages": [
     {
       "name": "Channel dependencies",
@@ -17,8 +17,8 @@
     {
       "name": "Channel, Pipeline and executor ordering",
       "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, bidirectional handlers, seven original tail callbacks, all 15 ChannelOutboundBuffer and all nine ChannelInitializer original methods; 61/72 DefaultChannelPipelineTest declarations mapped, including mutations, buffered forwarding, context event sequences, primary exception ownership, pre-cancelled operations, unordered admission and original lifecycle races.",
-      "next": "Remaining 11 pipeline declarations, SingleThreadEventLoop original fixtures, remaining config/executor/shutdown cases"
+      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage.",
+      "next": "Remaining Pipeline implementation comments/contracts, SingleThreadEventLoop original fixtures, config and executor/shutdown cases; reviewed test inventory does not complete Transport"
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
@@ -41,19 +41,20 @@
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 254,
-    "mappedOriginalMethods": 251,
-    "originalExecutedCases": 254,
-    "supplementalExecutedCases": 85,
+    "javaOriginalPassed": 265,
+    "mappedOriginalMethods": 254,
+    "originalExecutedCases": 257,
+    "javaOnlyReviewedCases": 8,
+    "supplementalExecutedCases": 90,
     "debug": {
-      "total": 339,
-      "passed": 339,
+      "total": 347,
+      "passed": 347,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 339,
-      "passed": 339,
+      "total": 347,
+      "passed": 347,
       "failed": 0,
       "skipped": 0
     },
@@ -65,8 +66,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 339,
-        "passed": 339,
+        "total": 347,
+        "passed": 347,
         "failed": 0,
         "skipped": 0
       },
@@ -83,15 +84,15 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32637,
+    "solutionPassed": 32645,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 254 unchanged pinned Java cases including 61/72 DefaultChannelPipelineTest declarations. Added 24 source methods executing 26 cases, retaining both true/false rows for inbound/outbound context dispatch. Every selected fixture was compared with git show before compilation; assertions and lifecycle callbacks ran without modifying the original Java source. This remains a selected Transport suite.",
-    "note": "All 339 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 251 mapped original methods execute 254 cases; 85 are explicit CLR supplements. Before fixes, the original dual-failure helper received the secondary removal error rather than the primary HandlerAdded exception. The ordinary source unordered test could pass after HandlerAdded started, so an extra native case held the first scheduled addition, ran a subsequent event on a real two-worker pool and proved loss of the ADD_PENDING event by timing out. Preserve source admission for unordered pending handlers using the existing IOrderedEventExecutor marker and Volatile/Interlocked state, commit added before reentrant callbacks, and mark removed in finally. During added-failure cleanup log the secondary removal error and propagate the original exception; ordinary removal still forwards its own failure. Keep original 500 race rounds, 50ms waits, 16 workers/32 bad handlers/10ms sleeps and every original time bound. A removed read handler that throws must forward its original error to the next context, without invoking its own ExceptionCaught; a failing native repro fixes this via admission recheck. The original alternating DefaultEventLoop helper retains IOrderedEventExecutor in its native wrapper. No Common/Buffer/Resolver source or new Markdown file changed.",
+    "javaEvidence": "Executed 265 unchanged pinned Java cases, including all 72 DefaultChannelPipelineTest declarations/74 executions. The corresponding mapped CLR original subset is 257 executions/254 methods. Eight Java cases test absent mutable/void/close-future producer inputs or the separate OIO backend; they are reviewed individually and not counted as ported/CLR skipped. Source bytes match the pinned git revision and all assertions/lifecycle callbacks ran.",
+    "note": "All 347 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild: 257 mapped original executions plus 90 explicitly supplemental native cases. Three original tests added this unit cover actual TCP/local registration completion and all seventeen @Skip callbacks with source lifecycle/execution masks. The skip fixture failed against the previous dispatcher even with the annotation type present; event masks fix the actual behavior. Non-inherited CLR attributes, interface maps (including explicit implementation targets) and a weak-key ConditionalWeakTable preserve source skip/cache semantics. Native cases verify override re-enabling, explicit-interface attributes and preservation of a foreign executor boundary behind a blocked prior event. Native completion-role alternatives check all six owner callbacks after foreign Task production and original failure identity through an awaited write Task; these are supplements, not alleged literal promise tests. The boundary fixture awaits both removal callbacks before stopping workers because CloseCompletion precedes cross-executor destruction. No new xUnit skips and no Common/Buffer/Resolver source or new Markdown files.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
@@ -272,9 +273,9 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 47,
-        "preservedCount": 4,
-        "unreviewedCount": 43,
-        "scope": "Original comments retained at reviewed lifecycle, event admission and exception counterparts and test helpers; remaining source comment/contracts remain open."
+        "preservedCount": 8,
+        "unreviewedCount": 39,
+        "scope": "Original comments retained at reviewed CLR counterparts and original/explicit native-alternative helpers. Remaining implementation comments/contracts stay explicit."
       },
       "review": {
         "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review.",
@@ -562,8 +563,25 @@
       "sha256": "6b0e7ad9cff54548bf78181ce242ca8cc275dc31a220b87607afa364947ea8ce",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs"
+      ],
+      "review": {
+        "scope": "Portable event bits, non-inherited method skip contract, override/explicit-interface dispatch and weak caching are implemented. ConditionalWeakTable replaces JVM FastThreadLocal<WeakHashMap<Class,Integer>>; CLR interface maps replace public-method reflection and AccessController. Remaining source-only comments stay explicit.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 9,
+        "preservedCount": 7,
+        "unreviewedCount": 2,
+        "scope": "Original comments retained at reviewed CLR counterparts and original/explicit native-alternative helpers. Remaining implementation comments/contracts stay explicit."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ChannelId.java",
@@ -3625,28 +3643,33 @@
       "sha256": "2c38530ea2b7abb6d633f7dc95fcdbf44edc6ee1877dfdbb999196cc41cfa696",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "in-progress",
+      "status": "clr-adapted",
       "implementation": [
         "test/Netty.NET.Transport.Tests/ChannelPipelineSourceTest.cs",
         "test/Netty.NET.Transport.Tests/DefaultChannelPipelineMutationSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
       ],
       "comments": {
-        "status": "partial",
+        "status": "preserved",
         "uniqueCount": 32,
-        "preservedCount": 30,
-        "unreviewedCount": 2,
-        "scope": "Original comments retained at reviewed lifecycle, event admission and exception counterparts and test helpers; remaining source comment/contracts remain open."
+        "preservedCount": 32,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at reviewed CLR counterparts and original/explicit native-alternative helpers. Remaining implementation comments/contracts stay explicit."
       },
       "review": {
-        "scope": "61/72 original declarations mapped, including both boolean inputs for inbound/outbound context dispatch, 500-round lifecycle race, 16-worker/32-handler failures, primary exception propagation, unordered admission and seven pre-cancelled operations. Remaining 11 declarations retain explicit review status; Java promise/mask/transport details are not silently excluded.",
+        "scope": "All 72 source declarations reviewed: 64 mapped CLR methods (66 executions including both boolean rows), eight explicitly CLR-inapplicable JVM API/backend scenarios. None of the eight is counted as ported or as a skipped xUnit test. Comments and helper assertions are retained at supported counterparts. Transport/runtime review remains in-progress.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/ChannelPipelineSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineMutationSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
-          "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+          "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
           "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
-          "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
         ]
       },
       "caseMappings": [
@@ -3978,25 +4001,135 @@
           "upstreamMethod": "testCancelWriteAndFlush",
           "clrMethod": "TestCancelWriteAndFlush",
           "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testAddInListenerNio",
+          "clrMethod": "TestAddInListenerNio",
+          "adaptation": "Keep original object identity, immediate HandlerAdded assertion and event capture from the registration-completion listener. Native Task continuations do not inherit a promise executor; explicitly regain channel.EventLoop before executing that original listener body. Actual TcpSocketChannel and LocalChannel cover the original NIO/local variants; original three-second outer bound remains. This does not claim automatic owner affinity for arbitrary Task continuations."
+        },
+        {
+          "upstreamMethod": "testAddInListenerLocal",
+          "clrMethod": "TestAddInListenerLocal",
+          "adaptation": "Keep original object identity, immediate HandlerAdded assertion and event capture from the registration-completion listener. Native Task continuations do not inherit a promise executor; explicitly regain channel.EventLoop before executing that original listener body. Actual TcpSocketChannel and LocalChannel cover the original NIO/local variants; original three-second outer bound remains. This does not claim automatic owner affinity for arbitrary Task continuations."
+        },
+        {
+          "upstreamMethod": "testSkipHandlerMethodsIfAnnotated",
+          "clrMethod": "TestSkipHandlerMethodsIfAnnotated",
+          "adaptation": "Keep all seventeen skipped event/operation bodies, both lifecycle calls, original inbound/outbound execution-bit assertions, empty-string messages and source operation ordering. A non-inherited CLR method attribute replaces @Skip; endpoints are opaque LocalAddress values because outbound helpers intercept every operation. Native Tasks replace per-operation promises."
         }
       ],
       "methodReview": {
         "declaredCount": 72,
-        "mappedCount": 61,
-        "unreviewedMethods": [
-          "testWrongPromiseChannel",
-          "testPromiseCorrectExecutor",
-          "testUnexpectedVoidChannelPromise",
-          "testUnexpectedVoidChannelPromiseCloseFuture",
-          "testAddInListenerNio",
-          "testAddInListenerOio",
-          "testAddInListenerLocal",
-          "testVoidPromiseNotify",
-          "testSkipHandlerMethodsIfAnnotated",
-          "testWriteThrowsReleaseMessage",
-          "testWriteAndFlushThrowsReleaseMessage"
+        "mappedCount": 64,
+        "unreviewedMethods": [],
+        "scope": "All 72 source declarations reviewed: 64 mapped CLR methods (66 executions including both boolean rows), eight explicitly CLR-inapplicable JVM API/backend scenarios. None of the eight is counted as ported or as a skipped xUnit test. Comments and helper assertions are retained at supported counterparts. Transport/runtime review remains in-progress.",
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testWrongPromiseChannel",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "AbstractChannelHandlerContext.isNotValidPromise rejects promise.channel()!=channel()",
+            "reason": "CLR outbound methods accept EndPoint/message/CancellationToken and return consumer Tasks. Callers cannot submit a mutable producer belonging to another channel; that invalid input is absent from the public API.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testUnexpectedVoidChannelPromise",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "isNotValidPromise rejects VoidChannelPromise for close",
+            "reason": "The CLR API has no VoidChannelPromise argument or void producer object. CloseAsync always returns a normal observable Task; manufacturing this input would add the JVM facade the port deliberately avoids.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testUnexpectedVoidChannelPromiseCloseFuture",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "isNotValidPromise rejects AbstractChannel.CloseFuture supplied as an operation promise",
+            "reason": "CloseCompletion is a consumer-only Task with no public setter, and CloseAsync has no completion-producer parameter. A close-notification Task cannot be supplied as a mutable close-operation producer.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testWriteThrowsReleaseMessage",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "validateWrite releases referenceCounted when a wrong-channel promise argument is rejected before transport ownership",
+            "reason": "The sole rejection trigger in this original helper is channel2.newPromise() supplied to channel1.write. No such parameter exists in CLR WriteAsync. Its exact validation/reference-release scenario is inapplicable, not replaced by an unrelated handler-throw test. Existing native cancellation and rejected-dispatch tests separately cover supported input ownership.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testWriteAndFlushThrowsReleaseMessage",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "validateWrite releases referenceCounted when wrong-channel promise is supplied to writeAndFlush",
+            "reason": "WriteAndFlushAsync likewise accepts no completion producer, so a foreign-channel promise cannot enter validation. Do not pretend a generic write failure is the original scenario; supported cancellation/rejection ownership remains separately tested.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testPromiseCorrectExecutor",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "ensurePromiseUseCorrectExecutor cascades a context-owned DefaultChannelPromise into a caller-supplied foreign-executor promise; six attached listeners observe context ownership",
+            "reason": "Native Tasks expose no executor-bearing mutable promise input and do not automatically schedule callbacks on a channel. This exact cascade is absent. A separately counted native test completes all six operations from a foreign producer and explicitly regains the handler owner before observing state; it is a CLR alternative, not the original assertion ported unchanged.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testVoidPromiseNotify",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "VoidChannelPromise.tryFailure routes a write failure to ExceptionCaught without a returned completion future",
+            "reason": "Every CLR write returns an observable Task, so there is no explicit VoidChannelPromise failure-notification mode. The native alternative awaits that Task and preserves the original exception identity; it does not manually fire ExceptionCaught to simulate the absent API.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testAddInListenerOio",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Registration listener initializes OioSocketChannel on a dedicated OioEventLoopGroup",
+            "reason": "CLR Transport has one asynchronous System.Net.Sockets TcpSocketChannel, not a separate obsolete JVM blocking OIO channel/event-loop family. The mapped NIO registration test executes the same portable listener contract on the actual CLR TCP implementation. Running that identical CLR case twice would not port an OIO backend.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelOutboundInvoker.cs",
+              "src/Netty.NET.Transport/Channels/IChannelOutboundHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs"
+            ]
+          }
         ],
-        "scope": "61/72 original declarations mapped, including both boolean inputs for inbound/outbound context dispatch, 500-round lifecycle race, 16-worker/32-handler failures, primary exception propagation, unordered admission and seven pre-cancelled operations. Remaining 11 declarations retain explicit review status; Java promise/mask/transport details are not silently excluded."
+        "reviewedCount": 72
       }
     },
     {
@@ -5467,6 +5600,10 @@
     {
       "subject": "Pipeline pending admission and primary initialization failure",
       "decision": "Use the existing IOrderedEventExecutor marker and private CLR volatile/Interlocked state to preserve source ADD_PENDING admission without recreating Java field-updater APIs. An unordered executor can deliver an event before queued HandlerAdded starts; a normal event loop cannot. Added state is committed before reentrant user callbacks, and removal is finalized even if a callback throws. Added-failure cleanup logs secondary removal errors while preserving the primary pipeline exception. Pre-cancelled tokens replace supplied cancelled promises; native cancellation/dispatch Tasks are explicitly observed before inspecting completion and buffer ownership. Recheck admission when routing a callback failure because that callback may already have removed its own context. The original DefaultEventLoop-based alternating helper retains the existing native ordered marker."
+    },
+    {
+      "subject": "Pipeline mask, method-level decisions and native completion roles",
+      "decision": "Preserve meaningful @Skip behavior using a non-inherited CLR method attribute, concrete interface-map targets and an immutable weak-key cache. Skip event-specific forwarding only on the same executor; crossing a foreign executor remains necessary for order. Do not reintroduce caller-owned Java promises, void promises, mutable close futures or a duplicate blocking OIO backend merely to compile invalid-input tests. Explicitly reviewed unsupported source methods remain separate from mapped source cases and native supplements. Task consumers must explicitly dispatch owner state access; their returned failure Task preserves exception identity."
     }
   ],
   "openWork": [
@@ -5520,7 +5657,8 @@
     "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs",
     "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs",
     "test/Netty.NET.Transport.Tests/PipelineOptionalRemovalContractTest.cs",
-    "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
+    "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs",
+    "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -6162,10 +6300,75 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "18d2f7560d2986a29732974408e74c8b9258263a",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 254,
+        "mappedOriginalMethods": 251,
+        "originalExecutedCases": 254,
+        "supplementalExecutedCases": 85,
+        "debug": {
+          "total": 339,
+          "passed": 339,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 339,
+          "passed": 339,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 339,
+            "passed": 339,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32637,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 254 unchanged pinned Java cases including 61/72 DefaultChannelPipelineTest declarations. Added 24 source methods executing 26 cases, retaining both true/false rows for inbound/outbound context dispatch. Every selected fixture was compared with git show before compilation; assertions and lifecycle callbacks ran without modifying the original Java source. This remains a selected Transport suite.",
+        "note": "All 339 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 251 mapped original methods execute 254 cases; 85 are explicit CLR supplements. Before fixes, the original dual-failure helper received the secondary removal error rather than the primary HandlerAdded exception. The ordinary source unordered test could pass after HandlerAdded started, so an extra native case held the first scheduled addition, ran a subsequent event on a real two-worker pool and proved loss of the ADD_PENDING event by timing out. Preserve source admission for unordered pending handlers using the existing IOrderedEventExecutor marker and Volatile/Interlocked state, commit added before reentrant callbacks, and mark removed in finally. During added-failure cleanup log the secondary removal error and propagate the original exception; ordinary removal still forwards its own failure. Keep original 500 race rounds, 50ms waits, 16 workers/32 bad handlers/10ms sleeps and every original time bound. A removed read handler that throws must forward its original error to the next context, without invoking its own ExceptionCaught; a failing native repro fixes this via admission recheck. The original alternating DefaultEventLoop helper retains IOrderedEventExecutor in its native wrapper. No Common/Buffer/Resolver source or new Markdown file changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Review the remaining 11 DefaultChannelPipelineTest declarations, including Java promise roles, event masks and transport listener variants; adapt meaningful CLR contracts without recreating JVM-only APIs.",
+    "Continue concrete portable runtime/fixture gaps after completing the 72-method Pipeline fixture review (64 mapped, 8 CLR-inapplicable); remaining Pipeline implementation comments/contracts and SingleThreadEventLoop fixtures stay open.",
     "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
     "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts."
@@ -6346,6 +6549,38 @@
       "javaOriginalCases": 254,
       "clrTransportCases": 339,
       "solutionPassed": 32637,
+      "solutionSkipped": 14
+    }
+  },
+  "pipelineCompletionEvidence": {
+    "priorRuntimeRevision": "18d2f7560d2986a29732974408e74c8b9258263a",
+    "newMappedOriginalMethods": 3,
+    "fixtureMapped": 64,
+    "fixtureReviewed": 72,
+    "fixtureNotApplicable": 8,
+    "nativeSupplementalCases": 5,
+    "maskContract": "@Skip is a behavioral contract: all marked callbacks must be bypassed, while lifecycle and following real callbacks run. It is not classified as JVM-only. Non-inherited C# method attributes and cached interface maps include explicit implementations; a ConditionalWeakTable value holds only an integer and cannot retain its Type key.",
+    "baselineFailure": "With only the CLR annotation type present and the previous dispatcher unchanged, the original skip fixture failed with Method should never been called. It passes with event masks. Native cases also verify overriding a skipped method re-enables it, explicit-interface attributes are honored, and skipping an otherwise transparent callback does not bypass a foreign executor behind a blocked earlier event.",
+    "fixtureCleanup": "The first broad native run exposed an executor shutdown race in the new boundary test cleanup. CloseCompletion precedes cross-executor pipeline destruction; await both handlers removed before stopping their owners. Original assertions and timeouts were not weakened.",
+    "completionRoles": "Two original NIO/local registration callbacks are mapped with explicit Task-to-owner dispatch. Foreign executor completion and dropped VoidChannelPromise modes are separately reviewed: native six-operation owner restoration and awaited failure identity are supplements, not counted as literal original ports.",
+    "notApplicableMethods": [
+      "testWrongPromiseChannel",
+      "testUnexpectedVoidChannelPromise",
+      "testUnexpectedVoidChannelPromiseCloseFuture",
+      "testWriteThrowsReleaseMessage",
+      "testWriteAndFlushThrowsReleaseMessage",
+      "testPromiseCorrectExecutor",
+      "testVoidPromiseNotify",
+      "testAddInListenerOio"
+    ],
+    "remaining": "The DefaultChannelPipelineTest method inventory is fully reviewed, with 64 real CLR mappings and eight explicit language/backend decisions. Remaining Pipeline runtime comments/contracts, other fixtures and Transport inventory are still open.",
+    "validated": {
+      "javaOriginalExecutions": 265,
+      "pipelineJavaExecutions": 74,
+      "mappedClrOriginalExecutions": 257,
+      "javaOnlyReviewedCases": 8,
+      "clrTransportCases": 347,
+      "solutionPassed": 32645,
       "solutionSkipped": 14
     }
   }

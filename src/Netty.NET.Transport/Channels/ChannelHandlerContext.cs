@@ -96,6 +96,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
     internal bool Linked = true;
     private readonly IEventExecutor _executor;
     private readonly bool _ordered;
+    private readonly int _executionMask;
     internal IEventExecutor AssignedExecutor => _executor;
     internal ChannelHandlerContext(DefaultChannelPipeline pipeline, string name, IChannelHandler handler, IEventExecutor executor = null)
     {
@@ -103,6 +104,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         Name = name;
         Handler = handler;
         _executor = executor;
+        _executionMask = ChannelHandlerMask.Mask(handler.GetType());
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
         _ordered = executor == null || executor is IOrderedEventExecutor;
         State = 3;
@@ -176,31 +178,42 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
      */
     public bool HasAttr<T>(AttributeKey<T> key) where T : class => Channel.HasAttr(key);
 
-    private ChannelHandlerContext FindInbound(bool exception = false)
+    private ChannelHandlerContext FindInbound(int mask)
     {
         // Like source findContextInbound/fireChannelRegistered, select pending handlers before dispatch.
         // Their owner must run queued HandlerAdded callbacks before deciding whether to invoke or forward.
         var context = Next;
-        while (context != null && (context.State == 2 || (!exception && context.Handler is not IChannelInboundHandler)))
+        var executor = Executor;
+        while (context != null && (context.State == 2 || SkipContext(context, executor, mask, ChannelHandlerMask.OnlyInbound)))
             context = context.Next;
         return context;
     }
-    private ChannelHandlerContext FindOutbound()
+    private ChannelHandlerContext FindOutbound(int mask)
     {
         var context = Previous;
-        while (context != null && (context.State == 2 || context.Handler is not IChannelOutboundHandler))
+        var executor = Executor;
+        while (context != null && (context.State == 2 || SkipContext(context, executor, mask, ChannelHandlerMask.OnlyOutbound)))
             context = context.Previous;
         return context;
     }
-    private ChannelHandlerContext Fire(Action<IChannelInboundHandler, ChannelHandlerContext> callback, object ownedMessage = null)
+    private static bool SkipContext(ChannelHandlerContext context, IEventExecutor executor, int mask, int direction)
     {
-        var next = FindInbound();
+        return (context._executionMask & (direction | mask)) == 0 ||
+            // We can only skip if the EventExecutor is the same as otherwise we need to ensure we offload
+            // everything to preserve ordering.
+            //
+            // See https://github.com/netty/netty/issues/10067
+            (ReferenceEquals(context.Executor, executor) && (context._executionMask & mask) == 0);
+    }
+    private ChannelHandlerContext Fire(Action<IChannelInboundHandler, ChannelHandlerContext> callback, int mask, object ownedMessage = null)
+    {
+        var next = FindInbound(mask);
         if (next == null)
         { ReferenceCountUtil.Release(ownedMessage); return this; }
         void Invoke()
         {
             if (!next.CanInvoke)
-            { next.Fire(callback, ownedMessage); return; }
+            { next.Fire(callback, mask, ownedMessage); return; }
             try
             { callback((IChannelInboundHandler)next.Handler, next); }
             catch (Exception error) { next.NotifyException(error); }
@@ -210,20 +223,20 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         catch { ReferenceCountUtil.Release(ownedMessage); throw; }
         return this;
     }
-    public ChannelHandlerContext FireChannelRegistered() => Fire((h, c) => h.ChannelRegistered(c));
-    public ChannelHandlerContext FireChannelUnregistered() => Fire((h, c) => h.ChannelUnregistered(c));
-    public ChannelHandlerContext FireChannelActive() => Fire((h, c) => h.ChannelActive(c));
-    public ChannelHandlerContext FireChannelInactive() => Fire((h, c) => h.ChannelInactive(c));
+    public ChannelHandlerContext FireChannelRegistered() => Fire((h, c) => h.ChannelRegistered(c), ChannelHandlerMask.ChannelRegistered);
+    public ChannelHandlerContext FireChannelUnregistered() => Fire((h, c) => h.ChannelUnregistered(c), ChannelHandlerMask.ChannelUnregistered);
+    public ChannelHandlerContext FireChannelActive() => Fire((h, c) => h.ChannelActive(c), ChannelHandlerMask.ChannelActive);
+    public ChannelHandlerContext FireChannelInactive() => Fire((h, c) => h.ChannelInactive(c), ChannelHandlerMask.ChannelInactive);
     public ChannelHandlerContext FireChannelRead(object message)
-    { ArgumentNullException.ThrowIfNull(message); return Fire((h, c) => h.ChannelRead(c, message), message); }
-    public ChannelHandlerContext FireChannelReadComplete() => Fire((h, c) => h.ChannelReadComplete(c));
+    { ArgumentNullException.ThrowIfNull(message); return Fire((h, c) => h.ChannelRead(c, message), ChannelHandlerMask.ChannelRead, message); }
+    public ChannelHandlerContext FireChannelReadComplete() => Fire((h, c) => h.ChannelReadComplete(c), ChannelHandlerMask.ChannelReadComplete);
     public ChannelHandlerContext FireUserEventTriggered(object evt)
-    { ArgumentNullException.ThrowIfNull(evt); return Fire((h, c) => h.UserEventTriggered(c, evt), evt); }
-    public ChannelHandlerContext FireChannelWritabilityChanged() => Fire((h, c) => h.ChannelWritabilityChanged(c));
+    { ArgumentNullException.ThrowIfNull(evt); return Fire((h, c) => h.UserEventTriggered(c, evt), ChannelHandlerMask.UserEventTriggered, evt); }
+    public ChannelHandlerContext FireChannelWritabilityChanged() => Fire((h, c) => h.ChannelWritabilityChanged(c), ChannelHandlerMask.ChannelWritabilityChanged);
     public ChannelHandlerContext FireExceptionCaught(Exception cause)
     {
         ArgumentNullException.ThrowIfNull(cause);
-        var next = FindInbound(true);
+        var next = FindInbound(ChannelHandlerMask.ExceptionCaught);
         if (next == null)
         { Pipeline.Owner.OnUnhandledException(cause); return this; }
         void Invoke()
@@ -248,9 +261,9 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
     }
 
     private Task Outbound(Func<IChannelOutboundHandler, ChannelHandlerContext, Task> operation,
-        CancellationToken cancellationToken, object message = null)
+        CancellationToken cancellationToken, int mask, object message = null)
     {
-        var previous = FindOutbound();
+        var previous = FindOutbound(mask);
         if (previous == null)
         { ReferenceCountUtil.Release(message); return Task.FromException(new InvalidOperationException("No outbound handler.")); }
         Task Invoke()
@@ -258,7 +271,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
             if (cancellationToken.IsCancellationRequested)
             { ReferenceCountUtil.Release(message); return Task.FromCanceled(cancellationToken); }
             if (!previous.CanInvoke)
-                return previous.Outbound(operation, cancellationToken, message);
+                return previous.Outbound(operation, cancellationToken, mask, message);
             try
             { return operation((IChannelOutboundHandler)previous.Handler, previous); }
             catch (Exception error) { return Task.FromException(error); }
@@ -281,26 +294,26 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         }
     }
     public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(localAddress); return Outbound((h, c) => h.BindAsync(c, localAddress, cancellationToken), cancellationToken); }
+    { ArgumentNullException.ThrowIfNull(localAddress); return Outbound((h, c) => h.BindAsync(c, localAddress, cancellationToken), cancellationToken, ChannelHandlerMask.Bind); }
     public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(remoteAddress); return Outbound((h, c) => h.ConnectAsync(c, remoteAddress, localAddress, cancellationToken), cancellationToken); }
+    { ArgumentNullException.ThrowIfNull(remoteAddress); return Outbound((h, c) => h.ConnectAsync(c, remoteAddress, localAddress, cancellationToken), cancellationToken, ChannelHandlerMask.Connect); }
     public Task DisconnectAsync(CancellationToken cancellationToken = default) => Channel.Metadata.HasDisconnect()
-        ? Outbound((h, c) => h.DisconnectAsync(c, cancellationToken), cancellationToken) : CloseAsync(cancellationToken);
-    public Task CloseAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.CloseAsync(c, cancellationToken), cancellationToken);
-    public Task DeregisterAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.DeregisterAsync(c, cancellationToken), cancellationToken);
+        ? Outbound((h, c) => h.DisconnectAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.Disconnect) : CloseAsync(cancellationToken);
+    public Task CloseAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.CloseAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.Close);
+    public Task DeregisterAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.DeregisterAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.Deregister);
     public Task WriteAsync(object message, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(message); return Outbound((h, c) => h.WriteAsync(c, message, cancellationToken), cancellationToken, message); }
+    { ArgumentNullException.ThrowIfNull(message); return Outbound((h, c) => h.WriteAsync(c, message, cancellationToken), cancellationToken, ChannelHandlerMask.Write, message); }
     public Task WriteAndFlushAsync(object message, CancellationToken cancellationToken = default)
     { var result = WriteAsync(message, cancellationToken); Flush(); return result; }
-    private void OutboundVoid(Action<IChannelOutboundHandler, ChannelHandlerContext> action)
+    private void OutboundVoid(Action<IChannelOutboundHandler, ChannelHandlerContext> action, int mask)
     {
-        var previous = FindOutbound();
+        var previous = FindOutbound(mask);
         if (previous == null)
             return;
         void Invoke()
         {
             if (!previous.CanInvoke)
-            { previous.OutboundVoid(action); return; }
+            { previous.OutboundVoid(action, mask); return; }
             try
             { action((IChannelOutboundHandler)previous.Handler, previous); }
             catch (Exception error) { previous.NotifyException(error); }
@@ -310,6 +323,6 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         else
             previous.Executor.Execute(Invoke);
     }
-    public IChannelOutboundInvoker Read() { OutboundVoid((h, c) => h.Read(c)); return this; }
-    public IChannelOutboundInvoker Flush() { OutboundVoid((h, c) => h.Flush(c)); return this; }
+    public IChannelOutboundInvoker Read() { OutboundVoid((h, c) => h.Read(c), ChannelHandlerMask.Read); return this; }
+    public IChannelOutboundInvoker Flush() { OutboundVoid((h, c) => h.Flush(c), ChannelHandlerMask.Flush); return this; }
 }

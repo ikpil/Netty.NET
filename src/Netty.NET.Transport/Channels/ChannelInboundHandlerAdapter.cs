@@ -37,6 +37,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelRegistered(ChannelHandlerContext context) => context.FireChannelRegistered();
     /**
      * Calls {@link ChannelHandlerContext#fireChannelUnregistered()} to forward
@@ -44,6 +45,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelUnregistered(ChannelHandlerContext context) => context.FireChannelUnregistered();
     /**
      * Calls {@link ChannelHandlerContext#fireChannelActive()} to forward
@@ -51,6 +53,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelActive(ChannelHandlerContext context) => context.FireChannelActive();
     /**
      * Calls {@link ChannelHandlerContext#fireChannelInactive()} to forward
@@ -58,6 +61,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelInactive(ChannelHandlerContext context) => context.FireChannelInactive();
     /**
      * Calls {@link ChannelHandlerContext#fireChannelRead(Object)} to forward
@@ -65,6 +69,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelRead(ChannelHandlerContext context, object message) => context.FireChannelRead(message);
     /**
      * Calls {@link ChannelHandlerContext#fireChannelReadComplete()} to forward
@@ -72,6 +77,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelReadComplete(ChannelHandlerContext context) => context.FireChannelReadComplete();
     /**
      * Calls {@link ChannelHandlerContext#fireUserEventTriggered(Object)} to forward
@@ -79,6 +85,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void UserEventTriggered(ChannelHandlerContext context, object evt) => context.FireUserEventTriggered(evt);
     /**
      * Calls {@link ChannelHandlerContext#fireChannelWritabilityChanged()} to forward
@@ -86,6 +93,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
      *
      * Sub-classes may override this method to change behavior.
      */
+    [ChannelHandlerMask.Skip]
     public virtual void ChannelWritabilityChanged(ChannelHandlerContext context) => context.FireChannelWritabilityChanged();
 
 }
