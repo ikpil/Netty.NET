@@ -17,8 +17,8 @@
     {
       "name": "Channel, Pipeline and executor ordering",
       "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, bidirectional handlers, seven original tail callbacks and all 15 original ChannelOutboundBuffer tests including gathering segments and reentrant cancelled-write release/flush/close; all nine ChannelInitializer tests, asynchronous initializer state removal and executor-aware pipeline destruction; 37/72 DefaultChannelPipelineTest declarations now mapped, including all selected mutation/forwarding/deferred lifecycle/pinning cases and optional concurrent removal.",
-      "next": "Remaining 35 DefaultChannelPipelineTest declarations, SingleThreadEventLoop original fixtures, config and remaining executor/shutdown cases"
+      "completedUnit": "Native Task lifecycle, bidirectional handlers, seven original tail callbacks, all 15 ChannelOutboundBuffer and all nine ChannelInitializer original methods; 61/72 DefaultChannelPipelineTest declarations mapped, including mutations, buffered forwarding, context event sequences, primary exception ownership, pre-cancelled operations, unordered admission and original lifecycle races.",
+      "next": "Remaining 11 pipeline declarations, SingleThreadEventLoop original fixtures, remaining config/executor/shutdown cases"
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
@@ -41,19 +41,19 @@
   ],
   "validation": {
     "framework": "net10.0",
-    "javaOriginalPassed": 228,
-    "mappedOriginalMethods": 227,
-    "originalExecutedCases": 228,
-    "supplementalExecutedCases": 83,
+    "javaOriginalPassed": 254,
+    "mappedOriginalMethods": 251,
+    "originalExecutedCases": 254,
+    "supplementalExecutedCases": 85,
     "debug": {
-      "total": 311,
-      "passed": 311,
+      "total": 339,
+      "passed": 339,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 311,
-      "passed": 311,
+      "total": 339,
+      "passed": 339,
       "failed": 0,
       "skipped": 0
     },
@@ -65,8 +65,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 311,
-        "passed": 311,
+        "total": 339,
+        "passed": 339,
         "failed": 0,
         "skipped": 0
       },
@@ -83,15 +83,15 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32609,
+    "solutionPassed": 32637,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 228 unchanged pinned Java cases including 37/72 DefaultChannelPipelineTest declarations: 32 original mutation, navigation, forwarding, deferred registration, lifecycle and executor pinning cases added to the prior five. Byte comparison with the pinned git revision, all selected assertions and lifecycle callbacks, and both existing fixed-pool boolean rows are retained. This selection is not the full upstream Transport suite.",
-    "note": "All 311 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked Transport/dependency rebuild. 227 mapped source methods execute 228 original cases; 83 remain explicitly supplemental. Original removeIfExists handler/type calls initially failed compilation because the API forms were absent. Replaying the prior nullable string lookup followed by throwing removal strategy in the new API shell failed the native 2000-round concurrent removal test with KeyNotFoundException. Source-based atomic TryRemoveContext gives nullable and throwing APIs their distinct results, and retains deferred/owner callback delivery. All original 20-handler shuffle, two-owner ten-per-direction submissions, integer-8 queue forwarding, nested generated-name suffix, callback incompleteness and strict 4/3/2/1 removal assertions remain. No Common/Buffer/Resolver sources or new Markdown files were changed.",
+    "javaEvidence": "Executed 254 unchanged pinned Java cases including 61/72 DefaultChannelPipelineTest declarations. Added 24 source methods executing 26 cases, retaining both true/false rows for inbound/outbound context dispatch. Every selected fixture was compared with git show before compilation; assertions and lifecycle callbacks ran without modifying the original Java source. This remains a selected Transport suite.",
+    "note": "All 339 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked rebuild. 251 mapped original methods execute 254 cases; 85 are explicit CLR supplements. Before fixes, the original dual-failure helper received the secondary removal error rather than the primary HandlerAdded exception. The ordinary source unordered test could pass after HandlerAdded started, so an extra native case held the first scheduled addition, ran a subsequent event on a real two-worker pool and proved loss of the ADD_PENDING event by timing out. Preserve source admission for unordered pending handlers using the existing IOrderedEventExecutor marker and Volatile/Interlocked state, commit added before reentrant callbacks, and mark removed in finally. During added-failure cleanup log the secondary removal error and propagate the original exception; ordinary removal still forwards its own failure. Keep original 500 race rounds, 50ms waits, 16 workers/32 bad handlers/10ms sleeps and every original time bound. A removed read handler that throws must forward its original error to the next context, without invoking its own ExceptionCaught; a failing native repro fixes this via admission recheck. The original alternating DefaultEventLoop helper retains IOrderedEventExecutor in its native wrapper. No Common/Buffer/Resolver source or new Markdown file changed.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
@@ -272,16 +272,18 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 47,
-        "preservedCount": 1,
-        "unreviewedCount": 46,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 4,
+        "unreviewedCount": 43,
+        "scope": "Original comments retained at reviewed lifecycle, event admission and exception counterparts and test helpers; remaining source comment/contracts remain open."
       },
       "review": {
-        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open.",
+        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
           "test/Netty.NET.Transport.Tests/ChannelInitializerTest.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs"
+          "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
         ]
       }
     },
@@ -1031,16 +1033,18 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 61,
-        "preservedCount": 17,
-        "unreviewedCount": 44,
-        "scope": "Original comments retained at reviewed mutation/forwarding/lifecycle counterparts and test helpers; comments for remaining source contracts stay explicit."
+        "preservedCount": 19,
+        "unreviewedCount": 42,
+        "scope": "Original comments retained at reviewed lifecycle, event admission and exception counterparts and test helpers; remaining source comment/contracts remain open."
       },
       "review": {
-        "scope": "Named implementation remains partial. Additionally reviewed optional name/type/handler removal, atomic unlink winner semantics, deferred removal callbacks and owner dispatch against 32 new original cases and a concurrent nullable-removal supplement. Remaining source comments/contracts are open.",
+        "scope": "Named implementation remains partial. Additionally reviewed optional name/type/handler removal, atomic unlink winner semantics, deferred removal callbacks and owner dispatch against 32 new original cases and a concurrent nullable-removal supplement. Remaining source comments/contracts are open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineMutationSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/PipelineOptionalRemovalContractTest.cs"
+          "test/Netty.NET.Transport.Tests/PipelineOptionalRemovalContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
         ]
       }
     },
@@ -3270,7 +3274,7 @@
         {
           "upstreamMethod": "testChannelInitializerEventExecutor",
           "clrMethod": "TestChannelInitializerEventExecutor",
-          "adaptation": "Original one-time invocation/completion/context/removal assertions and executor offloading intent. A composed CLR single-worker executor alternates its public InEventLoop admission check without falsifying the actual worker shutdown identity; Task/CountdownEvent replace Future/latches."
+          "adaptation": "Original one-time invocation/completion/context/removal assertions and executor offloading intent. A composed CLR single-worker executor alternates its public InEventLoop admission check without falsifying the actual worker shutdown identity; Task/CountdownEvent replace Future/latches. The native alternating single-worker helper retains IOrderedEventExecutor, inherited by its original Java DefaultEventLoop, so pending admission preserves the original ordered semantics."
         }
       ],
       "methodReview": {
@@ -3624,22 +3628,25 @@
       "status": "in-progress",
       "implementation": [
         "test/Netty.NET.Transport.Tests/ChannelPipelineSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineMutationSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineMutationSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 32,
-        "preservedCount": 16,
-        "unreviewedCount": 16,
-        "scope": "Original comments retained at reviewed mutation/forwarding/lifecycle counterparts and test helpers; comments for remaining source contracts stay explicit."
+        "preservedCount": 30,
+        "unreviewedCount": 2,
+        "scope": "Original comments retained at reviewed lifecycle, event admission and exception counterparts and test helpers; remaining source comment/contracts remain open."
       },
       "review": {
-        "scope": "37/72 declared original methods mapped: prior five throwing/reentrant/concurrent cases plus 32 mutation/navigation, forwarding, pre-registration callback, cross-worker lifecycle and executor-pinning cases. Remaining 35 declarations stay explicit; this is not full fixture or Transport completion.",
+        "scope": "61/72 original declarations mapped, including both boolean inputs for inbound/outbound context dispatch, 500-round lifecycle race, 16-worker/32-handler failures, primary exception propagation, unordered admission and seven pre-cancelled operations. Remaining 11 declarations retain explicit review status; Java promise/mask/transport details are not silently excluded.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/ChannelPipelineSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineMutationSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
           "src/Netty.NET.Transport/Channels/DefaultChannelPipeline.cs",
-          "test/Netty.NET.Transport.Tests/PipelineOptionalRemovalContractTest.cs"
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
         ]
       },
       "caseMappings": [
@@ -3827,49 +3834,169 @@
           "upstreamMethod": "testAddBefore",
           "clrMethod": "TestAddBefore",
           "adaptation": "Keep original handler identities, names, list navigation, buffered data, callback counts and executor ownership. Native Task/TCS, BCL Queue and System.Threading.Channels replace Java promises/latches/blocking queues; no caller-owned JVM promise is introduced. Keep every original outer timeout. Cleanup closes the fixture channels and awaits its real workers independently of test cancellation. Preserve the actual original body: two owners each submit ten tasks which AddLast on the other pipeline. Do not infer an AddBefore assertion from the method name."
+        },
+        {
+          "upstreamMethod": "testThrowInExceptionCaught",
+          "clrMethod": "TestThrowInExceptionCaught",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Preserve the helper-specific read-complete exception, queued owner signal, increment and second exception thrown from ExceptionCaught. Require exactly one invocation and retain the three-second bound."
+        },
+        {
+          "upstreamMethod": "testThrowInOtherHandlerAfterInvokedFromExceptionCaught",
+          "clrMethod": "TestThrowInOtherHandlerAfterInvokedFromExceptionCaught",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep the first handler firing ReadComplete from ExceptionCaught, the second throwing its own TestException, scheduling the signal and throwing again. Assert count one, not a recursive exception loop."
+        },
+        {
+          "upstreamMethod": "testFireChannelRegistered",
+          "clrMethod": "TestFireChannelRegistered",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep initializer-installed registered callback and original two-second signal bound."
+        },
+        {
+          "upstreamMethod": "testFreeCalled",
+          "clrMethod": "TestFreeCalled",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Use the original single-worker local pair setup, peer registration capture, listener close and StringInboundHandler which forwards non-strings. The actual original reference-counted holder deallocation must signal within ten seconds and the inbound helper must have been called."
+        },
+        {
+          "upstreamMethod": "testInboundOperationsViaContext",
+          "clrMethod": "TestInboundOperationsViaContext",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep both true/false caller-thread inputs and all nine exact ordered event names. The ChannelHandlerAdapter anchor has no inbound implementation. Async channel reads preserve BlockingQueue.take ordering.",
+          "parameterCases": [
+            {
+              "arguments": [
+                true
+              ]
+            },
+            {
+              "arguments": [
+                false
+              ]
+            }
+          ]
+        },
+        {
+          "upstreamMethod": "testOutboundOperationsViaContext",
+          "clrMethod": "TestOutboundOperationsViaContext",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep both true/false caller-thread inputs and exact bind/connect/close/deregister/read/write/flush ordering. Native LocalAddress EndPoints replace opaque SocketAddress values, which the intercepting helper never actually binds/connects. Returning completed Tasks replaces promise.setSuccess; additionally observe those Tasks rather than leaving native dispatch errors unobserved.",
+          "parameterCases": [
+            {
+              "arguments": [
+                true
+              ]
+            },
+            {
+              "arguments": [
+                false
+              ]
+            }
+          ]
+        },
+        {
+          "upstreamMethod": "testChannelInitializerException",
+          "clrMethod": "TestChannelInitializerException",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Preserve same InvalidOperationException identity, base ExceptionCaught close then capture, inactive assertion and five-second outer bound."
+        },
+        {
+          "upstreamMethod": "testChannelUnregistrationWithCustomExecutor",
+          "clrMethod": "TestChannelUnregistrationWithCustomExecutor",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Preserve registration submitted without awaiting it before close/deregister, two-second unregistered/removed signals and cleanup. A native DefaultEventLoop supplies the original WrapperExecutor single-worker identity/queue semantics; JDK ExecutorService shutdown/unsupported promise APIs are not copied."
+        },
+        {
+          "upstreamMethod": "testHandlerAddedExceptionFromChildHandlerIsPropagated",
+          "clrMethod": "TestHandlerAddedExceptionFromChildHandlerIsPropagated",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep added=false before registration, thrown source exception identity and separate one-worker error listener."
+        },
+        {
+          "upstreamMethod": "testHandlerRemovedExceptionFromChildHandlerIsPropagated",
+          "clrMethod": "TestHandlerRemovedExceptionFromChildHandlerIsPropagated",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep named foo removal after registration and original removal exception identity on the separate listener owner."
+        },
+        {
+          "upstreamMethod": "testHandlerAddedThrowsAndRemovedThrowsException",
+          "clrMethod": "TestHandlerAddedThrowsAndRemovedThrowsException",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Preserve two distinct exceptions, later owner signal, absent foo context and CheckExceptionHandler requiring the original added exception as InnerException. The secondary removal failure is logged during added-failure cleanup, as upstream, rather than replacing the primary pipeline error."
+        },
+        {
+          "upstreamMethod": "testUnorderedEventExecutor",
+          "clrMethod": "TestUnorderedEventExecutor",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep a genuine two-worker unordered executor, one blocked HandlerAdded and an event delivered while it blocks. A native gate replaces LockSupport.park; final cleanup explicitly releases it because CLR shutdown does not use JVM thread interruption."
+        },
+        {
+          "upstreamMethod": "testHandlerRemovedOnlyCalledWhenHandlerAddedCalled",
+          "clrMethod": "TestHandlerRemovedOnlyCalledWhenHandlerAddedCalled",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep all 500 race rounds, the original 50ms removal wait, close before second add, added-before-removed flag, close completion and explicit owner no-op barrier. Do not reduce the source race count."
+        },
+        {
+          "upstreamMethod": "testHandlerAddedFailedButHandlerStillRemoved",
+          "clrMethod": "TestHandlerAddedFailedButHandlerStillRemoved",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep 16 separate executor workers, 32 named bad handlers, disabled executor pinning, 10ms HandlerAdded sleep/failure, all 32 removed signals, absent names and five-second bound."
+        },
+        {
+          "upstreamMethod": "testHandlerAddedFailedButHandlerStillRemovedWithLaterRegister",
+          "clrMethod": "TestHandlerAddedFailedButHandlerStillRemovedWithLaterRegister",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep the same 16-worker/32-handler/10ms failure inputs, but register only after all handlers are added. Observe each removal/name absence with the original five-second bound."
+        },
+        {
+          "upstreamMethod": "handlerAddedStateUpdatedBeforeHandlerAddedDoneForceEventLoop",
+          "clrMethod": "HandlerAddedStateUpdatedBeforeHandlerAddedDoneForceEventLoop",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Preserve source userEvent and writeObject identity, first handler firing the event during HandlerAdded and reentrant write reaching its override, with setup forced onto the real owner. Keep five-second bound."
+        },
+        {
+          "upstreamMethod": "handlerAddedStateUpdatedBeforeHandlerAddedDoneOnCallingThread",
+          "clrMethod": "HandlerAddedStateUpdatedBeforeHandlerAddedDoneOnCallingThread",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Keep registration submitted without awaiting it and setup on the calling thread, exact event/write object identities and five-second bound."
+        },
+        {
+          "upstreamMethod": "testCancelBind",
+          "clrMethod": "TestCancelBind",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testCancelConnect",
+          "clrMethod": "TestCancelConnect",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testCancelDisconnect",
+          "clrMethod": "TestCancelDisconnect",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testCancelClose",
+          "clrMethod": "TestCancelClose",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testCancelDeregister",
+          "clrMethod": "TestCancelDeregister",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testCancelWrite",
+          "clrMethod": "TestCancelWrite",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
+        },
+        {
+          "upstreamMethod": "testCancelWriteAndFlush",
+          "clrMethod": "TestCancelWriteAndFlush",
+          "adaptation": "Preserve the original helper callbacks, input values, exception identity, reference ownership, counts, worker topology and per-test timeout. Native Task/TCS producer/consumer roles and BCL async channels/signals replace Java promise/latch/queue APIs. Cleanup awaits real worker termination without depending on the test cancellation token. Replace a caller-created, already-cancelled ChannelPromise with an already-cancelled CancellationToken. Await native asynchronous dispatch completion before asserting Task.IsCanceled; do not invent a mutable promise facade. Preserve cancelled-write ByteBuf reference counts 1 before submission and 0 after cancellation has completed."
         }
       ],
       "methodReview": {
         "declaredCount": 72,
-        "mappedCount": 37,
+        "mappedCount": 61,
         "unreviewedMethods": [
-          "testFreeCalled",
-          "testThrowInExceptionCaught",
-          "testThrowInOtherHandlerAfterInvokedFromExceptionCaught",
-          "testFireChannelRegistered",
-          "testInboundOperationsViaContext",
-          "testOutboundOperationsViaContext",
-          "testCancelBind",
-          "testCancelConnect",
-          "testCancelDisconnect",
-          "testCancelClose",
           "testWrongPromiseChannel",
           "testPromiseCorrectExecutor",
           "testUnexpectedVoidChannelPromise",
           "testUnexpectedVoidChannelPromiseCloseFuture",
-          "testCancelDeregister",
-          "testCancelWrite",
-          "testCancelWriteAndFlush",
-          "testChannelInitializerException",
-          "testChannelUnregistrationWithCustomExecutor",
-          "testHandlerAddedExceptionFromChildHandlerIsPropagated",
-          "testHandlerRemovedExceptionFromChildHandlerIsPropagated",
-          "testHandlerAddedThrowsAndRemovedThrowsException",
           "testAddInListenerNio",
           "testAddInListenerOio",
           "testAddInListenerLocal",
-          "testUnorderedEventExecutor",
           "testVoidPromiseNotify",
-          "testHandlerRemovedOnlyCalledWhenHandlerAddedCalled",
           "testSkipHandlerMethodsIfAnnotated",
           "testWriteThrowsReleaseMessage",
-          "testWriteAndFlushThrowsReleaseMessage",
-          "testHandlerAddedFailedButHandlerStillRemoved",
-          "testHandlerAddedFailedButHandlerStillRemovedWithLaterRegister",
-          "handlerAddedStateUpdatedBeforeHandlerAddedDoneForceEventLoop",
-          "handlerAddedStateUpdatedBeforeHandlerAddedDoneOnCallingThread"
+          "testWriteAndFlushThrowsReleaseMessage"
         ],
-        "scope": "37/72 declared original methods mapped: prior five throwing/reentrant/concurrent cases plus 32 mutation/navigation, forwarding, pre-registration callback, cross-worker lifecycle and executor-pinning cases. Remaining 35 declarations stay explicit; this is not full fixture or Transport completion."
+        "scope": "61/72 original declarations mapped, including both boolean inputs for inbound/outbound context dispatch, 500-round lifecycle race, 16-worker/32-handler failures, primary exception propagation, unordered admission and seven pre-cancelled operations. Remaining 11 declarations retain explicit review status; Java promise/mask/transport details are not silently excluded."
       }
     },
     {
@@ -5336,6 +5463,10 @@
     {
       "subject": "Pipeline mutations and optional concurrent removal",
       "decision": "Port the three original lookup forms using C# string, IChannelHandler and Type. A shared TryRemoveContext atomically unlinks under the existing pipeline gate, defers removal until first registration or queues it on the assigned owner, and returns false for a lost unlink race. Optional removal returns null; normal removal throws KeyNotFoundException. Preserve buffered forwarding through removed/replaced contexts and unresolved source write completions. Native Task/TCS and BCL queue/channel helpers retain the original callback counts and executor order without reproducing a Java Promise API."
+    },
+    {
+      "subject": "Pipeline pending admission and primary initialization failure",
+      "decision": "Use the existing IOrderedEventExecutor marker and private CLR volatile/Interlocked state to preserve source ADD_PENDING admission without recreating Java field-updater APIs. An unordered executor can deliver an event before queued HandlerAdded starts; a normal event loop cannot. Added state is committed before reentrant user callbacks, and removal is finalized even if a callback throws. Added-failure cleanup logs secondary removal errors while preserving the primary pipeline exception. Pre-cancelled tokens replace supplied cancelled promises; native cancellation/dispatch Tasks are explicitly observed before inspecting completion and buffer ownership. Recheck admission when routing a callback failure because that callback may already have removed its own context. The original DefaultEventLoop-based alternating helper retains the existing native ordered marker."
     }
   ],
   "openWork": [
@@ -5388,7 +5519,8 @@
     "test/Netty.NET.Transport.Tests/FixedChannelPoolContractTest.cs",
     "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs",
     "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs",
-    "test/Netty.NET.Transport.Tests/PipelineOptionalRemovalContractTest.cs"
+    "test/Netty.NET.Transport.Tests/PipelineOptionalRemovalContractTest.cs",
+    "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -5965,10 +6097,75 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "fe72907a3898ae78005573df5c30859ee73ca6b0",
+      "validation": {
+        "framework": "net10.0",
+        "javaOriginalPassed": 228,
+        "mappedOriginalMethods": 227,
+        "originalExecutedCases": 228,
+        "supplementalExecutedCases": 83,
+        "debug": {
+          "total": 311,
+          "passed": 311,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 311,
+          "passed": 311,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 311,
+            "passed": 311,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32609,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 228 unchanged pinned Java cases including 37/72 DefaultChannelPipelineTest declarations: 32 original mutation, navigation, forwarding, deferred registration, lifecycle and executor pinning cases added to the prior five. Byte comparison with the pinned git revision, all selected assertions and lifecycle callbacks, and both existing fixed-pool boolean rows are retained. This selection is not the full upstream Transport suite.",
+        "note": "All 311 CLR Transport cases passed in Debug, full-solution Release and checked Release after a full checked Transport/dependency rebuild. 227 mapped source methods execute 228 original cases; 83 remain explicitly supplemental. Original removeIfExists handler/type calls initially failed compilation because the API forms were absent. Replaying the prior nullable string lookup followed by throwing removal strategy in the new API shell failed the native 2000-round concurrent removal test with KeyNotFoundException. Source-based atomic TryRemoveContext gives nullable and throwing APIs their distinct results, and retains deferred/owner callback delivery. All original 20-handler shuffle, two-owner ten-per-direction submissions, integer-8 queue forwarding, nested generated-name suffix, callback incompleteness and strict 4/3/2/1 removal assertions remain. No Common/Buffer/Resolver sources or new Markdown files were changed.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Continue the remaining 35 DefaultChannelPipelineTest declarations, preserving original helpers, executor ordering and assertions.",
+    "Review the remaining 11 DefaultChannelPipelineTest declarations, including Java promise roles, event masks and transport listener variants; adapt meaningful CLR contracts without recreating JVM-only APIs.",
     "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
     "Review socket half closure/read-batch budgets/cancellation/rejection, unreviewed options and remaining partial comments.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts."
@@ -6103,6 +6300,53 @@
       "clrTransportCases": 311,
       "fullSolutionPassed": 32609,
       "fullSolutionSkipped": 14
+    }
+  },
+  "pipelineEventEvidence": {
+    "priorRuntimeRevision": "fe72907a3898ae78005573df5c30859ee73ca6b0",
+    "newOriginalMethods": 24,
+    "newOriginalExecutedCases": 26,
+    "fixtureMapped": 61,
+    "fixtureDeclared": 72,
+    "nativeSupplementalCases": 2,
+    "sourceContracts": [
+      "DefaultChannelPipeline.callHandlerAdded0/callHandlerRemoved0",
+      "AbstractChannelHandlerContext.ordered/invokeHandler/setAddComplete/callHandlerRemoved",
+      "DefaultChannelPipelineTest event/exception/cancellation/lifecycle helpers"
+    ],
+    "primaryException": {
+      "baselineResult": "The unchanged added-and-removed-throw original contract failed: CheckExceptionHandler saw the removal exception instead of the original HandlerAdded exception.",
+      "fix": "Atomically unlink during added-failure cleanup, invoke raw removal, log any secondary removal failure and fire one ChannelPipelineException carrying the original added failure. Ordinary removal still forwards its own exception. Existing self-remove/self-replace ownership stays intact."
+    },
+    "unorderedPending": {
+      "baselineResult": "The ordinary source unordered test could pass once HandlerAdded started. A separate native case held the first addition before it could begin, ran the later event on a genuine two-worker pool and timed out because the pending context was skipped.",
+      "fix": "Distinguish initial/add-pending/added/removed state, retaining the existing CLR ordered-executor marker. Unordered owners may invoke add-pending contexts; ordered owners wait for their prior callback. Publish added state with Interlocked before user HandlerAdded for reentrant events and mark removal in finally.",
+      "assertions": "The event arrives exactly once while HandlerAdded is demonstrably not started; after releasing the held callback, addition completes. A test-only held-addition adapter controls the real pool; no mutable Java promise or production executor facade is introduced."
+    },
+    "preserved": "500 close/add rounds, 50ms waits, 16 workers and 32 bad handlers with 10ms sleeps, all original timeout bounds, exact source error identity, on-owner and off-owner event name sequences, retained holder deallocation and cancelled-write counts.",
+    "remaining": [
+      "testWrongPromiseChannel",
+      "testPromiseCorrectExecutor",
+      "testUnexpectedVoidChannelPromise",
+      "testUnexpectedVoidChannelPromiseCloseFuture",
+      "testAddInListenerNio",
+      "testAddInListenerOio",
+      "testAddInListenerLocal",
+      "testVoidPromiseNotify",
+      "testSkipHandlerMethodsIfAnnotated",
+      "testWriteThrowsReleaseMessage",
+      "testWriteAndFlushThrowsReleaseMessage"
+    ],
+    "removedExceptionAdmission": {
+      "sourceContract": "AbstractChannelHandlerContext.invokeExceptionCaught repeats invokeHandler after an event callback throws.",
+      "baselineResult": "A native read handler removed itself and threw. Its own ExceptionCaught was incorrectly invoked once, while the next handler did not receive the original failure.",
+      "fix": "Recheck invocation eligibility in NotifyException itself as well as ordinary dispatch, so a removed handler forwards the failure. Assert zero removed-handler error calls and exact original exception identity at the following context."
+    },
+    "validated": {
+      "javaOriginalCases": 254,
+      "clrTransportCases": 339,
+      "solutionPassed": 32637,
+      "solutionSkipped": 14
     }
   }
 }

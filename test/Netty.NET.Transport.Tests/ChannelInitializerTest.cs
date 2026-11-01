@@ -225,7 +225,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         }
         public override void HandlerRemoved(ChannelHandlerContext context) => latch.Signal();
     }
-    private sealed class AlternatingExecutor : AbstractEventExecutor
+    private sealed class AlternatingExecutor : AbstractEventExecutor, IOrderedEventExecutor
     {
         private readonly DefaultEventLoop _worker = new();
         private int _calls;
@@ -234,6 +234,7 @@ public class ChannelInitializerTest : IAsyncLifetime
             // Return false every other time which will ensure we hit the execute(...) path
             // CLR: retain the intended alternating admission check using a real single worker instead of
             // the original Java helper's ScheduledExecutorService and shadowed thread parameter.
+            // Retain the ordered marker inherited by the source DefaultEventLoop helper.
             return _worker.InEventLoop(thread) && (Interlocked.Increment(ref _calls) & 1) == 0;
         }
         public override void Execute(Action task) => _worker.Execute(task);

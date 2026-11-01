@@ -91,12 +91,50 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
 {
     internal volatile ChannelHandlerContext Previous;
     internal volatile ChannelHandlerContext Next;
-    internal volatile int State; // 0 pending, 1 added, 2 removed.
+    private int _state;
+    internal int State { get => Volatile.Read(ref _state); set => Volatile.Write(ref _state, value); } // 0 initial, 1 added, 2 removed, 3 add pending.
     internal bool Linked = true;
     private readonly IEventExecutor _executor;
+    private readonly bool _ordered;
     internal IEventExecutor AssignedExecutor => _executor;
     internal ChannelHandlerContext(DefaultChannelPipeline pipeline, string name, IChannelHandler handler, IEventExecutor executor = null)
-    { Pipeline = pipeline; Name = name; Handler = handler; _executor = executor; }
+    {
+        Pipeline = pipeline;
+        Name = name;
+        Handler = handler;
+        _executor = executor;
+        // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
+        _ordered = executor == null || executor is IOrderedEventExecutor;
+        State = 3;
+    }
+    internal bool TrySetAdded()
+    {
+        while (true)
+        {
+            int state = State;
+            if (state == 1 || state == 2)
+                return false;
+            if (Interlocked.CompareExchange(ref _state, 1, state) == state)
+                return true;
+        }
+    }
+    /**
+     * Makes best possible effort to detect if {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called
+     * yet. If not return {@code false} and if called or could not detect return {@code true}.
+     *
+     * If this method returns {@code false} we will not invoke the {@link ChannelHandler} but just forward the event.
+     * This is needed as {@link DefaultChannelPipeline} may already put the {@link ChannelHandler} in the linked-list
+     * but not called {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}.
+     */
+    private bool CanInvoke
+    {
+        get
+        {
+            // Store in local variable to reduce volatile reads.
+            int state = State;
+            return state == 1 || (!_ordered && state == 3);
+        }
+    }
     /**
      * Return the assigned {@link ChannelPipeline}
      */
@@ -161,7 +199,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         { ReferenceCountUtil.Release(ownedMessage); return this; }
         void Invoke()
         {
-            if (next.State != 1)
+            if (!next.CanInvoke)
             { next.Fire(callback, ownedMessage); return; }
             try
             { callback((IChannelInboundHandler)next.Handler, next); }
@@ -190,7 +228,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         { Pipeline.Owner.OnUnhandledException(cause); return this; }
         void Invoke()
         {
-            if (next.State != 1)
+            if (!next.CanInvoke)
             { next.FireExceptionCaught(cause); return; }
             next.NotifyException(cause);
         }
@@ -202,6 +240,8 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
     }
     internal void NotifyException(Exception cause)
     {
+        if (!CanInvoke)
+        { FireExceptionCaught(cause); return; }
         try
         { Handler.ExceptionCaught(this, cause); }
         catch (Exception error) { Pipeline.LogExceptionHandlerFailure(error, cause); }
@@ -217,7 +257,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
         {
             if (cancellationToken.IsCancellationRequested)
             { ReferenceCountUtil.Release(message); return Task.FromCanceled(cancellationToken); }
-            if (previous.State != 1)
+            if (!previous.CanInvoke)
                 return previous.Outbound(operation, cancellationToken, message);
             try
             { return operation((IChannelOutboundHandler)previous.Handler, previous); }
@@ -259,7 +299,7 @@ public sealed class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeM
             return;
         void Invoke()
         {
-            if (previous.State != 1)
+            if (!previous.CanInvoke)
             { previous.OutboundVoid(action); return; }
             try
             { action((IChannelOutboundHandler)previous.Handler, previous); }

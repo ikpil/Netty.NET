@@ -408,11 +408,8 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
     {
         lock (_gate)
         {
-            if (!context.Linked)
+            if (!TryUnlinkContext(context))
                 return false;
-            context.Previous.Next = context.Next;
-            context.Next.Previous = context.Previous;
-            context.Linked = false;
             if (!_registered)
             {
                 // If the registered is false it means that the channel was not registered on an eventloop yet.
@@ -429,6 +426,18 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
         }
         CallRemoved0(context);
         return true;
+    }
+    private bool TryUnlinkContext(ChannelHandlerContext context)
+    {
+        lock (_gate)
+        {
+            if (!context.Linked)
+                return false;
+            context.Previous.Next = context.Next;
+            context.Next.Previous = context.Previous;
+            context.Linked = false;
+            return true;
+        }
     }
     /**
      * Replaces the {@link ChannelHandler} of the specified name with a new handler in this pipeline.
@@ -537,16 +546,26 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
     {
         void Invoke()
         {
-            if (context.State != 0)
+            // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
+            // any pipeline events ctx.handler() will miss them because the state will not allow it.
+            if (!context.TrySetAdded())
                 return;
-            context.State = 1;
             try
             { context.Handler.HandlerAdded(context); }
             catch (Exception error)
             {
-                if (!context.IsRemoved && Context(context.Handler) == context)
-                    RemoveContext(context);
-                FireExceptionCaught(new ChannelPipelineException("HandlerAdded failed: " + context.Name, error));
+                bool removed = false;
+                try
+                {
+                    // If handlerAdded(...) already removed or replaced the handler, whoever did that is responsible for
+                    // calling handlerRemoved(...).
+                    if (TryUnlinkContext(context))
+                        InvokeRemoved(context);
+                    removed = true;
+                }
+                catch (Exception removalError) { Logger.Warn("Failed to remove a handler: " + context.Name, removalError); }
+                FireExceptionCaught(new ChannelPipelineException("HandlerAdded failed: " + context.Name +
+                    (removed ? "; removed." : "; also failed to remove."), error));
             }
         }
         if (context.Executor.InEventLoop())
@@ -565,13 +584,23 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
     {
         if (context.State == 2)
             return;
-        bool added = context.State == 1;
-        context.State = 2;
-        if (!added)
-            return;
         try
-        { context.Handler.HandlerRemoved(context); }
+        { InvokeRemoved(context); }
         catch (Exception error) { FireExceptionCaught(new ChannelPipelineException("HandlerRemoved failed: " + context.Name, error)); }
+    }
+    private static void InvokeRemoved(ChannelHandlerContext context)
+    {
+        try
+        {
+            // Only call handlerRemoved(...) if we called handlerAdded(...) before.
+            if (context.State == 1)
+                context.Handler.HandlerRemoved(context);
+        }
+        finally
+        {
+            // Mark the handler as removed in any case.
+            context.State = 2;
+        }
     }
     /**
      * Removes all handlers from the pipeline one by one from tail (exclusive) to head (exclusive) to trigger
