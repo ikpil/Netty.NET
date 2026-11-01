@@ -206,7 +206,7 @@ public class DatagramChannel : AbstractChannel
             else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
                 value = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_TTL))
-                value = (int)_socket.Ttl;
+                value = (int)_socket.GetSocketOption(MulticastOptionLevel, SocketOptionName.MulticastTimeToLive);
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_LOOP_DISABLED))
                 value = !_socket.MulticastLoopback;
             else
@@ -224,12 +224,19 @@ public class DatagramChannel : AbstractChannel
             else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
                 _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, (bool)value);
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_TTL))
-            { ArgumentOutOfRangeException.ThrowIfNegative((int)value); _socket.Ttl = checked((short)(int)value); }
+            {
+                int ttl = (int)value;
+                ArgumentOutOfRangeException.ThrowIfNegative(ttl);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(ttl, 255);
+                _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.MulticastTimeToLive, ttl);
+            }
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_LOOP_DISABLED))
                 _socket.MulticastLoopback = !(bool)value;
             else
                 return base.SetValue(option, value);
             return true;
         }
+        private SocketOptionLevel MulticastOptionLevel => _socket.AddressFamily == AddressFamily.InterNetworkV6
+            ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
     }
 }
