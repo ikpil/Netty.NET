@@ -18,13 +18,15 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // Original independent group/channel cleanup.
+#pragma warning disable xUnit1051, xUnit1031 // Original independent cleanup and caller-thread extension assertions.
+[Collection("Initializer extensions")]
 public class ServerBootstrapSourceTest
 {
     [Fact]
@@ -126,5 +128,39 @@ public class ServerBootstrapSourceTest
         public override void HandlerAdded(ChannelHandlerContext context) => added(context);
         public override void ChannelRead(ChannelHandlerContext context, object message)
         { read?.Invoke(context, message); base.ChannelRead(context, message); }
+    }
+
+    [Fact]
+    public void MustCallInitializerExtensions()
+    {
+        using var extension = new SourceInitializerExtension();
+        using var registration = ChannelInitializerExtension.Register(extension);
+        var address = new LocalAddress(nameof(ServerBootstrapSourceTest));
+        IChannel expectedServer = null, expectedChild = null, server = null, client = null;
+        var group = new DefaultEventLoopGroup(1);
+        try
+        {
+            var sb = new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
+                .Handler(new ActionChannelInitializer<IChannel>(channel => expectedServer = channel))
+                .ChildHandler(new ActionChannelInitializer<IChannel>(channel => expectedChild = channel));
+            extension.ClearThreadLocals();
+            group.Next().SubmitAsync(extension.ClearThreadLocals).GetAwaiter().GetResult();
+            server = sb.BindAsync(address).GetAwaiter().GetResult();
+            Assert.Null(extension.LastSeenClient.Value);
+            Assert.Null(extension.LastSeenChild.Value);
+            Assert.Same(expectedServer, extension.LastSeenListener.Value);
+            Assert.Same(server, extension.LastSeenListener.Value);
+            client = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(address).GetAwaiter().GetResult();
+            Assert.Same(client, extension.LastSeenClient.Value);
+            group.Next().SubmitAsync(() => Assert.Same(expectedChild, extension.LastSeenChild.Value)).GetAwaiter().GetResult();
+            Assert.Same(expectedServer, extension.LastSeenListener.Value);
+            Assert.Same(server, extension.LastSeenListener.Value);
+        }
+        finally
+        {
+            if (server != null) server.CloseAsync().GetAwaiter().GetResult();
+            if (client != null) client.CloseAsync().GetAwaiter().GetResult();
+            group.StopAsync().GetAwaiter().GetResult();
+        }
     }
 }

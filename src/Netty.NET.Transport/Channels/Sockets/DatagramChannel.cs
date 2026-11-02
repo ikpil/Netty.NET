@@ -43,7 +43,12 @@ public class DatagramChannel : AbstractChannel
 {
     private readonly Socket _socket;
     private EndPoint _connectedAddress;
-    private readonly Dictionary<(IPAddress Group, long Index), IPAddress> _memberships = new();
+    private readonly Dictionary<(IPAddress Group, long Index, IPAddress Source), Membership> _memberships = new();
+    private sealed class Membership(IPAddress address)
+    {
+        internal readonly IPAddress Address = address;
+        internal readonly HashSet<IPAddress> Blocked = new();
+    }
     private bool _reading;
     private bool _readRequested;
     public DatagramChannel() : this(AddressFamily.InterNetwork) { }
@@ -195,13 +200,37 @@ public class DatagramChannel : AbstractChannel
                         again = IsOpen && (Config.IsAutoRead() || _readRequested);
                     }).ConfigureAwait(false);
                 }
+                catch (SocketException error)
+                {
+                    await OnLoopAsync(() =>
+                    {
+                        if (!IsOpen) { again = false; return; }
+                        ReceiveHandle.ReadComplete();
+                        Pipeline.FireChannelReadComplete();
+                        // We do not want to close on SocketException when using DatagramChannel as we usually can continue receiving.
+                        // See https://github.com/netty/netty/issues/5893
+                        Pipeline.FireExceptionCaught(error);
+                        again = IsOpen && (Config.IsAutoRead() || _readRequested);
+                    }).ConfigureAwait(false);
+                    // A synchronously failed CLR receive must return the owner to its task queue before retrying.
+                    if (again) await Task.Yield();
+                }
                 finally { data?.Release(); }
             }
         }
         catch (Exception error)
         {
             try
-            { await OnLoopAsync(() => { if (IsOpen) Pipeline.FireExceptionCaught(error); }).ConfigureAwait(false); }
+            {
+                await OnLoopAsync(() =>
+                {
+                    if (!IsOpen) return;
+                    ReceiveHandle.ReadComplete();
+                    Pipeline.FireChannelReadComplete();
+                    Pipeline.FireExceptionCaught(error);
+                    _ = CloseAsync();
+                }).ConfigureAwait(false);
+            }
             catch { }
         }
         finally
@@ -211,7 +240,7 @@ public class DatagramChannel : AbstractChannel
             catch { }
         }
     }
-    private async Task<SocketReceiveFromResult> ReceiveDatagramAsync(Memory<byte> memory, EndPoint remote)
+    protected virtual async Task<SocketReceiveFromResult> ReceiveDatagramAsync(Memory<byte> memory, EndPoint remote)
     {
         // .NET's Windows failure path does not materialize the sender on WSAEMSGSIZE. Receive one
         // complete UDP datagram into bounded pooled staging, then apply the configured Java-style
@@ -293,20 +322,108 @@ public class DatagramChannel : AbstractChannel
             throw new ArgumentException("A multicast address is required.", nameof(group));
         ArgumentOutOfRangeException.ThrowIfNegative(index);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, uint.MaxValue);
-        var key = (group, index);
+        var key = (group, index, (IPAddress)null);
+        if (join && _memberships.Keys.Any(k => k.Group.Equals(group) && k.Index == index && k.Source != null))
+            throw new InvalidOperationException("Cannot join all sources while a source-specific membership exists.");
         if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key))
             return;
         if (!join)
-            address = _memberships[key];
+            address = _memberships[key].Address;
         var option = join ? SocketOptionName.AddMembership : SocketOptionName.DropMembership;
         if (_socket.AddressFamily == AddressFamily.InterNetworkV6)
             _socket.SetSocketOption(SocketOptionLevel.IPv6, option, new IPv6MulticastOption(group, index));
         else
             _socket.SetSocketOption(SocketOptionLevel.IP, option, new MulticastOption(group, address ?? IPAddress.Any));
         if (join)
-            _memberships.Add(key, address);
+            _memberships.Add(key, new Membership(address));
         else
             _memberships.Remove(key);
+    }
+    /**
+     * Joins the specified multicast group at the specified interface and notifies the {@link ChannelFuture}
+     * once the operation completes.
+     */
+    public Task JoinGroupAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress source)
+        => ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, true);
+    /**
+     * Leave the specified multicast group at the specified interface using the specified source and notifies
+     * the {@link ChannelFuture} once the operation completes.
+     *
+     */
+    public Task LeaveGroupAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress source)
+        => ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, false);
+    private Task ChangeSourceMembershipAsync(IPAddress group, NetworkInterface networkInterface, IPAddress source, bool join)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+        ArgumentNullException.ThrowIfNull(networkInterface);
+        if (source == null) return ChangeMembershipAsync(group, networkInterface, join);
+        return OnLoopAsync(() =>
+        {
+            ValidateSource(group, source);
+            int index = InterfaceIndex(networkInterface, AddressFamily.InterNetwork);
+            var key = (group, (long)index, source);
+            if (join && _memberships.ContainsKey((group, index, null)))
+                throw new InvalidOperationException("Cannot join a source while an all-sources membership exists.");
+            if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key)) return;
+            var address = join ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork) : _memberships[key].Address;
+            SetSourceOption(join ? SocketOptionName.AddSourceMembership : SocketOptionName.DropSourceMembership, group, address, source);
+            if (join) _memberships.Add(key, new Membership(address)); else _memberships.Remove(key);
+        });
+    }
+    /**
+     * Block the given sourceToBlock address for the given multicastAddress on the given networkInterface
+     */
+    public Task BlockAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress sourceToBlock)
+    {
+        ArgumentNullException.ThrowIfNull(multicastAddress);
+        ArgumentNullException.ThrowIfNull(networkInterface);
+        ArgumentNullException.ThrowIfNull(sourceToBlock);
+        return OnLoopAsync(() =>
+        {
+            ValidateSource(multicastAddress, sourceToBlock);
+            int index = InterfaceIndex(networkInterface, AddressFamily.InterNetwork);
+            if (_memberships.Keys.Any(k => k.Group.Equals(multicastAddress) && k.Index == index && k.Source != null))
+                throw new InvalidOperationException("A source-specific membership cannot block sources.");
+            if (_memberships.TryGetValue((multicastAddress, index, null), out var membership) && !membership.Blocked.Contains(sourceToBlock))
+            {
+                SetSourceOption(SocketOptionName.BlockSource, multicastAddress, membership.Address, sourceToBlock);
+                membership.Blocked.Add(sourceToBlock);
+            }
+        });
+    }
+    /**
+     * Block the given sourceToBlock address for the given multicastAddress
+     *
+     */
+    public Task BlockAsync(IPAddress multicastAddress, IPAddress sourceToBlock)
+    {
+        var networkInterface = ((DatagramConfig)Config).GetNetworkInterface()
+            ?? FindInterface(((IPEndPoint)LocalAddress)?.Address ?? IPAddress.Any)
+            ?? throw new InvalidOperationException("No local multicast interface is selected.");
+        return BlockAsync(multicastAddress, networkInterface, sourceToBlock);
+    }
+    private void ValidateSource(IPAddress group, IPAddress source)
+    {
+        if (_socket.AddressFamily != AddressFamily.InterNetwork || group.AddressFamily != AddressFamily.InterNetwork || source.AddressFamily != AddressFamily.InterNetwork)
+            throw new NotSupportedException("Source filtering through CLR socket options currently supports IPv4.");
+        if (group.GetAddressBytes()[0] is < 224 or > 239)
+            throw new ArgumentException("A multicast address is required.", nameof(group));
+        if (source.Equals(IPAddress.Any) || source.Equals(IPAddress.Broadcast) || source.GetAddressBytes()[0] is >= 224 and <= 239)
+            throw new ArgumentException("A unicast source address is required.", nameof(source));
+    }
+    private void SetSourceOption(SocketOptionName option, IPAddress group, IPAddress address, IPAddress source)
+    {
+        // IP_MREQ_SOURCE is group/source/interface on Windows, group/interface/source on Linux.
+        // Keep addresses in network byte order; SocketOptionName supplies the platform option number.
+        // https://learn.microsoft.com/windows/win32/api/ws2ipdef/ns-ws2ipdef-ip_mreq_source
+        // https://github.com/torvalds/linux/blob/master/include/uapi/linux/in.h
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
+            throw new PlatformNotSupportedException("Source membership layout has not been reviewed for this platform.");
+        var request = new byte[12];
+        group.GetAddressBytes().CopyTo(request, 0);
+        (OperatingSystem.IsLinux() ? address : source).GetAddressBytes().CopyTo(request, 4);
+        (OperatingSystem.IsLinux() ? source : address).GetAddressBytes().CopyTo(request, 8);
+        _socket.SetSocketOption(SocketOptionLevel.IP, option, request);
     }
     private static NetworkInterface FindInterface(IPAddress address) => NetworkInterface.GetAllNetworkInterfaces()
         .FirstOrDefault(n => n.GetIPProperties().UnicastAddresses.Any(a => a.Address.Equals(address)));

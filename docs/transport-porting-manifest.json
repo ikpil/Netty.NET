@@ -29,38 +29,38 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Bootstrap and ServerBootstrap, actual TCP accept/connect/read/write, all five tests declared by NioSocketChannelTest (inherited AbstractNioChannel fixtures remain open) Added server registration-only API with five original ServerBootstrap cases; initializer extension fixture remains open.",
-      "next": "Full bootstrap/inherited socket tests, half closure, config options, connect cancellation and resolver failure paths"
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap original declarations and eleven of nineteen Bootstrap declarations. Scoped CLR initializer extensions preserve priority, immutable snapshots and client/listener/child roles. Original cancellation now closes while an independent resolver producer remains pending. Ordered option snapshots and concurrent typed attributes preserve source collection semantics.",
+      "next": "Remaining eight Bootstrap declarations and resolver/config diagnostic views, inherited socket/half-closure fixtures and remaining implementation comments; complete ServerBootstrap fixture does not complete Transport."
     },
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP receive/send/truncation/metadata and original 100-channel bind test; basic ChannelGroup operations; pending write and coalescing queues with all 31 original tests across their three fixtures; SimpleChannelPool and key-based pool map with all 15 declared original tests; FixedChannelPool with all 20 original fixed-pool/map-deadlock executions. Corrected IPv4/IPv6 multicast TTL mapping with two native regression cases; interface/address options and original multicast fixtures remain pending. Ported all ten DatagramUnicast methods, Inet port-only binding and IPv4 multicast with 46 explicit family/allocator cases; six native cases cover socket config, membership idempotence and live receive through reconnect.",
-      "next": "UDP/multicast and group fixture review; remaining portable inventory"
+      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries.",
+      "next": "IPv6 source filtering, other-platform native layouts, ICMP platform fixtures, complete read batching, remaining group/socket fixtures and implementation comments."
     }
   ],
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 303,
-    "transportJavaOriginalPassed": 280,
+    "javaOriginalPassed": 315,
+    "transportJavaOriginalPassed": 292,
     "testsuiteJavaJUnitInvocations": 23,
     "testsuiteJavaAllocatorExecutions": 46,
-    "mappedOriginalMethods": 281,
-    "originalExecutedCases": 318,
-    "transportMappedOriginalExecutions": 272,
+    "mappedOriginalMethods": 293,
+    "originalExecutedCases": 330,
+    "transportMappedOriginalExecutions": 284,
     "testsuiteMappedOriginalExecutions": 46,
     "javaOnlyReviewedCases": 8,
-    "supplementalExecutedCases": 104,
+    "supplementalExecutedCases": 116,
     "debug": {
-      "total": 422,
-      "passed": 422,
+      "total": 446,
+      "passed": 446,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 422,
-      "passed": 422,
+      "total": 446,
+      "passed": 446,
       "failed": 0,
       "skipped": 0
     },
@@ -72,8 +72,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 422,
-        "passed": 422,
+        "total": 446,
+        "passed": 446,
         "failed": 0,
         "skipped": 0
       },
@@ -90,32 +90,24 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32720,
+    "solutionPassed": 32744,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 280 unchanged pinned Transport Java cases plus 23 unchanged testsuite JUnit wrapper calls. Each testsuite wrapper runs its original pooled/adaptive allocator loop: 46 allocator executions across inherited IPv4/IPv6 unicast, Inet port-only bind and IPv4 multicast. Distinguish Java wrapper count (303 total) from allocator execution count. CLR splits the original testsuite family/allocator loops into 46 explicit Theory cases: 272 mapped Transport executions plus 46 testsuite executions = 318. Eight previously reviewed Pipeline Java-only cases remain separate. Source bytes/hashes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc; original assertions and actual packet exchanges executed.",
-    "note": "All 422 CLR Transport cases passed in final Debug, final full-solution Release and checked Release following a full checked rebuild: 318 mapped original executions and 104 supplemental native cases. This unit adds 17 mapped source declarations/51 CLR original executions and six native cases. Runtime changes cover registered-only UDP activity/implicit bind, unresolved endpoint rejection without closing, write-error continuation, actual Windows UDP disconnect/reconnect, port-only wildcard bind conversion, kernel-backed multicast interface/address/loop options, idempotent ASM membership and registration-only ServerBootstrap initialization. The first connected-send port run found four failures at Socket.Disconnect; source assertions were retained and the Windows path corrected to documented zero-address datagram connect. Native receive tests also accept a DIFFERENT peer after disconnect and retain local endpoint through reconnect; config tests independently inspect actual socket options, not only config symmetry. Original UDP tests retain direct/heap/composite/mixed buffers, four wrap variants, counts 1/4, three ten-second retry attempts, 100 empty packets, bad-prefix reader-index slicing and reference-count assertions. Corresponding original comments remain at reviewed declarations/branches/test helpers. Source-specific multicast/block, ICMP/read-error continuation, platform packet variants and initializer-extension design remain open. Five of six ServerBootstrap declarations are mapped; mustCallInitializerExtensions is unreviewed, not excluded or counted ported. No new xUnit skips, Common/Buffer/Resolver source changes, packages or Markdown files. Full solution passed 32720 with 14 existing Common skips; checked rebuild retains 51 existing Common warnings and zero Transport warnings.",
+    "javaEvidence": "Executed 292 unchanged pinned Transport Java cases plus 23 unchanged testsuite wrappers with 46 original allocator executions. All six ServerBootstrap declarations and eleven selected Bootstrap declarations execute with the original SPI resource and serviceload property in the isolated Java runner. Resource/source bytes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Keep raw Java wrapper calls (315 total) separate from CLR split variants. Eight previously reviewed Java-only Pipeline cases remain distinct; 284 mapped Transport executions plus 46 mapped testsuite cases = 330 CLR original executions.",
+    "note": "All 446 CLR Transport cases passed Debug, final full-solution Release and checked Release after a full checked rebuild: 330 mapped original executions + 116 supplemental cases. This unit adds twelve mapped original declarations/executions and twelve native cases. Runtime work includes IPv4 source inclusion/drop/block with real multicast packets, duplicate/conflict tracking, read-complete/exception ordering, recoverable socket-read continuation preserving manual permission, fatal read closure, explicit scoped process-wide initializer extensions with source priority/log-only/role/exception semantics, ordered locked option snapshots, concurrent typed attributes and cancellation independent of a resolver producer. Original cancel-during-resolution test initially timed out after its five-second close deadline; the resolver deliberately ignores its token and remains pending. WaitAsync plus late-fault observation now closes promptly and keeps the consumer canceled without canceling or retaining the producer/channel. Original dual-owner deadlock tests retain 1024 submissions in each direction and their ten-second deadlines. Source thread-local extension identities are preserved with caller-synchronous waits and owner barriers; no Java ServiceLoader facade or mutable promise facade is added. All applicable original extension comments are retained, with JVM property context explicitly labeled as upstream-only. ServerBootstrapTest is 6/6; BootstrapTest is 11/19, with eight methods explicitly unreviewed. IPv6 source filters, other-platform ABI execution, remaining batching/ICMP/socket fixtures and broader implementation review stay open. No Common/Buffer/Resolver source changes, new packages, Markdown files or new xUnit skips. Native ABI code reviewed for Windows/Linux; actual runtime validation here is Windows. Full solution 32744 passed, 14 existing Common skips; checked rebuild 51 existing Common warnings, zero Transport warnings.",
     "commands": [
       "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
       "python artifacts/transport-core/run-originals.py",
       "python artifacts/transport-core/run-datagram-originals.py",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+      "dotnet test Netty.NET.sln -c Release --no-restore --logger trx",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
-      "dotnet test Netty.NET.sln -c Release --no-restore"
-    ],
-    "executionCountAudit": {
-      "earlierSolutionBufferSummary": 29462,
-      "standaloneBufferPassed": 29556,
-      "finalSolutionBufferPassed": 29556,
-      "identicalBufferTestNames": 29556,
-      "missingOrExtraNames": 0,
-      "note": "An earlier solution run printed a lower Buffer total despite passing. Re-executed unchanged Buffer and final solution with detailed TRX. Both contain exactly the same 29556 distinct passed Buffer test names and no missing/extra names. Cause of the earlier summary difference is unconfirmed; no Buffer code was changed."
-    }
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
+    ]
   },
   "entries": [
     {
@@ -195,16 +187,54 @@
       "sha256": "6b4e755f1cbe0d8e278b779e85b0f1506432bf9eda633ca132f0ad6168a3626d",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Bootstrapping/ChannelInitializerExtension.cs"
+      ],
+      "review": {
+        "scope": "Global three-role initialization hooks and priority are ported. Explicit application-owned Register/Dispose replaces JVM ServiceLoader and opt-in system properties; no CLR assembly scan or Java loader facade. Original priority/callback docs and class context are retained; JVM property-only declaration/docs remain explicitly outside the native API.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Bootstrapping/ChannelInitializerExtension.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/bootstrap/ChannelInitializerExtensions.java",
       "sha256": "37848ad5857d08b76a370dca258a0cf2b930601a11b8ea9cc5c93b91187acec7",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Bootstrapping/ChannelInitializerExtensions.cs"
+      ],
+      "review": {
+        "scope": "Process-wide opt-in registry, log-only registrations, source Double.compare priority order, immutable snapshots, callback exception isolation and idempotent withdrawal. Existing listeners retain their captured snapshot for child notifications. JVM ClassLoader discovery/cache configuration is replaced by explicit CLR lifetime and remains a documented language decision, not a literal service-loader port.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Bootstrapping/ChannelInitializerExtensions.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/bootstrap/FailedChannel.java",
@@ -1981,8 +2011,27 @@
       "sha256": "f1475ff8ff720fbb054b0c9b00e5f0d54306a2d527800912ee2bb97fb532e0cd",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+      ],
+      "review": {
+        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler scheduling, batch budgets and remaining source contracts/comments remain open.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 17,
+        "preservedCount": 2,
+        "unreviewedCount": 15,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/nio/NioEventLoop.java",
@@ -2657,9 +2706,9 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 15,
-        "preservedCount": 7,
-        "unreviewedCount": 8,
-        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+        "preservedCount": 8,
+        "unreviewedCount": 7,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -2829,9 +2878,9 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 20,
-        "preservedCount": 5,
-        "unreviewedCount": 15,
-        "scope": "Original comments retained at corresponding reviewed runtime declarations, option dispatch branches and source test/helper bodies. Remaining comments stay explicit."
+        "preservedCount": 9,
+        "unreviewedCount": 11,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
@@ -3180,18 +3229,113 @@
       "sha256": "2c6e2fb0a2114d1d709edc3c702bcc55ef8968cd083b41f9d9fdadbe5ba372aa",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SourceInitializerExtension.cs",
+        "test/Netty.NET.Transport.Tests/SourceTestChannel.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSetOptionsThrow",
+          "clrMethod": "TestSetOptionsThrow",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "testOptionsCopied",
+          "clrMethod": "TestOptionsCopied",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "testAttributesCopied",
+          "clrMethod": "TestAttributesCopied",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "optionsAndAttributesMustBeAvailableOnChannelInit",
+          "clrMethod": "OptionsAndAttributesMustBeAvailableOnChannelInit",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "testBindDeadLock",
+          "clrMethod": "TestBindDeadLock",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "testConnectDeadLock",
+          "clrMethod": "TestConnectDeadLock",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "testChannelOptionOrderPreserve",
+          "clrMethod": "TestChannelOptionOrderPreserve",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "mustCallInitializerExtensions",
+          "clrMethod": "MustCallInitializerExtensions",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        },
+        {
+          "upstreamMethod": "testCancelDuringAddressResolutionClosesChannel",
+          "clrMethod": "TestCancelDuringAddressResolutionClosesChannel",
+          "adaptation": "Preserve cancellation timing, 5/10-second waits, close completion, resolver invocation count, independent pending resolver producer, original late failure and final canceled state. CancellationTokenSource cancels the consumer Task; resolver TaskCompletionSource is NOT canceled. Factory capture replaces future.channel(). The pre-registration test blocks the actual owner, not a fake registration promise."
+        },
+        {
+          "upstreamMethod": "testCancelBeforeRegistrationDoesNotResolveAddress",
+          "clrMethod": "TestCancelBeforeRegistrationDoesNotResolveAddress",
+          "adaptation": "Preserve cancellation timing, 5/10-second waits, close completion, resolver invocation count, independent pending resolver producer, original late failure and final canceled state. CancellationTokenSource cancels the consumer Task; resolver TaskCompletionSource is NOT canceled. Factory capture replaces future.channel(). The pre-registration test blocks the actual owner, not a fake registration promise."
+        },
+        {
+          "upstreamMethod": "testGetResolverFailed",
+          "clrMethod": "TestGetResolverFailed",
+          "adaptation": "Original scenario/assertions and helpers; source option/attribute values, original 1024 cross-owner submissions per direction and 10-second deadlock deadline, ordered option application, and thread-local extension role identities. Explicit scoped extension registration replaces Java ServiceLoader; synchronous waits in caller-role checks preserve source thread-local meaning. BCL key/value arrays are real independent snapshots."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 19,
+        "mappedCount": 11,
+        "reviewedCount": 11,
+        "unreviewedMethods": [
+          "testLateRegisterSuccess",
+          "testLateRegisterSuccessBindFailed",
+          "testLateRegistrationConnect",
+          "testResolverDefault",
+          "testResolverDisabled",
+          "testAsyncResolutionSuccess",
+          "testAsyncResolutionFailure",
+          "testChannelFactoryFailureNotifiesPromise"
+        ]
+      },
+      "review": {
+        "scope": "Eleven of nineteen declarations mapped, including the actual cancellation bug found by the unchanged close deadline. Eight declarations stay unreviewed; no unsupported promise or resolver-diagnostic assertion is silently dropped. All mapped original methods execute unchanged in Java.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SourceInitializerExtension.cs",
+          "test/Netty.NET.Transport.Tests/SourceTestChannel.cs",
+          "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 11,
+        "preservedCount": 6,
+        "unreviewedCount": 5,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/bootstrap/ServerBootstrapTest.java",
       "sha256": "9c401df31fea96bfb0818b20995fedaeb166e1aea978da05ebb5c68711a37fe9",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "test/Netty.NET.Transport.Tests/ServerBootstrapSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/SourceTestChannel.cs"
+        "test/Netty.NET.Transport.Tests/SourceTestChannel.cs",
+        "test/Netty.NET.Transport.Tests/SourceInitializerExtension.cs"
       ],
       "caseMappings": [
         {
@@ -3218,21 +3362,25 @@
           "upstreamMethod": "optionsAndAttributesMustBeAvailableOnChildChannelInit",
           "clrMethod": "OptionsAndAttributesMustBeAvailableOnChildChannelInit",
           "adaptation": "Original scenario, option value 4242, attribute value, callback owner assertions and parent/direct-initializer variants. Task/TCS replace futures/latches and volatile state replaces AtomicBoolean. Original five/three-second deadlines remain."
+        },
+        {
+          "upstreamMethod": "mustCallInitializerExtensions",
+          "clrMethod": "MustCallInitializerExtensions",
+          "adaptation": "Preserve all client/listener/child thread-local identity and absence assertions, the child owner-thread check, and direct/initializer lifecycle ordering. Explicit scoped Register replaces JVM SPI discovery. Caller checks use synchronous Task waits to preserve their original thread role."
         }
       ],
       "methodReview": {
         "declaredCount": 6,
-        "mappedCount": 5,
-        "reviewedCount": 5,
-        "unreviewedMethods": [
-          "mustCallInitializerExtensions"
-        ]
+        "mappedCount": 6,
+        "reviewedCount": 6,
+        "unreviewedMethods": []
       },
       "review": {
-        "scope": "Five original methods ported and executed unchanged in Java. mustCallInitializerExtensions remains genuinely unreviewed: ServiceLoader discovery and listener/child/client extension notification need a deliberate CLR extension design; it is neither marked inapplicable nor replaced by an unrelated test.",
+        "scope": "All six original methods mapped, including the formerly unreviewed initializer-extension method. Java service discovery becomes explicit CLR registration; role, thread-local identities and callback/initialization ordering are retained. Fixture completion does not complete the Bootstrap implementation.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/ServerBootstrapSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SourceTestChannel.cs",
+          "test/Netty.NET.Transport.Tests/SourceInitializerExtension.cs",
           "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
         ]
       },
@@ -3249,8 +3397,30 @@
       "sha256": "fda0f5f06f3883f246813f67453d53aa5fbdeda4246918b09452f54bdfcd810a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SourceInitializerExtension.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Source thread-local client/listener/child role observer, explicit clears and owner-thread observations. BCL ThreadLocal values replace FastThreadLocal in the scoped native test helper.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SourceInitializerExtension.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/bootstrap/TestChannel.java",
@@ -5797,10 +5967,10 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 28,
-    "portedOriginalFixtures": 25,
-    "portedOriginalMethods": 281,
-    "supplementalClrCases": 104,
+    "reviewedImplementationFiles": 30,
+    "portedOriginalFixtures": 26,
+    "portedOriginalMethods": 293,
+    "supplementalClrCases": 116,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
     "testsuiteSources": 7
@@ -5896,6 +6066,24 @@
         "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs"
       ],
       "platformEvidence": "https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-connect"
+    },
+    {
+      "subject": "Source-specific multicast, read failures and resolver cancellation",
+      "decision": "IPv4 source inclusion/drop and all-source blocking use BCL SocketOptionName with platform-reviewed IP_MREQ_SOURCE byte layout (Windows group/source/interface; Linux group/interface/source). Tuple keys distinguish source memberships, reject ASM/SSM mixing and retain idempotence. Blocking a missing membership is a no-op; implicit block uses the selected native multicast interface consistently with implicit join instead of the original bound-wildcard lookup pitfall. IPv6 source filtering and other-platform ABI remain unimplemented and explicit. Socket read failures emit ReadComplete then ExceptionCaught and preserve outstanding manual read permission; other read errors close. Connect cancellation races an independent resolver Task and closes promptly even if the resolver ignores its token; observe late failures without changing the canceled result or retaining the channel.",
+      "platformSources": [
+        "https://learn.microsoft.com/en-us/windows/win32/api/ws2ipdef/ns-ws2ipdef-ip_mreq_source",
+        "https://github.com/torvalds/linux/blob/master/include/uapi/linux/in.h"
+      ],
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs",
+        "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs"
+      ]
+    },
+    {
+      "subject": "Initializer extension discovery and ordered typed bootstrap state",
+      "decision": "Use explicit scoped process-wide Register rather than inventing a Java SPI/Classpath loader in CLR. Default registry is empty; opt-in/log-only mode, source floating-point priority order, immutable captures and exception isolation preserve actual policy. Client/listener callbacks run during pre-registration initialization; child callback runs after child options/attributes/handler setup and before registration. Notifications retain source role/thread-local semantics. OrderedDictionary preserves option insertion order; typed-key dictionaries retain attribute values/actions, replace updates and remove nulls without materializing an empty channel attribute. Both client and server clone/capture state independently. Preserve Java LinkedHashMap plus synchronized snapshots using OrderedDictionary guarded by a private lock, and ConcurrentHashMap attributes using ConcurrentDictionary of typed keys/value-application pairs. Caller mutation cannot corrupt option snapshots; clone option order remains independent. Other builder-wide concurrency remains unreviewed."
     }
   ],
   "openWork": [
@@ -5922,7 +6110,7 @@
     {
       "area": "Bootstrap and groups",
       "state": "test-and-implementation-review",
-      "detail": "Full original Bootstrap/ServerBootstrap/ChannelGroup fixtures, config views/extensions and per-channel group failure results. All nine ChannelInitializer tests and the original group-close regression are now ported."
+      "detail": "ServerBootstrapTest is 6/6 and BootstrapTest is 11/19. Native opt-in extensions, real source thread roles, cancellation independent of a pending resolver, ordered snapshots and concurrent typed attributes are now reviewed. Remaining eight Bootstrap declarations, config diagnostics, broader runtime comments and per-channel group outcomes remain open."
     },
     {
       "area": "Portable remaining inventory",
@@ -5953,7 +6141,9 @@
     "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs",
     "test/Netty.NET.Transport.Tests/CombinedChannelDuplexHandlerContractTest.cs",
     "test/Netty.NET.Transport.Tests/DatagramMulticastConfigContractTest.cs",
-    "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs"
+    "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -6793,14 +6983,95 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "e6d5f9256d58f44d7846edb7fe43820457042691",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 303,
+        "transportJavaOriginalPassed": 280,
+        "testsuiteJavaJUnitInvocations": 23,
+        "testsuiteJavaAllocatorExecutions": 46,
+        "mappedOriginalMethods": 281,
+        "originalExecutedCases": 318,
+        "transportMappedOriginalExecutions": 272,
+        "testsuiteMappedOriginalExecutions": 46,
+        "javaOnlyReviewedCases": 8,
+        "supplementalExecutedCases": 104,
+        "debug": {
+          "total": 422,
+          "passed": 422,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 422,
+          "passed": 422,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 422,
+            "passed": 422,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32720,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 280 unchanged pinned Transport Java cases plus 23 unchanged testsuite JUnit wrapper calls. Each testsuite wrapper runs its original pooled/adaptive allocator loop: 46 allocator executions across inherited IPv4/IPv6 unicast, Inet port-only bind and IPv4 multicast. Distinguish Java wrapper count (303 total) from allocator execution count. CLR splits the original testsuite family/allocator loops into 46 explicit Theory cases: 272 mapped Transport executions plus 46 testsuite executions = 318. Eight previously reviewed Pipeline Java-only cases remain separate. Source bytes/hashes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc; original assertions and actual packet exchanges executed.",
+        "note": "All 422 CLR Transport cases passed in final Debug, final full-solution Release and checked Release following a full checked rebuild: 318 mapped original executions and 104 supplemental native cases. This unit adds 17 mapped source declarations/51 CLR original executions and six native cases. Runtime changes cover registered-only UDP activity/implicit bind, unresolved endpoint rejection without closing, write-error continuation, actual Windows UDP disconnect/reconnect, port-only wildcard bind conversion, kernel-backed multicast interface/address/loop options, idempotent ASM membership and registration-only ServerBootstrap initialization. The first connected-send port run found four failures at Socket.Disconnect; source assertions were retained and the Windows path corrected to documented zero-address datagram connect. Native receive tests also accept a DIFFERENT peer after disconnect and retain local endpoint through reconnect; config tests independently inspect actual socket options, not only config symmetry. Original UDP tests retain direct/heap/composite/mixed buffers, four wrap variants, counts 1/4, three ten-second retry attempts, 100 empty packets, bad-prefix reader-index slicing and reference-count assertions. Corresponding original comments remain at reviewed declarations/branches/test helpers. Source-specific multicast/block, ICMP/read-error continuation, platform packet variants and initializer-extension design remain open. Five of six ServerBootstrap declarations are mapped; mustCallInitializerExtensions is unreviewed, not excluded or counted ported. No new xUnit skips, Common/Buffer/Resolver source changes, packages or Markdown files. Full solution passed 32720 with 14 existing Common skips; checked rebuild retains 51 existing Common warnings and zero Transport warnings.",
+        "commands": [
+          "powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "dotnet test Netty.NET.sln -c Release --no-restore"
+        ],
+        "executionCountAudit": {
+          "earlierSolutionBufferSummary": 29462,
+          "standaloneBufferPassed": 29556,
+          "finalSolutionBufferPassed": 29556,
+          "identicalBufferTestNames": 29556,
+          "missingOrExtraNames": 0,
+          "note": "An earlier solution run printed a lower Buffer total despite passing. Re-executed unchanged Buffer and final solution with detailed TRX. Both contain exactly the same 29556 distinct passed Buffer test names and no missing/extra names. Cause of the earlier summary difference is unconfirmed; no Buffer code was changed."
+        }
+      }
     }
   ],
   "nextWork": [
     "Continue concrete portable runtime/fixture gaps after the 72-method Pipeline review and complete ten-method CombinedChannelDuplexHandler fixture port. Remaining Pipeline implementation comments/contracts and SingleThreadEventLoop fixtures stay open.",
     "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
-    "Continue source-specific multicast membership/block and IPv6 multicast packet platform review, UDP ICMP/read-error continuation, socket half closure/read budgets and remaining socket fixtures. IP multicast interface/address/TTL/loop options, ASM membership, registered-only sends and reconnect paths now have original/native coverage.",
+    "Continue IPv6 source filtering, non-Windows/Linux source-filter ABI and ICMP platform fixtures; complete UDP read batching and remaining socket/half-close tests. IPv4 source membership/blocking, read-error continuation and independent resolver cancellation now have runtime coverage.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts.",
-    "Finish ServerBootstrap initializer-extension semantics and the remaining original Bootstrap/config fixtures; five of six ServerBootstrap declarations are now mapped, not a full fixture completion."
+    "Complete the remaining eight Bootstrap declarations (late registration, resolver config/diagnostic views and factory-failure producer-role decisions) and remaining implementation comments. ServerBootstrapTest is 6/6; BootstrapTest is 11/19."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [

@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,10 +40,11 @@ public class ServerBootstrap
     private IChannelHandler _handler;
     private IChannelHandler _childHandler;
     private EndPoint _local;
-    private readonly Dictionary<ChannelOption, object> _options = new();
-    private readonly Dictionary<ChannelOption, object> _childOptions = new();
-    private readonly List<Action<IChannel>> _attributes = new();
-    private readonly List<Action<IChannel>> _childAttributes = new();
+    private readonly OrderedDictionary<ChannelOption, object> _options = new();
+    private readonly OrderedDictionary<ChannelOption, object> _childOptions = new();
+    private readonly object _optionsGate = new();
+    private readonly ConcurrentDictionary<IAttributeKey, (object Value, Action<IChannel> Apply)> _attributes = new();
+    private readonly ConcurrentDictionary<IAttributeKey, (object Value, Action<IChannel> Apply)> _childAttributes = new();
     /**
      * Set the {@link EventLoopGroup} for the parent (acceptor) and the child (client). These
      * {@link EventLoopGroup}'s are used to handle all the events and IO for {@link ServerChannel} and
@@ -92,26 +95,26 @@ public class ServerBootstrap
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
      */
     public ServerBootstrap Option<T>(ChannelOption<T> option, T value)
-    { ArgumentNullException.ThrowIfNull(option); if (value is null) _options.Remove(option); else _options[option] = value; return this; }
+    { ArgumentNullException.ThrowIfNull(option); lock (_optionsGate) { if (value is null) _options.Remove(option); else _options[option] = value; } return this; }
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they get created
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
      * {@link ChannelOption}.
      */
     public ServerBootstrap ChildOption<T>(ChannelOption<T> option, T value)
-    { ArgumentNullException.ThrowIfNull(option); if (value is null) _childOptions.Remove(option); else _childOptions[option] = value; return this; }
+    { ArgumentNullException.ThrowIfNull(option); lock (_optionsGate) { if (value is null) _childOptions.Remove(option); else _childOptions[option] = value; } return this; }
     /**
      * Allow to specify an initial attribute of the newly created {@link Channel}.  If the {@code value} is
      * {@code null}, the attribute of the specified {@code key} is removed.
      */
     public ServerBootstrap Attr<T>(AttributeKey<T> key, T value) where T : class
-    { ArgumentNullException.ThrowIfNull(key); _attributes.Add(channel => channel.Attr(key).Set(value)); return this; }
+    { ArgumentNullException.ThrowIfNull(key); if (value == null) _attributes.TryRemove(key, out _); else _attributes[key] = (value, channel => channel.Attr(key).Set(value)); return this; }
     /**
      * Set the specific {@link AttributeKey} with the given value on every child {@link Channel}. If the value is
      * {@code null} the {@link AttributeKey} is removed
      */
     public ServerBootstrap ChildAttr<T>(AttributeKey<T> key, T value) where T : class
-    { ArgumentNullException.ThrowIfNull(key); _childAttributes.Add(channel => channel.Attr(key).Set(value)); return this; }
+    { ArgumentNullException.ThrowIfNull(key); if (value == null) _childAttributes.TryRemove(key, out _); else _childAttributes[key] = (value, channel => channel.Attr(key).Set(value)); return this; }
     /**
      * Validate all the parameters. Sub-classes may override this, but should
      * call the super method in that case.
@@ -134,12 +137,13 @@ public class ServerBootstrap
     public ServerBootstrap Clone()
     {
         var copy = new ServerBootstrap { _parentGroup = _parentGroup, _childGroup = _childGroup, _factory = _factory, _handler = _handler, _childHandler = _childHandler, _local = _local };
-        foreach (var pair in _options)
-            copy._options.Add(pair.Key, pair.Value);
-        foreach (var pair in _childOptions)
-            copy._childOptions.Add(pair.Key, pair.Value);
-        copy._attributes.AddRange(_attributes);
-        copy._childAttributes.AddRange(_childAttributes);
+        lock (_optionsGate)
+        {
+            foreach (var pair in _options) copy._options.Add(pair.Key, pair.Value);
+            foreach (var pair in _childOptions) copy._childOptions.Add(pair.Key, pair.Value);
+        }
+        foreach (var pair in _attributes) copy._attributes[pair.Key] = pair.Value;
+        foreach (var pair in _childAttributes) copy._childAttributes[pair.Key] = pair.Value;
         return copy;
     }
     /**
@@ -165,29 +169,35 @@ public class ServerBootstrap
         cancellationToken.ThrowIfCancellationRequested();
         var channel = _factory();
         // Capture child configuration during initialization; later bootstrap mutation must not reconfigure an existing listener.
-        var childOptions = new Dictionary<ChannelOption, object>(_childOptions);
-        var childAttributes = _childAttributes.ToArray();
+        KeyValuePair<ChannelOption, object>[] childOptions, parentOptions;
+        lock (_optionsGate) { childOptions = _childOptions.ToArray(); parentOptions = _options.ToArray(); }
+        var childAttributes = _childAttributes.Values.Select(attribute => attribute.Apply).ToArray();
         var childHandler = _childHandler;
         var childGroup = _childGroup;
         var parentHandler = _handler;
+        var extensions = ChannelInitializerExtensions.Snapshot();
         try
         {
-            channel.Config.SetOptions(_options);
-            foreach (var attribute in _attributes)
-                attribute(channel);
+            channel.Config.SetOptions(parentOptions);
+            foreach (var attribute in _attributes.Values.ToArray())
+                attribute.Apply(channel);
             channel.Pipeline.AddLast(new ActionChannelInitializer<IChannel>(server =>
             {
                 if (parentHandler != null)
                     server.Pipeline.AddLast(parentHandler);
-                server.EventLoop.Execute(() => server.Pipeline.AddLast(new Acceptor(childGroup, childHandler, childOptions, childAttributes)));
+                server.EventLoop.Execute(() => server.Pipeline.AddLast(new Acceptor(childGroup, childHandler, childOptions, childAttributes, extensions)));
             }));
+            if (channel is IServerChannel)
+                ChannelInitializerExtensions.Notify(extensions, channel,
+                    static (extension, initialized) => extension.PostInitializeServerListenerChannel(initialized));
             await _parentGroup.RegisterAsync(channel, cancellationToken).ConfigureAwait(false);
             return channel;
         }
         catch { await Bootstrap.CleanupAsync(channel).ConfigureAwait(false); throw; }
     }
     private sealed class Acceptor(IEventLoopGroup group, IChannelHandler handler,
-        Dictionary<ChannelOption, object> options, Action<IChannel>[] attributes) : ChannelInboundHandlerAdapter
+        KeyValuePair<ChannelOption, object>[] options, Action<IChannel>[] attributes,
+        IReadOnlyList<ChannelInitializerExtension> extensions) : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(ChannelHandlerContext context, object message)
         {
@@ -203,6 +213,8 @@ public class ServerBootstrap
                 foreach (var attribute in attributes)
                     attribute(child);
                 child.Pipeline.AddLast(handler);
+                ChannelInitializerExtensions.Notify(extensions, child,
+                    static (extension, initialized) => extension.PostInitializeServerChildChannel(initialized));
                 await group.RegisterAsync(child).ConfigureAwait(false);
             }
             catch (Exception error)

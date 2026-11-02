@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,8 +45,12 @@ public class Bootstrap
     private EndPoint _remote;
     private EndPoint _local;
     private bool _disableResolver;
-    private readonly Dictionary<ChannelOption, object> _options = new();
-    private readonly List<Action<IChannel>> _attributes = new();
+    private readonly OrderedDictionary<ChannelOption, object> _options = new();
+    private readonly object _optionsGate = new();
+    private readonly ConcurrentDictionary<IAttributeKey, (object Value, Action<IChannel> Apply)> _attributes = new();
+    internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
+    internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
+        => _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
     private Func<IEventExecutor, EndPoint, CancellationToken, Task<EndPoint>> _resolve = DefaultResolveAsync;
     // Select the configured owner without pretending that a native EventLoop is an EventLoopGroup.
     internal IEventLoop NextEventLoop() => _registrationLoop ?? (_group ?? throw new InvalidOperationException("Group not set.")).Next();
@@ -104,13 +110,18 @@ public class Bootstrap
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
      */
     public Bootstrap Option<T>(ChannelOption<T> option, T value)
-    { ArgumentNullException.ThrowIfNull(option); if (value is null) _options.Remove(option); else _options[option] = value; return this; }
+    { ArgumentNullException.ThrowIfNull(option); lock (_optionsGate) { if (value is null) _options.Remove(option); else _options[option] = value; } return this; }
     /**
      * Allow to specify an initial attribute of the newly created {@link Channel}.  If the {@code value} is
      * {@code null}, the attribute of the specified {@code key} is removed.
      */
     public Bootstrap Attr<T>(AttributeKey<T> key, T value) where T : class
-    { ArgumentNullException.ThrowIfNull(key); _attributes.Add(channel => channel.Attr(key).Set(value)); return this; }
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        if (value == null) _attributes.TryRemove(key, out _);
+        else _attributes[key] = (value, channel => channel.Attr(key).Set(value));
+        return this;
+    }
     /**
      * Disables address name resolution. Name resolution may be re-enabled with
      * {@link Bootstrap#resolver(AddressResolverGroup)}
@@ -162,9 +173,9 @@ public class Bootstrap
     public Bootstrap Clone()
     {
         var copy = new Bootstrap { _group = _group, _registrationLoop = _registrationLoop, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _resolve = _resolve, _disableResolver = _disableResolver };
-        foreach (var option in _options)
+        foreach (var option in NewOptionsArray())
             copy._options.Add(option.Key, option.Value);
-        copy._attributes.AddRange(_attributes);
+        foreach (var pair in _attributes) copy._attributes[pair.Key] = pair.Value;
         return copy;
     }
     // CLR: EventLoop is not an EventLoopGroup facade. An explicit registration owner provides
@@ -191,10 +202,12 @@ public class Bootstrap
         var channel = _factory();
         try
         {
-            channel.Config.SetOptions(_options);
-            foreach (var attribute in _attributes)
-                attribute(channel);
             channel.Pipeline.AddLast(_handler);
+            channel.Config.SetOptions(NewOptionsArray());
+            foreach (var attribute in _attributes.Values.ToArray())
+                attribute.Apply(channel);
+            ChannelInitializerExtensions.Notify(ChannelInitializerExtensions.Snapshot(), channel,
+                static (extension, initialized) => extension.PostInitializeClientChannel(initialized));
             await (_registrationLoop == null ? _group.RegisterAsync(channel, token) : _registrationLoop.RegisterAsync(channel, token)).ConfigureAwait(false);
             return channel;
         }
@@ -212,7 +225,20 @@ public class Bootstrap
         var channel = await InitAndRegisterAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var resolved = _disableResolver ? remote : await _resolve(channel.EventLoop, remote, cancellationToken).ConfigureAwait(false);
+            var resolved = remote;
+            if (!_disableResolver)
+            {
+                var resolving = _resolve(channel.EventLoop, remote, cancellationToken);
+                try { resolved = await resolving.WaitAsync(cancellationToken).ConfigureAwait(false); }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Cancelling a connect must not wait for a third-party resolver to honor cancellation.
+                    // Its producer remains independent; observe a later failure without capturing the channel.
+                    _ = resolving.ContinueWith(static failed => { _ = failed.Exception; }, CancellationToken.None,
+                        TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                    throw;
+                }
+            }
             await channel.ConnectAsync(resolved, local, cancellationToken).ConfigureAwait(false);
             return channel;
         }
