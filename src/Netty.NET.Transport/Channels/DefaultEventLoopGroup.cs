@@ -46,5 +46,5 @@ public class DefaultEventLoopGroup : MultithreadEventExecutorGroup, IEventLoopGr
         : base(threads == 0 ? Math.Max(1, Environment.ProcessorCount * 2) : threads, threadFactory) { }
     protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) => new DefaultEventLoop(this, executor);
     public override IEventLoop Next() => (IEventLoop)base.Next();
-    public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default) => Next().RegisterAsync(channel, cancellationToken);
+    public virtual Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default) => Next().RegisterAsync(channel, cancellationToken);
 }

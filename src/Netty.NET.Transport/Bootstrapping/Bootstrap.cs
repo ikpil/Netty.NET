@@ -38,20 +38,31 @@ namespace Netty.NET.Transport.Bootstrapping;
  */
 public class Bootstrap
 {
-    private IEventLoopGroup _group;
-    private IEventLoop _registrationLoop;
-    private Func<IChannel> _factory;
-    private IChannelHandler _handler;
-    private EndPoint _remote;
-    private EndPoint _local;
-    private bool _disableResolver;
+    public Bootstrap() => Config = new BootstrapConfig(this);
+    public BootstrapConfig Config { get; }
+    internal IEventLoopGroup ConfiguredGroup => _group;
+    internal IEventLoop ConfiguredEventLoop => _registrationLoop;
+    internal Func<IChannel> ConfiguredFactory => _factory;
+    internal IChannelHandler ConfiguredHandler => _handler;
+    internal EndPoint ConfiguredLocalAddress => _local;
+    internal EndPoint ConfiguredRemoteAddress => _remote;
+    internal object ConfiguredResolver => _disableResolver ? null : _resolverConfiguration.Group;
+    private volatile IEventLoopGroup _group;
+    private volatile IEventLoop _registrationLoop;
+    private volatile Func<IChannel> _factory;
+    private volatile IChannelHandler _handler;
+    private volatile EndPoint _remote;
+    private volatile EndPoint _local;
+    private volatile bool _disableResolver;
+    // Publish the resolver identity and its typed resolution delegate together.
+    private sealed record ResolverConfiguration(object Group, Func<IEventExecutor, EndPoint, CancellationToken, Task<EndPoint>> Resolve);
+    private volatile ResolverConfiguration _resolverConfiguration = new(DefaultAddressResolverGroup.INSTANCE, DefaultResolveAsync);
     private readonly OrderedDictionary<ChannelOption, object> _options = new();
     private readonly object _optionsGate = new();
     private readonly ConcurrentDictionary<IAttributeKey, (object Value, Action<IChannel> Apply)> _attributes = new();
     internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
     internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
         => _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
-    private Func<IEventExecutor, EndPoint, CancellationToken, Task<EndPoint>> _resolve = DefaultResolveAsync;
     // Select the configured owner without pretending that a native EventLoop is an EventLoopGroup.
     internal IEventLoop NextEventLoop() => _registrationLoop ?? (_group ?? throw new InvalidOperationException("Group not set.")).Next();
     /**
@@ -137,13 +148,19 @@ public class Bootstrap
      */
     public Bootstrap Resolver<T>(AddressResolverGroup<T> group) where T : EndPoint
     {
-        ArgumentNullException.ThrowIfNull(group);
-        _disableResolver = false;
-        _resolve = async (executor, address, token) =>
+        if (group == null)
         {
-            var resolver = group.GetResolver(executor);
-            return !resolver.IsSupported(address) || resolver.IsResolved(address) ? address : await resolver.ResolveAsync(address, token).ConfigureAwait(false);
-        };
+            _resolverConfiguration = new ResolverConfiguration(DefaultAddressResolverGroup.INSTANCE, DefaultResolveAsync);
+        }
+        else
+        {
+            _resolverConfiguration = new ResolverConfiguration(group, async (executor, address, token) =>
+            {
+                var resolver = group.GetResolver(executor);
+                return !resolver.IsSupported(address) || resolver.IsResolved(address) ? address : await resolver.ResolveAsync(address, token).ConfigureAwait(false);
+            });
+        }
+        _disableResolver = false;
         return this;
     }
     private static async Task<EndPoint> DefaultResolveAsync(IEventExecutor executor, EndPoint address, CancellationToken token)
@@ -172,7 +189,7 @@ public class Bootstrap
      */
     public Bootstrap Clone()
     {
-        var copy = new Bootstrap { _group = _group, _registrationLoop = _registrationLoop, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _resolve = _resolve, _disableResolver = _disableResolver };
+        var copy = new Bootstrap { _group = _group, _registrationLoop = _registrationLoop, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _resolverConfiguration = _resolverConfiguration, _disableResolver = _disableResolver };
         foreach (var option in NewOptionsArray())
             copy._options.Add(option.Key, option.Value);
         foreach (var pair in _attributes) copy._attributes[pair.Key] = pair.Value;
@@ -228,7 +245,7 @@ public class Bootstrap
             var resolved = remote;
             if (!_disableResolver)
             {
-                var resolving = _resolve(channel.EventLoop, remote, cancellationToken);
+                var resolving = _resolverConfiguration.Resolve(channel.EventLoop, remote, cancellationToken);
                 try { resolved = await resolving.WaitAsync(cancellationToken).ConfigureAwait(false); }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {

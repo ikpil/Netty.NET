@@ -34,12 +34,26 @@ namespace Netty.NET.Transport.Bootstrapping;
  */
 public class ServerBootstrap
 {
-    private IEventLoopGroup _parentGroup;
-    private IEventLoopGroup _childGroup;
-    private Func<IChannel> _factory;
-    private IChannelHandler _handler;
-    private IChannelHandler _childHandler;
-    private EndPoint _local;
+    public ServerBootstrap() => Config = new ServerBootstrapConfig(this);
+    public ServerBootstrapConfig Config { get; }
+    internal IEventLoopGroup ConfiguredGroup => _parentGroup;
+    internal IEventLoopGroup ConfiguredChildGroup => _childGroup;
+    internal Func<IChannel> ConfiguredFactory => _factory;
+    internal IChannelHandler ConfiguredHandler => _handler;
+    internal IChannelHandler ConfiguredChildHandler => _childHandler;
+    internal EndPoint ConfiguredLocalAddress => _local;
+    internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
+    internal KeyValuePair<ChannelOption, object>[] NewChildOptionsArray() { lock (_optionsGate) return _childOptions.ToArray(); }
+    internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
+        => _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    internal KeyValuePair<IAttributeKey, object>[] NewChildAttributesArray()
+        => _childAttributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    private volatile IEventLoopGroup _parentGroup;
+    private volatile IEventLoopGroup _childGroup;
+    private volatile Func<IChannel> _factory;
+    private volatile IChannelHandler _handler;
+    private volatile IChannelHandler _childHandler;
+    private volatile EndPoint _local;
     private readonly OrderedDictionary<ChannelOption, object> _options = new();
     private readonly OrderedDictionary<ChannelOption, object> _childOptions = new();
     private readonly object _optionsGate = new();
