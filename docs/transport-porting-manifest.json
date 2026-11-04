@@ -29,8 +29,8 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer.",
-      "next": "Remaining Bootstrap runtime comments/contracts, inherited socket/half-closure fixtures and executor/group cases; fixture review does not complete Transport."
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented.",
+      "next": "Remaining five SocketHalfClosed declarations, source-disabled self-shutdown writability scenario, executor/group cases and broader runtime comments/contracts."
     },
     {
       "name": "UDP and remaining portable transport contracts",
@@ -42,25 +42,29 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 323,
+    "javaOriginalPassed": 332,
     "transportJavaOriginalPassed": 300,
-    "testsuiteJavaJUnitInvocations": 23,
-    "testsuiteJavaAllocatorExecutions": 46,
-    "mappedOriginalMethods": 300,
-    "originalExecutedCases": 337,
+    "testsuiteJavaJUnitInvocations": 32,
+    "datagramJavaJUnitInvocations": 23,
+    "datagramJavaAllocatorExecutions": 46,
+    "shutdownJavaJUnitInvocations": 9,
+    "mappedOriginalMethods": 309,
+    "originalExecutedCases": 365,
     "transportMappedOriginalExecutions": 291,
-    "testsuiteMappedOriginalExecutions": 46,
+    "testsuiteMappedOriginalExecutions": 74,
+    "datagramMappedOriginalExecutions": 46,
+    "shutdownMappedOriginalExecutions": 28,
     "javaOnlyReviewedCases": 9,
-    "supplementalExecutedCases": 119,
+    "supplementalExecutedCases": 122,
     "debug": {
-      "total": 456,
-      "passed": 456,
+      "total": 487,
+      "passed": 487,
       "failed": 0,
       "skipped": 0
     },
     "checkedRelease": {
-      "total": 456,
-      "passed": 456,
+      "total": 487,
+      "passed": 487,
       "failed": 0,
       "skipped": 0
     },
@@ -72,8 +76,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 456,
-        "passed": 456,
+        "total": 487,
+        "passed": 487,
         "failed": 0,
         "skipped": 0
       },
@@ -90,22 +94,23 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32754,
+    "solutionPassed": 32785,
     "solutionSkipped": 14,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 300 unchanged pinned Transport Java cases, including all nineteen Bootstrap declarations and six ServerBootstrap declarations with their unchanged helpers/SPI resource, plus 23 unchanged UDP JUnit wrappers with 46 allocator executions. Raw Java calls total 323; keep wrappers distinct from CLR split variants. Nine reviewed Java-only methods (eight Pipeline methods plus the FailedChannel-dependent factory-failure method) are excluded from mapped counts. 291 mapped Transport executions + 46 testsuite executions = 337 CLR original executions.",
-    "note": "All 456 CLR Transport cases passed Debug, full-solution Release and checked Release following a full checked rebuild: 337 mapped original executions + 119 supplementary native cases. This unit adds seven original mappings and three native cases. All nineteen Bootstrap declarations are reviewed: eighteen original mappings and one explicit JVM failure-promise representation decision, with its native Task alternative counted separately. Live client/parent/child configuration views preserve read-only independent ordered snapshots, source volatile field visibility, resolver default/disable/null-reset/clone state and typed resolution identity. Late-registration helpers retain pending-before-release, real owner operation and success/failure semantics; owner callbacks use explicit owner dispatch because CLR Task continuations have no Java ChannelFuture listener affinity. Original asynchronous resolution helpers, error type meaning, ten-second deadlines, real channel closure and applicable Java comments remain present. No dummy FailedChannel, Java future facade or xUnit skip was added. Transport remains in-progress: inherited socket/half-closure, executor/group and broader runtime contract/comment reviews remain open.",
+    "javaEvidence": "Executed 300 unchanged pinned Transport cases, 23 unchanged UDP wrappers (46 original allocator executions) and nine selected unchanged shutdown wrappers with their original allocator/backend/helper loops: 332 raw Java calls. The new shutdown fixtures and required helper bytes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Java wrapper counts are not CLR variant counts. The nine already-reviewed Java-only methods remain distinct; 291 Transport + 46 UDP + 28 TCP shutdown = 365 mapped CLR original executions. Source Disabled self-shutdown writability was not run or counted.",
+    "note": "All 487 CLR Transport cases passed Debug, final full-solution Release and checked Release after a full checked rebuild: 365 original executions + 122 native supplementary cases. This unit adds nine original declarations / 28 explicit allocator/role/AutoRead/half-close executions and three supplementary contracts. Original four active self-shutdown declarations, two peer-shutdown declarations and three of eight SocketHalfClosed declarations preserve one-byte payload/state checks, SO_LINGER=1, original 30-second self/peer deadlines, 100 random bytes in both directions with five-second delivery deadlines, 16384 bytes with one-byte allocations/two-read batches, all boolean variants, source helpers/comments and reference ownership. Initial original closed-channel test exposed ObjectDisposedException instead of the native IOException/SocketException roles. The initial unbounded all-data run stalled at broken manual batching and was interrupted, so that initial run is not reported as a completed test total. Runtime fixes preserve allocator-owned manual batches, first-native-completion admission, once-only final input read-complete notification, output-first always-attempt-both shutdown/error precedence, and pending-write release with the dedicated IOException subtype even when native shutdown fails. Native tests verify exact event/owner order, manual admission, repeated-read suppression, queued/rejected buffer release and live reverse-direction communication. Source Disabled writability test remains explicitly unreviewed, including its out-of-bounds buffer argument; five other half-close declarations and broader executor/group/runtime review remain open. No xUnit skip was added.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
-      "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=bootstrap-config\" --results-directory artifacts/transport-core/bootstrap-config-results",
+      "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=socket-shutdown-final\" --results-directory artifacts/transport-core/socket-shutdown-final-results",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
       "python artifacts/transport-core/run-datagram-originals.py",
+      "python artifacts/transport-core/run-shutdown-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ]
   },
@@ -351,19 +356,23 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 98,
-        "preservedCount": 12,
-        "unreviewedCount": 86,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 19,
+        "unreviewedCount": 79,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Existing native channel core plus the TCP counterpart of AbstractUnsafe.shutdownOutput: disable further enqueueing, attempt native shutdown, fail/release pending writes and emit the output event in finally without deregistering input. Source nonblocking SO_LINGER rationale retained at this implementation. Broader source contracts/comments remain open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
         ]
       }
     },
@@ -2026,9 +2035,12 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
         ]
       }
     },
@@ -2722,8 +2734,25 @@
       "sha256": "c633bdb9f39e1cb20151abfbe1c2bdd452a57b50c33af5e28ad391862d565ed0",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/ChannelInputShutdownReadComplete.cs"
+      ],
+      "review": {
+        "scope": "Preserve source singleton read-completion event, or sealed IOException subtype with message/cause constructors. Java serialization ID is not a CLR transport contract. All original comments are retained.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/ChannelInputShutdownReadComplete.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/ChannelOutputShutdownEvent.java",
@@ -2753,8 +2782,25 @@
       "sha256": "8948b79c6add8d2d35c306b9b913c71b040e76aed1f8ac6018bf67fd72827ddf",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/ChannelOutputShutdownException.cs"
+      ],
+      "review": {
+        "scope": "Preserve source singleton read-completion event, or sealed IOException subtype with message/cause constructors. Java serialization ID is not a CLR transport contract. All original comments are retained.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/ChannelOutputShutdownException.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DatagramChannel.java",
@@ -3040,9 +3086,12 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "TCP shutdown is output-first, always attempts input shutdown and preserves the output failure when both fail. Closed shutdown reports IOException, inactive state reports both directions shut, output shutdown detaches queued write ownership even on native failure and preserves inbound communication. Original SO_LINGER/self/peer shutdown and selected half-closure tests are mapped separately; remaining socket contracts/comments stay open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
         ]
       }
     },
@@ -6073,13 +6122,13 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 33,
-    "portedOriginalFixtures": 27,
-    "portedOriginalMethods": 300,
-    "supplementalClrCases": 119,
+    "reviewedImplementationFiles": 35,
+    "portedOriginalFixtures": 28,
+    "portedOriginalMethods": 309,
+    "supplementalClrCases": 122,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
-    "testsuiteSources": 7
+    "testsuiteSources": 16
   },
   "clrDecisions": [
     {
@@ -6200,6 +6249,16 @@
         "test/Netty.NET.Transport.Tests/BootstrapCompletionSourceTest.cs",
         "test/Netty.NET.Transport.Tests/BootstrapConfigurationContractTest.cs"
       ]
+    },
+    {
+      "subject": "TCP direction shutdown, allocator-owned manual read batches and final input-read notification",
+      "decision": "Use Task-based direction shutdown, output before input, always attempt both and preserve the original output exception via ExceptionDispatchInfo. IOException replaces closed-channel representation; the dedicated ChannelOutputShutdownException subtype preserves queued-write failure meaning. Output shutdown fails/releases queued ownership and emits its event even when the native call fails, retaining input registration and communication. One explicit Read admits the whole allocator-approved available batch; a held first native completion still respects disabled AutoRead and deregistration. CLR has no later readiness callback after EOF, so the next admitted logical read emits the final ReadComplete/InputShutdownReadComplete pair once on the current owner. Source tests keep original data sizes, allocator budgets, boolean combinations, direction roles, ownership and deadlines. No selector, Java future facade or copied comment archive is introduced.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -6221,7 +6280,7 @@
     {
       "area": "TCP and UDP",
       "state": "test-and-implementation-review",
-      "detail": "Half-closure/read-complete events, output shutdown, timeout/cancellation, full platform socket options, multicast/source-specific membership and all remaining original socket fixtures."
+      "detail": "TCP self/peer FIN, five-second bidirectional half-close payloads, original 16KB two-read batches, final input-read completion, SO_LINGER=1, shutdown failure precedence and queued-write release now have runtime/test coverage. Remaining five SocketHalfClosed declarations (including platform conditions), disabled self-shutdown writability, broader timeouts/options/IoHandler fixtures, IPv6 source multicast and full socket inventory remain open."
     },
     {
       "area": "Bootstrap and groups",
@@ -6260,7 +6319,8 @@
     "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs",
     "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs",
-    "test/Netty.NET.Transport.Tests/BootstrapConfigurationContractTest.cs"
+    "test/Netty.NET.Transport.Tests/BootstrapConfigurationContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -7254,6 +7314,79 @@
           "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true"
         ]
       }
+    },
+    {
+      "checkpoint": "e1abb8e62fb2a536f2da8c98818acf2593e3cfc7",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 323,
+        "transportJavaOriginalPassed": 300,
+        "testsuiteJavaJUnitInvocations": 23,
+        "testsuiteJavaAllocatorExecutions": 46,
+        "mappedOriginalMethods": 300,
+        "originalExecutedCases": 337,
+        "transportMappedOriginalExecutions": 291,
+        "testsuiteMappedOriginalExecutions": 46,
+        "javaOnlyReviewedCases": 9,
+        "supplementalExecutedCases": 119,
+        "debug": {
+          "total": 456,
+          "passed": 456,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checkedRelease": {
+          "total": 456,
+          "passed": 456,
+          "failed": 0,
+          "skipped": 0
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 456,
+            "passed": 456,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32754,
+        "solutionSkipped": 14,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 300 unchanged pinned Transport Java cases, including all nineteen Bootstrap declarations and six ServerBootstrap declarations with their unchanged helpers/SPI resource, plus 23 unchanged UDP JUnit wrappers with 46 allocator executions. Raw Java calls total 323; keep wrappers distinct from CLR split variants. Nine reviewed Java-only methods (eight Pipeline methods plus the FailedChannel-dependent factory-failure method) are excluded from mapped counts. 291 mapped Transport executions + 46 testsuite executions = 337 CLR original executions.",
+        "note": "All 456 CLR Transport cases passed Debug, full-solution Release and checked Release following a full checked rebuild: 337 mapped original executions + 119 supplementary native cases. This unit adds seven original mappings and three native cases. All nineteen Bootstrap declarations are reviewed: eighteen original mappings and one explicit JVM failure-promise representation decision, with its native Task alternative counted separately. Live client/parent/child configuration views preserve read-only independent ordered snapshots, source volatile field visibility, resolver default/disable/null-reset/clone state and typed resolution identity. Late-registration helpers retain pending-before-release, real owner operation and success/failure semantics; owner callbacks use explicit owner dispatch because CLR Task continuations have no Java ChannelFuture listener affinity. Original asynchronous resolution helpers, error type meaning, ten-second deadlines, real channel closure and applicable Java comments remain present. No dummy FailedChannel, Java future facade or xUnit skip was added. Transport remains in-progress: inherited socket/half-closure, executor/group and broader runtime contract/comment reviews remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=bootstrap-config\" --results-directory artifacts/transport-core/bootstrap-config-results",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ]
+      }
     }
   ],
   "nextWork": [
@@ -7261,7 +7394,8 @@
     "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
     "Continue IPv6 source filtering, non-Windows/Linux source-filter ABI and ICMP platform fixtures; complete UDP read batching and remaining socket/half-close tests. IPv4 source membership/blocking, read-error continuation and independent resolver cancellation now have runtime coverage.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts.",
-    "BootstrapTest is fully reviewed (18 mappings plus 1 explicit JVM promise-representation decision); all three configuration views are ported. Continue remaining Bootstrap runtime comments/contracts and inherited socket/half-closure or SingleThreadEventLoop originals against concrete missing behavior, not arbitrary CLR polishing."
+    "BootstrapTest is fully reviewed (18 mappings plus 1 explicit JVM promise-representation decision); all three configuration views are ported. Continue remaining Bootstrap runtime comments/contracts and remaining SocketHalfClosed or SingleThreadEventLoop originals against concrete missing behavior, not arbitrary CLR polishing.",
+    "Finish the five remaining SocketHalfClosed declarations, their exact platform/AutoClose conditions and original tests. Investigate the source Disabled self-shutdown writability test and its out-of-bounds buffer argument without silently enabling or rewriting it. Complete backend/group fixture review; the selected shutdown unit is not whole-Transport completion."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -7871,6 +8005,352 @@
       "status": "pending",
       "implementation": [],
       "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketShutdownOutputBySelfTest.java",
+      "sha256": "28a25da6307e150d2374ac7c9391cd9c78b2018ff7b784f4d6210b2480106e7c",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testShutdownOutput",
+          "clrMethod": "TestShutdownOutput",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Four active original declarations retain payload byte 1, pre/post direction state, peer EOF, inbound communication after output shutdown, both closed-channel errors and SO_LINGER=1 shutdown variants with the original thirty-second deadlines. Pooled/adaptive allocator rows are explicit; native async TCP replaces Java NIO/OIO backend permutations, and CLR stream EOF is 0 rather than InputStream -1. IOException replaces ClosedChannelException; SocketException retains its role. Source Disabled writability declaration remains unreviewed/unmapped, not a CLR skip; its final randomBufferType invocation requests length 2 from a one-byte array and needs original-issue review before activation."
+        },
+        {
+          "upstreamMethod": "testShutdownOutputAfterClosed",
+          "clrMethod": "TestShutdownOutputAfterClosed",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Four active original declarations retain payload byte 1, pre/post direction state, peer EOF, inbound communication after output shutdown, both closed-channel errors and SO_LINGER=1 shutdown variants with the original thirty-second deadlines. Pooled/adaptive allocator rows are explicit; native async TCP replaces Java NIO/OIO backend permutations, and CLR stream EOF is 0 rather than InputStream -1. IOException replaces ClosedChannelException; SocketException retains its role. Source Disabled writability declaration remains unreviewed/unmapped, not a CLR skip; its final randomBufferType invocation requests length 2 from a one-byte array and needs original-issue review before activation."
+        },
+        {
+          "upstreamMethod": "testShutdownOutputSoLingerNoAssertError",
+          "clrMethod": "TestShutdownOutputSoLingerNoAssertError",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Four active original declarations retain payload byte 1, pre/post direction state, peer EOF, inbound communication after output shutdown, both closed-channel errors and SO_LINGER=1 shutdown variants with the original thirty-second deadlines. Pooled/adaptive allocator rows are explicit; native async TCP replaces Java NIO/OIO backend permutations, and CLR stream EOF is 0 rather than InputStream -1. IOException replaces ClosedChannelException; SocketException retains its role. Source Disabled writability declaration remains unreviewed/unmapped, not a CLR skip; its final randomBufferType invocation requests length 2 from a one-byte array and needs original-issue review before activation."
+        },
+        {
+          "upstreamMethod": "testShutdownSoLingerNoAssertError",
+          "clrMethod": "TestShutdownSoLingerNoAssertError",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Four active original declarations retain payload byte 1, pre/post direction state, peer EOF, inbound communication after output shutdown, both closed-channel errors and SO_LINGER=1 shutdown variants with the original thirty-second deadlines. Pooled/adaptive allocator rows are explicit; native async TCP replaces Java NIO/OIO backend permutations, and CLR stream EOF is 0 rather than InputStream -1. IOException replaces ClosedChannelException; SocketException retains its role. Source Disabled writability declaration remains unreviewed/unmapped, not a CLR skip; its final randomBufferType invocation requests length 2 from a one-byte array and needs original-issue review before activation."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 4,
+        "reviewedCount": 4,
+        "unreviewedMethods": [
+          "testWriteAfterShutdownOutputNoWritabilityChange"
+        ]
+      },
+      "review": {
+        "scope": "Four active original declarations retain payload byte 1, pre/post direction state, peer EOF, inbound communication after output shutdown, both closed-channel errors and SO_LINGER=1 shutdown variants with the original thirty-second deadlines. Pooled/adaptive allocator rows are explicit; native async TCP replaces Java NIO/OIO backend permutations, and CLR stream EOF is 0 rather than InputStream -1. IOException replaces ClosedChannelException; SocketException retains its role. Source Disabled writability declaration remains unreviewed/unmapped, not a CLR skip; its final randomBufferType invocation requests length 2 from a one-byte array and needs original-issue review before activation.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 7,
+        "preservedCount": 4,
+        "unreviewedCount": 3,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractSocketShutdownOutputByPeerTest.java",
+      "sha256": "374c9fe7cb5a3181c6f216a34ee74ad82f6eb3943d444cff84499380dd646d21",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketShutdownOutputByPeerSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testShutdownOutput",
+          "clrMethod": "TestShutdownOutput",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations."
+        },
+        {
+          "upstreamMethod": "testShutdownOutputWithoutOption",
+          "clrMethod": "TestShutdownOutputWithoutOption",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketShutdownOutputByPeerSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketShutdownOutputByPeerTest.java",
+      "sha256": "e53149ad975ee9c6aa592ef6f35860675c677e4619b5098a93ba148a4e1d2c89",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Concrete original peer operations (connect, byte write, shutdownOutput, close) use BCL TcpClient/Socket/NetworkStream; inherited methods are accounted in the abstract fixture once, not duplicated.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketHalfClosedTest.java",
+      "sha256": "adea1bde8e2f14f4c92108fe285609fabe74d0ef01d1f8f2dd9fd05709d521a7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAllDataReadClosure",
+          "clrMethod": "TestAllDataReadClosure",
+          "nativeCases": [
+            [
+              false,
+              false,
+              false
+            ],
+            [
+              false,
+              false,
+              true
+            ],
+            [
+              false,
+              true,
+              false
+            ],
+            [
+              false,
+              true,
+              true
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              false,
+              true
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Three of eight original declarations ported. Preserve 16384 bytes, one-byte receive allocations, two reads per batch, all AutoRead/half-close combinations and original read-complete upper bound. Preserve both client/server initiators, random 100-byte payload equality, five-second direction-shutdown delivery deadlines, source writer/reader event roles and accumulated ByteBuf release on removal. Explicit allocator/boolean rows replace nested helper loops. Tasks use explicit native pipeline owner dispatch; no Java future facade. The otherwise unbounded all-data wrapper has a thirty-second CLR test-harness cap. Other five original declarations remain unreviewed, including their platform conditions."
+        },
+        {
+          "upstreamMethod": "testShutdownInputAllowsOutboundWrites",
+          "clrMethod": "TestShutdownInputAllowsOutboundWrites",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Three of eight original declarations ported. Preserve 16384 bytes, one-byte receive allocations, two reads per batch, all AutoRead/half-close combinations and original read-complete upper bound. Preserve both client/server initiators, random 100-byte payload equality, five-second direction-shutdown delivery deadlines, source writer/reader event roles and accumulated ByteBuf release on removal. Explicit allocator/boolean rows replace nested helper loops. Tasks use explicit native pipeline owner dispatch; no Java future facade. The otherwise unbounded all-data wrapper has a thirty-second CLR test-harness cap. Other five original declarations remain unreviewed, including their platform conditions."
+        },
+        {
+          "upstreamMethod": "testShutdownOutputAllowsInboundReads",
+          "clrMethod": "TestShutdownOutputAllowsInboundReads",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ],
+          "adaptation": "Three of eight original declarations ported. Preserve 16384 bytes, one-byte receive allocations, two reads per batch, all AutoRead/half-close combinations and original read-complete upper bound. Preserve both client/server initiators, random 100-byte payload equality, five-second direction-shutdown delivery deadlines, source writer/reader event roles and accumulated ByteBuf release on removal. Explicit allocator/boolean rows replace nested helper loops. Tasks use explicit native pipeline owner dispatch; no Java future facade. The otherwise unbounded all-data wrapper has a thirty-second CLR test-harness cap. Other five original declarations remain unreviewed, including their platform conditions."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 8,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [
+          "testAllDataReadEventTriggeredAfterHalfClosure",
+          "testHalfClosureReceiveDataOnFinalWait2StateWhenSoLingerSet",
+          "testHalfClosureOnlyOneEventWhenAutoRead",
+          "testAllDataReadAfterHalfClosure",
+          "testAutoCloseFalseDoesShutdownOutput"
+        ]
+      },
+      "review": {
+        "scope": "Three of eight original declarations ported. Preserve 16384 bytes, one-byte receive allocations, two reads per batch, all AutoRead/half-close combinations and original read-complete upper bound. Preserve both client/server initiators, random 100-byte payload equality, five-second direction-shutdown delivery deadlines, source writer/reader event roles and accumulated ByteBuf release on removal. Explicit allocator/boolean rows replace nested helper loops. Tasks use explicit native pipeline owner dispatch; no Java future facade. The otherwise unbounded all-data wrapper has a thirty-second CLR test-harness cap. Other five original declarations remain unreviewed, including their platform conditions.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 22,
+        "preservedCount": 4,
+        "unreviewedCount": 18,
+        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractClientSocketTest.java",
+      "sha256": "7be57c1f64d0004d5d924dad1420242cead11e29a33e955c604f975325364f0f",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Selected shutdown fixtures execute their unchanged original harness in Java. Native fixture explicitly selects loopback TCP and both original allocators; this does not claim a port of the whole Java backend/testsuite permutation framework."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractServerSocketTest.java",
+      "sha256": "663ca9419ed6a9d1ee2ee9a89ba82fb203f2d10d947cf2fb590d7e29f2405f63",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Selected shutdown fixtures execute their unchanged original harness in Java. Native fixture explicitly selects loopback TCP and both original allocators; this does not claim a port of the whole Java backend/testsuite permutation framework."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractSocketTest.java",
+      "sha256": "2dd536e5fa00ba0289bcdc6187397483d4a98c61e46a8badbfa686f744732713",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Selected shutdown fixtures execute their unchanged original harness in Java. Native fixture explicitly selects loopback TCP and both original allocators; this does not claim a port of the whole Java backend/testsuite permutation framework."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketTestPermutation.java",
+      "sha256": "32592de75fa949e6b3a138d79c500d761cab2fec29ce10cc2f77eb62fc775838",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Selected shutdown fixtures execute their unchanged original harness in Java. Native fixture explicitly selects loopback TCP and both original allocators; this does not claim a port of the whole Java backend/testsuite permutation framework."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractTestsuiteTest.java",
+      "sha256": "167f3a153ae390d0d8e77533d44778765d6a8dc1dcf1131ab9eabd6170fbe026",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "pending",
+      "implementation": [],
+      "reviewScope": "Selected shutdown fixtures execute their unchanged original harness in Java. Native fixture explicitly selects loopback TCP and both original allocators; this does not claim a port of the whole Java backend/testsuite permutation framework."
     }
   ]
 }

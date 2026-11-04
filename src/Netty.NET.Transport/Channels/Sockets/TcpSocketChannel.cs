@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
@@ -34,8 +35,9 @@ public class TcpSocketChannel : AbstractChannel
     protected readonly Socket Socket;
     private bool _reading;
     private bool _readRequested;
-    private bool _inputShutdown;
-    private bool _outputShutdown;
+    private volatile bool _inputShutdown;
+    private volatile bool _outputShutdown;
+    private bool _inputReadComplete;
     public TcpSocketChannel() : this(new Socket(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), null)
     { if (Socket.AddressFamily == AddressFamily.InterNetworkV6) Socket.DualMode = true; }
     public TcpSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp), null) { }
@@ -115,8 +117,26 @@ public class TcpSocketChannel : AbstractChannel
     {
         _readRequested = true;
         ResumeRead();
-        if (_reading || _inputShutdown)
+        if (_reading)
             return;
+        if (_inputShutdown)
+        {
+            if (!IsRegistered || _inputReadComplete || !Config.TryGetOption(ChannelOption.ALLOW_HALF_CLOSURE, out bool half) || !half)
+                return;
+            _inputReadComplete = true;
+            _readRequested = false;
+            // CLR has no read-ready callback after EOF; complete the next logical read once on its owner.
+            EventLoop.Execute(() =>
+            {
+                if (!IsOpen) return;
+                ReceiveHandle.Reset(Config);
+                ReceiveHandle.LastBytesRead(-1);
+                ReceiveHandle.ReadComplete();
+                Pipeline.FireChannelReadComplete();
+                Pipeline.FireUserEventTriggered(ChannelInputShutdownReadComplete.INSTANCE);
+            });
+            return;
+        }
         _reading = true;
         EventLoop.Execute(() => _ = ReadLoopAsync());
     }
@@ -129,13 +149,16 @@ public class TcpSocketChannel : AbstractChannel
             while (IsOpen && IsActive && !_inputShutdown)
             {
                 ByteBuf buffer = null;
-                bool admitted = false, again = false;
+                bool admitted = false, again = false, continuedBatch = false;
                 try
                 {
                     await OnLoopAsync(() =>
                     {
-                        if (!IsOpen || !IsRegistered || _inputShutdown || (!Config.IsAutoRead() && !_readRequested))
+                        if (!IsOpen || !IsRegistered || _inputShutdown || (!cycle && !Config.IsAutoRead() && !_readRequested))
                             return;
+                        // One manual Read owns every available message admitted by this allocator batch.
+                        // The initial native receive still obeys registration and AutoRead admission.
+                        continuedBatch = cycle;
                         if (!cycle)
                         { ReceiveHandle.Reset(Config); cycle = true; }
                         buffer = ReceiveHandle.Allocate(Allocator);
@@ -145,7 +168,7 @@ public class TcpSocketChannel : AbstractChannel
                     if (!admitted)
                         break;
                     int read = await Socket.ReceiveAsync(buffer.AsMemory(buffer.WriterIndex, buffer.WritableBytes), SocketFlags.None).ConfigureAwait(false);
-                    await DispatchReadAsync(() => _readRequested || _inputShutdown, () =>
+                    await DispatchReadAsync(() => continuedBatch || _readRequested || _inputShutdown, () =>
                     {
                         if (!IsOpen || _inputShutdown)
                             return;
@@ -174,7 +197,7 @@ public class TcpSocketChannel : AbstractChannel
                             else
                                 _ = CloseTransportAsync();
                         }
-                        again = IsOpen && !_inputShutdown && (Config.IsAutoRead() || _readRequested);
+                        again = IsOpen && !_inputShutdown && (more || Config.IsAutoRead() || _readRequested);
                     }).ConfigureAwait(false);
                 }
                 finally { buffer?.Release(); }
@@ -195,22 +218,58 @@ public class TcpSocketChannel : AbstractChannel
         finally
         {
             try
-            { await OnLoopAsync(() => { _reading = false; if (IsOpen && !_inputShutdown && _readRequested) DoBeginRead(); }).ConfigureAwait(false); }
+            {
+                await OnLoopAsync(() =>
+                {
+                    _reading = false;
+                    if (IsOpen && (!_inputShutdown ? _readRequested : !_inputReadComplete && (Config.IsAutoRead() || _readRequested))) DoBeginRead();
+                }).ConfigureAwait(false);
+            }
             catch { }
         }
     }
-    public bool IsInputShutdown => _inputShutdown || !IsOpen;
-    public bool IsOutputShutdown => _outputShutdown || !IsOpen;
+    public bool IsInputShutdown => _inputShutdown || !IsActive;
+    public bool IsOutputShutdown => _outputShutdown || !IsActive;
     public Task ShutdownOutputAsync() => OnLoopAsync(() =>
     {
-        if (_outputShutdown)
-            return;
-        Socket.Shutdown(SocketShutdown.Send);
+        EnsureOpen();
+        if (_outputShutdown) throw new IOException("Socket output is shut down.");
+        // Disallow adding any messages and flushes to outboundBuffer.
         _outputShutdown = true;
-        OutboundBuffer.Close(new IOException("Socket output is shut down."));
-        Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
+        // When a side enables SO_LINGER and calls showdownOutput(...) to start TCP half-closure
+        // we can not call doDeregister here because we should ensure this side in fin_wait2 state
+        // can still receive and process the data which is send by another side in the close_wait state。
+        // See https://github.com/netty/netty/issues/11981
+        try
+        {
+            // The shutdown function does not block regardless of the SO_LINGER setting on the socket
+            // so we don't need to use GlobalEventExecutor to execute the shutdown
+            DoShutdownOutput();
+        }
+        finally
+        {
+            OutboundBuffer.Close(new ChannelOutputShutdownException("Channel output shutdown"));
+            Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
+        }
     });
     public Task ShutdownInputAsync() => OnLoopAsync(() =>
-    { if (!_inputShutdown) { Socket.Shutdown(SocketShutdown.Receive); _inputShutdown = true; ResumeRead(); } });
-    public Task ShutdownAsync() => Task.WhenAll(ShutdownInputAsync(), ShutdownOutputAsync());
+    {
+        EnsureOpen();
+        if (!_inputShutdown)
+        {
+            DoShutdownInput(); _inputShutdown = true; ResumeRead();
+            if (!_reading && (Config.IsAutoRead() || _readRequested)) DoBeginRead();
+        }
+    });
+    protected virtual void DoShutdownOutput() => Socket.Shutdown(SocketShutdown.Send);
+    protected virtual void DoShutdownInput() => Socket.Shutdown(SocketShutdown.Receive);
+    public async Task ShutdownAsync()
+    {
+        Exception outputFailure = null;
+        try { await ShutdownOutputAsync().ConfigureAwait(false); }
+        catch (Exception error) { outputFailure = error; }
+        try { await ShutdownInputAsync().ConfigureAwait(false); }
+        catch (Exception) when (outputFailure != null) { }
+        if (outputFailure != null) ExceptionDispatchInfo.Capture(outputFailure).Throw();
+    }
 }
