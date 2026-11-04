@@ -419,7 +419,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Return the number of tasks that are pending for processing.
      */
-    public int PendingTasks()
+    public virtual int PendingTasks()
     {
         return _taskQueue.Count;
     }

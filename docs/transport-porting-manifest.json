@@ -17,8 +17,8 @@
     {
       "name": "Channel, Pipeline and executor ordering",
       "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests.",
-      "next": "Remaining Pipeline implementation comments/contracts, SingleThreadEventLoop original fixtures, config and executor/shutdown cases; reviewed test inventory does not complete Transport"
+      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting.",
+      "next": "Remaining I/O-handler/group rejection/shutdown fixtures and broader Pipeline/loop runtime comments/contracts; review does not complete Transport."
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
@@ -42,9 +42,11 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 335,
-    "javaOriginalInvocations": 337,
-    "transportJavaOriginalPassed": 300,
+    "javaOriginalPassed": 359,
+    "javaOriginalInvocations": 361,
+    "transportJavaOriginalPassed": 324,
+    "coreTransportJavaOriginalPassed": 300,
+    "eventLoopJavaOriginalPassed": 24,
     "testsuiteJavaJUnitInvocations": 37,
     "datagramJavaJUnitInvocations": 23,
     "datagramJavaAllocatorExecutions": 46,
@@ -52,24 +54,24 @@
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 313,
-    "originalExecutedCases": 373,
+    "mappedOriginalMethods": 333,
+    "originalExecutedCases": 394,
     "originalSkippedCases": 8,
-    "transportMappedOriginalExecutions": 291,
+    "transportMappedOriginalExecutions": 312,
     "testsuiteMappedOriginalExecutions": 82,
     "datagramMappedOriginalExecutions": 46,
     "shutdownMappedOriginalExecutions": 36,
-    "javaOnlyReviewedCases": 10,
-    "supplementalExecutedCases": 133,
+    "javaOnlyReviewedCases": 11,
+    "supplementalExecutedCases": 137,
     "debug": {
-      "total": 514,
-      "passed": 506,
+      "total": 539,
+      "passed": 531,
       "failed": 0,
       "skipped": 8
     },
     "checkedRelease": {
-      "total": 514,
-      "passed": 506,
+      "total": 539,
+      "passed": 531,
       "failed": 0,
       "skipped": 8
     },
@@ -81,8 +83,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 514,
-        "passed": 506,
+        "total": 539,
+        "passed": 531,
         "failed": 0,
         "skipped": 8
       },
@@ -99,21 +101,22 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32804,
+    "solutionPassed": 32829,
     "solutionSkipped": 22,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 300 unchanged Transport bodies, 23 UDP wrappers with 46 allocator executions and 14 selected shutdown wrappers. The shutdown runner reports 12 passed bodies, one original NIO/OIO guard bypass (all configured backend groups were checked before invocation) and one original Windows-assumption abort. Never count those two gated wrappers as passed test bodies: 337 raw calls, 335 successful bodies/wrappers. Source and helper bytes remain pinned to 64cc10f38ea5f5bd7eae48507817c66680d0afdc. CLR counts separately retain 291 Transport + 46 UDP + 36 shutdown = 373 executed original cases; eight Unix-only CLR cases are skipped on Windows. Java original allocator/backend helper loops are unchanged.",
-    "note": "All 506 executed CLR Transport cases passed Debug, full-solution Release and checked Release after a full checked rebuild; eight conditional skips preserve the original Unix-only reset/read-order assumption. Full solution passed 32804 cases with 22 skips (14 existing Common plus eight original-condition Transport). This unit adds eight executed original variants and eleven supplementary native cases, plus eight compiled platform-conditional variants. All eight SocketHalfClosed declarations/comments are reviewed: seven mappings, including six methods executable on Windows and one Unix-only mapping, plus one explicit original backend-capability exclusion. Source 16KB/one-byte/two-read batching, total/empty completion bounds, both AutoRead inputs, SO_LINGER=1/16-byte FIN_WAIT2 reply, exact event counts and 100 ms delayed close remain intact. Original Context-to-DuplexChannel cast defect actually closes the peer via exceptionCaught; the source mapping preserves that observable close path while separate native tests perform a genuine half-close. The no-manual-read kernel-specific original is not mapped; its native one-byte/FIN counterpart preserves explicit CLR admission and original helper comments. Unix reset fixture retains all allocator/half-close/leader inputs, 100-byte payloads, owner-blocking latch, 200 ms delay, two completion signals and ownership; actual Unix execution remains unverified on this Windows host. Seven native error/reset cases initially failed, then passed after preserving the IO/AutoClose matrix, explicit CLR SocketException classification, output-only shutdown/cause chaining, flushed vs unflushed close failures, close-before-task-notification, reference release, reverse reads and abortive SO_LINGER=0 reset. Eleven new native cases are never counted as original executions. Broader socket, secondary shutdown-error topology and executor/group/runtime review remain open.",
+    "javaEvidence": "Executed 300 unchanged prior Transport bodies plus 24 event-loop executions (all eighteen SingleThreadEventLoop methods and six AbstractEventLoop executions including all four enum inputs), 23 unchanged UDP wrappers with 46 allocator executions and fourteen selected shutdown wrappers. Shutdown reports twelve passed bodies, one original NIO/OIO bypass and one original Windows-assumption abort. Totals: 361 raw Java calls and 359 successfully executed bodies/wrappers. The event-loop sources and NioEventLoop concrete helper match pinned bytes at 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Source BeforeEach/AfterEach and cleanup assertions, timing annotations, logger handling and enum forms execute unchanged. One caller-promise listener method stays CLR-inapplicable; two producer enum forms fold into the native context/channel Task routes. Those three differences explain 24 Java versus 21 new mapped CLR executions, without invented duplicate counts.",
+    "note": "All 531 executed Transport cases passed Debug, full-solution Release and checked Release after a full checked rebuild. Eight unchanged Unix-only variants remain skipped on Windows. Full solution: 32829 passed/22 skipped (14 existing Common plus eight original-platform Transport). This unit adds twenty mapped original declarations / twenty-one executed cases plus four native supplementary cases: totals 394 original executions + 137 supplemental. Both event-loop fixtures are fully reviewed: SingleThreadEventLoop has seventeen mappings and one explicit caller-promise/listener non-notification decision; AbstractEventLoop has three mappings with two native routing variants instead of four Java caller-producer enum forms. Preserve original A/B/C algorithms, cleanup count one, three pending tasks, 500 ms delay, all fixed-rate/fixed-delay counts/work/period/catch-up bounds, 300 ms cancellation observation, original five/ten-second deadlines, one-second quiet period after twenty 100 ms submissions, two-second timeout, tail counts/removal, actual TCP channel migration, assigned executor identity and 600 ms zero-quiet termination. Unbounded one-shot/legacy cases have a ten-second harness cap. Stopwatch offset is restored before the source absolute-clock DelayNanos call; native cancellation does not emulate Java worker interruption. A source-shaped parent-typed queue count failed before the patch (expected two ordinary-plus-tail, actual one); Java default virtual dispatch is now a true CLR virtual/override. Native stopped-owner Task observation, tail shutdown drain and tail exception isolation remain supplementary. No extra xUnit skips or promise facade were added. I/O-specific loop/group fixtures and broader runtime contract/comment review remain open.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
-      "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=half-completion\" --results-directory artifacts/transport-core/half-completion-results",
+      "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=event-loop\" --results-directory artifacts/transport-core/event-loop-results",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
+      "python artifacts/transport-core/run-event-loop-originals.py",
       "python artifacts/transport-core/run-datagram-originals.py",
       "python artifacts/transport-core/run-shutdown-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
@@ -2700,9 +2703,13 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain review work, not CLR exclusions."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Preserve source PendingTasks dynamic dispatch: Java instance methods are overridable by default. Native SingleThreadEventExecutor.PendingTasks is now virtual and this class overrides it so parent-typed queue metrics include tail tasks. The original A/B/C loop/shutdown/schedule fixtures and inherited re-registration fixtures are separately reviewed. Broader runtime declarations/comments and I/O-specific event-loop inventory remain open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs"
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+          "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs",
+          "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractEventLoopSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs"
         ]
       }
     },
@@ -3673,8 +3680,62 @@
       "sha256": "a34a5ad4d7a71a903a7b4916c8d6404fb8d41ec94ed10ff3ec234c2be35d02eb",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/AbstractEventLoopSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testReregister",
+          "clrMethod": "TestReregister",
+          "adaptation": "Retain real server deregister/re-register across two event-loop groups and a two-thread explicitly assigned executor group. Default handler executor must change; explicitly assigned executor identity must stay identical. Native teardown closes all owned groups, fixing the original helper resource leak without changing assertions."
+        },
+        {
+          "upstreamMethod": "testReregisterOnChannelHandlerContext",
+          "clrMethod": "TestReregisterOnChannelHandlerContext",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "upstreamVariants": [
+            "CONTEXT",
+            "CONTEXT_PROMISE",
+            "CHANNEL",
+            "CHANNEL_PROMISE"
+          ],
+          "adaptation": "Preserve issue 14923 real hello echo, unregistered user event before moving owners, adding a pipeline handler on the new owner, writing through the original context, captured exceptions and close-driven completion. Four original enum forms use two routing paths and caller-promise overloads; C# folds the two producer overloads into the same returned-Task routes and executes both context/channel paths. No Java promise input facade or duplicate native executions are counted. Explicit owner submissions replace channel-associated future listener affinity; ByteBuf ownership is retained until handed off or released on failure."
+        },
+        {
+          "upstreamMethod": "testShutdownGracefullyNoQuietPeriod",
+          "clrMethod": "TestShutdownGracefullyNoQuietPeriod",
+          "adaptation": "Leave a real server channel open, request zero quiet period with one-minute timeout, preserve the original 600 ms termination bound, successful lifecycle result and shutdown/terminated states."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "All three inherited original declarations ported as four CLR executions (two routing paths) versus six unchanged Java executions (four enum forms). Original issue references/comments and helpers retained. Native TCP + DefaultEventLoopGroup replace selector backends; no claim is made about NioEventLoopTest own declarations.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/AbstractEventLoopSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at actual loop helpers, scheduling/shutdown scenarios and native completion counterpart; no detached comment archive."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/AbstractIoHandlerEventCountTest.java",
@@ -5951,8 +6012,133 @@
       "sha256": "6d59ff34d053953002895a43fd8fdbc9177707213e40ec85f3f40dffc416ca8a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "shutdownBeforeStart",
+          "clrMethod": "ShutdownBeforeStart",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "shutdownAfterStart",
+          "clrMethod": "ShutdownAfterStart",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskA",
+          "clrMethod": "ScheduleTaskA",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskB",
+          "clrMethod": "ScheduleTaskB",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskC",
+          "clrMethod": "ScheduleTaskC",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskAtFixedRateA",
+          "clrMethod": "ScheduleTaskAtFixedRateA",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskAtFixedRateB",
+          "clrMethod": "ScheduleTaskAtFixedRateB",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleLaggyTaskAtFixedRateA",
+          "clrMethod": "ScheduleLaggyTaskAtFixedRateA",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleLaggyTaskAtFixedRateB",
+          "clrMethod": "ScheduleLaggyTaskAtFixedRateB",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskWithFixedDelayA",
+          "clrMethod": "ScheduleTaskWithFixedDelayA",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "scheduleTaskWithFixedDelayB",
+          "clrMethod": "ScheduleTaskWithFixedDelayB",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "shutdownWithPendingTasks",
+          "clrMethod": "ShutdownWithPendingTasks",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "testRegistrationAfterShutdown",
+          "clrMethod": "TestRegistrationAfterShutdown",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "testGracefulShutdownQuietPeriod",
+          "clrMethod": "TestGracefulShutdownQuietPeriod",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "testGracefulShutdownTimeout",
+          "clrMethod": "TestGracefulShutdownTimeout",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "testOnEventLoopIteration",
+          "clrMethod": "TestOnEventLoopIteration",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        },
+        {
+          "upstreamMethod": "testRemoveOnEventLoopIteration",
+          "clrMethod": "TestRemoveOnEventLoopIteration",
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 18,
+        "mappedCount": 17,
+        "reviewedCount": 18,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testRegistrationAfterShutdown2",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Register a caller-supplied channel-associated Java ChannelPromise after loop shutdown. Its monitor/future completes with RejectedExecutionException and its channel closes, but assertFalse(latch.await(1 second)) requires that the already-attached listener never runs because dispatch through the stopped channel executor is rejected. The source comment says notified while the assertion explicitly requires non-notification.",
+            "reason": "Native RegisterAsync returns a Task and has no mutable caller-supplied Java promise input. Task consumers can observe a fault through the CLR scheduler even after the event loop stops. Faking a promise/listener executor or silently changing the one-second non-notification assertion would change the source contract. Review the whole original method separately without a mapped count or xUnit skip; the positive native consumer/closure counterpart is supplementary. Java executes the unchanged original, including its one-second negative listener observation.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs",
+              "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs",
+              "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "All eighteen declarations reviewed: seventeen mapped executions plus one Java caller-producer/listener non-notification contract. Both native and Java tests preserve the strict original timing bounds; A/B/C helper implementations and cleanup remain present. Logging-provider mutation is replaced by Task failure observation. Native Task observer, parent-type pending count, tail drain/exception boundary tests are supplemental, not original coverage.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+          "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 18,
+        "preservedCount": 18,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at actual loop helpers, scheduling/shutdown scenarios and native completion counterpart; no detached comment archive."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/SingleThreadIoEventLoopTest.java",
@@ -6130,9 +6316,9 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 35,
-    "portedOriginalFixtures": 29,
-    "portedOriginalMethods": 313,
-    "supplementalClrCases": 133,
+    "portedOriginalFixtures": 31,
+    "portedOriginalMethods": 333,
+    "supplementalClrCases": 137,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
     "testsuiteSources": 16
@@ -6277,6 +6463,17 @@
         "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs"
       ]
+    },
+    {
+      "subject": "Event-loop native scheduling, registration result roles and polymorphic queue metrics",
+      "decision": "Java virtual instance dispatch must remain virtual in CLR: replace the hidden new PendingTasks member by a true override, with a source-shaped held-owner test proving ordinary plus tail counts through the parent type. Native Task/CTS retain scheduling deadlines, non-overlap and cancellation while avoiding Java scheduled futures/promises. DelayNanos expects the source absolute clock input, so native helper adds the ticker initial offset to elapsed nanoseconds before conversion. A caller-supplied channel promise that completes but cannot dispatch its listener through a stopped owner has no native producer-input equivalent; it stays explicitly CLR-inapplicable, while native Task consumer notification is separately verified. Four deregistration enum forms fold to the two native context/channel routes; owner dispatch is explicit before and after moving the real channel. Original comments/assertions/timing bounds, tail removal/drain and cleanup count remain intact.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+        "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs",
+        "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/AbstractEventLoopSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -6288,7 +6485,7 @@
     {
       "area": "Pipeline executor lifecycle",
       "state": "implementation-gap",
-      "detail": "The complete 72-method DefaultChannelPipeline fixture review and ten-method CombinedChannelDuplexHandler port are recorded individually. Native combined-context checks cover live neighbor routing, owned removal state/affinity and lifecycle failure. Remaining: executor rejection, queued inbound reference ownership on separate executor shutdown, SingleThreadEventLoop fixtures, and remaining implementation comments/contracts."
+      "detail": "The 72-method Pipeline and ten-method Combined fixtures remain recorded. SingleThreadEventLoopTest is fully reviewed (17 mappings, 1 explicit Java promise/listener exclusion); AbstractEventLoopTest is 3/3 with context/channel route folding. Source schedule timing, graceful deadlines, tail work and real TCP re-registration pass; parent-typed tail queue accounting is fixed. Remaining I/O-handler/group rejection, separate-executor shutdown ownership and broader runtime comment/contract review stay open."
     },
     {
       "area": "Outbound buffer",
@@ -6339,7 +6536,8 @@
     "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs",
     "test/Netty.NET.Transport.Tests/BootstrapConfigurationContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs",
+    "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -7484,15 +7682,99 @@
           "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
         ]
       }
+    },
+    {
+      "checkpoint": "210256c4b3a515bc42f10a8b14767e31d7f80f1d",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 335,
+        "javaOriginalInvocations": 337,
+        "transportJavaOriginalPassed": 300,
+        "testsuiteJavaJUnitInvocations": 37,
+        "datagramJavaJUnitInvocations": 23,
+        "datagramJavaAllocatorExecutions": 46,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 313,
+        "originalExecutedCases": 373,
+        "originalSkippedCases": 8,
+        "transportMappedOriginalExecutions": 291,
+        "testsuiteMappedOriginalExecutions": 82,
+        "datagramMappedOriginalExecutions": 46,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 10,
+        "supplementalExecutedCases": 133,
+        "debug": {
+          "total": 514,
+          "passed": 506,
+          "failed": 0,
+          "skipped": 8
+        },
+        "checkedRelease": {
+          "total": 514,
+          "passed": 506,
+          "failed": 0,
+          "skipped": 8
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 514,
+            "passed": 506,
+            "failed": 0,
+            "skipped": 8
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32804,
+        "solutionSkipped": 22,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 300 unchanged Transport bodies, 23 UDP wrappers with 46 allocator executions and 14 selected shutdown wrappers. The shutdown runner reports 12 passed bodies, one original NIO/OIO guard bypass (all configured backend groups were checked before invocation) and one original Windows-assumption abort. Never count those two gated wrappers as passed test bodies: 337 raw calls, 335 successful bodies/wrappers. Source and helper bytes remain pinned to 64cc10f38ea5f5bd7eae48507817c66680d0afdc. CLR counts separately retain 291 Transport + 46 UDP + 36 shutdown = 373 executed original cases; eight Unix-only CLR cases are skipped on Windows. Java original allocator/backend helper loops are unchanged.",
+        "note": "All 506 executed CLR Transport cases passed Debug, full-solution Release and checked Release after a full checked rebuild; eight conditional skips preserve the original Unix-only reset/read-order assumption. Full solution passed 32804 cases with 22 skips (14 existing Common plus eight original-condition Transport). This unit adds eight executed original variants and eleven supplementary native cases, plus eight compiled platform-conditional variants. All eight SocketHalfClosed declarations/comments are reviewed: seven mappings, including six methods executable on Windows and one Unix-only mapping, plus one explicit original backend-capability exclusion. Source 16KB/one-byte/two-read batching, total/empty completion bounds, both AutoRead inputs, SO_LINGER=1/16-byte FIN_WAIT2 reply, exact event counts and 100 ms delayed close remain intact. Original Context-to-DuplexChannel cast defect actually closes the peer via exceptionCaught; the source mapping preserves that observable close path while separate native tests perform a genuine half-close. The no-manual-read kernel-specific original is not mapped; its native one-byte/FIN counterpart preserves explicit CLR admission and original helper comments. Unix reset fixture retains all allocator/half-close/leader inputs, 100-byte payloads, owner-blocking latch, 200 ms delay, two completion signals and ownership; actual Unix execution remains unverified on this Windows host. Seven native error/reset cases initially failed, then passed after preserving the IO/AutoClose matrix, explicit CLR SocketException classification, output-only shutdown/cause chaining, flushed vs unflushed close failures, close-before-task-notification, reference release, reverse reads and abortive SO_LINGER=0 reset. Eleven new native cases are never counted as original executions. Broader socket, secondary shutdown-error topology and executor/group/runtime review remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=half-completion\" --results-directory artifacts/transport-core/half-completion-results",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete portable runtime/fixture gaps after the 72-method Pipeline review and complete ten-method CombinedChannelDuplexHandler fixture port. Remaining Pipeline implementation comments/contracts and SingleThreadEventLoop fixtures stay open.",
+    "Continue concrete portable runtime/fixture gaps after the 72-method Pipeline review and complete ten-method CombinedChannelDuplexHandler fixture port. Remaining Pipeline implementation comments/contracts and I/O-specific event-loop/group fixtures stay open.",
     "Review remaining LocalChannel runtime comments/contracts and auxiliary embedded fixtures; LocalChannelTest is now 32/32 with explicit CLR Task/exception/cleanup adaptations.",
     "Continue IPv6 source filtering, non-Windows/Linux source-filter ABI and ICMP platform fixtures; complete UDP read batching and remaining socket/half-close tests. IPv4 source membership/blocking, read-error continuation and independent resolver cancellation now have runtime coverage.",
     "Continue other unreviewed Transport inventory against concrete CLR consumers and original tests; do not mark the module complete from selected fixture counts.",
-    "BootstrapTest is fully reviewed (18 mappings plus 1 explicit JVM promise-representation decision); all three configuration views are ported. Continue remaining Bootstrap runtime comments/contracts and SingleThreadEventLoop and remaining socket originals against concrete missing behavior, not arbitrary CLR polishing.",
-    "SocketHalfClosed declarations/comments are fully reviewed with seven mappings, one original backend exclusion and eight Windows skips preserving the Unix-only assumption. Validate that original reset/read-order body on Unix; investigate the source-disabled self-shutdown writability fixture and then continue SingleThreadEventLoop/group/runtime contracts. Do not infer whole-Transport completion."
+    "BootstrapTest is fully reviewed (18 mappings plus 1 explicit JVM promise-representation decision); all three configuration views are ported. Continue remaining Bootstrap runtime comments/contracts and remaining I/O-event-loop/group and socket originals against concrete missing behavior, not arbitrary CLR polishing.",
+    "SocketHalfClosed declarations/comments are fully reviewed with seven mappings, one original backend exclusion and eight Windows skips preserving the Unix-only assumption. Validate that original reset/read-order body on Unix; investigate the source-disabled self-shutdown writability fixture and then continue I/O-specific event-loop/group/runtime contracts. Do not infer whole-Transport completion.",
+    "SingleThreadEventLoop and AbstractEventLoop fixture declarations/comments are fully reviewed with explicit CLR producer/route adaptations. Continue actual pending I/O-handler/group lifecycle and executor rejection/ownership fixtures; leave source-shaped timing assertions intact and do not polish already-passing native code without a source gap."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
