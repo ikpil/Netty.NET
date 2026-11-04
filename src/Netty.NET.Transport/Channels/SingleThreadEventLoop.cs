@@ -68,6 +68,7 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     protected override void AfterRunningAllTasks() => RunAllTasksFrom(_tailTasks);
     protected override bool HasTasks() => base.HasTasks() || _tailTasks.Count != 0;
     public override int PendingTasks() => base.PendingTasks() + _tailTasks.Count;
+    protected override int GetNumOfRegisteredChannels() => RegisteredChannels();
     /**
      * Returns the number of {@link Channel}s registered with this {@link EventLoop} or {@code -1}
      * if operation is not supported. The returned value is not guaranteed to be exact accurate and

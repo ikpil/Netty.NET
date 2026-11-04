@@ -41,6 +41,10 @@ public class TcpSocketChannel : AbstractChannel
     public TcpSocketChannel() : this(new Socket(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), null)
     { if (Socket.AddressFamily == AddressFamily.InterNetworkV6) Socket.DualMode = true; }
     public TcpSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp), null) { }
+    /**
+     * Create a new instance using the given {@link SocketChannel}.
+     */
+    public TcpSocketChannel(Socket socket) : this(socket, null) { }
     internal TcpSocketChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false, 16))
     {
         Socket = socket;

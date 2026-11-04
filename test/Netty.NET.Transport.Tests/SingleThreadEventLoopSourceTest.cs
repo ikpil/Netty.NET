@@ -262,20 +262,23 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     }
     internal class LoopB : SingleThreadEventLoop
     {
+        private readonly AutoResetEvent _wakeup = new(false);
         internal LoopB() : base(null, new DefaultThreadFactory(typeof(LoopB)), false) { }
         protected override void Run()
         {
             for (;;)
             {
                 // Source delayNanos consumes absolute System.nanoTime, while the native ticker reports elapsed time.
-                try { Thread.Sleep(TimeSpan.FromMilliseconds(DelayNanos(unchecked(GetCurrentTimeNanos() + Ticker().InitialNanoTime())) / 1000000)); }
-                catch (ThreadInterruptedException) { /* Waken up by interruptThread() */ }
+                // Waken up by interruptThread()
+                // Java interrupt only signals the source sleep here. A CLR signal avoids interrupting Monitor/Trace locks in callbacks.
+                _wakeup.WaitOne(TimeSpan.FromMilliseconds(DelayNanos(unchecked(GetCurrentTimeNanos() + Ticker().InitialNanoTime())) / 1000000));
                 RunTasks0();
                 if (ConfirmShutdown()) break;
             }
         }
         protected virtual void RunTasks0() => RunAllTasks();
-        public override void Wakeup(bool inEventLoop) => InterruptThread();
+        public override void Wakeup(bool inEventLoop) => _wakeup.Set();
+        protected override void Cleanup() => _wakeup.Dispose();
     }
     private sealed class LoopC : LoopB
     {

@@ -34,7 +34,8 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     /**
      * Creates a new instance.
      */
-    public DefaultSocketChannelConfig(IChannel channel, Socket socket) : base(channel)
+    public DefaultSocketChannelConfig(IChannel channel, Socket socket)
+        : base(channel, channel is IServerChannel ? new ServerChannelRecvByteBufAllocator() : new AdaptiveRecvByteBufAllocator())
     {
         Socket = socket ?? throw new ArgumentNullException(nameof(socket));
         if (socket.SocketType == SocketType.Stream && channel.Parent != null)

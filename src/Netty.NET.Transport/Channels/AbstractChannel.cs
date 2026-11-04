@@ -118,6 +118,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     bool firstRegistration = !_everRegistered;
                     _everRegistered = true;
                     _registered = true;
+                    if (eventLoop is DefaultEventLoop registry) registry.ChannelRegistered(this);
                     // Registration is committed before user lifecycle callbacks; those callbacks may
                     // deregister and register this channel again, as in AbstractChannel.register0.
                     lock (_registrationGate)
@@ -139,6 +140,8 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             catch
             {
                 // Registration rejection cannot rely on another task being admitted by the rejected executor.
+                if (eventLoop is DefaultEventLoop registry) registry.ChannelUnregistered(this);
+                _registered = false;
                 _open = _active = false;
                 ResumeRead();
                 try
@@ -340,6 +343,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         if (!_registered)
             return Task.CompletedTask;
         _registered = false;
+        if (EventLoop is DefaultEventLoop registry) registry.ChannelUnregistered(this);
         if (EventLoop is SingleThreadEventExecutor worker)
             worker.RemoveShutdownHook(OnLoopShutdown);
         DoDeregister();
@@ -392,6 +396,13 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 }
                 catch (Exception error)
                 {
+                    // The native operation has finished. Release its borrow before failing the queued Task,
+                    // just as ChannelOutboundBuffer releases the message before notifying its promise.
+                    if (borrowed)
+                    {
+                        ReferenceCountUtil.Release(message);
+                        borrowed = false;
+                    }
                     await OnLoopAsync(() => HandleWriteError(error)).ConfigureAwait(false);
                 }
                 finally { if (borrowed) ReferenceCountUtil.Release(message); }

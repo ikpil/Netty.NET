@@ -70,8 +70,8 @@ public class SocketHalfClosedContractTest
         var firstError = await Record.ExceptionAsync(() => first);
         var secondError = await Record.ExceptionAsync(() => second);
         var unflushedError = await Record.ExceptionAsync(() => unflushed);
-        await channel.EventLoop.SubmitAsync(() => { });
         foreach (var buffer in buffers) Assert.Equal(0, buffer.ReferenceCount);
+        await channel.EventLoop.SubmitAsync(() => { });
         bool close = autoClose && error is IOException or SocketException;
         if (close)
         {

@@ -15,10 +15,13 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
@@ -34,8 +37,15 @@ public class TcpServerSocketChannel : AbstractChannel, IServerChannel
     private bool _readRequested;
     public TcpServerSocketChannel() : this(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork)
     { if (_socket.AddressFamily == AddressFamily.InterNetworkV6) _socket.DualMode = true; }
-    public TcpServerSocketChannel(AddressFamily family) : base(null, new ChannelMetadata(false, 16))
-    { _socket = new Socket(family, SocketType.Stream, ProtocolType.Tcp); }
+    public TcpServerSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp)) { }
+    /**
+     * Create a new instance using the given {@link ServerSocketChannel}.
+     */
+    public TcpServerSocketChannel(Socket socket) : base(null, new ChannelMetadata(false, 16))
+    {
+        _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+        SetActive(socket.IsBound && (int)socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.AcceptConnection) != 0);
+    }
     public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(_socket.LocalEndPoint) : null;
     public override EndPoint RemoteAddress => null;
     protected override IChannelConfig NewConfig() => new DefaultSocketChannelConfig(this, _socket);
@@ -62,6 +72,15 @@ public class TcpServerSocketChannel : AbstractChannel, IServerChannel
         EventLoop.Execute(() => _ = AcceptLoopAsync());
     }
     protected override void DoClearReadPending() => _readRequested = false;
+    protected virtual Task<Socket> AcceptSocketAsync() => _socket.AcceptAsync();
+    protected virtual bool CloseOnReadError(Exception error)
+    {
+        // If the channel is not active anymore for whatever reason we should not try to continue reading.
+        if (!IsActive) return true;
+        // ServerChannel should not be closed even on IOException because it can often continue
+        // accepting incoming connections. (e.g. too many open files)
+        return error is not IOException and not SocketException;
+    }
     private async Task AcceptLoopAsync()
     {
         try
@@ -69,33 +88,83 @@ public class TcpServerSocketChannel : AbstractChannel, IServerChannel
             bool again = true;
             while (again && IsOpen)
             {
-                Socket accepted = await _socket.AcceptAsync().ConfigureAwait(false);
+                var batch = new List<Socket>();
+                Exception failure = null;
+                bool admitted = false;
                 try
                 {
+                    await OnLoopAsync(() =>
+                    {
+                        if (!IsOpen || !IsActive || !IsRegistered || (!Config.IsAutoRead() && !_readRequested)) return;
+                        ReceiveHandle.Reset(Config); admitted = true;
+                    }).ConfigureAwait(false);
+                    if (!admitted) break;
+                    bool more;
+                    do
+                    {
+                        try
+                        {
+                            Task<Socket> accepting = null;
+                            await OnLoopAsync(() => { if (IsOpen) accepting = AcceptSocketAsync(); }).ConfigureAwait(false);
+                            if (accepting == null) break;
+                            batch.Add(await accepting.ConfigureAwait(false));
+                        }
+                        catch (Exception error) { failure = error; break; }
+                        more = false;
+                        try
+                        {
+                            await OnLoopAsync(() =>
+                            {
+                                ReceiveHandle.IncMessagesRead(1);
+                                more = IsOpen && ReceiveHandle.ContinueReading() && _socket.Poll(0, SelectMode.SelectRead);
+                            }).ConfigureAwait(false);
+                        }
+                        catch (Exception error) { failure = error; break; }
+                    } while (more);
                     await DispatchReadAsync(() => _readRequested, () =>
                     {
-                        if (!IsOpen)
-                        { accepted.Dispose(); return; }
-                        _readRequested = false;
-                        Pipeline.FireChannelRead(new TcpSocketChannel(accepted, this));
-                        accepted = null;
+                        if (!IsOpen) return;
+                        for (int i = 0; i < batch.Count && IsOpen; i++)
+                        {
+                            _readRequested = false;
+                            var child = new TcpSocketChannel(batch[i], this);
+                            batch[i] = null;
+                            Pipeline.FireChannelRead(child);
+                        }
+                        ReceiveHandle.ReadComplete();
                         Pipeline.FireChannelReadComplete();
-                        again = IsOpen && (Config.IsAutoRead() || _readRequested);
+                        if (failure != null)
+                        {
+                            bool close = CloseOnReadError(failure);
+                            Pipeline.FireExceptionCaught(failure);
+                            if (close && IsOpen) _ = CloseTransportAsync();
+                        }
+                        again = IsOpen && IsActive && (Config.IsAutoRead() || _readRequested);
                     }).ConfigureAwait(false);
                 }
-                finally { accepted?.Dispose(); }
+                finally { foreach (var socket in batch) socket?.Dispose(); }
+                // Synchronously failing native accepts must yield instead of spinning on the owner.
+                if (again) await EventLoop.SubmitAsync(() => { }).ConfigureAwait(false);
             }
         }
         catch (Exception error)
         {
             try
-            { await OnLoopAsync(() => { if (IsOpen) Pipeline.FireExceptionCaught(error); }).ConfigureAwait(false); }
+            { await OnLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
             catch { }
         }
         finally
         {
             try
-            { await OnLoopAsync(() => { _accepting = false; if (IsOpen && _readRequested) DoBeginRead(); }).ConfigureAwait(false); }
+            {
+                // Check if there is a readPending which was not processed yet.
+                // This could be for two reasons:
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+                //
+                // See https://github.com/netty/netty/issues/2254
+                await OnLoopAsync(() => { _accepting = false; if (IsOpen && IsRegistered && _readRequested) DoBeginRead(); }).ConfigureAwait(false);
+            }
             catch { }
         }
     }

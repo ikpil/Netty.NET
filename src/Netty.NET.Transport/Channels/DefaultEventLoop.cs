@@ -15,6 +15,9 @@
  */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
@@ -22,8 +25,17 @@ namespace Netty.NET.Transport.Channels;
 
 public class DefaultEventLoop : SingleThreadEventLoop
 {
+    private readonly ConcurrentDictionary<IChannel, byte> _channels = new(ReferenceEqualityComparer.Instance);
     public DefaultEventLoop() : this(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventLoop))).Execute) { }
     public DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor) : base(parent, executor, true) { }
+    internal void ChannelRegistered(IChannel channel) => _channels.TryAdd(channel, 0);
+    internal void ChannelUnregistered(IChannel channel) => _channels.TryRemove(channel, out _);
+    public override int RegisteredChannels() => _channels.Count;
+    public override IEnumerable<IChannel> RegisteredChannelsIterator()
+    {
+        if (!InEventLoop()) throw new InvalidOperationException("Registered channels must be inspected on their event loop.");
+        return Array.AsReadOnly(_channels.Keys.ToArray());
+    }
     protected override void Run()
     {
         for (; ; )
