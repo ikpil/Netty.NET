@@ -323,6 +323,8 @@ public sealed class ChannelOutboundBuffer
         }
     }
     internal void Close(Exception cause)
+        => Close(cause, cause);
+    internal void Close(Exception flushedCause, Exception unflushedCause)
     {
         _closed = true;
         var entries = new List<Entry>(_entries);
@@ -341,7 +343,7 @@ public sealed class ChannelOutboundBuffer
             entry.Cancellation.Dispose();
             ReferenceCountUtil.SafeRelease(entry.Message);
             entry.Message = null;
-            entry.Completion.TrySetException(cause);
+            entry.Completion.TrySetException(entry.Flushed ? flushedCause : unflushedCause);
         }
     }
     private sealed class Entry(object message, long size, CancellationToken token)

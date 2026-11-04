@@ -73,7 +73,10 @@ public class TcpSocketChannel : AbstractChannel
         // Dispose aborts pending CLR socket operations. Shut down the TCP directions first so accepted
         // data and FIN retain the orderly close semantics of FileDescriptor-based Java socket close.
         try
-        { if (Socket.Connected) Socket.Shutdown(SocketShutdown.Both); }
+        {
+            // SO_LINGER=0 is an abortive close. Sending FIN first would change the peer's reset semantics.
+            if (Socket.Connected && Socket.LingerState is not { Enabled: true, LingerTime: 0 }) Socket.Shutdown(SocketShutdown.Both);
+        }
         catch (SocketException) { }
         catch (ObjectDisposedException) { }
         finally { Socket.Dispose(); }
@@ -230,7 +233,20 @@ public class TcpSocketChannel : AbstractChannel
     }
     public bool IsInputShutdown => _inputShutdown || !IsActive;
     public bool IsOutputShutdown => _outputShutdown || !IsActive;
-    public Task ShutdownOutputAsync() => OnLoopAsync(() =>
+    protected override void HandleWriteError(Exception error)
+    {
+        if (OutboundBuffer.IsClosed) return;
+        // Java SocketException is an IOException; the CLR SocketException hierarchy is different.
+        if (Config.IsAutoClose() && error is IOException or SocketException)
+        {
+            CloseOnWriteError(error);
+            return;
+        }
+        try { ShutdownOutput(error); }
+        catch (Exception shutdownFailure) { Pipeline.FireExceptionCaught(shutdownFailure); }
+    }
+    public Task ShutdownOutputAsync() => OnLoopAsync(() => ShutdownOutput(null));
+    private void ShutdownOutput(Exception cause)
     {
         EnsureOpen();
         if (_outputShutdown) throw new IOException("Socket output is shut down.");
@@ -248,10 +264,11 @@ public class TcpSocketChannel : AbstractChannel
         }
         finally
         {
-            OutboundBuffer.Close(new ChannelOutputShutdownException("Channel output shutdown"));
+            OutboundBuffer.Close(cause == null ? new ChannelOutputShutdownException("Channel output shutdown")
+                : new ChannelOutputShutdownException("Channel output shutdown", cause));
             Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
         }
-    });
+    }
     public Task ShutdownInputAsync() => OnLoopAsync(() =>
     {
         EnsureOpen();

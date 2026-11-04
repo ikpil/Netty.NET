@@ -24,7 +24,7 @@ using Netty.NET.Transport.Channels.Sockets;
 namespace Netty.NET.Transport.Tests;
 
 #pragma warning disable xUnit1051 // Preserve source operation ordering and independently owned cleanup.
-public class SocketHalfClosedSourceTest
+public partial class SocketHalfClosedSourceTest
 {
     [Theory]
     [InlineData(false, false)]

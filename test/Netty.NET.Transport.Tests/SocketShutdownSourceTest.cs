@@ -106,12 +106,14 @@ internal sealed class ShutdownTestHandler : SimpleChannelInboundHandler<ByteBuf>
     internal readonly TaskCompletionSource HalfClosure = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal readonly TaskCompletionSource Closure = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal int HalfClosureCount;
+    internal int OutputEvents;
     public override void ChannelActive(ChannelHandlerContext ctx) => Channel = (TcpSocketChannel)ctx.Channel;
     public override void ChannelInactive(ChannelHandlerContext ctx) => Closure.TrySetResult();
     protected override void ChannelRead0(ChannelHandlerContext ctx, ByteBuf msg) => Bytes.Writer.TryWrite((byte)msg.ReadByte());
     public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
     {
         if (evt is ChannelInputShutdownEvent) { Interlocked.Increment(ref HalfClosureCount); HalfClosure.TrySetResult(); }
+        else if (evt is ChannelOutputShutdownEvent) Interlocked.Increment(ref OutputEvents);
     }
 }
 

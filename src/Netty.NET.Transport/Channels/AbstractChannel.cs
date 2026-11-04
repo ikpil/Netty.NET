@@ -34,6 +34,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
 {
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(AbstractChannel));
     private readonly object _registrationGate = new();
+    private Exception _writeCloseCause;
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Lazy<IChannelConfig> _config;
     private volatile IEventLoop _eventLoop;
@@ -314,7 +315,8 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         try
         { DoClose(); }
         catch (Exception error) { failure = error; }
-        OutboundBuffer.Close(new IOException("Channel is closed."));
+        var closedCause = new IOException("Channel is closed.", _writeCloseCause);
+        OutboundBuffer.Close(_writeCloseCause ?? closedCause, closedCause);
         void CompleteClose()
         {
             try
@@ -390,12 +392,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 }
                 catch (Exception error)
                 {
-                    await OnLoopAsync(() =>
-                    {
-                        OutboundBuffer.Remove(error);
-                        if (Config.IsAutoClose() && !ContinueOnWriteError && !OutboundBuffer.IsClosed)
-                            _ = CloseTransportAsync();
-                    }).ConfigureAwait(false);
+                    await OnLoopAsync(() => HandleWriteError(error)).ConfigureAwait(false);
                 }
                 finally { if (borrowed) ReferenceCountUtil.Release(message); }
                 // The next iteration must inspect state on the event loop, including after an asynchronous write.
@@ -423,6 +420,24 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      */
     protected virtual object FilterOutboundMessage(object message) => message;
     protected virtual bool ContinueOnWriteError => false;
+    protected virtual void HandleWriteError(Exception error)
+    {
+        OutboundBuffer.Remove(error);
+        if (Config.IsAutoClose() && !ContinueOnWriteError && !OutboundBuffer.IsClosed) _ = CloseTransportAsync();
+    }
+    protected void CloseOnWriteError(Exception error)
+    {
+        /**
+         * Just call {@link #close(ChannelPromise, Throwable, boolean)} here which will take care of
+         * failing all flushed messages and also ensure the actual close of the underlying transport
+         * will happen before the promises are notified.
+         *
+         * This is needed as otherwise {@link #isActive()} , {@link #isOpen()} and {@link #isWritable()}
+         * may still return {@code true} even if the channel should be closed as result of the exception.
+         */
+        _writeCloseCause = error;
+        _ = CloseTransportAsync();
+    }
     /**
      * Is called after the {@link Channel} is registered with its {@link EventLoop} as part of the register process.
      * Subclasses may override this method
