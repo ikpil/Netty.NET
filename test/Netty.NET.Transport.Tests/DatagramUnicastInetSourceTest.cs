@@ -26,18 +26,21 @@ namespace Netty.NET.Transport.Tests;
 public class DatagramUnicastInetSourceTest
 {
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestBindWithPortOnly(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestBindWithPortOnly(bool ipv6, bool adaptive, bool mapped)
     {
+        if (ipv6 && !Socket.OSSupportsIPv6) Assert.Skip("IPv6 not supported");
         var group = new DefaultEventLoopGroup(1);
         IByteBufAllocator allocator = adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default;
         IChannel channel = null;
         try
         {
-            var cb = new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork))
+            var cb = new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork, mapped))
                 .Option(ChannelOption.ALLOCATOR, allocator).Handler(new ChannelInboundHandlerAdapter());
             channel = await cb.BindAsync(0);
         }

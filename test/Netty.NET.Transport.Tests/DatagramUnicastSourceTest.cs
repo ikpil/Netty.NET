@@ -29,7 +29,7 @@ using Netty.NET.Transport.Channels.Sockets;
 namespace Netty.NET.Transport.Tests;
 
 #pragma warning disable CS0612, CS0618, xUnit1051 // Original deprecated option and independently owned teardown.
-public class DatagramUnicastSourceTest
+public partial class DatagramUnicastSourceTest
 {
     private static readonly byte[] BadPrefix = Encoding.UTF8.GetBytes("BAD-PREFIX-");
     private static readonly byte[] Expected = Encoding.UTF8.GetBytes("EXPECTED-direct-reader-index");
@@ -38,13 +38,15 @@ public class DatagramUnicastSourceTest
     private const int SendAttempts = 3;
     private enum WrapType { None, Dup, Slice, ReadOnly }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendDirectByteBuf(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendDirectByteBuf(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = NewBuffer("direct");
@@ -60,13 +62,15 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendHeapByteBuf(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendHeapByteBuf(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = NewBuffer("heap");
@@ -82,13 +86,15 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendCompositeDirectByteBuf(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendCompositeDirectByteBuf(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = NewBuffer("composite-direct");
@@ -104,13 +110,15 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendCompositeHeapByteBuf(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendCompositeHeapByteBuf(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = NewBuffer("composite-heap");
@@ -126,13 +134,15 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendCompositeMixedByteBuf(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendCompositeMixedByteBuf(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = NewBuffer("composite-mixed");
@@ -148,13 +158,15 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendWithoutBind(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendWithoutBind(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = NewBuffer("direct");
@@ -170,13 +182,15 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSimpleSendWithConnect(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSimpleSendWithConnect(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = Unpooled.DirectBuffer().WriteBytes(Bytes);
@@ -192,42 +206,46 @@ public class DatagramUnicastSourceTest
         }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestReceiveEmptyDatagrams(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestReceiveEmptyDatagrams(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         using var semaphore = new SemaphoreSlim(0);
         var server = await fixture.Bootstrap(new PacketHandler((_, _) => semaphore.Release())).BindAsync(fixture.Address());
         try
         {
-            using var client = new Socket(fixture.Family, SocketType.Dgram, ProtocolType.Udp);
+            using var client = new Socket(mapped ? AddressFamily.InterNetwork : fixture.Family, SocketType.Dgram, ProtocolType.Udp);
             client.Bind(fixture.Address());
             for (int i = 0; i < 100; i++)
             {
-                await client.SendToAsync(ReadOnlyMemory<byte>.Empty, SocketFlags.None, server.LocalAddress, TestContext.Current.CancellationToken);
+                await client.SendToAsync(ReadOnlyMemory<byte>.Empty, SocketFlags.None, fixture.Target(server), TestContext.Current.CancellationToken);
                 await semaphore.WaitAsync(TestContext.Current.CancellationToken);
             }
         }
         finally { await server.CloseAsync(); }
     }
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestSendToUnresolvableAddress(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestSendToUnresolvableAddress(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         // Just drop
         var server = await fixture.Bootstrap(new PacketHandler((_, _) => { })).BindAsync(fixture.Address());
         var client = await fixture.Bootstrap(new ChannelInboundHandlerAdapter())
             .Option(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, true).RegisterAsync();
         try
         {
-            var goodHost = (IPEndPoint)server.LocalAddress;
+            var goodHost = fixture.Target(server);
             var unresolvedHost = new DnsEndPoint("NOT_A_REAL_ADDRESS", goodHost.Port);
             Assert.IsType<IPEndPoint>(goodHost);
             Assert.IsType<DnsEndPoint>(unresolvedHost);
@@ -245,13 +263,15 @@ public class DatagramUnicastSourceTest
         finally { await client.CloseAsync(); await server.CloseAsync(); }
     }
     [Theory(Timeout = 10000)]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestWriteOffsetBytebuf(bool ipv6, bool adaptive)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task TestWriteOffsetBytebuf(bool ipv6, bool adaptive, bool mapped)
     {
-        await using var fixture = new Fixture(ipv6, adaptive);
+        await using var fixture = new Fixture(ipv6, adaptive, mapped);
         var buffer = Unpooled.DirectBuffer(BadPrefix.Length + Expected.Length).WriteBytes(BadPrefix).WriteBytes(Expected);
         buffer.ReaderIndex = BadPrefix.Length;
         try
@@ -270,7 +290,7 @@ public class DatagramUnicastSourceTest
                         received.TrySetResult(bytes);
                     })).BindAsync(fixture.Address());
                     // Correctly ha
-                    var serverAddress = server.LocalAddress;
+                    var serverAddress = fixture.Target(server);
                     // no-op
                     client = await fixture.Bootstrap(new PacketHandler((_, _) => { })).ConnectAsync(serverAddress);
                     var written = client.WriteAsync(Wrap(buffer, wrap));
@@ -329,7 +349,7 @@ public class DatagramUnicastSourceTest
             {
                 var futures = new List<Task>();
                 for (int i = 0; i < count; i++)
-                    futures.Add(client.WriteAsync(new DatagramPacket(Wrap(buffer, wrap), (IPEndPoint)server.LocalAddress)));
+                    futures.Add(client.WriteAsync(new DatagramPacket(Wrap(buffer, wrap), fixture.Target(server))));
                 // release as we used buf.retain() before
                 client.Flush();
                 await Task.WhenAll(futures);
@@ -357,7 +377,7 @@ public class DatagramUnicastSourceTest
             var clientError = new ErrorHolder();
             client = await fixture.Bootstrap(Receiver(Bytes, null, clientLatch, clientError, false, true)).BindAsync(fixture.Address());
             server = await fixture.Bootstrap(Receiver(Bytes, client.LocalAddress, latch, error, true, false)).BindAsync(fixture.Address());
-            await client.ConnectAsync(server.LocalAddress);
+            await client.ConnectAsync(fixture.Target(server));
             bool received = false;
             for (int attempt = 1; attempt <= SendAttempts && !received; attempt++)
             {
@@ -386,7 +406,7 @@ public class DatagramUnicastSourceTest
             var disconnectedWrite = client.WriteAndFlushAsync(buffer.RetainedDuplicate());
             Assert.Equal(SocketError.NotConnected, (await Assert.ThrowsAsync<SocketException>(() => disconnectedWrite)).SocketErrorCode);
             // Connect again and try to write.
-            await client.ConnectAsync(server.LocalAddress);
+            await client.ConnectAsync(fixture.Target(server));
             var finalWrite = client.WriteAsync(Wrap(buffer, wrap));
             client.Flush();
             await finalWrite;
@@ -454,17 +474,5 @@ public class DatagramUnicastSourceTest
             try { await _done.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); return true; }
             catch (TimeoutException) { return false; }
         }
-    }
-    private sealed class Fixture : IAsyncDisposable
-    {
-        internal readonly DefaultEventLoopGroup Group = new(1);
-        internal readonly AddressFamily Family;
-        private readonly IByteBufAllocator _allocator;
-        internal Fixture(bool ipv6, bool adaptive)
-        { Family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork; _allocator = adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default; }
-        internal IPEndPoint Address() => new(Family == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, 0);
-        internal Bootstrap Bootstrap(IChannelHandler handler) => new Bootstrap().Group(Group).ChannelFactory(() => new DatagramChannel(Family)).Option(ChannelOption.ALLOCATOR, _allocator).Handler(handler);
-        public async ValueTask DisposeAsync()
-        { await Group.StopAsync(); if (_allocator is AdaptiveByteBufAllocator adaptive) adaptive.Dispose(); }
     }
 }

@@ -35,44 +35,44 @@
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries.",
-      "next": "IPv6 source filtering, other-platform native layouts, ICMP platform fixtures, complete read batching, remaining group/socket fixtures and implementation comments."
+      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries. Added native UDP receive batches and the complete IPv4-mapped unicast fixture with 22 original allocator cases.",
+      "next": "Review IPv6 source multicast filtering, native platform layouts and Unix ICMP read/write tests, plus remaining socket and handler contracts."
     }
   ],
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 424,
-    "javaOriginalInvocations": 426,
+    "javaOriginalPassed": 435,
+    "javaOriginalInvocations": 437,
     "transportJavaOriginalPassed": 370,
     "coreTransportJavaOriginalPassed": 300,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 56,
-    "datagramJavaJUnitInvocations": 23,
-    "datagramJavaAllocatorExecutions": 46,
+    "testsuiteJavaJUnitInvocations": 67,
+    "datagramJavaJUnitInvocations": 34,
+    "datagramJavaAllocatorExecutions": 68,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
     "mappedOriginalMethods": 379,
-    "originalExecutedCases": 461,
+    "originalExecutedCases": 483,
     "originalSkippedCases": 8,
     "transportMappedOriginalExecutions": 347,
-    "testsuiteMappedOriginalExecutions": 114,
-    "datagramMappedOriginalExecutions": 46,
+    "testsuiteMappedOriginalExecutions": 136,
+    "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 24,
-    "supplementalExecutedCases": 183,
+    "supplementalExecutedCases": 188,
     "debug": {
-      "total": 652,
-      "passed": 644,
+      "total": 679,
+      "passed": 671,
       "failed": 0,
       "skipped": 8
     },
     "checkedRelease": {
-      "total": 652,
-      "passed": 644,
+      "total": 679,
+      "passed": 671,
       "failed": 0,
       "skipped": 8
     },
@@ -84,8 +84,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 652,
-        "passed": 644,
+        "total": 679,
+        "passed": 671,
         "failed": 0,
         "skipped": 8
       },
@@ -102,19 +102,19 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32942,
+    "solutionPassed": 32969,
     "solutionSkipped": 22,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward 420 original calls and 418 passes. Executed all six unchanged SocketGatheringWriteTest wrappers against 64cc10f38ea5f5bd7eae48507817c66680d0afdc with both original allocator modes. All twelve allocator executions passed. Total 424 passes in 426 wrapper or direct invocations.",
-    "note": "Stream writes gather consecutive array-backed flushed buffers into a bounded native vector. The kernel count advances the queue, and native borrows are retained across owner shutdown until the socket operation ends. Re-arm the existing flush without advancing later writes. All six source declarations and their twelve allocator rows keep the original payload sizes, composite/manual-read modes and same-owner ordering. Five supplemental cases verify actual partial vectored sends, failure and shutdown borrows, and ordered direct-buffer/file-region fallback on TCP and AF_UNIX. Full solution Release passed 32942 with 22 skips. After using safe release for each native borrow, final Transport Debug, ordinary Release and checked Release each passed 644 cases with eight unchanged Unix-only skips. The other projects do not reference Transport. Raw I/O registration, threaded budgets and UDP batching remain open.",
+    "javaEvidence": "Carries forward 426 original calls and 424 passes. Executed all eleven unchanged inherited DatagramUnicastIPv6MappedTest wrappers against baseline 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Both original allocator modes passed for all methods. Total 435 passes in 437 wrapper or direct invocations.",
+    "note": "UDP honors the original receive allocator and available-data batching rules. A full or partial batch delivers messages, one read-complete, then an error if present. A deferred follow-up receive retains one buffer and obeys read admission. The dual-mode socket adds 22 original allocator cases from eleven inherited methods, without increasing the original declaration count. Five supplemental cases cover short and empty packets, automatic and manual reads, both failure classes and a deferred receive. Final Debug, solution Release and checked Release each passed 671 Transport cases with eight existing Unix-only skips. Full solution Release passed 32969 with 22 skips. Unix ICMP, IPv6 source multicast and low-level I/O contracts remain open.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/gather-results --logger \"trx;LogFilePrefix=gather\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/udp-batch-results --logger \"trx;LogFilePrefix=udp-batch\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -127,9 +127,8 @@
       "python artifacts/transport-core/run-manual-originals.py",
       "python artifacts/transport-core/run-io-phase-originals.py",
       "python artifacts/transport-core/run-outbound-originals.py",
-      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore",
       "python artifacts/transport-core/run-gather-originals.py",
+      "python artifacts/transport-core/run-udp-mapped-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -148,7 +147,10 @@
     "outboundMappedOriginalExecutions": 12,
     "gatheringJavaJUnitInvocations": 6,
     "gatheringJavaAllocatorExecutions": 12,
-    "gatheringMappedOriginalExecutions": 12
+    "gatheringMappedOriginalExecutions": 12,
+    "mappedUdpJavaJUnitInvocations": 11,
+    "mappedUdpJavaAllocatorExecutions": 22,
+    "mappedUdpOriginalExecutions": 22
   },
   "entries": [
     {
@@ -2205,10 +2207,11 @@
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
         "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "review": {
-        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler scheduling, batch budgets and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences.",
+        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler scheduling, batch budgets and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
@@ -2216,7 +2219,8 @@
           "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
           "test/Netty.NET.Transport.Tests/ChannelInitializerExtensionContractTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
-          "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs"
+          "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs"
         ]
       },
       "comments": {
@@ -2224,7 +2228,7 @@
         "uniqueCount": 17,
         "preservedCount": 10,
         "unreviewedCount": 7,
-        "scope": "Original comments remain at reviewed loop, socket, owner-batch and original/native test counterparts. Backend-specific context is labeled; no detached comment archive."
+        "scope": "Original comments remain at reviewed loop, socket, owner-batch and original/native test counterparts. Backend-specific context is labeled; no detached comment archive. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies."
       }
     },
     {
@@ -3149,19 +3153,21 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 20,
-        "preservedCount": 9,
-        "unreviewedCount": 11,
-        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
+        "preservedCount": 11,
+        "unreviewedCount": 9,
+        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs"
         ]
       }
     },
@@ -7120,10 +7126,10 @@
     "reviewedImplementationFiles": 37,
     "portedOriginalFixtures": 46,
     "portedOriginalMethods": 379,
-    "supplementalClrCases": 183,
+    "supplementalClrCases": 188,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
-    "testsuiteSources": 21
+    "testsuiteSources": 22
   },
   "clrDecisions": [
     {
@@ -7367,6 +7373,19 @@
         "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs"
       ]
+    },
+    {
+      "subject": "UDP receive batches and IPv4-mapped traffic",
+      "decision": "Use the original allocator continue-reading rule with a native readiness hint, including short UDP datagrams. Deliver each received message once, complete the batch once, then publish any error. Recoverable SocketException preserves an empty manual-read request. A not-yet-complete follow-up receive may be carried into the next batch with its buffer still borrowed. DualMode is explicit on IPv6 sockets; derived mapped fixtures use an IPv4 wildcard bind and IPv4 loopback destination. Keep all eleven inherited methods and both original allocators without counting inherited declarations twice.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/FixedRecvByteBufAllocator.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -7438,7 +7457,8 @@
     "test/Netty.NET.Transport.Tests/ManualIoEventLoopContractTest.cs",
     "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
     "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -9349,6 +9369,120 @@
         "outboundJavaAllocatorExecutions": 12,
         "outboundMappedOriginalExecutions": 12
       }
+    },
+    {
+      "checkpoint": "5c6a777a6158cda9d0781a9d28249963c6b742b6",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 424,
+        "javaOriginalInvocations": 426,
+        "transportJavaOriginalPassed": 370,
+        "coreTransportJavaOriginalPassed": 300,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 56,
+        "datagramJavaJUnitInvocations": 23,
+        "datagramJavaAllocatorExecutions": 46,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 379,
+        "originalExecutedCases": 461,
+        "originalSkippedCases": 8,
+        "transportMappedOriginalExecutions": 347,
+        "testsuiteMappedOriginalExecutions": 114,
+        "datagramMappedOriginalExecutions": 46,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 24,
+        "supplementalExecutedCases": 183,
+        "debug": {
+          "total": 652,
+          "passed": 644,
+          "failed": 0,
+          "skipped": 8
+        },
+        "checkedRelease": {
+          "total": 652,
+          "passed": 644,
+          "failed": 0,
+          "skipped": 8
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 652,
+            "passed": 644,
+            "failed": 0,
+            "skipped": 8
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32942,
+        "solutionSkipped": 22,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward 420 original calls and 418 passes. Executed all six unchanged SocketGatheringWriteTest wrappers against 64cc10f38ea5f5bd7eae48507817c66680d0afdc with both original allocator modes. All twelve allocator executions passed. Total 424 passes in 426 wrapper or direct invocations.",
+        "note": "Stream writes gather consecutive array-backed flushed buffers into a bounded native vector. The kernel count advances the queue, and native borrows are retained across owner shutdown until the socket operation ends. Re-arm the existing flush without advancing later writes. All six source declarations and their twelve allocator rows keep the original payload sizes, composite/manual-read modes and same-owner ordering. Five supplemental cases verify actual partial vectored sends, failure and shutdown borrows, and ordered direct-buffer/file-region fallback on TCP and AF_UNIX. Full solution Release passed 32942 with 22 skips. After using safe release for each native borrow, final Transport Debug, ordinary Release and checked Release each passed 644 cases with eight unchanged Unix-only skips. The other projects do not reference Transport. Raw I/O registration, threaded budgets and UDP batching remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/gather-results --logger \"trx;LogFilePrefix=gather\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "python artifacts/transport-core/run-scaling-originals.py",
+          "python artifacts/transport-core/run-manual-originals.py",
+          "python artifacts/transport-core/run-io-phase-originals.py",
+          "python artifacts/transport-core/run-outbound-originals.py",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore",
+          "python artifacts/transport-core/run-gather-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4,
+        "outboundJavaJUnitInvocations": 6,
+        "outboundJavaAllocatorExecutions": 12,
+        "outboundMappedOriginalExecutions": 12,
+        "gatheringJavaJUnitInvocations": 6,
+        "gatheringJavaAllocatorExecutions": 12,
+        "gatheringMappedOriginalExecutions": 12
+      }
     }
   ],
   "nextWork": [
@@ -9365,7 +9499,8 @@
     "The caller-owned ManualIoEventLoop is available to Bootstrap and ServerBootstrap. Raw I/O registration, backend compatibility queries and a separate readiness-only phase remain open.",
     "Manual inbound socket I/O dispatch is separated from ordinary work. Continue raw I/O handler registrations, backend queries, and send/connect and threaded-loop processing contracts.",
     "Manual socket connect and write completion dispatch is ported. Continue raw I/O registrations, threaded budgets and source gathering-write contracts.",
-    "The stream gathering-write path and its six original fixtures are mapped. Continue low-level I/O registration, threaded I/O budgets and the remaining UDP batching/backend contracts."
+    "The stream gathering-write path and its six original fixtures are mapped. Continue low-level I/O registration, threaded I/O budgets and the remaining UDP batching/backend contracts.",
+    "UDP batching and IPv4-mapped IPv6 unicast are implemented and validated. Unix ICMP and IPv6 source multicast remain open."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -9586,7 +9721,8 @@
       "kind": "test",
       "status": "verified",
       "implementation": [
-        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs"
       ],
       "caseMappings": [
         {
@@ -9595,17 +9731,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9618,17 +9768,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9641,17 +9805,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9664,17 +9842,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9687,17 +9879,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9710,17 +9916,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9733,17 +9953,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9756,17 +9990,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9779,17 +10027,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9802,17 +10064,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9827,7 +10103,7 @@
         "unreviewedMethods": []
       },
       "review": {
-        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped.",
+        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped. The two IPv4-mapped IPv6 rows come from the derived Java fixture; all assertions and both allocator modes execute in those rows.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
         ]
@@ -9848,7 +10124,8 @@
       "status": "verified",
       "implementation": [
         "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs"
       ],
       "caseMappings": [
         {
@@ -9857,17 +10134,31 @@
           "nativeCases": [
             [
               false,
+              false,
               false
             ],
             [
+              false,
+              true,
+              false
+            ],
+            [
+              true,
+              false,
+              false
+            ],
+            [
+              true,
+              true,
+              false
+            ],
+            [
+              true,
               false,
               true
             ],
             [
               true,
-              false
-            ],
-            [
               true,
               true
             ]
@@ -9882,7 +10173,7 @@
         "unreviewedMethods": []
       },
       "review": {
-        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped.",
+        "scope": "Pinned testsuite original, not an invented contract test. Native rows are listed explicitly and validated against InlineData. Original Java wrapper methods run unchanged with their original allocator loop; Java wrapper counts and allocator execution counts are reported separately. Cleanup owns CLR sockets/groups; no original assertion is dropped. The two IPv4-mapped IPv6 rows come from the derived Java fixture; all assertions and both allocator modes execute in those rows.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
@@ -9954,9 +10245,36 @@
       "sha256": "be23cc4ddcf8285ddc78fc4f72f9dd94ddcaef488af2314b7a08ef9ed417acda",
       "hashMode": "utf8-lf",
       "kind": "test-helper",
-      "status": "pending",
-      "implementation": [],
-      "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported."
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs"
+      ],
+      "reviewScope": "Reference for selected IP family/inherited fixture and pooled/adaptive permutation inputs. Hash verified; the entire reusable Java testsuite harness is not claimed ported.",
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "The source declares no own JUnit tests. The native IPv6 capability gate and two IPv6-only allocator rows remain mapped in the declaring base fixtures. The ignored Java IOException from its selector-provider probe is backend-specific.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs",
+          "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 2,
+        "preservedCount": 1,
+        "unreviewedCount": 1,
+        "scope": "The source declares no own JUnit tests. The native IPv6 capability gate and two IPv6-only allocator rows remain mapped in the declaring base fixtures. The ignored Java IOException from its selector-provider probe is backend-specific."
+      }
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractComboTestsuiteTest.java",
@@ -10834,6 +11152,41 @@
         "preservedCount": 3,
         "unreviewedCount": 1,
         "scope": "All six declarations run with both original allocators. The empty-buffer flush remains a completion barrier with the source 60 s limit and all write tasks are observed. The ordinary cases keep the original 120 s test limit and the same-owner case keeps 30 s. The JVM heap-dump failure helper and its temporary TODO have no runtime counterpart in this fixture."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/DatagramUnicastIPv6MappedTest.java",
+      "sha256": "0876d414b73397ffeb3224630e143b5ac6fa75f401dfbd5c9ea4eb0c08b0022e",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "The source declares no own JUnit tests. Execute all eleven inherited methods against the dual-mode IPv6 socket, using the original IPv4 wildcard bind and IPv4 loopback target, with both allocators. Mappings are recorded at the two declaring classes. The pre-Java 20 disconnect workaround has no CLR equivalent.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.Fixture.cs",
+          "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramUnicastInetSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 3,
+        "preservedCount": 2,
+        "unreviewedCount": 1,
+        "scope": "The source declares no own JUnit tests. Execute all eleven inherited methods against the dual-mode IPv6 socket, using the original IPv4 wildcard bind and IPv4 loopback target, with both allocators. Mappings are recorded at the two declaring classes. The pre-Java 20 disconnect workaround has no CLR equivalent."
       }
     }
   ]

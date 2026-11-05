@@ -52,8 +52,20 @@ public class DatagramChannel : AbstractChannel
     private bool _reading;
     private bool _readRequested;
     public DatagramChannel() : this(AddressFamily.InterNetwork) { }
-    public DatagramChannel(AddressFamily family) : base(null, new ChannelMetadata(true, 16))
-    { _socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp); }
+    public DatagramChannel(AddressFamily family) : this(family, false) { }
+
+    /// <summary>Creates a UDP channel with optional IPv4-mapped traffic on an IPv6 socket.</summary>
+    public DatagramChannel(AddressFamily family, bool dualMode) : base(null, new ChannelMetadata(true, 16))
+    {
+        if (dualMode && family != AddressFamily.InterNetworkV6)
+            throw new ArgumentException("Dual mode requires an IPv6 socket.", nameof(family));
+        _socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
+        if (dualMode)
+        {
+            try { _socket.DualMode = true; }
+            catch { _socket.Dispose(); throw; }
+        }
+    }
     public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(_socket.LocalEndPoint) : null;
     public override EndPoint RemoteAddress => IsOpen ? Volatile.Read(ref _connectedAddress) : null;
     protected override IChannelConfig NewConfig() => new DatagramConfig(this, _socket);
@@ -163,66 +175,96 @@ public class DatagramChannel : AbstractChannel
         StartSocketWork(() => _ = ReadLoopAsync());
     }
     protected override void DoClearReadPending() => _readRequested = false;
+    private readonly record struct PendingDatagram(ByteBuf Buffer, Task<SocketReceiveFromResult> Completion);
+
     private async Task ReadLoopAsync()
     {
+        EndPoint any = _socket.AddressFamily == AddressFamily.InterNetworkV6
+            ? new IPEndPoint(IPAddress.IPv6Any, 0) : new IPEndPoint(IPAddress.Any, 0);
+        var batch = new List<DatagramPacket>();
+        PendingDatagram? pending = null;
         try
         {
             bool again = true;
-            while (again && IsOpen)
+            while ((again || pending != null) && IsOpen)
             {
-                ByteBuf data = null;
+                Exception failure = null;
+                IRecvByteBufAllocator.IHandle handle = null;
                 try
                 {
                     await OnSocketLoopAsync(() =>
                     {
-                        if (!IsOpen)
+                        if (!IsOpen || (pending == null && (!IsRegistered || (!Config.IsAutoRead() && !_readRequested))))
                             return;
-                        ReceiveHandle.Reset(Config);
-                        data = ReceiveHandle.Allocate(Allocator);
-                        ReceiveHandle.AttemptedBytesRead(data.WritableBytes);
+
+                        handle = ReceiveHandle;
+                        handle.Reset(Config);
+                        pending ??= StartReceive(handle, any);
                     }).ConfigureAwait(false);
-                    if (data == null)
-                        return;
-                    EndPoint any = _socket.AddressFamily == AddressFamily.InterNetworkV6 ? new IPEndPoint(IPAddress.IPv6Any, 0) : new IPEndPoint(IPAddress.Any, 0);
-                    var result = await ReceiveDatagramAsync(data.AsMemory(data.WriterIndex, data.WritableBytes), any).ConfigureAwait(false);
-                    await DispatchReadAsync(() => _readRequested, () =>
+                    if (handle == null) break;
+
+                    do
                     {
-                        if (!IsOpen)
-                            return;
-                        _readRequested = false;
-                        ReceiveHandle.LastBytesRead(result.ReceivedBytes);
-                        ReceiveHandle.IncMessagesRead(1);
-                        data.WriterIndex += result.ReceivedBytes;
-                        var packet = new DatagramPacket(data, (IPEndPoint)LocalAddress, (IPEndPoint)TcpSocketChannel.Normalize(result.RemoteEndPoint));
-                        data = null;
-                        Pipeline.FireChannelRead(packet);
-                        ReceiveHandle.ReadComplete();
-                        Pipeline.FireChannelReadComplete();
-                        again = IsOpen && (Config.IsAutoRead() || _readRequested);
-                    }).ConfigureAwait(false);
+                        PendingDatagram receive = pending.Value;
+                        pending = null;
+                        ByteBuf data = receive.Buffer;
+                        try
+                        {
+                            var result = await receive.Completion.ConfigureAwait(false);
+                            await OnSocketLoopAsync(() =>
+                            {
+                                if (!IsOpen) return;
+                                handle.AttemptedBytesRead(data.WritableBytes);
+                                handle.LastBytesRead(result.ReceivedBytes);
+                                handle.IncMessagesRead(1);
+                                data.WriterIndex += result.ReceivedBytes;
+                                batch.Add(new DatagramPacket(data, (IPEndPoint)LocalAddress,
+                                    (IPEndPoint)TcpSocketChannel.Normalize(result.RemoteEndPoint)));
+                                data = null;
+
+                                if (IsRegistered && ContinueReading(handle) && _socket.Poll(0, SelectMode.SelectRead))
+                                    pending = StartReceive(handle, any);
+                            }).ConfigureAwait(false);
+                        }
+                        finally { data?.Release(); }
+                        // A readiness hint can race with a socket change. Deliver the current batch
+                        // before waiting for a receive that did not finish synchronously.
+                    } while (pending?.Completion.IsCompleted == true);
                 }
-                catch (SocketException error)
+                catch (Exception error) { failure = error; }
+
+                again = false;
+                if (batch.Count != 0)
+                    await DispatchReadAsync(() => _readRequested, CompleteBatch).ConfigureAwait(false);
+                else if (failure != null)
+                    await OnSocketLoopAsync(CompleteBatch).ConfigureAwait(false);
+
+                if (again || pending != null)
+                    await QueueSocketWorkAsync(() => { }).ConfigureAwait(false);
+
+                void CompleteBatch()
                 {
-                    await OnSocketLoopAsync(() =>
+                    if (!IsOpen) return;
+                    for (int i = 0; i < batch.Count && IsOpen; i++)
                     {
-                        if (!IsOpen) { again = false; return; }
-                        ReceiveHandle.ReadComplete();
-                        Pipeline.FireChannelReadComplete();
+                        _readRequested = false;
+                        var packet = batch[i];
+                        batch[i] = null;
+                        Pipeline.FireChannelRead(packet);
+                    }
+                    handle?.ReadComplete();
+                    Pipeline.FireChannelReadComplete();
+                    if (failure != null)
+                    {
                         // We do not want to close on SocketException when using DatagramChannel as we usually can continue receiving.
                         // See https://github.com/netty/netty/issues/5893
-                        Pipeline.FireExceptionCaught(error);
-                        again = IsOpen && (Config.IsAutoRead() || _readRequested);
-                    }).ConfigureAwait(false);
-                    // A synchronously failed CLR receive must return the owner to its task queue before retrying.
-                    if (again)
-                    {
-                        if (EventLoop is ManualIoEventLoop)
-                            await QueueSocketWorkAsync(() => { }).ConfigureAwait(false);
-                        else
-                            await Task.Yield();
+                        Pipeline.FireExceptionCaught(failure);
+                        if (failure is not SocketException && IsOpen) _ = CloseTransportAsync();
                     }
+                    again = IsOpen && (Config.IsAutoRead() || _readRequested);
                 }
-                finally { data?.Release(); }
+
+                ReleaseBatch();
             }
         }
         catch (Exception error)
@@ -232,21 +274,50 @@ public class DatagramChannel : AbstractChannel
                 await OnSocketLoopAsync(() =>
                 {
                     if (!IsOpen) return;
-                    ReceiveHandle.ReadComplete();
-                    Pipeline.FireChannelReadComplete();
                     Pipeline.FireExceptionCaught(error);
-                    _ = CloseAsync();
+                    _ = CloseTransportAsync();
                 }).ConfigureAwait(false);
             }
             catch { }
         }
         finally
         {
+            ReleaseBatch();
+            if (pending is { } receive)
+            {
+                try { await receive.Completion.ConfigureAwait(false); }
+                catch { }
+                finally { receive.Buffer.Release(); }
+            }
             try
-            { await OnSocketLoopAsync(() => { _reading = false; if (IsOpen && _readRequested) DoBeginRead(); }).ConfigureAwait(false); }
+            { await OnSocketLoopAsync(() => { _reading = false; if (IsOpen && IsRegistered && _readRequested) DoBeginRead(); }).ConfigureAwait(false); }
             catch { }
         }
+
+        void ReleaseBatch()
+        {
+            foreach (var packet in batch) packet?.Release();
+            batch.Clear();
+        }
     }
+
+    private PendingDatagram StartReceive(IRecvByteBufAllocator.IHandle handle, EndPoint any)
+    {
+        var data = handle.Allocate(Allocator);
+        try
+        {
+            handle.AttemptedBytesRead(data.WritableBytes);
+            return new PendingDatagram(data, ReceiveDatagramAsync(data.AsMemory(data.WriterIndex, data.WritableBytes), any));
+        }
+        catch { data.Release(); throw; }
+    }
+
+    private static bool ContinueReading(IRecvByteBufAllocator.IHandle handle) =>
+        // We use the TRUE_SUPPLIER as it is also ok to read less then what we did try to read (as long
+        // as we read anything).
+        handle is IRecvByteBufAllocator.IExtendedHandle extended
+            ? extended.ContinueReading(static () => true) : handle.ContinueReading();
+
     protected virtual async Task<SocketReceiveFromResult> ReceiveDatagramAsync(Memory<byte> memory, EndPoint remote)
     {
         // .NET's Windows failure path does not materialize the sender on WSAEMSGSIZE. Receive one
