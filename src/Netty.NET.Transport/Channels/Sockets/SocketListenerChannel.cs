@@ -68,7 +68,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
         if (_accepting)
             return;
         _accepting = true;
-        EventLoop.Execute(() => _ = AcceptLoopAsync());
+        StartSocketWork(() => _ = AcceptLoopAsync());
     }
     protected override void DoClearReadPending() => _readRequested = false;
     protected virtual Task<Socket> AcceptSocketAsync() => _socket.AcceptAsync();
@@ -92,7 +92,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
                 bool admitted = false;
                 try
                 {
-                    await OnLoopAsync(() =>
+                    await OnSocketLoopAsync(() =>
                     {
                         if (!IsOpen || !IsActive || !IsRegistered || (!Config.IsAutoRead() && !_readRequested)) return;
                         ReceiveHandle.Reset(Config); admitted = true;
@@ -104,7 +104,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
                         try
                         {
                             Task<Socket> accepting = null;
-                            await OnLoopAsync(() => { if (IsOpen) accepting = AcceptSocketAsync(); }).ConfigureAwait(false);
+                            await OnSocketLoopAsync(() => { if (IsOpen) accepting = AcceptSocketAsync(); }).ConfigureAwait(false);
                             if (accepting == null) break;
                             batch.Add(await accepting.ConfigureAwait(false));
                         }
@@ -112,7 +112,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
                         more = false;
                         try
                         {
-                            await OnLoopAsync(() =>
+                            await OnSocketLoopAsync(() =>
                             {
                                 ReceiveHandle.IncMessagesRead(1);
                                 more = IsOpen && ReceiveHandle.ContinueReading() && _socket.Poll(0, SelectMode.SelectRead);
@@ -143,13 +143,13 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
                 }
                 finally { foreach (var socket in batch) socket?.Dispose(); }
                 // Synchronously failing native accepts must yield instead of spinning on the owner.
-                if (again) await EventLoop.SubmitAsync(() => { }).ConfigureAwait(false);
+                if (again) await QueueSocketWorkAsync(() => { }).ConfigureAwait(false);
             }
         }
         catch (Exception error)
         {
             try
-            { await OnLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
+            { await OnSocketLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
             catch { }
         }
         finally
@@ -162,7 +162,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
                 // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
                 //
                 // See https://github.com/netty/netty/issues/2254
-                await OnLoopAsync(() => { _accepting = false; if (IsOpen && IsRegistered && _readRequested) DoBeginRead(); }).ConfigureAwait(false);
+                await OnSocketLoopAsync(() => { _accepting = false; if (IsOpen && IsRegistered && _readRequested) DoBeginRead(); }).ConfigureAwait(false);
             }
             catch { }
         }

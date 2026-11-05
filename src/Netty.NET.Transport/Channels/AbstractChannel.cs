@@ -178,6 +178,49 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return Task.CompletedTask;
         });
     }
+    protected Task OnSocketLoopAsync(Action action) =>
+        DispatchSocketAsync(() => { action(); return false; }, false);
+
+    protected void StartSocketWork(Action action)
+    {
+        if (EventLoop is ManualIoEventLoop)
+            _ = DispatchSocketAsync(() => { action(); return false; }, true, captureContext: false);
+        else EventLoop.Execute(action);
+    }
+
+    protected Task QueueSocketWorkAsync(Action action)
+    {
+        var loop = EventLoop;
+        if (loop is ManualIoEventLoop)
+            return DispatchSocketAsync(() => { action(); return false; }, true);
+        return loop.SubmitAsync(() =>
+        {
+            if (!ReferenceEquals(loop, _eventLoop))
+                return QueueSocketWorkAsync(action);
+            action();
+            return Task.CompletedTask;
+        });
+    }
+
+    private Task DispatchSocketAsync(Func<bool> action, bool queue, bool captureContext = true)
+    {
+        var loop = EventLoop;
+        if (loop is not ManualIoEventLoop manual || (!queue && loop.InEventLoop()))
+            return OnLoopAsync(() => action());
+
+        try
+        {
+            return manual.SubmitIoAsync(this, () =>
+                ReferenceEquals(loop, _eventLoop)
+                    ? (Task.CompletedTask, action())
+                    : (DispatchSocketAsync(action, queue, captureContext), false), captureContext);
+        }
+        catch (RejectedExecutionException) when (!ReferenceEquals(loop, _eventLoop))
+        {
+            return DispatchSocketAsync(action, queue, captureContext);
+        }
+    }
+
     protected void ResumeRead() => Interlocked.Exchange(ref _readResumed, null)?.TrySetResult();
     protected virtual void DoClearReadPending() { }
     /**
@@ -205,22 +248,25 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         {
             bool finished = false;
             Task resumed = null;
-            await OnLoopAsync(() =>
+            await DispatchSocketAsync(() =>
             {
                 if (!_open)
-                { finished = true; return; }
+                { finished = true; return false; }
                 if (_registered && (Config.IsAutoRead() || readPending()))
-                { read(); finished = true; }
-                else
                 {
-                    var waiter = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                    resumed = (Interlocked.CompareExchange(ref _readResumed, waiter, null) ?? waiter).Task;
-                    // A forced close may run outside the owner during registration rejection.
-                    // Recheck after publication so it cannot miss a newly installed waiter.
-                    if (!_open)
-                        ResumeRead();
+                    read();
+                    finished = true;
+                    return true;
                 }
-            }).ConfigureAwait(false);
+
+                var waiter = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                resumed = (Interlocked.CompareExchange(ref _readResumed, waiter, null) ?? waiter).Task;
+                // A forced close may run outside the owner during registration rejection.
+                // Recheck after publication so it cannot miss a newly installed waiter.
+                if (!_open)
+                    ResumeRead();
+                return false;
+            }, true).ConfigureAwait(false);
             if (finished)
                 return;
             await resumed.ConfigureAwait(false);

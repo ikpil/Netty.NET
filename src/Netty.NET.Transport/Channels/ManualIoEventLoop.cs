@@ -33,7 +33,7 @@ namespace Netty.NET.Transport.Channels;
  * {@link IoEventLoop} to also do other work. Care must be taken that the {@link #runNow() or
  * {@link #waitAndRun()}} methods are called in a timely fashion.
  */
-/// <summary>An event loop pumped by its owning thread. Socket completions use the same queue as submitted work.</summary>
+/// <summary>An event loop pumped by its owning thread.</summary>
 public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLoop, IEventLoopGroup
 {
     private const int Started = 0;
@@ -43,6 +43,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
 
     private readonly object _gate = new();
     private readonly LinkedBlockingQueue<Action> _tasks = new(int.MaxValue);
+    private readonly Queue<(AbstractChannel Channel, Func<bool> Dispatch)> _io = new();
     private readonly HashSet<AbstractChannel> _channels = new(ReferenceEqualityComparer.Instance);
     private readonly TaskCompletionSource _termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Ticker _ticker;
@@ -126,6 +127,45 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         }
     }
 
+    internal Task SubmitIoAsync(AbstractChannel channel, Func<(Task Completion, bool Handled)> dispatch,
+        bool captureContext = true)
+    {
+        var context = captureContext ? ExecutionContext.Capture() : null;
+        var completion = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (_gate)
+        {
+            if (IsShutdown())
+                throw new RejectedExecutionException("The event loop is shut down.");
+            _io.Enqueue((channel, Invoke));
+            Monitor.Pulse(_gate);
+        }
+        return completion.Task.Unwrap();
+
+        bool Invoke()
+        {
+            bool handled = false;
+            if (context == null)
+                Dispatch();
+            else
+                ExecutionContext.Run(context, _ => Dispatch(), null);
+            return handled;
+
+            void Dispatch()
+            {
+                try
+                {
+                    var result = dispatch();
+                    completion.SetResult(result.Completion);
+                    handled = result.Handled;
+                }
+                catch (Exception error)
+                {
+                    completion.SetException(error);
+                }
+            }
+        }
+    }
+
     /**
      * Force a wakeup and so the {@link #run(long)} method will unblock and return even if there was nothing to do.
      */
@@ -191,7 +231,10 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
      *                  if there is nothing to run (like {@link #runNow()}).
      * @return          the number of IO and tasks executed.
      */
-    /// <summary>A zero wait permits indefinite blocking. A negative wait pumps without blocking.</summary>
+    /// <summary>
+    /// A zero wait permits indefinite blocking. A negative wait pumps without blocking.
+    /// A negative task budget processes inbound socket I/O only.
+    /// </summary>
     public int Run(long waitNanos, long runAllTasksTimeoutNanos)
     {
         EnterRun();
@@ -207,10 +250,9 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
                 return RunShutdown();
             }
 
-            // Managed I/O completion callbacks share the ordinary dispatch queue.
-            // There is no separately polled readiness phase for a negative task budget.
+            int ioCount = RunIo();
             // Now run all tasks.
-            return runAllTasksTimeoutNanos < 0 ? 0 : RunTasks(runAllTasksTimeoutNanos);
+            return runAllTasksTimeoutNanos < 0 ? ioCount : ioCount + RunTasks(runAllTasksTimeoutNanos);
         }
         finally
         {
@@ -250,7 +292,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         long started = clock.NanoTime();
         lock (_gate)
         {
-            while (!IsShuttingDown() && !_wakeRequested && _tasks.IsEmpty())
+            while (!IsShuttingDown() && !_wakeRequested && _tasks.IsEmpty() && _io.Count == 0)
             {
                 // we cannot just check Math.min as nanoTime can be negative or wrap around!
                 // Compare the remaining durations after subtracting their respective clocks.
@@ -270,7 +312,8 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
     {
         lock (_gate)
         {
-            if (_state != ShuttingDown || _shutdownStarted is not long started || !_tasks.IsEmpty()) return;
+            if (_state != ShuttingDown || _shutdownStarted is not long started || !_tasks.IsEmpty() || _io.Count != 0)
+                return;
             long now = _ticker.NanoTime();
             long remaining = Math.Min(_shutdownTimeout - unchecked(now - started),
                 _quietPeriod - unchecked(now - _lastExecution));
@@ -301,6 +344,29 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
             if (timeoutNanos > 0 && unchecked(_lastExecution - started) >= timeoutNanos) break;
         }
         return count;
+    }
+
+    /**
+     * @return          the number of {@link IoHandle} for which I/O was handled.
+     *                  Internal events such as wakeups and timer expirations must not be included in this count.
+     */
+    private int RunIo()
+    {
+        int remaining;
+        lock (_gate) remaining = _io.Count;
+        if (remaining == 0) return 0;
+
+        // Only drain the current snapshot. Reads may re-arm or publish another
+        // completion, and ordinary tasks must still get their turn.
+        HashSet<AbstractChannel> handled = null;
+        while (remaining-- > 0)
+        {
+            (AbstractChannel Channel, Func<bool> Dispatch) entry;
+            lock (_gate) entry = _io.Dequeue();
+            if (entry.Dispatch())
+                (handled ??= new HashSet<AbstractChannel>(ReferenceEqualityComparer.Instance)).Add(entry.Channel);
+        }
+        return handled?.Count ?? 0;
     }
 
     public override Task Termination => _termination.Task;
@@ -352,6 +418,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         // Run all tasks before prepare to destroy.
         int count = RunTasks(0);
         CloseRegisteredChannels();
+        count += RunIo();
         CancelScheduledTasks();
 
         lock (_gate)
@@ -362,7 +429,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
             // See https://github.com/netty/netty/issues/4241
             if (_state == ShuttingDown && _quietPeriod > 0 &&
                 unchecked(now - started) < _shutdownTimeout &&
-                (!_tasks.IsEmpty() || unchecked(now - _lastExecution) <= _quietPeriod))
+                (!_tasks.IsEmpty() || _io.Count != 0 || unchecked(now - _lastExecution) <= _quietPeriod))
                 return count;
 
             // Executor shut down - no new tasks anymore.
@@ -372,6 +439,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         // Execute work accepted before shutdown admission closed.
         count += RunTasks(0);
         CloseRegisteredChannels();
+        count += RunIo();
         CancelScheduledTasks();
         Volatile.Write(ref _state, Terminated);
         _termination.SetResult();

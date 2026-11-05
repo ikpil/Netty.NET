@@ -159,7 +159,7 @@ public class DatagramChannel : AbstractChannel
         if (_reading)
             return;
         _reading = true;
-        EventLoop.Execute(() => _ = ReadLoopAsync());
+        StartSocketWork(() => _ = ReadLoopAsync());
     }
     protected override void DoClearReadPending() => _readRequested = false;
     private async Task ReadLoopAsync()
@@ -172,7 +172,7 @@ public class DatagramChannel : AbstractChannel
                 ByteBuf data = null;
                 try
                 {
-                    await OnLoopAsync(() =>
+                    await OnSocketLoopAsync(() =>
                     {
                         if (!IsOpen)
                             return;
@@ -202,7 +202,7 @@ public class DatagramChannel : AbstractChannel
                 }
                 catch (SocketException error)
                 {
-                    await OnLoopAsync(() =>
+                    await OnSocketLoopAsync(() =>
                     {
                         if (!IsOpen) { again = false; return; }
                         ReceiveHandle.ReadComplete();
@@ -213,7 +213,13 @@ public class DatagramChannel : AbstractChannel
                         again = IsOpen && (Config.IsAutoRead() || _readRequested);
                     }).ConfigureAwait(false);
                     // A synchronously failed CLR receive must return the owner to its task queue before retrying.
-                    if (again) await Task.Yield();
+                    if (again)
+                    {
+                        if (EventLoop is ManualIoEventLoop)
+                            await QueueSocketWorkAsync(() => { }).ConfigureAwait(false);
+                        else
+                            await Task.Yield();
+                    }
                 }
                 finally { data?.Release(); }
             }
@@ -222,7 +228,7 @@ public class DatagramChannel : AbstractChannel
         {
             try
             {
-                await OnLoopAsync(() =>
+                await OnSocketLoopAsync(() =>
                 {
                     if (!IsOpen) return;
                     ReceiveHandle.ReadComplete();
@@ -236,7 +242,7 @@ public class DatagramChannel : AbstractChannel
         finally
         {
             try
-            { await OnLoopAsync(() => { _reading = false; if (IsOpen && _readRequested) DoBeginRead(); }).ConfigureAwait(false); }
+            { await OnSocketLoopAsync(() => { _reading = false; if (IsOpen && _readRequested) DoBeginRead(); }).ConfigureAwait(false); }
             catch { }
         }
     }

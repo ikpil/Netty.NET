@@ -133,7 +133,7 @@ public abstract class SocketStreamChannel : AbstractChannel
             return;
         }
         _reading = true;
-        EventLoop.Execute(() => _ = ReadLoopAsync());
+        StartSocketWork(() => _ = ReadLoopAsync());
     }
     protected override void DoClearReadPending() => _readRequested = false;
     private async Task ReadLoopAsync()
@@ -147,7 +147,7 @@ public abstract class SocketStreamChannel : AbstractChannel
                 bool admitted = false, again = false, continuedBatch = false;
                 try
                 {
-                    await OnLoopAsync(() =>
+                    await OnSocketLoopAsync(() =>
                     {
                         if (!IsOpen || !IsRegistered || _inputShutdown || (!cycle && !Config.IsAutoRead() && !_readRequested))
                             return;
@@ -201,20 +201,20 @@ public abstract class SocketStreamChannel : AbstractChannel
                 // A synchronous CLR receive must yield after the configured read batch, just as
                 // returning from the NIO read-ready callback lets the event loop process other work.
                 if (!cycle)
-                    await EventLoop.SubmitAsync(() => { }).ConfigureAwait(false);
+                    await QueueSocketWorkAsync(() => { }).ConfigureAwait(false);
             }
         }
         catch (Exception error)
         {
             try
-            { await OnLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
+            { await OnSocketLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
             catch { }
         }
         finally
         {
             try
             {
-                await OnLoopAsync(() =>
+                await OnSocketLoopAsync(() =>
                 {
                     _reading = false;
                     if (IsOpen && (!_inputShutdown ? _readRequested : !_inputReadComplete && (Config.IsAutoRead() || _readRequested))) DoBeginRead();
