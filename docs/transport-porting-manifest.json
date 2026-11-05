@@ -29,8 +29,8 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed.",
-      "next": "Run the conditional reset/read-order fixture on Unix; review the source-disabled self-shutdown writability case, executor/group fixtures and broader socket/runtime contracts."
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests.",
+      "next": "Run the conditional reset/read-order fixture on Unix; review the source-disabled self-shutdown writability case, executor/group fixtures and broader socket/runtime contracts. Continue Unix-host execution and remaining domain runtime comment review."
     },
     {
       "name": "UDP and remaining portable transport contracts",
@@ -42,37 +42,37 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 374,
-    "javaOriginalInvocations": 376,
-    "transportJavaOriginalPassed": 339,
+    "javaOriginalPassed": 389,
+    "javaOriginalInvocations": 391,
+    "transportJavaOriginalPassed": 347,
     "coreTransportJavaOriginalPassed": 300,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 37,
+    "testsuiteJavaJUnitInvocations": 44,
     "datagramJavaJUnitInvocations": 23,
     "datagramJavaAllocatorExecutions": 46,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 340,
-    "originalExecutedCases": 403,
+    "mappedOriginalMethods": 350,
+    "originalExecutedCases": 418,
     "originalSkippedCases": 8,
-    "transportMappedOriginalExecutions": 321,
-    "testsuiteMappedOriginalExecutions": 82,
+    "transportMappedOriginalExecutions": 328,
+    "testsuiteMappedOriginalExecutions": 90,
     "datagramMappedOriginalExecutions": 46,
     "shutdownMappedOriginalExecutions": 36,
-    "javaOnlyReviewedCases": 16,
-    "supplementalExecutedCases": 151,
+    "javaOnlyReviewedCases": 20,
+    "supplementalExecutedCases": 156,
     "debug": {
-      "total": 562,
-      "passed": 554,
+      "total": 582,
+      "passed": 574,
       "failed": 0,
       "skipped": 8
     },
     "checkedRelease": {
-      "total": 562,
-      "passed": 554,
+      "total": 582,
+      "passed": 574,
       "failed": 0,
       "skipped": 8
     },
@@ -84,8 +84,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 562,
-        "passed": 554,
+        "total": 582,
+        "passed": 574,
         "failed": 0,
         "skipped": 8
       },
@@ -102,18 +102,18 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32852,
+    "solutionPassed": 32872,
     "solutionSkipped": 22,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Executed 300 prior Transport bodies, 24 unchanged event-loop cases, fifteen unchanged I/O lifecycle cases (all seven own NioEventLoop declarations, two own server declarations and all six stream/listener inherited option variants), 23 UDP wrappers with 46 allocator executions and fourteen shutdown wrappers. Shutdown retains twelve passed bodies, one original backend bypass and one original Windows-assumption abort. Totals: 376 raw Java calls, 374 successful bodies/wrappers. All new I/O source/helper bytes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Fifteen new Java executions map to nine CLR originals: four selector-specific methods and both concrete invocations of the invalid JDK-option-adapter method remain explicitly unmapped. No missing selector identity/interest-mask assertion is silently removed.",
-    "note": "All 554 executed Transport cases passed final Debug, final full-solution Release and checked Release after a full checked rebuild; eight unchanged original Unix-only variants remain skipped on Windows. Full solution: 32852 passed/22 skipped (14 existing Common plus eight original-platform Transport). New unit adds seven mapped methods/nine executions plus fourteen native cases, totaling 403 original executions + 151 supplemental. Native loop registration counts and owner-only read-only snapshots follow register, migration, deregister, close, forced failure and suspension admission. Source 250 shutdown/producer rejection iterations and one-second maximum-delay non-completion/cancellation are preserved. TCP listener owns raw BCL sockets, uses the existing source server allocator instead of stream adaptation, batches queued accepts by message budget and delivers partial batches before ReadComplete/error. Recoverable IOException/CLR SocketException retain empty-failure read permission; delivered messages consume it; fatal/inactive failures close. Live tests prove 2/1 batching, partial-error event sequence, reverse registration lifecycle and native raw connection/worker interruption roles. New constructor/policy comments are preserved; final inactive-listener policy refinement is additionally covered in final Debug and checked runs. First solution run exposed CLR Thread.Interrupt escaping callback Trace/Monitor lock acquisition in source B/C test helpers. AutoResetEvent now provides the source wakeup intent without interrupting arbitrary CLR callback locks; strict original timing/count assertions are unchanged, and final solution passes. A checked run also exposed an already-finished native write retaining its temporary borrow after publishing failure. Release that borrow before error-policy completion, guard successful-path releases against double release, and assert zero references immediately after failed Tasks before an owner barrier. All twelve declarations in the three new source fixtures are reviewed: seven mapped methods and five explicit selector/JDK-adapter decisions; no new xUnit skips or dummy selector/interest-key types were added. Broader IoHandler/group/runtime contracts, Unix validation and source-disabled writability remain open.",
+    "javaEvidence": "Carries forward 376 original calls and 374 passes from the recorded preceding checkpoint. New unchanged execution on Java 21 adds eight domain cases and seven TCP echo wrappers covering fourteen allocator runs. Source bytes match baseline 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Total 389 passes in 391 wrapper or direct invocations. One domain option-adapter method and three VoidPromise identity methods have separately recorded CLR decisions.",
+    "note": "Added Unix domain stream and server channels using the existing asynchronous TCP read, write and accept behavior. Native socket role, options, ownership, parent identity, real half-close and bound-path cleanup have direct coverage. Six domain source methods give seven CLR cases and four TCP echo source methods give eight CLR cases. The ordinary echo cases retain the source random 1 MiB payload, per-byte checks, two allocators, read modes and executor ownership. Five supplemental cases cover real AF_UNIX half-close, bind failure ownership, option filtering and two echo read modes. The first solution run found a disposal race in an existing test-only event-loop wakeup. Serialize signaling with disposal and preserve the original assertions. Final Debug, checked Release and solution Release passed 574 executed Transport cases on Windows with eight existing Unix-only skips. Full solution passed 32872 with 22 skips. Domain runtime comment review and Unix-host execution remain open.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
-      "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=io-lifecycle-borrow-final\" --results-directory artifacts/transport-core/io-lifecycle-borrow-final-results",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/domain-verified-results --logger \"trx;LogFilePrefix=domain-verified\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -121,8 +121,14 @@
       "python artifacts/transport-core/run-io-lifecycle-originals.py",
       "python artifacts/transport-core/run-datagram-originals.py",
       "python artifacts/transport-core/run-shutdown-originals.py",
+      "python artifacts/transport-core/run-domain-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
-    ]
+    ],
+    "domainJavaOriginalExecutions": 8,
+    "echoJavaJUnitInvocations": 7,
+    "echoJavaAllocatorExecutions": 14,
+    "domainMappedOriginalExecutions": 7,
+    "echoMappedOriginalExecutions": 8
   },
   "entries": [
     {
@@ -367,7 +373,8 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
       ],
       "comments": {
         "status": "partial",
@@ -2043,7 +2050,8 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
       ],
       "comments": {
         "status": "partial",
@@ -2072,7 +2080,9 @@
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
         "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
         "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
       ],
       "review": {
         "scope": "Only clearReadPending, read/registration admission and native callback ownership are mapped here. Selector/IoRegistration/interest-op implementation is not mechanically reproduced; the rest of this original class remains under review.",
@@ -2106,7 +2116,8 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
       ],
       "review": {
         "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler scheduling, batch budgets and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences.",
@@ -3053,24 +3064,81 @@
       "sha256": "46a567d9c06e35d790200cf175beda32bb23dd690965701c6a0420380874b3fa",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+      ],
+      "review": {
+        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 23,
+        "preservedCount": 5,
+        "unreviewedCount": 18,
+        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioDomainSocketUtil.java",
       "sha256": "d66032783392b01ceef400e27eb2c4638e12043b6c0ddfa40be7851b5873ec83",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DomainServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
+      ],
+      "review": {
+        "scope": "CLR uses UnixDomainSocketEndPoint and the BCL Socket bind and disposal path directly. The Java reflection helper is accounted for by native Unix address, socket creation and close behavior.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DomainServerSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "CLR uses UnixDomainSocketEndPoint and the BCL Socket bind and disposal path directly. The Java reflection helper is accounted for by native Unix address, socket creation and close behavior."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioServerDomainSocketChannel.java",
       "sha256": "bf301331d506abbcefbb2210641b136c31605a819a1fccc36dbb57f58651994c",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/DomainServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+      ],
+      "review": {
+        "scope": "Portable AF_UNIX bind, listen, accept, close, existing-socket ownership and receive options run through the CLR socket backend. BCL Bind and Dispose own the bound path lifecycle. Remaining Java provider, reflection and option-adapter comments and contracts await review.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/DomainServerSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 15,
+        "preservedCount": 7,
+        "unreviewedCount": 8,
+        "scope": "Portable AF_UNIX bind, listen, accept, close, existing-socket ownership and receive options run through the CLR socket backend. BCL Bind and Dispose own the bound path lifecycle. Remaining Java provider, reflection and option-adapter comments and contracts await review."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioServerSocketChannel.java",
@@ -3079,7 +3147,8 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
       ],
       "comments": {
         "status": "partial",
@@ -3104,7 +3173,8 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
       ],
       "comments": {
         "status": "partial",
@@ -3233,7 +3303,8 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
       ],
       "comments": {
         "status": "partial",
@@ -3264,7 +3335,8 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
       ],
       "comments": {
         "status": "partial",
@@ -6336,8 +6408,54 @@
       "sha256": "667f5e4219efe9584676cbb6c6f8472cbf4a70892e1746bddc06a2c604bcba1b",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketOptionSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testNioChannelOption",
+          "clrMethod": "TestNioChannelOption",
+          "adaptation": "Read the actual receive buffer on the socket and through the config, then set the original value plus one and compare the updated values."
+        },
+        {
+          "upstreamMethod": "testGetOptions",
+          "clrMethod": "TestGetOptions",
+          "adaptation": "Enumerate actual native option values to exercise the source no-throw path."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 2,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testInvalidNioChannelOption",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The Java adapter accepts a null value for an unsupported JDK IP_MULTICAST_IF option and reports false and null for set and get.",
+            "reason": "The typed CLR config enforces its null contract and exposes only AF_UNIX options. An adapter that accepts null just for this test would alter native config validation.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+              "test/Netty.NET.Transport.Tests/DomainSocketContractTest.cs",
+              "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "Both portable declarations are mapped on the domain listener. The JDK option adapter case is reviewed separately.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketOptionSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments are retained at the CLR fixture and helper sites."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/socket/nio/NioDatagramChannelTest.java",
@@ -6380,16 +6498,90 @@
       "sha256": "76f7e28ae4e915574ab377cd0dc5822a7eac8fc13283dda21f350d314cb554e5",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "accessParent",
+          "clrMethod": "AccessParent",
+          "adaptation": "Preserve the real wrapped stream socket and listener parent identity. The BCL socket capability gates the test and the event-loop group is disposed after channel cleanup."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "The own declaration is mapped. Inherited option tests are accounted for under AbstractNioDomainChannelTest.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments are retained at the CLR fixture and helper sites."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/socket/nio/NioServerDomainSocketChannelTest.java",
       "sha256": "29796cca6fa1ae4a34f4467db8d65bccdbd8e9529e0a8b43e89f16b789375134",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCloseOnError",
+          "clrMethod": "TestCloseOnError",
+          "adaptation": "Keep the recoverable IOException assertion on a registered and bound AF_UNIX listener. A test subclass exposes the protected callback."
+        },
+        {
+          "upstreamMethod": "testIsActiveFalseAfterClose",
+          "clrMethod": "TestIsActiveFalseAfterClose",
+          "adaptation": "Retain open and active assertions before and after closing the bound listener."
+        },
+        {
+          "upstreamMethod": "testCreateChannelFromJdkChannel",
+          "clrMethod": "TestCreateChannelFromJdkChannel",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Wrap a real BCL socket before binding and after Bind plus Listen. Preserve both boolean inputs, initial state, and ownership after channel close."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "All three own declarations are mapped, with four executions across the original inputs.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments are retained at the CLR fixture and helper sites."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/socket/nio/NioServerSocketChannelTest.java",
@@ -6517,13 +6709,13 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 36,
-    "portedOriginalFixtures": 34,
-    "portedOriginalMethods": 340,
-    "supplementalClrCases": 151,
+    "reviewedImplementationFiles": 37,
+    "portedOriginalFixtures": 38,
+    "portedOriginalMethods": 350,
+    "supplementalClrCases": 156,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
-    "testsuiteSources": 16
+    "testsuiteSources": 17
   },
   "clrDecisions": [
     {
@@ -6689,6 +6881,21 @@
         "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
         "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs"
       ]
+    },
+    {
+      "subject": "Unix domain stream and listener channels",
+      "decision": "Share native asynchronous read, write, connect and accept behavior with TCP. Use BCL AF_UNIX endpoints and sockets, preserve role-specific receive/send/backlog/half-close options and let BCL socket disposal clean up paths it bound. Capability checks replace the JDK version gate. The JDK unsupported-option and three VoidPromise identity fixtures are reviewed as complete methods. A test-only wakeup signal is serialized with disposal to keep the original event-loop assertions runnable.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DomainServerSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "test/Netty.NET.Transport.Tests/DomainSocketSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DomainSocketContractTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -6753,7 +6960,9 @@
     "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs",
     "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs",
-    "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs"
+    "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DomainSocketContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs"
   ],
   "validationHistory": [
     {
@@ -8067,6 +8276,94 @@
           "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
         ]
       }
+    },
+    {
+      "checkpoint": "167fa3effc2c6523a4260b221f20e8d3a1634d5d",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 374,
+        "javaOriginalInvocations": 376,
+        "transportJavaOriginalPassed": 339,
+        "coreTransportJavaOriginalPassed": 300,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 37,
+        "datagramJavaJUnitInvocations": 23,
+        "datagramJavaAllocatorExecutions": 46,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 340,
+        "originalExecutedCases": 403,
+        "originalSkippedCases": 8,
+        "transportMappedOriginalExecutions": 321,
+        "testsuiteMappedOriginalExecutions": 82,
+        "datagramMappedOriginalExecutions": 46,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 16,
+        "supplementalExecutedCases": 151,
+        "debug": {
+          "total": 562,
+          "passed": 554,
+          "failed": 0,
+          "skipped": 8
+        },
+        "checkedRelease": {
+          "total": 562,
+          "passed": 554,
+          "failed": 0,
+          "skipped": 8
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 562,
+            "passed": 554,
+            "failed": 0,
+            "skipped": 8
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32852,
+        "solutionSkipped": 22,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Executed 300 prior Transport bodies, 24 unchanged event-loop cases, fifteen unchanged I/O lifecycle cases (all seven own NioEventLoop declarations, two own server declarations and all six stream/listener inherited option variants), 23 UDP wrappers with 46 allocator executions and fourteen shutdown wrappers. Shutdown retains twelve passed bodies, one original backend bypass and one original Windows-assumption abort. Totals: 376 raw Java calls, 374 successful bodies/wrappers. All new I/O source/helper bytes match pinned revision 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Fifteen new Java executions map to nine CLR originals: four selector-specific methods and both concrete invocations of the invalid JDK-option-adapter method remain explicitly unmapped. No missing selector identity/interest-mask assertion is silently removed.",
+        "note": "All 554 executed Transport cases passed final Debug, final full-solution Release and checked Release after a full checked rebuild; eight unchanged original Unix-only variants remain skipped on Windows. Full solution: 32852 passed/22 skipped (14 existing Common plus eight original-platform Transport). New unit adds seven mapped methods/nine executions plus fourteen native cases, totaling 403 original executions + 151 supplemental. Native loop registration counts and owner-only read-only snapshots follow register, migration, deregister, close, forced failure and suspension admission. Source 250 shutdown/producer rejection iterations and one-second maximum-delay non-completion/cancellation are preserved. TCP listener owns raw BCL sockets, uses the existing source server allocator instead of stream adaptation, batches queued accepts by message budget and delivers partial batches before ReadComplete/error. Recoverable IOException/CLR SocketException retain empty-failure read permission; delivered messages consume it; fatal/inactive failures close. Live tests prove 2/1 batching, partial-error event sequence, reverse registration lifecycle and native raw connection/worker interruption roles. New constructor/policy comments are preserved; final inactive-listener policy refinement is additionally covered in final Debug and checked runs. First solution run exposed CLR Thread.Interrupt escaping callback Trace/Monitor lock acquisition in source B/C test helpers. AutoResetEvent now provides the source wakeup intent without interrupting arbitrary CLR callback locks; strict original timing/count assertions are unchanged, and final solution passes. A checked run also exposed an already-finished native write retaining its temporary borrow after publishing failure. Release that borrow before error-policy completion, guard successful-path releases against double release, and assert zero references immediately after failed Tasks before an owner barrier. All twelve declarations in the three new source fixtures are reviewed: seven mapped methods and five explicit selector/JDK-adapter decisions; no new xUnit skips or dummy selector/interest-key types were added. Broader IoHandler/group/runtime contracts, Unix validation and source-disabled writability remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test Netty.NET.sln -c Release --no-restore --logger \"trx;LogFilePrefix=io-lifecycle-borrow-final\" --results-directory artifacts/transport-core/io-lifecycle-borrow-final-results",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ]
+      }
     }
   ],
   "nextWork": [
@@ -8077,7 +8374,8 @@
     "BootstrapTest is fully reviewed (18 mappings plus 1 explicit JVM promise-representation decision); all three configuration views are ported. Continue remaining Bootstrap runtime comments/contracts and remaining I/O-event-loop/group and socket originals against concrete missing behavior, not arbitrary CLR polishing.",
     "SocketHalfClosed declarations/comments are fully reviewed with seven mappings, one original backend exclusion and eight Windows skips preserving the Unix-only assumption. Validate that original reset/read-order body on Unix; investigate the source-disabled self-shutdown writability fixture and then continue I/O-specific event-loop/group/runtime contracts. Do not infer whole-Transport completion.",
     "SingleThreadEventLoop and AbstractEventLoop fixture declarations/comments are fully reviewed with explicit CLR producer/route adaptations. Continue actual pending I/O-handler/group lifecycle and executor rejection/ownership fixtures; leave source-shaped timing assertions intact and do not polish already-passing native code without a source gap.",
-    "NioEventLoop own, NioServerSocketChannel own and inherited AbstractNioChannel option declarations are reviewed with explicit selector/JDK-adapter exclusions. Continue unreviewed native socket/IoHandler/group behavior and comment contracts against actual CLR consumers; retain Unix-only validation and source-disabled writability work. Native backend choices are not whole-Transport completion."
+    "NioEventLoop own, NioServerSocketChannel own and inherited AbstractNioChannel option declarations are reviewed with explicit selector/JDK-adapter exclusions. Continue unreviewed native socket/IoHandler/group behavior and comment contracts against actual CLR consumers; retain Unix-only validation and source-disabled writability work. Native backend choices are not whole-Transport completion.",
+    "Unix domain stream/listener, portable domain source fixtures and four ordinary TCP echo methods are ported. Continue Unix-host execution and remaining I/O handler/group runtime and original fixture gaps."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -9140,6 +9438,121 @@
       "status": "pending",
       "implementation": [],
       "reviewScope": "Selected shutdown fixtures execute their unchanged original harness in Java. Native fixture explicitly selects loopback TCP and both original allocators; this does not claim a port of the whole Java backend/testsuite permutation framework."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketEchoTest.java",
+      "sha256": "e774122024d147742ab14a6d7341995f29c825445f9c4dab2572f15cd68939b6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSimpleEcho",
+          "clrMethod": "TestSimpleEcho",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the source 1 MiB random payload, randomized chunk bounds and buffer forms, per-byte checks, the selected read and executor modes, and both allocator rows. Observe write completion using returned Tasks. A 30-second harness bounds source waits."
+        },
+        {
+          "upstreamMethod": "testSimpleEchoNotAutoRead",
+          "clrMethod": "TestSimpleEchoNotAutoRead",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the source 1 MiB random payload, randomized chunk bounds and buffer forms, per-byte checks, the selected read and executor modes, and both allocator rows. Observe write completion using returned Tasks. A 30-second harness bounds source waits."
+        },
+        {
+          "upstreamMethod": "testSimpleEchoWithAdditionalExecutor",
+          "clrMethod": "TestSimpleEchoWithAdditionalExecutor",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the source 1 MiB random payload, randomized chunk bounds and buffer forms, per-byte checks, the selected read and executor modes, and both allocator rows. Observe write completion using returned Tasks. A 30-second harness bounds source waits."
+        },
+        {
+          "upstreamMethod": "testSimpleEchoWithAdditionalExecutorNotAutoRead",
+          "clrMethod": "TestSimpleEchoWithAdditionalExecutorNotAutoRead",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the source 1 MiB random payload, randomized chunk bounds and buffer forms, per-byte checks, the selected read and executor modes, and both allocator rows. Observe write completion using returned Tasks. A 30-second harness bounds source waits."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 7,
+        "mappedCount": 4,
+        "reviewedCount": 7,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testSimpleEchoWithVoidPromise",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Select the channel VoidPromise for writes and assert the returned future has that same identity while the data still echoes.",
+            "reason": "CLR writes return Task without a caller-supplied completion object or a per-channel VoidPromise identity. Dropping the identity assertion would change the test.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSimpleEchoWithVoidPromiseNotAutoRead",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Select the channel VoidPromise for writes and assert the returned future has that same identity while the data still echoes.",
+            "reason": "CLR writes return Task without a caller-supplied completion object or a per-channel VoidPromise identity. Dropping the identity assertion would change the test.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSimpleEchoWithAdditionalExecutorAndVoidPromise",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Select the channel VoidPromise for writes and assert the returned future has that same identity while the data still echoes.",
+            "reason": "CLR writes return Task without a caller-supplied completion object or a per-channel VoidPromise identity. Dropping the identity assertion would change the test.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "Four source methods run on real TCP with both allocator modes. Three VoidPromise-specific methods are reviewed separately. The two AF_UNIX echo rows are supplemental.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comments are retained at the CLR fixture and helper sites."
+      }
     }
   ]
 }

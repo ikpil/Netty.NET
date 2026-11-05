@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Netty.NET.Common;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
@@ -38,7 +39,9 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         : base(channel, channel is IServerChannel ? new ServerChannelRecvByteBufAllocator() : new AdaptiveRecvByteBufAllocator())
     {
         Socket = socket ?? throw new ArgumentNullException(nameof(socket));
-        if (socket.SocketType == SocketType.Stream && channel.Parent != null)
+        if (socket.AddressFamily == AddressFamily.Unix && channel is IServerChannel)
+            _backlog = NetUtil.DefaultListenBacklog;
+        if (socket.AddressFamily != AddressFamily.Unix && socket.SocketType == SocketType.Stream && channel.Parent != null)
             socket.NoDelay = true;
     }
     private static readonly ChannelOption[] Options = {
@@ -46,16 +49,24 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         ChannelOption.SO_KEEPALIVE, ChannelOption.SO_REUSEADDR, ChannelOption.SO_LINGER,
         ChannelOption.IP_TOS, ChannelOption.ALLOW_HALF_CLOSURE, ChannelOption.SO_BACKLOG
     };
+    private static readonly ChannelOption[] DomainStreamOptions = {
+        ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.ALLOW_HALF_CLOSURE
+    };
+    private static readonly ChannelOption[] DomainListenerOptions = { ChannelOption.SO_RCVBUF, ChannelOption.SO_BACKLOG };
+    private ChannelOption[] SupportedSocketOptions => Socket.AddressFamily != AddressFamily.Unix
+        ? Options : Channel is IServerChannel ? DomainListenerOptions : DomainStreamOptions;
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         var values = new Dictionary<ChannelOption, object>(base.GetOptions());
-        foreach (var option in Options)
+        foreach (var option in SupportedSocketOptions)
             if (TryGetValue(option, out var value))
                 values[option] = value;
         return values;
     }
     protected override bool TryGetValue(ChannelOption option, out object value)
     {
+        if (Socket.AddressFamily == AddressFamily.Unix && Array.IndexOf(SupportedSocketOptions, option) < 0)
+            return base.TryGetValue(option, out value);
         if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
             value = Socket.ReceiveBufferSize;
         else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
@@ -80,6 +91,8 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     }
     protected override bool SetValue(ChannelOption option, object value)
     {
+        if (Socket.AddressFamily == AddressFamily.Unix && Array.IndexOf(SupportedSocketOptions, option) < 0)
+            return base.SetValue(option, value);
         if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
             Socket.ReceiveBufferSize = (int)value;
         else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))

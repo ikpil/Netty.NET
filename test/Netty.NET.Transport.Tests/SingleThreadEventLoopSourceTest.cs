@@ -263,6 +263,8 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     internal class LoopB : SingleThreadEventLoop
     {
         private readonly AutoResetEvent _wakeup = new(false);
+        private readonly object _wakeupGate = new();
+        private bool _stopped;
         internal LoopB() : base(null, new DefaultThreadFactory(typeof(LoopB)), false) { }
         protected override void Run()
         {
@@ -277,8 +279,21 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             }
         }
         protected virtual void RunTasks0() => RunAllTasks();
-        public override void Wakeup(bool inEventLoop) => _wakeup.Set();
-        protected override void Cleanup() => _wakeup.Dispose();
+        public override void Wakeup(bool inEventLoop)
+        {
+            lock (_wakeupGate)
+            {
+                if (!_stopped) _wakeup.Set();
+            }
+        }
+        protected override void Cleanup()
+        {
+            lock (_wakeupGate)
+            {
+                _stopped = true;
+                _wakeup.Dispose();
+            }
+        }
     }
     private sealed class LoopC : LoopB
     {
