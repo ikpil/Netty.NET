@@ -15,13 +15,16 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
+using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Transport.Channels.Sockets;
@@ -34,6 +37,7 @@ public abstract class SocketStreamChannel : AbstractChannel
     private volatile bool _inputShutdown;
     private volatile bool _outputShutdown;
     private bool _inputReadComplete;
+    private int _gatheringWriteLimit;
     protected SocketStreamChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false, 16))
     {
         Socket = socket ?? throw new ArgumentNullException(nameof(socket));
@@ -92,6 +96,96 @@ public abstract class SocketStreamChannel : AbstractChannel
             throw new IOException("Socket output is shut down.");
         return message is ByteBuf or IFileRegion ? message : throw new NotSupportedException("Stream writes require ByteBuf or IFileRegion.");
     }
+
+    // Custom channels can override DoWriteAsync; only the built-in socket types opt into batching.
+    internal virtual bool SupportsGatheringWrites =>
+        GetType() == typeof(TcpSocketChannel) || GetType() == typeof(DomainSocketChannel);
+
+    internal void ResetGatheringWriteLimit() => Volatile.Write(ref _gatheringWriteLimit, 0);
+
+    internal override Task<int> TryGatherWriteAsync()
+    {
+        if (_outputShutdown || !SupportsGatheringWrites || OutboundBuffer.Current is not ByteBuf first ||
+            (OutboundBuffer.Size == 1 && first.ReadableSequence.IsSingleSegment))
+            return null;
+
+        // A small vector bound is portable across supported socket backends.
+        const int maxSegments = 16;
+        int limit = Volatile.Read(ref _gatheringWriteLimit);
+        if (limit == 0)
+        {
+            // Multiply by 2 to give some extra space in case the OS can process write data faster than we can provide.
+            int initial = (int)Math.Clamp(Socket.SendBufferSize * 2L, 1, int.MaxValue);
+            int previous = Interlocked.CompareExchange(ref _gatheringWriteLimit, initial, 0);
+            limit = previous == 0 ? initial : previous;
+        }
+        List<ArraySegment<byte>> segments = null;
+        List<ByteBuf> buffers = null;
+        int attempted = 0;
+        // Ensure the pending writes are made of ByteBufs only.
+        OutboundBuffer.ForEachFlushedMessage(message =>
+        {
+            if (message is not ByteBuf buffer) return false;
+            bool added = false;
+            foreach (var memory in buffer.ReadableSequence)
+            {
+                // Zero length buffers are not added to nioBuffers by ChannelOutboundBuffer, so there is no need
+                // to check if the total size of all the buffers is non-zero.
+                if (memory.IsEmpty) continue;
+                if (!MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> segment)) return false;
+                if (!added)
+                {
+                    (buffers ??= new List<ByteBuf>(maxSegments)).Add(buffer);
+                    added = true;
+                }
+                int length = Math.Min(segment.Count, limit - attempted);
+                (segments ??= new List<ArraySegment<byte>>(maxSegments))
+                    .Add(new ArraySegment<byte>(segment.Array, segment.Offset, length));
+                attempted += length;
+                if (segments.Count == maxSegments || attempted == limit) return false;
+            }
+            return true;
+        });
+        // Only one ByteBuf so use non-gathering write
+        if (segments == null || segments.Count < 2) return null;
+        return SendAsync();
+
+        async Task<int> SendAsync()
+        {
+            int retained = 0;
+            try
+            {
+                for (; retained < buffers.Count; retained++) buffers[retained].Retain();
+                int written = await SendGatheredAsync(segments).ConfigureAwait(false);
+                if (written <= 0 || written > attempted)
+                    throw new IOException("Socket reported an invalid gathered write length.");
+                AdjustGatheringWriteLimit(attempted, written, limit);
+                return written;
+            }
+            finally
+            {
+                for (int i = 0; i < retained; i++) ReferenceCountUtil.SafeRelease(buffers[i]);
+            }
+        }
+    }
+
+    internal virtual Task<int> SendGatheredAsync(IList<ArraySegment<byte>> segments) =>
+        Socket.SendAsync(segments, SocketFlags.None);
+
+    private void AdjustGatheringWriteLimit(int attempted, int written, int previous)
+    {
+        // By default we track the SO_SNDBUF when ever it is explicitly set. However some OSes may dynamically change
+        // SO_SNDBUF (and other characteristics that determine how much data can be written at once) so we should try
+        // make a best effort to adjust as OS behavior changes.
+        if (attempted == written)
+        {
+            int next = (int)Math.Min(attempted * 2L, int.MaxValue);
+            if (next > previous) Interlocked.CompareExchange(ref _gatheringWriteLimit, next, previous);
+        }
+        else if (attempted > 4096 && written < attempted / 2)
+            Interlocked.CompareExchange(ref _gatheringWriteLimit, attempted / 2, previous);
+    }
+
     protected override async Task DoWriteAsync(object message)
     {
         if (message is ByteBuf buffer)

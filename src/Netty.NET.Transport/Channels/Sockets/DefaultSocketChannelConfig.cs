@@ -96,7 +96,10 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
             Socket.ReceiveBufferSize = (int)value;
         else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
+        {
             Socket.SendBufferSize = (int)value;
+            if (Channel is SocketStreamChannel stream) stream.ResetGatheringWriteLimit();
+        }
         else if (ReferenceEquals(option, ChannelOption.TCP_NODELAY))
             Socket.NoDelay = (bool)value;
         else if (ReferenceEquals(option, ChannelOption.SO_KEEPALIVE))

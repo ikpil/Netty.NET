@@ -29,7 +29,7 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests.",
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations.",
       "next": "Run the conditional reset/read-order fixture on Unix; review the source-disabled self-shutdown writability case, executor/group fixtures and broader socket/runtime contracts. Continue Unix-host execution and remaining domain runtime comment review."
     },
     {
@@ -42,37 +42,37 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 418,
-    "javaOriginalInvocations": 420,
+    "javaOriginalPassed": 424,
+    "javaOriginalInvocations": 426,
     "transportJavaOriginalPassed": 370,
     "coreTransportJavaOriginalPassed": 300,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 50,
+    "testsuiteJavaJUnitInvocations": 56,
     "datagramJavaJUnitInvocations": 23,
     "datagramJavaAllocatorExecutions": 46,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 373,
-    "originalExecutedCases": 449,
+    "mappedOriginalMethods": 379,
+    "originalExecutedCases": 461,
     "originalSkippedCases": 8,
     "transportMappedOriginalExecutions": 347,
-    "testsuiteMappedOriginalExecutions": 102,
+    "testsuiteMappedOriginalExecutions": 114,
     "datagramMappedOriginalExecutions": 46,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 24,
-    "supplementalExecutedCases": 178,
+    "supplementalExecutedCases": 183,
     "debug": {
-      "total": 635,
-      "passed": 627,
+      "total": 652,
+      "passed": 644,
       "failed": 0,
       "skipped": 8
     },
     "checkedRelease": {
-      "total": 635,
-      "passed": 627,
+      "total": 652,
+      "passed": 644,
       "failed": 0,
       "skipped": 8
     },
@@ -84,8 +84,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 635,
-        "passed": 627,
+        "total": 652,
+        "passed": 644,
         "failed": 0,
         "skipped": 8
       },
@@ -102,19 +102,19 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32925,
+    "solutionPassed": 32942,
     "solutionSkipped": 22,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward 414 original calls and 412 passes. Executed six unchanged outbound wrapper methods against 64cc10f38ea5f5bd7eae48507817c66680d0afdc with both original allocator modes. All six wrappers and twelve allocator cases passed. Total 418 passes in 420 wrapper or direct invocations.",
-    "note": "Ported managed pending connect and write completion dispatch. Reject pending and already-connected duplicates without closing the first connection. Keep the source active/close order when cancellation follows native connection. Release the native write borrow before signaling completion, and retain the borrow during owner shutdown until the socket operation returns. Six original methods map to twelve CLR allocator cases. The two timer/cancellation source tests preserve source limits with a controllable CLR socket primitive. Eight native cases cover real TCP/UDP, refusal, two cancellation boundaries, queued writes, failure and shutdown ownership. Initial full solution Release passed 32923 with 22 skips. Final Transport Debug, ordinary Release and checked Release passed 627 with eight unchanged skips. The other projects do not reference Transport and their full-run results are carried forward, yielding 32925 passes and 22 skips with final Transport. Raw handler registration, threaded I/O budgets and gathering writes remain open.",
+    "javaEvidence": "Carries forward 420 original calls and 418 passes. Executed all six unchanged SocketGatheringWriteTest wrappers against 64cc10f38ea5f5bd7eae48507817c66680d0afdc with both original allocator modes. All twelve allocator executions passed. Total 424 passes in 426 wrapper or direct invocations.",
+    "note": "Stream writes gather consecutive array-backed flushed buffers into a bounded native vector. The kernel count advances the queue, and native borrows are retained across owner shutdown until the socket operation ends. Re-arm the existing flush without advancing later writes. All six source declarations and their twelve allocator rows keep the original payload sizes, composite/manual-read modes and same-owner ordering. Five supplemental cases verify actual partial vectored sends, failure and shutdown borrows, and ordered direct-buffer/file-region fallback on TCP and AF_UNIX. Full solution Release passed 32942 with 22 skips. After using safe release for each native borrow, final Transport Debug, ordinary Release and checked Release each passed 644 cases with eight unchanged Unix-only skips. The other projects do not reference Transport. Raw I/O registration, threaded budgets and UDP batching remain open.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/outbound-results --logger \"trx;LogFilePrefix=outbound\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/gather-results --logger \"trx;LogFilePrefix=gather\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -126,9 +126,10 @@
       "python artifacts/transport-core/run-scaling-originals.py",
       "python artifacts/transport-core/run-manual-originals.py",
       "python artifacts/transport-core/run-io-phase-originals.py",
-      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore --results-directory artifacts/transport-core/outbound-final-results --logger \"trx;LogFilePrefix=outbound-final\"",
       "python artifacts/transport-core/run-outbound-originals.py",
+      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore",
+      "python artifacts/transport-core/run-gather-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -144,7 +145,10 @@
     "ioPhaseMappedOriginalExecutions": 4,
     "outboundJavaJUnitInvocations": 6,
     "outboundJavaAllocatorExecutions": 12,
-    "outboundMappedOriginalExecutions": 12
+    "outboundMappedOriginalExecutions": 12,
+    "gatheringJavaJUnitInvocations": 6,
+    "gatheringJavaAllocatorExecutions": 12,
+    "gatheringMappedOriginalExecutions": 12
   },
   "entries": [
     {
@@ -3195,22 +3199,26 @@
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
         "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
       ],
       "review": {
-        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit.",
+        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs"
         ]
       },
       "comments": {
         "status": "partial",
         "uniqueCount": 23,
-        "preservedCount": 5,
-        "unreviewedCount": 18,
-        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit."
+        "preservedCount": 13,
+        "unreviewedCount": 10,
+        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open."
       }
     },
     {
@@ -3301,21 +3309,26 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 29,
-        "preservedCount": 3,
-        "unreviewedCount": 26,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 11,
+        "unreviewedCount": 18,
+        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open."
       },
       "review": {
-        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open.",
+        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/NioLifecycleSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs"
+          "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs"
         ]
       }
     },
@@ -7105,12 +7118,12 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 37,
-    "portedOriginalFixtures": 45,
-    "portedOriginalMethods": 373,
-    "supplementalClrCases": 178,
+    "portedOriginalFixtures": 46,
+    "portedOriginalMethods": 379,
+    "supplementalClrCases": 183,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
-    "testsuiteSources": 20
+    "testsuiteSources": 21
   },
   "clrDecisions": [
     {
@@ -7342,6 +7355,18 @@
         "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
         "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
       ]
+    },
+    {
+      "subject": "Stream socket gathering writes",
+      "decision": "Use the managed Socket.SendAsync array-vector overload for at most sixteen compatible memory segments, bounded by the adaptive send window. The vector is a prefix of flushed byte buffers. Borrow each covered buffer until the native operation completes, then commit exactly the returned bytes using ChannelOutboundBuffer.RemoveBytes. Direct-memory segments, file regions and custom stream write overrides retain their own path. Write-spin yielding and asynchronous rearm resume only the existing flush. Retain all six source methods and both allocator modes; the JVM heap-dump TODO is tracked separately.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -7412,7 +7437,8 @@
     "test/Netty.NET.Transport.Tests/ScalableEventLoopGroupContractTest.cs",
     "test/Netty.NET.Transport.Tests/ManualIoEventLoopContractTest.cs",
     "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -9213,6 +9239,116 @@
         "ioPhaseJavaOriginalExecutions": 4,
         "ioPhaseMappedOriginalExecutions": 4
       }
+    },
+    {
+      "checkpoint": "27fe17277fd78278e7faaf375b664d774bfca558",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 418,
+        "javaOriginalInvocations": 420,
+        "transportJavaOriginalPassed": 370,
+        "coreTransportJavaOriginalPassed": 300,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 50,
+        "datagramJavaJUnitInvocations": 23,
+        "datagramJavaAllocatorExecutions": 46,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 373,
+        "originalExecutedCases": 449,
+        "originalSkippedCases": 8,
+        "transportMappedOriginalExecutions": 347,
+        "testsuiteMappedOriginalExecutions": 102,
+        "datagramMappedOriginalExecutions": 46,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 24,
+        "supplementalExecutedCases": 178,
+        "debug": {
+          "total": 635,
+          "passed": 627,
+          "failed": 0,
+          "skipped": 8
+        },
+        "checkedRelease": {
+          "total": 635,
+          "passed": 627,
+          "failed": 0,
+          "skipped": 8
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 635,
+            "passed": 627,
+            "failed": 0,
+            "skipped": 8
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32925,
+        "solutionSkipped": 22,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward 414 original calls and 412 passes. Executed six unchanged outbound wrapper methods against 64cc10f38ea5f5bd7eae48507817c66680d0afdc with both original allocator modes. All six wrappers and twelve allocator cases passed. Total 418 passes in 420 wrapper or direct invocations.",
+        "note": "Ported managed pending connect and write completion dispatch. Reject pending and already-connected duplicates without closing the first connection. Keep the source active/close order when cancellation follows native connection. Release the native write borrow before signaling completion, and retain the borrow during owner shutdown until the socket operation returns. Six original methods map to twelve CLR allocator cases. The two timer/cancellation source tests preserve source limits with a controllable CLR socket primitive. Eight native cases cover real TCP/UDP, refusal, two cancellation boundaries, queued writes, failure and shutdown ownership. Initial full solution Release passed 32923 with 22 skips. Final Transport Debug, ordinary Release and checked Release passed 627 with eight unchanged skips. The other projects do not reference Transport and their full-run results are carried forward, yielding 32925 passes and 22 skips with final Transport. Raw handler registration, threaded I/O budgets and gathering writes remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/outbound-results --logger \"trx;LogFilePrefix=outbound\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "python artifacts/transport-core/run-scaling-originals.py",
+          "python artifacts/transport-core/run-manual-originals.py",
+          "python artifacts/transport-core/run-io-phase-originals.py",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore --results-directory artifacts/transport-core/outbound-final-results --logger \"trx;LogFilePrefix=outbound-final\"",
+          "python artifacts/transport-core/run-outbound-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4,
+        "outboundJavaJUnitInvocations": 6,
+        "outboundJavaAllocatorExecutions": 12,
+        "outboundMappedOriginalExecutions": 12
+      }
     }
   ],
   "nextWork": [
@@ -9228,7 +9364,8 @@
     "Group scaling lifecycle is ported (2/2 original methods). ManualIoEventLoop, backend-type queries, handler-level raw I/O registration and polling contracts remain open.",
     "The caller-owned ManualIoEventLoop is available to Bootstrap and ServerBootstrap. Raw I/O registration, backend compatibility queries and a separate readiness-only phase remain open.",
     "Manual inbound socket I/O dispatch is separated from ordinary work. Continue raw I/O handler registrations, backend queries, and send/connect and threaded-loop processing contracts.",
-    "Manual socket connect and write completion dispatch is ported. Continue raw I/O registrations, threaded budgets and source gathering-write contracts."
+    "Manual socket connect and write completion dispatch is ported. Continue raw I/O registrations, threaded budgets and source gathering-write contracts.",
+    "The stream gathering-write path and its six original fixtures are mapped. Continue low-level I/O registration, threaded I/O budgets and the remaining UDP batching/backend contracts."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -10585,6 +10722,118 @@
         "preservedCount": 1,
         "unreviewedCount": 0,
         "scope": "The single source declaration runs with both managed allocators."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketGatheringWriteTest.java",
+      "sha256": "ce897c6060bed4b4950795f328d60905e4a3822cdfd3efef3055680dfe79212a",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testGatheringWrite",
+          "clrMethod": "TestGatheringWrite",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Preserve 1 MiB random bytes, original random lengths below 8 KiB, direct and wrapped buffers, and AutoRead. CLR observes native flush and write Tasks instead of Promise identity."
+        },
+        {
+          "upstreamMethod": "testGatheringWriteNotAutoRead",
+          "clrMethod": "TestGatheringWriteNotAutoRead",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Preserve 1 MiB random bytes and request reads on channel-active and every read-complete. CLR observes native flush and write Tasks instead of Promise identity."
+        },
+        {
+          "upstreamMethod": "testGatheringWriteWithComposite",
+          "clrMethod": "TestGatheringWriteWithComposite",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Preserve 1 MiB random bytes and two-component composite writes at the original even offsets. CLR observes native flush and write Tasks instead of Promise identity."
+        },
+        {
+          "upstreamMethod": "testGatheringWriteWithCompositeNotAutoRead",
+          "clrMethod": "TestGatheringWriteWithCompositeNotAutoRead",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep composite selection and manual read requests together for the exact 1 MiB payload. CLR observes native flush and write Tasks instead of Promise identity."
+        },
+        {
+          "upstreamMethod": "testGatheringWriteBig",
+          "clrMethod": "TestGatheringWriteBig",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Preserve the 50 MiB random payload, write sizes below 8 KiB, AutoRead and per-byte equality. CLR observes native flush and write Tasks instead of Promise identity."
+        },
+        {
+          "upstreamMethod": "testGatheringWriteSameEventLoop",
+          "clrMethod": "TestGatheringWriteSameEventLoop",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Clone the bootstrap onto one selected owner, assert identical client event loops, interleave both 1 MiB streams, flush both and compare both received payloads. CLR observes native flush and write Tasks instead of Promise identity."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 6,
+        "reviewedCount": 6,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "All six declarations run with both original allocators. The empty-buffer flush remains a completion barrier with the source 60 s limit and all write tasks are observed. The ordinary cases keep the original 120 s test limit and the same-owner case keeps 30 s. The JVM heap-dump failure helper and its temporary TODO have no runtime counterpart in this fixture.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 4,
+        "preservedCount": 3,
+        "unreviewedCount": 1,
+        "scope": "All six declarations run with both original allocators. The empty-buffer flush remains a completion barrier with the source 60 s limit and all write tasks are observed. The ordinary cases keep the original 120 s test limit and the same-owner case keeps 30 s. The JVM heap-dump failure helper and its temporary TODO have no runtime counterpart in this fixture."
       }
     }
   ]

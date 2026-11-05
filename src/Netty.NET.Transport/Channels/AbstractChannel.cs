@@ -473,32 +473,44 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
     private async Task DrainWritesAsync()
     {
+        int gatheredWrites = 0;
         try
         {
             while (_open && OutboundBuffer.Current is { } message)
             {
-                // Closing cancels queued ownership; an in-flight native operation must keep its own borrow alive.
-                ReferenceCountUtil.Retain(message);
-                bool borrowed = true;
                 bool pending = false;
                 try
                 {
-                    Task operation = DoWriteAsync(message);
-                    pending = !operation.IsCompleted;
-                    await operation.ConfigureAwait(false);
-                    ReferenceCountUtil.Release(message);
-                    borrowed = false;
-                    await CompleteOutboundIoAsync(() => OutboundBuffer.Remove(), pending).ConfigureAwait(false);
+                    if (TryGatherWriteAsync() is { } gather)
+                    {
+                        pending = !gather.IsCompleted;
+                        int written = await gather.ConfigureAwait(false);
+                        await CompleteOutboundIoAsync(() =>
+                        {
+                            if (!IsOpen || OutboundBuffer.IsClosed) return false;
+                            OutboundBuffer.RemoveBytes(written);
+                            return true;
+                        }, pending).ConfigureAwait(false);
+                        gatheredWrites++;
+                    }
+                    else
+                    {
+                        // Closing cancels queued ownership; an in-flight native operation must keep its own borrow alive.
+                        ReferenceCountUtil.Retain(message);
+                        try
+                        {
+                            Task operation = DoWriteAsync(message);
+                            pending = !operation.IsCompleted;
+                            await operation.ConfigureAwait(false);
+                        }
+                        finally { ReferenceCountUtil.Release(message); }
+                        await CompleteOutboundIoAsync(() => OutboundBuffer.Remove(), pending).ConfigureAwait(false);
+                    }
                 }
                 catch (Exception error)
                 {
                     // The native operation has finished. Release its borrow before failing the queued Task,
                     // just as ChannelOutboundBuffer releases the message before notifying its promise.
-                    if (borrowed)
-                    {
-                        ReferenceCountUtil.Release(message);
-                        borrowed = false;
-                    }
                     await CompleteOutboundIoAsync(() =>
                     {
                         bool handled = !OutboundBuffer.IsClosed;
@@ -506,16 +518,25 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         return handled;
                     }, pending).ConfigureAwait(false);
                 }
-                finally { if (borrowed) ReferenceCountUtil.Release(message); }
                 // The next iteration must inspect state on the event loop, including after an asynchronous write.
-                if (!EventLoop.InEventLoop())
+                bool inEventLoop = EventLoop.InEventLoop();
+                bool yield = inEventLoop && gatheredWrites != 0 &&
+                    gatheredWrites >= Config.GetWriteSpinCount() && OutboundBuffer.Current != null;
+                if (!inEventLoop || yield)
                 {
                     void ResumeWrites()
                     {
                         _writing = false;
-                        if (OutboundBuffer.Current != null) FlushTransport();
+                        // Resume the existing flush without admitting writes queued after it.
+                        if (IsOpen && OutboundBuffer.Current != null)
+                        {
+                            _writing = true;
+                            _ = DrainWritesAsync();
+                        }
                     }
-                    await (UsesSocketCompletions ? OnSocketLoopAsync(ResumeWrites) : OnLoopAsync(ResumeWrites)).ConfigureAwait(false);
+                    Task resume = yield ? QueueSocketWorkAsync(ResumeWrites)
+                        : UsesSocketCompletions ? OnSocketLoopAsync(ResumeWrites) : OnLoopAsync(ResumeWrites);
+                    await resume.ConfigureAwait(false);
                     return;
                 }
             }
@@ -523,6 +544,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         catch (Exception error) { OnUnhandledException(error); }
         finally { if (EventLoop.InEventLoop()) { _writing = false; DoWriteComplete(); } }
     }
+    internal virtual Task<int> TryGatherWriteAsync() => null;
     internal void BeginRead()
     {
         if (!_open || !_active)

@@ -190,7 +190,7 @@ public sealed class ChannelOutboundBuffer
     public void RemoveBytes(long writtenBytes)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(writtenBytes);
-        for (; ; )
+        while (!IsClosed)
         {
             if (Current is not ByteBuf buffer)
             {
