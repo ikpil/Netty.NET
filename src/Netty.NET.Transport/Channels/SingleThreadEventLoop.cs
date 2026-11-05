@@ -37,7 +37,10 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         : this(parent, new ThreadPerTaskExecutor(factory).Execute, addTaskWakesUp) { }
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
-        : base(parent, executor, addTaskWakesUp, maxPendingTasks, rejectedHandler)
+        : this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler) { }
+    protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
+        bool supportSuspension, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
+        : base(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler)
         => _tailTasks = NewTaskQueue(maxPendingTasks);
     public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
     { ArgumentNullException.ThrowIfNull(channel); return channel.RegisterAsync(this, cancellationToken); }
@@ -54,7 +57,12 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         if (!_tailTasks.TryEnqueue(task))
             Reject(task);
         if (WakesUpForTask(task))
-            Wakeup(InEventLoop());
+        {
+            bool inEventLoop = InEventLoop();
+            if (!inEventLoop && IsSuspensionSupported())
+                StartThread();
+            Wakeup(inEventLoop);
+        }
     }
     /**
      * Removes a task that was added previously via {@link #executeAfterEventLoopIteration(Runnable)}.
@@ -66,7 +74,8 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     public bool RemoveAfterEventLoopIterationTask(Action task)
     { ArgumentNullException.ThrowIfNull(task); return _tailTasks.TryRemove(task); }
     protected override void AfterRunningAllTasks() => RunAllTasksFrom(_tailTasks);
-    protected override bool HasTasks() => base.HasTasks() || _tailTasks.Count != 0;
+    protected bool HasTailTasks => _tailTasks.Count != 0;
+    protected override bool HasTasks() => base.HasTasks() || HasTailTasks;
     public override int PendingTasks() => base.PendingTasks() + _tailTasks.Count;
     protected override int GetNumOfRegisteredChannels() => RegisteredChannels();
     /**

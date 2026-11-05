@@ -353,9 +353,13 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
 
                 AutoScalingState currentState = Volatile.Read(ref chooser.state);
 
+                int observedActive = 0;
                 for (int i = 0; i < chooser.executors.Length; i++)
                 {
                     IEventExecutor child = chooser.executors[i];
+                    bool suspended = child.IsSuspended();
+                    if (!suspended)
+                        observedActive++;
                     if (!(child is SingleThreadEventExecutor))
                     {
                         continue;
@@ -364,7 +368,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     SingleThreadEventExecutor eventExecutor = (SingleThreadEventExecutor)child;
 
                     double utilization = 0.0;
-                    if (!eventExecutor.IsSuspended())
+                    if (!suspended)
                     {
                         long activeTime = eventExecutor.GetAndResetAccumulatedActiveTimeNanos();
 
@@ -426,6 +430,13 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     chooser.utilizationMetrics[i].SetUtilization(utilization);
                 }
 
+                // Direct submissions to a cached executor can resume it without using Next().
+                // Keep published scale-ups while their worker is still being started.
+                if (observedActive > currentState.activeChildrenCount)
+                {
+                    RebuildActiveExecutors();
+                    currentState = Volatile.Read(ref chooser.state);
+                }
                 int currentActive = currentState.activeChildrenCount;
 
                 // Make scaling decisions based on stable states.

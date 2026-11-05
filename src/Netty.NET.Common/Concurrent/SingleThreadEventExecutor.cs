@@ -50,6 +50,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     // Native queue entries retain their exact callback across retries and rollback.
     private static readonly Action WAKEUP_ACTION = WAKEUP_TASK;
+    private readonly object _wakeupLock = new();
     private readonly IQueue<Action> _taskQueue;
 
     private volatile Thread _thread;
@@ -771,8 +772,24 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             // Use offer as we actually only need this to unblock the thread and if offer fails we do not care as there
             // is already something in the queue.
-            _taskQueue.TryEnqueue(WAKEUP_ACTION);
+            EnqueueWakeup();
         }
+    }
+
+    private void EnqueueWakeup()
+    {
+        using (UninterruptibleMonitor.Enter(_wakeupLock))
+        {
+            if (!IsTerminated())
+                _taskQueue.TryEnqueue(WAKEUP_ACTION);
+        }
+    }
+
+    private void SetTerminated()
+    {
+        // Wakeup requests can race with the worker's final drain.
+        using (UninterruptibleMonitor.Enter(_wakeupLock))
+            _state.Set(ST_TERMINATED);
     }
 
     public override bool InEventLoop()
@@ -924,7 +941,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (wakeup)
         {
-            _taskQueue.TryEnqueue(WAKEUP_ACTION);
+            EnqueueWakeup();
             if (!_addTaskWakesUp)
             {
                 this.Wakeup(inEventLoop);
@@ -1294,7 +1311,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     // ScheduledExecutorService implementation
     private static readonly long SCHEDULE_PURGE_INTERVAL = (long)TimeSpan.FromSeconds(1).TotalNanoseconds;
 
-    private void StartThread()
+    protected void StartThread()
     {
         int currentState = _state.Get();
         while (currentState == ST_NOT_STARTED || currentState == ST_SUSPENDED)
@@ -1337,7 +1354,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             }
             catch (Exception cause)
             {
-                _state.Set(ST_TERMINATED);
+                SetTerminated();
                 _terminationSource.TrySetException(cause);
 
                 if (cause is OutOfMemoryException || cause is StackOverflowException || cause is ThreadAbortException)
@@ -1497,7 +1514,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                                 // See https://github.com/netty/netty/issues/6596.
                                 FastThreadLocal.RemoveAll();
 
-                                _state.Set(ST_TERMINATED);
+                                SetTerminated();
                                 _threadLock.Signal();
                                 int numUserTasks = DrainTasks();
                                 if (numUserTasks > 0 && logger.IsWarnEnabled())

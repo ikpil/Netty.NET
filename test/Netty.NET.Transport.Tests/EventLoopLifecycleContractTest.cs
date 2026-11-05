@@ -81,6 +81,24 @@ public class EventLoopLifecycleContractTest
         }
         finally { await loop.StopAsync(); }
     }
+
+    [Fact(Timeout = 10000)]
+    public async Task ShutdownCannotQueueAWakeupAfterTheWorkerHasExited()
+    {
+        var loop = new DefaultEventLoop(null, run =>
+        {
+            var thread = new Thread(() => run()) { IsBackground = true };
+            thread.Start();
+            Assert.True(thread.Join(TimeSpan.FromSeconds(2)));
+        });
+        var ran = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        loop.ExecuteAfterEventLoopIteration(() => ran.SetResult(loop.InEventLoop()));
+
+        var cancellation = TestContext.Current.CancellationToken;
+        await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(cancellation);
+        Assert.True(await ran.Task.WaitAsync(cancellation));
+        Assert.Equal(0, loop.PendingTasks());
+    }
     [Fact(Timeout = 10000)]
     public async Task TailExceptionsDoNotSuppressLaterAcceptedWork()
     {

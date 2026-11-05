@@ -27,10 +27,18 @@ public class DefaultEventLoop : SingleThreadEventLoop
 {
     private readonly ConcurrentDictionary<IChannel, byte> _channels = new(ReferenceEqualityComparer.Instance);
     public DefaultEventLoop() : this(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventLoop))).Execute) { }
-    public DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor) : base(parent, executor, true) { }
+    public DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor) : this(parent, executor, false) { }
+    internal DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool supportSuspension)
+        : base(parent, executor, true, supportSuspension, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
     internal void ChannelRegistered(IChannel channel) => _channels.TryAdd(channel, 0);
     internal void ChannelUnregistered(IChannel channel) => _channels.TryRemove(channel, out _);
     public override int RegisteredChannels() => _channels.Count;
+    public override bool TrySuspend() => _channels.IsEmpty && base.TrySuspend();
+    protected override bool CanSuspend(int state)
+    {
+        // We should only allow to suspend if there are no registrations on this loop atm.
+        return base.CanSuspend(state) && _channels.IsEmpty;
+    }
     public override IEnumerable<IChannel> RegisteredChannelsIterator()
     {
         if (!InEventLoop()) throw new InvalidOperationException("Registered channels must be inspected on their event loop.");
@@ -38,13 +46,26 @@ public class DefaultEventLoop : SingleThreadEventLoop
     }
     protected override void Run()
     {
-        for (; ; )
+        bool measureWork = IsSuspensionSupported();
+        do
         {
             var task = TakeTask();
-            if (task != null)
-            { RunTask(task); UpdateLastExecutionTime(); }
-            if (ConfirmShutdown())
-                break;
-        }
+            if (measureWork && (task != null || HasTailTasks))
+            {
+                // Socket readiness completes through CLR tasks. Count the time the
+                // owner spends dispatching them, excluding time blocked in TakeTask.
+                long start = Ticker().NanoTime();
+                if (task != null) SafeExecute(task);
+                AfterRunningAllTasks();
+                ReportActiveIoTime(unchecked(Ticker().NanoTime() - start));
+                UpdateLastExecutionTime();
+            }
+            else if (task != null)
+            {
+                RunTask(task);
+                UpdateLastExecutionTime();
+            }
+            // We should continue with our loop until we either confirmed a shutdown or we can suspend it.
+        } while (!ConfirmShutdown() && !CanSuspend());
     }
 }

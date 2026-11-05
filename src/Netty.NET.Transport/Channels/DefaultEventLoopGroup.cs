@@ -44,7 +44,23 @@ public class DefaultEventLoopGroup : MultithreadEventExecutorGroup, IEventLoopGr
      */
     public DefaultEventLoopGroup(int threads = 0, IThreadFactory threadFactory = null)
         : base(threads == 0 ? Math.Max(1, Environment.ProcessorCount * 2) : threads, threadFactory) { }
-    protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) => new DefaultEventLoop(this, executor);
+
+    /**
+     * {@link IoEventLoopGroup} implementation that will handle its tasks with multiple threads.
+     * <p>
+     * This group supports advanced thread management strategies, such as dynamic auto-scaling,
+     * by providing a custom {@link EventExecutorChooserFactory}. To enable utilization-based
+     * auto-scaling, pass an instance of
+     * {@link io.netty.util.concurrent.AutoScalingEventExecutorChooserFactory}.
+     */
+    /// <summary>Creates a group whose chooser may suspend and resume idle workers.</summary>
+    public DefaultEventLoopGroup(int threads, IThreadFactory threadFactory, IEventExecutorChooserFactory chooserFactory)
+        : base(threads == 0 ? Math.Max(1, Environment.ProcessorCount * 2) : threads,
+            threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory).Execute,
+            chooserFactory ?? throw new ArgumentNullException(nameof(chooserFactory)), true) { }
+
+    protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) =>
+        new DefaultEventLoop(this, executor, args.Length != 0);
     public override IEventLoop Next() => (IEventLoop)base.Next();
     public virtual Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default) => Next().RegisterAsync(channel, cancellationToken);
 }

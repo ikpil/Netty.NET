@@ -17,8 +17,8 @@
     {
       "name": "Channel, Pipeline and executor ordering",
       "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions.",
-      "next": "Remaining I/O-handler/group rejection/shutdown fixtures and broader Pipeline/loop runtime comments/contracts; review does not complete Transport."
+      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown.",
+      "next": "Review remaining I/O-handler and manual-pump contracts, backend-type queries, and broader Pipeline/loop runtime comments/contracts."
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
@@ -42,9 +42,9 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 389,
-    "javaOriginalInvocations": 391,
-    "transportJavaOriginalPassed": 347,
+    "javaOriginalPassed": 391,
+    "javaOriginalInvocations": 393,
+    "transportJavaOriginalPassed": 349,
     "coreTransportJavaOriginalPassed": 300,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
@@ -55,24 +55,24 @@
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 350,
-    "originalExecutedCases": 418,
+    "mappedOriginalMethods": 352,
+    "originalExecutedCases": 420,
     "originalSkippedCases": 8,
-    "transportMappedOriginalExecutions": 328,
+    "transportMappedOriginalExecutions": 330,
     "testsuiteMappedOriginalExecutions": 90,
     "datagramMappedOriginalExecutions": 46,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 20,
-    "supplementalExecutedCases": 156,
+    "supplementalExecutedCases": 160,
     "debug": {
-      "total": 582,
-      "passed": 574,
+      "total": 588,
+      "passed": 580,
       "failed": 0,
       "skipped": 8
     },
     "checkedRelease": {
-      "total": 582,
-      "passed": 574,
+      "total": 588,
+      "passed": 580,
       "failed": 0,
       "skipped": 8
     },
@@ -84,8 +84,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 582,
-        "passed": 574,
+        "total": 588,
+        "passed": 580,
         "failed": 0,
         "skipped": 8
       },
@@ -102,18 +102,19 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32872,
+    "solutionPassed": 32878,
     "solutionSkipped": 22,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward 376 original calls and 374 passes from the recorded preceding checkpoint. New unchanged execution on Java 21 adds eight domain cases and seven TCP echo wrappers covering fourteen allocator runs. Source bytes match baseline 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Total 389 passes in 391 wrapper or direct invocations. One domain option-adapter method and three VoidPromise identity methods have separately recorded CLR decisions.",
-    "note": "Added Unix domain stream and server channels using the existing asynchronous TCP read, write and accept behavior. Native socket role, options, ownership, parent identity, real half-close and bound-path cleanup have direct coverage. Six domain source methods give seven CLR cases and four TCP echo source methods give eight CLR cases. The ordinary echo cases retain the source random 1 MiB payload, per-byte checks, two allocators, read modes and executor ownership. Five supplemental cases cover real AF_UNIX half-close, bind failure ownership, option filtering and two echo read modes. The first solution run found a disposal race in an existing test-only event-loop wakeup. Serialize signaling with disposal and preserve the original assertions. Final Debug, checked Release and solution Release passed 574 executed Transport cases on Windows with eight existing Unix-only skips. Full solution passed 32872 with 22 skips. Domain runtime comment review and Unix-host execution remain open.",
+    "javaEvidence": "Carries forward 391 original calls and 389 passes from the preceding recorded checkpoint. Both unchanged MultiThreadIoEventLoopGroup source tests executed on Java 21 against baseline 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Total 391 passes in 393 wrapper or direct invocations.",
+    "note": "Ported configurable Transport group scaling with real channel registration, utilization and worker resumption. Both original tests preserve 200 ms monitoring, 100 ms simulated workload, 450/600 ms observations, 2 s deadlines and 30 s test limit. Four supplemental cases cover scale-up, off-chooser tail resumption and re-suspension, TCP Bootstrap from zero and shutdown closing all channels, and deterministic proof that shutdown cannot enqueue a wakeup after the worker has exited. The first full Debug and Release runs exposed a late-wakeup race and premature removal of an in-flight scale-up from the chooser. Final Transport Debug and checked Release passed 580 cases with eight existing Windows platform skips. All 29 targeted Common chooser tests and full solution Release (32878 passed, 22 existing skips) passed. Manual pumping, raw I/O handler registration, explicit backend queries, polling budgets and associated comments remain open.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/domain-verified-results --logger \"trx;LogFilePrefix=domain-verified\"",
+      "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/scaling-final-results --logger \"trx;LogFilePrefix=scaling-final\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -122,13 +123,16 @@
       "python artifacts/transport-core/run-datagram-originals.py",
       "python artifacts/transport-core/run-shutdown-originals.py",
       "python artifacts/transport-core/run-domain-originals.py",
+      "python artifacts/transport-core/run-scaling-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
     "echoJavaJUnitInvocations": 7,
     "echoJavaAllocatorExecutions": 14,
     "domainMappedOriginalExecutions": 7,
-    "echoMappedOriginalExecutions": 8
+    "echoMappedOriginalExecutions": 8,
+    "scalingJavaOriginalExecutions": 2,
+    "scalingMappedOriginalExecutions": 2
   },
   "entries": [
     {
@@ -2040,8 +2044,27 @@
       "sha256": "678cdfcbc9a6192383dc3829418791e2434fbf30b6644568f0f916f4e8512ea7",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs",
+        "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+        "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs"
+      ],
+      "review": {
+        "scope": "Managed socket and local channels use the existing DefaultEventLoopGroup with an optional chooser factory. Workers use the Common chooser, support scale-up/scale-down, resume for direct work and close registered channels on shutdown. Explicit IoHandler factory selection, IoRatio, and remaining constructor comments are open.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs",
+          "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+          "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 17,
+        "preservedCount": 1,
+        "unreviewedCount": 16,
+        "scope": "Managed socket and local channels use the existing DefaultEventLoopGroup with an optional chooser factory. Workers use the Common chooser, support scale-up/scale-down, resume for direct work and close registered channels on shutdown. Explicit IoHandler factory selection, IoRatio, and remaining constructor comments are open."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/nio/AbstractNioByteChannel.java",
@@ -2740,8 +2763,27 @@
       "sha256": "22c74eeb76610dffacd206b56ec84efcc497ca06046be5d5a22a963867b35626",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+        "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+        "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs"
+      ],
+      "review": {
+        "scope": "Managed completion dispatch measures owner work outside blocking waits. Both early suspension admission and the owner-side transition protect registered channels. Non-I/O and tail work can restart the worker. Handler-owned raw registrations, backend polling/ratios and corresponding original comments remain open.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+          "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 20,
+        "preservedCount": 2,
+        "unreviewedCount": 18,
+        "scope": "Managed completion dispatch measures owner work outside blocking waits. Both early suspension admission and the owner-side transition protect registered channels. Non-I/O and tail work can restart the worker. Handler-owned raw registrations, backend polling/ratios and corresponding original comments remain open."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/ChannelInputShutdownEvent.java",
@@ -5514,8 +5556,45 @@
       "sha256": "632849d3943f60f6a214aa7287e41531fc354a0886c334347514e0c200d80b1a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/MultiThreadIoEventLoopGroupSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testScalingWithIoRegistrationLifecycle",
+          "clrMethod": "TestScalingWithIoRegistrationLifecycle",
+          "adaptation": "Keep two workers, minimum zero, original 200 ms monitor and scaling thresholds, 2 s startup and suspension waits, 100 ms work intervals, 450 ms load observation and suspension after registration cancellation. Real LocalChannel registration and deregistration replace fake IoHandle and IoRegistration. The registered-to-deregistered transition verifies cancellation succeeded."
+        },
+        {
+          "upstreamMethod": "testShouldNotSuspendExecutorWithActiveRegistration",
+          "clrMethod": "TestShouldNotSuspendExecutorWithActiveRegistration",
+          "adaptation": "Keep the 600 ms idle observation, one-worker count while registered and two suspended workers after successful deregistration. Task-based waits and real LocalChannel lifecycle preserve the role of the source handle. Both original 30 s limits and original comments are retained."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Both original declarations execute against the production native chooser and managed channel registration.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/MultiThreadIoEventLoopGroupSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/ScalableEventLoopGroupContractTest.cs",
+          "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs",
+          "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+          "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0,
+        "scope": "Original comments and source license remain at the mapped test and startup helper."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/NativeImageHandlerMetadataTest.java",
@@ -6710,9 +6789,9 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 37,
-    "portedOriginalFixtures": 38,
-    "portedOriginalMethods": 350,
-    "supplementalClrCases": 156,
+    "portedOriginalFixtures": 39,
+    "portedOriginalMethods": 352,
+    "supplementalClrCases": 160,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
     "testsuiteSources": 17
@@ -6896,6 +6975,20 @@
         "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs"
       ]
+    },
+    {
+      "subject": "Transport group scaling and worker suspension",
+      "decision": "The existing group can opt into Common chooser policies. Managed async socket completions and local channel callbacks use the same owner queue, so dispatch time feeds utilization and blocking queue time stays idle. Real channel registrations guard both suspension request and owner transition. Direct work can resume a cached loop without chooser selection, so the monitor reconciles newly active capacity while preserving published scale-ups whose workers are still starting. Wakeup enqueue and terminal state publication are serialized to avoid late sentinels after final drain.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs",
+        "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+        "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+        "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs",
+        "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs",
+        "test/Netty.NET.Transport.Tests/MultiThreadIoEventLoopGroupSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/ScalableEventLoopGroupContractTest.cs",
+        "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -6962,7 +7055,8 @@
     "test/Netty.NET.Transport.Tests/EventLoopLifecycleContractTest.cs",
     "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
     "test/Netty.NET.Transport.Tests/DomainSocketContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+    "test/Netty.NET.Transport.Tests/ScalableEventLoopGroupContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -8364,6 +8458,100 @@
           "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
         ]
       }
+    },
+    {
+      "checkpoint": "42cc6c6b62fcc17f9371c2a789107d286f3b9cb8",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 389,
+        "javaOriginalInvocations": 391,
+        "transportJavaOriginalPassed": 347,
+        "coreTransportJavaOriginalPassed": 300,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 44,
+        "datagramJavaJUnitInvocations": 23,
+        "datagramJavaAllocatorExecutions": 46,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 350,
+        "originalExecutedCases": 418,
+        "originalSkippedCases": 8,
+        "transportMappedOriginalExecutions": 328,
+        "testsuiteMappedOriginalExecutions": 90,
+        "datagramMappedOriginalExecutions": 46,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 20,
+        "supplementalExecutedCases": 156,
+        "debug": {
+          "total": 582,
+          "passed": 574,
+          "failed": 0,
+          "skipped": 8
+        },
+        "checkedRelease": {
+          "total": 582,
+          "passed": 574,
+          "failed": 0,
+          "skipped": 8
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 582,
+            "passed": 574,
+            "failed": 0,
+            "skipped": 8
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32872,
+        "solutionSkipped": 22,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward 376 original calls and 374 passes from the recorded preceding checkpoint. New unchanged execution on Java 21 adds eight domain cases and seven TCP echo wrappers covering fourteen allocator runs. Source bytes match baseline 64cc10f38ea5f5bd7eae48507817c66680d0afdc. Total 389 passes in 391 wrapper or direct invocations. One domain option-adapter method and three VoidPromise identity methods have separately recorded CLR decisions.",
+        "note": "Added Unix domain stream and server channels using the existing asynchronous TCP read, write and accept behavior. Native socket role, options, ownership, parent identity, real half-close and bound-path cleanup have direct coverage. Six domain source methods give seven CLR cases and four TCP echo source methods give eight CLR cases. The ordinary echo cases retain the source random 1 MiB payload, per-byte checks, two allocators, read modes and executor ownership. Five supplemental cases cover real AF_UNIX half-close, bind failure ownership, option filtering and two echo read modes. The first solution run found a disposal race in an existing test-only event-loop wakeup. Serialize signaling with disposal and preserve the original assertions. Final Debug, checked Release and solution Release passed 574 executed Transport cases on Windows with eight existing Unix-only skips. Full solution passed 32872 with 22 skips. Domain runtime comment review and Unix-host execution remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/domain-verified-results --logger \"trx;LogFilePrefix=domain-verified\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8
+      }
     }
   ],
   "nextWork": [
@@ -8375,7 +8563,8 @@
     "SocketHalfClosed declarations/comments are fully reviewed with seven mappings, one original backend exclusion and eight Windows skips preserving the Unix-only assumption. Validate that original reset/read-order body on Unix; investigate the source-disabled self-shutdown writability fixture and then continue I/O-specific event-loop/group/runtime contracts. Do not infer whole-Transport completion.",
     "SingleThreadEventLoop and AbstractEventLoop fixture declarations/comments are fully reviewed with explicit CLR producer/route adaptations. Continue actual pending I/O-handler/group lifecycle and executor rejection/ownership fixtures; leave source-shaped timing assertions intact and do not polish already-passing native code without a source gap.",
     "NioEventLoop own, NioServerSocketChannel own and inherited AbstractNioChannel option declarations are reviewed with explicit selector/JDK-adapter exclusions. Continue unreviewed native socket/IoHandler/group behavior and comment contracts against actual CLR consumers; retain Unix-only validation and source-disabled writability work. Native backend choices are not whole-Transport completion.",
-    "Unix domain stream/listener, portable domain source fixtures and four ordinary TCP echo methods are ported. Continue Unix-host execution and remaining I/O handler/group runtime and original fixture gaps."
+    "Unix domain stream/listener, portable domain source fixtures and four ordinary TCP echo methods are ported. Continue Unix-host execution and remaining I/O handler/group runtime and original fixture gaps.",
+    "Group scaling lifecycle is ported (2/2 original methods). ManualIoEventLoop, backend-type queries, handler-level raw I/O registration and polling contracts remain open."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
