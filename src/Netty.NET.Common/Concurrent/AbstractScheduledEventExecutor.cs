@@ -372,6 +372,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     private void SubmitScheduled(IScheduledWork task)
     {
+        if (IsShutdown())
+            throw new RejectedExecutionException("The event executor is shut down.");
+
         if (InEventLoop())
         {
             ScheduleFromEventLoop(task);

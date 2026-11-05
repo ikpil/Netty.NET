@@ -151,7 +151,7 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries)) {
                 if (-not $javaRows.Count -or (Compare-Object $javaRows $expectedRows)) { throw 'Original parameter inputs differ from their mapping.' }
             }
             if ($mapping.nativeCases) {
-                $theory = [regex]::Match($testCode, '\[Theory(?:\([^\]]*\))?\]\s*(?<rows>(?:\[InlineData\([^\]]*\)\]\s*)+)public\s+(?:async\s+)?Task\s+' +
+                $theory = [regex]::Match($testCode, '\[Theory(?:\([^\]]*\))?\]\s*(?<rows>(?:\[InlineData\([^\]]*\)\]\s*)+)public\s+(?:async\s+)?(?:void|Task)\s+' +
                     [regex]::Escape($mapping.clrMethod) + '\(')
                 if (-not $theory.Success) { throw 'Missing testsuite CLR permutation rows.' }
                 $rows = @([regex]::Matches($theory.Groups['rows'].Value, '\[InlineData\((?<input>[^)]*)\)\]') |

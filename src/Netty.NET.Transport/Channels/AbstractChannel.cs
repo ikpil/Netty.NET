@@ -119,6 +119,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     _everRegistered = true;
                     _registered = true;
                     if (eventLoop is DefaultEventLoop registry) registry.ChannelRegistered(this);
+                    else if (eventLoop is ManualIoEventLoop manual) manual.ChannelRegistered(this);
                     // Registration is committed before user lifecycle callbacks; those callbacks may
                     // deregister and register this channel again, as in AbstractChannel.register0.
                     lock (_registrationGate)
@@ -141,6 +142,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             {
                 // Registration rejection cannot rely on another task being admitted by the rejected executor.
                 if (eventLoop is DefaultEventLoop registry) registry.ChannelUnregistered(this);
+                else if (eventLoop is ManualIoEventLoop manual) manual.ChannelUnregistered(this);
                 _registered = false;
                 _open = _active = false;
                 ResumeRead();
@@ -344,6 +346,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return Task.CompletedTask;
         _registered = false;
         if (EventLoop is DefaultEventLoop registry) registry.ChannelUnregistered(this);
+        else if (EventLoop is ManualIoEventLoop manual) manual.ChannelUnregistered(this);
         if (EventLoop is SingleThreadEventExecutor worker)
             worker.RemoveShutdownHook(OnLoopShutdown);
         DoDeregister();
