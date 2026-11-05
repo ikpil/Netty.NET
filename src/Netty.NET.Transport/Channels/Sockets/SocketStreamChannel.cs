@@ -45,21 +45,34 @@ public abstract class SocketStreamChannel : AbstractChannel
     protected override IChannelConfig NewConfig() => new DefaultSocketChannelConfig(this, Socket);
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     { cancellationToken.ThrowIfCancellationRequested(); Socket.Bind(address); return Task.CompletedTask; }
+    internal override bool UsesSocketCompletions => true;
     protected override async Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
     {
+        if (IsActive)
+            throw new SocketException((int)SocketError.IsConnected);
         if (local != null)
             Socket.Bind(local);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        // Schedule connect timeout.
         int milliseconds = Config.GetConnectTimeoutMillis();
         if (milliseconds > 0)
             timeout.CancelAfter(milliseconds);
         try
-        { await Socket.ConnectAsync(remote, timeout.Token).ConfigureAwait(false); }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        { await OnLoopAsync(() => _ = CloseTransportAsync()).ConfigureAwait(false); throw new ConnectTimeoutException("Connection timed out: " + remote); }
-        catch { await OnLoopAsync(() => _ = CloseTransportAsync()).ConfigureAwait(false); throw; }
-        await OnLoopAsync(() => { EnsureOpen(); SetActive(true); }).ConfigureAwait(false);
+        { await ConnectSocketAsync(remote, timeout.Token).ConfigureAwait(false); }
+        catch (Exception error)
+        {
+            // If the connect future is cancelled we also cancel the timeout and close the
+            // underlying socket.
+            try { await OnSocketLoopAsync(() => _ = CloseTransportAsync()).ConfigureAwait(false); }
+            catch (RejectedExecutionException) when (EventLoop.IsShuttingDown()) { }
+            if (error is OperationCanceledException && !cancellationToken.IsCancellationRequested)
+                throw new ConnectTimeoutException("Connection timed out: " + remote);
+            throw;
+        }
+        await OnSocketLoopAsync(() => { EnsureOpen(); SetActive(true); }).ConfigureAwait(false);
     }
+    protected virtual ValueTask ConnectSocketAsync(EndPoint remote, CancellationToken cancellationToken) =>
+        Socket.ConnectAsync(remote, cancellationToken);
     protected override void DoClose()
     {
         // Dispose aborts pending CLR socket operations. Shut down the TCP directions first so accepted
@@ -89,7 +102,7 @@ public abstract class SocketStreamChannel : AbstractChannel
                 int sent = await Socket.SendAsync(buffer.ReadableSequence.First, SocketFlags.None).ConfigureAwait(false);
                 if (sent == 0)
                     throw new IOException("Socket accepted zero bytes.");
-                await OnLoopAsync(() => { buffer.ReaderIndex += sent; OutboundBuffer.Progress(sent); }).ConfigureAwait(false);
+                await OnSocketLoopAsync(() => { buffer.ReaderIndex += sent; OutboundBuffer.Progress(sent); }).ConfigureAwait(false);
             }
             return;
         }

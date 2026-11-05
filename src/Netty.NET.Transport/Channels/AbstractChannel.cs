@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
@@ -46,6 +47,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private volatile bool _registered;
     private bool _everRegistered;
     private bool _writing;
+    private int _connecting;
     private IRecvByteBufAllocator.IHandle _receiveHandle;
     /**
      * Creates a new instance.
@@ -180,6 +182,11 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
     protected Task OnSocketLoopAsync(Action action) =>
         DispatchSocketAsync(() => { action(); return false; }, false);
+
+    internal virtual bool UsesSocketCompletions => false;
+
+    private Task CompleteOutboundIoAsync(Func<bool> action, bool pending) =>
+        pending && UsesSocketCompletions ? DispatchSocketAsync(action, true) : OnLoopAsync(() => action());
 
     protected void StartSocketWork(Action action)
     {
@@ -321,29 +328,66 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         return completion.Task;
         async Task ConnectCoreAsync()
         {
+            bool connecting = false;
             try
             {
                 EnsureOpen();
-                await DoConnectAsync(remote, local, cancellationToken).ConfigureAwait(false);
-                await OnLoopAsync(() =>
+                if (UsesSocketCompletions)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    // Already a connect in process.
+                    if (Interlocked.CompareExchange(ref _connecting, 1, 0) != 0)
+                        throw new SocketException((int)SocketError.AlreadyInProgress);
+                    connecting = true;
+                }
+
+                Task operation = DoConnectAsync(remote, local, cancellationToken);
+                bool pending = !operation.IsCompleted;
+                try { await operation.ConfigureAwait(false); }
+                catch (Exception error) when (pending && UsesSocketCompletions && EventLoop is ManualIoEventLoop)
+                {
+                    // Publish the original operation result even if a stopped owner rejects dispatch.
+                    try { await CompleteOutboundIoAsync(() => { Fail(error); return true; }, true).ConfigureAwait(false); }
+                    catch (RejectedExecutionException) { Fail(error); }
+                    return;
+                }
+
+                await CompleteOutboundIoAsync(() =>
                 {
                     EnsureOpen();
+                    ReleaseConnect();
                     // Source connect completion precedes ChannelActive. Keep the native producer's asynchronous
                     // continuation policy; completion itself is committed on this owner.
-                    completion.TrySetResult();
+                    bool canceled = UsesSocketCompletions && cancellationToken.IsCancellationRequested;
+                    if (canceled)
+                        completion.TrySetCanceled(cancellationToken);
+                    else
+                        completion.TrySetResult();
+                    // Regardless if the connection attempt was cancelled, channelActive() event should be triggered,
+                    // because what happened is what happened.
                     if (!wasActive && _active)
-                    { Pipeline.FireChannelActive(); if (Config.IsAutoRead()) BeginRead(); }
-                }).ConfigureAwait(false);
+                    { Pipeline.FireChannelActive(); if (!canceled && Config.IsAutoRead()) BeginRead(); }
+                    // If a user cancelled the connection attempt, close the channel, which is followed by channelInactive().
+                    if (canceled) _ = CloseTransportAsync();
+                    return true;
+                }, pending).ConfigureAwait(false);
             }
-            catch (OperationCanceledException canceled)
+            catch (Exception error) { Fail(error); }
+
+            void Fail(Exception error)
             {
-                if (!completion.TrySetCanceled(canceled.CancellationToken))
-                    OnUnhandledException(canceled);
-            }
-            catch (Exception error)
-            {
-                if (!completion.TrySetException(error))
+                ReleaseConnect();
+                bool published = error is OperationCanceledException canceled
+                    ? completion.TrySetCanceled(canceled.CancellationToken) : completion.TrySetException(error);
+                if (!published)
                     OnUnhandledException(error);
+            }
+
+            void ReleaseConnect()
+            {
+                if (!connecting) return;
+                connecting = false;
+                Volatile.Write(ref _connecting, 0);
             }
         }
     }
@@ -436,12 +480,15 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 // Closing cancels queued ownership; an in-flight native operation must keep its own borrow alive.
                 ReferenceCountUtil.Retain(message);
                 bool borrowed = true;
+                bool pending = false;
                 try
                 {
-                    await DoWriteAsync(message).ConfigureAwait(false);
+                    Task operation = DoWriteAsync(message);
+                    pending = !operation.IsCompleted;
+                    await operation.ConfigureAwait(false);
                     ReferenceCountUtil.Release(message);
                     borrowed = false;
-                    await OnLoopAsync(() => OutboundBuffer.Remove()).ConfigureAwait(false);
+                    await CompleteOutboundIoAsync(() => OutboundBuffer.Remove(), pending).ConfigureAwait(false);
                 }
                 catch (Exception error)
                 {
@@ -452,13 +499,23 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         ReferenceCountUtil.Release(message);
                         borrowed = false;
                     }
-                    await OnLoopAsync(() => HandleWriteError(error)).ConfigureAwait(false);
+                    await CompleteOutboundIoAsync(() =>
+                    {
+                        bool handled = !OutboundBuffer.IsClosed;
+                        HandleWriteError(error);
+                        return handled;
+                    }, pending).ConfigureAwait(false);
                 }
                 finally { if (borrowed) ReferenceCountUtil.Release(message); }
                 // The next iteration must inspect state on the event loop, including after an asynchronous write.
                 if (!EventLoop.InEventLoop())
                 {
-                    await OnLoopAsync(() => { _writing = false; if (OutboundBuffer.Current != null) FlushTransport(); }).ConfigureAwait(false);
+                    void ResumeWrites()
+                    {
+                        _writing = false;
+                        if (OutboundBuffer.Current != null) FlushTransport();
+                    }
+                    await (UsesSocketCompletions ? OnSocketLoopAsync(ResumeWrites) : OnLoopAsync(ResumeWrites)).ConfigureAwait(false);
                     return;
                 }
             }

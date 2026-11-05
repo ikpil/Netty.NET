@@ -66,12 +66,13 @@ public class DatagramChannel : AbstractChannel
         SetActive(true);
         return Task.CompletedTask;
     }
+    internal override bool UsesSocketCompletions => true;
     protected override async Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
     {
         if (local != null)
             _socket.Bind(local);
         await _socket.ConnectAsync(remote, token).ConfigureAwait(false);
-        await OnLoopAsync(() => { EnsureOpen(); Volatile.Write(ref _connectedAddress, TcpSocketChannel.Normalize(remote)); SetActive(true); }).ConfigureAwait(false);
+        await OnSocketLoopAsync(() => { EnsureOpen(); Volatile.Write(ref _connectedAddress, TcpSocketChannel.Normalize(remote)); SetActive(true); }).ConfigureAwait(false);
     }
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
     {
@@ -140,7 +141,7 @@ public class DatagramChannel : AbstractChannel
                 : await _socket.SendAsync(memory, SocketFlags.None).ConfigureAwait(false);
             if (sent != length)
                 throw new IOException("A UDP datagram was only partially accepted.");
-            await OnLoopAsync(() =>
+            await OnSocketLoopAsync(() =>
             {
                 OutboundBuffer.Progress(sent);
                 // CLR receive cannot start on an unbound socket. A first send can implicitly bind it.

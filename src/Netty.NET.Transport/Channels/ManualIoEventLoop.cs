@@ -233,7 +233,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
      */
     /// <summary>
     /// A zero wait permits indefinite blocking. A negative wait pumps without blocking.
-    /// A negative task budget processes inbound socket I/O only.
+    /// A negative task budget processes socket I/O completions only.
     /// </summary>
     public int Run(long waitNanos, long runAllTasksTimeoutNanos)
     {
@@ -356,7 +356,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         lock (_gate) remaining = _io.Count;
         if (remaining == 0) return 0;
 
-        // Only drain the current snapshot. Reads may re-arm or publish another
+        // Only drain the current snapshot. Socket operations may re-arm or publish another
         // completion, and ordinary tasks must still get their turn.
         HashSet<AbstractChannel> handled = null;
         while (remaining-- > 0)

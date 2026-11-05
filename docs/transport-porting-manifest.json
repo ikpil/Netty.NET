@@ -17,8 +17,8 @@
     {
       "name": "Channel, Pipeline and executor ordering",
       "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown. Ported the caller-owned manual pump and eleven portable source methods, with real TCP and channel-migration contracts. Separated manual inbound I/O and task phases and ported four original I/O-handler count and manual-listener methods.",
-      "next": "Review raw I/O registration and backend queries, send/connect phase and I/O processing budgets, and remaining runtime comments."
+      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown. Ported the caller-owned manual pump and eleven portable source methods, with real TCP and channel-migration contracts. Separated manual inbound I/O and task phases and ported four original I/O-handler count and manual-listener methods. Ported pending connect and write completion dispatch with the six outbound source declarations and eight native contract cases.",
+      "next": "Review raw I/O registration and backend queries, threaded I/O time budgets and remaining runtime comments."
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
@@ -42,37 +42,37 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 412,
-    "javaOriginalInvocations": 414,
+    "javaOriginalPassed": 418,
+    "javaOriginalInvocations": 420,
     "transportJavaOriginalPassed": 370,
     "coreTransportJavaOriginalPassed": 300,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 44,
+    "testsuiteJavaJUnitInvocations": 50,
     "datagramJavaJUnitInvocations": 23,
     "datagramJavaAllocatorExecutions": 46,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 367,
-    "originalExecutedCases": 437,
+    "mappedOriginalMethods": 373,
+    "originalExecutedCases": 449,
     "originalSkippedCases": 8,
     "transportMappedOriginalExecutions": 347,
-    "testsuiteMappedOriginalExecutions": 90,
+    "testsuiteMappedOriginalExecutions": 102,
     "datagramMappedOriginalExecutions": 46,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 24,
-    "supplementalExecutedCases": 170,
+    "supplementalExecutedCases": 178,
     "debug": {
-      "total": 615,
-      "passed": 607,
+      "total": 635,
+      "passed": 627,
       "failed": 0,
       "skipped": 8
     },
     "checkedRelease": {
-      "total": 615,
-      "passed": 607,
+      "total": 635,
+      "passed": 627,
       "failed": 0,
       "skipped": 8
     },
@@ -84,8 +84,8 @@
         "skipped": 0
       },
       "Netty.NET.Transport.Tests": {
-        "total": 615,
-        "passed": 607,
+        "total": 635,
+        "passed": 627,
         "failed": 0,
         "skipped": 8
       },
@@ -102,19 +102,19 @@
         "skipped": 14
       }
     },
-    "solutionPassed": 32905,
+    "solutionPassed": 32925,
     "solutionSkipped": 22,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward 410 original calls and 408 passes. Executed four unchanged I/O phase source tests against 64cc10f38ea5f5bd7eae48507817c66680d0afdc, including three NIO-inherited event count bodies and the standalone listener body. Total 412 passes in 414 wrapper or direct invocations.",
-    "note": "Ported the managed inbound I/O phase of the manual event loop. Full passes dispatch a bounded I/O snapshot before ordinary tasks. Wakeups, internal timer expirations, I/O admission, rearming and discarded reads do not increase the handled channel count. Four original cases and six native cases cover separate read/task passes, actual TCP/UDP/Unix domain socket operations, one count per channel, owner and ExecutionContext restoration, migration and shutdown settlement. Full solution Release passed 32905 cases and skipped 22. After preserving ExecutionContext, final Transport Debug, ordinary Release and checked Release each passed 607 cases with eight unchanged Unix-only skips. The other solution projects do not reference Transport and their Release results are carried forward from the full run. Generic raw handles and outbound I/O phases remain open.",
+    "javaEvidence": "Carries forward 414 original calls and 412 passes. Executed six unchanged outbound wrapper methods against 64cc10f38ea5f5bd7eae48507817c66680d0afdc with both original allocator modes. All six wrappers and twelve allocator cases passed. Total 418 passes in 420 wrapper or direct invocations.",
+    "note": "Ported managed pending connect and write completion dispatch. Reject pending and already-connected duplicates without closing the first connection. Keep the source active/close order when cancellation follows native connection. Release the native write borrow before signaling completion, and retain the borrow during owner shutdown until the socket operation returns. Six original methods map to twelve CLR allocator cases. The two timer/cancellation source tests preserve source limits with a controllable CLR socket primitive. Eight native cases cover real TCP/UDP, refusal, two cancellation boundaries, queued writes, failure and shutdown ownership. Initial full solution Release passed 32923 with 22 skips. Final Transport Debug, ordinary Release and checked Release passed 627 with eight unchanged skips. The other projects do not reference Transport and their full-run results are carried forward, yielding 32925 passes and 22 skips with final Transport. Raw handler registration, threaded I/O budgets and gathering writes remain open.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/io-phase-results --logger \"trx;LogFilePrefix=io-phase\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/outbound-results --logger \"trx;LogFilePrefix=outbound\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -125,9 +125,10 @@
       "python artifacts/transport-core/run-domain-originals.py",
       "python artifacts/transport-core/run-scaling-originals.py",
       "python artifacts/transport-core/run-manual-originals.py",
-      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
-      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore --results-directory artifacts/transport-core/io-phase-final-results --logger \"trx;LogFilePrefix=io-phase-final\"",
       "python artifacts/transport-core/run-io-phase-originals.py",
+      "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
+      "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore --results-directory artifacts/transport-core/outbound-final-results --logger \"trx;LogFilePrefix=outbound-final\"",
+      "python artifacts/transport-core/run-outbound-originals.py",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -140,7 +141,10 @@
     "manualJavaOriginalExecutions": 17,
     "manualMappedOriginalExecutions": 13,
     "ioPhaseJavaOriginalExecutions": 4,
-    "ioPhaseMappedOriginalExecutions": 4
+    "ioPhaseMappedOriginalExecutions": 4,
+    "outboundJavaJUnitInvocations": 6,
+    "outboundJavaAllocatorExecutions": 12,
+    "outboundMappedOriginalExecutions": 12
   },
   "entries": [
     {
@@ -1801,14 +1805,15 @@
         "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
       ],
       "review": {
-        "scope": "The managed inbound I/O phase dispatches accepted socket connections and reads before ordinary tasks. The return value counts distinct channels whose completion callbacks ran. Wakeups, timer expirations, read admission and rearming are excluded. Generic raw-handle handler selection, send/connect phases and remaining original comments are open.",
+        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Raw IoHandle operations, backend queries, threaded-loop I/O ratios and remaining backend comments are open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
-          "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs"
+          "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
         ]
       },
       "comments": {
@@ -1998,14 +2003,15 @@
         "src/Netty.NET.Common/Concurrent/AbstractScheduledEventExecutor.cs"
       ],
       "review": {
-        "scope": "Caller-owned pump and real channel lifecycle are implemented. The inbound I/O-only phase handles TCP, Unix domain stream, and UDP reads and accepts. Task-only execution excludes I/O. Full execution processes an inbound snapshot first. Raw IoHandle registration, send/connect I/O phases, backend queries and remaining source comments stay open.",
+        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Raw IoHandle operations, backend queries, threaded-loop I/O ratios and remaining backend comments are open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Common/Concurrent/AbstractScheduledEventExecutor.cs",
           "test/Netty.NET.Transport.Tests/ManualIoEventLoopSourceTest.cs",
           "test/Netty.NET.Transport.Tests/ManualIoEventLoopContractTest.cs",
-          "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs"
+          "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
         ]
       },
       "comments": {
@@ -2162,13 +2168,14 @@
         "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
       ],
       "review": {
-        "scope": "Only clearReadPending, read/registration admission and native callback ownership are mapped here. Selector/IoRegistration/interest-op implementation is not mechanically reproduced; the rest of this original class remains under review.",
+        "scope": "Only clearReadPending, read/registration admission and native callback ownership are mapped here. Selector/IoRegistration/interest-op implementation is not mechanically reproduced; the rest of this original class remains under review. Managed pending connect admission rejects duplicates while retaining the first connection. The owner commits delayed socket outcomes and retains the source cancellation/activation order.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/TcpServerSocketChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
-          "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/NativeReadAdmissionContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
         ],
         "originalMethods": [
           "clearReadPending",
@@ -2180,8 +2187,8 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 60,
-        "preservedCount": 5,
-        "unreviewedCount": 55,
+        "preservedCount": 12,
+        "unreviewedCount": 48,
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       }
     },
@@ -2258,16 +2265,18 @@
         "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
         "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
         "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "review": {
-        "scope": "CLR async socket operations supply inbound readiness without SelectionKey or selector rebuild. The owner-dispatch, event-count and directly driven listener contracts are implemented. Other backend-specific selection, raw registration and lifecycle comments await review.",
+        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Raw IoHandle operations, backend queries, threaded-loop I/O ratios and remaining backend comments are open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
-          "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs"
+          "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
         ]
       },
       "comments": {
@@ -7096,12 +7105,12 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 37,
-    "portedOriginalFixtures": 42,
-    "portedOriginalMethods": 367,
-    "supplementalClrCases": 170,
+    "portedOriginalFixtures": 45,
+    "portedOriginalMethods": 373,
+    "supplementalClrCases": 178,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
-    "testsuiteSources": 17
+    "testsuiteSources": 20
   },
   "clrDecisions": [
     {
@@ -7321,6 +7330,18 @@
         "test/Netty.NET.Transport.Tests/NioIoHandlerSourceTest.cs",
         "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs"
       ]
+    },
+    {
+      "subject": "Socket connect and outbound completion dispatch",
+      "decision": "Reject a second connect while the first is pending, and reject a new stream connect once active without closing the first connection. Route pending managed socket send and connect results through the manual I/O phase. Control callbacks and synchronous operations do not increase the count. Retain the primary failure and the outbound buffer borrow until the native operation has returned. A cancellation after native connect but before owner publication still emits ChannelActive, then closes, preserving the source order. The original timeout and cancellation fixtures use a controllable pending primitive in CLR and keep the source time bounds.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -7390,7 +7411,8 @@
     "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
     "test/Netty.NET.Transport.Tests/ScalableEventLoopGroupContractTest.cs",
     "test/Netty.NET.Transport.Tests/ManualIoEventLoopContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -9085,6 +9107,112 @@
         "manualJavaOriginalExecutions": 17,
         "manualMappedOriginalExecutions": 13
       }
+    },
+    {
+      "checkpoint": "9be1606e0385fe84ceab3343f480df0022938b32",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 412,
+        "javaOriginalInvocations": 414,
+        "transportJavaOriginalPassed": 370,
+        "coreTransportJavaOriginalPassed": 300,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 44,
+        "datagramJavaJUnitInvocations": 23,
+        "datagramJavaAllocatorExecutions": 46,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 367,
+        "originalExecutedCases": 437,
+        "originalSkippedCases": 8,
+        "transportMappedOriginalExecutions": 347,
+        "testsuiteMappedOriginalExecutions": 90,
+        "datagramMappedOriginalExecutions": 46,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 24,
+        "supplementalExecutedCases": 170,
+        "debug": {
+          "total": 615,
+          "passed": 607,
+          "failed": 0,
+          "skipped": 8
+        },
+        "checkedRelease": {
+          "total": 615,
+          "passed": 607,
+          "failed": 0,
+          "skipped": 8
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "total": 64,
+            "passed": 64,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Transport.Tests": {
+            "total": 615,
+            "passed": 607,
+            "failed": 0,
+            "skipped": 8
+          },
+          "Netty.NET.Buffer.Tests": {
+            "total": 29556,
+            "passed": 29556,
+            "failed": 0,
+            "skipped": 0
+          },
+          "Netty.NET.Common.Tests": {
+            "total": 2692,
+            "passed": 2678,
+            "failed": 0,
+            "skipped": 14
+          }
+        },
+        "solutionPassed": 32905,
+        "solutionSkipped": 22,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward 410 original calls and 408 passes. Executed four unchanged I/O phase source tests against 64cc10f38ea5f5bd7eae48507817c66680d0afdc, including three NIO-inherited event count bodies and the standalone listener body. Total 412 passes in 414 wrapper or direct invocations.",
+        "note": "Ported the managed inbound I/O phase of the manual event loop. Full passes dispatch a bounded I/O snapshot before ordinary tasks. Wakeups, internal timer expirations, I/O admission, rearming and discarded reads do not increase the handled channel count. Four original cases and six native cases cover separate read/task passes, actual TCP/UDP/Unix domain socket operations, one count per channel, owner and ExecutionContext restoration, migration and shutdown settlement. Full solution Release passed 32905 cases and skipped 22. After preserving ExecutionContext, final Transport Debug, ordinary Release and checked Release each passed 607 cases with eight unchanged Unix-only skips. The other solution projects do not reference Transport and their Release results are carried forward from the full run. Generic raw handles and outbound I/O phases remain open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/io-phase-results --logger \"trx;LogFilePrefix=io-phase\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "python artifacts/transport-core/run-scaling-originals.py",
+          "python artifacts/transport-core/run-manual-originals.py",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=false",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore --results-directory artifacts/transport-core/io-phase-final-results --logger \"trx;LogFilePrefix=io-phase-final\"",
+          "python artifacts/transport-core/run-io-phase-originals.py",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4
+      }
     }
   ],
   "nextWork": [
@@ -9099,7 +9227,8 @@
     "Unix domain stream/listener, portable domain source fixtures and four ordinary TCP echo methods are ported. Continue Unix-host execution and remaining I/O handler/group runtime and original fixture gaps.",
     "Group scaling lifecycle is ported (2/2 original methods). ManualIoEventLoop, backend-type queries, handler-level raw I/O registration and polling contracts remain open.",
     "The caller-owned ManualIoEventLoop is available to Bootstrap and ServerBootstrap. Raw I/O registration, backend compatibility queries and a separate readiness-only phase remain open.",
-    "Manual inbound socket I/O dispatch is separated from ordinary work. Continue raw I/O handler registrations, backend queries, and send/connect and threaded-loop processing contracts."
+    "Manual inbound socket I/O dispatch is separated from ordinary work. Continue raw I/O handler registrations, backend queries, and send/connect and threaded-loop processing contracts.",
+    "Manual socket connect and write completion dispatch is ported. Continue raw I/O registrations, threaded budgets and source gathering-write contracts."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -10276,6 +10405,186 @@
         "preservedCount": 3,
         "unreviewedCount": 0,
         "scope": "Original comments are retained at the CLR fixture and helper sites."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketConnectionAttemptTest.java",
+      "sha256": "eca6194d57b590753d99e8b1c0653363ceb5465e6f2714590f16d176fb69c030",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketConnectionAttemptSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testConnectTimeout",
+          "clrMethod": "TestConnectTimeout",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep a 2000 ms configured timeout and 3000 ms completion bound with both allocators. Hold the socket connect primitive at a cancellable operation boundary, so the test does not depend on an external network route. Verify ConnectTimeoutException and socket closure."
+        },
+        {
+          "upstreamMethod": "testConnectRefused",
+          "clrMethod": "TestConnectRefused",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Connect to an actual bound but non-listening loopback socket with half closure false. Verify ConnectionRefused and no ChannelActive on both allocator modes."
+        },
+        {
+          "upstreamMethod": "testConnectRefusedHalfClosure",
+          "clrMethod": "TestConnectRefusedHalfClosure",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Retain the true half-closure option and real loopback refusal. Verify ConnectionRefused and no ChannelActive on both allocator modes."
+        },
+        {
+          "upstreamMethod": "testConnectCancellation",
+          "clrMethod": "TestConnectCancellation",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the source 4000 ms connect timeout, 1000 ms unfinished observation, cancellation and 500 ms close-completion limit. Native token cancellation and a deterministic pending socket primitive replace promise cancellation and the Java network-route preflight."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 4,
+        "reviewedCount": 4,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "All four source declarations mapped with two allocator variants. Original network-route prerequisite comments remain at the Java probe. The controlled timeout/cancellation cases exercise the actual CLR timeout and socket-close path.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketConnectionAttemptSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 6,
+        "preservedCount": 1,
+        "unreviewedCount": 5,
+        "scope": "All four source declarations mapped with two allocator variants. Original network-route prerequisite comments remain at the Java probe. The controlled timeout/cancellation cases exercise the actual CLR timeout and socket-close path."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketMultipleConnectTest.java",
+      "sha256": "dd99a829830a2b7a8595e18a6d8604695ced676c7251f7e2ae88475f2251e35b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketMultipleConnectSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testMultipleConnect",
+          "clrMethod": "TestMultipleConnect",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Retain a live TCP listener, explicit client registration, successful first connect and second-connect failure. Map AlreadyConnectedException to SocketError.IsConnected and verify that the first connection stays active. Both NIO allocator rows are preserved."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "The single source declaration runs with both managed allocators.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketMultipleConnectSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The single source declaration runs with both managed allocators."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketCancelWriteTest.java",
+      "sha256": "18a94488750b50190c7159432673c5a9e05b8a7ca3efea81d84e456859e068dc",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketCancelWriteSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCancelWrite",
+          "clrMethod": "TestCancelWrite",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Use real client/server TCP, the original a/b/c/d/e writes and the same cancellation and flush order. Cancellation tokens claim the two queued completions before flush. Await b/c/e, verify the receiver sees exactly b/c/e, sender sees no bytes, and both canceled buffers were released. Preserve both allocators and the 30 s harness."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "The single source declaration runs with both managed allocators.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketCancelWriteSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The single source declaration runs with both managed allocators."
       }
     }
   ]
