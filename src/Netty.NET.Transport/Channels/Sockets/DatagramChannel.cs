@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
+using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
@@ -43,6 +44,7 @@ namespace Netty.NET.Transport.Channels.Sockets;
 public class DatagramChannel : AbstractChannel
 {
     private readonly Socket _socket;
+    private readonly bool _linuxDualMode;
     private EndPoint _connectedAddress;
     private IPEndPoint _linuxLocalAddress;
     private IPEndPoint _linuxBoundAddress;
@@ -63,11 +65,29 @@ public class DatagramChannel : AbstractChannel
         if (dualMode && family != AddressFamily.InterNetworkV6)
             throw new ArgumentException("Dual mode requires an IPv6 socket.", nameof(family));
         _socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
-        if (dualMode)
+        _linuxDualMode = OperatingSystem.IsLinux() && dualMode;
+        try
         {
-            try { _socket.DualMode = true; }
-            catch { _socket.Dispose(); throw; }
+            if (dualMode) _socket.DualMode = true;
+            if (OperatingSystem.IsLinux())
+            {
+                if (Socket.OSSupportsIPv4 && (family == AddressFamily.InterNetwork || dualMode))
+                    DisableMulticastAll(SocketOptionLevel.IP, 49); // IP_MULTICAST_ALL
+                if (family == AddressFamily.InterNetworkV6)
+                    DisableMulticastAll(SocketOptionLevel.IPv6, 29); // IPV6_MULTICAST_ALL
+            }
         }
+        catch { _socket.Dispose(); throw; }
+    }
+
+    private void DisableMulticastAll(SocketOptionLevel level, int option)
+    {
+        // As in OpenJDK, receive only memberships held by this socket. Older kernels may lack the option.
+        // https://github.com/openjdk/jdk/blob/master/src/java.base/unix/native/libnio/ch/Net.c
+        Span<byte> disabled = stackalloc byte[sizeof(int)];
+        disabled.Clear();
+        try { _socket.SetRawSocketOption((int)level, option, disabled); }
+        catch (SocketException error) when (error.SocketErrorCode == SocketError.ProtocolOption) { }
     }
     public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(Volatile.Read(ref _linuxLocalAddress) ?? _socket.LocalEndPoint) : null;
     public override EndPoint RemoteAddress => IsOpen ? Volatile.Read(ref _connectedAddress) : null;
@@ -87,7 +107,15 @@ public class DatagramChannel : AbstractChannel
         if (local != null)
             _socket.Bind(local);
         var bound = OperatingSystem.IsLinux() ? _linuxBoundAddress ?? (IPEndPoint)_socket.LocalEndPoint : null;
-        await _socket.ConnectAsync(remote, token).ConfigureAwait(false);
+        try { await _socket.ConnectAsync(remote, token).ConfigureAwait(false); }
+        catch (SocketException)
+        {
+            // NioDatagramChannel closes when the native connect fails. The socket may own multicast
+            // state that cannot be copied to a replacement descriptor by Socket.ConnectAsync.
+            try { await OnSocketLoopAsync(() => { _ = CloseTransportAsync(); }).ConfigureAwait(false); }
+            catch (RejectedExecutionException) { } // The event loop's shutdown hook owns cleanup.
+            throw;
+        }
         await OnSocketLoopAsync(() =>
         {
             EnsureOpen();
@@ -419,9 +447,10 @@ public class DatagramChannel : AbstractChannel
             throw new NotSupportedException("Use the IPv6 interface-index or network-interface overload.");
         NetworkInterface networkInterface = interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any)
             ? ((DatagramConfig)Config).GetNetworkInterface() : FindInterface(interfaceAddress);
+        var local = (LocalAddress as IPEndPoint)?.Address;
         var address = networkInterface != null && (interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any))
             ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork)
-            : interfaceAddress ?? (LocalAddress as IPEndPoint)?.Address;
+            : interfaceAddress ?? (local?.AddressFamily == AddressFamily.InterNetwork ? local : IPAddress.Any);
         address ??= IPAddress.Any;
         networkInterface ??= FindInterface(address);
         ChangeMembership(multicastAddress, networkInterface?.GetIPProperties().GetIPv4Properties()?.Index ?? 0, address, join);
@@ -451,16 +480,26 @@ public class DatagramChannel : AbstractChannel
     private Task ChangeMembershipAsync(IPAddress address, NetworkInterface networkInterface, bool join)
     {
         ArgumentNullException.ThrowIfNull(networkInterface);
-        return OnLoopAsync(() => ChangeMembership(address, InterfaceIndex(networkInterface, _socket.AddressFamily),
-            _socket.AddressFamily == AddressFamily.InterNetworkV6 ? null : InterfaceAddress(networkInterface, _socket.AddressFamily), join));
+        return OnLoopAsync(() =>
+        {
+            var family = address.AddressFamily;
+            if (!SupportsGroupFamily(family))
+                throw new ArgumentException("Multicast group and socket families differ.", nameof(address));
+            ChangeMembership(address, InterfaceIndex(networkInterface, family),
+                family == AddressFamily.InterNetworkV6 ? null : InterfaceAddress(networkInterface, family), join);
+        });
     }
+
+    private bool SupportsGroupFamily(AddressFamily family) => family == _socket.AddressFamily ||
+        (_linuxDualMode && family == AddressFamily.InterNetwork);
+
     private void ChangeMembership(IPAddress group, long index, IPAddress address, bool join)
     {
         ArgumentNullException.ThrowIfNull(group);
         group = MembershipAddress(group);
-        if (group.AddressFamily != _socket.AddressFamily)
+        if (!SupportsGroupFamily(group.AddressFamily))
             throw new ArgumentException("Multicast group and socket families differ.", nameof(group));
-        if (_socket.AddressFamily == AddressFamily.InterNetwork && address == null)
+        if (group.AddressFamily == AddressFamily.InterNetwork && address == null)
             throw new ArgumentException("IPv4 membership requires an interface address; the numeric-index overload is for IPv6.", nameof(address));
         if (!(group.IsIPv6Multicast || group.AddressFamily == AddressFamily.InterNetwork && group.GetAddressBytes()[0] is >= 224 and <= 239))
             throw new ArgumentException("A multicast address is required.", nameof(group));
@@ -474,7 +513,7 @@ public class DatagramChannel : AbstractChannel
         if (!join)
             address = _memberships[key].Address;
         var option = join ? SocketOptionName.AddMembership : SocketOptionName.DropMembership;
-        if (_socket.AddressFamily == AddressFamily.InterNetworkV6)
+        if (group.AddressFamily == AddressFamily.InterNetworkV6)
             _socket.SetSocketOption(SocketOptionLevel.IPv6, option, new IPv6MulticastOption(group, index));
         else
             _socket.SetSocketOption(SocketOptionLevel.IP, option, new MulticastOption(group, address ?? IPAddress.Any));
@@ -553,8 +592,8 @@ public class DatagramChannel : AbstractChannel
     }
     private void ValidateSource(IPAddress group, IPAddress source)
     {
-        if (group.AddressFamily != _socket.AddressFamily || source.AddressFamily != group.AddressFamily)
-            throw new NotSupportedException("Source filtering requires the group, source and socket to use the same address family.");
+        if (!SupportsGroupFamily(group.AddressFamily) || source.AddressFamily != group.AddressFamily)
+            throw new NotSupportedException("Source filtering requires matching group and source families supported by the socket.");
         if (group.AddressFamily == AddressFamily.InterNetworkV6)
         {
             if (!group.IsIPv6Multicast)
@@ -711,12 +750,22 @@ public class DatagramChannel : AbstractChannel
                 _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface,
                     InterfaceAddress(networkInterface, AddressFamily.InterNetwork).GetAddressBytes());
             else
+            {
                 _socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface,
                     InterfaceIndex(networkInterface, AddressFamily.InterNetworkV6));
+                if (_linuxDualMode && networkInterface.GetIPProperties().UnicastAddresses
+                    .FirstOrDefault(info => info.Address.AddressFamily == AddressFamily.InterNetwork) is { } ipv4)
+                    _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, ipv4.Address.GetAddressBytes());
+            }
         }
         protected override void AutoReadCleared() => ((AbstractChannel)Channel).ClearReadPending();
         private readonly Socket _socket;
-        internal DatagramConfig(IChannel channel, Socket socket) : base(channel, new FixedRecvByteBufAllocator(2048)) { _socket = socket; }
+        private readonly bool _linuxDualMode;
+        internal DatagramConfig(DatagramChannel channel, Socket socket) : base(channel, new FixedRecvByteBufAllocator(2048))
+        {
+            _socket = socket;
+            _linuxDualMode = channel._linuxDualMode && Socket.OSSupportsIPv4;
+        }
         protected override bool TryGetValue(ChannelOption option, out object value)
         {
             /**
@@ -826,6 +875,7 @@ public class DatagramChannel : AbstractChannel
                 ArgumentOutOfRangeException.ThrowIfNegative(ttl);
                 ArgumentOutOfRangeException.ThrowIfGreaterThan(ttl, 255);
                 _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.MulticastTimeToLive, ttl);
+                SetMappedIPv4Option(SocketOptionName.MulticastTimeToLive, ttl);
             }
             /**
      * Sets the {@link StandardSocketOptions#IP_MULTICAST_LOOP} option.
@@ -834,7 +884,11 @@ public class DatagramChannel : AbstractChannel
      *        {@code true} if and only if the loopback mode has been disabled
      */
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_LOOP_DISABLED))
-                _socket.MulticastLoopback = !(bool)value;
+            {
+                bool enabled = !(bool)value;
+                _socket.MulticastLoopback = enabled;
+                SetMappedIPv4Option(SocketOptionName.MulticastLoopback, enabled ? 1 : 0);
+            }
             else
                 return base.SetValue(option, value);
             return true;
@@ -861,9 +915,15 @@ public class DatagramChannel : AbstractChannel
                 Span<byte> value = stackalloc byte[sizeof(int)];
                 BitConverter.TryWriteBytes(value, trafficClass);
                 _socket.SetRawSocketOption((int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, value);
+                SetMappedIPv4Option(SocketOptionName.TypeOfService, trafficClass);
             }
             else
                 _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService, trafficClass);
+        }
+
+        private void SetMappedIPv4Option(SocketOptionName option, int value)
+        {
+            if (_linuxDualMode) _socket.SetSocketOption(SocketOptionLevel.IP, option, value);
         }
 
         private SocketOptionLevel MulticastOptionLevel => _socket.AddressFamily == AddressFamily.InterNetworkV6

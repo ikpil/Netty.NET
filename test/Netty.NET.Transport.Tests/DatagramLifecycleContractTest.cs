@@ -160,6 +160,24 @@ public class DatagramLifecycleContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
     }
+    [Fact(Timeout = 10000)]
+    public async Task NativeConnectFailureClosesTheDatagramChannel()
+    {
+        if (!OperatingSystem.IsLinux()) Assert.Skip("Linux rejects UDP connect to broadcast without SO_BROADCAST.");
+        var cancellation = TestContext.Current.CancellationToken;
+        var group = new DefaultEventLoopGroup(1);
+        try
+        {
+            var channel = await new Bootstrap().Group(group).Channel<DatagramChannel>()
+                .Option(ChannelOption.SO_BROADCAST, false).Handler(new ChannelInboundHandlerAdapter())
+                .BindAsync(new IPEndPoint(IPAddress.Any, 0), cancellation);
+            await Assert.ThrowsAsync<SocketException>(() => channel.ConnectAsync(new IPEndPoint(IPAddress.Broadcast, 9), cancellationToken: cancellation));
+            await channel.CloseCompletion.WaitAsync(cancellation);
+            Assert.False(channel.IsOpen);
+        }
+        finally { await group.StopAsync(); }
+    }
+
     private sealed class Capture(ChannelWriter<int> writer) : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket message) => writer.TryWrite(message.Content.ReadByte());
