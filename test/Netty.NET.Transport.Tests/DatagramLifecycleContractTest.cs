@@ -113,12 +113,18 @@ public class DatagramLifecycleContractTest
         finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
     }
     [Theory(Timeout = 10000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task DisconnectKeepsTheBoundSocketAndReceivingAcrossReconnect(bool ipv6)
+    [InlineData(false, false, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, true, true)]
+    public async Task DisconnectKeepsTheBoundSocketAndReceivingAcrossReconnect(bool ipv6, bool wildcard, bool implicitBind)
     {
         var family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
         var loopback = ipv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
+        var any = ipv6 ? IPAddress.IPv6Any : IPAddress.Any;
+        var cancellation = TestContext.Current.CancellationToken;
         var messages = Channel.CreateUnbounded<int>();
         var group = new DefaultEventLoopGroup(1);
         IChannel channel = null;
@@ -128,18 +134,28 @@ public class DatagramLifecycleContractTest
         otherPeer.Bind(new IPEndPoint(loopback, 0));
         try
         {
-            channel = await new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family))
-                .Handler(new Capture(messages.Writer)).BindAsync(new IPEndPoint(loopback, 0));
-            var bound = channel.LocalAddress;
-            for (int i = 0; i < 3; i++)
+            var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family))
+                .Handler(new Capture(messages.Writer)).Option(ChannelOption.IP_MULTICAST_TTL, 23);
+            channel = implicitBind ? await bootstrap.RegisterAsync() : await bootstrap.BindAsync(new IPEndPoint(wildcard ? any : loopback, 0));
+            int port = (channel.LocalAddress as IPEndPoint)?.Port ?? 0;
+            for (int i = 0; i < 5; i++)
             {
-                if (i != 1) await channel.ConnectAsync(peer.LocalEndPoint);
-                else await channel.DisconnectAsync();
-                Assert.Equal(bound, channel.LocalAddress);
-                Assert.Equal(i != 1, ((DatagramChannel)channel).IsConnected);
-                var sender = i == 1 ? otherPeer : peer;
-                await sender.SendToAsync(new byte[] { (byte)i }, SocketFlags.None, bound, TestContext.Current.CancellationToken);
-                Assert.Equal(i, await messages.Reader.ReadAsync(TestContext.Current.CancellationToken));
+                bool connected = i % 2 == 0;
+                if (connected) await channel.ConnectAsync(peer.LocalEndPoint, cancellationToken: cancellation);
+                else await channel.DisconnectAsync(cancellation);
+                var local = Assert.IsType<IPEndPoint>(channel.LocalAddress);
+                if (port == 0) port = local.Port;
+                Assert.NotEqual(0, port);
+                Assert.Equal(port, local.Port);
+                if (!wildcard || OperatingSystem.IsLinux())
+                    Assert.Equal(!connected && wildcard ? any : loopback, local.Address);
+                Assert.True(channel.IsActive);
+                Assert.Equal(connected, ((DatagramChannel)channel).IsConnected);
+                Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_TTL, out var ttl));
+                Assert.Equal(23, ttl);
+                var sender = connected ? peer : otherPeer;
+                await sender.SendToAsync(new byte[] { (byte)i }, SocketFlags.None, new IPEndPoint(loopback, port), cancellation);
+                Assert.Equal(i, await messages.Reader.ReadAsync(cancellation));
             }
         }
         finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }

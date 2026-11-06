@@ -22,6 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
@@ -43,6 +44,8 @@ public class DatagramChannel : AbstractChannel
 {
     private readonly Socket _socket;
     private EndPoint _connectedAddress;
+    private IPEndPoint _linuxLocalAddress;
+    private IPEndPoint _linuxBoundAddress;
     private readonly Dictionary<(IPAddress Group, long Index, IPAddress Source), Membership> _memberships = new();
     private sealed class Membership(IPAddress address)
     {
@@ -66,7 +69,7 @@ public class DatagramChannel : AbstractChannel
             catch { _socket.Dispose(); throw; }
         }
     }
-    public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(_socket.LocalEndPoint) : null;
+    public override EndPoint LocalAddress => IsOpen ? TcpSocketChannel.Normalize(Volatile.Read(ref _linuxLocalAddress) ?? _socket.LocalEndPoint) : null;
     public override EndPoint RemoteAddress => IsOpen ? Volatile.Read(ref _connectedAddress) : null;
     protected override IChannelConfig NewConfig() => new DatagramConfig(this, _socket);
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
@@ -83,8 +86,20 @@ public class DatagramChannel : AbstractChannel
     {
         if (local != null)
             _socket.Bind(local);
+        var bound = OperatingSystem.IsLinux() ? _linuxBoundAddress ?? (IPEndPoint)_socket.LocalEndPoint : null;
         await _socket.ConnectAsync(remote, token).ConfigureAwait(false);
-        await OnSocketLoopAsync(() => { EnsureOpen(); Volatile.Write(ref _connectedAddress, TcpSocketChannel.Normalize(remote)); SetActive(true); }).ConfigureAwait(false);
+        await OnSocketLoopAsync(() =>
+        {
+            EnsureOpen();
+            if (OperatingSystem.IsLinux())
+            {
+                var connected = ReadLinuxLocalAddress();
+                _linuxBoundAddress = bound ?? new IPEndPoint(AnyAddress, connected.Port);
+                Volatile.Write(ref _linuxLocalAddress, connected);
+            }
+            Volatile.Write(ref _connectedAddress, TcpSocketChannel.Normalize(remote));
+            SetActive(true);
+        }).ConfigureAwait(false);
     }
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
     {
@@ -95,7 +110,9 @@ public class DatagramChannel : AbstractChannel
             // to a zero address removes its default peer without replacing the bound socket.
             // https://learn.microsoft.com/windows/win32/api/winsock2/nf-winsock2-connect
             if (OperatingSystem.IsWindows())
-                _socket.Connect(new IPEndPoint(_socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0));
+                _socket.Connect(new IPEndPoint(AnyAddress, 0));
+            else if (OperatingSystem.IsLinux())
+                DisconnectLinux();
             else
                 _socket.Disconnect(true);
             Volatile.Write(ref _connectedAddress, null);
@@ -103,6 +120,54 @@ public class DatagramChannel : AbstractChannel
         }
         return Task.CompletedTask;
     }
+
+    private IPAddress AnyAddress => _socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any;
+
+    private void DisconnectLinux()
+    {
+        // AF_UNSPEC detaches the UDP peer while keeping the descriptor, its socket options and pending receives.
+        // Linux may release an ephemeral port. Restore the original binding just as the JDK channel does.
+        // https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/sun/nio/ch/DatagramChannelImpl.java
+        byte[] unspecified = new byte[16]; // struct sockaddr with sa_family = AF_UNSPEC (0)
+        if (ConnectNative(_socket.SafeHandle, unspecified, (uint)unspecified.Length) != 0)
+            throw new SocketException();
+
+        try
+        {
+            var local = ReadLinuxLocalAddress();
+            if (local.Port == 0)
+            {
+                _socket.Bind(_linuxBoundAddress);
+                local = ReadLinuxLocalAddress();
+            }
+            Volatile.Write(ref _linuxLocalAddress, local);
+        }
+        catch
+        {
+            // The peer is already detached. Close if we cannot restore the promised binding.
+            _ = CloseTransportAsync();
+            throw;
+        }
+    }
+
+    private IPEndPoint ReadLinuxLocalAddress()
+    {
+        // Socket.LocalEndPoint caches the connected address. Query the same descriptor directly.
+        var template = new IPEndPoint(AnyAddress, 0);
+        SocketAddress address = template.Serialize();
+        var bytes = new byte[address.Size];
+        uint length = (uint)bytes.Length;
+        if (GetSocketName(_socket.SafeHandle, bytes, ref length) != 0)
+            throw new SocketException();
+        bytes.AsSpan(0, (int)length).CopyTo(address.Buffer.Span);
+        return (IPEndPoint)template.Create(address);
+    }
+
+    [DllImport("libc", EntryPoint = "connect", SetLastError = true)]
+    private static extern int ConnectNative(SafeSocketHandle socket, byte[] address, uint length);
+
+    [DllImport("libc", EntryPoint = "getsockname", SetLastError = true)]
+    private static extern int GetSocketName(SafeSocketHandle socket, [Out] byte[] address, ref uint length);
     /**
      * Return {@code true} if the {@link DatagramChannel} is connected to the remote peer.
      */
@@ -356,7 +421,7 @@ public class DatagramChannel : AbstractChannel
             ? ((DatagramConfig)Config).GetNetworkInterface() : FindInterface(interfaceAddress);
         var address = networkInterface != null && (interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any))
             ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork)
-            : interfaceAddress ?? (_socket.LocalEndPoint as IPEndPoint)?.Address;
+            : interfaceAddress ?? (LocalAddress as IPEndPoint)?.Address;
         address ??= IPAddress.Any;
         networkInterface ??= FindInterface(address);
         ChangeMembership(multicastAddress, networkInterface?.GetIPProperties().GetIPv4Properties()?.Index ?? 0, address, join);

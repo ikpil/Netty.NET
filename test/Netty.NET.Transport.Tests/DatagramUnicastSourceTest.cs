@@ -398,10 +398,12 @@ public partial class DatagramUnicastSourceTest
             Assert.True(((DatagramChannel)client).IsConnected);
             Assert.NotNull(client.LocalAddress);
             Assert.NotNull(client.RemoteAddress);
+            int localPort = ((IPEndPoint)client.LocalAddress).Port;
             // Test what happens when we call disconnect()
             await client.DisconnectAsync();
             Assert.False(((DatagramChannel)client).IsConnected);
             Assert.NotNull(client.LocalAddress);
+            Assert.Equal(localPort, ((IPEndPoint)client.LocalAddress).Port);
             Assert.Null(client.RemoteAddress);
             var disconnectedWrite = client.WriteAndFlushAsync(buffer.RetainedDuplicate());
             Assert.Equal(SocketError.NotConnected, (await Assert.ThrowsAsync<SocketException>(() => disconnectedWrite)).SocketErrorCode);
