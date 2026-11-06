@@ -212,15 +212,18 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private Task DispatchSocketAsync(Func<bool> action, bool queue, bool captureContext = true)
     {
         var loop = EventLoop;
-        if (loop is not ManualIoEventLoop manual || (!queue && loop.InEventLoop()))
+        if (loop is not (ManualIoEventLoop or DefaultEventLoop) || (!queue && loop.InEventLoop()))
             return OnLoopAsync(() => action());
 
         try
         {
-            return manual.SubmitIoAsync(this, () =>
+            (Task, bool) Dispatch() =>
                 ReferenceEquals(loop, _eventLoop)
                     ? (Task.CompletedTask, action())
-                    : (DispatchSocketAsync(action, queue, captureContext), false), captureContext);
+                    : (DispatchSocketAsync(action, queue, captureContext), false);
+            return loop is ManualIoEventLoop manual
+                ? manual.SubmitIoAsync(this, Dispatch, captureContext)
+                : ((DefaultEventLoop)loop).SubmitIoAsync(Dispatch, captureContext);
         }
         catch (RejectedExecutionException) when (!ReferenceEquals(loop, _eventLoop))
         {
@@ -344,7 +347,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 Task operation = DoConnectAsync(remote, local, cancellationToken);
                 bool pending = !operation.IsCompleted;
                 try { await operation.ConfigureAwait(false); }
-                catch (Exception error) when (pending && UsesSocketCompletions && EventLoop is ManualIoEventLoop)
+                catch (Exception error) when (pending && UsesSocketCompletions && EventLoop is ManualIoEventLoop or DefaultEventLoop)
                 {
                     // Publish the original operation result even if a stopped owner rejects dispatch.
                     try { await CompleteOutboundIoAsync(() => { Fail(error); return true; }, true).ConfigureAwait(false); }

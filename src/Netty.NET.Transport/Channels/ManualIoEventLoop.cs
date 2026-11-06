@@ -43,7 +43,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
 
     private readonly object _gate = new();
     private readonly LinkedBlockingQueue<Action> _tasks = new(int.MaxValue);
-    private readonly Queue<(AbstractChannel Channel, Func<bool> Dispatch)> _io = new();
+    private readonly Queue<(AbstractChannel Channel, IoCompletion Completion)> _io = new();
     private readonly HashSet<AbstractChannel> _channels = new(ReferenceEqualityComparer.Instance);
     private readonly TaskCompletionSource _termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Ticker _ticker;
@@ -130,40 +130,15 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
     internal Task SubmitIoAsync(AbstractChannel channel, Func<(Task Completion, bool Handled)> dispatch,
         bool captureContext = true)
     {
-        var context = captureContext ? ExecutionContext.Capture() : null;
-        var completion = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new IoCompletion(dispatch, captureContext);
         lock (_gate)
         {
             if (IsShutdown())
                 throw new RejectedExecutionException("The event loop is shut down.");
-            _io.Enqueue((channel, Invoke));
+            _io.Enqueue((channel, completion));
             Monitor.Pulse(_gate);
         }
-        return completion.Task.Unwrap();
-
-        bool Invoke()
-        {
-            bool handled = false;
-            if (context == null)
-                Dispatch();
-            else
-                ExecutionContext.Run(context, _ => Dispatch(), null);
-            return handled;
-
-            void Dispatch()
-            {
-                try
-                {
-                    var result = dispatch();
-                    completion.SetResult(result.Completion);
-                    handled = result.Handled;
-                }
-                catch (Exception error)
-                {
-                    completion.SetException(error);
-                }
-            }
-        }
+        return completion.Completion;
     }
 
     /**
@@ -361,9 +336,9 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         HashSet<AbstractChannel> handled = null;
         while (remaining-- > 0)
         {
-            (AbstractChannel Channel, Func<bool> Dispatch) entry;
+            (AbstractChannel Channel, IoCompletion Completion) entry;
             lock (_gate) entry = _io.Dequeue();
-            if (entry.Dispatch())
+            if (entry.Completion.Dispatch())
                 (handled ??= new HashSet<AbstractChannel>(ReferenceEqualityComparer.Instance)).Add(entry.Channel);
         }
         return handled?.Count ?? 0;
