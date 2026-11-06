@@ -82,12 +82,23 @@ public class LocalChannel : AbstractChannel
             return Task.FromException(new InvalidOperationException("Connection pending."));
         cancellationToken.ThrowIfCancellationRequested();
         _connecting = true;
-        if (_local == null)
-            _local = LocalChannelRegistry.Register(this, null, local ?? global::Netty.NET.Transport.Channels.Local.LocalAddress.ANY);
-        if (LocalChannelRegistry.Get(remote) is not LocalServerChannel server || !server.IsActive)
-            return Task.FromException(new SocketException((int)SocketError.ConnectionRefused));
-        _remote = (LocalAddress)remote;
-        _peer = server.Serve(this);
+        try
+        {
+            // Not bound yet and no localAddress specified - get one.
+            if (_local == null || local != null)
+                _local = LocalChannelRegistry.Register(this, _local, local ?? global::Netty.NET.Transport.Channels.Local.LocalAddress.ANY);
+            if (LocalChannelRegistry.Get(remote) is not LocalServerChannel server || !server.IsActive)
+                throw new SocketException((int)SocketError.ConnectionRefused);
+            _remote = (LocalAddress)remote;
+            _peer = server.Serve(this);
+        }
+        catch
+        {
+            // No asynchronous connection is being awaited. Close and release the local binding.
+            _connecting = false;
+            _ = CloseTransportAsync();
+            throw;
+        }
         return FinishConnectAsync(cancellationToken);
     }
     private async Task FinishConnectAsync(CancellationToken cancellationToken)
