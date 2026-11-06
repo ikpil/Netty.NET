@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels;
 
@@ -260,9 +261,19 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         catch (Exception error) { Pipeline.LogExceptionHandlerFailure(error, cause); }
     }
 
+    private static readonly bool EstimateWriteTaskSize = SystemPropertyUtil.GetBoolean("io.netty.transport.estimateSizeOnSubmit", true);
+    // Assuming compressed oops, 12 bytes obj header, 4 ref fields and one int field
+    // CLR retains the source default as an accounting estimate for a queued write.
+    private static readonly int WriteTaskOverhead = Math.Max(0, SystemPropertyUtil.GetInt("io.netty.transport.writeTaskSizeOverhead", 32));
+
     private Task Outbound(Func<IChannelOutboundHandler, ChannelHandlerContext, Task> operation,
         CancellationToken cancellationToken, int mask, object message = null)
     {
+        if (message != null && cancellationToken.IsCancellationRequested)
+        {
+            ReferenceCountUtil.Release(message);
+            return Task.FromCanceled(cancellationToken);
+        }
         var previous = FindOutbound(mask);
         if (previous == null)
         { ReferenceCountUtil.Release(message); return Task.FromException(new InvalidOperationException("No outbound handler.")); }
@@ -281,16 +292,32 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         return QueueAsync();
         async Task QueueAsync()
         {
-            int started = 0;
+            var buffer = Pipeline.Owner.OutboundBuffer;
+            long size = 0;
+            bool started = false;
             try
             {
+                if (message != null && EstimateWriteTaskSize && !buffer.IsClosed)
+                {
+                    size = (long)Math.Max(0, Pipeline.EstimatorHandle.Size(message)) + WriteTaskOverhead;
+                    buffer.IncrementPendingOutboundBytes(size, notifyLater: true);
+                }
                 await previous.Executor.SubmitAsync(() =>
                 {
-                    started = 1;
+                    started = true;
+                    buffer.DecrementPendingOutboundBytes(size, notifyLater: true);
                     return Invoke();
                 }, CancellationToken.None).ConfigureAwait(false);
             }
-            catch { if (started == 0) ReferenceCountUtil.Release(message); throw; }
+            catch
+            {
+                if (!started)
+                {
+                    buffer.DecrementPendingOutboundBytes(size, notifyLater: true);
+                    ReferenceCountUtil.Release(message);
+                }
+                throw;
+            }
         }
     }
     public virtual Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
@@ -304,7 +331,18 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
     public virtual Task WriteAsync(object message, CancellationToken cancellationToken = default)
     { ArgumentNullException.ThrowIfNull(message); return Outbound((h, c) => h.WriteAsync(c, message, cancellationToken), cancellationToken, ChannelHandlerMask.Write, message); }
     public virtual Task WriteAndFlushAsync(object message, CancellationToken cancellationToken = default)
-    { var result = WriteAsync(message, cancellationToken); Flush(); return result; }
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        return Outbound((handler, context) =>
+        {
+            Task write;
+            try { write = handler.WriteAsync(context, message, cancellationToken); }
+            catch (Exception error) { write = Task.FromException(error); }
+            try { handler.Flush(context); }
+            catch (Exception error) { context.NotifyException(error); }
+            return write;
+        }, cancellationToken, ChannelHandlerMask.Write | ChannelHandlerMask.Flush, message);
+    }
     private void OutboundVoid(Action<IChannelOutboundHandler, ChannelHandlerContext> action, int mask)
     {
         var previous = FindOutbound(mask);

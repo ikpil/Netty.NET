@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels;
@@ -275,25 +276,29 @@ public sealed class ChannelOutboundBuffer
      * Increment the pending bytes which will be written at some point.
      * This method is thread-safe!
      */
-    public void IncrementPendingOutboundBytes(long amount)
+    public void IncrementPendingOutboundBytes(long amount) => IncrementPendingOutboundBytes(amount, false);
+
+    internal void IncrementPendingOutboundBytes(long amount, bool notifyLater)
     {
         if (amount == 0)
             return;
         long size = Interlocked.Add(ref _pendingBytes, amount);
         if (size > _channel.Config.GetWriteBufferHighWaterMark())
-            ChangeMask(1, true);
+            ChangeMask(1, true, notifyLater);
     }
     /**
      * Decrement the pending bytes which will be written at some point.
      * This method is thread-safe!
      */
-    public void DecrementPendingOutboundBytes(long amount)
+    public void DecrementPendingOutboundBytes(long amount) => DecrementPendingOutboundBytes(amount, false);
+
+    internal void DecrementPendingOutboundBytes(long amount, bool notifyLater)
     {
         if (amount == 0)
             return;
         long size = Interlocked.Add(ref _pendingBytes, -amount);
         if (size < _channel.Config.GetWriteBufferLowWaterMark())
-            ChangeMask(1, false);
+            ChangeMask(1, false, notifyLater);
     }
     /**
      * Returns {@code true} if and only if the user-defined writability flag at the specified index is set to
@@ -305,7 +310,7 @@ public sealed class ChannelOutboundBuffer
      */
     public void SetUserDefinedWritability(int index, bool writable) { ValidateIndex(index); ChangeMask(1 << index, !writable); }
     private static void ValidateIndex(int index) { if (index is < 1 or > 31) throw new ArgumentOutOfRangeException(nameof(index)); }
-    private void ChangeMask(int mask, bool set)
+    private void ChangeMask(int mask, bool set, bool notifyLater = false)
     {
         for (; ; )
         {
@@ -314,7 +319,15 @@ public sealed class ChannelOutboundBuffer
                 continue;
             if ((old == 0) != (next == 0))
             {
-                if (_channel.EventLoop.InEventLoop())
+                if (notifyLater)
+                {
+                    if (!_closed)
+                    {
+                        try { _channel.EventLoop.Execute(() => _channel.Pipeline.FireChannelWritabilityChanged()); }
+                        catch (RejectedExecutionException) { } // Queued byte accounting must still balance during shutdown.
+                    }
+                }
+                else if (_channel.EventLoop.InEventLoop())
                     _channel.Pipeline.FireChannelWritabilityChanged();
                 else
                     _channel.EventLoop.Execute(() => _channel.Pipeline.FireChannelWritabilityChanged());

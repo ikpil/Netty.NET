@@ -42,10 +42,10 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 438,
-    "javaOriginalInvocations": 440,
-    "transportJavaOriginalPassed": 370,
-    "coreTransportJavaOriginalPassed": 300,
+    "javaOriginalPassed": 444,
+    "javaOriginalInvocations": 446,
+    "transportJavaOriginalPassed": 376,
+    "coreTransportJavaOriginalPassed": 306,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
     "testsuiteJavaJUnitInvocations": 70,
@@ -55,26 +55,26 @@
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 381,
-    "originalExecutedCases": 483,
+    "mappedOriginalMethods": 387,
+    "originalExecutedCases": 489,
     "originalSkippedCases": 14,
-    "transportMappedOriginalExecutions": 347,
+    "transportMappedOriginalExecutions": 353,
     "testsuiteMappedOriginalExecutions": 136,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 24,
-    "supplementalExecutedCases": 194,
+    "supplementalExecutedCases": 196,
     "debug": {
       "failed": 0,
-      "passed": 677,
+      "passed": 685,
       "skipped": 21,
-      "total": 698
+      "total": 706
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 677,
+      "passed": 685,
       "skipped": 21,
-      "total": 698
+      "total": 706
     },
     "solutionRelease": {
       "Netty.NET.Resolver.Tests": {
@@ -85,9 +85,9 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 677,
+        "passed": 685,
         "skipped": 21,
-        "total": 698
+        "total": 706
       },
       "Netty.NET.Buffer.Tests": {
         "failed": 0,
@@ -102,19 +102,19 @@
         "total": 2692
       }
     },
-    "solutionPassed": 32975,
+    "solutionPassed": 32983,
     "solutionSkipped": 35,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward 437 passes in 439 calls. The unchanged IPv6 multicast inherited wrapper executed on Linux with the two original allocators. Total 438 passes in 440 wrapper or direct invocations.",
-    "note": "Full Windows solution Release passed 32975 with 34 skips before the Linux-only native failure case was added. Final Windows Transport Debug, Release and checked Release pass 677 with 21 skips. Combining unchanged other projects with final Transport yields 32975 passes and 35 skips. Full Linux Transport Release passes 698 with no skips, including 117 UDP selections. The unchanged Java IPv4 and IPv6 multicast wrappers pass with both allocators. The mixed-family original wrapper retains its Linux send failure and stays open.",
+    "javaEvidence": "Carries forward 438 passes in 440 original calls. All six unchanged ReentrantChannelTest methods pass at the pinned source revision. Total 444 passes in 446 wrapper or direct invocations.",
+    "note": "Final Windows Transport Debug, Release and checked Release pass 685 with 21 skips. Full solution Release passed 32983 with 35 skips. Transport was separately rerun after the early canceled-write guard. Final Linux Transport Release passes all 706. The previous CLR commit failed two ported writability tests and both supplemental reservation cases. All eight cases pass in eight repeated focused runs.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/udp-dual-results --logger \"trx;LogFilePrefix=udp-dual\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/reentrant-results --logger \"trx;LogFilePrefix=reentrant\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -138,6 +138,9 @@
       "python artifacts/transport-core/run-udp-dual-regular-originals.py",
       "python artifacts/transport-core/run-udp-multicast-dual-original.py",
       "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-dual-standard-out",
+      "python artifacts/transport-core/run-reentrant-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/reentrant-standard-out",
+      "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore --filter FullyQualifiedName~ReentrantChannelSourceTest",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -181,8 +184,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 698,
-      "passed": 698,
+      "total": 706,
+      "passed": 706,
       "failed": 0,
       "skipped": 0
     },
@@ -198,6 +201,13 @@
       "regularJavaWrappersPassed": 2,
       "regularJavaAllocatorRunsPassed": 4,
       "mixedJavaWrapperFailed": 1
+    },
+    "reentrantEvidence": {
+      "javaOriginalPassed": 6,
+      "clrOriginalPassed": 6,
+      "clrSupplementalPassed": 2,
+      "baselineFailed": 4,
+      "focusedRepeats": 8
     }
   },
   "entries": [
@@ -479,18 +489,19 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 47,
-        "preservedCount": 8,
-        "unreviewedCount": 39,
+        "preservedCount": 9,
+        "unreviewedCount": 38,
         "scope": "Original comments retained at reviewed CLR counterparts and original/explicit native-alternative helpers. Remaining implementation comments/contracts stay explicit."
       },
       "review": {
-        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review.",
+        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review. Cross-executor write task bytes use the configured message estimator and source overhead. Remove the reservation before invoking the handler and on rejected dispatch. Write-and-flush shares one executor dispatch. Writability callbacks for reservations are deferred.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
           "test/Netty.NET.Transport.Tests/ChannelInitializerTest.cs",
           "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
         ]
       }
     },
@@ -948,11 +959,12 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Existing original fifteen-method fixture plus differentiated flushed/unflushed close failures. The native error-policy fixture verifies both flushed tasks retain original exception identity, unflushed close retains its cause, and all owned buffers release after an in-flight failure. Output-only shutdown uses one wrapped cause for all pending entries. Broader comments, progressive completion and cross-executor accounting remain open.",
+        "scope": "Existing original fifteen-method fixture plus differentiated flushed/unflushed close failures. The native error-policy fixture verifies both flushed tasks retain original exception identity, unflushed close retains its cause, and all owned buffers release after an in-flight failure. Output-only shutdown uses one wrapped cause for all pending entries. Broader comments, and progressive completion remain open. Cross-executor write task bytes use the configured message estimator and source overhead. Remove the reservation before invoking the handler and on rejected dispatch. Write-and-flush shares one executor dispatch. Writability callbacks for reservations are deferred.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
-          "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs",
+          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
         ]
       }
     },
@@ -4139,8 +4151,30 @@
       "sha256": "abf8736c1c4092b33165d8c20f01025343ae09d9d7c98adb2647e67b4e9187d7",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "Fixture owns the same separate local client and server groups, exact-length buffer creation and alternative log matching. Each fixture disposes its own groups.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original license and relevant helper comments are preserved in the shared fixture."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/ChannelInitializerTest.java",
@@ -5746,8 +5780,30 @@
       "sha256": "4b55809e8945b857e6e5696e9f5adec069fc8212d89fb6cf5300848b880eeaa2",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "The fixture logger retains the original formatting and forwarding for the five events consumed by ReentrantChannelTest. Other generic logger events are outside this fixture.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original license and relevant helper comments are preserved in the shared fixture."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/ManualIoEventLoopTest.java",
@@ -6612,8 +6668,63 @@
       "sha256": "6396d3d8a8ddebce7bd7c8218be89ed18a3b6796371cdf7138a910f446d19463",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testWritabilityChanged",
+          "clrMethod": "TestWritabilityChanged",
+          "adaptation": "Retain the 512/1024 watermarks, 2000-byte buffer, separate write and flush, and both allowed writability traces."
+        },
+        {
+          "upstreamMethod": "testFlushInWritabilityChanged",
+          "clrMethod": "TestFlushInWritabilityChanged",
+          "adaptation": "Retain the automatic flush on unwritable, the initial writable assertion and both allowed ordered traces."
+        },
+        {
+          "upstreamMethod": "testWriteFlushPingPong",
+          "clrMethod": "TestWriteFlushPingPong",
+          "adaptation": "Retain five recursive write/flush iterations, the initial combined write and flush, and the exact six write/flush pairs before close."
+        },
+        {
+          "upstreamMethod": "testCloseInFlush",
+          "clrMethod": "TestCloseInFlush",
+          "adaptation": "Observe the returned write Task and close after completion while the handler explicitly flushes. Preserve the exact WRITE, FLUSH, CLOSE log and close completion."
+        },
+        {
+          "upstreamMethod": "testFlushFailure",
+          "clrMethod": "TestFlushFailure",
+          "adaptation": "Throw the original intentional flush error, close from ExceptionCaught, and verify the pending write faults with the closed-channel IOException and exact WRITE, CLOSE log."
+        },
+        {
+          "upstreamMethod": "nestReentrancy",
+          "clrMethod": "NestReentrancy",
+          "adaptation": "Use the original four pipeline handlers, manual reads and the A/B/C payload. Verify the exact receive order under synchronous reentrant reads."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 6,
+        "reviewedCount": 6,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "All six original declarations run with the source payloads, handler order, event traces and alternative schedules. Native Task completion and cancellable test deadlines preserve observability without a Java promise facade.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 33,
+        "preservedCount": 33,
+        "unreviewedCount": 0,
+        "scope": "Preserve all original fixture comments at corresponding test and handler sites."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/SimpleUserEventChannelHandlerTest.java",
@@ -7186,9 +7297,9 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 37,
-    "portedOriginalFixtures": 49,
-    "portedOriginalMethods": 381,
-    "supplementalClrCases": 201,
+    "portedOriginalFixtures": 50,
+    "portedOriginalMethods": 387,
+    "supplementalClrCases": 203,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuiteEntries and their validated original/CLR variant rows. Java JUnit wrapper counts, allocator executions, CLR original cases and supplemental cases are separated in validation. Pending helpers do not claim a port of the entire testsuite framework.",
     "testsuiteSources": 25
@@ -7492,6 +7603,15 @@
         "https://github.com/torvalds/linux/blob/master/include/uapi/linux/in.h",
         "https://github.com/torvalds/linux/blob/master/include/uapi/linux/in6.h"
       ]
+    },
+    {
+      "subject": "Reentrant writes and queued writability",
+      "decision": "Charge queued writes before submission and release the reservation before handler dispatch or when submission fails. The owner publishes deferred writability changes for task bytes and immediate changes for buffer entries. A queued write-and-flush resolves the combined handler mask and calls both operations in one executor callback. Task cancellation and fault paths release the queued message once.",
+      "sourceEvidence": [
+        "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs",
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+      ]
     }
   ],
   "openWork": [
@@ -7508,7 +7628,7 @@
     {
       "area": "Outbound buffer",
       "state": "review-gap",
-      "detail": "All 15 declared original tests are ported. Remaining internal comments/helpers, progressive reporting through native CLR APIs and cross-executor enqueue byte accounting still require review; passing the fixture is not whole-class completion."
+      "detail": "All 15 outbound-buffer and six reentrant-channel original methods are mapped. Cross-executor enqueue byte accounting and reentrant write-and-flush are implemented. Remaining internal comments and progressive reporting through CLR APIs still require review."
     },
     {
       "area": "TCP and UDP",
@@ -7576,7 +7696,8 @@
     "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketGatheringWriteContractTest.cs",
     "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs",
-    "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs"
+    "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
   ],
   "validationHistory": [
     {
@@ -10146,6 +10267,170 @@
           "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
         }
       }
+    },
+    {
+      "checkpoint": "9280b4c9311ae35bf01fba542d1bdd2dd4d56317",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 438,
+        "javaOriginalInvocations": 440,
+        "transportJavaOriginalPassed": 370,
+        "coreTransportJavaOriginalPassed": 300,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 70,
+        "datagramJavaJUnitInvocations": 37,
+        "datagramJavaAllocatorExecutions": 74,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 381,
+        "originalExecutedCases": 483,
+        "originalSkippedCases": 14,
+        "transportMappedOriginalExecutions": 347,
+        "testsuiteMappedOriginalExecutions": 136,
+        "datagramMappedOriginalExecutions": 68,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 24,
+        "supplementalExecutedCases": 194,
+        "debug": {
+          "failed": 0,
+          "passed": 677,
+          "skipped": 21,
+          "total": 698
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 677,
+          "skipped": 21,
+          "total": 698
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "failed": 0,
+            "passed": 64,
+            "skipped": 0,
+            "total": 64
+          },
+          "Netty.NET.Transport.Tests": {
+            "failed": 0,
+            "passed": 677,
+            "skipped": 21,
+            "total": 698
+          },
+          "Netty.NET.Buffer.Tests": {
+            "failed": 0,
+            "passed": 29556,
+            "skipped": 0,
+            "total": 29556
+          },
+          "Netty.NET.Common.Tests": {
+            "failed": 0,
+            "passed": 2678,
+            "skipped": 14,
+            "total": 2692
+          }
+        },
+        "solutionPassed": 32975,
+        "solutionSkipped": 35,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward 437 passes in 439 calls. The unchanged IPv6 multicast inherited wrapper executed on Linux with the two original allocators. Total 438 passes in 440 wrapper or direct invocations.",
+        "note": "Full Windows solution Release passed 32975 with 34 skips before the Linux-only native failure case was added. Final Windows Transport Debug, Release and checked Release pass 677 with 21 skips. Combining unchanged other projects with final Transport yields 32975 passes and 35 skips. Full Linux Transport Release passes 698 with no skips, including 117 UDP selections. The unchanged Java IPv4 and IPv6 multicast wrappers pass with both allocators. The mixed-family original wrapper retains its Linux send failure and stays open.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/udp-dual-results --logger \"trx;LogFilePrefix=udp-dual\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "python artifacts/transport-core/run-scaling-originals.py",
+          "python artifacts/transport-core/run-manual-originals.py",
+          "python artifacts/transport-core/run-io-phase-originals.py",
+          "python artifacts/transport-core/run-outbound-originals.py",
+          "python artifacts/transport-core/run-gather-originals.py",
+          "python artifacts/transport-core/run-udp-mapped-originals.py",
+          "python artifacts/transport-core/run-udp-native-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter \"FullyQualifiedName~Datagram\" on an IPv6-enabled Linux container",
+          "python artifacts/transport-core/run-udp-multicast-ipv6-original.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-multicast-ipv6-isolated --results-directory artifacts/transport-core/udp-multicast-ipv6-transport-results -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-udp-disconnect-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore on an IPv6-enabled Linux container",
+          "python artifacts/transport-core/run-udp-dual-regular-originals.py",
+          "python artifacts/transport-core/run-udp-multicast-dual-original.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-dual-standard-out",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4,
+        "outboundJavaJUnitInvocations": 6,
+        "outboundJavaAllocatorExecutions": 12,
+        "outboundMappedOriginalExecutions": 12,
+        "gatheringJavaJUnitInvocations": 6,
+        "gatheringJavaAllocatorExecutions": 12,
+        "gatheringMappedOriginalExecutions": 12,
+        "mappedUdpJavaJUnitInvocations": 11,
+        "mappedUdpJavaAllocatorExecutions": 22,
+        "mappedUdpOriginalExecutions": 22,
+        "unixUdpIcmpJavaJUnitInvocations": 2,
+        "unixUdpIcmpJavaAllocatorExecutions": 4,
+        "supplementalSkippedCases": 7,
+        "linuxDatagramRelease": {
+          "total": 117,
+          "passed": 117,
+          "failed": 0,
+          "skipped": 0,
+          "baselineFailures": [],
+          "unixIcmpOriginalCasesPassed": 4,
+          "ipv6SourceMembershipCasesPassed": 2,
+          "ipv6SourcePacketCasesPassed": 2,
+          "ipv6MulticastOriginalCasesPassed": 2,
+          "ipv6TrafficClassConfigurationCasesPassed": 1,
+          "udpDisconnectCasesPassed": 6,
+          "multicastIsolationCasesPassed": 4,
+          "nativeConnectFailureCasesPassed": 1
+        },
+        "ipv6MulticastJavaJUnitInvocations": 1,
+        "ipv6MulticastJavaAllocatorExecutions": 2,
+        "linuxTransportRelease": {
+          "total": 698,
+          "passed": 698,
+          "failed": 0,
+          "skipped": 0
+        },
+        "linuxOriginalRerun": {
+          "udpJavaWrappersPassed": 3,
+          "udpJavaAllocatorRunsPassed": 6,
+          "unixHalfCloseJavaWrappersPassed": 1,
+          "unixHalfCloseJavaAllocatorRunsPassed": 2,
+          "unixHalfCloseClrCasesPassed": 8,
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+        },
+        "linuxMulticastOriginalRerun": {
+          "regularJavaWrappersPassed": 2,
+          "regularJavaAllocatorRunsPassed": 4,
+          "mixedJavaWrapperFailed": 1
+        }
+      }
     }
   ],
   "nextWork": [
@@ -10163,7 +10448,8 @@
     "Manual inbound socket I/O dispatch is separated from ordinary work. Continue raw I/O handler registrations, backend queries, and send/connect and threaded-loop processing contracts.",
     "Manual socket connect and write completion dispatch is ported. Continue raw I/O registrations, threaded budgets and source gathering-write contracts.",
     "The stream gathering-write path and its six original fixtures are mapped. Continue low-level I/O registration, threaded I/O budgets and the remaining UDP batching/backend contracts.",
-    "Linux UDP disconnect preserves its socket and local binding. Linux dual-mode sockets support IPv4 multicast, and shared-port delivery is isolated by native membership. The original mixed-family send failure and low-level I/O registration and threaded-loop contracts remain open."
+    "Linux UDP disconnect preserves its socket and local binding. Linux dual-mode sockets support IPv4 multicast, and shared-port delivery is isolated by native membership. The original mixed-family send failure and low-level I/O registration and threaded-loop contracts remain open.",
+    "The six reentrant-channel originals and two supplemental reservation cases pass on Windows and Linux. Separate Local transport thread-model fixtures and I/O-specific event-loop contracts remain open."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
