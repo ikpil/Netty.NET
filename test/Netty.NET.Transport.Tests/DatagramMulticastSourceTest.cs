@@ -28,23 +28,29 @@ using Netty.NET.Transport.Channels.Sockets;
 namespace Netty.NET.Transport.Tests;
 
 #pragma warning disable xUnit1051 // Original join/send/leave sequence and independently owned cleanup.
-public class DatagramMulticastSourceTest
+public partial class DatagramMulticastSourceTest
 {
-    private static readonly IPAddress GroupAddress = IPAddress.Parse("230.0.0.1");
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestMulticast(bool adaptive)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public Task TestMulticast(bool adaptive, bool ipv6) => ipv6
+        ? RunIPv6MulticastAsync(adaptive) : RunMulticastAsync(adaptive, AddressFamily.InterNetwork);
+
+    private static async Task RunMulticastAsync(bool adaptive, AddressFamily family)
     {
-        var iface = MulticastNetworkInterface();
-        if (iface == null) Assert.Skip("No NetworkInterface found that supports multicast and IPv4");
+        bool ipv6 = family == AddressFamily.InterNetworkV6;
+        var any = ipv6 ? IPAddress.IPv6Any : IPAddress.Any;
+        var iface = MulticastNetworkInterface(family, any);
+        if (iface == null) Assert.Skip($"No NetworkInterface found that supports multicast and {family}");
         var handler = new MulticastTestHandler();
         var group = new DefaultEventLoopGroup(1);
         IByteBufAllocator allocator = adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default;
         DatagramChannel server = null, client = null;
         try
         {
-            Bootstrap Create(IChannelHandler channelHandler) => new Bootstrap().Group(group).Channel<DatagramChannel>()
+            Bootstrap Create(IChannelHandler channelHandler) => new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family))
                 .Option(ChannelOption.ALLOCATOR, allocator).Handler(channelHandler)
                 .Option(ChannelOption.IP_MULTICAST_IF, iface).Option(ChannelOption.SO_REUSEADDR, true);
             var sb = Create(new DiscardHandler());
@@ -53,7 +59,7 @@ public class DatagramMulticastSourceTest
             for (;;)
             {
                 if (server != null) await server.CloseAsync();
-                server = (DatagramChannel)await sb.BindAsync(new IPEndPoint(InterfaceAddress(iface), 0));
+                server = (DatagramChannel)await sb.BindAsync(new IPEndPoint(InterfaceAddress(iface, family), 0));
                 // skip the test for OIO, as it fails because of
                 // No route to host which makes no sense.
                 // Maybe a JDK bug ?
@@ -61,13 +67,13 @@ public class DatagramMulticastSourceTest
                 AssertInterface(server, iface);
                 try
                 {
-                    client = (DatagramChannel)await cb.BindAsync(new IPEndPoint(IPAddress.Any, ((IPEndPoint)server.LocalAddress).Port));
+                    client = (DatagramChannel)await cb.BindAsync(new IPEndPoint(any, ((IPEndPoint)server.LocalAddress).Port));
                     break;
                 }
                 catch when (--attempts > 0) { }
             }
             AssertInterface(client, iface);
-            var address = new IPEndPoint(GroupAddress, ((IPEndPoint)server.LocalAddress).Port);
+            var address = new IPEndPoint(MulticastGroup(iface, family), ((IPEndPoint)server.LocalAddress).Port);
             await client.JoinGroupAsync(address, iface);
             await server.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(1), address));
             Assert.True(await handler.Await());
@@ -106,21 +112,33 @@ public class DatagramMulticastSourceTest
         Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_ADDR, out var address));
         Assert.Contains(iface.GetIPProperties().UnicastAddresses, a => a.Address.Equals(address));
     }
-    private static IPAddress InterfaceAddress(NetworkInterface iface) => iface.GetIPProperties().UnicastAddresses
-        .First(a => a.Address.AddressFamily == AddressFamily.InterNetwork).Address;
-    private static NetworkInterface MulticastNetworkInterface()
+    private static IPAddress InterfaceAddress(NetworkInterface iface, AddressFamily family) => iface.GetIPProperties().UnicastAddresses
+        .First(a => a.Address.AddressFamily == family).Address;
+
+    private static IPAddress MulticastGroup(NetworkInterface iface, AddressFamily family)
+    {
+        if (family == AddressFamily.InterNetwork) return IPAddress.Parse("230.0.0.1");
+        var address = IPAddress.Parse("ff01::101");
+        address.ScopeId = iface.GetIPProperties().GetIPv6Properties().Index;
+        return address;
+    }
+
+    private static NetworkInterface MulticastNetworkInterface(AddressFamily family, IPAddress any)
     {
         foreach (var iface in NetworkInterface.GetAllNetworkInterfaces())
         {
             if (iface.OperationalStatus != OperationalStatus.Up || !iface.SupportsMulticast) continue;
             foreach (var address in iface.GetIPProperties().UnicastAddresses)
             {
-                if (address.Address.AddressFamily != AddressFamily.InterNetwork) continue;
-                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+                if (address.Address.AddressFamily != family) continue;
+                using var socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
+                socket.Bind(new IPEndPoint(any, 0));
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, address.Address.GetAddressBytes());
-                try { socket.SendTo(new byte[] { 1, 2, 3, 4 }, new IPEndPoint(GroupAddress, 12345)); return iface; }
+                if (family == AddressFamily.InterNetworkV6)
+                    socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, iface.GetIPProperties().GetIPv6Properties().Index);
+                else
+                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, address.Address.GetAddressBytes());
+                try { socket.SendTo(new byte[] { 1, 2, 3, 4 }, new IPEndPoint(MulticastGroup(iface, family), 12345)); return iface; }
                 catch (SocketException)
                 {
                     // Try the next interface

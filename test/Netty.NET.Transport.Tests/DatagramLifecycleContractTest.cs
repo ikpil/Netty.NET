@@ -46,6 +46,16 @@ public class DatagramLifecycleContractTest
                 Assert.Equal(!disabled, socket.MulticastLoopback);
             }
             var options = channel.Config.GetOptions();
+            if (ipv6 && OperatingSystem.IsLinux())
+            {
+                Assert.True(channel.Config.SetOption(ChannelOption.IP_TOS, 184));
+                byte[] trafficClass = new byte[sizeof(int)];
+                Assert.Equal(sizeof(int), socket.GetRawSocketOption((int)SocketOptionLevel.IPv6, 67, trafficClass));
+                Assert.Equal(184, BitConverter.ToInt32(trafficClass));
+                socket.SetRawSocketOption((int)SocketOptionLevel.IPv6, 67, BitConverter.GetBytes(32));
+                Assert.True(channel.Config.TryGetOption(ChannelOption.IP_TOS, out int actualTrafficClass));
+                Assert.Equal(32, actualTrafficClass);
+            }
             Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_TOS, -1));
             Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_TOS, 256));
             foreach (var option in new ChannelOption[] { ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_ADDR,
@@ -61,7 +71,12 @@ public class DatagramLifecycleContractTest
             await channel.RegisterAsync(group.Next());
             Assert.True(channel.IsActive);
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            if (channel.IsRegistered) await channel.CloseAsync();
+            else socket.Dispose();
+            await group.StopAsync();
+        }
     }
     [Theory]
     [InlineData(false)]

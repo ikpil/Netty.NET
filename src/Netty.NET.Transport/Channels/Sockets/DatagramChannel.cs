@@ -688,7 +688,7 @@ public class DatagramChannel : AbstractChannel
      * Gets the {@link StandardSocketOptions#IP_TOS} option.
      */
             else if (ReferenceEquals(option, ChannelOption.IP_TOS))
-                value = (int)_socket.GetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService);
+                value = GetTrafficClass();
             else if (ReferenceEquals(option, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION))
                 value = ActiveOnRegistration;
             /**
@@ -744,7 +744,7 @@ public class DatagramChannel : AbstractChannel
                 int trafficClass = (int)value;
                 ArgumentOutOfRangeException.ThrowIfNegative(trafficClass);
                 ArgumentOutOfRangeException.ThrowIfGreaterThan(trafficClass, 255);
-                _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService, trafficClass);
+                SetTrafficClass(trafficClass);
             }
             else if (ReferenceEquals(option, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION))
             {
@@ -774,6 +774,33 @@ public class DatagramChannel : AbstractChannel
                 return base.SetValue(option, value);
             return true;
         }
+        // Linux's IPv6 traffic class is IPV6_TCLASS, which has no SocketOptionName mapping.
+        // https://github.com/torvalds/linux/blob/master/include/uapi/linux/in6.h
+        private const int LinuxIPv6TrafficClass = 67;
+
+        private int GetTrafficClass()
+        {
+            if (OperatingSystem.IsLinux() && _socket.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                Span<byte> value = stackalloc byte[sizeof(int)];
+                int written = _socket.GetRawSocketOption((int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, value);
+                return BitConverter.ToInt32(value[..written]);
+            }
+            return (int)_socket.GetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService);
+        }
+
+        private void SetTrafficClass(int trafficClass)
+        {
+            if (OperatingSystem.IsLinux() && _socket.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                Span<byte> value = stackalloc byte[sizeof(int)];
+                BitConverter.TryWriteBytes(value, trafficClass);
+                _socket.SetRawSocketOption((int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, value);
+            }
+            else
+                _socket.SetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService, trafficClass);
+        }
+
         private SocketOptionLevel MulticastOptionLevel => _socket.AddressFamily == AddressFamily.InterNetworkV6
             ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
     }
