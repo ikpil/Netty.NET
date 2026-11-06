@@ -34,7 +34,7 @@ namespace Netty.NET.Transport.Channels;
  * {@link #waitAndRun()}} methods are called in a timely fashion.
  */
 /// <summary>An event loop pumped by its owning thread.</summary>
-public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLoop, IEventLoopGroup
+public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
 {
     private const int Started = 0;
     private const int ShuttingDown = 1;
@@ -43,8 +43,9 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
 
     private readonly object _gate = new();
     private readonly LinkedBlockingQueue<Action> _tasks = new(int.MaxValue);
-    private readonly Queue<(AbstractChannel Channel, IoCompletion Completion)> _io = new();
+    private readonly Queue<(object Source, IoCompletion Completion)> _io = new();
     private readonly HashSet<AbstractChannel> _channels = new(ReferenceEqualityComparer.Instance);
+    private readonly CompletionIoHandler _ioHandler;
     private readonly TaskCompletionSource _termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Ticker _ticker;
     private Thread _owner;
@@ -72,10 +73,15 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
      *                          not use the ticker, so if the ticker advances faster than system time, you may have to
      *                          {@link #wakeup()} this event loop manually.
      */
-    public ManualIoEventLoop(Thread owningThread, IEventLoopGroup parent = null, Ticker ticker = null) : base(parent)
+    public ManualIoEventLoop(Thread owningThread, IEventLoopGroup parent = null, Ticker ticker = null)
+        : this(owningThread, parent, ticker, new CompletionIoHandler()) { }
+
+    public ManualIoEventLoop(Thread owningThread, IEventLoopGroup parent, Ticker ticker, CompletionIoHandler ioHandler) : base(parent)
     {
         _owner = owningThread;
         _ticker = ticker ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        _ioHandler = ioHandler ?? throw new ArgumentNullException(nameof(ioHandler));
+        _ioHandler.Attach(this, (registration, dispatch) => SubmitIoAsync(registration, dispatch));
     }
 
     public override Ticker Ticker() => _ticker;
@@ -102,6 +108,11 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         return channel.RegisterAsync(this, cancellationToken);
     }
 
+    public Task<IoRegistration> RegisterIoAsync(IIoHandle handle, CancellationToken cancellationToken = default) =>
+        _ioHandler.RegisterAsync(handle, cancellationToken);
+    public bool IsCompatible(Type handleType) => _ioHandler.IsCompatible(handleType);
+    public bool IsIoType(Type handlerType) => _ioHandler.GetType() == handlerType;
+
     internal void ChannelRegistered(AbstractChannel channel)
     {
         lock (_gate)
@@ -127,7 +138,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         }
     }
 
-    internal Task SubmitIoAsync(AbstractChannel channel, Func<(Task Completion, bool Handled)> dispatch,
+    internal Task SubmitIoAsync(object source, Func<(Task Completion, bool Handled)> dispatch,
         bool captureContext = true)
     {
         var completion = new IoCompletion(dispatch, captureContext);
@@ -135,7 +146,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         {
             if (IsShutdown())
                 throw new RejectedExecutionException("The event loop is shut down.");
-            _io.Enqueue((channel, completion));
+            _io.Enqueue((source, completion));
             Monitor.Pulse(_gate);
         }
         return completion.Completion;
@@ -333,13 +344,13 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
 
         // Only drain the current snapshot. Socket operations may re-arm or publish another
         // completion, and ordinary tasks must still get their turn.
-        HashSet<AbstractChannel> handled = null;
+        HashSet<object> handled = null;
         while (remaining-- > 0)
         {
-            (AbstractChannel Channel, IoCompletion Completion) entry;
+            (object Source, IoCompletion Completion) entry;
             lock (_gate) entry = _io.Dequeue();
             if (entry.Completion.Dispatch())
-                (handled ??= new HashSet<AbstractChannel>(ReferenceEqualityComparer.Instance)).Add(entry.Channel);
+                (handled ??= new HashSet<object>(ReferenceEqualityComparer.Instance)).Add(entry.Source);
         }
         return handled?.Count ?? 0;
     }
@@ -416,6 +427,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IEventLo
         CloseRegisteredChannels();
         count += RunIo();
         CancelScheduledTasks();
+        _ioHandler.CloseAll();
         Volatile.Write(ref _state, Terminated);
         _termination.SetResult();
         return count;

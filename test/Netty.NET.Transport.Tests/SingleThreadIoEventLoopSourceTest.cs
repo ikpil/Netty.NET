@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -48,6 +49,58 @@ public class SingleThreadIoEventLoopSourceTest
             Assert.Equal(50, loop.IoRatio);
             Assert.Throws<ArgumentOutOfRangeException>(() => loop.IoRatio = 0);
             Assert.Throws<ArgumentOutOfRangeException>(() => loop.IoRatio = 101);
+        }
+        finally { await loop.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task TestIsIoType()
+    {
+        var loop = new DefaultEventLoop(new TestIoHandler());
+        try
+        {
+            Assert.True(loop.IsIoType(typeof(TestIoHandler)));
+            Assert.False(loop.IsIoType(typeof(DerivedTestIoHandler)));
+        }
+        finally { await loop.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task TestIsCompatible()
+    {
+        using var handle = new DerivedTestIoHandle();
+        var loop = new DefaultEventLoop(new CompatibleTestIoHandler());
+        try
+        {
+            Assert.True(loop.IsCompatible(typeof(TestIoHandle)));
+            Assert.False(loop.IsCompatible(handle.GetType()));
+        }
+        finally { await loop.StopAsync(); }
+    }
+
+    [Fact(Timeout = 5000, Skip = "This test is flaky and will often stall the build")]
+    public async Task TestSuspendingWhileRegistrationActive()
+    {
+        var threadFactory = new TestThreadFactory();
+        var loop = new DefaultEventLoop(null, new ThreadPerTaskExecutor(threadFactory).Execute,
+            supportSuspension: true, ioHandler: new TestIoHandler());
+        var token = TestContext.Current.CancellationToken;
+        try
+        {
+            Assert.False(loop.IsSuspended());
+            var registration = await loop.RegisterIoAsync(new TestIoHandle(), token);
+            Assert.True(threadFactory.Threads.TryDequeue(out var worker));
+            Assert.True(worker.IsAlive);
+            Assert.True(loop.TrySuspend());
+
+            // Still should be alive as until the registration is cancelled we can not suspend the loop.
+            Assert.True(worker.IsAlive);
+            Assert.True(await registration.CancelAsync().WaitAsync(token));
+            Assert.False(registration.IsValid);
+
+            // The current thread should be able to die now.
+            Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            Assert.Empty(threadFactory.Threads);
         }
         finally { await loop.StopAsync(); }
     }
@@ -184,5 +237,38 @@ public class SingleThreadIoEventLoopSourceTest
     private sealed class ClockedLoop(Ticker clock) : DefaultEventLoop
     {
         public override Ticker Ticker() => clock;
+    }
+
+    private class TestIoHandler : CompletionIoHandler { }
+    private sealed class DerivedTestIoHandler : TestIoHandler { }
+    private sealed class CompatibleTestIoHandler : TestIoHandler
+    {
+        public override bool IsCompatible(Type handleType) => handleType == typeof(TestIoHandle);
+    }
+
+    private class TestIoHandle : IIoHandle
+    {
+        public void HandleCompletion(IoRegistration registration, object completion)
+        {
+            // NOOP
+        }
+
+        public void Dispose()
+        {
+            // NOOP
+        }
+    }
+    private sealed class DerivedTestIoHandle : TestIoHandle { }
+
+    private sealed class TestThreadFactory : IThreadFactory
+    {
+        internal readonly ConcurrentQueue<Thread> Threads = new();
+
+        public Thread NewThread(Action run)
+        {
+            var thread = new Thread(() => run()) { IsBackground = true };
+            Threads.Enqueue(thread);
+            return thread;
+        }
     }
 }

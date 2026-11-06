@@ -32,7 +32,6 @@ public class MultiThreadIoEventLoopGroupSourceTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var group = NewGroup();
-        var channel = new LocalChannel();
         using var workload = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         try
         {
@@ -43,7 +42,7 @@ public class MultiThreadIoEventLoopGroupSourceTest
             Assert.Equal(1, CountActiveExecutors(group));
             var active = Assert.IsType<DefaultEventLoop>(FindActiveExecutor(group));
 
-            await active.RegisterAsync(channel, cancellation);
+            var registration = await active.RegisterIoAsync(new TestIoHandle(), cancellation);
             StartWorkload(active, workload.Token);
             await Task.Delay(450, cancellation);
 
@@ -51,14 +50,14 @@ public class MultiThreadIoEventLoopGroupSourceTest
             Assert.False(active.IsSuspended(), "Executor with active handle should not be suspended");
 
             workload.Cancel();
-            await CancelRegistration(channel, active, cancellation);
+            await CancelRegistration(registration, active, cancellation);
             await WaitForSuspension(group, 2, cancellation);
             Assert.True(active.IsSuspended(), "Executor should suspend after handle is cancelled and idle");
         }
         finally
         {
             workload.Cancel();
-            await Cleanup(group, channel);
+            await group.StopAsync();
         }
     }
 
@@ -67,7 +66,6 @@ public class MultiThreadIoEventLoopGroupSourceTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var group = NewGroup();
-        var channel = new LocalChannel();
         try
         {
             await StartAllExecutors(group, cancellation);
@@ -76,8 +74,8 @@ public class MultiThreadIoEventLoopGroupSourceTest
             var active = Assert.IsType<DefaultEventLoop>(FindActiveExecutor(group));
 
             // Register a handle with the active executor. This makes registeredChannels() return 1.
-            await active.RegisterAsync(channel, cancellation);
-            Assert.Equal(1, active.RegisteredChannels());
+            var registration = await active.RegisterIoAsync(new TestIoHandle(), cancellation);
+            Assert.Equal(1, active.RegisteredIoHandles);
 
             // The executor is now a candidate for suspension based on utilization,
             // but not based on registered channels.
@@ -88,11 +86,11 @@ public class MultiThreadIoEventLoopGroupSourceTest
                 "Executor with an active registration should not be suspended, even if idle");
             Assert.Equal(1, CountActiveExecutors(group));
 
-            await CancelRegistration(channel, active, cancellation);
+            await CancelRegistration(registration, active, cancellation);
             await WaitForSuspension(group, 2, cancellation);
             Assert.True(active.IsSuspended(), "Executor should suspend after registration is cancelled and it remains idle");
         }
-        finally { await Cleanup(group, channel); }
+        finally { await group.StopAsync(); }
     }
 
     internal static DefaultEventLoopGroup NewGroup(int minimum = 0, IThreadFactory threadFactory = null) =>
@@ -134,12 +132,18 @@ public class MultiThreadIoEventLoopGroupSourceTest
         Assert.Fail($"Timed out waiting for {count} executor(s) to suspend.");
     }
 
-    private static async Task CancelRegistration(LocalChannel channel, DefaultEventLoop owner, CancellationToken cancellation)
+    private static async Task CancelRegistration(IoRegistration registration, DefaultEventLoop owner, CancellationToken cancellation)
     {
-        Assert.True(channel.IsRegistered);
-        await channel.DeregisterAsync(cancellation);
-        Assert.False(channel.IsRegistered);
-        Assert.Equal(0, owner.RegisteredChannels());
+        Assert.True(registration.IsValid);
+        Assert.True(await registration.CancelAsync().WaitAsync(cancellation));
+        Assert.False(registration.IsValid);
+        Assert.Equal(0, owner.RegisteredIoHandles);
+    }
+
+    private sealed class TestIoHandle : IIoHandle
+    {
+        public void HandleCompletion(IoRegistration registration, object completion) { }
+        public void Dispose() { }
     }
 
     internal static async Task Cleanup(DefaultEventLoopGroup group, LocalChannel channel)

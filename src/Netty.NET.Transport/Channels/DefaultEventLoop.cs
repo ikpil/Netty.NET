@@ -24,7 +24,7 @@ using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 namespace Netty.NET.Transport.Channels;
 
-public class DefaultEventLoop : SingleThreadEventLoop
+public class DefaultEventLoop : SingleThreadEventLoop, IIoEventLoop
 {
     // TODO: Is this a sensible default ?
     private static readonly long MaxTaskProcessingQuantumNanos = 1_000_000L * Math.Max(100,
@@ -35,13 +35,28 @@ public class DefaultEventLoop : SingleThreadEventLoop
     private readonly ConcurrentDictionary<IChannel, byte> _channels = new(ReferenceEqualityComparer.Instance);
     private readonly object _ioGate = new();
     private readonly Queue<IoCompletion> _io = new();
+    private readonly CompletionIoHandler _ioHandler;
     private int _ioRatio = DefaultIoRatio;
     public DefaultEventLoop() : this(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventLoop))).Execute) { }
+    public DefaultEventLoop(CompletionIoHandler ioHandler)
+        : this(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventLoop))).Execute, false,
+            ioHandler ?? throw new ArgumentNullException(nameof(ioHandler))) { }
     public DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor) : this(parent, executor, false) { }
-    internal DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool supportSuspension)
-        : base(parent, executor, true, supportSuspension, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
+    internal DefaultEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool supportSuspension, CompletionIoHandler ioHandler = null)
+        : base(parent, executor, true, supportSuspension, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject())
+    {
+        _ioHandler = ioHandler ?? new CompletionIoHandler();
+        _ioHandler.Attach(this, (_, dispatch) => SubmitIoAsync(dispatch));
+    }
     internal void ChannelRegistered(IChannel channel) => _channels.TryAdd(channel, 0);
     internal void ChannelUnregistered(IChannel channel) => _channels.TryRemove(channel, out _);
+
+    public Task<IoRegistration> RegisterIoAsync(IIoHandle handle, CancellationToken cancellationToken = default) =>
+        _ioHandler.RegisterAsync(handle, cancellationToken);
+    IEventLoop IEventLoopGroup.Next() => this;
+    public bool IsCompatible(Type handleType) => _ioHandler.IsCompatible(handleType);
+    public bool IsIoType(Type handlerType) => _ioHandler.GetType() == handlerType;
+    public int RegisteredIoHandles => _ioHandler.Count;
 
     /**
      * Returns the current IO ratio. This value only affects scheduling behaviour when it's not the default
@@ -91,11 +106,13 @@ public class DefaultEventLoop : SingleThreadEventLoop
     protected override bool HasTasks() => base.HasTasks() || PendingIoCount() != 0;
     public override int PendingTasks() => base.PendingTasks() + PendingIoCount();
     public override int RegisteredChannels() => _channels.Count;
+    protected override int GetNumOfRegisteredChannels() => _channels.Count + _ioHandler.Count;
+    // A raw registration delays suspension until the owner unregisters it.
     public override bool TrySuspend() => _channels.IsEmpty && base.TrySuspend();
     protected override bool CanSuspend(int state)
     {
         // We should only allow to suspend if there are no registrations on this loop atm.
-        return base.CanSuspend(state) && _channels.IsEmpty;
+        return base.CanSuspend(state) && GetNumOfRegisteredChannels() == 0;
     }
     public override IEnumerable<IChannel> RegisteredChannelsIterator()
     {
@@ -183,6 +200,7 @@ public class DefaultEventLoop : SingleThreadEventLoop
     {
         // Drain completions admitted before the common executor closed admission.
         RunIoBatch();
+        _ioHandler.CloseAll();
         base.Cleanup();
     }
 }
