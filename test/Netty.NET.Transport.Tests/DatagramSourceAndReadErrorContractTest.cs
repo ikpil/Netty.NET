@@ -23,22 +23,85 @@ public class DatagramSourceAndReadErrorContractTest
     [Theory(Timeout = 10000)]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task SourceMembershipAndBlockingControlRealPackets(bool sourceSpecific)
+    public async Task IPv6SourceMembershipUsesTheInterfaceAcrossScopedAddressForms(bool sourceSpecific)
     {
-        var iface = NetworkInterface.GetAllNetworkInterfaces().First(n => n.OperationalStatus == OperationalStatus.Up && n.SupportsMulticast &&
-            n.GetIPProperties().UnicastAddresses.Any(a => a.Address.AddressFamily == AddressFamily.InterNetwork));
-        var source = iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == AddressFamily.InterNetwork).Address;
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
+            Assert.Skip("The native IPv6 source option layout is defined for Windows and Linux.");
+        if (!Socket.OSSupportsIPv6) Assert.Skip("IPv6 is not supported.");
+        var cancellation = TestContext.Current.CancellationToken;
+        var iface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(n =>
+            n.OperationalStatus == OperationalStatus.Up && n.SupportsMulticast &&
+            n.GetIPProperties().UnicastAddresses.Any(a => a.Address.AddressFamily == AddressFamily.InterNetworkV6));
+        if (iface == null) Assert.Skip("An active IPv6 multicast interface is required.");
+
+        int index = iface.GetIPProperties().GetIPv6Properties().Index;
+        var source = iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == AddressFamily.InterNetworkV6).Address;
+        var unscopedSource = new IPAddress(source.GetAddressBytes());
+        var multicast = IPAddress.Parse("ff02::114");
+        var scopedGroup = new IPAddress(multicast.GetAddressBytes(), index);
         var group = new DefaultEventLoopGroup(1);
-        var messages = Channel.CreateUnbounded<int>();
-        DatagramChannel channel = null;
-        using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        sender.Bind(new IPEndPoint(source, 0));
-        sender.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, source.GetAddressBytes());
+        var channel = new DatagramChannel(AddressFamily.InterNetworkV6);
         try
         {
-            channel = (DatagramChannel)await new Bootstrap().Group(group).Channel<DatagramChannel>().Handler(new Capture(messages.Writer))
-                .Option(ChannelOption.IP_MULTICAST_IF, iface).BindAsync(new IPEndPoint(IPAddress.Any, 0));
-            var multicast = new IPEndPoint(IPAddress.Parse("230.0.0.2"), ((IPEndPoint)channel.LocalAddress).Port);
+            await group.RegisterAsync(channel, cancellation);
+            await channel.BindAsync(new IPEndPoint(IPAddress.IPv6Any, 0), cancellation);
+            if (sourceSpecific)
+            {
+                await channel.JoinGroupAsync(scopedGroup, iface, source);
+                await channel.JoinGroupAsync(multicast, iface, unscopedSource);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => channel.JoinGroupAsync(new IPEndPoint(multicast, 0), iface));
+                await Assert.ThrowsAsync<InvalidOperationException>(() => channel.BlockAsync(multicast, iface, unscopedSource));
+                await channel.LeaveGroupAsync(multicast, iface, unscopedSource);
+                await channel.LeaveGroupAsync(scopedGroup, iface, source);
+                await channel.JoinGroupAsync(new IPEndPoint(multicast, 0), iface);
+                await channel.LeaveGroupAsync(scopedGroup, index);
+            }
+            else
+            {
+                await channel.JoinGroupAsync(new IPEndPoint(scopedGroup, 0), iface);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => channel.JoinGroupAsync(multicast, iface, unscopedSource));
+                await channel.BlockAsync(multicast, iface, unscopedSource);
+                await channel.BlockAsync(scopedGroup, iface, source);
+                await channel.LeaveGroupAsync(multicast, index);
+                await channel.JoinGroupAsync(new IPEndPoint(scopedGroup, 0), iface);
+                await channel.BlockAsync(scopedGroup, iface, source);
+            }
+        }
+        finally { await group.StopAsync(); }
+    }
+
+    [Theory(Timeout = 10000)]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task SourceMembershipAndBlockingControlRealPackets(bool sourceSpecific, bool ipv6)
+    {
+        if (ipv6 && !OperatingSystem.IsLinux())
+            Assert.Skip("IPv6 packet delivery is exercised on an IPv6-enabled Linux test network.");
+        var family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
+        var iface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(n => n.OperationalStatus == OperationalStatus.Up && n.SupportsMulticast &&
+            n.GetIPProperties().UnicastAddresses.Any(a => a.Address.AddressFamily == family));
+        if (ipv6 && iface == null) Assert.Skip("An active IPv6 multicast interface is required.");
+        var source = iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address;
+        var multicastAddress = IPAddress.Parse(!ipv6 ? "230.0.0.2" : sourceSpecific ? "ff32::a187:613c" : "ff12::a187:613d");
+        var messages = Channel.CreateUnbounded<int>();
+        DatagramChannel channel = null;
+        using var sender = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
+        sender.Bind(new IPEndPoint(source, 0));
+        if (ipv6)
+        {
+            int index = iface.GetIPProperties().GetIPv6Properties().Index;
+            multicastAddress.ScopeId = index;
+            sender.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, index);
+        }
+        else sender.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, source.GetAddressBytes());
+        var group = new DefaultEventLoopGroup(1);
+        try
+        {
+            channel = (DatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family)).Handler(new Capture(messages.Writer))
+                .Option(ChannelOption.IP_MULTICAST_IF, iface).BindAsync(new IPEndPoint(ipv6 ? IPAddress.IPv6Any : IPAddress.Any, 0));
+            var multicast = new IPEndPoint(multicastAddress, ((IPEndPoint)channel.LocalAddress).Port);
             if (sourceSpecific)
             {
                 await channel.JoinGroupAsync(multicast.Address, iface, source);
@@ -66,11 +129,14 @@ public class DatagramSourceAndReadErrorContractTest
             }
             await sender.SendToAsync(new byte[] { 2 }, SocketFlags.None, multicast, TestContext.Current.CancellationToken);
             await Task.Delay(200, TestContext.Current.CancellationToken);
-            Assert.False(messages.Reader.TryRead(out _));
+            // A multicast loopback can duplicate the first packet. Only payload 2 tests the filter.
+            while (messages.Reader.TryRead(out int received)) Assert.Equal(1, received);
             if (sourceSpecific) await channel.JoinGroupAsync(multicast.Address, iface, source);
             else { await channel.LeaveGroupAsync(multicast, iface); await channel.JoinGroupAsync(multicast, iface); }
             await sender.SendToAsync(new byte[] { 3 }, SocketFlags.None, multicast, TestContext.Current.CancellationToken);
-            Assert.Equal(3, await messages.Reader.ReadAsync(TestContext.Current.CancellationToken));
+            int resumed;
+            do { resumed = await messages.Reader.ReadAsync(TestContext.Current.CancellationToken); } while (resumed == 1);
+            Assert.Equal(3, resumed);
         }
         finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
     }

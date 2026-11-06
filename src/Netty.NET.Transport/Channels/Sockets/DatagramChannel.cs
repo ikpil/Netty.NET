@@ -392,6 +392,7 @@ public class DatagramChannel : AbstractChannel
     private void ChangeMembership(IPAddress group, long index, IPAddress address, bool join)
     {
         ArgumentNullException.ThrowIfNull(group);
+        group = MembershipAddress(group);
         if (group.AddressFamily != _socket.AddressFamily)
             throw new ArgumentException("Multicast group and socket families differ.", nameof(group));
         if (_socket.AddressFamily == AddressFamily.InterNetwork && address == null)
@@ -438,13 +439,16 @@ public class DatagramChannel : AbstractChannel
         return OnLoopAsync(() =>
         {
             ValidateSource(group, source);
-            int index = InterfaceIndex(networkInterface, AddressFamily.InterNetwork);
+            group = MembershipAddress(group);
+            source = MembershipAddress(source);
+            int index = InterfaceIndex(networkInterface, group.AddressFamily);
             var key = (group, (long)index, source);
             if (join && _memberships.ContainsKey((group, index, null)))
                 throw new InvalidOperationException("Cannot join a source while an all-sources membership exists.");
             if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key)) return;
-            var address = join ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork) : _memberships[key].Address;
-            SetSourceOption(join ? SocketOptionName.AddSourceMembership : SocketOptionName.DropSourceMembership, group, address, source);
+            var address = group.AddressFamily == AddressFamily.InterNetwork
+                ? (join ? InterfaceAddress(networkInterface, group.AddressFamily) : _memberships[key].Address) : null;
+            SetSourceOption(join ? SocketOptionName.AddSourceMembership : SocketOptionName.DropSourceMembership, group, index, address, source);
             if (join) _memberships.Add(key, new Membership(address)); else _memberships.Remove(key);
         });
     }
@@ -459,12 +463,14 @@ public class DatagramChannel : AbstractChannel
         return OnLoopAsync(() =>
         {
             ValidateSource(multicastAddress, sourceToBlock);
-            int index = InterfaceIndex(networkInterface, AddressFamily.InterNetwork);
+            multicastAddress = MembershipAddress(multicastAddress);
+            sourceToBlock = MembershipAddress(sourceToBlock);
+            int index = InterfaceIndex(networkInterface, multicastAddress.AddressFamily);
             if (_memberships.Keys.Any(k => k.Group.Equals(multicastAddress) && k.Index == index && k.Source != null))
                 throw new InvalidOperationException("A source-specific membership cannot block sources.");
             if (_memberships.TryGetValue((multicastAddress, index, null), out var membership) && !membership.Blocked.Contains(sourceToBlock))
             {
-                SetSourceOption(SocketOptionName.BlockSource, multicastAddress, membership.Address, sourceToBlock);
+                SetSourceOption(SocketOptionName.BlockSource, multicastAddress, index, membership.Address, sourceToBlock);
                 membership.Blocked.Add(sourceToBlock);
             }
         });
@@ -482,15 +488,34 @@ public class DatagramChannel : AbstractChannel
     }
     private void ValidateSource(IPAddress group, IPAddress source)
     {
-        if (_socket.AddressFamily != AddressFamily.InterNetwork || group.AddressFamily != AddressFamily.InterNetwork || source.AddressFamily != AddressFamily.InterNetwork)
-            throw new NotSupportedException("Source filtering through CLR socket options currently supports IPv4.");
+        if (group.AddressFamily != _socket.AddressFamily || source.AddressFamily != group.AddressFamily)
+            throw new NotSupportedException("Source filtering requires the group, source and socket to use the same address family.");
+        if (group.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            if (!group.IsIPv6Multicast)
+                throw new ArgumentException("A multicast address is required.", nameof(group));
+            if (MembershipAddress(source).Equals(IPAddress.IPv6Any) || source.IsIPv6Multicast || source.IsIPv4MappedToIPv6)
+                throw new ArgumentException("An IPv6 unicast source address is required.", nameof(source));
+            return;
+        }
         if (group.GetAddressBytes()[0] is < 224 or > 239)
             throw new ArgumentException("A multicast address is required.", nameof(group));
         if (source.Equals(IPAddress.Any) || source.Equals(IPAddress.Broadcast) || source.GetAddressBytes()[0] is >= 224 and <= 239)
             throw new ArgumentException("A unicast source address is required.", nameof(source));
     }
-    private void SetSourceOption(SocketOptionName option, IPAddress group, IPAddress address, IPAddress source)
+    // The membership key already identifies the interface. Scoped and unscoped
+    // forms of the same IPv6 address identify the same membership on that interface.
+    private static IPAddress MembershipAddress(IPAddress address) =>
+        address.AddressFamily == AddressFamily.InterNetworkV6 && address.ScopeId != 0
+            ? new IPAddress(address.GetAddressBytes()) : address;
+
+    private void SetSourceOption(SocketOptionName option, IPAddress group, int index, IPAddress address, IPAddress source)
     {
+        if (group.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            SetIPv6SourceOption(option, group, index, source);
+            return;
+        }
         // IP_MREQ_SOURCE is group/source/interface on Windows, group/interface/source on Linux.
         // Keep addresses in network byte order; SocketOptionName supplies the platform option number.
         // https://learn.microsoft.com/windows/win32/api/ws2ipdef/ns-ws2ipdef-ip_mreq_source
@@ -502,6 +527,42 @@ public class DatagramChannel : AbstractChannel
         (OperatingSystem.IsLinux() ? address : source).GetAddressBytes().CopyTo(request, 4);
         (OperatingSystem.IsLinux() ? source : address).GetAddressBytes().CopyTo(request, 8);
         _socket.SetSocketOption(SocketOptionLevel.IP, option, request);
+    }
+
+    private void SetIPv6SourceOption(SocketOptionName option, IPAddress group, int index, IPAddress source)
+    {
+        bool windows = OperatingSystem.IsWindows();
+        if (!windows && !OperatingSystem.IsLinux())
+            throw new PlatformNotSupportedException("IPv6 source filtering is supported on Windows and Linux.");
+
+        // GROUP_SOURCE_REQ has a native-endian uint followed by two 128-byte
+        // sockaddr_storage values. Winsock aligns them to 8 and Linux to pointer size.
+        // https://learn.microsoft.com/windows/win32/api/ws2ipdef/ns-ws2ipdef-group_source_req
+        // https://github.com/torvalds/linux/blob/master/include/uapi/linux/in.h
+        const int storageSize = 128;
+        int offset = windows ? 8 : IntPtr.Size;
+        Span<byte> request = stackalloc byte[offset + 2 * storageSize];
+        request.Clear();
+        BitConverter.TryWriteBytes(request, index);
+        WriteAddress(group, request.Slice(offset, storageSize));
+        WriteAddress(source, request.Slice(offset + storageSize, storageSize));
+
+        int name = option switch
+        {
+            SocketOptionName.AddSourceMembership => windows ? 45 : 46,
+            SocketOptionName.DropSourceMembership => windows ? 46 : 47,
+            SocketOptionName.BlockSource => 43,
+            _ => throw new ArgumentOutOfRangeException(nameof(option))
+        };
+        _socket.SetRawSocketOption((int)SocketOptionLevel.IPv6, name, request);
+
+        void WriteAddress(IPAddress address, Span<byte> destination)
+        {
+            if (address.IsIPv6LinkLocal || (address.IsIPv6Multicast && (address.GetAddressBytes()[1] & 15) <= 2))
+                address = new IPAddress(address.GetAddressBytes(), index);
+            SocketAddress serialized = new IPEndPoint(address, 0).Serialize();
+            serialized.Buffer.Span[..serialized.Size].CopyTo(destination);
+        }
     }
     private static NetworkInterface FindInterface(IPAddress address) => NetworkInterface.GetAllNetworkInterfaces()
         .FirstOrDefault(n => n.GetIPProperties().UnicastAddresses.Any(a => a.Address.Equals(address)));
