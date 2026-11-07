@@ -56,6 +56,9 @@ public class DatagramChannel : AbstractChannel
     }
     private bool _reading;
     private bool _readRequested;
+    private bool _udpGro;
+    private int _udpSlotSize;
+    private bool _offloadConfigurationClosed;
     public DatagramChannel() : this(AddressFamily.InterNetwork) { }
     public DatagramChannel(AddressFamily family) : this(family, false) { }
 
@@ -200,7 +203,42 @@ public class DatagramChannel : AbstractChannel
      * Return {@code true} if the {@link DatagramChannel} is connected to the remote peer.
      */
     public bool IsConnected => RemoteAddress != null;
-    protected override void DoRegister() => SetActive(_socket.IsBound || ((DatagramConfig)Config).ActiveOnRegistration);
+    protected override void DoRegister()
+    {
+        lock (_socket)
+            _offloadConfigurationClosed = true;
+        SetActive(_socket.IsBound || ((DatagramConfig)Config).ActiveOnRegistration);
+    }
+
+    private void SetUdpGro(bool enabled)
+    {
+        lock (_socket)
+        {
+            if (_udpGro == enabled) return;
+            EnsureOffloadConfigurationOpen();
+            LinuxUdpOffload.SetGro(_socket, enabled);
+            Volatile.Write(ref _udpGro, enabled);
+        }
+    }
+
+    private void SetUdpSlotSize(int size)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(size);
+        lock (_socket)
+        {
+            if (_udpSlotSize == size) return;
+            EnsureOffloadConfigurationOpen();
+            if (!OperatingSystem.IsLinux())
+                throw new PlatformNotSupportedException("UDP scattering requires Linux.");
+            Volatile.Write(ref _udpSlotSize, size);
+        }
+    }
+
+    private void EnsureOffloadConfigurationOpen()
+    {
+        if (_offloadConfigurationClosed)
+            throw new InvalidOperationException("Set UDP receive offload options before registering the channel.");
+    }
     protected override void DoDeregister() => SetActive(_socket.IsBound);
     protected override void DoClose() { _memberships.Clear(); _socket.Dispose(); }
     protected override bool ContinueOnWriteError
@@ -227,8 +265,51 @@ public class DatagramChannel : AbstractChannel
         if (envelope?.Recipient == null && !IsConnected)
             throw new SocketException((int)SocketError.NotConnected);
         ByteBuf data = envelope?.Content ?? (ByteBuf)message;
-        int length = data.ReadableBytes;
         var sequence = data.ReadableSequence;
+        int length = data.ReadableBytes;
+        var target = envelope?.Recipient;
+        if (message is SegmentedDatagramPacket segmented && length > segmented.SegmentSize)
+        {
+            int segmentSize = segmented.SegmentSize;
+            bool sentWithOffload = LinuxUdpOffload.CanSend(_socket, length, segmentSize) &&
+                TrySendSegmented(sequence, length, segmentSize, segmented.Recipient);
+            if (!sentWithOffload)
+            {
+                for (int offset = 0; offset < length;)
+                {
+                    int count = Math.Min(segmentSize, length - offset);
+                    await SendDatagramAsync(sequence.Slice(offset, count), target).ConfigureAwait(false);
+                    offset += count;
+                }
+            }
+        }
+        else
+            await SendDatagramAsync(sequence, target).ConfigureAwait(false);
+
+        await OnSocketLoopAsync(() =>
+        {
+            OutboundBuffer.Progress(length);
+            // CLR receive cannot start on an unbound socket. A first send can implicitly bind it.
+            if (!_reading && _readRequested && IsOpen)
+                DoBeginRead();
+        }).ConfigureAwait(false);
+    }
+
+    private bool TrySendSegmented(ReadOnlySequence<byte> sequence, int length, int segmentSize, IPEndPoint recipient)
+    {
+        if (sequence.IsSingleSegment)
+            return LinuxUdpOffload.TrySend(_socket, sequence.First, segmentSize, recipient);
+        byte[] staging = ArrayPool<byte>.Shared.Rent(length);
+        try
+        {
+            sequence.CopyTo(staging);
+            return LinuxUdpOffload.TrySend(_socket, staging.AsMemory(0, length), segmentSize, recipient);
+        }
+        finally { ArrayPool<byte>.Shared.Return(staging); }
+    }
+
+    private async Task SendDatagramAsync(ReadOnlySequence<byte> sequence, EndPoint target)
+    {
         byte[] staging = null;
         try
         {
@@ -237,22 +318,16 @@ public class DatagramChannel : AbstractChannel
             {
                 // A datagram must be sent atomically. As in the original composite-buffer copy path,
                 // gather a segmented payload into a contiguous borrow rather than sending several datagrams.
+                int length = (int)sequence.Length;
                 staging = ArrayPool<byte>.Shared.Rent(length);
                 sequence.CopyTo(staging);
                 memory = staging.AsMemory(0, length);
             }
-            int sent = envelope?.Recipient is { } target
+            int sent = target != null
                 ? await _socket.SendToAsync(memory, SocketFlags.None, target).ConfigureAwait(false)
                 : await _socket.SendAsync(memory, SocketFlags.None).ConfigureAwait(false);
-            if (sent != length)
+            if (sent != sequence.Length)
                 throw new IOException("A UDP datagram was only partially accepted.");
-            await OnSocketLoopAsync(() =>
-            {
-                OutboundBuffer.Progress(sent);
-                // CLR receive cannot start on an unbound socket. A first send can implicitly bind it.
-                if (!_reading && _readRequested && IsOpen)
-                    DoBeginRead();
-            }).ConfigureAwait(false);
         }
         finally { if (staging != null) ArrayPool<byte>.Shared.Return(staging); }
     }
@@ -268,11 +343,11 @@ public class DatagramChannel : AbstractChannel
         StartSocketWork(() => _ = ReadLoopAsync());
     }
     protected override void DoClearReadPending() => _readRequested = false;
-    private readonly record struct PendingDatagram(ByteBuf Buffer, Task<SocketReceiveFromResult> Completion);
+    private readonly record struct PendingDatagram(ByteBuf Buffer, Task<LinuxUdpOffload.ReadResult> Completion);
 
     private async Task ReadLoopAsync()
     {
-        EndPoint any = _socket.AddressFamily == AddressFamily.InterNetworkV6
+        IPEndPoint any = _socket.AddressFamily == AddressFamily.InterNetworkV6
             ? new IPEndPoint(IPAddress.IPv6Any, 0) : new IPEndPoint(IPAddress.Any, 0);
         var batch = new List<DatagramPacket>();
         PendingDatagram? pending = null;
@@ -324,12 +399,30 @@ public class DatagramChannel : AbstractChannel
                                 {
                                     var result = receive.Completion.GetAwaiter().GetResult();
                                     handle.AttemptedBytesRead(data.WritableBytes);
-                                    handle.LastBytesRead(result.ReceivedBytes);
-                                    handle.IncMessagesRead(1);
-                                    data.WriterIndex += result.ReceivedBytes;
-                                    batch.Add(new DatagramPacket(data, (IPEndPoint)LocalAddress,
-                                        (IPEndPoint)TcpSocketChannel.Normalize(result.RemoteEndPoint)));
-                                    data = null;
+                                    handle.LastBytesRead(result.BytesRead);
+                                    var recipient = (IPEndPoint)LocalAddress;
+                                    int start = data.WriterIndex;
+                                    if (result.Batch is { } packets)
+                                    {
+                                        var last = packets[^1];
+                                        data.WriterIndex = start + last.Offset + last.Length;
+                                        foreach (var packet in packets)
+                                            AddDatagramSlices(data, start, packet, recipient, handle, batch);
+                                    }
+                                    else
+                                    {
+                                        var packet = result.Single;
+                                        data.WriterIndex += packet.Length;
+                                        if (packet.SegmentSize > 0 && packet.SegmentSize < packet.Length)
+                                            AddDatagramSlices(data, start, packet, recipient, handle, batch);
+                                        else
+                                        {
+                                            handle.IncMessagesRead(1);
+                                            batch.Add(new DatagramPacket(data, recipient,
+                                                (IPEndPoint)TcpSocketChannel.Normalize(packet.Sender)));
+                                            data = null;
+                                        }
+                                    }
                                 }
                                 finally { data?.Release(); }
 
@@ -403,13 +496,31 @@ public class DatagramChannel : AbstractChannel
         }
     }
 
-    private PendingDatagram StartReceive(IRecvByteBufAllocator.IHandle handle, EndPoint any)
+    private static void AddDatagramSlices(ByteBuf data, int start, LinuxUdpOffload.Received packet, IPEndPoint recipient,
+        IRecvByteBufAllocator.IHandle handle, List<DatagramPacket> batch)
+    {
+        var sender = (IPEndPoint)TcpSocketChannel.Normalize(packet.Sender);
+        int segmentSize = packet.SegmentSize > 0 ? packet.SegmentSize : packet.Length;
+        int offset = 0;
+        // Retain the payload of each delivered datagram independently of the aggregate.
+        do
+        {
+            int count = Math.Min(segmentSize, packet.Length - offset);
+            batch.Add(new DatagramPacket(data.RetainedSlice(start + packet.Offset + offset, count), recipient, sender));
+            handle.IncMessagesRead(1);
+            offset += count;
+        } while (offset < packet.Length);
+    }
+
+    private PendingDatagram StartReceive(IRecvByteBufAllocator.IHandle handle, IPEndPoint any)
     {
         var data = handle.Allocate(Allocator);
         try
         {
             handle.AttemptedBytesRead(data.WritableBytes);
-            return new PendingDatagram(data, ReceiveDatagramAsync(data.AsMemory(data.WriterIndex, data.WritableBytes), any));
+            Memory<byte> memory = data.AsMemory(data.WriterIndex, data.WritableBytes);
+            return new PendingDatagram(data, _udpGro || _udpSlotSize != 0
+                ? LinuxUdpOffload.ReceiveAsync(_socket, memory, any, _udpSlotSize) : ReceivePacketAsync(memory, any));
         }
         catch { data.Release(); throw; }
     }
@@ -419,6 +530,12 @@ public class DatagramChannel : AbstractChannel
         // as we read anything).
         handle is IRecvByteBufAllocator.IExtendedHandle extended
             ? extended.ContinueReading(static () => true) : handle.ContinueReading();
+
+    private async Task<LinuxUdpOffload.ReadResult> ReceivePacketAsync(Memory<byte> memory, EndPoint remote)
+    {
+        var result = await ReceiveDatagramAsync(memory, remote).ConfigureAwait(false);
+        return new LinuxUdpOffload.ReadResult(new(result.ReceivedBytes, result.RemoteEndPoint, 0), BytesRead: result.ReceivedBytes);
+    }
 
     protected virtual async Task<SocketReceiveFromResult> ReceiveDatagramAsync(Memory<byte> memory, EndPoint remote)
     {
@@ -731,7 +848,8 @@ public class DatagramChannel : AbstractChannel
             foreach (var option in new ChannelOption[] { ChannelOption.SO_BROADCAST, ChannelOption.SO_RCVBUF,
                 ChannelOption.SO_SNDBUF, ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED,
                 ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL,
-                ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION })
+                ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, ChannelOption.UDP_GRO,
+                ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE })
                 if (TryGetValue(option, out var value)) options[option] = value;
             return options;
         }
@@ -814,6 +932,10 @@ public class DatagramChannel : AbstractChannel
                 value = GetTrafficClass();
             else if (ReferenceEquals(option, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION))
                 value = ActiveOnRegistration;
+            else if (ReferenceEquals(option, ChannelOption.UDP_GRO))
+                value = Volatile.Read(ref ((DatagramChannel)Channel)._udpGro);
+            else if (ReferenceEquals(option, ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE))
+                value = Volatile.Read(ref ((DatagramChannel)Channel)._udpSlotSize);
             /**
      * Gets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
      */
@@ -875,6 +997,10 @@ public class DatagramChannel : AbstractChannel
                     throw new InvalidOperationException("Can only change before channel is registered.");
                 ActiveOnRegistration = (bool)value;
             }
+            else if (ReferenceEquals(option, ChannelOption.UDP_GRO))
+                ((DatagramChannel)Channel).SetUdpGro((bool)value);
+            else if (ReferenceEquals(option, ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE))
+                ((DatagramChannel)Channel).SetUdpSlotSize((int)value);
             /**
      * Sets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
      */

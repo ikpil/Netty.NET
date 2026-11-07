@@ -138,6 +138,15 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     public static readonly ChannelOption<int> IP_MULTICAST_TTL = ValueOf<int>("IP_MULTICAST_TTL");
     public static readonly ChannelOption<bool> IP_MULTICAST_LOOP_DISABLED = ValueOf<bool>("IP_MULTICAST_LOOP_DISABLED");
 
+    /// <summary>
+    /// Enables Linux UDP receive offload. Set this before the first channel registration and configure
+    /// a receive buffer large enough for an entire aggregate.
+    /// </summary>
+    public static readonly ChannelOption<bool> UDP_GRO = ValueOf<bool>("UDP_GRO");
+
+    /// <summary>Sets the Linux UDP scattering slot size. Zero disables scattering. Set this before registration.</summary>
+    public static readonly ChannelOption<int> UDP_MAX_DATAGRAM_PAYLOAD_SIZE = ValueOf<int>("UDP_MAX_DATAGRAM_PAYLOAD_SIZE");
+
     public static readonly ChannelOption<bool> TCP_NODELAY = ValueOf<bool>("TCP_NODELAY");
     /**
      * Client-side TCP FastOpen. Sending data with the initial TCP handshake.

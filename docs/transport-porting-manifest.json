@@ -35,15 +35,15 @@
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries. Added native UDP receive batches and the complete IPv4-mapped unicast fixture with 22 original allocator cases. Added IPv6 source multicast operations and two original Unix ICMP fixtures. The inherited IPv6 multicast fixture and the Linux IPv6 traffic class mapping are verified. Linux UDP disconnect preserves its socket and local binding across reconnect. Linux validates all eight Unix TCP reset cases. Linux dual-mode IPv4 multicast membership and per-socket multicast delivery are verified with shared-port packet tests. Mapped six original epoll datagram scenarios to the portable CLR receive path.",
-      "next": "Review epoll-only ABI and segmented datagram/GRO contracts, and the mixed-family original fixture with its existing Linux send failure."
+      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries. Added native UDP receive batches and the complete IPv4-mapped unicast fixture with 22 original allocator cases. Added IPv6 source multicast operations and two original Unix ICMP fixtures. The inherited IPv6 multicast fixture and the Linux IPv6 traffic class mapping are verified. Linux UDP disconnect preserves its socket and local binding across reconnect. Linux validates all eight Unix TCP reset cases. Linux dual-mode IPv4 multicast membership and per-socket multicast delivery are verified with shared-port packet tests. Mapped six original epoll datagram scenarios to the portable CLR receive path. Ported segmented sends, Linux UDP GRO, and native receive batching with five original tests.",
+      "next": "Review the mixed-family original fixture with its Linux send failure, IP_RECVORIGDSTADDR, and the remaining epoll-specific contracts."
     }
   ],
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 458,
-    "javaOriginalInvocations": 460,
+    "javaOriginalPassed": 463,
+    "javaOriginalInvocations": 465,
     "transportJavaOriginalPassed": 384,
     "coreTransportJavaOriginalPassed": 314,
     "eventLoopJavaOriginalPassed": 24,
@@ -55,26 +55,26 @@
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 408,
-    "originalExecutedCases": 509,
-    "originalSkippedCases": 21,
+    "mappedOriginalMethods": 413,
+    "originalExecutedCases": 513,
+    "originalSkippedCases": 27,
     "transportMappedOriginalExecutions": 361,
     "testsuiteMappedOriginalExecutions": 136,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 24,
-    "supplementalExecutedCases": 214,
+    "supplementalExecutedCases": 216,
     "debug": {
       "failed": 0,
-      "passed": 723,
-      "skipped": 28,
-      "total": 751
+      "passed": 729,
+      "skipped": 36,
+      "total": 765
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 723,
-      "skipped": 28,
-      "total": 751
+      "passed": 729,
+      "skipped": 36,
+      "total": 765
     },
     "solutionRelease": {
       "Netty.NET.Resolver.Tests": {
@@ -85,9 +85,9 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 723,
-        "skipped": 28,
-        "total": 751
+        "passed": 729,
+        "skipped": 36,
+        "total": 765
       },
       "Netty.NET.Buffer.Tests": {
         "failed": 0,
@@ -102,19 +102,19 @@
         "total": 2692
       }
     },
-    "solutionPassed": 33021,
-    "solutionSkipped": 42,
+    "solutionPassed": 33027,
+    "solutionSkipped": 50,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward 452 passes in 454 calls. Six unchanged epoll datagram wrappers compiled from the pinned checkout pass against the exact tag release artifacts on Linux, for 458 passes in 460 calls. Each new wrapper runs both original allocators.",
-    "note": "Windows solution Release passed 33021 with 42 skips. Final Transport Debug, Release and checked Release passed 723 with 28 skips. Linux Transport passed 744 with seven source-disabled skips. The strengthened manual UDP phase test fails against the previous implementation because preparation was reported in a separate uncounted pump.",
+    "javaEvidence": "Carries forward 458 passes in 460 calls. Five unchanged epoll segmentation wrappers pass against the pinned release artifacts on Linux, for 463 passes in 465 calls. The wrappers log 40 backend and allocator rows, including the source early-return rows for non-epoll senders.",
+    "note": "Windows solution Release passed 33027 with 50 skips. Final Transport Debug, Release and checked Release passed 729 with 36 skips. Linux Transport passed 758 with seven source-disabled skips. The first full Linux run hit the existing fixed-rate timing assertion. The unchanged test passed in the full retry.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/udp-phase-solution-final-results --logger \"trx;LogFilePrefix=udp-phase-final\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/udp-segment-results --logger \"trx;LogFilePrefix=udp-segment\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -149,6 +149,8 @@
       "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/raw-io-standard-out",
       "python artifacts/transport-core/run-udp-phase-originals.py",
       "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/udp-phase-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-udp-segment-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/udp-segment-checked-out -p:NuGetAudit=false",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -173,7 +175,7 @@
     "mappedUdpOriginalExecutions": 22,
     "unixUdpIcmpJavaJUnitInvocations": 2,
     "unixUdpIcmpJavaAllocatorExecutions": 4,
-    "supplementalSkippedCases": 7,
+    "supplementalSkippedCases": 9,
     "linuxDatagramRelease": {
       "total": 117,
       "passed": 117,
@@ -192,8 +194,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 751,
-      "passed": 744,
+      "total": 765,
+      "passed": 758,
       "failed": 0,
       "skipped": 7
     },
@@ -240,7 +242,7 @@
       "sourceDisabledSkipped": 1,
       "isolatedDisabledProbePassed": 1
     },
-    "nativeMappedOriginalExecutions": 12,
+    "nativeMappedOriginalExecutions": 16,
     "udpReadPhaseEvidence": {
       "javaNativeWrappersPassed": 6,
       "javaNativeAllocatorExecutions": 12,
@@ -248,6 +250,16 @@
       "previousImplementationRegressionFailures": 1,
       "checkedClrRepeatRuns": 8,
       "checkedClrCasesPerRepeat": 13
+    },
+    "udpSegmentationEvidence": {
+      "javaWrappersPassed": 5,
+      "javaOriginalPermutationRows": 40,
+      "windowsOriginalPassed": 4,
+      "windowsOriginalSkipped": 6,
+      "linuxOriginalPassed": 10,
+      "linuxSupplementalPassed": 4,
+      "windowsSupplementalPassed": 2,
+      "windowsSupplementalSkipped": 2
     }
   },
   "entries": [
@@ -2438,7 +2450,7 @@
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "review": {
-        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler operation submission and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery.",
+        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler operation submission and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
@@ -2449,7 +2461,10 @@
           "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs",
           "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
-          "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs"
         ]
       },
       "comments": {
@@ -3230,7 +3245,7 @@
         "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/DatagramSourceAndReadErrorContractTest.cs",
@@ -3238,7 +3253,10 @@
           "test/Netty.NET.Transport.Tests/DatagramConnectedWriteExceptionSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs"
+          "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs"
         ]
       }
     },
@@ -3410,7 +3428,7 @@
         "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels. A native connect error closes the datagram channel, preserving the original socket failure. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels. A native connect error closes the datagram channel, preserving the original socket failure. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs",
@@ -3421,7 +3439,10 @@
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs",
           "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
-          "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs"
         ]
       }
     },
@@ -7687,14 +7708,14 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 37,
-    "portedOriginalFixtures": 53,
-    "portedOriginalMethods": 408,
-    "supplementalClrCases": 221,
+    "portedOriginalFixtures": 54,
+    "portedOriginalMethods": 413,
+    "supplementalClrCases": 225,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 25,
     "sourceDisabledMethodsMapped": 7,
-    "nativeTestSources": 1
+    "nativeTestSources": 2
   },
   "clrDecisions": [
     {
@@ -8051,6 +8072,25 @@
         "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
         "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs"
       ]
+    },
+    {
+      "subject": "Segmented UDP writes and Linux receive offload",
+      "decision": "Use per-message UDP_SEGMENT on eligible Linux sockets and separate datagrams on the managed fallback. Enable UDP_GRO and scattering slot size before registration so an outstanding managed receive cannot consume control metadata. The Linux path uses non-blocking recvmsg or recvmmsg and CLR async peek for readiness. Retained slices preserve individual datagram lengths and sender addresses after the aggregate buffer is released.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/SegmentedDatagramPacket.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
+        "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs"
+      ],
+      "platformSources": [
+        "https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Net.Primitives/src/System/Net/SocketException.Unix.cs"
+      ],
+      "upstreamSources": [
+        "transport-native-unix-common/src/main/java/io/netty/channel/unix/SegmentedDatagramPacket.java",
+        "transport-classes-epoll/src/main/java/io/netty/channel/epoll/EpollDatagramChannel.java",
+        "transport-native-epoll/src/main/c/netty_epoll_native.c"
+      ]
     }
   ],
   "openWork": [
@@ -8139,7 +8179,8 @@
     "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs",
     "test/Netty.NET.Transport.Tests/LocalTransportThreadModel2SourceTest.cs",
     "test/Netty.NET.Transport.Tests/SingleThreadIoEventLoopSourceTest.cs",
-    "test/Netty.NET.Transport.Tests/RawIoRegistrationContractTest.cs"
+    "test/Netty.NET.Transport.Tests/RawIoRegistrationContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -11626,6 +11667,220 @@
           "isolatedDisabledProbePassed": 1
         }
       }
+    },
+    {
+      "checkpoint": "791096ff60ab8c3c7bfcf2c90b15172542924bb2",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 458,
+        "javaOriginalInvocations": 460,
+        "transportJavaOriginalPassed": 384,
+        "coreTransportJavaOriginalPassed": 314,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 70,
+        "datagramJavaJUnitInvocations": 37,
+        "datagramJavaAllocatorExecutions": 74,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 408,
+        "originalExecutedCases": 509,
+        "originalSkippedCases": 21,
+        "transportMappedOriginalExecutions": 361,
+        "testsuiteMappedOriginalExecutions": 136,
+        "datagramMappedOriginalExecutions": 68,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 24,
+        "supplementalExecutedCases": 214,
+        "debug": {
+          "failed": 0,
+          "passed": 723,
+          "skipped": 28,
+          "total": 751
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 723,
+          "skipped": 28,
+          "total": 751
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "failed": 0,
+            "passed": 64,
+            "skipped": 0,
+            "total": 64
+          },
+          "Netty.NET.Transport.Tests": {
+            "failed": 0,
+            "passed": 723,
+            "skipped": 28,
+            "total": 751
+          },
+          "Netty.NET.Buffer.Tests": {
+            "failed": 0,
+            "passed": 29556,
+            "skipped": 0,
+            "total": 29556
+          },
+          "Netty.NET.Common.Tests": {
+            "failed": 0,
+            "passed": 2678,
+            "skipped": 14,
+            "total": 2692
+          }
+        },
+        "solutionPassed": 33021,
+        "solutionSkipped": 42,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward 452 passes in 454 calls. Six unchanged epoll datagram wrappers compiled from the pinned checkout pass against the exact tag release artifacts on Linux, for 458 passes in 460 calls. Each new wrapper runs both original allocators.",
+        "note": "Windows solution Release passed 33021 with 42 skips. Final Transport Debug, Release and checked Release passed 723 with 28 skips. Linux Transport passed 744 with seven source-disabled skips. The strengthened manual UDP phase test fails against the previous implementation because preparation was reported in a separate uncounted pump.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/udp-phase-solution-final-results --logger \"trx;LogFilePrefix=udp-phase-final\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "python artifacts/transport-core/run-scaling-originals.py",
+          "python artifacts/transport-core/run-manual-originals.py",
+          "python artifacts/transport-core/run-io-phase-originals.py",
+          "python artifacts/transport-core/run-outbound-originals.py",
+          "python artifacts/transport-core/run-gather-originals.py",
+          "python artifacts/transport-core/run-udp-mapped-originals.py",
+          "python artifacts/transport-core/run-udp-native-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter \"FullyQualifiedName~Datagram\" on an IPv6-enabled Linux container",
+          "python artifacts/transport-core/run-udp-multicast-ipv6-original.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-multicast-ipv6-isolated --results-directory artifacts/transport-core/udp-multicast-ipv6-transport-results -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-udp-disconnect-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore on an IPv6-enabled Linux container",
+          "python artifacts/transport-core/run-udp-dual-regular-originals.py",
+          "python artifacts/transport-core/run-udp-multicast-dual-original.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-dual-standard-out",
+          "python artifacts/transport-core/run-reentrant-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/reentrant-standard-out",
+          "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore --filter FullyQualifiedName~ReentrantChannelSourceTest",
+          "python artifacts/transport-core/run-local-thread-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore --filter FullyQualifiedName~LocalTransportThreadModel",
+          "python artifacts/transport-core/run-threaded-io-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/threaded-io-standard-out",
+          "python artifacts/transport-core/run-raw-io-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/raw-io-standard-out",
+          "python artifacts/transport-core/run-udp-phase-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/udp-phase-checked-out -p:NuGetAudit=false",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4,
+        "outboundJavaJUnitInvocations": 6,
+        "outboundJavaAllocatorExecutions": 12,
+        "outboundMappedOriginalExecutions": 12,
+        "gatheringJavaJUnitInvocations": 6,
+        "gatheringJavaAllocatorExecutions": 12,
+        "gatheringMappedOriginalExecutions": 12,
+        "mappedUdpJavaJUnitInvocations": 11,
+        "mappedUdpJavaAllocatorExecutions": 22,
+        "mappedUdpOriginalExecutions": 22,
+        "unixUdpIcmpJavaJUnitInvocations": 2,
+        "unixUdpIcmpJavaAllocatorExecutions": 4,
+        "supplementalSkippedCases": 7,
+        "linuxDatagramRelease": {
+          "total": 117,
+          "passed": 117,
+          "failed": 0,
+          "skipped": 0,
+          "baselineFailures": [],
+          "unixIcmpOriginalCasesPassed": 4,
+          "ipv6SourceMembershipCasesPassed": 2,
+          "ipv6SourcePacketCasesPassed": 2,
+          "ipv6MulticastOriginalCasesPassed": 2,
+          "ipv6TrafficClassConfigurationCasesPassed": 1,
+          "udpDisconnectCasesPassed": 6,
+          "multicastIsolationCasesPassed": 4,
+          "nativeConnectFailureCasesPassed": 1
+        },
+        "ipv6MulticastJavaJUnitInvocations": 1,
+        "ipv6MulticastJavaAllocatorExecutions": 2,
+        "linuxTransportRelease": {
+          "total": 751,
+          "passed": 744,
+          "failed": 0,
+          "skipped": 7
+        },
+        "linuxOriginalRerun": {
+          "udpJavaWrappersPassed": 3,
+          "udpJavaAllocatorRunsPassed": 6,
+          "unixHalfCloseJavaWrappersPassed": 1,
+          "unixHalfCloseJavaAllocatorRunsPassed": 2,
+          "unixHalfCloseClrCasesPassed": 8,
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+        },
+        "linuxMulticastOriginalRerun": {
+          "regularJavaWrappersPassed": 2,
+          "regularJavaAllocatorRunsPassed": 4,
+          "mixedJavaWrapperFailed": 1
+        },
+        "reentrantEvidence": {
+          "javaOriginalPassed": 6,
+          "clrOriginalPassed": 6,
+          "clrSupplementalPassed": 2,
+          "baselineFailed": 4,
+          "focusedRepeats": 8
+        },
+        "localThreadModelEvidence": {
+          "javaOriginalPassed": 2,
+          "clrOriginalPassed": 2,
+          "sourceDisabledSkipped": 6,
+          "clrSupplementalPassed": 2,
+          "baselineFailed": 2,
+          "focusedRepeats": 3
+        },
+        "threadedIoEvidence": {
+          "javaOriginalPassed": 2,
+          "clrOriginalPassed": 2,
+          "clrSupplementalPassed": 11,
+          "baselineTcpOrderingFailed": 1
+        },
+        "rawIoEvidence": {
+          "newJavaOriginalPassed": 4,
+          "javaOriginalRerun": 2,
+          "newClrOriginalPassed": 4,
+          "upgradedClrOriginalPassed": 2,
+          "clrSupplementalPassed": 5,
+          "sourceDisabledSkipped": 1,
+          "isolatedDisabledProbePassed": 1
+        },
+        "nativeMappedOriginalExecutions": 12,
+        "udpReadPhaseEvidence": {
+          "javaNativeWrappersPassed": 6,
+          "javaNativeAllocatorExecutions": 12,
+          "clrOriginalPassed": 12,
+          "previousImplementationRegressionFailures": 1,
+          "checkedClrRepeatRuns": 8,
+          "checkedClrCasesPerRepeat": 13
+        }
+      }
     }
   ],
   "nextWork": [
@@ -11647,7 +11902,8 @@
     "The six reentrant-channel originals and two reservation cases pass on Windows and Linux. All eight Local transport thread-model bodies are mapped and two run by default, matching the pinned Java conditions. I/O-specific event-loop contracts remain open.",
     "Threaded I/O ratios and TCP completion priority are verified. Continue raw handle registration, backend selection and single-phase UDP preparation/delivery where supported.",
     "Standalone I/O registration, backend compatibility and auto-scaling registration tests pass. Continue selector-specific operation submission, single-phase UDP preparation/delivery and remaining Transport contracts.",
-    "UDP receive preparation and delivery now run in the same I/O phase. Keep epoll-specific batching ABI and segmented UDP/GRO, the mixed-family multicast original, and selector-specific operation contracts separate."
+    "UDP receive preparation and delivery now run in the same I/O phase. Keep epoll-specific batching ABI and segmented UDP/GRO, the mixed-family multicast original, and selector-specific operation contracts separate.",
+    "Segmented UDP sends, GRO and recvmmsg receive are mapped and validated. Continue original-destination metadata, the mixed-family multicast fixture and remaining native backend contracts."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -13582,6 +13838,106 @@
         "preservedCount": 6,
         "unreviewedCount": 0,
         "scope": "All original fixture comments are preserved at the corresponding test steps."
+      }
+    },
+    {
+      "upstream": "transport-native-epoll/src/test/java/io/netty/channel/epoll/EpollDatagramUnicastTest.java",
+      "sha256": "d0565f65a4a5141ecc1cad45f4a2a14e27753fc5ffd3c1456d5000c32eb20822",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs"
+      ],
+      "review": {
+        "scope": "All five declared segmented datagram scenarios are mapped with both original allocators. The two segmentation-only tests use the portable send path on Windows and Linux offload when available. The three GRO tests require real Linux support. The Java NIO and epoll permutations are consolidated into the CLR datagram channel. The separate inherited original-destination option scenario remains open.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SegmentedDatagramPacket.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSendSegmentedDatagramPacket",
+          "clrMethod": "TestSendSegmentedDatagramPacket",
+          "adaptation": "Send 16 512-byte segments from one contiguous direct buffer. Keep the original receiver segment count and size assertions.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testSendSegmentedDatagramPacketComposite",
+          "clrMethod": "TestSendSegmentedDatagramPacketComposite",
+          "adaptation": "Repeat the original send with 16 direct composite components.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacket",
+          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacket",
+          "adaptation": "Enable real Linux UDP_GRO and retain the original fixed 8192-byte receive buffer. Verify GRO configuration and all 16 delivered segments.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketComposite",
+          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacketComposite",
+          "adaptation": "Repeat real Linux UDP_GRO with the source composite layout.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
+          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
+          "adaptation": "Enable real Linux UDP_GRO with 8192-byte slots and a 16384-byte receive buffer. Use recvmmsg and retain the original 16 delivered segment assertions.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 5,
+        "reviewedCount": 5,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 7,
+        "preservedCount": 6,
+        "unreviewedCount": 1,
+        "scope": "Original comments for all five declared tests are retained. The inherited IP_RECVORIGDSTADDR scenario remains outside this mapping."
       }
     }
   ]
