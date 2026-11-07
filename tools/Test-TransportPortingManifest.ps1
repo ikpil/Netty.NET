@@ -29,9 +29,9 @@ function Get-DeclaredJavaTests([string]$source) {
         '(?:(?:public|protected|private|static|final|synchronized|abstract)[ \t]+)*' +
         'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]+throws[^{;]+)?[ \t\r\n]*\{'
     $names = @([regex]::Matches($masked, $declarations) | Where-Object {
-        $_.Groups['annotations'].Value -match '@(?:Test|ParameterizedTest)\b'
+        $_.Groups['annotations'].Value -match '@(?:Test|ParameterizedTest|RepeatedIfExceptionsTest)\b'
     } | ForEach-Object { $_.Groups['name'].Value })
-    $annotationCount = [regex]::Matches($masked, '(?m)^[ \t]*@(?:Test|ParameterizedTest)\b').Count
+    $annotationCount = [regex]::Matches($masked, '(?m)^[ \t]*@(?:Test|ParameterizedTest|RepeatedIfExceptionsTest)\b').Count
     if ($names.Count -ne $annotationCount -or @($names | Select-Object -Unique).Count -ne $names.Count) {
         throw 'Cannot account for every declared JUnit method exactly once.'
     }

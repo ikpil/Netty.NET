@@ -14,7 +14,6 @@ internal static class LinuxUdpOffload
     private const int SolUdp = 17;
     private const int UdpSegment = 103;
     private const int UdpGro = 104;
-    internal const int IpFreeBind = 15;
     internal const int IpOriginalDestination = 20;
     private const int DontWait = 0x40;
     private const int ControlTruncated = 0x08;
@@ -36,21 +35,7 @@ internal static class LinuxUdpOffload
             return;
         }
 
-        SetFlag(socket, SolUdp, UdpGro, enabled);
-    }
-
-    internal static void SetFlag(Socket socket, int level, int option, bool enabled)
-    {
-        Span<byte> value = stackalloc byte[sizeof(int)];
-        BitConverter.TryWriteBytes(value, enabled ? 1 : 0);
-        socket.SetRawSocketOption(level, option, value);
-    }
-
-    internal static bool GetFlag(Socket socket, int level, int option)
-    {
-        Span<byte> value = stackalloc byte[sizeof(int)];
-        int length = socket.GetRawSocketOption(level, option, value);
-        return BitConverter.ToInt32(value[..length]) != 0;
+        LinuxSocketOptions.SetFlag(socket, SolUdp, UdpGro, enabled);
     }
 
     internal static bool CanSend(Socket socket, int length, int segmentSize) =>

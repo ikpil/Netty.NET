@@ -247,7 +247,7 @@ public class DatagramChannel : AbstractChannel
             EnsureOffloadConfigurationOpen();
             if (!OperatingSystem.IsLinux())
                 throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR requires Linux.");
-            LinuxUdpOffload.SetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpOriginalDestination, enabled);
+            LinuxSocketOptions.SetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpOriginalDestination, enabled);
             Volatile.Write(ref _receiveOriginalDestination, enabled);
         }
     }
@@ -869,7 +869,8 @@ public class DatagramChannel : AbstractChannel
                 ChannelOption.SO_SNDBUF, ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED,
                 ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL,
                 ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, ChannelOption.UDP_GRO,
-                ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE, ChannelOption.IP_RECVORIGDSTADDR, ChannelOption.IP_FREEBIND })
+                ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE, ChannelOption.IP_RECVORIGDSTADDR, ChannelOption.IP_FREEBIND,
+                ChannelOption.SO_REUSEPORT })
                 if (TryGetValue(option, out var value)) options[option] = value;
             return options;
         }
@@ -967,7 +968,9 @@ public class DatagramChannel : AbstractChannel
      * {@code false} otherwise.
      */
             else if (ReferenceEquals(option, ChannelOption.IP_FREEBIND) && OperatingSystem.IsLinux())
-                value = LinuxUdpOffload.GetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpFreeBind);
+                value = LinuxSocketOptions.GetFlag(_socket, (int)SocketOptionLevel.IP, LinuxSocketOptions.IpFreeBind);
+            else if (ReferenceEquals(option, ChannelOption.SO_REUSEPORT) && OperatingSystem.IsLinux())
+                value = LinuxSocketOptions.GetFlag(_socket, LinuxSocketOptions.SolSocket, LinuxSocketOptions.SoReusePort);
             /**
      * Gets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
      */
@@ -1040,7 +1043,9 @@ public class DatagramChannel : AbstractChannel
      * {@code false} for disable it. Default is disabled.
      */
             else if (ReferenceEquals(option, ChannelOption.IP_FREEBIND) && OperatingSystem.IsLinux())
-                LinuxUdpOffload.SetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpFreeBind, (bool)value);
+                LinuxSocketOptions.SetFlag(_socket, (int)SocketOptionLevel.IP, LinuxSocketOptions.IpFreeBind, (bool)value);
+            else if (ReferenceEquals(option, ChannelOption.SO_REUSEPORT) && OperatingSystem.IsLinux())
+                LinuxSocketOptions.SetFlag(_socket, LinuxSocketOptions.SolSocket, LinuxSocketOptions.SoReusePort, (bool)value);
             /**
      * Sets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
      */

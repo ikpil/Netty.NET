@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 using Netty.NET.Common;
 
 namespace Netty.NET.Transport.Channels.Sockets;
@@ -32,6 +33,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     protected readonly Socket Socket;
     private volatile bool _halfClosure;
     private int _backlog = 128;
+    private int _tcpFastOpen;
     /**
      * Creates a new instance.
      */
@@ -53,14 +55,34 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.ALLOW_HALF_CLOSURE
     };
     private static readonly ChannelOption[] DomainListenerOptions = { ChannelOption.SO_RCVBUF, ChannelOption.SO_BACKLOG };
+    private static readonly (ChannelOption Option, int Level, int Name)[] LinuxListenerOptions = {
+        (ChannelOption.SO_REUSEPORT, LinuxSocketOptions.SolSocket, LinuxSocketOptions.SoReusePort),
+        (ChannelOption.IP_FREEBIND, (int)SocketOptionLevel.IP, LinuxSocketOptions.IpFreeBind),
+        (ChannelOption.TCP_DEFER_ACCEPT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpDeferAccept)
+    };
+    private static readonly (ChannelOption Option, int Level, int Name)[] LinuxStreamOptions = {
+        (ChannelOption.TCP_CORK, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpCork),
+        (ChannelOption.TCP_QUICKACK, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpQuickAck),
+        (ChannelOption.TCP_NOTSENT_LOWAT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpNotSentLowAt)
+    };
     private ChannelOption[] SupportedSocketOptions => Socket.AddressFamily != AddressFamily.Unix
         ? Options : Channel is IServerChannel ? DomainListenerOptions : DomainStreamOptions;
+    private bool IsLinuxTcp => OperatingSystem.IsLinux() && Socket.ProtocolType == ProtocolType.Tcp;
+    private bool HasTcpFastOpen => IsLinuxTcp && Channel is IServerChannel;
+    private ReadOnlySpan<(ChannelOption Option, int Level, int Name)> LinuxOptions => !IsLinuxTcp
+        ? [] : Channel is IServerChannel ? LinuxListenerOptions : LinuxStreamOptions;
+
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         var values = new Dictionary<ChannelOption, object>(base.GetOptions());
         foreach (var option in SupportedSocketOptions)
             if (TryGetValue(option, out var value))
                 values[option] = value;
+        foreach (var option in LinuxOptions)
+            if (TryGetValue(option.Option, out var value))
+                values[option.Option] = value;
+        if (HasTcpFastOpen)
+            values[ChannelOption.TCP_FASTOPEN] = Volatile.Read(ref _tcpFastOpen);
         return values;
     }
     protected override bool TryGetValue(ChannelOption option, out object value)
@@ -85,6 +107,18 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
             value = _halfClosure;
         else if (ReferenceEquals(option, ChannelOption.SO_BACKLOG))
             value = _backlog;
+        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
+            value = Volatile.Read(ref _tcpFastOpen);
+        else if (FindLinuxOption(option) is { } native)
+        {
+            int raw = LinuxSocketOptions.GetInt(Socket, native.Level, native.Name);
+            value = option switch
+            {
+                ChannelOption<bool> => raw != 0,
+                ChannelOption<long> => (long)unchecked((uint)raw),
+                _ => raw
+            };
+        }
         else
             return base.TryGetValue(option, out value);
         return true;
@@ -114,8 +148,35 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
             _halfClosure = (bool)value;
         else if (ReferenceEquals(option, ChannelOption.SO_BACKLOG))
         { ArgumentOutOfRangeException.ThrowIfNegative((int)value); _backlog = (int)value; }
+        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
+        {
+            int queue = (int)value;
+            ArgumentOutOfRangeException.ThrowIfNegative(queue);
+            Volatile.Write(ref _tcpFastOpen, queue);
+        }
+        else if (FindLinuxOption(option) is { } native)
+        {
+            int raw;
+            if (value is long threshold)
+            {
+                ArgumentOutOfRangeException.ThrowIfNegative(threshold);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(threshold, (long)uint.MaxValue);
+                raw = unchecked((int)threshold);
+            }
+            else
+                raw = value is bool enabled ? enabled ? 1 : 0 : (int)value;
+            LinuxSocketOptions.SetInt(Socket, native.Level, native.Name, raw);
+        }
         else
             return base.SetValue(option, value);
         return true;
+    }
+
+    private (int Level, int Name)? FindLinuxOption(ChannelOption option)
+    {
+        foreach (var candidate in LinuxOptions)
+            if (ReferenceEquals(option, candidate.Option))
+                return (candidate.Level, candidate.Name);
+        return null;
     }
 }

@@ -128,6 +128,8 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     public static readonly ChannelOption<int> SO_SNDBUF = ValueOf<int>("SO_SNDBUF");
     public static readonly ChannelOption<int> SO_RCVBUF = ValueOf<int>("SO_RCVBUF");
     public static readonly ChannelOption<bool> SO_REUSEADDR = ValueOf<bool>("SO_REUSEADDR");
+    /// <summary>Allows Linux sockets to share a bound endpoint. Set on each socket before binding.</summary>
+    public static readonly ChannelOption<bool> SO_REUSEPORT = ValueOf<bool>("SO_REUSEPORT");
     public static readonly ChannelOption<int> SO_LINGER = ValueOf<int>("SO_LINGER");
     public static readonly ChannelOption<int> SO_BACKLOG = ValueOf<int>("SO_BACKLOG");
     public static readonly ChannelOption<int> SO_TIMEOUT = ValueOf<int>("SO_TIMEOUT");
@@ -150,10 +152,14 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     /// <summary>Enables Linux IPv4 original destination metadata. Set this before channel registration.</summary>
     public static readonly ChannelOption<bool> IP_RECVORIGDSTADDR = ValueOf<bool>("IP_RECVORIGDSTADDR");
 
-    /// <summary>Allows binding a Linux UDP socket to a nonlocal IPv4 address.</summary>
+    /// <summary>Allows binding a Linux TCP listener or UDP socket to a nonlocal IPv4 address.</summary>
     public static readonly ChannelOption<bool> IP_FREEBIND = ValueOf<bool>("IP_FREEBIND");
 
     public static readonly ChannelOption<bool> TCP_NODELAY = ValueOf<bool>("TCP_NODELAY");
+    public static readonly ChannelOption<int> TCP_DEFER_ACCEPT = ValueOf<int>("TCP_DEFER_ACCEPT");
+    public static readonly ChannelOption<bool> TCP_CORK = ValueOf<bool>("TCP_CORK");
+    public static readonly ChannelOption<bool> TCP_QUICKACK = ValueOf<bool>("TCP_QUICKACK");
+    public static readonly ChannelOption<long> TCP_NOTSENT_LOWAT = ValueOf<long>("TCP_NOTSENT_LOWAT");
     /**
      * Client-side TCP FastOpen. Sending data with the initial TCP handshake.
      */

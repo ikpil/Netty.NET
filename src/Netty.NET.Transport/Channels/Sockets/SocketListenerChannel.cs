@@ -46,6 +46,15 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
     {
         cancellationToken.ThrowIfCancellationRequested();
         _socket.Bind(address);
+        if (OperatingSystem.IsLinux() && _socket.ProtocolType == ProtocolType.Tcp &&
+            Config.TryGetOption(ChannelOption.TCP_FASTOPEN, out int fastOpen) && fastOpen > 0)
+        {
+            try { LinuxSocketOptions.SetInt(_socket, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpen, fastOpen); }
+            catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
+            {
+                // The source only applies the configured queue on a supporting kernel.
+            }
+        }
         Config.TryGetOption(ChannelOption.SO_BACKLOG, out int backlog);
         _socket.Listen(backlog);
         SetActive(true);
