@@ -249,7 +249,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         else
             _ = OnLoopAsync(DoClearReadPending);
     }
-    protected async Task DispatchReadAsync(Func<bool> readPending, Action read)
+    protected Task DispatchReadAsync(Func<bool> readPending, Action read) =>
+        DispatchReadResultAsync(readPending, () => { read(); return true; });
+
+    private protected async Task DispatchReadResultAsync(Func<bool> readPending, Func<bool> read)
     {
         // Unlike readiness-based NIO, a native receive can consume input before AutoRead is disabled.
         // Keep that single completed operation's borrow until registration and read admission resume.
@@ -264,9 +267,8 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 { finished = true; return false; }
                 if (_registered && (Config.IsAutoRead() || readPending()))
                 {
-                    read();
                     finished = true;
-                    return true;
+                    return read();
                 }
 
                 var waiter = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

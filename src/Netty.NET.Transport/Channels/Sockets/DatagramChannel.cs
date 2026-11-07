@@ -296,48 +296,52 @@ public class DatagramChannel : AbstractChannel
                     }).ConfigureAwait(false);
                     if (handle == null) break;
 
-                    do
-                    {
-                        PendingDatagram receive = pending.Value;
-                        pending = null;
-                        ByteBuf data = receive.Buffer;
-                        try
-                        {
-                            var result = await receive.Completion.ConfigureAwait(false);
-                            await OnSocketLoopAsync(() =>
-                            {
-                                if (!IsOpen) return;
-                                handle.AttemptedBytesRead(data.WritableBytes);
-                                handle.LastBytesRead(result.ReceivedBytes);
-                                handle.IncMessagesRead(1);
-                                data.WriterIndex += result.ReceivedBytes;
-                                batch.Add(new DatagramPacket(data, (IPEndPoint)LocalAddress,
-                                    (IPEndPoint)TcpSocketChannel.Normalize(result.RemoteEndPoint)));
-                                data = null;
-
-                                if (IsRegistered && ContinueReading(handle) && _socket.Poll(0, SelectMode.SelectRead))
-                                    pending = StartReceive(handle, any);
-                            }).ConfigureAwait(false);
-                        }
-                        finally { data?.Release(); }
-                        // A readiness hint can race with a socket change. Deliver the current batch
-                        // before waiting for a receive that did not finish synchronously.
-                    } while (pending?.Completion.IsCompleted == true);
+                    // Await readiness without consuming the outcome. The owner prepares and delivers
+                    // the entire ready batch before returning to the ordinary task queue.
+                    await ((Task)pending.Value.Completion).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
                 }
                 catch (Exception error) { failure = error; }
 
                 again = false;
-                if (batch.Count != 0)
-                    await DispatchReadAsync(() => _readRequested, CompleteBatch).ConfigureAwait(false);
-                else if (failure != null)
-                    await OnSocketLoopAsync(CompleteBatch).ConfigureAwait(false);
+                await DispatchReadResultAsync(() => _readRequested, CompleteBatch).ConfigureAwait(false);
+                ReleaseBatch();
 
                 if (again || pending != null)
                     await QueueSocketWorkAsync(() => { }).ConfigureAwait(false);
 
-                void CompleteBatch()
+                bool CompleteBatch()
                 {
-                    if (!IsOpen) return;
+                    if (failure == null)
+                    {
+                        try
+                        {
+                            do
+                            {
+                                PendingDatagram receive = pending.Value;
+                                pending = null;
+                                ByteBuf data = receive.Buffer;
+                                try
+                                {
+                                    var result = receive.Completion.GetAwaiter().GetResult();
+                                    handle.AttemptedBytesRead(data.WritableBytes);
+                                    handle.LastBytesRead(result.ReceivedBytes);
+                                    handle.IncMessagesRead(1);
+                                    data.WriterIndex += result.ReceivedBytes;
+                                    batch.Add(new DatagramPacket(data, (IPEndPoint)LocalAddress,
+                                        (IPEndPoint)TcpSocketChannel.Normalize(result.RemoteEndPoint)));
+                                    data = null;
+                                }
+                                finally { data?.Release(); }
+
+                                if (IsRegistered && ContinueReading(handle) && _socket.Poll(0, SelectMode.SelectRead))
+                                    pending = StartReceive(handle, any);
+                                // A readiness hint can race with a socket change. Deliver the current batch
+                                // before waiting for a receive that did not finish synchronously.
+                            } while (pending?.Completion.IsCompleted == true);
+                        }
+                        catch (Exception error) { failure = error; }
+                    }
+
                     for (int i = 0; i < batch.Count && IsOpen; i++)
                     {
                         _readRequested = false;
@@ -354,10 +358,15 @@ public class DatagramChannel : AbstractChannel
                         Pipeline.FireExceptionCaught(failure);
                         if (failure is not SocketException && IsOpen) _ = CloseTransportAsync();
                     }
+                    // Check if there is a readPending which was not processed yet.
+                    // This could be for two reasons:
+                    // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+                    // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+                    //
+                    // See https://github.com/netty/netty/issues/2254
                     again = IsOpen && (Config.IsAutoRead() || _readRequested);
+                    return batch.Count != 0;
                 }
-
-                ReleaseBatch();
             }
         }
         catch (Exception error)

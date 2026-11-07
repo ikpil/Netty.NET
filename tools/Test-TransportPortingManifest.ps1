@@ -48,13 +48,22 @@ $mappedCount = 0
 $notApplicableCount = 0
 $partialCommentCount = 0
 $testsuiteEntries = @($manifest.testsuiteEntries | Where-Object { $null -ne $_ })
+$nativeTestEntries = @($manifest.nativeTestEntries | Where-Object { $null -ne $_ })
 if (@($testsuiteEntries.upstream | Select-Object -Unique).Count -ne $testsuiteEntries.Count) {
     throw 'Duplicate testsuite source inventory.'
 }
 foreach ($entry in $testsuiteEntries) {
     if (-not $entry.upstream.StartsWith('testsuite/src/main/java/')) { throw 'Unexpected testsuite source path.' }
 }
-foreach ($entry in (@($manifest.entries) + $testsuiteEntries)) {
+if (@($nativeTestEntries.upstream | Select-Object -Unique).Count -ne $nativeTestEntries.Count) {
+    throw 'Duplicate native transport test inventory.'
+}
+foreach ($entry in $nativeTestEntries) {
+    if ($entry.upstream -notmatch '^transport-native-[a-z0-9-]+/src/test/java/.+\.java$' -or $entry.kind -ne 'test') {
+        throw 'Unexpected native transport test path.'
+    }
+}
+foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntries)) {
     $path = Join-Path $UpstreamRoot $entry.upstream
     $bytes = [IO.File]::ReadAllBytes($path)
     if ($entry.hashMode -eq 'utf8-lf') {
@@ -153,14 +162,14 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries)) {
             if ($mapping.nativeCases) {
                 $theory = [regex]::Match($testCode, '\[Theory(?:\([^\]]*\))?\]\s*(?<rows>(?:\[InlineData\([^\]]*\)\]\s*)+)public\s+(?:async\s+)?(?:void|Task)\s+' +
                     [regex]::Escape($mapping.clrMethod) + '\(')
-                if (-not $theory.Success) { throw 'Missing testsuite CLR permutation rows.' }
+                if (-not $theory.Success) { throw 'Missing CLR permutation rows.' }
                 $rows = @([regex]::Matches($theory.Groups['rows'].Value, '\[InlineData\((?<input>[^)]*)\)\]') |
                     ForEach-Object { $_.Groups['input'].Value.Replace(' ', '').ToLowerInvariant() } | Sort-Object)
                 $expectedRows = @($mapping.nativeCases | ForEach-Object { ([string]::Join(',', @($_))).ToLowerInvariant() } | Sort-Object)
-                if (Compare-Object $rows $expectedRows) { throw 'Testsuite CLR permutation rows differ from the manifest.' }
+                if (Compare-Object $rows $expectedRows) { throw 'CLR permutation rows differ from the manifest.' }
             }
             $mappedCount++
         }
     }
 }
-Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries and $($testsuiteEntries.Count) selected testsuite sources, $mappedCount mapped original methods, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) selected testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped original methods, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."

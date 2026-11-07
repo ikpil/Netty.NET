@@ -63,6 +63,8 @@ public class ManualIoPhaseContractTest
         var cancellation = TestContext.Current.CancellationToken;
         var loop = new ManualIoEventLoop(Thread.CurrentThread);
         var receiver = new DatagramChannel(AddressFamily.InterNetwork);
+        var allocator = new ObservedDatagramAllocator();
+        receiver.Config.SetRecvByteBufAllocator(allocator);
         var reads = new ReadBytes();
         receiver.Pipeline.AddLast(reads);
         try
@@ -77,13 +79,30 @@ public class ManualIoPhaseContractTest
             bool ran = false;
             loop.Execute(() => ran = true);
 
-            Assert.Equal(1, PumpUntil(loop, () => reads.Values.Count == 1));
+            Assert.Equal(1, PumpUntil(loop, () => allocator.Prepared));
             Assert.Equal(42, Assert.Single(reads.Values));
             Assert.False(ran);
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ran);
         }
         finally { Terminate(loop); }
+    }
+
+    private sealed class ObservedDatagramAllocator : DefaultMaxMessagesRecvByteBufAllocator
+    {
+        internal bool Prepared { get; private set; }
+        public override IRecvByteBufAllocator.IHandle NewHandle() => new ObservedHandle(this);
+
+        private sealed class ObservedHandle(ObservedDatagramAllocator owner) : MaxMessageHandle(owner)
+        {
+            public override int Guess() => 32;
+
+            public override void LastBytesRead(int bytes)
+            {
+                base.LastBytesRead(bytes);
+                owner.Prepared = true;
+            }
+        }
     }
 
     [Theory]
