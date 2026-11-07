@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Moq;
 using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
@@ -175,6 +178,104 @@ public class ChannelCoreContractTest
         Assert.False(channel.IsOpen);
         Assert.Contains("a.registered", calls);
         Assert.Contains("a.removed", calls);
+    }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WriteFailureClosesBeforeReleasingQueuedOwnershipAndPreservesAllCauses(bool socketFailure)
+    {
+        Exception failure = socketFailure ? new SocketException((int)SocketError.ConnectionReset) : new IOException("original");
+        var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var loop = new DefaultEventLoop();
+        var channel = new FailureChannel(pending.Task);
+        var closedAtRelease = new List<bool>();
+        var first = new ReleaseObserver(Unpooled.Buffer(1).WriteByte(1), () => closedAtRelease.Add(!channel.IsOpen && !channel.IsActive && !channel.IsWritable));
+        var second = Unpooled.Buffer(1).WriteByte(2);
+        var third = Unpooled.Buffer(1).WriteByte(3);
+        Task firstWrite = null, secondWrite = null, unflushed = null;
+        try
+        {
+            await channel.RegisterAsync(loop);
+            await loop.SubmitAsync(() =>
+            {
+                firstWrite = channel.WriteAsync(first);
+                secondWrite = channel.WriteAsync(second);
+                channel.Flush();
+                unflushed = channel.WriteAsync(third);
+            });
+            pending.SetException(failure);
+            Assert.Same(failure, await Record.ExceptionAsync(() => firstWrite.WaitAsync(TimeSpan.FromSeconds(5))));
+            Assert.Same(failure, await Record.ExceptionAsync(() => secondWrite.WaitAsync(TimeSpan.FromSeconds(5))));
+            var unflushedCause = await Assert.ThrowsAsync<IOException>(() => unflushed.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.Same(failure, unflushedCause.InnerException);
+            Assert.True(Assert.Single(closedAtRelease));
+            Assert.Equal(0, first.ReferenceCount);
+            Assert.Equal(0, second.ReferenceCount);
+            Assert.Equal(0, third.ReferenceCount);
+            var late = await Assert.ThrowsAsync<IOException>(() => channel.WriteAsync(new object()));
+            Assert.Same(failure, late.InnerException);
+            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            pending.TrySetException(failure);
+            await channel.CloseAsync();
+            await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
+    }
+    [Fact]
+    public async Task InactiveFlushDoesNotRecursivelyDrainWritesAddedDuringRelease()
+    {
+        var loop = new Mock<IEventLoop>();
+        loop.Setup(value => value.InEventLoop()).Returns(true);
+        loop.Setup(value => value.Execute(It.IsAny<Action>())).Callback<Action>(action => action());
+        var channel = new FailureChannel(Task.CompletedTask, false);
+        var writes = new List<Task>();
+        int remaining = 8, depth = 0, maximumDepth = 0;
+        void Enqueue()
+        {
+            var message = new ReleaseObserver(Unpooled.Buffer(1).WriteByte(1), () =>
+            {
+                maximumDepth = Math.Max(maximumDepth, ++depth);
+                if (--remaining != 0) Enqueue();
+                depth--;
+            });
+            writes.Add(channel.WriteAndFlushAsync(message));
+        }
+        try
+        {
+            await channel.RegisterAsync(loop.Object);
+            Enqueue();
+            Assert.Equal(8, writes.Count);
+            foreach (var write in writes)
+                Assert.Equal(SocketError.NotConnected, (await Assert.ThrowsAsync<SocketException>(() => write)).SocketErrorCode);
+            Assert.Equal(1, maximumDepth);
+            Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
+            Assert.Equal(0, channel.OutboundBuffer.Size);
+        }
+        finally { await channel.CloseAsync(); }
+    }
+    private sealed class FailureChannel : AbstractChannel
+    {
+        private readonly Task _write;
+        internal FailureChannel(Task write, bool active = true) : base(null, new ChannelMetadata(false))
+        { _write = write; SetActive(active); }
+        public override EndPoint LocalAddress => null;
+        public override EndPoint RemoteAddress => null;
+        protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
+        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
+        protected override void DoClose() { }
+        protected override void DoBeginRead() { }
+        protected override Task DoWriteAsync(object message) => _write;
+    }
+    private sealed class ReleaseObserver(ByteBuf content, Action released) : DefaultByteBufHolder(content)
+    {
+        public override bool Release()
+        {
+            bool result = base.Release();
+            if (result) released();
+            return result;
+        }
     }
     private sealed class Initializer(Action<EmbeddedChannel> initialize) : ChannelInitializer<EmbeddedChannel>
     { protected override void InitChannel(EmbeddedChannel channel) => initialize(channel); }

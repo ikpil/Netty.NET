@@ -296,7 +296,8 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         finally { OutboundBuffer.Close(new IOException("Channel is closed.")); _closed.TrySetResult(); }
     }
     protected void EnsureOpen()
-    { if (!_open) throw new IOException("Channel is closed."); }
+    { if (!_open) throw NewClosedChannelException(); }
+    private IOException NewClosedChannelException() => new("Channel is closed.", _writeCloseCause);
     private Task Operation(Func<Task> operation, Action success)
     {
         Task task;
@@ -415,7 +416,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         try
         { DoClose(); }
         catch (Exception error) { failure = error; }
-        var closedCause = new IOException("Channel is closed.", _writeCloseCause);
+        var closedCause = NewClosedChannelException();
         OutboundBuffer.Close(_writeCloseCause ?? closedCause, closedCause);
         void CompleteClose()
         {
@@ -452,8 +453,17 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
     internal Task WriteTransportAsync(object message, CancellationToken cancellationToken)
     {
-        if (!_open)
-        { ReferenceCountUtil.Release(message); return Task.FromException(new IOException("Channel is closed.")); }
+        if (!_open || OutboundBuffer.IsClosed)
+        {
+            // release message now to prevent resource-leak
+            ReferenceCountUtil.Release(message);
+            // If the outboundBuffer is null we know the channel was closed and so
+            // need to fail the future right away. If it is not null the handling of the rest
+            // will be done in flush0()
+            // See https://github.com/netty/netty/issues/2362
+            // CLR keeps a closed buffer object in place of the source's null buffer.
+            return Task.FromException(NewClosedChannelException());
+        }
         try
         {
             message = FilterOutboundMessage(message);
@@ -464,13 +474,23 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
     internal void FlushTransport()
     {
-        OutboundBuffer.AddFlush();
-        if (_writing)
+        if (OutboundBuffer.IsClosed)
             return;
+        OutboundBuffer.AddFlush();
+        // Avoid re-entrance
+        if (_writing || OutboundBuffer.IsEmpty)
+            return;
+        // Mark all pending write requests as failure if the channel is inactive.
         if (!_active)
         {
-            while (OutboundBuffer.Remove(new IOException(_open ? "Channel is not connected." : "Channel is closed.")))
-            { }
+            _writing = true;
+            try
+            {
+                // Check if we need to generate the exception at all.
+                Exception cause = _open ? new SocketException((int)SocketError.NotConnected) : NewClosedChannelException();
+                while (OutboundBuffer.Remove(cause)) { }
+            }
+            finally { _writing = false; }
             return;
         }
         _writing = true;
@@ -566,6 +586,13 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     protected virtual bool ContinueOnWriteError => false;
     protected virtual void HandleWriteError(Exception error)
     {
+        if (OutboundBuffer.IsClosed) return;
+        // Java SocketException is an IOException; native CLR socket failures use a separate hierarchy.
+        if (Config.IsAutoClose() && !ContinueOnWriteError && error is IOException or SocketException)
+        {
+            CloseOnWriteError(error);
+            return;
+        }
         OutboundBuffer.Remove(error);
         if (Config.IsAutoClose() && !ContinueOnWriteError && !OutboundBuffer.IsClosed) _ = CloseTransportAsync();
     }

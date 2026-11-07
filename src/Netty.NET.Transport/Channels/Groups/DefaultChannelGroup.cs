@@ -37,6 +37,10 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
     private readonly bool _stayClosed;
     private int _closed;
     /**
+     * Creates a new group with a generated name and the provided {@link EventExecutor} to notify the
+     * {@link ChannelGroupFuture}s.
+     */
+    /**
      * Creates a new group with the specified {@code name} and {@link EventExecutor} to notify the
      * {@link ChannelGroupFuture}s.  Please note that different groups can have the same name, which means no
      * duplicate check is done against group names.
@@ -65,18 +69,31 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
     public bool Add(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
-        if (!_channels.TryAdd(channel.Id, channel))
-            return false;
-        var group = new WeakReference<DefaultChannelGroup>(this);
-        var member = new WeakReference<IChannel>(channel);
-        channel.CloseCompletion.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+        bool added = _channels.TryAdd(channel.Id, channel);
+        if (added)
         {
-            if (group.TryGetTarget(out var owner) && member.TryGetTarget(out var value))
-                owner.Remove(value);
-        });
+            var group = new WeakReference<DefaultChannelGroup>(this);
+            var member = new WeakReference<IChannel>(channel);
+            channel.CloseCompletion.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+            {
+                if (group.TryGetTarget(out var owner) && member.TryGetTarget(out var value))
+                    owner.Remove(value);
+            });
+        }
+        // First add channel, than check if closed.
+        // Seems inefficient at first, but this way a volatile
+        // gives us enough synchronization to be thread-safe.
+        //
+        // If true: Close right away.
+        // (Might be closed a second time by ChannelGroup.close(), but this is ok)
+        //
+        // If false: Channel will definitely be closed by the ChannelGroup.
+        // (Because closed=true always happens-before ChannelGroup.close())
+        //
+        // See https://github.com/netty/netty/issues/4020
         if (_stayClosed && Volatile.Read(ref _closed) != 0)
             _ = channel.CloseAsync();
-        return true;
+        return added;
     }
     public bool Remove(IChannel channel) => channel != null && _channels.TryRemove(new KeyValuePair<IChannelId, IChannel>(channel.Id, channel));
     public bool Contains(IChannel channel) => channel != null && _channels.TryGetValue(channel.Id, out var value) && ReferenceEquals(value, channel);
@@ -87,7 +104,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      */
     public IChannel Find(IChannelId id) => _channels.TryGetValue(id, out var channel) ? channel : null;
     public void Clear() => _channels.Clear();
-    public IEnumerator<IChannel> GetEnumerator() => ((IEnumerable<IChannel>)_channels.Values.ToArray()).GetEnumerator();
+    public IEnumerator<IChannel> GetEnumerator() => _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     /**
      * Closes all {@link Channel}s in this group that are matched by the given {@link ChannelMatcher}.
@@ -100,7 +117,15 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
     public Task CloseAsync(Func<IChannel, bool> matcher = null)
     {
         if (_stayClosed)
+        {
+            // It is important to set the closed to true, before closing channels.
+            // Our invariants are:
+            // closed=true happens-before ChannelGroup.close()
+            // ChannelGroup.add() happens-before checking closed==true
+            //
+            // See https://github.com/netty/netty/issues/4020
             Volatile.Write(ref _closed, 1);
+        }
         return OperateAsync(async channel => { await channel.CloseAsync().ConfigureAwait(false); Remove(channel); }, matcher, true);
     }
     /**
@@ -172,11 +197,13 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
     private Task WriteCoreAsync(object message, Func<IChannel, bool> matcher, bool flush)
     {
         ArgumentNullException.ThrowIfNull(message);
-        var tasks = new List<Task>();
+        var tasks = new List<KeyValuePair<IChannel, Task>>();
         foreach (var channel in _channels.Values)
         {
             if (channel is IServerChannel || matcher != null && !matcher(channel))
                 continue;
+            // Create a safe duplicate of the message to write it to a channel but not affect other writes.
+            // See https://github.com/netty/netty/issues/1461
             object copy = message switch
             {
                 ByteBuf buffer => buffer.RetainedDuplicate(),
@@ -184,11 +211,11 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
                 _ => ReferenceCountUtil.Retain(message)
             };
             try
-            { tasks.Add(flush ? channel.WriteAndFlushAsync(copy) : channel.WriteAsync(copy)); }
-            catch (Exception error) { ReferenceCountUtil.Release(copy); tasks.Add(Task.FromException(error)); }
+            { tasks.Add(new(channel, flush ? channel.WriteAndFlushAsync(copy) : channel.WriteAsync(copy))); }
+            catch (Exception error) { ReferenceCountUtil.Release(copy); tasks.Add(new(channel, Task.FromException(error))); }
         }
         ReferenceCountUtil.Release(message);
-        return Task.WhenAll(tasks);
+        return CompleteAsync(tasks);
     }
     /**
      * Flush all {@link Channel}s in this group that are matched by the given {@link ChannelMatcher}.
@@ -205,21 +232,46 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
     { foreach (var channel in _channels.Values) if (channel is not IServerChannel && (matcher == null || matcher(channel))) channel.Flush(); return this; }
     private Task OperateAsync(Func<IChannel, Task> operation, Func<IChannel, bool> matcher, bool includeServers)
     {
-        var tasks = new List<Task>();
+        var tasks = new List<KeyValuePair<IChannel, Task>>();
         foreach (var channel in _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1))
         {
             if ((!includeServers && channel is IServerChannel) || matcher != null && !matcher(channel))
                 continue;
             try
-            { tasks.Add(operation(channel)); }
-            catch (Exception error) { tasks.Add(Task.FromException(error)); }
+            { tasks.Add(new(channel, operation(channel))); }
+            catch (Exception error) { tasks.Add(new(channel, Task.FromException(error))); }
         }
-        return Task.WhenAll(tasks);
+        return CompleteAsync(tasks);
+    }
+    private static async Task CompleteAsync(List<KeyValuePair<IChannel, Task>> operations)
+    {
+        // Done on arrival?
+        if (operations.Count == 0)
+            return;
+        try { await Task.WhenAll(operations.Select(pair => pair.Value)).ConfigureAwait(false); }
+        catch
+        {
+            // WhenAll waits for every selected channel. Keep the complete set of channel/cause pairs,
+            // including canceled child tasks, rather than exposing just the exception rethrown by await.
+            var failures = new List<KeyValuePair<IChannel, Exception>>();
+            foreach (var pair in operations)
+            {
+                if (pair.Value.IsCompletedSuccessfully) continue;
+                try { pair.Value.GetAwaiter().GetResult(); }
+                catch (Exception error)
+                {
+                    failures.Add(new(pair.Key, pair.Value.Exception is { InnerExceptions.Count: > 1 } multiple ? multiple : error));
+                }
+            }
+            throw new ChannelGroupException(failures);
+        }
     }
     /**
      * Returns the {@link ChannelGroupFuture} which will be notified when all {@link Channel}s that are part of this
      * {@link ChannelGroup}, at the time of calling, are closed.
      */
-    public Task NewCloseFuture(Func<IChannel, bool> matcher = null) => Task.WhenAll(_channels.Values.Where(channel => matcher == null || matcher(channel)).Select(channel => channel.CloseCompletion));
+    public Task NewCloseFuture(Func<IChannel, bool> matcher = null) =>
+        CompleteAsync(_channels.Values.Where(channel => matcher == null || matcher(channel))
+            .Select(channel => new KeyValuePair<IChannel, Task>(channel, channel.CloseCompletion)).ToList());
     public override string ToString() => $"DefaultChannelGroup(name: {Name}, size: {Count})";
 }
