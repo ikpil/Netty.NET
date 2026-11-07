@@ -147,6 +147,12 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     /// <summary>Sets the Linux UDP scattering slot size. Zero disables scattering. Set this before registration.</summary>
     public static readonly ChannelOption<int> UDP_MAX_DATAGRAM_PAYLOAD_SIZE = ValueOf<int>("UDP_MAX_DATAGRAM_PAYLOAD_SIZE");
 
+    /// <summary>Enables Linux IPv4 original destination metadata. Set this before channel registration.</summary>
+    public static readonly ChannelOption<bool> IP_RECVORIGDSTADDR = ValueOf<bool>("IP_RECVORIGDSTADDR");
+
+    /// <summary>Allows binding a Linux UDP socket to a nonlocal IPv4 address.</summary>
+    public static readonly ChannelOption<bool> IP_FREEBIND = ValueOf<bool>("IP_FREEBIND");
+
     public static readonly ChannelOption<bool> TCP_NODELAY = ValueOf<bool>("TCP_NODELAY");
     /**
      * Client-side TCP FastOpen. Sending data with the initial TCP handshake.

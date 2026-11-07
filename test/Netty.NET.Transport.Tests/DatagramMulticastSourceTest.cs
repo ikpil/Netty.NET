@@ -38,11 +38,12 @@ public partial class DatagramMulticastSourceTest
     public Task TestMulticast(bool adaptive, bool ipv6) => ipv6
         ? RunIPv6MulticastAsync(adaptive) : RunMulticastAsync(adaptive, AddressFamily.InterNetwork);
 
-    private static async Task RunMulticastAsync(bool adaptive, AddressFamily family)
+    private static async Task RunMulticastAsync(bool adaptive, AddressFamily family, bool mixed = false)
     {
         bool ipv6 = family == AddressFamily.InterNetworkV6;
         var any = ipv6 ? IPAddress.IPv6Any : IPAddress.Any;
-        var iface = MulticastNetworkInterface(family, any);
+        var groupFamily = mixed ? AddressFamily.InterNetwork : family;
+        var iface = MulticastNetworkInterface(family, any, mixed);
         if (iface == null) Assert.Skip($"No NetworkInterface found that supports multicast and {family}");
         var handler = new MulticastTestHandler();
         var group = new DefaultEventLoopGroup(1);
@@ -50,16 +51,29 @@ public partial class DatagramMulticastSourceTest
         DatagramChannel server = null, client = null;
         try
         {
-            Bootstrap Create(IChannelHandler channelHandler) => new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family))
+            Bootstrap Create(IChannelHandler channelHandler) => new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family, mixed))
                 .Option(ChannelOption.ALLOCATOR, allocator).Handler(channelHandler)
                 .Option(ChannelOption.IP_MULTICAST_IF, iface).Option(ChannelOption.SO_REUSEADDR, true);
             var sb = Create(new DiscardHandler());
             var cb = Create(handler);
+            var bindAddress = InterfaceAddress(iface, family);
+            var multicast = MulticastGroup(iface, groupFamily);
+            if (mixed && BoundSenderRouteError(iface, bindAddress, multicast) is { } routeError)
+            {
+                // The original bind can be refused by the kernel for IPv4 multicast. First verify the
+                // same failure through the channel, then exercise membership on a routable wildcard bind.
+                server = (DatagramChannel)await sb.BindAsync(new IPEndPoint(bindAddress, 0));
+                var failure = await Assert.ThrowsAsync<SocketException>(() => server.WriteAndFlushAsync(
+                    new DatagramPacket(Unpooled.Buffer(4).WriteInt(1), new IPEndPoint(multicast, 12345))));
+                Assert.Equal(routeError, failure.SocketErrorCode);
+                Assert.True(server.IsOpen);
+                bindAddress = any;
+            }
             int attempts = 5;
             for (;;)
             {
                 if (server != null) await server.CloseAsync();
-                server = (DatagramChannel)await sb.BindAsync(new IPEndPoint(InterfaceAddress(iface, family), 0));
+                server = (DatagramChannel)await sb.BindAsync(new IPEndPoint(bindAddress, 0));
                 // skip the test for OIO, as it fails because of
                 // No route to host which makes no sense.
                 // Maybe a JDK bug ?
@@ -73,7 +87,7 @@ public partial class DatagramMulticastSourceTest
                 catch when (--attempts > 0) { }
             }
             AssertInterface(client, iface);
-            var address = new IPEndPoint(MulticastGroup(iface, family), ((IPEndPoint)server.LocalAddress).Port);
+            var address = new IPEndPoint(multicast, ((IPEndPoint)server.LocalAddress).Port);
             await client.JoinGroupAsync(address, iface);
             await server.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(1), address));
             Assert.True(await handler.Await());
@@ -83,6 +97,7 @@ public partial class DatagramMulticastSourceTest
             await Task.Delay(1000, TestContext.Current.CancellationToken);
             // we should not receive a message anymore as we left the group before
             await server.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(1), address));
+            if (mixed) await Task.Delay(200, TestContext.Current.CancellationToken);
             await handler.Await();
             client.Config.SetOption(ChannelOption.IP_MULTICAST_LOOP_DISABLED, false);
             server.Config.SetOption(ChannelOption.IP_MULTICAST_LOOP_DISABLED, false);
@@ -123,22 +138,28 @@ public partial class DatagramMulticastSourceTest
         return address;
     }
 
-    private static NetworkInterface MulticastNetworkInterface(AddressFamily family, IPAddress any)
+    private static NetworkInterface MulticastNetworkInterface(AddressFamily family, IPAddress any, bool mixed = false)
     {
         foreach (var iface in NetworkInterface.GetAllNetworkInterfaces())
         {
             if (iface.OperationalStatus != OperationalStatus.Up || !iface.SupportsMulticast) continue;
+            if (mixed && !iface.GetIPProperties().UnicastAddresses.Any(a => a.Address.AddressFamily == AddressFamily.InterNetwork))
+                continue;
             foreach (var address in iface.GetIPProperties().UnicastAddresses)
             {
                 if (address.Address.AddressFamily != family) continue;
                 using var socket = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
+                if (mixed) socket.DualMode = true;
                 socket.Bind(new IPEndPoint(any, 0));
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                if (family == AddressFamily.InterNetworkV6)
+                if (mixed)
+                    SetIPv4MulticastInterface(socket, iface);
+                else if (family == AddressFamily.InterNetworkV6)
                     socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, iface.GetIPProperties().GetIPv6Properties().Index);
                 else
                     socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, address.Address.GetAddressBytes());
-                try { socket.SendTo(new byte[] { 1, 2, 3, 4 }, new IPEndPoint(MulticastGroup(iface, family), 12345)); return iface; }
+                var groupFamily = mixed ? AddressFamily.InterNetwork : family;
+                try { socket.SendTo(new byte[] { 1, 2, 3, 4 }, new IPEndPoint(MulticastGroup(iface, groupFamily), 12345)); return iface; }
                 catch (SocketException)
                 {
                     // Try the next interface

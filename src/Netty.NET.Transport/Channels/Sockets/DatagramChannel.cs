@@ -58,6 +58,7 @@ public class DatagramChannel : AbstractChannel
     private bool _readRequested;
     private bool _udpGro;
     private int _udpSlotSize;
+    private bool _receiveOriginalDestination;
     private bool _offloadConfigurationClosed;
     public DatagramChannel() : this(AddressFamily.InterNetwork) { }
     public DatagramChannel(AddressFamily family) : this(family, false) { }
@@ -234,6 +235,23 @@ public class DatagramChannel : AbstractChannel
         }
     }
 
+    /**
+     * If {@code true} is used <a href="https://man7.org/linux/man-pages/man7/ip.7.html">IP_RECVORIGDSTADDR</a> is
+     * enabled, {@code false} for disable it. Default is disabled.
+     */
+    private void SetReceiveOriginalDestination(bool enabled)
+    {
+        lock (_socket)
+        {
+            if (_receiveOriginalDestination == enabled) return;
+            EnsureOffloadConfigurationOpen();
+            if (!OperatingSystem.IsLinux())
+                throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR requires Linux.");
+            LinuxUdpOffload.SetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpOriginalDestination, enabled);
+            Volatile.Write(ref _receiveOriginalDestination, enabled);
+        }
+    }
+
     private void EnsureOffloadConfigurationOpen()
     {
         if (_offloadConfigurationClosed)
@@ -294,6 +312,7 @@ public class DatagramChannel : AbstractChannel
                 DoBeginRead();
         }).ConfigureAwait(false);
     }
+
 
     private bool TrySendSegmented(ReadOnlySequence<byte> sequence, int length, int segmentSize, IPEndPoint recipient)
     {
@@ -418,7 +437,7 @@ public class DatagramChannel : AbstractChannel
                                         else
                                         {
                                             handle.IncMessagesRead(1);
-                                            batch.Add(new DatagramPacket(data, recipient,
+                                            batch.Add(new DatagramPacket(data, packet.Recipient ?? recipient,
                                                 (IPEndPoint)TcpSocketChannel.Normalize(packet.Sender)));
                                             data = null;
                                         }
@@ -500,6 +519,7 @@ public class DatagramChannel : AbstractChannel
         IRecvByteBufAllocator.IHandle handle, List<DatagramPacket> batch)
     {
         var sender = (IPEndPoint)TcpSocketChannel.Normalize(packet.Sender);
+        recipient = packet.Recipient ?? recipient;
         int segmentSize = packet.SegmentSize > 0 ? packet.SegmentSize : packet.Length;
         int offset = 0;
         // Retain the payload of each delivered datagram independently of the aggregate.
@@ -519,7 +539,7 @@ public class DatagramChannel : AbstractChannel
         {
             handle.AttemptedBytesRead(data.WritableBytes);
             Memory<byte> memory = data.AsMemory(data.WriterIndex, data.WritableBytes);
-            return new PendingDatagram(data, _udpGro || _udpSlotSize != 0
+            return new PendingDatagram(data, _udpGro || _udpSlotSize != 0 || _receiveOriginalDestination
                 ? LinuxUdpOffload.ReceiveAsync(_socket, memory, any, _udpSlotSize) : ReceivePacketAsync(memory, any));
         }
         catch { data.Release(); throw; }
@@ -849,7 +869,7 @@ public class DatagramChannel : AbstractChannel
                 ChannelOption.SO_SNDBUF, ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED,
                 ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL,
                 ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, ChannelOption.UDP_GRO,
-                ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE })
+                ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE, ChannelOption.IP_RECVORIGDSTADDR, ChannelOption.IP_FREEBIND })
                 if (TryGetValue(option, out var value)) options[option] = value;
             return options;
         }
@@ -937,6 +957,18 @@ public class DatagramChannel : AbstractChannel
             else if (ReferenceEquals(option, ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE))
                 value = Volatile.Read(ref ((DatagramChannel)Channel)._udpSlotSize);
             /**
+     * Returns {@code true} if <a href="https://man7.org/linux/man-pages/man7/ip.7.html">IP_RECVORIGDSTADDR</a> is
+     * enabled, {@code false} otherwise.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_RECVORIGDSTADDR))
+                value = Volatile.Read(ref ((DatagramChannel)Channel)._receiveOriginalDestination);
+            /**
+     * Returns {@code true} if <a href="https://man7.org/linux/man-pages/man7/ip.7.html">IP_FREEBIND</a> is enabled,
+     * {@code false} otherwise.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_FREEBIND) && OperatingSystem.IsLinux())
+                value = LinuxUdpOffload.GetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpFreeBind);
+            /**
      * Gets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
      */
             else if (ReferenceEquals(option, ChannelOption.IP_MULTICAST_TTL))
@@ -1001,6 +1033,14 @@ public class DatagramChannel : AbstractChannel
                 ((DatagramChannel)Channel).SetUdpGro((bool)value);
             else if (ReferenceEquals(option, ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE))
                 ((DatagramChannel)Channel).SetUdpSlotSize((int)value);
+            else if (ReferenceEquals(option, ChannelOption.IP_RECVORIGDSTADDR))
+                ((DatagramChannel)Channel).SetReceiveOriginalDestination((bool)value);
+            /**
+     * If {@code true} is used <a href="https://man7.org/linux/man-pages/man7/ip.7.html">IP_FREEBIND</a> is enabled,
+     * {@code false} for disable it. Default is disabled.
+     */
+            else if (ReferenceEquals(option, ChannelOption.IP_FREEBIND) && OperatingSystem.IsLinux())
+                LinuxUdpOffload.SetFlag(_socket, (int)SocketOptionLevel.IP, LinuxUdpOffload.IpFreeBind, (bool)value);
             /**
      * Sets the {@link StandardSocketOptions#IP_MULTICAST_TTL} option.
      */

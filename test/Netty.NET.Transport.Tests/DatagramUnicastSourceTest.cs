@@ -191,6 +191,22 @@ public partial class DatagramUnicastSourceTest
     public async Task TestSimpleSendWithConnect(bool ipv6, bool adaptive, bool mapped)
     {
         await using var fixture = new Fixture(ipv6, adaptive, mapped);
+        await RunSimpleSendWithConnect(fixture);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TestSimpleSendWithConnectAndOriginalDestination(bool adaptive)
+    {
+        if (!OperatingSystem.IsLinux()) Assert.Skip("Original destination metadata requires Linux.");
+        await using var fixture = new Fixture(ipv6: false, adaptive, mapped: false);
+        // Run this test with IP_RECVORIGDSTADDR option enabled
+        await RunSimpleSendWithConnect(fixture, originalDestination: true);
+    }
+
+    private static async Task RunSimpleSendWithConnect(Fixture fixture, bool originalDestination = false)
+    {
         foreach (int count in new[] { 1, 4 })
         {
             var buffer = Unpooled.DirectBuffer().WriteBytes(Bytes);
@@ -199,7 +215,7 @@ public partial class DatagramUnicastSourceTest
                 foreach (WrapType wrap in Enum.GetValues<WrapType>())
                 {
                     buffer.Retain();
-                    await ConnectedSend(fixture, buffer, count, wrap);
+                    await ConnectedSend(fixture, buffer, count, wrap, originalDestination);
                 }
             }
             finally { Assert.True(buffer.Release()); }
@@ -366,7 +382,7 @@ public partial class DatagramUnicastSourceTest
             if (server != null) await server.CloseAsync();
         }
     }
-    private static async Task ConnectedSend(Fixture fixture, ByteBuf buffer, int count, WrapType wrap)
+    private static async Task ConnectedSend(Fixture fixture, ByteBuf buffer, int count, WrapType wrap, bool originalDestination)
     {
         IChannel server = null, client = null;
         try
@@ -376,7 +392,9 @@ public partial class DatagramUnicastSourceTest
             var clientLatch = new Countdown(count);
             var clientError = new ErrorHolder();
             client = await fixture.Bootstrap(Receiver(Bytes, null, clientLatch, clientError, false, true)).BindAsync(fixture.Address());
-            server = await fixture.Bootstrap(Receiver(Bytes, client.LocalAddress, latch, error, true, false)).BindAsync(fixture.Address());
+            var bootstrap = fixture.Bootstrap(Receiver(Bytes, client.LocalAddress, latch, error, true, false));
+            if (originalDestination) bootstrap.Option(ChannelOption.IP_RECVORIGDSTADDR, true);
+            server = await bootstrap.BindAsync(fixture.Address());
             await client.ConnectAsync(fixture.Target(server));
             bool received = false;
             for (int attempt = 1; attempt <= SendAttempts && !received; attempt++)
@@ -395,6 +413,8 @@ public partial class DatagramUnicastSourceTest
                 if (clientError.Cause != null) throw clientError.Cause;
                 Assert.Fail();
             }
+            if (error.Cause != null) throw error.Cause;
+            if (clientError.Cause != null) throw clientError.Cause;
             Assert.True(((DatagramChannel)client).IsConnected);
             Assert.NotNull(client.LocalAddress);
             Assert.NotNull(client.RemoteAddress);
@@ -446,6 +466,7 @@ public partial class DatagramUnicastSourceTest
                 }
                 if (echo) _ = context.WriteAndFlushAsync(new DatagramPacket(buffer.RetainedDuplicate(), packet.Sender));
             }
+            catch (Exception cause) { error.Set(cause); throw; }
             finally { latch.CountDown(); }
         }, error);
     private sealed class PacketHandler(Action<ChannelHandlerContext, DatagramPacket> read, ErrorHolder error = null) : SimpleChannelInboundHandler<DatagramPacket>

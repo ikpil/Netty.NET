@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -13,6 +14,8 @@ internal static class LinuxUdpOffload
     private const int SolUdp = 17;
     private const int UdpSegment = 103;
     private const int UdpGro = 104;
+    internal const int IpFreeBind = 15;
+    internal const int IpOriginalDestination = 20;
     private const int DontWait = 0x40;
     private const int ControlTruncated = 0x08;
     private const int Interrupted = 4;
@@ -33,9 +36,21 @@ internal static class LinuxUdpOffload
             return;
         }
 
-        Span<byte> option = stackalloc byte[sizeof(int)];
-        BitConverter.TryWriteBytes(option, enabled ? 1 : 0);
-        socket.SetRawSocketOption(SolUdp, UdpGro, option);
+        SetFlag(socket, SolUdp, UdpGro, enabled);
+    }
+
+    internal static void SetFlag(Socket socket, int level, int option, bool enabled)
+    {
+        Span<byte> value = stackalloc byte[sizeof(int)];
+        BitConverter.TryWriteBytes(value, enabled ? 1 : 0);
+        socket.SetRawSocketOption(level, option, value);
+    }
+
+    internal static bool GetFlag(Socket socket, int level, int option)
+    {
+        Span<byte> value = stackalloc byte[sizeof(int)];
+        int length = socket.GetRawSocketOption(level, option, value);
+        return BitConverter.ToInt32(value[..length]) != 0;
     }
 
     internal static bool CanSend(Socket socket, int length, int segmentSize) =>
@@ -78,7 +93,8 @@ internal static class LinuxUdpOffload
         }
     }
 
-    internal readonly record struct Received(int Length, EndPoint Sender, int SegmentSize, int Offset = 0);
+    internal readonly record struct Received(int Length, EndPoint Sender, int SegmentSize, int Offset = 0,
+        IPEndPoint Recipient = null);
 
     internal readonly record struct ReadResult(Received Single, Received[] Batch = null, int BytesRead = 0);
 
@@ -123,7 +139,7 @@ internal static class LinuxUdpOffload
                 if (read >= 0)
                 {
                     CheckControl(message.Flags);
-                    return new Received((int)read, template.Create(address), ReadSegmentSize(control[..(int)message.ControlLength]));
+                    return ReadPacket(control[..(int)message.ControlLength], (int)read, template.Create(address), 0);
                 }
                 int error = Marshal.GetLastPInvokeError();
                 if (error == Interrupted) continue;
@@ -177,8 +193,8 @@ internal static class LinuxUdpOffload
                 CheckControl(message.Flags);
                 var address = template.Serialize();
                 new ReadOnlySpan<byte>(message.Name, (int)message.NameLength).CopyTo(address.Buffer.Span);
-                int segmentSize = ReadSegmentSize(new ReadOnlySpan<byte>(message.Control, (int)message.ControlLength));
-                packets[i] = new Received((int)messages[i].Length, template.Create(address), segmentSize, i * slotSize);
+                packets[i] = ReadPacket(new ReadOnlySpan<byte>(message.Control, (int)message.ControlLength),
+                    (int)messages[i].Length, template.Create(address), i * slotSize);
             }
             // As in the source scattering path, charge a full slot for each received message.
             return new ReadResult(default, packets, count * slotSize);
@@ -191,21 +207,31 @@ internal static class LinuxUdpOffload
             throw new IOException("UDP receive control information was truncated.");
     }
 
-    private static unsafe int ReadSegmentSize(ReadOnlySpan<byte> control)
+    private static unsafe Received ReadPacket(ReadOnlySpan<byte> control, int bytesRead, EndPoint sender, int offset)
     {
+        int segmentSize = 0;
+        IPEndPoint recipient = null;
         int headerLength = Aligned(sizeof(ControlHeader));
         while (control.Length >= headerLength)
         {
             var header = MemoryMarshal.Read<ControlHeader>(control);
             if (header.Length < (nuint)headerLength || header.Length > (nuint)control.Length) break;
             int length = (int)header.Length;
-            if (header.Level == SolUdp && header.Type == UdpGro && length >= headerLength + sizeof(int))
-                return BitConverter.ToInt32(control[headerLength..]); // The kernel reports the segment size as an int
+            var payload = control[headerLength..length];
+            if (header.Level == SolUdp && header.Type == UdpGro && payload.Length >= sizeof(int))
+                segmentSize = BitConverter.ToInt32(payload); // The kernel reports the segment size as an int
+            else if (header.Level == (int)SocketOptionLevel.IP && header.Type == IpOriginalDestination &&
+                payload.Length >= 16 && BitConverter.ToUInt16(payload) == (int)AddressFamily.InterNetwork)
+            {
+                // sockaddr_in has a native-endian family and network-order port and address.
+                recipient = new IPEndPoint(new IPAddress(payload.Slice(4, 4)),
+                    BinaryPrimitives.ReadUInt16BigEndian(payload[2..]));
+            }
             int next = Aligned(length);
             if (next > control.Length) break;
             control = control[next..];
         }
-        return 0;
+        return new Received(bytesRead, sender, segmentSize, offset, recipient);
     }
 
     private static int Aligned(int size) => (size + IntPtr.Size - 1) & -IntPtr.Size;

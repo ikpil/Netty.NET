@@ -45,6 +45,7 @@ $actual = @(Get-ChildItem (Join-Path $UpstreamRoot 'transport/src') -Recurse -Fi
 if (Compare-Object $expected $actual) { throw 'Transport inventory changed.' }
 
 $mappedCount = 0
+$inheritedMappedCount = 0
 $notApplicableCount = 0
 $partialCommentCount = 0
 $testsuiteEntries = @($manifest.testsuiteEntries | Where-Object { $null -ne $_ })
@@ -107,6 +108,7 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
         $mapped = @($entry.caseMappings | ForEach-Object { $_.upstreamMethod } | Sort-Object)
         $unreviewed = @($entry.methodReview.unreviewedMethods | Where-Object { $null -ne $_ })
         $notApplicable = @($entry.methodReview.notApplicableMethods | Where-Object { $null -ne $_ })
+        $inherited = @($entry.inheritedCaseMappings | Where-Object { $null -ne $_ })
         $notApplicableCount += $notApplicable.Count
         $accounted = @($mapped) + @($unreviewed) + @($notApplicable | ForEach-Object { $_.upstreamMethod })
         if (@($accounted | Select-Object -Unique).Count -ne $accounted.Count -or
@@ -134,12 +136,21 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
         if ($entry.methodReview.PSObject.Properties.Name -contains 'reviewedCount') {
             if ($entry.methodReview.reviewedCount -ne $mapped.Count + $notApplicable.Count) { throw 'Incorrect reviewed method count.' }
         }
+        if (@($inherited.upstreamMethod | Select-Object -Unique).Count -ne $inherited.Count) {
+            throw 'Duplicate inherited test mapping.'
+        }
+        foreach ($mapping in $inherited) {
+            $owner = @($testsuiteEntries | Where-Object { $_.upstream -ceq $mapping.upstreamOwner -and $_.kind -eq 'test' })
+            if ($owner.Count -ne 1 -or $mapping.upstreamMethod -cin $methods) { throw 'Unexpected inherited test owner.' }
+            $ownerSource = Get-Content (Join-Path $UpstreamRoot $owner[0].upstream) -Raw -Encoding UTF8
+            if ($mapping.upstreamMethod -cnotin @(Get-DeclaredJavaTests $ownerSource)) { throw 'Missing inherited original test.' }
+        }
         $testCode = [regex]::Replace($implementation,
             '(?s)"(?:\\.|[^"\\])*"|''(?:\\.|[^''\\])*''|/\*.*?\*/|//[^\r\n]*', {
                 param($match)
                 [regex]::Replace($match.Value, '[^\r\n]', ' ')
             })
-        foreach ($mapping in $entry.caseMappings) {
+        foreach ($mapping in (@($entry.caseMappings | Where-Object { $null -ne $_ }) + $inherited)) {
             $nativeDeclaration = '\[(?:Fact|Theory)(?:\([^\]]*\))?\]\s*(?:\[[^\]]+\]\s*)*public\s+(?:async\s+)?(?:void|Task)\s+' +
                 [regex]::Escape($mapping.clrMethod) + '\('
             if ($testCode -notmatch $nativeDeclaration) {
@@ -168,8 +179,9 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
                 $expectedRows = @($mapping.nativeCases | ForEach-Object { ([string]::Join(',', @($_))).ToLowerInvariant() } | Sort-Object)
                 if (Compare-Object $rows $expectedRows) { throw 'CLR permutation rows differ from the manifest.' }
             }
-            $mappedCount++
         }
+        $mappedCount += $mapped.Count
+        $inheritedMappedCount += $inherited.Count
     }
 }
-Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) selected testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped original methods, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) selected testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
