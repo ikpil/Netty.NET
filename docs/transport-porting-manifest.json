@@ -29,8 +29,8 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture.",
-      "next": "Continue native client Fast Open and remaining TCP transport contracts."
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path.",
+      "next": "Review remaining native transport contracts and runtime comments."
     },
     {
       "name": "UDP and remaining portable transport contracts",
@@ -42,39 +42,39 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 482,
-    "javaOriginalInvocations": 487,
+    "javaOriginalPassed": 489,
+    "javaOriginalInvocations": 494,
     "transportJavaOriginalPassed": 384,
     "coreTransportJavaOriginalPassed": 314,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 70,
+    "testsuiteJavaJUnitInvocations": 77,
     "datagramJavaJUnitInvocations": 37,
     "datagramJavaAllocatorExecutions": 74,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 435,
-    "originalExecutedCases": 513,
+    "mappedOriginalMethods": 442,
+    "originalExecutedCases": 527,
     "originalSkippedCases": 53,
     "transportMappedOriginalExecutions": 361,
-    "testsuiteMappedOriginalExecutions": 136,
+    "testsuiteMappedOriginalExecutions": 150,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 24,
     "supplementalExecutedCases": 218,
     "debug": {
       "failed": 0,
-      "passed": 731,
-      "skipped": 71,
-      "total": 802
+      "passed": 745,
+      "skipped": 77,
+      "total": 822
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 731,
-      "skipped": 71,
-      "total": 802
+      "passed": 745,
+      "skipped": 77,
+      "total": 822
     },
     "solutionRelease": {
       "Netty.NET.Resolver.Tests": {
@@ -85,9 +85,9 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 731,
-        "skipped": 71,
-        "total": 802
+        "passed": 745,
+        "skipped": 77,
+        "total": 822
       },
       "Netty.NET.Buffer.Tests": {
         "failed": 0,
@@ -102,19 +102,19 @@
         "total": 2692
       }
     },
-    "solutionPassed": 33029,
-    "solutionSkipped": 85,
+    "solutionPassed": 33043,
+    "solutionSkipped": 91,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward the previously recorded original results and adds four unchanged successful TCP MD5 scenarios from the pinned Java epoll fixture.",
-    "note": "Windows solution Release passed 33029 with 85 skips. Final Transport Debug, Release and checked Release passed 731 with 71 skips. Linux Transport passed 794 with eight source-disabled skips. Linux checked focus passed all nine cases. After adding the missing test cancellation token, Windows Transport Release and the Linux checked focus passed again without Transport warnings. Both deferred-port cases first exposed the CLR cached port-zero endpoint and pass after querying the connected kernel socket address.",
+    "javaEvidence": "Carries forward the previously recorded results. Seven new SocketConnectTest wrappers and seven inherited epoll wrappers pass with 56 allocator/backend rows. All fourteen pass again with 84 backend/allocator rows in an isolated container with net.ipv4.tcp_fastopen=3.",
+    "note": "Windows solution Release passed 33043 with 91 skips. Final Transport Debug, Release and checked Release passed 745 with 77 skips. Linux Transport passed 814 with eight source-disabled skips. Linux checked focus passed all twenty cases. TCP_INFO confirms initial SYN data with a cached cookie in the isolated container, and timeout/cancellation release the retained initial buffer.",
     "commands": [
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
       "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/tcp-connect-options-results --logger \"trx;LogFilePrefix=tcp-connect-options\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/fastopen-results --logger \"trx;LogFilePrefix=fastopen\"",
       "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
       "python artifacts/transport-core/run-originals.py",
@@ -157,6 +157,9 @@
       "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/linux-options-checked-out -p:NuGetAudit=false",
       "python artifacts/transport-core/run-tcp-connect-options-originals.py",
       "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/tcp-connect-options-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-fastopen-originals.py",
+      "python artifacts/transport-core/run-fastopen-enabled-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/fastopen-checked-out -p:NuGetAudit=false",
       "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -181,7 +184,7 @@
     "mappedUdpOriginalExecutions": 22,
     "unixUdpIcmpJavaJUnitInvocations": 2,
     "unixUdpIcmpJavaAllocatorExecutions": 4,
-    "supplementalSkippedCases": 18,
+    "supplementalSkippedCases": 24,
     "linuxDatagramRelease": {
       "total": 117,
       "passed": 117,
@@ -200,8 +203,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 802,
-      "passed": 794,
+      "total": 822,
+      "passed": 814,
       "failed": 0,
       "skipped": 8
     },
@@ -297,6 +300,20 @@
       "windowsNewSkipped": 8,
       "portCacheFailureBeforeFix": 2,
       "warningCleanupVerified": true
+    },
+    "clientFastOpenEvidence": {
+      "javaNewWrappersPassed": 7,
+      "javaEpollBackendWrappersRerun": 7,
+      "javaBackendAllocatorRows": 56,
+      "javaEnabledKernelBackendAllocatorRows": 84,
+      "javaEnabledKernelWrappersRerun": 14,
+      "windowsClrOriginalPassed": 14,
+      "linuxClrOriginalPassed": 14,
+      "linuxClrSupplementalPassed": 6,
+      "linuxClrCheckedFocusedPassed": 20,
+      "windowsNewSupplementalSkipped": 6,
+      "nativeSynDataVerified": true,
+      "isolatedLinuxTcpFastOpenSysctl": 3
     }
   },
   "entries": [
@@ -3413,13 +3430,16 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
           "src/Netty.NET.Transport/Channels/Sockets/LinuxSocketOptions.cs",
           "src/Netty.NET.Transport/Channels/Sockets/LinuxTcpMd5Keys.cs",
           "test/Netty.NET.Transport.Tests/LinuxTcpMd5SourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs"
+          "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/SocketConnectSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs"
         ]
       }
     },
@@ -3651,7 +3671,7 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open."
       },
       "review": {
-        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration.",
+        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/NioLifecycleSourceTest.cs",
@@ -3662,7 +3682,9 @@
           "src/Netty.NET.Transport/Channels/Sockets/LinuxSocketOptions.cs",
           "src/Netty.NET.Transport/Channels/Sockets/LinuxTcpMd5Keys.cs",
           "test/Netty.NET.Transport.Tests/LinuxTcpMd5SourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs"
+          "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketConnectSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs"
         ]
       }
     },
@@ -7760,12 +7782,12 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 37,
-    "portedOriginalFixtures": 60,
-    "portedOriginalMethods": 435,
-    "supplementalClrCases": 236,
+    "portedOriginalFixtures": 61,
+    "portedOriginalMethods": 442,
+    "supplementalClrCases": 242,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
-    "testsuiteSources": 25,
+    "testsuiteSources": 26,
     "sourceDisabledMethodsMapped": 8,
     "nativeTestSources": 8,
     "mappedInheritedScenarios": 2
@@ -8211,6 +8233,25 @@
         "transport-classes-epoll/src/main/java/io/netty/channel/epoll/EpollSocketChannelConfig.java",
         "transport-native-epoll/src/main/c/netty_epoll_linuxsocket.c"
       ]
+    },
+    {
+      "subject": "Client Fast Open and queued initial data",
+      "decision": "Enable Linux TCP_FASTOPEN_CONNECT when a flushed initial ByteBuf is available. Use managed ConnectAsync and the first SendAsync so the CLR tracks socket state and cancellation. Bound the initial prefix to the kernel TCP_MAXSEG and remove only accepted bytes on the owner. Retain its buffer until native completion. Empty queues and unsupported platforms use ordinary connect. Separate managed connect and send avoid the .NET 10 pending ConnectAsync-with-buffer failure path that suppressed completion callbacks in the isolated diagnostic.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/LinuxSocketOptions.cs",
+        "test/Netty.NET.Transport.Tests/SocketConnectSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs"
+      ],
+      "platformSources": [
+        "https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Net.Sockets/src/System/Net/Sockets/SocketAsyncContext.Unix.cs",
+        "https://github.com/torvalds/linux/blob/v6.12/net/ipv4/tcp.c"
+      ],
+      "upstreamSources": [
+        "transport-classes-epoll/src/main/java/io/netty/channel/epoll/EpollSocketChannel.java",
+        "transport-native-epoll/src/test/java/io/netty/channel/epoll/EpollSocketConnectTest.java"
+      ]
     }
   ],
   "openWork": [
@@ -8305,7 +8346,8 @@
     "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
     "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
     "test/Netty.NET.Transport.Tests/LinuxListenerOptionsContractTest.cs",
-    "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs"
+    "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs",
+    "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -12721,6 +12763,269 @@
           "windowsNewSkipped": 18
         }
       }
+    },
+    {
+      "checkpoint": "aca799f6393be8b02cc5e39f5537a7c5a43ada1f",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 482,
+        "javaOriginalInvocations": 487,
+        "transportJavaOriginalPassed": 384,
+        "coreTransportJavaOriginalPassed": 314,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 70,
+        "datagramJavaJUnitInvocations": 37,
+        "datagramJavaAllocatorExecutions": 74,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 435,
+        "originalExecutedCases": 513,
+        "originalSkippedCases": 53,
+        "transportMappedOriginalExecutions": 361,
+        "testsuiteMappedOriginalExecutions": 136,
+        "datagramMappedOriginalExecutions": 68,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 24,
+        "supplementalExecutedCases": 218,
+        "debug": {
+          "failed": 0,
+          "passed": 731,
+          "skipped": 71,
+          "total": 802
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 731,
+          "skipped": 71,
+          "total": 802
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "failed": 0,
+            "passed": 64,
+            "skipped": 0,
+            "total": 64
+          },
+          "Netty.NET.Transport.Tests": {
+            "failed": 0,
+            "passed": 731,
+            "skipped": 71,
+            "total": 802
+          },
+          "Netty.NET.Buffer.Tests": {
+            "failed": 0,
+            "passed": 29556,
+            "skipped": 0,
+            "total": 29556
+          },
+          "Netty.NET.Common.Tests": {
+            "failed": 0,
+            "passed": 2678,
+            "skipped": 14,
+            "total": 2692
+          }
+        },
+        "solutionPassed": 33029,
+        "solutionSkipped": 85,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward the previously recorded original results and adds four unchanged successful TCP MD5 scenarios from the pinned Java epoll fixture.",
+        "note": "Windows solution Release passed 33029 with 85 skips. Final Transport Debug, Release and checked Release passed 731 with 71 skips. Linux Transport passed 794 with eight source-disabled skips. Linux checked focus passed all nine cases. After adding the missing test cancellation token, Windows Transport Release and the Linux checked focus passed again without Transport warnings. Both deferred-port cases first exposed the CLR cached port-zero endpoint and pass after querying the connected kernel socket address.",
+        "commands": [
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Common.Tests/Netty.NET.Common.Tests.csproj -c Debug --no-restore --filter \"FullyQualifiedName~AutoScalingEventExecutorChooserFactoryTest|FullyQualifiedName~AutoScalingChooserContractTest\"",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/tcp-connect-options-results --logger \"trx;LogFilePrefix=tcp-connect-options\"",
+          "dotnet build test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-restore -t:Rebuild -p:CheckForOverflowUnderflow=true",
+          "dotnet test test/Netty.NET.Transport.Tests/Netty.NET.Transport.Tests.csproj -c Release --no-build --no-restore -p:CheckForOverflowUnderflow=true",
+          "python artifacts/transport-core/run-originals.py",
+          "python artifacts/transport-core/run-event-loop-originals.py",
+          "python artifacts/transport-core/run-io-lifecycle-originals.py",
+          "python artifacts/transport-core/run-datagram-originals.py",
+          "python artifacts/transport-core/run-shutdown-originals.py",
+          "python artifacts/transport-core/run-domain-originals.py",
+          "python artifacts/transport-core/run-scaling-originals.py",
+          "python artifacts/transport-core/run-manual-originals.py",
+          "python artifacts/transport-core/run-io-phase-originals.py",
+          "python artifacts/transport-core/run-outbound-originals.py",
+          "python artifacts/transport-core/run-gather-originals.py",
+          "python artifacts/transport-core/run-udp-mapped-originals.py",
+          "python artifacts/transport-core/run-udp-native-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter \"FullyQualifiedName~Datagram\" on an IPv6-enabled Linux container",
+          "python artifacts/transport-core/run-udp-multicast-ipv6-original.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-multicast-ipv6-isolated --results-directory artifacts/transport-core/udp-multicast-ipv6-transport-results -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-udp-disconnect-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore on an IPv6-enabled Linux container",
+          "python artifacts/transport-core/run-udp-dual-regular-originals.py",
+          "python artifacts/transport-core/run-udp-multicast-dual-original.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/udp-dual-standard-out",
+          "python artifacts/transport-core/run-reentrant-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/reentrant-standard-out",
+          "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore --filter FullyQualifiedName~ReentrantChannelSourceTest",
+          "python artifacts/transport-core/run-local-thread-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore --filter FullyQualifiedName~LocalTransportThreadModel",
+          "python artifacts/transport-core/run-threaded-io-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/threaded-io-standard-out",
+          "python artifacts/transport-core/run-raw-io-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release --artifacts-path artifacts/transport-core/raw-io-standard-out",
+          "python artifacts/transport-core/run-udp-phase-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/udp-phase-checked-out -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-udp-segment-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/udp-segment-checked-out -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-udp-dest-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/udp-dest-checked-out -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-linux-options-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/linux-options-checked-out -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-tcp-connect-options-originals.py",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/tcp-connect-options-checked-out -p:NuGetAudit=false",
+          "pwsh -NoProfile -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4,
+        "outboundJavaJUnitInvocations": 6,
+        "outboundJavaAllocatorExecutions": 12,
+        "outboundMappedOriginalExecutions": 12,
+        "gatheringJavaJUnitInvocations": 6,
+        "gatheringJavaAllocatorExecutions": 12,
+        "gatheringMappedOriginalExecutions": 12,
+        "mappedUdpJavaJUnitInvocations": 11,
+        "mappedUdpJavaAllocatorExecutions": 22,
+        "mappedUdpOriginalExecutions": 22,
+        "unixUdpIcmpJavaJUnitInvocations": 2,
+        "unixUdpIcmpJavaAllocatorExecutions": 4,
+        "supplementalSkippedCases": 18,
+        "linuxDatagramRelease": {
+          "total": 117,
+          "passed": 117,
+          "failed": 0,
+          "skipped": 0,
+          "baselineFailures": [],
+          "unixIcmpOriginalCasesPassed": 4,
+          "ipv6SourceMembershipCasesPassed": 2,
+          "ipv6SourcePacketCasesPassed": 2,
+          "ipv6MulticastOriginalCasesPassed": 2,
+          "ipv6TrafficClassConfigurationCasesPassed": 1,
+          "udpDisconnectCasesPassed": 6,
+          "multicastIsolationCasesPassed": 4,
+          "nativeConnectFailureCasesPassed": 1
+        },
+        "ipv6MulticastJavaJUnitInvocations": 1,
+        "ipv6MulticastJavaAllocatorExecutions": 2,
+        "linuxTransportRelease": {
+          "total": 802,
+          "passed": 794,
+          "failed": 0,
+          "skipped": 8
+        },
+        "linuxOriginalRerun": {
+          "udpJavaWrappersPassed": 3,
+          "udpJavaAllocatorRunsPassed": 6,
+          "unixHalfCloseJavaWrappersPassed": 1,
+          "unixHalfCloseJavaAllocatorRunsPassed": 2,
+          "unixHalfCloseClrCasesPassed": 8,
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+        },
+        "linuxMulticastOriginalRerun": {
+          "regularJavaWrappersPassed": 2,
+          "regularJavaAllocatorRunsPassed": 4,
+          "mixedJavaWrapperFailed": 1
+        },
+        "reentrantEvidence": {
+          "javaOriginalPassed": 6,
+          "clrOriginalPassed": 6,
+          "clrSupplementalPassed": 2,
+          "baselineFailed": 4,
+          "focusedRepeats": 8
+        },
+        "localThreadModelEvidence": {
+          "javaOriginalPassed": 2,
+          "clrOriginalPassed": 2,
+          "sourceDisabledSkipped": 6,
+          "clrSupplementalPassed": 2,
+          "baselineFailed": 2,
+          "focusedRepeats": 3
+        },
+        "threadedIoEvidence": {
+          "javaOriginalPassed": 2,
+          "clrOriginalPassed": 2,
+          "clrSupplementalPassed": 11,
+          "baselineTcpOrderingFailed": 1
+        },
+        "rawIoEvidence": {
+          "newJavaOriginalPassed": 4,
+          "javaOriginalRerun": 2,
+          "newClrOriginalPassed": 4,
+          "upgradedClrOriginalPassed": 2,
+          "clrSupplementalPassed": 5,
+          "sourceDisabledSkipped": 1,
+          "isolatedDisabledProbePassed": 1
+        },
+        "nativeMappedOriginalExecutions": 16,
+        "udpReadPhaseEvidence": {
+          "javaNativeWrappersPassed": 6,
+          "javaNativeAllocatorExecutions": 12,
+          "clrOriginalPassed": 12,
+          "previousImplementationRegressionFailures": 1,
+          "checkedClrRepeatRuns": 8,
+          "checkedClrCasesPerRepeat": 13
+        },
+        "udpSegmentationEvidence": {
+          "javaWrappersPassed": 5,
+          "javaOriginalPermutationRows": 40,
+          "windowsOriginalPassed": 4,
+          "windowsOriginalSkipped": 6,
+          "linuxOriginalPassed": 10,
+          "linuxSupplementalPassed": 4,
+          "windowsSupplementalPassed": 2,
+          "windowsSupplementalSkipped": 2
+        },
+        "mappedInheritedScenarios": 2,
+        "udpOriginalDestinationEvidence": {
+          "javaWrappersPassed": 2,
+          "javaMixedFamilyRouteFailureRerun": 1,
+          "windowsOriginalSkipped": 5,
+          "linuxOriginalScenariosPassed": 5,
+          "linuxSupplementalPassed": 5,
+          "windowsSupplementalPassed": 1,
+          "windowsSupplementalSkipped": 4
+        },
+        "linuxSocketOptionsEvidence": {
+          "javaPassed": 13,
+          "javaAssumptionAborted": 3,
+          "javaIsolatedVersionGatePassed": 3,
+          "javaSourceDisabledProbePassed": 1,
+          "linuxClrOriginalPassed": 16,
+          "linuxClrSupplementalPassed": 1,
+          "linuxClrSourceDisabledProbePassed": 1,
+          "linuxClrCheckedFocusedPassed": 18,
+          "windowsNewSkipped": 18
+        },
+        "linuxTcpConnectOptionsEvidence": {
+          "javaMd5OriginalPassed": 4,
+          "linuxClrOriginalPassed": 4,
+          "linuxClrSupplementalPassed": 5,
+          "linuxClrCheckedFocusedPassed": 9,
+          "windowsClrSupplementalPassed": 1,
+          "windowsNewSkipped": 8,
+          "portCacheFailureBeforeFix": 2,
+          "warningCleanupVerified": true
+        }
+      }
     }
   ],
   "nextWork": [
@@ -12746,7 +13051,8 @@
     "Segmented UDP sends, GRO and recvmmsg receive are mapped and validated. Continue original-destination metadata, the mixed-family multicast fixture and remaining native backend contracts.",
     "Original destination, IP_FREEBIND and the mixed-family CLR scenario are covered. The unchanged mixed-family Java fixture still fails on the observed route. Continue remaining native transport contracts.",
     "Linux kernel port sharing and the selected TCP options are covered by 17 original methods. Remaining native transport work is separate from these configuration and bind contracts.",
-    "Linux peer-key TCP authentication and deferred source-port assignment are verified. Native client Fast Open and other native transport contracts remain open."
+    "Linux peer-key TCP authentication and deferred source-port assignment are verified. Native client Fast Open and other native transport contracts remain open.",
+    "The client Fast Open path and all seven SocketConnectTest methods are mapped. Continue the remaining native transport contracts and original runtime comments."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -14568,6 +14874,132 @@
         "preservedCount": 3,
         "unreviewedCount": 0,
         "scope": "Preserve the original license and Windows condition comments at the IPv6 entry point."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketConnectTest.java",
+      "sha256": "a445c66b4350159fa4ec6cfcae8df4b9337938763599dec09018dd132b8f4d5e",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketConnectSourceTest.cs"
+      ],
+      "review": {
+        "scope": "All seven original declarations run with both pooled and adaptive allocators. CLR async sockets consolidate the source backend permutations. The four Fast Open methods retain both cold and repeated connections.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketConnectSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/LinuxSocketOptions.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCloseTwice",
+          "clrMethod": "TestCloseTwice",
+          "adaptation": "Retain the user-event close task, direct client close and repeated server close.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testLocalAddressAfterConnect",
+          "clrMethod": "TestLocalAddressAfterConnect",
+          "adaptation": "Register before connect, check initially absent addresses and verify client and accepted-child concrete local endpoints.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testChannelEventsFiredWhenClosedDirectly",
+          "clrMethod": "TestChannelEventsFiredWhenClosedDirectly",
+          "adaptation": "Close from the completed connection task and keep active then inactive event ordering.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testWriteWithFastOpenBeforeConnect",
+          "clrMethod": "TestWriteWithFastOpenBeforeConnect",
+          "adaptation": "Register, enqueue initial ASCII data before connect, append normal data, verify the exact echoed string and repeat for a warm connection.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testWriteWithFastOpenBeforeConnectDirectBufferReaderIndex",
+          "clrMethod": "TestWriteWithFastOpenBeforeConnectDirectBufferReaderIndex",
+          "adaptation": "Retain the direct buffer BAD-PREFIX- offset and exact expected echo.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testWriteWithFastOpenBeforeConnectCompositeBuffer",
+          "clrMethod": "TestWriteWithFastOpenBeforeConnectCompositeBuffer",
+          "adaptation": "Retain the three original direct-buffer components and exact expected echo.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testWriteWithFastOpenBeforeConnectCompositeBufferReaderIndex",
+          "clrMethod": "TestWriteWithFastOpenBeforeConnectCompositeBufferReaderIndex",
+          "adaptation": "Retain the four-component prefix layout and skip the prefix through ReaderIndex.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 7,
+        "mappedCount": 7,
+        "reviewedCount": 7,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "All original fixture comments are preserved."
       }
     }
   ],

@@ -35,6 +35,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     private volatile bool _halfClosure;
     private int _backlog = 128;
     private int _tcpFastOpen;
+    private bool _tcpFastOpenConnect;
     private LinuxTcpMd5Keys _tcpMd5Keys;
     /**
      * Creates a new instance.
@@ -72,6 +73,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         ? Options : Channel is IServerChannel ? DomainListenerOptions : DomainStreamOptions;
     private bool IsLinuxTcp => OperatingSystem.IsLinux() && Socket.ProtocolType == ProtocolType.Tcp;
     private bool HasTcpFastOpen => IsLinuxTcp && Channel is IServerChannel;
+    private bool IsTcpStream => Socket.ProtocolType == ProtocolType.Tcp && Channel is not IServerChannel;
     private ReadOnlySpan<(ChannelOption Option, int Level, int Name)> LinuxOptions => !IsLinuxTcp
         ? [] : Channel is IServerChannel ? LinuxListenerOptions : LinuxStreamOptions;
 
@@ -86,6 +88,8 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
                 values[option.Option] = value;
         if (HasTcpFastOpen)
             values[ChannelOption.TCP_FASTOPEN] = Volatile.Read(ref _tcpFastOpen);
+        if (IsTcpStream)
+            values[ChannelOption.TCP_FASTOPEN_CONNECT] = Volatile.Read(ref _tcpFastOpenConnect);
         return values;
     }
     protected override bool TryGetValue(ChannelOption option, out object value)
@@ -112,6 +116,8 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
             value = _backlog;
         else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
             value = Volatile.Read(ref _tcpFastOpen);
+        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
+            value = Volatile.Read(ref _tcpFastOpenConnect);
         else if (FindLinuxOption(option) is { } native)
         {
             int raw = LinuxSocketOptions.GetInt(Socket, native.Level, native.Name);
@@ -169,6 +175,8 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
             ArgumentOutOfRangeException.ThrowIfNegative(queue);
             Volatile.Write(ref _tcpFastOpen, queue);
         }
+        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
+            Volatile.Write(ref _tcpFastOpenConnect, (bool)value);
         else if (FindLinuxOption(option) is { } native)
         {
             int raw;

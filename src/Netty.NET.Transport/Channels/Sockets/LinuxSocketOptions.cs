@@ -13,9 +13,11 @@ internal static class LinuxSocketOptions
     internal const int IpFreeBind = 15;
     internal const int IpBindAddressNoPort = 24;
     internal const int TcpCork = 3;
+    internal const int TcpMaxSegment = 2;
     internal const int TcpDeferAccept = 9;
     internal const int TcpQuickAck = 12;
     internal const int TcpFastOpen = 23;
+    internal const int TcpFastOpenConnect = 30;
     internal const int TcpNotSentLowAt = 25;
 
     internal static int GetInt(Socket socket, int level, int option)
