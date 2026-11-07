@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -155,11 +156,24 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     /// <summary>Allows binding a Linux TCP listener or UDP socket to a nonlocal IPv4 address.</summary>
     public static readonly ChannelOption<bool> IP_FREEBIND = ValueOf<bool>("IP_FREEBIND");
 
+    /**
+     * Set the IP_BIND_ADDRESS_NO_PORT option on the underlying Channel.
+     *
+     * Be aware this method needs be called before {@link EpollSocketChannel#bind(java.net.SocketAddress)} to have
+     * any affect.
+     */
+    /// <summary>Delays Linux TCP source-port allocation. Set this before binding to port zero.</summary>
+    public static readonly ChannelOption<bool> IP_BIND_ADDRESS_NO_PORT = ValueOf<bool>("IP_BIND_ADDRESS_NO_PORT");
+
     public static readonly ChannelOption<bool> TCP_NODELAY = ValueOf<bool>("TCP_NODELAY");
     public static readonly ChannelOption<int> TCP_DEFER_ACCEPT = ValueOf<int>("TCP_DEFER_ACCEPT");
     public static readonly ChannelOption<bool> TCP_CORK = ValueOf<bool>("TCP_CORK");
     public static readonly ChannelOption<bool> TCP_QUICKACK = ValueOf<bool>("TCP_QUICKACK");
     public static readonly ChannelOption<long> TCP_NOTSENT_LOWAT = ValueOf<long>("TCP_NOTSENT_LOWAT");
+
+    /// <summary>Replaces the peer keys for Linux TCP MD5 authentication. This option is write-only.</summary>
+    public static readonly ChannelOption<IReadOnlyDictionary<IPAddress, byte[]>> TCP_MD5SIG =
+        ValueOf<IReadOnlyDictionary<IPAddress, byte[]>>("TCP_MD5SIG");
     /**
      * Client-side TCP FastOpen. Sending data with the initial TCP handshake.
      */

@@ -1,5 +1,7 @@
 using System;
+using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
@@ -9,6 +11,7 @@ internal static class LinuxSocketOptions
     internal const int SolSocket = 1;
     internal const int SoReusePort = 15;
     internal const int IpFreeBind = 15;
+    internal const int IpBindAddressNoPort = 24;
     internal const int TcpCork = 3;
     internal const int TcpDeferAccept = 9;
     internal const int TcpQuickAck = 12;
@@ -33,4 +36,20 @@ internal static class LinuxSocketOptions
 
     internal static void SetFlag(Socket socket, int level, int option, bool enabled) =>
         SetInt(socket, level, option, enabled ? 1 : 0);
+
+    internal static unsafe IPEndPoint GetLocalEndpoint(Socket socket)
+    {
+        var template = new IPEndPoint(socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
+        var address = template.Serialize();
+        uint length = (uint)address.Size;
+        fixed (byte* bytes = address.Buffer.Span[..address.Size])
+        {
+            if (GetSocketName(socket.SafeHandle, bytes, ref length) != 0)
+                throw new SocketException();
+        }
+        return (IPEndPoint)template.Create(address);
+    }
+
+    [DllImport("libc", EntryPoint = "getsockname", SetLastError = true)]
+    private static extern unsafe int GetSocketName(SafeSocketHandle socket, byte* address, ref uint length);
 }

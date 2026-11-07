@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Netty.NET.Common;
@@ -34,6 +35,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     private volatile bool _halfClosure;
     private int _backlog = 128;
     private int _tcpFastOpen;
+    private LinuxTcpMd5Keys _tcpMd5Keys;
     /**
      * Creates a new instance.
      */
@@ -61,6 +63,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         (ChannelOption.TCP_DEFER_ACCEPT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpDeferAccept)
     };
     private static readonly (ChannelOption Option, int Level, int Name)[] LinuxStreamOptions = {
+        (ChannelOption.IP_BIND_ADDRESS_NO_PORT, (int)SocketOptionLevel.IP, LinuxSocketOptions.IpBindAddressNoPort),
         (ChannelOption.TCP_CORK, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpCork),
         (ChannelOption.TCP_QUICKACK, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpQuickAck),
         (ChannelOption.TCP_NOTSENT_LOWAT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpNotSentLowAt)
@@ -125,6 +128,18 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     }
     protected override bool SetValue(ChannelOption option, object value)
     {
+        /**
+         * Set the {@code TCP_MD5SIG} option on the socket. See {@code linux/tcp.h} for more details.
+         * Keys can only be set on, not read to prevent a potential leak, as they are confidential.
+         * Allowing them being read would mean anyone with access to the channel could get them.
+         */
+        if (ReferenceEquals(option, ChannelOption.TCP_MD5SIG) && IsLinuxTcp)
+        {
+            var keys = LazyInitializer.EnsureInitialized(ref _tcpMd5Keys,
+                () => new LinuxTcpMd5Keys(Socket, Channel.Parent is IServerChannel));
+            keys.Replace((IReadOnlyDictionary<IPAddress, byte[]>)value);
+            return true;
+        }
         if (Socket.AddressFamily == AddressFamily.Unix && Array.IndexOf(SupportedSocketOptions, option) < 0)
             return base.SetValue(option, value);
         if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))

@@ -14,7 +14,10 @@
  * under the License.
  */
 
+using System;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
@@ -24,6 +27,8 @@ namespace Netty.NET.Transport.Channels.Sockets;
  */
 public class TcpSocketChannel : SocketStreamChannel
 {
+    private EndPoint _assignedLocalAddress;
+
     public TcpSocketChannel() : this(new Socket(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), null)
     { if (Socket.AddressFamily == AddressFamily.InterNetworkV6) Socket.DualMode = true; }
     public TcpSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp), null) { }
@@ -34,5 +39,22 @@ public class TcpSocketChannel : SocketStreamChannel
     internal TcpSocketChannel(Socket socket, IChannel parent) : base(socket, parent)
     {
         Socket.NoDelay = true;
+    }
+
+    public override EndPoint LocalAddress
+    {
+        get
+        {
+            var address = base.LocalAddress;
+            if (address is not IPEndPoint { Port: 0 } || !IsActive || !OperatingSystem.IsLinux())
+                return address;
+
+            // Socket.LocalEndPoint may cache the address-only bind. Connect assigns the kernel port.
+            if (Volatile.Read(ref _assignedLocalAddress) is { } assigned)
+                return assigned;
+            assigned = Normalize(LinuxSocketOptions.GetLocalEndpoint(Socket));
+            Volatile.Write(ref _assignedLocalAddress, assigned);
+            return assigned;
+        }
     }
 }

@@ -125,7 +125,7 @@ public class DatagramChannel : AbstractChannel
             EnsureOpen();
             if (OperatingSystem.IsLinux())
             {
-                var connected = ReadLinuxLocalAddress();
+                var connected = LinuxSocketOptions.GetLocalEndpoint(_socket);
                 _linuxBoundAddress = bound ?? new IPEndPoint(AnyAddress, connected.Port);
                 Volatile.Write(ref _linuxLocalAddress, connected);
             }
@@ -166,11 +166,11 @@ public class DatagramChannel : AbstractChannel
 
         try
         {
-            var local = ReadLinuxLocalAddress();
+            var local = LinuxSocketOptions.GetLocalEndpoint(_socket);
             if (local.Port == 0)
             {
                 _socket.Bind(_linuxBoundAddress);
-                local = ReadLinuxLocalAddress();
+                local = LinuxSocketOptions.GetLocalEndpoint(_socket);
             }
             Volatile.Write(ref _linuxLocalAddress, local);
         }
@@ -182,24 +182,9 @@ public class DatagramChannel : AbstractChannel
         }
     }
 
-    private IPEndPoint ReadLinuxLocalAddress()
-    {
-        // Socket.LocalEndPoint caches the connected address. Query the same descriptor directly.
-        var template = new IPEndPoint(AnyAddress, 0);
-        SocketAddress address = template.Serialize();
-        var bytes = new byte[address.Size];
-        uint length = (uint)bytes.Length;
-        if (GetSocketName(_socket.SafeHandle, bytes, ref length) != 0)
-            throw new SocketException();
-        bytes.AsSpan(0, (int)length).CopyTo(address.Buffer.Span);
-        return (IPEndPoint)template.Create(address);
-    }
-
     [DllImport("libc", EntryPoint = "connect", SetLastError = true)]
     private static extern int ConnectNative(SafeSocketHandle socket, byte[] address, uint length);
 
-    [DllImport("libc", EntryPoint = "getsockname", SetLastError = true)]
-    private static extern int GetSocketName(SafeSocketHandle socket, [Out] byte[] address, ref uint length);
     /**
      * Return {@code true} if the {@link DatagramChannel} is connected to the remote peer.
      */

@@ -151,6 +151,8 @@ public class DefaultChannelConfig : IChannelConfig
             _pinExecutor = (bool)value;
         else if (ReferenceEquals(option, ChannelOption.MAX_MESSAGES_PER_WRITE))
             SetMaxMessagesPerWrite((int)value);
+        else if (ReferenceEquals(option, ChannelOption.TCP_MD5SIG))
+            throw new PlatformNotSupportedException("TCP_MD5SIG requires a Linux TCP socket.");
         else
             return false;
         return true;
