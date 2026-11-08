@@ -335,6 +335,7 @@ public sealed class ChannelOutboundBuffer
             return;
         }
     }
+    internal void BeginOutputShutdown() => _closed = true;
     internal void Close(Exception cause)
         => Close(cause, cause);
     internal void Close(Exception flushedCause, Exception unflushedCause)

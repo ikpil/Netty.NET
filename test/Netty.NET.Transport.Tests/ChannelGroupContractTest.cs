@@ -252,6 +252,102 @@ public class ChannelGroupContractTest
         finally { child.FinishAndReleaseAll(); }
     }
 
+    [Theory]
+    [InlineData("write")]
+    [InlineData("writeAndFlush")]
+    [InlineData("disconnect")]
+    [InlineData("deregister")]
+    [InlineData("close")]
+    [InlineData("closeFuture")]
+    public async Task NativeTaskSnapshotSupportsLookupIterationAndLivePartialCompletion(string operation)
+    {
+        var success = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failure = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var canceled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = Channel(success.Task, operation);
+        var second = Channel(failure.Task, operation);
+        var third = Channel(canceled.Task, operation);
+        var group = new DefaultChannelGroup();
+        foreach (var child in new[] { first, second, third }) group.Add(child.Object);
+        var (completion, operations) = OperateWithTasks(group, operation);
+        group.Clear();
+        var later = Channel(Task.CompletedTask, operation);
+        group.Add(later.Object);
+        Assert.Equal(3, operations.Count);
+        Assert.False(operations.TryGetValue(later.Object, out _));
+        Assert.All(operations.Values, task => Assert.False(task.IsCompleted));
+        Assert.Throws<NotSupportedException>(() => ((IDictionary<IChannel, Task>)operations).Clear());
+        success.SetResult();
+        await operations[first.Object].WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(1, operations.Values.Count(task => task.IsCompletedSuccessfully));
+        Assert.False(completion.IsCompleted);
+        var cause = new IOException("second");
+        failure.SetException(cause);
+        Assert.Same(cause, await Record.ExceptionAsync(() => operations[second.Object]));
+        Assert.Equal(1, operations.Values.Count(task => task.IsFaulted));
+        Assert.False(completion.IsCompleted);
+        canceled.SetCanceled();
+        var error = await Assert.ThrowsAsync<ChannelGroupException>(() => completion);
+        Assert.Equal(2, error.Count);
+        Assert.Equal(1, operations.Values.Count(task => task.IsCanceled));
+        Assert.True(operations[first.Object].IsCompletedSuccessfully);
+    }
+
+    [Fact]
+    public async Task CancelingAGroupObserverDoesNotCancelTheChannelOperations()
+    {
+        var producer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var child = Channel(producer.Task, "disconnect");
+        var group = new DefaultChannelGroup();
+        group.Add(child.Object);
+        Task completion = group.DisconnectAsync(out var operations);
+        using var observer = new CancellationTokenSource();
+        Task observation = completion.WaitAsync(observer.Token);
+        observer.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => observation);
+        Assert.False(operations[child.Object].IsCompleted);
+        Assert.False(completion.IsCompleted);
+        producer.SetResult();
+        await completion;
+    }
+
+    [Fact]
+    public async Task RemovingByIdKeepsTheExistingCloseSnapshotAndCannotRemoveAReplacement()
+    {
+        var close = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var original = Channel(close.Task, "closeFuture");
+        var replacement = Channel(new TaskCompletionSource().Task, "closeFuture");
+        replacement.SetupGet(value => value.Id).Returns(original.Object.Id);
+        var group = new DefaultChannelGroup();
+        group.Add(original.Object);
+        Task snapshot = group.NewCloseFuture(out var operations);
+        Assert.False(group.Remove(null));
+        Assert.True(group.RemoveById(original.Object.Id));
+        Assert.False(group.RemoveById(original.Object.Id));
+        Assert.True(group.Add(replacement.Object));
+        close.SetResult();
+        await snapshot;
+        Assert.Same(close.Task, operations[original.Object]);
+        Assert.Same(replacement.Object, group.Find(original.Object.Id));
+        original.Verify(value => value.CloseAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static (Task, IReadOnlyDictionary<IChannel, Task>) OperateWithTasks(DefaultChannelGroup group, string kind)
+    {
+        IReadOnlyDictionary<IChannel, Task> operations;
+        Task completion = kind switch
+        {
+            "write" => group.WriteAsync(new object(), out operations),
+            "writeAndFlush" => group.WriteAndFlushAsync(new object(), out operations),
+            "close" => group.CloseAsync(out operations),
+            "disconnect" => group.DisconnectAsync(out operations),
+            "deregister" => group.DeregisterAsync(out operations),
+            "closeFuture" => group.NewCloseFuture(out operations),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+        return (completion, operations);
+    }
+
     private static Mock<IChannel> Channel(Task operation, string kind)
     {
         var channel = new Mock<IChannel>();

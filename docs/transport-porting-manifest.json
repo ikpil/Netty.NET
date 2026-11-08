@@ -17,8 +17,8 @@
     {
       "name": "Channel, Pipeline and executor ordering",
       "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown. Ported the caller-owned manual pump and eleven portable source methods, with real TCP and channel-migration contracts. Separated manual inbound I/O and task phases and ported four original I/O-handler count and manual-listener methods. Ported pending connect and write completion dispatch with the six outbound source declarations and eight native contract cases. Threaded socket completion phases and the source task-processing I/O ratio are implemented. Added direct completion registration, backend compatibility and chooser-preserving queries. UDP preparation and delivery share one completion callback. Ported all portable AbstractChannelTest declarations, preserving initial write-failure causes, close-before-release ownership and inactive-flush reentrancy. Added Task-native channel-correlated group failures and fixed duplicate-member stayClosed admission.",
-      "next": "Review generic output-shutdown and non-I/O failure behavior, group per-channel/partial completion views and the remaining selector/runtime comments."
+      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown. Ported the caller-owned manual pump and eleven portable source methods, with real TCP and channel-migration contracts. Separated manual inbound I/O and task phases and ported four original I/O-handler count and manual-listener methods. Ported pending connect and write completion dispatch with the six outbound source declarations and eight native contract cases. Threaded socket completion phases and the source task-processing I/O ratio are implemented. Added direct completion registration, backend compatibility and chooser-preserving queries. UDP preparation and delivery share one completion callback. Ported all portable AbstractChannelTest declarations, preserving initial write-failure causes, close-before-release ownership and inactive-flush reentrancy. Added Task-native channel-correlated group failures and fixed duplicate-member stayClosed admission. Shared output-shutdown policy now handles generic channels and TCP consistently, with admission closed before native shutdown, scoped producer ownership and the full-close default. Channel groups expose immutable per-channel native Task snapshots with live completion and typed id removal.",
+      "next": "Review remaining group comparison/inherited set-surface decisions, selector-specific consumers and original runtime comments."
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
@@ -29,7 +29,7 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path.",
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved.",
       "next": "Review remaining native transport contracts and runtime comments."
     },
     {
@@ -42,39 +42,39 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 497,
-    "javaOriginalInvocations": 502,
+    "javaOriginalPassed": 504,
+    "javaOriginalInvocations": 509,
     "transportJavaOriginalPassed": 392,
     "coreTransportJavaOriginalPassed": 322,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 77,
+    "testsuiteJavaJUnitInvocations": 84,
     "datagramJavaJUnitInvocations": 37,
     "datagramJavaAllocatorExecutions": 74,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 449,
-    "originalExecutedCases": 534,
+    "mappedOriginalMethods": 456,
+    "originalExecutedCases": 550,
     "originalSkippedCases": 53,
     "transportMappedOriginalExecutions": 368,
-    "testsuiteMappedOriginalExecutions": 150,
+    "testsuiteMappedOriginalExecutions": 166,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 26,
-    "supplementalExecutedCases": 242,
+    "supplementalExecutedCases": 266,
     "debug": {
       "failed": 0,
-      "passed": 776,
+      "passed": 816,
       "skipped": 77,
-      "total": 853
+      "total": 893
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 776,
+      "passed": 816,
       "skipped": 77,
-      "total": 853
+      "total": 893
     },
     "solutionRelease": {
       "Netty.NET.Resolver.Tests": {
@@ -85,9 +85,9 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 776,
+        "passed": 816,
         "skipped": 77,
-        "total": 853
+        "total": 893
       },
       "Netty.NET.Buffer.Tests": {
         "failed": 0,
@@ -102,22 +102,24 @@
         "total": 2692
       }
     },
-    "solutionPassed": 33074,
+    "solutionPassed": 33114,
     "solutionSkipped": 91,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51
     },
-    "javaEvidence": "Carries forward previous evidence. Unmodified pinned AbstractChannelTest and DefaultChannelGroupTest execute through JUnit Jupiter on Windows and Linux: nine passed and one Java-8-only JRE skip on each platform. Eight new AbstractChannel methods pass on Java; seven are mapped to CLR and the two JVM process-discovery declarations are explicitly reviewed outside the Guid identity model.",
-    "note": "Windows Release solution: 33074 passed, 91 skipped, zero failures. Transport Debug/Release/checked Release: 776 passed and 77 skipped. Linux Transport Release: 845 passed and eight existing source-disabled skips. Checked focus: 42/42 on both platforms. In an isolated copy using the previous runtime implementations, the same focus has 14 failures and 28 passes. No new source-independent skip was added.",
+    "javaEvidence": "Prior evidence is carried forward. Five new unmodified pinned socket fixtures run with JUnit Jupiter on Windows and Linux: seven passed, no skips, fourteen logged allocator rows on each platform. AutoRead also executes both nested read-caller routes; the CLR exposes all sixteen allocator/route scenarios separately.",
+    "note": "Windows solution Release: 33114 passed, 91 skipped, zero failures. Final Transport Release/Debug/checked Release: 816 passed and 77 skipped. Linux Transport: 885 passed and eight existing source-disabled skips. Linux checked focus: 61/61. Final native task-map focus: 30/30; final pre-activation read/output-shutdown focus: 20/20. Ten controlled decision-branch regressions are reproduced in an isolated copy. Five original fixtures and native Task/group source comments are preserved; no new skip or Markdown document was added.",
     "commands": [
-      "python artifacts/transport-core/run-channel-core-originals.py",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/channel-core-results --logger \"trx;LogFilePrefix=channel-core\"",
+      "python artifacts/transport-core/run-output-read-originals.py",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/output-read-results --logger \"trx;LogFilePrefix=output-read\"",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --results-directory artifacts/transport-core/output-read-final-results --logger \"trx;LogFilePrefix=output-read-final\"",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/channel-core-checked-out -p:NuGetAudit=false",
-      "python artifacts/transport-core/run-channel-core-regressions.py",
-      "python artifacts/transport-core/run-channel-core-linux.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/output-read-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-output-read-regressions.py",
+      "python artifacts/transport-core/run-output-read-linux.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter FullyQualifiedName~ChannelGroup",
       "pwsh -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -161,8 +163,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 853,
-      "passed": 845,
+      "total": 893,
+      "passed": 885,
       "failed": 0,
       "skipped": 8
     },
@@ -287,6 +289,25 @@
       "javaExistingGroupRerunPassed": 1,
       "javaWindowsPassed": 9,
       "javaLinuxPassed": 9
+    },
+    "outputReadEvidence": {
+      "newSourceFixtures": 5,
+      "newSourceMethods": 7,
+      "newClrOriginalCases": 16,
+      "newSupplementalCases": 24,
+      "javaWindowsPassed": 7,
+      "javaLinuxPassed": 7,
+      "javaAllocatorRowsPerPlatform": 14,
+      "javaSourceSkipped": 0,
+      "previousDecisionBranchesFailed": 10,
+      "previousDecisionBranchesPassed": 6,
+      "regressionScope": "The isolated copy retains the new output-hook signatures and task-map APIs, then restores only the previously committed HandleWriteError and BeginRead/activation admission decisions. It is a decision-branch regression, not a claim that the entire old runtime compiles against new APIs.",
+      "windowsFocusedPassed": 61,
+      "linuxCheckedFocusedPassed": 61,
+      "windowsFinalTaskMapPassed": 30,
+      "windowsFinalReadAndShutdownPassed": 20,
+      "eofPayloadBytes": 33554432,
+      "eofPauseMillis": 750
     }
   },
   "entries": [
@@ -538,12 +559,12 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 98,
-        "preservedCount": 28,
-        "unreviewedCount": 70,
-        "scope": "Original comments retained at corresponding reviewed CLR declarations and operations; any remaining text stays explicitly unreviewed."
+        "preservedCount": 30,
+        "unreviewedCount": 68,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
-        "scope": "Registration-first active notification, re-registration without duplicate active, closed-channel identity, initial write-failure causes and inactive flush ownership are reviewed against the complete AbstractChannelTest declarations. Native IOException/SocketException failures close before releasing queued ownership and completing write Tasks. Original generic non-I/O/output-shutdown contracts and other runtime comments still need review.",
+        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
@@ -552,9 +573,15 @@
           "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs",
           "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
           "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs",
           "test/Netty.NET.Transport.Tests/AbstractChannelTest.cs",
-          "test/Netty.NET.Transport.Tests/ChannelCoreContractTest.cs"
+          "test/Netty.NET.Transport.Tests/ChannelCoreContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketChannelNotYetConnectedSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketChannelEOFSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketReadPendingSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketAutoReadSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs"
         ]
       }
     },
@@ -1037,7 +1064,7 @@
         "uniqueCount": 98,
         "preservedCount": 27,
         "unreviewedCount": 71,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
         "scope": "Existing original fifteen-method fixture plus differentiated flushed/unflushed close failures. The native error-policy fixture verifies both flushed tasks retain original exception identity, unflushed close retains its cause, and all owned buffers release after an in-flight failure. Output-only shutdown uses one wrapped cause for all pending entries. Broader comments, and progressive completion remain open. Cross-executor write task bytes use the configured message estimator and source overhead. Remove the reservation before invoking the handler and on rejected dispatch. Write-and-flush shares one executor dispatch. Writability callbacks for reservations are deferred.",
@@ -1785,21 +1812,24 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 21,
         "preservedCount": 14,
         "unreviewedCount": 7,
-        "scope": "Original comments retained at corresponding reviewed CLR declarations and operations; any remaining text stays explicitly unreviewed."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
-        "scope": "Native collection, Task fan-out, selected lifecycle operations and retained broadcast ownership are implemented. Correlated group failure enumeration now preserves the original ChannelGroupException contract. Remaining interface documentation and per-channel/live partial-completion API decisions remain open.",
+        "scope": "Reviewed server-first lifecycle/enumeration, matcher fan-out, retained buffer/holder views, stayClosed admission, close snapshots and immutable per-channel Task lookup/iteration/live completion. RemoveById preserves native typed removal and existing Remove(null) behavior; replacement channels remain protected from old close callbacks. Group comparison and remaining inherited set-surface/documentation decisions stay open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
-          "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
+          "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelGroupTest.cs"
         ]
       }
     },
@@ -1834,8 +1864,28 @@
       "sha256": "1bfd7b864d50a4aa8b28763bb27cdd122141d0bdc6093c8b02073e5717440ddd",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
+        "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs"
+      ],
+      "review": {
+        "scope": "The aggregate Task and immutable channel-to-Task dictionary jointly retain completion, channel lookup, read-only iteration, live partial success/failure and original cause correlation. Group identity remains the receiver. Native await/WaitAsync replaces JVM listener and blocking methods; caller cancellation withdraws observation without canceling channel producers. Task has no external completion setters. The JVM future deadlock hook is intentionally absent from native Task; library owner paths remain nonblocking. All original comments are preserved next to the corresponding shared Task/map construction and completion roles.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
+          "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
+          "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/group/ChannelGroupFutureListener.java",
@@ -1876,19 +1926,21 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs"
       ],
       "comments": {
         "status": "preserved",
         "uniqueCount": 21,
         "preservedCount": 21,
         "unreviewedCount": 0,
-        "scope": "Original comments retained at corresponding reviewed CLR declarations and operations; any remaining text stays explicitly unreviewed."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
-        "scope": "Reviewed server-first lifecycle/enumeration, matcher fan-out, retained independent buffer/holder views, stayClosed admission and close-completion snapshots. Task completion waits for every selected channel and reports all failed channel/cause pairs through ChannelGroupException. ChannelId-based removal, group comparison and live per-channel/partial completion views remain unreviewed.",
+        "scope": "Reviewed server-first lifecycle/enumeration, matcher fan-out, retained buffer/holder views, stayClosed admission, close snapshots and immutable per-channel Task lookup/iteration/live completion. RemoveById preserves native typed removal and existing Remove(null) behavior; replacement channels remain protected from old close callbacks. Group comparison and remaining inherited set-surface/documentation decisions stay open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelGroupTest.cs"
@@ -1900,25 +1952,27 @@
       "sha256": "238296963ecbcefa9f04c93cc6cedc0b6ec93136555f7b997cb8904b3d943485",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "in-progress",
+      "status": "clr-adapted",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
         "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs"
       ],
       "review": {
-        "scope": "Task.WhenAll replaces listener counting and native await replaces Java blocking/listener methods. CompleteAsync handles empty groups, waits for all children, and collects channel-correlated failures and canceled child Tasks. Live partial-success/failure and per-channel future lookup views still need an explicit CLR API decision; this entry is not complete.",
+        "scope": "The aggregate Task and immutable channel-to-Task dictionary jointly retain completion, channel lookup, read-only iteration, live partial success/failure and original cause correlation. Group identity remains the receiver. Native await/WaitAsync replaces JVM listener and blocking methods; caller cancellation withdraws observation without canceling channel producers. Task has no external completion setters. The JVM future deadlock hook is intentionally absent from native Task; library owner paths remain nonblocking. All original comments are preserved next to the corresponding shared Task/map construction and completion roles.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
         ]
       },
       "comments": {
-        "status": "partial",
+        "status": "preserved",
         "uniqueCount": 4,
-        "preservedCount": 1,
-        "unreviewedCount": 3,
-        "scope": "Original comments retained at corresponding reviewed CLR declarations and operations; any remaining text stays explicitly unreviewed."
+        "preservedCount": 4,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -2087,7 +2141,7 @@
         "uniqueCount": 9,
         "preservedCount": 3,
         "unreviewedCount": 6,
-        "scope": "The managed inbound I/O phase dispatches accepted socket connections and reads before ordinary tasks. The return value counts distinct channels whose completion callbacks ran. Wakeups, timer expirations, read admission and rearming are excluded. Generic raw-handle handler selection, send/connect phases and remaining original comments are open."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -2329,7 +2383,7 @@
         "uniqueCount": 34,
         "preservedCount": 22,
         "unreviewedCount": 12,
-        "scope": "Original comments remain at corresponding methods. JVM handler, synchronous bulk invocation, and remaining backend comments await review."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -2449,22 +2503,25 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 32,
         "preservedCount": 1,
         "unreviewedCount": 31,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
-        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open.",
+        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open. Output-shutdown mechanics and original shared comments now reside in AbstractChannel.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketShutdownContractTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
         ]
       }
     },
@@ -2504,7 +2561,7 @@
         "uniqueCount": 60,
         "preservedCount": 12,
         "unreviewedCount": 48,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -2544,7 +2601,7 @@
         "uniqueCount": 17,
         "preservedCount": 10,
         "unreviewedCount": 7,
-        "scope": "Original comments remain at reviewed loop, socket, owner-batch and original/native test counterparts. Backend-specific context is labeled; no detached comment archive. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -2611,7 +2668,7 @@
         "uniqueCount": 90,
         "preservedCount": 1,
         "unreviewedCount": 89,
-        "scope": "CLR async socket operations supply inbound readiness without SelectionKey or selector rebuild. The owner-dispatch, event-count and directly driven listener contracts are implemented. Other backend-specific selection, raw registration and lifecycle comments await review."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -3506,7 +3563,7 @@
         "uniqueCount": 20,
         "preservedCount": 11,
         "unreviewedCount": 9,
-        "scope": "Original comments remain at reviewed runtime declarations and source test/helpers; source JVM loader configuration context is retained alongside explicit CLR registration notes. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
         "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels. A native connect error closes the datagram channel, preserving the original socket failure. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices. Linux UDP uses per-packet original destination metadata when enabled, falling back to the bound address when absent.",
@@ -3583,7 +3640,7 @@
         "uniqueCount": 23,
         "preservedCount": 13,
         "unreviewedCount": 10,
-        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
     {
@@ -3684,7 +3741,7 @@
         "uniqueCount": 29,
         "preservedCount": 11,
         "unreviewedCount": 18,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
         "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner.",
@@ -3848,19 +3905,22 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "comments": {
         "status": "partial",
         "uniqueCount": 2,
         "preservedCount": 1,
         "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Output-shutdown mechanics and original shared comments now reside in AbstractChannel.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
         ]
       }
     },
@@ -7880,13 +7940,13 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 38,
-    "portedOriginalFixtures": 62,
-    "portedOriginalMethods": 449,
-    "supplementalClrCases": 266,
+    "reviewedImplementationFiles": 40,
+    "portedOriginalFixtures": 67,
+    "portedOriginalMethods": 456,
+    "supplementalClrCases": 290,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
-    "testsuiteSources": 26,
+    "testsuiteSources": 31,
     "sourceDisabledMethodsMapped": 8,
     "nativeTestSources": 8,
     "mappedInheritedScenarios": 2
@@ -8363,13 +8423,45 @@
         "test/Netty.NET.Transport.Tests/ChannelCoreContractTest.cs",
         "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
       ]
+    },
+    {
+      "subject": "Shared output shutdown and full-close default",
+      "decision": "AbstractChannel owns output admission, queue causes and the shutdown event. Socket streams override only the native shutdown primitive. Default shutdown uses ordinary CLR close/lifecycle cleanup because open/active/registration state is held by AbstractChannel. Queue admission closes before native work, while references and completion are released afterward. Native I/O exception classes retain the source AutoClose policy; datagrams retain their continue-per-message exception behavior.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+      ]
+    },
+    {
+      "subject": "Native per-channel group operation observation",
+      "decision": "Async methods return a native aggregate Task and optionally an out IReadOnlyDictionary<IChannel, Task>. The immutable snapshot supplies lookup and Values iteration; standard Task status queries supply source partial completion. Successful = IsCompletedSuccessfully; failed = IsCompleted && !IsCompletedSuccessfully, including cancellation. The group is the receiver. There is no new Future/Promise wrapper or public producer. WaitAsync cancellation withdraws the observer; it does not cancel children. JVM listener removal and the blocking deadlock hook are adapted to the native async-observer model; Task.Wait itself has no JVM guard. RemoveById avoids making existing Remove(null) ambiguous.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
+        "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
+      ]
+    },
+    {
+      "subject": "Manual read before activation and decoder test adaptation",
+      "decision": "Completion-based sockets cannot issue a receive before connect. Retain that read permission until activation, consume it through the existing owner read path and clear it with read-pending state. The not-yet-connected fixture uses a four-byte native test collector with the source ByteToMessageDecoder manual continuation for fragmented input; no codec implementation is claimed.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "test/Netty.NET.Transport.Tests/SocketChannelNotYetConnectedSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+      ],
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/nio/AbstractNioChannel.java",
+        "codec-base/src/main/java/io/netty/handler/codec/ByteToMessageDecoder.java"
+      ]
     }
   ],
   "openWork": [
     {
       "area": "Socket read admission",
       "state": "partially-verified",
-      "detail": "TCP receive, TCP accept and UDP receive now withhold a completed native operation after AutoRead=false; read resumes without dropping input. Deregistered TCP input waits for registration and moves to the new worker. Native integration tests also cover buffer/socket cleanup while paused. Remaining: further registration/rejection and half-closure variants, complete read-batch budgets, and original socket/IoHandler fixture review. Native accept batching now uses the original server message allocator and proves 2/1 grouping, partial-batch error ordering, empty-failure manual permission retention and fatal closure."
+      "detail": "TCP receive, TCP accept and UDP receive now withhold a completed native operation after AutoRead=false; read resumes without dropping input. Deregistered TCP input waits for registration and moves to the new worker. Native integration tests also cover buffer/socket cleanup while paused. Remaining: further registration/rejection and half-closure variants, complete read-batch budgets, and original socket/IoHandler fixture review. Native accept batching now uses the original server message allocator and proves 2/1 grouping, partial-batch error ordering, empty-failure manual permission retention and fatal closure. Five original socket read-state/EOF fixtures now retain initial no-read state, both read-caller routes, reset-per-message read permission and all 32 MiB through an intentional read pause and FIN. Native requests made before activation are deferred rather than discarded."
     },
     {
       "area": "Pipeline executor lifecycle",
@@ -8389,7 +8481,7 @@
     {
       "area": "Bootstrap and groups",
       "state": "test-and-implementation-review",
-      "detail": "ServerBootstrapTest is 6/6. BootstrapTest has all nineteen declarations reviewed: eighteen mappings plus one JVM failure-promise representation exclusion with a native Task alternative. Client/parent/child live configuration views, ordered read-only snapshots, resolver identity/reset, late registration and async resolution are covered. Group Task completion now retains every failed channel and cause after all children complete; stayClosed and server-first ordering are covered. Remaining runtime contracts/comments, ChannelId removal, group comparison and per-channel/live partial-completion API decisions stay open."
+      "detail": "Existing Bootstrap and ServerBootstrap source mappings remain intact. Group completion now retains channel/cause pairs, immutable per-channel Task lookup and iteration, live partial completion, close snapshots, source stayClosed admission and server-first order. RemoveById is implemented. Remaining group comparison and inherited set/documentation decisions stay open."
     },
     {
       "area": "Portable remaining inventory",
@@ -8416,8 +8508,8 @@
     },
     {
       "area": "Generic channel write-failure fallback",
-      "state": "review-gap",
-      "detail": "The complete AbstractChannelTest declaration review and seven portable mappings are recorded. IOException/native SocketException auto-close, initial causes, close-before-release ownership and inactive-flush reentrancy are verified. The generic non-I/O/AutoClose=false output-shutdown fallback still needs review against AbstractUnsafe.handleWriteError; the stream-specific implementation already has its own mapped fixtures."
+      "state": "verified-for-reviewed-contracts",
+      "detail": "Shared generic output shutdown, default full close and overridden half close are implemented. The twelve-way AutoClose/error-kind/override matrix, native primitive failure, reentrant write rejection and both manual-read-before-connect allocator cases pass on Windows and Linux. Restoring only the previous write-error and read-admission branches while retaining new hook signatures produces ten failures and six passes in the same sixteen native cases. Other AbstractChannel contracts/comments remain open."
     }
   ],
   "supplementalTests": [
@@ -8464,7 +8556,8 @@
     "test/Netty.NET.Transport.Tests/LinuxListenerOptionsContractTest.cs",
     "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs",
     "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -13423,14 +13516,267 @@
           "isolatedLinuxTcpFastOpenSysctl": 3
         }
       }
+    },
+    {
+      "checkpoint": "b6d2b0cd522787179b1003c16bcc5cbe8197bfac",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "javaOriginalPassed": 497,
+        "javaOriginalInvocations": 502,
+        "transportJavaOriginalPassed": 392,
+        "coreTransportJavaOriginalPassed": 322,
+        "eventLoopJavaOriginalPassed": 24,
+        "ioLifecycleJavaOriginalPassed": 15,
+        "testsuiteJavaJUnitInvocations": 77,
+        "datagramJavaJUnitInvocations": 37,
+        "datagramJavaAllocatorExecutions": 74,
+        "shutdownJavaJUnitInvocations": 14,
+        "shutdownJavaPassedWrappers": 12,
+        "shutdownJavaBackendBypassedWrappers": 1,
+        "shutdownJavaPlatformAbortedWrappers": 1,
+        "mappedOriginalMethods": 449,
+        "originalExecutedCases": 534,
+        "originalSkippedCases": 53,
+        "transportMappedOriginalExecutions": 368,
+        "testsuiteMappedOriginalExecutions": 150,
+        "datagramMappedOriginalExecutions": 68,
+        "shutdownMappedOriginalExecutions": 36,
+        "javaOnlyReviewedCases": 26,
+        "supplementalExecutedCases": 242,
+        "debug": {
+          "failed": 0,
+          "passed": 776,
+          "skipped": 77,
+          "total": 853
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 776,
+          "skipped": 77,
+          "total": 853
+        },
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "failed": 0,
+            "passed": 64,
+            "skipped": 0,
+            "total": 64
+          },
+          "Netty.NET.Transport.Tests": {
+            "failed": 0,
+            "passed": 776,
+            "skipped": 77,
+            "total": 853
+          },
+          "Netty.NET.Buffer.Tests": {
+            "failed": 0,
+            "passed": 29556,
+            "skipped": 0,
+            "total": 29556
+          },
+          "Netty.NET.Common.Tests": {
+            "failed": 0,
+            "passed": 2678,
+            "skipped": 14,
+            "total": 2692
+          }
+        },
+        "solutionPassed": 33074,
+        "solutionSkipped": 91,
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "javaEvidence": "Carries forward previous evidence. Unmodified pinned AbstractChannelTest and DefaultChannelGroupTest execute through JUnit Jupiter on Windows and Linux: nine passed and one Java-8-only JRE skip on each platform. Eight new AbstractChannel methods pass on Java; seven are mapped to CLR and the two JVM process-discovery declarations are explicitly reviewed outside the Guid identity model.",
+        "note": "Windows Release solution: 33074 passed, 91 skipped, zero failures. Transport Debug/Release/checked Release: 776 passed and 77 skipped. Linux Transport Release: 845 passed and eight existing source-disabled skips. Checked focus: 42/42 on both platforms. In an isolated copy using the previous runtime implementations, the same focus has 14 failures and 28 passes. No new source-independent skip was added.",
+        "commands": [
+          "python artifacts/transport-core/run-channel-core-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/channel-core-results --logger \"trx;LogFilePrefix=channel-core\"",
+          "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/channel-core-checked-out -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-channel-core-regressions.py",
+          "python artifacts/transport-core/run-channel-core-linux.py",
+          "pwsh -File tools/Test-TransportPortingManifest.ps1"
+        ],
+        "domainJavaOriginalExecutions": 8,
+        "echoJavaJUnitInvocations": 7,
+        "echoJavaAllocatorExecutions": 14,
+        "domainMappedOriginalExecutions": 7,
+        "echoMappedOriginalExecutions": 8,
+        "scalingJavaOriginalExecutions": 2,
+        "scalingMappedOriginalExecutions": 2,
+        "manualJavaOriginalExecutions": 17,
+        "manualMappedOriginalExecutions": 13,
+        "ioPhaseJavaOriginalExecutions": 4,
+        "ioPhaseMappedOriginalExecutions": 4,
+        "outboundJavaJUnitInvocations": 6,
+        "outboundJavaAllocatorExecutions": 12,
+        "outboundMappedOriginalExecutions": 12,
+        "gatheringJavaJUnitInvocations": 6,
+        "gatheringJavaAllocatorExecutions": 12,
+        "gatheringMappedOriginalExecutions": 12,
+        "mappedUdpJavaJUnitInvocations": 11,
+        "mappedUdpJavaAllocatorExecutions": 22,
+        "mappedUdpOriginalExecutions": 22,
+        "unixUdpIcmpJavaJUnitInvocations": 2,
+        "unixUdpIcmpJavaAllocatorExecutions": 4,
+        "supplementalSkippedCases": 24,
+        "linuxDatagramRelease": {
+          "total": 117,
+          "passed": 117,
+          "failed": 0,
+          "skipped": 0,
+          "baselineFailures": [],
+          "unixIcmpOriginalCasesPassed": 4,
+          "ipv6SourceMembershipCasesPassed": 2,
+          "ipv6SourcePacketCasesPassed": 2,
+          "ipv6MulticastOriginalCasesPassed": 2,
+          "ipv6TrafficClassConfigurationCasesPassed": 1,
+          "udpDisconnectCasesPassed": 6,
+          "multicastIsolationCasesPassed": 4,
+          "nativeConnectFailureCasesPassed": 1
+        },
+        "ipv6MulticastJavaJUnitInvocations": 1,
+        "ipv6MulticastJavaAllocatorExecutions": 2,
+        "linuxTransportRelease": {
+          "total": 853,
+          "passed": 845,
+          "failed": 0,
+          "skipped": 8
+        },
+        "linuxOriginalRerun": {
+          "udpJavaWrappersPassed": 3,
+          "udpJavaAllocatorRunsPassed": 6,
+          "unixHalfCloseJavaWrappersPassed": 1,
+          "unixHalfCloseJavaAllocatorRunsPassed": 2,
+          "unixHalfCloseClrCasesPassed": 8,
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+        },
+        "linuxMulticastOriginalRerun": {
+          "regularJavaWrappersPassed": 2,
+          "regularJavaAllocatorRunsPassed": 4,
+          "mixedJavaWrapperFailed": 1
+        },
+        "reentrantEvidence": {
+          "javaOriginalPassed": 6,
+          "clrOriginalPassed": 6,
+          "clrSupplementalPassed": 2,
+          "baselineFailed": 4,
+          "focusedRepeats": 8
+        },
+        "localThreadModelEvidence": {
+          "javaOriginalPassed": 2,
+          "clrOriginalPassed": 2,
+          "sourceDisabledSkipped": 6,
+          "clrSupplementalPassed": 2,
+          "baselineFailed": 2,
+          "focusedRepeats": 3
+        },
+        "threadedIoEvidence": {
+          "javaOriginalPassed": 2,
+          "clrOriginalPassed": 2,
+          "clrSupplementalPassed": 11,
+          "baselineTcpOrderingFailed": 1
+        },
+        "rawIoEvidence": {
+          "newJavaOriginalPassed": 4,
+          "javaOriginalRerun": 2,
+          "newClrOriginalPassed": 4,
+          "upgradedClrOriginalPassed": 2,
+          "clrSupplementalPassed": 5,
+          "sourceDisabledSkipped": 1,
+          "isolatedDisabledProbePassed": 1
+        },
+        "nativeMappedOriginalExecutions": 16,
+        "udpReadPhaseEvidence": {
+          "javaNativeWrappersPassed": 6,
+          "javaNativeAllocatorExecutions": 12,
+          "clrOriginalPassed": 12,
+          "previousImplementationRegressionFailures": 1,
+          "checkedClrRepeatRuns": 8,
+          "checkedClrCasesPerRepeat": 13
+        },
+        "udpSegmentationEvidence": {
+          "javaWrappersPassed": 5,
+          "javaOriginalPermutationRows": 40,
+          "windowsOriginalPassed": 4,
+          "windowsOriginalSkipped": 6,
+          "linuxOriginalPassed": 10,
+          "linuxSupplementalPassed": 4,
+          "windowsSupplementalPassed": 2,
+          "windowsSupplementalSkipped": 2
+        },
+        "mappedInheritedScenarios": 2,
+        "udpOriginalDestinationEvidence": {
+          "javaWrappersPassed": 2,
+          "javaMixedFamilyRouteFailureRerun": 1,
+          "windowsOriginalSkipped": 5,
+          "linuxOriginalScenariosPassed": 5,
+          "linuxSupplementalPassed": 5,
+          "windowsSupplementalPassed": 1,
+          "windowsSupplementalSkipped": 4
+        },
+        "linuxSocketOptionsEvidence": {
+          "javaPassed": 13,
+          "javaAssumptionAborted": 3,
+          "javaIsolatedVersionGatePassed": 3,
+          "javaSourceDisabledProbePassed": 1,
+          "linuxClrOriginalPassed": 16,
+          "linuxClrSupplementalPassed": 1,
+          "linuxClrSourceDisabledProbePassed": 1,
+          "linuxClrCheckedFocusedPassed": 18,
+          "windowsNewSkipped": 18
+        },
+        "linuxTcpConnectOptionsEvidence": {
+          "javaMd5OriginalPassed": 4,
+          "linuxClrOriginalPassed": 4,
+          "linuxClrSupplementalPassed": 5,
+          "linuxClrCheckedFocusedPassed": 9,
+          "windowsClrSupplementalPassed": 1,
+          "windowsNewSkipped": 8,
+          "portCacheFailureBeforeFix": 2,
+          "warningCleanupVerified": true
+        },
+        "clientFastOpenEvidence": {
+          "javaNewWrappersPassed": 7,
+          "javaEpollBackendWrappersRerun": 7,
+          "javaBackendAllocatorRows": 56,
+          "javaEnabledKernelBackendAllocatorRows": 84,
+          "javaEnabledKernelWrappersRerun": 14,
+          "windowsClrOriginalPassed": 14,
+          "linuxClrOriginalPassed": 14,
+          "linuxClrSupplementalPassed": 6,
+          "linuxClrCheckedFocusedPassed": 20,
+          "windowsNewSupplementalSkipped": 6,
+          "nativeSynDataVerified": true,
+          "isolatedLinuxTcpFastOpenSysctl": 3
+        },
+        "coreChannelEvidence": {
+          "originalFixtureDeclarations": 9,
+          "clrOriginalMapped": 7,
+          "jvmOnlyReviewed": 2,
+          "newSupplementalCases": 24,
+          "previousRuntimeFailedFocusedCases": 14,
+          "focusedCases": 42,
+          "windowsCheckedFocusedPassed": 42,
+          "linuxCheckedFocusedPassed": 42,
+          "javaNewStartedPassed": 8,
+          "javaJreConditionalSkipped": 1,
+          "javaExistingGroupRerunPassed": 1,
+          "javaWindowsPassed": 9,
+          "javaLinuxPassed": 9
+        }
+      }
     }
   ],
   "nextWork": [
-    "Review the generic AbstractChannel non-I/O/AutoClose=false output-shutdown fallback against original consumers and tests; portable AbstractChannelTest is now fully reviewed.",
-    "Decide a CLR-native per-channel/live partial-completion surface for channel groups. Channel-correlated final failures are implemented; future/lookup/progress representation remains open. Review ChannelId removal and group comparison separately.",
-    "Continue remaining pending Transport fixtures against concrete CLR contracts, including native backend admission/operation submission and the source-disabled writability scenario. A pending source is unreviewed, not automatically a missing CLR feature.",
-    "Finish original runtime comments at corresponding reviewed declarations. Preserve the existing exact comment inventory and per-method source mappings.",
-    "Retain the mixed-family IPv6-bind/IPv4-multicast original Java route failure as a platform limitation; do not infer original success from the wildcard CLR adaptation."
+    "Continue concrete pending Transport runtime/fixture gaps against original consumers. Shared output shutdown, pre-activation read permission and native per-channel group Task observation are now implemented; do not reopen these as unimplemented work.",
+    "Review remaining group comparison/inherited set-surface decisions and unreviewed auxiliary listener/matcher/iterator source roles against standard CLR collections and delegates. Do not create JVM future or collection facades to make file counts match.",
+    "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
+    "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
+    "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -15378,6 +15724,279 @@
         "preservedCount": 3,
         "unreviewedCount": 0,
         "scope": "All original fixture comments are preserved."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketChannelNotYetConnectedTest.java",
+      "sha256": "59a75f0bad963adf9cc98cbfd5cfc4bc5170deed67d9c95727e94a923905dd7b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketChannelNotYetConnectedSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketChannelNotYetConnectedSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testShutdownNotYetConnected",
+          "clrMethod": "TestShutdownNotYetConnected",
+          "adaptation": "Keep bound-but-unconnected input/output shutdown and native NotConnected failures.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "readMustBePendingUntilChannelIsActive",
+          "clrMethod": "ReadMustBePendingUntilChannelIsActive",
+          "adaptation": "Keep read() from handlerAdded while inactive, server integer 42, at-most-four accumulated bytes and exact decode. The native test collector retains the source decoder's partial-input continuation; no codec library implementation is claimed.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketChannelEOFTest.java",
+      "sha256": "b6752b38bd61db410d0d23c84c0514bc0e938b877643ae321e110f433b8f2736",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketChannelEOFSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketChannelEOFSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "readAllPendingOnEOF",
+          "clrMethod": "ReadAllPendingOnEOF",
+          "adaptation": "Keep 32 MiB, 8 KiB chunks, deterministic byte pattern, SHA-256, a single 750 ms pause after 128 KiB, manual reads, ten-second result deadlines and server output FIN. A native async producer replaces the dedicated blocking Java server thread and remains owned until cleanup.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketReadPendingTest.java",
+      "sha256": "04921696d579d6890a6fdfae5d3e9c760a99891d88b705ec1c102bd7e2caf905",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketReadPendingSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketReadPendingSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testReadPendingIsResetAfterEachRead",
+          "clrMethod": "TestReadPendingIsResetAfterEachRead",
+          "adaptation": "Keep both directions, four-byte writes, one-byte buffers, two reads per allocator cycle, read() only in the first callback, original five-second read/one-second no-second-cycle windows and count exactly two.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketAutoReadTest.java",
+      "sha256": "0be20f93488a15e2d980dcb9c31e1789b1bed39e3978696e0bbf2eb6f7a72cd0",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketAutoReadSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketReadPendingSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketAutoReadSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketReadPendingSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAutoReadOffDuringReadOnlyReadsOneTime",
+          "clrMethod": "TestAutoReadOffDuringReadOnlyReadsOneTime",
+          "adaptation": "Keep three one-byte reads, disabling auto-read in the first callback and both original read() caller routes. Preserve final count three for owner-issued reads and two for external reads on both peers.",
+          "nativeCases": [
+            [
+              false,
+              false
+            ],
+            [
+              false,
+              true
+            ],
+            [
+              true,
+              false
+            ],
+            [
+              true,
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 9,
+        "preservedCount": 9,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketDataReadInitialStateTest.java",
+      "sha256": "de3a3a95a5234e966f6423ef47159bc3e89412df4c97424f9b16890971317ece",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAutoReadOffNoDataReadUntilReadCalled",
+          "clrMethod": "TestAutoReadOffNoDataReadUntilReadCalled",
+          "adaptation": "Keep parent, accepted child and client AUTO_READ=false, three original 100 ms no-read windows, one-byte echo and independently granted accept/read/read permissions.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamMethod": "testAutoReadOnDataReadImmediately",
+          "clrMethod": "TestAutoReadOnDataReadImmediately",
+          "adaptation": "Keep parent, child and client AUTO_READ=true and require both echo reads without explicit Read calls.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     }
   ],

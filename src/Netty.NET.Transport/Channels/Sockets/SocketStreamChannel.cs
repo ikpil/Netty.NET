@@ -35,7 +35,6 @@ public abstract class SocketStreamChannel : AbstractChannel
     private bool _reading;
     private bool _readRequested;
     private volatile bool _inputShutdown;
-    private volatile bool _outputShutdown;
     private bool _inputReadComplete;
     private int _gatheringWriteLimit;
     protected SocketStreamChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false, 16))
@@ -92,7 +91,7 @@ public abstract class SocketStreamChannel : AbstractChannel
     }
     protected override object FilterOutboundMessage(object message)
     {
-        if (_outputShutdown)
+        if (OutboundBuffer.IsClosed)
             throw new IOException("Socket output is shut down.");
         return message is ByteBuf or IFileRegion ? message : throw new NotSupportedException("Stream writes require ByteBuf or IFileRegion.");
     }
@@ -105,7 +104,7 @@ public abstract class SocketStreamChannel : AbstractChannel
 
     internal override Task<int> TryGatherWriteAsync()
     {
-        if (_outputShutdown || !SupportsGatheringWrites || OutboundBuffer.Current is not ByteBuf first ||
+        if (OutboundBuffer.IsClosed || !SupportsGatheringWrites || OutboundBuffer.Current is not ByteBuf first ||
             (OutboundBuffer.Size == 1 && first.ReadableSequence.IsSingleSegment))
             return null;
 
@@ -331,43 +330,8 @@ public abstract class SocketStreamChannel : AbstractChannel
         }
     }
     public bool IsInputShutdown => _inputShutdown || !IsActive;
-    public bool IsOutputShutdown => _outputShutdown || !IsActive;
-    protected override void HandleWriteError(Exception error)
-    {
-        if (OutboundBuffer.IsClosed) return;
-        // Java SocketException is an IOException; the CLR SocketException hierarchy is different.
-        if (Config.IsAutoClose() && error is IOException or SocketException)
-        {
-            CloseOnWriteError(error);
-            return;
-        }
-        try { ShutdownOutput(error); }
-        catch (Exception shutdownFailure) { Pipeline.FireExceptionCaught(shutdownFailure); }
-    }
+    public bool IsOutputShutdown => OutboundBuffer.IsClosed || !IsActive;
     public Task ShutdownOutputAsync() => OnLoopAsync(() => ShutdownOutput(null));
-    private void ShutdownOutput(Exception cause)
-    {
-        EnsureOpen();
-        if (_outputShutdown) throw new IOException("Socket output is shut down.");
-        // Disallow adding any messages and flushes to outboundBuffer.
-        _outputShutdown = true;
-        // When a side enables SO_LINGER and calls showdownOutput(...) to start TCP half-closure
-        // we can not call doDeregister here because we should ensure this side in fin_wait2 state
-        // can still receive and process the data which is send by another side in the close_wait state。
-        // See https://github.com/netty/netty/issues/11981
-        try
-        {
-            // The shutdown function does not block regardless of the SO_LINGER setting on the socket
-            // so we don't need to use GlobalEventExecutor to execute the shutdown
-            DoShutdownOutput();
-        }
-        finally
-        {
-            OutboundBuffer.Close(cause == null ? new ChannelOutputShutdownException("Channel output shutdown")
-                : new ChannelOutputShutdownException("Channel output shutdown", cause));
-            Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
-        }
-    }
     public Task ShutdownInputAsync() => OnLoopAsync(() =>
     {
         EnsureOpen();
@@ -377,7 +341,7 @@ public abstract class SocketStreamChannel : AbstractChannel
             if (!_reading && (Config.IsAutoRead() || _readRequested)) DoBeginRead();
         }
     });
-    protected virtual void DoShutdownOutput() => Socket.Shutdown(SocketShutdown.Send);
+    protected override void DoShutdownOutput() => Socket.Shutdown(SocketShutdown.Send);
     protected virtual void DoShutdownInput() => Socket.Shutdown(SocketShutdown.Receive);
     public async Task ShutdownAsync()
     {

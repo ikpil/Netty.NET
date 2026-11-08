@@ -31,7 +31,7 @@ namespace Netty.NET.Transport.Channels.Groups;
 /**
  * The default {@link ChannelGroup} implementation.
  */
-public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
+public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>
 {
     private readonly ConcurrentDictionary<IChannelId, IChannel> _channels = new();
     private readonly bool _stayClosed;
@@ -96,6 +96,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
         return added;
     }
     public bool Remove(IChannel channel) => channel != null && _channels.TryRemove(new KeyValuePair<IChannelId, IChannel>(channel.Id, channel));
+    public bool RemoveById(IChannelId id) => id != null && _channels.TryRemove(id, out _);
     public bool Contains(IChannel channel) => channel != null && _channels.TryGetValue(channel.Id, out var value) && ReferenceEquals(value, channel);
     /**
      * Returns the {@link Channel} which has the specified {@link ChannelId}.
@@ -114,7 +115,8 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task CloseAsync(Func<IChannel, bool> matcher = null)
+    public Task CloseAsync(Func<IChannel, bool> matcher = null) => CloseAsync(out _, matcher);
+    public Task CloseAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         if (_stayClosed)
         {
@@ -126,7 +128,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
             // See https://github.com/netty/netty/issues/4020
             Volatile.Write(ref _closed, 1);
         }
-        return OperateAsync(async channel => { await channel.CloseAsync().ConfigureAwait(false); Remove(channel); }, matcher, true);
+        return OperateAsync(async channel => { await channel.CloseAsync().ConfigureAwait(false); Remove(channel); }, matcher, true, out operations);
     }
     /**
      * Disconnects all {@link Channel}s in this group from their remote peers,
@@ -135,7 +137,9 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task DisconnectAsync(Func<IChannel, bool> matcher = null) => OperateAsync(channel => channel.DisconnectAsync(), matcher, true);
+    public Task DisconnectAsync(Func<IChannel, bool> matcher = null) => DisconnectAsync(out _, matcher);
+    public Task DisconnectAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
+        OperateAsync(channel => channel.DisconnectAsync(), matcher, true, out operations);
     /**
      * @deprecated This method will be removed in the next major feature release.
      *
@@ -145,7 +149,9 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task DeregisterAsync(Func<IChannel, bool> matcher = null) => OperateAsync(channel => channel.DeregisterAsync(), matcher, true);
+    public Task DeregisterAsync(Func<IChannel, bool> matcher = null) => DeregisterAsync(out _, matcher);
+    public Task DeregisterAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
+        OperateAsync(channel => channel.DeregisterAsync(), matcher, true, out operations);
     /**
      * Writes the specified {@code message} to all {@link Channel}s in this
      * group. If the specified {@code message} is an instance of
@@ -181,7 +187,9 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task WriteAsync(object message, Func<IChannel, bool> matcher = null) => WriteCoreAsync(message, matcher, false);
+    public Task WriteAsync(object message, Func<IChannel, bool> matcher = null) => WriteAsync(message, out _, matcher);
+    public Task WriteAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
+        WriteCoreAsync(message, matcher, false, out operations);
     /**
      * Shortcut for calling {@link #write(Object)} and {@link #flush()}.
      */
@@ -193,8 +201,10 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      * Shortcut for calling {@link #write(Object, ChannelMatcher, boolean)} and {@link #flush()} and only act on
      * {@link Channel}s that are matched by the {@link ChannelMatcher}.
      */
-    public Task WriteAndFlushAsync(object message, Func<IChannel, bool> matcher = null) => WriteCoreAsync(message, matcher, true);
-    private Task WriteCoreAsync(object message, Func<IChannel, bool> matcher, bool flush)
+    public Task WriteAndFlushAsync(object message, Func<IChannel, bool> matcher = null) => WriteAndFlushAsync(message, out _, matcher);
+    public Task WriteAndFlushAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
+        WriteCoreAsync(message, matcher, true, out operations);
+    private Task WriteCoreAsync(object message, Func<IChannel, bool> matcher, bool flush, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         ArgumentNullException.ThrowIfNull(message);
         var tasks = new List<KeyValuePair<IChannel, Task>>();
@@ -215,6 +225,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
             catch (Exception error) { ReferenceCountUtil.Release(copy); tasks.Add(new(channel, Task.FromException(error))); }
         }
         ReferenceCountUtil.Release(message);
+        operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
     /**
@@ -230,7 +241,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
      */
     public DefaultChannelGroup Flush(Func<IChannel, bool> matcher = null)
     { foreach (var channel in _channels.Values) if (channel is not IServerChannel && (matcher == null || matcher(channel))) channel.Flush(); return this; }
-    private Task OperateAsync(Func<IChannel, Task> operation, Func<IChannel, bool> matcher, bool includeServers)
+    private Task OperateAsync(Func<IChannel, Task> operation, Func<IChannel, bool> matcher, bool includeServers, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         var tasks = new List<KeyValuePair<IChannel, Task>>();
         foreach (var channel in _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1))
@@ -241,37 +252,20 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>
             { tasks.Add(new(channel, operation(channel))); }
             catch (Exception error) { tasks.Add(new(channel, Task.FromException(error))); }
         }
+        operations = Snapshot(tasks);
         return CompleteAsync(tasks);
-    }
-    private static async Task CompleteAsync(List<KeyValuePair<IChannel, Task>> operations)
-    {
-        // Done on arrival?
-        if (operations.Count == 0)
-            return;
-        try { await Task.WhenAll(operations.Select(pair => pair.Value)).ConfigureAwait(false); }
-        catch
-        {
-            // WhenAll waits for every selected channel. Keep the complete set of channel/cause pairs,
-            // including canceled child tasks, rather than exposing just the exception rethrown by await.
-            var failures = new List<KeyValuePair<IChannel, Exception>>();
-            foreach (var pair in operations)
-            {
-                if (pair.Value.IsCompletedSuccessfully) continue;
-                try { pair.Value.GetAwaiter().GetResult(); }
-                catch (Exception error)
-                {
-                    failures.Add(new(pair.Key, pair.Value.Exception is { InnerExceptions.Count: > 1 } multiple ? multiple : error));
-                }
-            }
-            throw new ChannelGroupException(failures);
-        }
     }
     /**
      * Returns the {@link ChannelGroupFuture} which will be notified when all {@link Channel}s that are part of this
      * {@link ChannelGroup}, at the time of calling, are closed.
      */
-    public Task NewCloseFuture(Func<IChannel, bool> matcher = null) =>
-        CompleteAsync(_channels.Values.Where(channel => matcher == null || matcher(channel))
-            .Select(channel => new KeyValuePair<IChannel, Task>(channel, channel.CloseCompletion)).ToList());
+    public Task NewCloseFuture(Func<IChannel, bool> matcher = null) => NewCloseFuture(out _, matcher);
+    public Task NewCloseFuture(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
+    {
+        var tasks = _channels.Values.Where(channel => matcher == null || matcher(channel))
+            .Select(channel => new KeyValuePair<IChannel, Task>(channel, channel.CloseCompletion)).ToList();
+        operations = Snapshot(tasks);
+        return CompleteAsync(tasks);
+    }
     public override string ToString() => $"DefaultChannelGroup(name: {Name}, size: {Count})";
 }

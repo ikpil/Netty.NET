@@ -24,6 +24,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
+using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Channels;
 
@@ -36,6 +37,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(AbstractChannel));
     private readonly object _registrationGate = new();
     private Exception _writeCloseCause;
+    private ChannelOutputShutdownException _outputShutdownCause;
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Lazy<IChannelConfig> _config;
     private volatile IEventLoop _eventLoop;
@@ -47,6 +49,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private volatile bool _registered;
     private bool _everRegistered;
     private bool _writing;
+    private bool _readBeforeActive;
     private int _connecting;
     private IRecvByteBufAllocator.IHandle _receiveHandle;
     /**
@@ -134,7 +137,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     {
                         if (firstRegistration)
                             Pipeline.FireChannelActive();
-                        if (Config.IsAutoRead())
+                        if (Config.IsAutoRead() || _readBeforeActive)
                             BeginRead();
                     }
                     ResumeRead();
@@ -238,16 +241,17 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      */
     internal void ClearReadPending()
     {
+        void Clear() { _readBeforeActive = false; DoClearReadPending(); }
         if (!_registered)
         {
             // Best effort if we are not registered yet clear readPending. This happens during channel initialization.
             // NB: We only set the boolean field instead of calling clearReadPending0(), because the SelectionKey is
             // not set yet so it would produce an assertion failure.
             // CLR: there is no SelectionKey; each native backend clears its pending-read flag.
-            DoClearReadPending();
+            Clear();
         }
         else
-            _ = OnLoopAsync(DoClearReadPending);
+            _ = OnLoopAsync(Clear);
     }
     protected Task DispatchReadAsync(Func<bool> readPending, Action read) =>
         DispatchReadResultAsync(readPending, () => { read(); return true; });
@@ -323,7 +327,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         return Operation(() => DoBindAsync(address, cancellationToken), () =>
         {
             if (!wasActive && _active)
-            { Pipeline.FireChannelActive(); if (Config.IsAutoRead()) BeginRead(); }
+            { Pipeline.FireChannelActive(); if (Config.IsAutoRead() || _readBeforeActive) BeginRead(); }
         });
     }
     internal Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
@@ -372,7 +376,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     // Regardless if the connection attempt was cancelled, channelActive() event should be triggered,
                     // because what happened is what happened.
                     if (!wasActive && _active)
-                    { Pipeline.FireChannelActive(); if (!canceled && Config.IsAutoRead()) BeginRead(); }
+                    { Pipeline.FireChannelActive(); if (!canceled && (Config.IsAutoRead() || _readBeforeActive)) BeginRead(); }
                     // If a user cancelled the connection attempt, close the channel, which is followed by channelInactive().
                     if (canceled) _ = CloseTransportAsync();
                     return true;
@@ -417,7 +421,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         { DoClose(); }
         catch (Exception error) { failure = error; }
         var closedCause = NewClosedChannelException();
-        OutboundBuffer.Close(_writeCloseCause ?? closedCause, closedCause);
+        OutboundBuffer.Close(_outputShutdownCause ?? _writeCloseCause ?? closedCause, _outputShutdownCause ?? closedCause);
         void CompleteClose()
         {
             try
@@ -572,8 +576,16 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     internal virtual Task<int> TryGatherWriteAsync() => null;
     internal void BeginRead()
     {
-        if (!_open || !_active)
+        if (!_open)
             return;
+        if (!_active)
+        {
+            // CLR completion-based sockets cannot receive before connect. Preserve the source readPending
+            // permission until activation rather than issuing a native receive on an unconnected socket.
+            _readBeforeActive = true;
+            return;
+        }
+        _readBeforeActive = false;
         try
         { DoBeginRead(); }
         catch (Exception error) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); }
@@ -587,14 +599,59 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     protected virtual void HandleWriteError(Exception error)
     {
         if (OutboundBuffer.IsClosed) return;
+        if (ContinueOnWriteError)
+        {
+            OutboundBuffer.Remove(error);
+            return;
+        }
         // Java SocketException is an IOException; native CLR socket failures use a separate hierarchy.
         if (Config.IsAutoClose() && !ContinueOnWriteError && error is IOException or SocketException)
         {
             CloseOnWriteError(error);
             return;
         }
-        OutboundBuffer.Remove(error);
-        if (Config.IsAutoClose() && !ContinueOnWriteError && !OutboundBuffer.IsClosed) _ = CloseTransportAsync();
+        try { ShutdownOutput(error); }
+        catch (Exception shutdownFailure) { Pipeline.FireExceptionCaught(shutdownFailure); }
+    }
+    /**
+     * Shutdown the output portion of the corresponding {@link Channel}.
+     * For example this will clean up the {@link ChannelOutboundBuffer} and not allow any more writes.
+     * @param cause The cause which may provide rational for the shutdown.
+     */
+    protected void ShutdownOutput(Exception cause)
+    {
+        EnsureOpen();
+        if (OutboundBuffer.IsClosed) throw NewClosedChannelException();
+        // Disallow adding any messages and flushes to outboundBuffer.
+        OutboundBuffer.BeginOutputShutdown();
+        _outputShutdownCause = cause == null ? new ChannelOutputShutdownException("Channel output shutdown")
+            : new ChannelOutputShutdownException("Channel output shutdown", cause);
+        // When a side enables SO_LINGER and calls showdownOutput(...) to start TCP half-closure
+        // we can not call doDeregister here because we should ensure this side in fin_wait2 state
+        // can still receive and process the data which is send by another side in the close_wait state。
+        // See https://github.com/netty/netty/issues/11981
+        try
+        {
+            // The shutdown function does not block regardless of the SO_LINGER setting on the socket
+            // so we don't need to use GlobalEventExecutor to execute the shutdown
+            DoShutdownOutput();
+        }
+        finally
+        {
+            OutboundBuffer.Close(_outputShutdownCause);
+            Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
+        }
+    }
+    /**
+     * Called when conditions justify shutting down the output portion of the channel. This may happen if a write
+     * operation throws an exception.
+     */
+    protected virtual void DoShutdownOutput()
+    {
+        // The source default closes the transport. CLR channel state and deferred lifecycle callbacks
+        // are owned here, so use the ordinary close path with the output-shutdown queue cause.
+        Task close = CloseTransportAsync();
+        if (close.IsFaulted) close.GetAwaiter().GetResult();
     }
     protected void CloseOnWriteError(Exception error)
     {
