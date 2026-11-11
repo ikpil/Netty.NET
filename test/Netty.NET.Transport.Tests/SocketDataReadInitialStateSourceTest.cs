@@ -25,12 +25,15 @@ namespace Netty.NET.Transport.Tests;
 #pragma warning disable xUnit1051 // Source quiet windows and independently owned cleanup.
 public class SocketDataReadInitialStateSourceTest
 {
+    protected virtual bool Domain => false;
+    private System.Net.EndPoint NewAddress() => Domain ? DomainSocketSourceTest.NewAddress() : new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0);
     [Theory(Timeout = 10000)]
     [InlineData(false)]
     [InlineData(true)]
     public async Task TestAutoReadOffNoDataReadUntilReadCalled(bool adaptive)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        if (Domain) DomainSocketSourceTest.RequireDomainSockets();
+        await using var fixture = new ShutdownFixture(adaptive, Domain);
         var serverReady = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var acceptorRead = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var serverRead = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -38,7 +41,7 @@ public class SocketDataReadInitialStateSourceTest
         var server = await fixture.Server.Option(ChannelOption.AUTO_READ, false).ChildOption(ChannelOption.AUTO_READ, false)
             .Handler(new ActionChannelInitializer<IChannel>(channel => channel.Pipeline.AddLast(new Acceptor(acceptorRead))))
             .ChildHandler(new ActionChannelInitializer<IChannel>(channel => { channel.Pipeline.AddLast(new Echo(serverRead)); serverReady.SetResult(channel); }))
-            .BindAsync(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0));
+            .BindAsync(NewAddress());
         IChannel client = null;
         try
         {
@@ -69,12 +72,13 @@ public class SocketDataReadInitialStateSourceTest
     [InlineData(true)]
     public async Task TestAutoReadOnDataReadImmediately(bool adaptive)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        if (Domain) DomainSocketSourceTest.RequireDomainSockets();
+        await using var fixture = new ShutdownFixture(adaptive, Domain);
         var serverRead = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var clientRead = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var server = await fixture.Server.Option(ChannelOption.AUTO_READ, true).ChildOption(ChannelOption.AUTO_READ, true)
             .ChildHandler(new ActionChannelInitializer<IChannel>(channel => channel.Pipeline.AddLast(new Echo(serverRead))))
-            .BindAsync(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0));
+            .BindAsync(NewAddress());
         IChannel client = null;
         try
         {

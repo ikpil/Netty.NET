@@ -29,7 +29,7 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows).",
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows). Added the shared IDuplexChannel/IsShutdown API, original TCP/domain address scenarios, inherited domain initial-read and peer-shutdown fixtures, the complete 100-connection descriptor-reuse body and registration-before-write original. Restored real-network connection-attempt originals and implemented the measured Windows AF_UNIX EOF workaround.",
       "next": "Continue remaining portable socket and selector/backend contracts against their original fixtures and runtime comments."
     },
     {
@@ -42,39 +42,39 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 522,
-    "javaOriginalInvocations": 527,
+    "javaOriginalPassed": 532,
+    "javaOriginalInvocations": 537,
     "transportJavaOriginalPassed": 392,
     "coreTransportJavaOriginalPassed": 322,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
-    "testsuiteJavaJUnitInvocations": 95,
+    "testsuiteJavaJUnitInvocations": 98,
     "datagramJavaJUnitInvocations": 37,
     "datagramJavaAllocatorExecutions": 74,
     "shutdownJavaJUnitInvocations": 14,
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 467,
-    "originalExecutedCases": 586,
+    "mappedOriginalMethods": 471,
+    "originalExecutedCases": 606,
     "originalSkippedCases": 53,
     "transportMappedOriginalExecutions": 368,
-    "testsuiteMappedOriginalExecutions": 188,
+    "testsuiteMappedOriginalExecutions": 194,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 26,
-    "supplementalExecutedCases": 290,
+    "supplementalExecutedCases": 296,
     "debug": {
       "failed": 0,
-      "passed": 876,
+      "passed": 902,
       "skipped": 77,
-      "total": 953
+      "total": 979
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 876,
+      "passed": 902,
       "skipped": 77,
-      "total": 953
+      "total": 979
     },
     "solutionRelease": {
       "Netty.NET.Resolver.Tests": {
@@ -85,9 +85,9 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 876,
+        "passed": 902,
         "skipped": 77,
-        "total": 953
+        "total": 979
       },
       "Netty.NET.Buffer.Tests": {
         "failed": 0,
@@ -102,22 +102,24 @@
         "total": 2692
       }
     },
-    "solutionPassed": 33174,
+    "solutionPassed": 33200,
     "solutionSkipped": 91,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
-      "existingCommonCheckedRebuild": 51
+      "existingCommonCheckedRebuild": 51,
+      "transientTransportCopyRetries": 2,
+      "transientTransportCopyDetail": "The Release build retried copying the unchanged xunit.abstractions.dll twice (MSB3026) while a concurrent no-build fixture repetition held it. Copy succeeded; all projects and the final solution tests completed. No Transport compiler/analyzer warning was introduced."
     },
-    "javaEvidence": "Pinned unmodified file-region originals: Windows portable fixture seven JUnit tests / fourteen allocator rows; Linux portable, epoll TCP and inherited epoll AF_UNIX fixtures twenty-one JUnit tests / 154 allocator/backend rows, zero skips and failures. Prior selected-fixture evidence is retained in validationHistory; repeated wrappers are not added as new declarations.",
-    "note": "Windows solution Release: 33174 passed / 91 skipped / zero failed. Transport Release, final standalone Debug and checked Release: 876 passed / 77 existing skips. Linux full Transport: 945 passed / eight existing source-disabled skips. File-region focus 62/62 on Windows and Linux checked. Eight traced Linux tests pass with actual TCP/AF_UNIX sendfile calls and 64-bit offsets. One initial concurrent Debug fixed-rate timing failure is recorded separately and passes both isolated and subsequent full unchanged Debug runs. No source assertion was weakened and no skip was added.",
+    "javaEvidence": "Pinned original socket lifecycle fixtures pass with JUnit Jupiter: Windows nine wrappers/eighteen allocator rows; Linux eighteen wrappers/68 allocator/backend rows, zero skips, aborts or failures. Both unchanged abstract TCP address bodies are instantiated by a small NIO adapter using the original TCP endpoint assertions. The Linux concrete epoll/domain fixtures are unmodified. Counts separate repeated base fixtures, abstract owners and concrete inherited scenarios.",
+    "note": "Final Windows solution Release: 33200 passed / 91 existing skips / zero failures. Transport final Debug/Release/checked Release: 902 passed / 77 existing skips. Linux Transport: 971 passed / eight existing source-disabled skips. Checked lifecycle focus: 50/50 on Windows and Linux. The unchanged two-allocator 100-connection source fixture passes ten repetitions (2000 connections) after the Windows AF_UNIX read fix. The pre-fix timeout and BCL-only Poll/Peek/ReceiveAsync evidence remain explicit. Actual real-network timeout/cancellation originals pass on both platforms; deterministic held-connect checks are separately supplemental. No new skip or weakened original assertion was introduced.",
     "commands": [
-      "python artifacts/transport-core/run-native-file-originals.py",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/native-file-results --logger \"trx;LogFilePrefix=native-file\"",
-      "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/native-file-checked-out -p:NuGetAudit=false",
-      "python artifacts/transport-core/run-native-file-linux.py",
-      "python artifacts/transport-core/run-native-file-strace.py",
+      "python artifacts/transport-core/run-socket-lifecycle-originals.py",
+      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/socket-lifecycle-final-results --logger \"trx;LogFilePrefix=socket-lifecycle-final\"",
+      "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/socket-lifecycle-checked-out -p:NuGetAudit=false --no-restore",
+      "python artifacts/transport-core/run-socket-lifecycle-polled-read-stress.py",
+      "python artifacts/transport-core/run-socket-lifecycle-linux.py",
       "pwsh -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -161,8 +163,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 953,
-      "passed": 945,
+      "total": 979,
+      "passed": 971,
       "failed": 0,
       "skipped": 8
     },
@@ -209,7 +211,7 @@
       "sourceDisabledSkipped": 1,
       "isolatedDisabledProbePassed": 1
     },
-    "nativeMappedOriginalExecutions": 30,
+    "nativeMappedOriginalExecutions": 44,
     "udpReadPhaseEvidence": {
       "javaNativeWrappersPassed": 6,
       "javaNativeAllocatorExecutions": 12,
@@ -228,7 +230,7 @@
       "windowsSupplementalPassed": 2,
       "windowsSupplementalSkipped": 2
     },
-    "mappedInheritedScenarios": 9,
+    "mappedInheritedScenarios": 16,
     "udpOriginalDestinationEvidence": {
       "javaWrappersPassed": 2,
       "javaMixedFamilyRouteFailureRerun": 1,
@@ -373,6 +375,63 @@
         "isolatedPassed": 1,
         "fullDebugPassed": 876,
         "fullDebugSkipped": 77
+      }
+    },
+    "socketLifecycleEvidence": {
+      "newSourceFixtures": 7,
+      "newDeclaredMethods": 4,
+      "newMappedInheritedScenarios": 7,
+      "newClrOriginalCases": 20,
+      "newSupplementalCases": 6,
+      "restoredRealNetworkOriginalCases": 4,
+      "java": {
+        "windows": {
+          "passed": 9,
+          "skipped": 0,
+          "aborted": 0,
+          "allocatorRows": 18
+        },
+        "linux": {
+          "passed": 18,
+          "skipped": 0,
+          "aborted": 0,
+          "allocatorRows": 68
+        }
+      },
+      "javaAddressAdapter": "Windows and Linux also execute unchanged SocketAddressesTest bodies through a NIO adapter carrying only the original concrete TCP assertion. Linux additionally runs unmodified EpollSocketAddressesTest. Adapter and epoll TCP rows are backend evidence, not extra mapped declarations.",
+      "cumulativeJavaCounting": "Ten new selected wrapper executions: TCP addresses 2, write-before-connect 1, domain addresses 2, domain initial read 2, domain reuse 1 and domain peer shutdown 2. Do not count the abstract reuse owner again or repeated TCP address/connection-attempt/base initial-read validations.",
+      "uniqueClrCases": {
+        "SocketAddressesSourceTest": 4,
+        "DomainSocketAddressesSourceTest": 4,
+        "DomainSocketDataReadInitialStateSourceTest": 4,
+        "DomainSocketReuseFdSourceTest": 2,
+        "DomainSocketShutdownOutputByPeerSourceTest": 4,
+        "WriteBeforeRegisteredSourceTest": 2,
+        "SocketConnectionAttemptSourceTest": 8,
+        "SocketConnectTimingContractTest": 4,
+        "DuplexChannelContractTest": 2
+      },
+      "focusedCheckedWindowsPassed": 50,
+      "focusedCheckedLinuxPassed": 50,
+      "unchangedOriginalReuseRepetitions": 10,
+      "reuseCasesPassed": 20,
+      "reuseConnectionsCompleted": 2000,
+      "windowsEofDiagnosis": {
+        "os": "Microsoft Windows NT 10.0.26300.0",
+        "runtime": "Microsoft.NETCore.App 10.0.7",
+        "initialOriginalFixtureTimedOut": true,
+        "allClientsClosed": 100,
+        "serverClosures": 99,
+        "bclOnlyReproduced": true,
+        "pollReadable": true,
+        "available": 0,
+        "synchronousPeek": 0,
+        "postedReceiveAsyncRemainedPending": true,
+        "closeOnlyAlternativesFailed": [
+          "Shutdown(Send) followed by Dispose",
+          "DisconnectAsync(false) followed by Dispose"
+        ],
+        "retainedFix": "Only Windows AF_UNIX reads use single-reader readiness-gated worker receives; no source test skip, reduced connection count, payload change or relaxed deadline."
       }
     }
   },
@@ -630,7 +689,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
@@ -653,7 +712,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       }
     },
@@ -2190,7 +2253,7 @@
         "src/Netty.NET.Transport/Channels/CompletionIoHandler.cs"
       ],
       "review": {
-        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Threaded loops now run a separate completion phase and enforce the I/O ratio budget. Direct completion registrations and backend queries now execute. Selector-specific submission contracts remain open. Standalone completion handles are owner-managed and included in threaded worker admission and shutdown. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Threaded loops now run a separate completion phase and enforce the I/O ratio budget. Direct completion registrations and backend queries now execute. Selector-specific submission contracts remain open. Standalone completion handles are owner-managed and included in threaded worker admission and shutdown. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
@@ -2211,7 +2274,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       },
       "comments": {
@@ -2592,7 +2659,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open. Output-shutdown mechanics and original shared comments now reside in AbstractChannel. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open. Output-shutdown mechanics and original shared comments now reside in AbstractChannel. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
@@ -2606,7 +2673,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       }
     },
@@ -2625,7 +2696,7 @@
         "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs"
       ],
       "review": {
-        "scope": "Only clearReadPending, read/registration admission and native callback ownership are mapped here. Selector/IoRegistration/interest-op implementation is not mechanically reproduced; the rest of this original class remains under review. Managed pending connect admission rejects duplicates while retaining the first connection. The owner commits delayed socket outcomes and retains the source cancellation/activation order. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Only clearReadPending, read/registration admission and native callback ownership are mapped here. Selector/IoRegistration/interest-op implementation is not mechanically reproduced; the rest of this original class remains under review. Managed pending connect admission rejects duplicates while retaining the first connection. The owner commits delayed socket outcomes and retains the source cancellation/activation order. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
@@ -2639,7 +2710,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ],
         "originalMethods": [
           "clearReadPending",
@@ -2742,7 +2817,7 @@
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "review": {
-        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Threaded loops now run a separate completion phase and enforce the I/O ratio budget. The CLR completion backend supports standalone registrations and type queries. Selector-specific readiness and operation submission remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Managed socket pumps count delivered reads and accepts, and pending send/connect outcomes. The owner handles inbound and outbound completions before ordinary tasks, leaving wakeups, timers, admission and rearming uncounted. Threaded loops now run a separate completion phase and enforce the I/O ratio budget. The CLR completion backend supports standalone registrations and type queries. Selector-specific readiness and operation submission remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ManualIoEventLoop.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketListenerChannel.cs",
@@ -2758,7 +2833,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       },
       "comments": {
@@ -3619,8 +3698,29 @@
       "sha256": "9a602a3b9ba7d37fa4fa369dc7a84d9dd59589ad1c78653ea6a4d58a76aad44b",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
+      ],
+      "decision": "Expose IDuplexChannel : IChannel for TCP and AF_UNIX streams, with independent input/output state, IsShutdown and Task-returning directional/combined shutdown. Fold producer-supplied ChannelPromise overloads into native Task methods while preserving every original comment. IsShutdown retains the source inactive-or-both-directions behavior; combined shutdown still attempts input after output failure and preserves output failure precedence.",
+      "review": {
+        "scope": "Complete shared duplex contract and native completion adaptation; original shutdown fixtures now consume the common interface. Two explicitly supplemental real socket-family cases cover its state and directional/error behavior.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "test/Netty.NET.Transport.Tests/DuplexChannelContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownOutputByPeerSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 11,
+        "preservedCount": 11,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DuplexChannelConfig.java",
@@ -3724,7 +3824,7 @@
         "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
       ],
       "review": {
-        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Portable AF_UNIX connection, stream I/O, parent identity, socket ownership, half-close and supported options run through the CLR socket backend. Remaining selector/provider, JDK NioChannelOption and write-gathering comment and contract review is explicit. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DomainSocketChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
@@ -3736,7 +3836,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       },
       "comments": {
@@ -3848,7 +3952,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/NioLifecycleSourceTest.cs",
@@ -3868,7 +3972,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       }
     },
@@ -4027,7 +4135,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Output-shutdown mechanics and original shared comments now reside in AbstractChannel. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Output-shutdown mechanics and original shared comments now reside in AbstractChannel. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
@@ -4038,7 +4146,11 @@
           "src/Netty.NET.Transport/Channels/DefaultFileRegion.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketFileRegionSender.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketFileRegionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
         ]
       }
     },
@@ -8058,16 +8170,16 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 40,
-    "portedOriginalFixtures": 73,
-    "portedOriginalMethods": 467,
-    "supplementalClrCases": 314,
+    "reviewedImplementationFiles": 41,
+    "portedOriginalFixtures": 80,
+    "portedOriginalMethods": 471,
+    "supplementalClrCases": 320,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
-    "testsuiteSources": 36,
+    "testsuiteSources": 39,
     "sourceDisabledMethodsMapped": 8,
-    "nativeTestSources": 9,
-    "mappedInheritedScenarios": 9
+    "nativeTestSources": 13,
+    "mappedInheritedScenarios": 16
   },
   "clrDecisions": [
     {
@@ -8622,13 +8734,35 @@
         "test/Netty.NET.Transport.Tests/SocketFileRegionSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SocketBufReleaseSourceTest.cs"
       ]
+    },
+    {
+      "subject": "Windows AF_UNIX overlapped EOF completion",
+      "decision": "On Windows NT 10.0.26300 with .NET 10.0.7, the original 100-connection domain fixture intermittently leaves one server ReceiveAsync pending after all clients close. A standalone BCL-only echo probe also reproduces it: Poll(SelectRead)=true, Available=0, synchronous Peek=0, while the already posted async receive stays incomplete. Shutdown(Send) and DisconnectAsync alternatives also reproduce the hang; no close-only workaround is retained. Only Windows AF_UNIX uses a single-reader readiness-gated synchronous receive on an asynchronous worker, with 1/2/4/8/10 ms polling backoff. No idle connection pins a blocked worker and no receive blocks the event loop. Delivery, reference ownership, read admission and native socket mode remain unchanged. Polling adds timer/allocation/idle CPU cost and readiness latency; no Windows AF_UNIX performance parity is claimed. The exact OS versus runtime defect and applicability to other Windows/runtime versions are not established.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/AbstractSocketReuseFdSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs"
+      ],
+      "platformSources": [
+        "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.poll?view=net-10.0",
+        "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.receive?view=net-10.0"
+      ]
+    },
+    {
+      "subject": "Real connection-attempt originals versus deterministic CLR timing tests",
+      "decision": "The original timeout/cancellation bodies again use actual socket connects and the source network-route prerequisite. Preserve the configurable bad host/port and original observation windows; the timeout original checks completion, not an invented timeout-only assertion. Keep held-native-connect timing checks in SocketConnectTimingContractTest as four supplemental cases. These no longer count as replacements for real source executions. Native cancellation tokens replace future.cancel, and refused/half-closure scenarios continue to verify real refusal and no ChannelActive.",
+      "sourceEvidence": [
+        "test/Netty.NET.Transport.Tests/SocketConnectionAttemptSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketConnectTimingContractTest.cs"
+      ]
     }
   ],
   "openWork": [
     {
       "area": "Socket read admission",
       "state": "partially-verified",
-      "detail": "TCP receive, TCP accept and UDP receive now withhold a completed native operation after AutoRead=false; read resumes without dropping input. Deregistered TCP input waits for registration and moves to the new worker. Native integration tests also cover buffer/socket cleanup while paused. Remaining: further registration/rejection and half-closure variants, complete read-batch budgets, and original socket/IoHandler fixture review. Native accept batching now uses the original server message allocator and proves 2/1 grouping, partial-batch error ordering, empty-failure manual permission retention and fatal closure. Five original socket read-state/EOF fixtures now retain initial no-read state, both read-caller routes, reset-per-message read permission and all 32 MiB through an intentional read pause and FIN. Native requests made before activation are deferred rather than discarded."
+      "detail": "TCP receive, TCP accept and UDP receive now withhold a completed native operation after AutoRead=false; read resumes without dropping input. Deregistered TCP input waits for registration and moves to the new worker. Native integration tests also cover buffer/socket cleanup while paused. Remaining: further registration/rejection and half-closure variants, complete read-batch budgets, and original socket/IoHandler fixture review. Native accept batching now uses the original server message allocator and proves 2/1 grouping, partial-batch error ordering, empty-failure manual permission retention and fatal closure. Five original socket read-state/EOF fixtures now retain initial no-read state, both read-caller routes, reset-per-message read permission and all 32 MiB through an intentional read pause and FIN. Native requests made before activation are deferred rather than discarded. Inherited AF_UNIX initial AutoRead tests are now mapped. Windows AF_UNIX EOF delivery uses measured readiness-gated worker receive adaptation; its bounded polling cost is explicit."
     },
     {
       "area": "Pipeline executor lifecycle",
@@ -8643,7 +8777,7 @@
     {
       "area": "TCP and UDP",
       "state": "test-and-implementation-review",
-      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path."
+      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path. The shared duplex contract and TCP/AF_UNIX address tests, native domain peer shutdown and 100-connection reuse body are mapped. Real network connection-attempt originals replace former held-connect mappings; deterministic cases remain supplemental."
     },
     {
       "area": "Bootstrap and groups",
@@ -8726,7 +8860,9 @@
     "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelOutputShutdownContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketFileRegionContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketConnectTimingContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DuplexChannelContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -14505,10 +14641,110 @@
           "conditionalWritabilityBytes": 104857600
         }
       }
+    },
+    {
+      "checkpoint": "2a505ab777da49f0494601b7dd0c5ecd4ad7a968",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionRelease": {
+          "Netty.NET.Resolver.Tests": {
+            "failed": 0,
+            "passed": 64,
+            "skipped": 0,
+            "total": 64
+          },
+          "Netty.NET.Transport.Tests": {
+            "failed": 0,
+            "passed": 876,
+            "skipped": 77,
+            "total": 953
+          },
+          "Netty.NET.Buffer.Tests": {
+            "failed": 0,
+            "passed": 29556,
+            "skipped": 0,
+            "total": 29556
+          },
+          "Netty.NET.Common.Tests": {
+            "failed": 0,
+            "passed": 2678,
+            "skipped": 14,
+            "total": 2692
+          }
+        },
+        "solutionPassed": 33174,
+        "solutionSkipped": 91,
+        "javaOriginalPassed": 522,
+        "javaOriginalInvocations": 527,
+        "mappedOriginalMethods": 467,
+        "mappedInheritedScenarios": 9,
+        "originalExecutedCases": 586,
+        "supplementalExecutedCases": 290,
+        "nativeFileEvidence": {
+          "newSourceFixtures": 1,
+          "newMappedInheritedScenarios": 7,
+          "newClrOriginalCases": 14,
+          "newSupplementalCases": 15,
+          "sourceFixtureCases": {
+            "tcp": 14,
+            "domain": 14
+          },
+          "focusedPassed": 62,
+          "linuxCheckedFocusedPassed": 62,
+          "java": {
+            "windows": {
+              "passed": 7,
+              "skipped": 0,
+              "allocatorRows": 14
+            },
+            "linux": {
+              "passed": 21,
+              "skipped": 0,
+              "allocatorRows": 154
+            }
+          },
+          "javaSourceFixtures": [
+            "SocketFileRegionTest",
+            "EpollSocketFileRegionTest",
+            "EpollDomainSocketFileRegionTest"
+          ],
+          "cumulativeJavaCounting": "Add only the seven newly selected domain inherited wrappers to cumulative original invocations/passes. TCP base is a repeat; the seven additional epoll TCP wrappers are cross-backend evidence, not extra mapped declarations.",
+          "linuxSyscallTrace": {
+            "passed": 8,
+            "sendfileStarts": 253,
+            "socketFamilies": {
+              "tcp": 74,
+              "domain": 179
+            },
+            "observedOffset64": 2147484671,
+            "detail": "Real successful file sends and EAGAIN readiness retries observed on TCP and AF_UNIX. A three-byte request preserves a 64-bit offset above Int32. These are kernel dispatch observations, not a throughput benchmark."
+          },
+          "debugTimingRecheck": {
+            "initialFailed": 1,
+            "method": "SingleThreadEventLoopSourceTest.ScheduleTaskAtFixedRateA",
+            "observation": "Initial Debug execution concurrent with other builds/tests exceeded an existing fixed-rate time window (272.5248 ms). Source test and production scheduling were not changed. Same test passes alone; subsequent complete unchanged Debug run passes.",
+            "isolatedPassed": 1,
+            "fullDebugPassed": 876,
+            "fullDebugSkipped": 77
+          }
+        },
+        "javaEvidence": "Pinned unmodified file-region originals: Windows portable fixture seven JUnit tests / fourteen allocator rows; Linux portable, epoll TCP and inherited epoll AF_UNIX fixtures twenty-one JUnit tests / 154 allocator/backend rows, zero skips and failures. Prior selected-fixture evidence is retained in validationHistory; repeated wrappers are not added as new declarations.",
+        "note": "Windows solution Release: 33174 passed / 91 skipped / zero failed. Transport Release, final standalone Debug and checked Release: 876 passed / 77 existing skips. Linux full Transport: 945 passed / eight existing source-disabled skips. File-region focus 62/62 on Windows and Linux checked. Eight traced Linux tests pass with actual TCP/AF_UNIX sendfile calls and 64-bit offsets. One initial concurrent Debug fixed-rate timing failure is recorded separately and passes both isolated and subsequent full unchanged Debug runs. No source assertion was weakened and no skip was added.",
+        "commands": [
+          "python artifacts/transport-core/run-native-file-originals.py",
+          "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/native-file-results --logger \"trx;LogFilePrefix=native-file\"",
+          "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-build --no-restore",
+          "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/native-file-checked-out -p:NuGetAudit=false",
+          "python artifacts/transport-core/run-native-file-linux.py",
+          "python artifacts/transport-core/run-native-file-strace.py",
+          "pwsh -File tools/Test-TransportPortingManifest.ps1"
+        ]
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete pending Transport consumers/fixtures: socket address, auto-read and remaining backend contracts. Native default-file handle/range transfer and all seven inherited domain file-region scenarios are now implemented. Keep runtime/comment review and performance claims explicit.",
+    "Continue remaining concrete Transport contracts and original source-disabled fixture review. Duplex, addresses, domain read/peer-shutdown/100-connection lifetime and pre-connect writes are mapped. Keep Windows AF_UNIX polling cost explicit and do not invent additional feature work where source contracts already pass.",
     "Review remaining group comparison/inherited set-surface decisions and unreviewed auxiliary listener/matcher/iterator source roles against standard CLR collections and delegates. Do not create JVM future or collection facades to make file counts match.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
@@ -15449,7 +15685,7 @@
         "unreviewedMethods": []
       },
       "review": {
-        "scope": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations.",
+        "scope": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations. The unchanged common body also executes through its concrete AF_UNIX fixture. The peer handler uses IDuplexChannel, with the native domain peer four-byte write retained.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SocketShutdownOutputByPeerSourceTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
@@ -15461,7 +15697,7 @@
         "uniqueCount": 1,
         "preservedCount": 1,
         "unreviewedCount": 0,
-        "scope": "Original comments remain at reviewed runtime, event/error declarations and source test/helpers. Comments for unported original methods/helpers remain explicit review work; no detached comment archive."
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
       }
     },
     {
@@ -15891,7 +16127,7 @@
       "sha256": "eca6194d57b590753d99e8b1c0653363ceb5465e6f2714590f16d176fb69c030",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "in-progress",
+      "status": "clr-adapted",
       "implementation": [
         "test/Netty.NET.Transport.Tests/SocketConnectionAttemptSourceTest.cs"
       ],
@@ -15907,7 +16143,7 @@
               true
             ]
           ],
-          "adaptation": "Keep a 2000 ms configured timeout and 3000 ms completion bound with both allocators. Hold the socket connect primitive at a cancellable operation boundary, so the test does not depend on an external network route. Verify ConnectTimeoutException and socket closure."
+          "adaptation": "Use a real configured bad-host TCP connect with source 2000 ms timeout and require Task completion within 3000 ms, regardless of timeout versus immediate refusal. Keep both allocators and native socket cleanup. No held-connect primitive is used."
         },
         {
           "upstreamMethod": "testConnectRefused",
@@ -15946,7 +16182,7 @@
               true
             ]
           ],
-          "adaptation": "Keep the source 4000 ms connect timeout, 1000 ms unfinished observation, cancellation and 500 ms close-completion limit. Native token cancellation and a deterministic pending socket primitive replace promise cancellation and the Java network-route preflight."
+          "adaptation": "Keep real-network 10 ms preflight and its conditional skip, then 4000 ms connect timeout, 1000 ms pending observation, native token cancellation and 500 ms close completion. CLR refused/unreachable SocketError codes represent the original ConnectException preflight outcome. Do not replace the route with a fake pending operation."
         }
       ],
       "methodReview": {
@@ -15956,20 +16192,19 @@
         "unreviewedMethods": []
       },
       "review": {
-        "scope": "All four source declarations mapped with two allocator variants. Original network-route prerequisite comments remain at the Java probe. The controlled timeout/cancellation cases exercise the actual CLR timeout and socket-close path.",
+        "scope": "Restore the actual original network timeout and cancellation bodies. Use the original configurable 198.51.100.254:65535 default, 10 ms route preflight, conditional network prerequisite, 2000/3000 ms timeout completion bound and 4000/1000/500 ms cancellation/closure windows. The source timeout test asserts completion, not a specific failure type. Existing refused/half-closed-refused cases retain actual non-listening loopback sockets. Former held-connect tests remain explicitly supplemental and no longer stand in for source executions.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SocketConnectionAttemptSourceTest.cs",
-          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
-          "test/Netty.NET.Transport.Tests/ManualOutboundIoContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketConnectTimingContractTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs"
         ]
       },
       "comments": {
-        "status": "partial",
+        "status": "preserved",
         "uniqueCount": 6,
-        "preservedCount": 1,
-        "unreviewedCount": 5,
-        "scope": "All four source declarations mapped with two allocator variants. Original network-route prerequisite comments remain at the Java probe. The controlled timeout/cancellation cases exercise the actual CLR timeout and socket-close path."
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
       }
     },
     {
@@ -16685,7 +16920,7 @@
         "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs"
       ],
       "review": {
-        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows.",
+        "scope": "Every original declaration is mapped. Task/TCS and native socket/event-loop APIs replace Java latch/promise/backend mechanics while preserving data, read budgets, ordering and assertion windows. The unchanged common body also executes through its concrete AF_UNIX fixture, retaining all three 100 ms quiet windows and separate acceptor, child and client read admission.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
@@ -16732,7 +16967,7 @@
         "uniqueCount": 5,
         "preservedCount": 5,
         "unreviewedCount": 0,
-        "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
       }
     },
     {
@@ -17045,6 +17280,157 @@
         "preservedCount": 1,
         "unreviewedCount": 0,
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketAddressesTest.java",
+      "sha256": "137abec364930a6f3b58d36d6f65bb1291b3e5378b8af639d85d95b7ccdc5c56",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketAddressesSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every declared original method is mapped. Keep original ordering, payloads, allocator choices, endpoint assertions and failure conditions; use native Tasks and existing CLR socket factories.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketAddressesSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAddresses",
+          "clrMethod": "TestAddresses",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep explicit local bind, null addresses before connect, and all four connected endpoint assertions. TCP assertion body comes from EpollSocketAddressesTest; native Task/TCS observers replace Java promises."
+        },
+        {
+          "upstreamMethod": "testAddressesConnectWithoutLocalAddress",
+          "clrMethod": "TestAddressesConnectWithoutLocalAddress",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the same endpoint assertions with automatic local binding. The concrete AF_UNIX fixture separately retains its non-null path assertion, including unnamed paths."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractSocketReuseFdTest.java",
+      "sha256": "9d5b4148cbf0f062f9b01cbdcaf823a71ca8920b195ba0a18bf9382767a7774b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/AbstractSocketReuseFdSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every declared original method is mapped. Keep original ordering, payloads, allocator choices, endpoint assertions and failure conditions; use native Tasks and existing CLR socket factories.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/AbstractSocketReuseFdSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testReuseFd",
+          "clrMethod": "TestReuseFd",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep all 100 concurrently initiated connections, ASCII payload/echo accumulation, client-initiated close after complete payload, both 100-channel inactive counters, completion/failure listeners and the original last-completion payload assertion. The concrete domain fixture executes this abstract body; no forced descriptor number or SCM_RIGHTS behavior is invented."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/WriteBeforeRegisteredTest.java",
+      "sha256": "116309a99134cbede5375cd037fec6f8f76e079445bc46a114889ffdcda5d0a9",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/WriteBeforeRegisteredSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Every declared original method is mapped. Keep original ordering, payloads, allocator choices, endpoint assertions and failure conditions; use native Tasks and existing CLR socket factories.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/WriteBeforeRegisteredSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testWriteBeforeConnect",
+          "clrMethod": "TestWriteBeforeConnect",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Start connect, immediately submit the original one-byte random direct/heap buffer and close without awaiting connect. Channel access is independent of Task<IChannel> completion. Observe expected failed Tasks during cleanup; preserve the original no-synchronous-failure/no-hang body without inventing success assertions."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
       }
     }
   ],
@@ -17744,6 +18130,248 @@
           "adaptation": "Execute the unchanged inherited body with AF_UNIX endpoints and both original allocator choices. Keep size sixteen, one physical source byte, logical transferred=count, strict transferTo position invariant and a synchronously observed zero overshoot counter. Preserve the original OIO rationale; the CLR asynchronous socket backend has no OIO permutation."
         }
       ]
+    },
+    {
+      "upstream": "transport-native-epoll/src/test/java/io/netty/channel/epoll/EpollDomainSocketAddressesTest.java",
+      "sha256": "523ff0ff439b662fee3e544cf71ef753e7f6f5793b690474b4be38f7664738b7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketAddressesSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketAddressesSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Retain the original concrete AF_UNIX backend and inherited original test bodies, with pooled/adaptive allocators. CLR native sockets replace LinuxSocket/epoll objects; no Java selector or promise facade is introduced.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketAddressesSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketAddressesSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "inheritedCaseMappings": [
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketAddressesTest.java",
+          "upstreamMethod": "testAddresses",
+          "clrMethod": "TestAddresses",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep explicit local bind, null addresses before connect, and all four connected endpoint assertions. TCP assertion body comes from EpollSocketAddressesTest; native Task/TCS observers replace Java promises."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketAddressesTest.java",
+          "upstreamMethod": "testAddressesConnectWithoutLocalAddress",
+          "clrMethod": "TestAddressesConnectWithoutLocalAddress",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep the same endpoint assertions with automatic local binding. The concrete AF_UNIX fixture separately retains its non-null path assertion, including unnamed paths."
+        }
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
+    },
+    {
+      "upstream": "transport-native-epoll/src/test/java/io/netty/channel/epoll/EpollDomainSocketDataReadInitialStateTest.java",
+      "sha256": "5b7cb25394055c2ce5c988e4b0bf6ec334a1bdd0ac953de966746aa798f294b8",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Retain the original concrete AF_UNIX backend and inherited original test bodies, with pooled/adaptive allocators. CLR native sockets replace LinuxSocket/epoll objects; no Java selector or promise facade is introduced.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketDataReadInitialStateSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "inheritedCaseMappings": [
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketDataReadInitialStateTest.java",
+          "upstreamMethod": "testAutoReadOffNoDataReadUntilReadCalled",
+          "clrMethod": "TestAutoReadOffNoDataReadUntilReadCalled",
+          "adaptation": "Keep parent, accepted child and client AUTO_READ=false, three original 100 ms no-read windows, one-byte echo and independently granted accept/read/read permissions.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketDataReadInitialStateTest.java",
+          "upstreamMethod": "testAutoReadOnDataReadImmediately",
+          "clrMethod": "TestAutoReadOnDataReadImmediately",
+          "adaptation": "Keep parent, child and client AUTO_READ=true and require both echo reads without explicit Read calls.",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ]
+        }
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
+    },
+    {
+      "upstream": "transport-native-epoll/src/test/java/io/netty/channel/epoll/EpollDomainSocketReuseFdTest.java",
+      "sha256": "3a7eed870afd8f09d5b8fe54c6184483cfb5dff17c983e45f0db6ea0bfd3755b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/AbstractSocketReuseFdSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Retain the original concrete AF_UNIX backend and inherited original test bodies, with pooled/adaptive allocators. CLR native sockets replace LinuxSocket/epoll objects; no Java selector or promise facade is introduced.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketReuseFdSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "inheritedCaseMappings": [
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractSocketReuseFdTest.java",
+          "upstreamMethod": "testReuseFd",
+          "clrMethod": "TestReuseFd",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Keep all 100 concurrently initiated connections, ASCII payload/echo accumulation, client-initiated close after complete payload, both 100-channel inactive counters, completion/failure listeners and the original last-completion payload assertion. The concrete domain fixture executes this abstract body; no forced descriptor number or SCM_RIGHTS behavior is invented."
+        }
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
+    },
+    {
+      "upstream": "transport-native-epoll/src/test/java/io/netty/channel/epoll/EpollDomainSocketShutdownOutputByPeerTest.java",
+      "sha256": "ef57822ef1cebd9594ae6ae0a4d46774e7eb304c4b79badd9aaf6e7d4b44c54d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketShutdownOutputByPeerSourceTest.cs"
+      ],
+      "review": {
+        "scope": "Retain the original concrete AF_UNIX backend and inherited original test bodies, with pooled/adaptive allocators. CLR native sockets replace LinuxSocket/epoll objects; no Java selector or promise facade is introduced. The domain shutdown peer retains its native-order four-byte integer payload, while TCP keeps its one-byte write.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketShutdownOutputByPeerSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "inheritedCaseMappings": [
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractSocketShutdownOutputByPeerTest.java",
+          "upstreamMethod": "testShutdownOutput",
+          "clrMethod": "TestShutdownOutput",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/AbstractSocketShutdownOutputByPeerTest.java",
+          "upstreamMethod": "testShutdownOutputWithoutOption",
+          "clrMethod": "TestShutdownOutputWithoutOption",
+          "nativeCases": [
+            [
+              false
+            ],
+            [
+              true
+            ]
+          ],
+          "adaptation": "Both original inherited peer-FIN declarations retain byte 1, active/open direction state, optional half-close vs full close, half-close event count, original polling predicates, source socket operations and thirty-second deadline. Native TaskCompletionSource/Channel replace latch/byte queue; BCL TcpClient is the unchanged peer role. Explicit pooled/adaptive allocator cases use the native TCP backend instead of Java NIO/OIO permutations."
+        }
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at the reviewed CLR contract, original shared test body, or corresponding concrete backend adapter. Remaining runtime comments stay explicit."
+      }
     }
   ]
 }

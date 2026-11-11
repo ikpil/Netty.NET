@@ -29,22 +29,28 @@ namespace Netty.NET.Transport.Tests;
 #pragma warning disable xUnit1051 // Original operation ordering and independently owned socket/group cleanup.
 public class SocketShutdownOutputByPeerSourceTest
 {
+    protected virtual bool Domain => false;
+    private EndPoint NewAddress() => Domain ? DomainSocketSourceTest.NewAddress() : new IPEndPoint(IPAddress.Loopback, 0);
+    private Socket NewSocket() => Domain ? DomainSocketSourceTest.NewSocket() : new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+    // The original native domain peer sends one native-order int, while the TCP peer writes one byte.
+    private byte[] Payload() => Domain ? BitConverter.GetBytes(1) : new byte[] { 1 };
     [Theory(Timeout = 30000)]
     [InlineData(false)]
     [InlineData(true)]
     public async Task TestShutdownOutput(bool adaptive)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        if (Domain) DomainSocketSourceTest.RequireDomainSockets();
+        await using var fixture = new ShutdownFixture(adaptive, Domain);
         var handler = new ShutdownTestHandler();
         var server = await fixture.Server.ChildHandler(handler).ChildOption(ChannelOption.ALLOW_HALF_CLOSURE, true)
-            .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        using var peer = new TcpClient();
-        await peer.ConnectAsync((IPEndPoint)server.LocalAddress);
-        await peer.GetStream().WriteAsync(new byte[] { 1 }, TestContext.Current.CancellationToken);
+            .BindAsync(NewAddress());
+        using var peer = NewSocket();
+        await peer.ConnectAsync(server.LocalAddress, TestContext.Current.CancellationToken);
+        await peer.SendAsync(Payload(), SocketFlags.None, TestContext.Current.CancellationToken);
         Assert.Equal(1, await handler.Bytes.Reader.ReadAsync(TestContext.Current.CancellationToken));
         Assert.True(handler.Channel.IsOpen); Assert.True(handler.Channel.IsActive);
         Assert.False(handler.Channel.IsInputShutdown); Assert.False(handler.Channel.IsOutputShutdown);
-        peer.Client.Shutdown(SocketShutdown.Send);
+        peer.Shutdown(SocketShutdown.Send);
         await handler.HalfClosure.Task.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(handler.Channel.IsOpen); Assert.True(handler.Channel.IsActive);
         Assert.True(handler.Channel.IsInputShutdown); Assert.False(handler.Channel.IsOutputShutdown);
@@ -55,16 +61,17 @@ public class SocketShutdownOutputByPeerSourceTest
     [InlineData(true)]
     public async Task TestShutdownOutputWithoutOption(bool adaptive)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        if (Domain) DomainSocketSourceTest.RequireDomainSockets();
+        await using var fixture = new ShutdownFixture(adaptive, Domain);
         var handler = new ShutdownTestHandler();
-        var server = await fixture.Server.ChildHandler(handler).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        using var peer = new TcpClient();
-        await peer.ConnectAsync((IPEndPoint)server.LocalAddress);
-        await peer.GetStream().WriteAsync(new byte[] { 1 }, TestContext.Current.CancellationToken);
+        var server = await fixture.Server.ChildHandler(handler).BindAsync(NewAddress());
+        using var peer = NewSocket();
+        await peer.ConnectAsync(server.LocalAddress, TestContext.Current.CancellationToken);
+        await peer.SendAsync(Payload(), SocketFlags.None, TestContext.Current.CancellationToken);
         Assert.Equal(1, await handler.Bytes.Reader.ReadAsync(TestContext.Current.CancellationToken));
         Assert.True(handler.Channel.IsOpen); Assert.True(handler.Channel.IsActive);
         Assert.False(handler.Channel.IsInputShutdown); Assert.False(handler.Channel.IsOutputShutdown);
-        peer.Client.Shutdown(SocketShutdown.Send);
+        peer.Shutdown(SocketShutdown.Send);
         await handler.Closure.Task.WaitAsync(TestContext.Current.CancellationToken);
         Assert.False(handler.Channel.IsOpen); Assert.False(handler.Channel.IsActive);
         Assert.True(handler.Channel.IsInputShutdown); Assert.True(handler.Channel.IsOutputShutdown);

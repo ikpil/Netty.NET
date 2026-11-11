@@ -28,22 +28,30 @@ namespace Netty.NET.Transport.Tests;
 
 public class SocketConnectionAttemptSourceTest
 {
+    private static readonly string BadHost = Netty.NET.Common.Internal.SystemPropertyUtil.Get("io.netty.testsuite.badHost", "198.51.100.254");
+    private static readonly int BadPort = Netty.NET.Common.Internal.SystemPropertyUtil.GetInt("io.netty.testsuite.badPort", 65535);
+    private static readonly EndPoint BadAddress = IPAddress.TryParse(BadHost, out var address)
+        ? new IPEndPoint(address, BadPort) : new DnsEndPoint(BadHost, BadPort);
+    private static AddressFamily BadAddressFamily => BadAddress.AddressFamily == AddressFamily.InterNetworkV6
+        ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
+
     [Theory(Timeout = 30000)]
     [InlineData(false)]
     [InlineData(true)]
     public async Task TestConnectTimeout(bool adaptive)
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var address = Loopback();
         var group = new DefaultEventLoopGroup(1);
-        var channel = new PendingSocketConnect(address.AddressFamily);
+        var channel = new TcpSocketChannel(BadAddressFamily);
         try
         {
-            var bootstrap = PendingBootstrap(group, channel, adaptive, 2000);
-            await Assert.ThrowsAsync<ConnectTimeoutException>(() =>
-                bootstrap.ConnectAsync(new IPEndPoint(address, 65535), cancellationToken: cancellation)
-                    .WaitAsync(TimeSpan.FromMilliseconds(3000), cancellation));
-            Assert.False(channel.IsOpen);
+            Task<IChannel> future = NetworkBootstrap(group, channel, adaptive, 2000).ConnectAsync(BadAddress, cancellationToken: cancellation);
+            try
+            {
+                // The source asserts completion within 3000 ms, irrespective of timeout versus immediate refusal.
+                await Observe(future).WaitAsync(TimeSpan.FromMilliseconds(3000), cancellation);
+            }
+            finally { await Bootstrap.CleanupAsync(channel); }
         }
         finally { await group.StopAsync(); }
     }
@@ -54,32 +62,64 @@ public class SocketConnectionAttemptSourceTest
     public async Task TestConnectCancellation(bool adaptive)
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var address = Loopback();
+        // Check if the test can be executed or should be skipped because of no network/internet connection
+        // See https://github.com/netty/netty/issues/1474
+        bool badHostTimedOut = true;
+        using (var socket = new Socket(BadAddressFamily, SocketType.Stream, ProtocolType.Tcp))
+        using (var probeTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
+        {
+            probeTimeout.CancelAfter(10);
+            try { await socket.ConnectAsync(BadAddress, probeTimeout.Token); }
+            catch (SocketException error) when (error.SocketErrorCode is SocketError.ConnectionRefused or SocketError.NetworkUnreachable or SocketError.HostUnreachable)
+            {
+                badHostTimedOut = false;
+                // is thrown for no route to host when using Socket connect
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { throw; }
+            catch (Exception)
+            {
+                // ignore
+            }
+        }
+        if (!badHostTimedOut) Assert.Skip("The connection attempt to " + BadHost + " does not time out.");
+
         var group = new DefaultEventLoopGroup(1);
-        var channel = new PendingSocketConnect(address.AddressFamily);
+        var channel = new TcpSocketChannel(BadAddressFamily);
         using var connectCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+        Task<IChannel> future = null;
         try
         {
-            var connect = PendingBootstrap(group, channel, adaptive, 4000)
-                .ConnectAsync(new IPEndPoint(address, 65535), cancellationToken: connectCancellation.Token);
-            await channel.Started.Task.WaitAsync(cancellation);
-            await Assert.ThrowsAsync<TimeoutException>(() => connect.WaitAsync(TimeSpan.FromMilliseconds(1000), cancellation));
+            future = NetworkBootstrap(group, channel, adaptive, 4000).ConnectAsync(BadAddress, cancellationToken: connectCancellation.Token);
+            if (await Task.WhenAny(future, Task.Delay(1000, cancellation)) == future)
+            {
+                if (future.IsCompletedSuccessfully) Assert.Fail("A connection attempt to " + BadHost + " must not succeed.");
+                await future;
+            }
+            // Check if cancellation is supported or not.
+            // CLR asynchronous Socket connects support native token cancellation; there is no OIO permutation.
             connectCancellation.Cancel();
             await channel.CloseCompletion.WaitAsync(TimeSpan.FromMilliseconds(500), cancellation);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connect);
-            Assert.True(connect.IsCanceled);
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => future);
+            Assert.True(future.IsCanceled);
         }
         finally
         {
             connectCancellation.Cancel();
+            await Bootstrap.CleanupAsync(channel);
+            if (future != null) await Observe(future);
             await group.StopAsync();
         }
     }
 
-    private static Bootstrap PendingBootstrap(DefaultEventLoopGroup group, PendingSocketConnect channel,
-        bool adaptive, int timeout) => new Bootstrap().Group(group).ChannelFactory(() => channel)
-        .Handler(new ChannelInboundHandlerAdapter()).Option(ChannelOption.ALLOCATOR, SelectAllocator(adaptive))
-        .Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout);
+    private static Bootstrap NetworkBootstrap(DefaultEventLoopGroup group, TcpSocketChannel channel, bool adaptive, int timeout) =>
+        new Bootstrap().Group(group).ChannelFactory(() => channel).Handler(new TestHandler())
+            .Option(ChannelOption.ALLOCATOR, SelectAllocator(adaptive)).Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout);
+    private static async Task Observe(Task operation) { try { await operation; } catch { } }
+    private sealed class TestHandler : ChannelInboundHandlerAdapter
+    {
+        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) =>
+            Netty.NET.Common.Internal.Logging.InternalLoggerFactory.GetInstance(typeof(TestHandler)).Warn("Unexpected exception:", error);
+    }
 
     [Theory(Timeout = 30000)]
     [InlineData(false)]

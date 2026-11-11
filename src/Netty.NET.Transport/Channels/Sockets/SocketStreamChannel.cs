@@ -29,7 +29,7 @@ using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
-public abstract class SocketStreamChannel : AbstractChannel
+public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
 {
     protected readonly Socket Socket;
     private bool _reading;
@@ -381,7 +381,7 @@ public abstract class SocketStreamChannel : AbstractChannel
                     }).ConfigureAwait(false);
                     if (!admitted)
                         break;
-                    int read = await Socket.ReceiveAsync(buffer.AsMemory(buffer.WriterIndex, buffer.WritableBytes), SocketFlags.None).ConfigureAwait(false);
+                    int read = await ReceiveStreamAsync(buffer.AsMemory(buffer.WriterIndex, buffer.WritableBytes)).ConfigureAwait(false);
                     await DispatchReadAsync(() => continuedBatch || _readRequested || _inputShutdown, () =>
                     {
                         if (!IsOpen || _inputShutdown)
@@ -442,8 +442,31 @@ public abstract class SocketStreamChannel : AbstractChannel
             catch { }
         }
     }
+    private ValueTask<int> ReceiveStreamAsync(Memory<byte> buffer)
+    {
+        if (!OperatingSystem.IsWindows() || Socket.AddressFamily != AddressFamily.Unix)
+            return Socket.ReceiveAsync(buffer, SocketFlags.None);
+        return new ValueTask<int>(Task.Run(async () =>
+        {
+            // Windows AF_UNIX can leave overlapped ReceiveAsync pending after peer close even when
+            // Poll reports readable and a synchronous receive returns EOF (also reproduced without Netty).
+            // There is exactly one channel reader. Receive only after readiness, on a worker, so this
+            // path neither blocks the event loop nor consumes one blocked thread per idle connection.
+            // Bounded asynchronous polling trades idle wakeups/latency for reliable EOF on this backend.
+            int delay = 1;
+            while (IsOpen)
+            {
+                if (Socket.Poll(0, SelectMode.SelectRead))
+                    return Socket.Receive(buffer.Span, SocketFlags.None);
+                await Task.Delay(delay).ConfigureAwait(false);
+                delay = Math.Min(delay * 2, 10);
+            }
+            throw new IOException("Channel is closed.");
+        }));
+    }
     public bool IsInputShutdown => _inputShutdown || !IsActive;
     public bool IsOutputShutdown => OutboundBuffer.IsClosed || !IsActive;
+    public bool IsShutdown => IsInputShutdown && IsOutputShutdown;
     public Task ShutdownOutputAsync() => OnLoopAsync(() => ShutdownOutput(null));
     public Task ShutdownInputAsync() => OnLoopAsync(() =>
     {

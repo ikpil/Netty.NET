@@ -38,7 +38,7 @@ public class SocketShutdownOutputBySelfSourceTest
         var handler = new ShutdownTestHandler();
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        var channel = (TcpSocketChannel)await fixture.Client.Handler(handler).ConnectAsync(listener.LocalEndpoint);
+        var channel = (IDuplexChannel)await fixture.Client.Handler(handler).ConnectAsync(listener.LocalEndpoint);
         Assert.True(channel.IsActive); Assert.False(channel.IsOutputShutdown);
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
         await channel.WriteAndFlushAsync(channel.Allocator.Buffer(1).WriteByte(1));
@@ -64,7 +64,7 @@ public class SocketShutdownOutputBySelfSourceTest
         await using var fixture = new ShutdownFixture(adaptive);
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        var channel = (TcpSocketChannel)await fixture.Client.Handler(new ShutdownTestHandler()).ConnectAsync(listener.LocalEndpoint);
+        var channel = (IDuplexChannel)await fixture.Client.Handler(new ShutdownTestHandler()).ConnectAsync(listener.LocalEndpoint);
         Assert.True(channel.IsActive);
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
         await channel.CloseAsync();
@@ -91,7 +91,7 @@ public class SocketShutdownOutputBySelfSourceTest
         await using var fixture = new ShutdownFixture(adaptive);
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        var channel = (TcpSocketChannel)await fixture.Client.Option(ChannelOption.SO_LINGER, 1)
+        var channel = (IDuplexChannel)await fixture.Client.Option(ChannelOption.SO_LINGER, 1)
             .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(listener.LocalEndpoint);
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
         if (output) await channel.ShutdownOutputAsync();
@@ -101,13 +101,13 @@ public class SocketShutdownOutputBySelfSourceTest
 
 internal sealed class ShutdownTestHandler : SimpleChannelInboundHandler<ByteBuf>
 {
-    internal volatile TcpSocketChannel Channel;
+    internal volatile IDuplexChannel Channel;
     internal readonly System.Threading.Channels.Channel<byte> Bytes = System.Threading.Channels.Channel.CreateUnbounded<byte>();
     internal readonly TaskCompletionSource HalfClosure = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal readonly TaskCompletionSource Closure = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal int HalfClosureCount;
     internal int OutputEvents;
-    public override void ChannelActive(ChannelHandlerContext ctx) => Channel = (TcpSocketChannel)ctx.Channel;
+    public override void ChannelActive(ChannelHandlerContext ctx) => Channel = (IDuplexChannel)ctx.Channel;
     public override void ChannelInactive(ChannelHandlerContext ctx) => Closure.TrySetResult();
     protected override void ChannelRead0(ChannelHandlerContext ctx, ByteBuf msg) => Bytes.Writer.TryWrite((byte)msg.ReadByte());
     public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
