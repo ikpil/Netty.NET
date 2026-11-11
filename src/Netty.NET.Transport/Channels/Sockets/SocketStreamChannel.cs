@@ -201,18 +201,62 @@ public abstract class SocketStreamChannel : AbstractChannel
         }
         var region = (IFileRegion)message;
         // Portable synchronous FileRegion implementations are offloaded, never run on the event-loop worker.
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
-            using var stream = new NetworkStream(Socket, ownsSocket: false);
-            long offset = 0;
-            while (offset < region.Count())
+            using var stream = new FileRegionSocketStream(Socket);
+            while (region.Transferred() < region.Count())
             {
-                long count = region.TransferTo(stream, offset);
-                if (count == 0)
+                // A custom region can advance its logical transfer counter by more than the bytes
+                // written to the target (for example, a complete framed or encrypted source chunk).
+                // The source contract uses transferred(), both as the position and the completion test.
+                long count = region.TransferTo(stream, region.Transferred());
+                if (count < 0 || count == 0 && region.Transferred() < region.Count())
                     throw new IOException("File region made no forward progress.");
-                offset += count;
+                if (count > 0)
+                    await OnSocketLoopAsync(() =>
+                    {
+                        if (!OutboundBuffer.IsClosed) OutboundBuffer.Progress(count);
+                    }).ConfigureAwait(false);
             }
         }).ConfigureAwait(false);
+    }
+    // NetworkStream rejects nonblocking sockets. Keep the caller's socket mode and consume every
+    // Stream.Write span through partial sends, waiting for write readiness only on the file worker.
+    private sealed class FileRegionSocketStream(Socket socket) : Stream
+    {
+        private bool _disposed;
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => !_disposed;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override void Write(byte[] buffer, int offset, int count)
+        { ArgumentNullException.ThrowIfNull(buffer); Write(buffer.AsSpan(offset, count)); }
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            try
+            {
+                while (!buffer.IsEmpty)
+                {
+                    int written = socket.Send(buffer, SocketFlags.None, out SocketError error);
+                    if (written > 0) buffer = buffer[written..];
+                    if (error == SocketError.WouldBlock)
+                    {
+                        if (!buffer.IsEmpty) socket.Poll(-1, SelectMode.SelectWrite);
+                        continue;
+                    }
+                    if (error != SocketError.Success) throw new SocketException((int)error);
+                    if (written == 0) throw new IOException("Socket accepted zero bytes.");
+                }
+            }
+            catch (SocketException error) { throw new IOException("Socket file transfer failed.", error); }
+        }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        protected override void Dispose(bool disposing) { _disposed = true; base.Dispose(disposing); }
     }
     protected override void DoBeginRead()
     {
