@@ -122,12 +122,14 @@ internal sealed class ShutdownFixture : IAsyncDisposable
     private readonly DefaultEventLoopGroup _group = new(2);
     internal Bootstrap Client { get; }
     internal ServerBootstrap Server { get; }
-    internal ShutdownFixture(bool adaptive)
+    internal ShutdownFixture(bool adaptive, bool domain = false)
     {
         IByteBufAllocator allocator = adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default;
-        Client = new Bootstrap().Group(_group).Channel<TcpSocketChannel>().Option(ChannelOption.ALLOCATOR, allocator);
-        Server = new ServerBootstrap().Group(_group).Channel<TcpServerSocketChannel>()
+        Client = new Bootstrap().Group(_group).Option(ChannelOption.ALLOCATOR, allocator);
+        Server = new ServerBootstrap().Group(_group)
             .Option(ChannelOption.ALLOCATOR, allocator).ChildOption(ChannelOption.ALLOCATOR, allocator);
+        if (domain) { Client.Channel<DomainSocketChannel>(); Server.Channel<DomainServerSocketChannel>(); }
+        else { Client.Channel<TcpSocketChannel>(); Server.Channel<TcpServerSocketChannel>(); }
     }
     public async ValueTask DisposeAsync() => await _group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
 }

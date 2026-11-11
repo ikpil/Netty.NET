@@ -200,6 +200,11 @@ public abstract class SocketStreamChannel : AbstractChannel
             return;
         }
         var region = (IFileRegion)message;
+        if (region.Transferred() >= region.Count()) return;
+        // Preserve virtual/custom FileRegion producers. Only the exact default region exposes a plain file range.
+        if (SupportsNativeFileTransfer && region.GetType() == typeof(DefaultFileRegion) &&
+            await TryWriteNativeFileRegionAsync((DefaultFileRegion)region).ConfigureAwait(false))
+            return;
         // Portable synchronous FileRegion implementations are offloaded, never run on the event-loop worker.
         await Task.Run(async () =>
         {
@@ -219,6 +224,70 @@ public abstract class SocketStreamChannel : AbstractChannel
                     }).ConfigureAwait(false);
             }
         }).ConfigureAwait(false);
+    }
+    internal virtual bool SupportsNativeFileTransfer => OperatingSystem.IsLinux() ||
+        OperatingSystem.IsWindows() && Socket.AddressFamily is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6;
+    internal virtual Task<FileRegionSendResult> SendFilePacketAsync(FileStream file, long offset, int count) =>
+        SocketFileRegionSender.SendAsync(Socket, file, offset, count);
+    internal const int NativeFileChunkSize = 1024 * 1024;
+
+    private async Task<bool> TryWriteNativeFileRegionAsync(DefaultFileRegion region)
+    {
+        // File open can block on storage. A supplied stream keeps its identity and mode; .NET 10 only
+        // accepts asynchronous FileStreams in SendPacketsElement, so synchronous streams use TransferTo.
+        FileStream file = await Task.Run(region.OpenForSocketTransfer).ConfigureAwait(false);
+        if (!file.IsAsync || !file.CanRead) return false;
+        for (;;)
+        {
+            Task<FileRegionSendResult> sending = null;
+            int requested = 0;
+            await OnSocketLoopAsync(() =>
+            {
+                EnsureOpen();
+                if (OutboundBuffer.IsClosed) throw new IOException("Channel output is shut down.");
+                long position = region.Transferred();
+                long remaining = region.Count() - position;
+                if (remaining <= 0) return;
+                if (position > long.MaxValue - region.Position()) throw new IOException("File region offset exceeds Int64 range.");
+                long offset = region.Position() + position;
+                long available = RandomAccess.GetLength(file.SafeFileHandle) - offset;
+                if (available <= 0)
+                {
+                    DefaultFileRegion.Validate(region, position);
+                    throw new IOException("File region made no forward progress.");
+                }
+                requested = (int)Math.Min(Math.Min(remaining, available), NativeFileChunkSize);
+                sending = SendFilePacketAsync(file, offset, requested);
+            }).ConfigureAwait(false);
+            if (sending == null) return true;
+
+            FileRegionSendResult result;
+            try { result = await sending.ConfigureAwait(false); }
+            catch (PlatformNotSupportedException) { return false; }
+            if (result.BytesTransferred < 0 || result.BytesTransferred > requested)
+                throw new IOException("Socket reported an invalid file transfer length.");
+            await OnSocketLoopAsync(() =>
+            {
+                region.RecordSocketTransfer(result.BytesTransferred);
+                if (!OutboundBuffer.IsClosed && result.BytesTransferred > 0) OutboundBuffer.Progress(result.BytesTransferred);
+            }).ConfigureAwait(false);
+
+            if (result.Error != SocketError.Success)
+            {
+                // The file may have shrunk between the range check and the kernel call.
+                if (result.Error == SocketError.InvalidArgument) DefaultFileRegion.Validate(region, region.Transferred());
+                // A capability rejection before sending is safe to retry through the portable Stream producer.
+                // Never resend a partially accepted range as if it had not reached the socket.
+                if (result.BytesTransferred == 0 && result.Error is SocketError.OperationNotSupported or SocketError.ProtocolNotSupported or SocketError.InvalidArgument)
+                    return false;
+                throw new IOException("Socket file transfer failed.", new SocketException((int)result.Error));
+            }
+            if (result.BytesTransferred == 0)
+            {
+                DefaultFileRegion.Validate(region, region.Transferred());
+                throw new IOException("File region made no forward progress.");
+            }
+        }
     }
     // NetworkStream rejects nonblocking sockets. Keep the caller's socket mode and consume every
     // Stream.Write span through partial sends, waiting for write readiness only on the file worker.

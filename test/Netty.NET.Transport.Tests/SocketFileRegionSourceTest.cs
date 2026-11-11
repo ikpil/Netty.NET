@@ -22,12 +22,20 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
 #pragma warning disable xUnit1051 // Source write order and independently owned cleanup.
 public class SocketFileRegionSourceTest
 {
+    protected virtual bool Domain => false;
+
+    private ShutdownFixture NewFixture(bool adaptive) => new(adaptive, Domain);
+
+    private EndPoint NewAddress() => Domain ? DomainSocketSourceTest.NewAddress() : new IPEndPoint(IPAddress.Loopback, 0);
+
+    private void RequireBackend() { if (Domain) DomainSocketSourceTest.RequireDomainSockets(); }
     private static readonly byte[] Data = RandomData(1048576 * 10);
     private static byte[] RandomData(int length) { var bytes = new byte[length]; Random.Shared.NextBytes(bytes); return bytes; }
 
@@ -57,13 +65,14 @@ public class SocketFileRegionSourceTest
     [InlineData(true)]
     public async Task TestFileRegionCountLargerThenFile(bool adaptive)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        RequireBackend();
+        await using var fixture = NewFixture(adaptive);
         string path = Path.GetTempFileName();
         IChannel server = null, client = null;
         try
         {
             await File.WriteAllBytesAsync(path, Data, TestContext.Current.CancellationToken);
-            server = await fixture.Server.ChildHandler(new Discard()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            server = await fixture.Server.ChildHandler(new Discard()).BindAsync(NewAddress());
             client = await fixture.Client.Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(server.LocalAddress);
             // Request file region which is bigger then the underlying file.
             var region = new DefaultFileRegion(Open(path), 0, Data.Length + 1024);
@@ -91,13 +100,14 @@ public class SocketFileRegionSourceTest
     [InlineData(true)]
     public async Task TestFileRegionDrainStopsAtCompletion(bool adaptive)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        RequireBackend();
+        await using var fixture = NewFixture(adaptive);
         // Region size > 1 so any chunked transport (e.g. io_uring's generic FileRegion fallback)
         // that sizes its chunk buffer from count() retains spare capacity after the first
         // (and only) source byte is written -- without that spare capacity an inner drain loop
         // would exit on writableBytes() == 0 and the overshoot path would not be exercised.
         const int regionSize = 16;
-        IChannel server = await fixture.Server.ChildHandler(new Discard()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+        IChannel server = await fixture.Server.ChildHandler(new Discard()).BindAsync(NewAddress());
         IChannel client = null;
         try
         {
@@ -122,9 +132,10 @@ public class SocketFileRegionSourceTest
         finally { if (client != null) await client.CloseAsync(); await server.CloseAsync(); }
     }
 
-    private static async Task Transfer(bool adaptive, bool unobservedWrites, bool autoRead, bool defaultFileRegion, CancellationToken cancellation)
+    private async Task Transfer(bool adaptive, bool unobservedWrites, bool autoRead, bool defaultFileRegion, CancellationToken cancellation)
     {
-        await using var fixture = new ShutdownFixture(adaptive);
+        RequireBackend();
+        await using var fixture = NewFixture(adaptive);
         const int bufferSize = 1024;
         string path = Path.GetTempFileName();
         IChannel server = null, client = null;
@@ -141,7 +152,7 @@ public class SocketFileRegionSourceTest
                 await output.WriteAsync(RandomData(Random.Shared.Next(8192)), cancellation);
             }
             var received = new TestHandler(autoRead);
-            server = await fixture.Server.ChildOption(ChannelOption.AUTO_READ, autoRead).ChildHandler(received).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), cancellation);
+            server = await fixture.Server.ChildOption(ChannelOption.AUTO_READ, autoRead).ChildHandler(received).BindAsync(NewAddress(), cancellation);
             client = await fixture.Client.Option(ChannelOption.AUTO_READ, autoRead).Handler(new Discard(autoRead)).ConnectAsync(server.LocalAddress, cancellationToken: cancellation);
             IFileRegion region = new DefaultFileRegion(Open(path), startOffset, Data.Length - bufferSize);
             IFileRegion emptyRegion = new DefaultFileRegion(Open(path), 0, 0);
@@ -170,7 +181,9 @@ public class SocketFileRegionSourceTest
         }
         finally { if (client != null) await client.CloseAsync(); if (server != null) await server.CloseAsync(); File.Delete(path); }
     }
-    private static FileStream Open(string path) => new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+    // CLR file-handle sends require an asynchronous FileStream. This preserves the original range and file identity.
+    private static FileStream Open(string path) => new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete,
+        bufferSize: 1, options: FileOptions.Asynchronous);
     private sealed class Discard(bool autoRead = true) : SimpleChannelInboundHandler<object>
     {
         protected override void ChannelRead0(ChannelHandlerContext context, object message)

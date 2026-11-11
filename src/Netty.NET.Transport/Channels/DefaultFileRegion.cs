@@ -81,13 +81,14 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         if (!IsOpen() && ReferenceCount > 0)
         {
             // Only open if this DefaultFileRegion was not released yet.
-            _file = new FileStream(_path.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            _file = new FileStream(_path.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete,
+                bufferSize: 1, options: FileOptions.Asynchronous);
         }
     }
     public long Position() => _position;
     public long Count() => _count;
     public long Transferred() => _transferred;
-    public long TransferTo(Stream target, long position)
+    public virtual long TransferTo(Stream target, long position)
     {
         if (position < 0 || position > _count)
             throw new ArgumentOutOfRangeException(nameof(position));
@@ -146,6 +147,15 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
     public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
     public new IFileRegion Touch() => this;
     public override IFileRegion Touch(object hint) => this;
+    // Native socket sends must borrow the same opened file, including after rename/unlink. Never
+    // reopen a supplied FileStream by path or take ownership away from this reference-counted region.
+    internal FileStream OpenForSocketTransfer()
+    {
+        if (ReferenceCount == 0) throw new IllegalReferenceCountException(0);
+        Open();
+        return _file;
+    }
+    internal void RecordSocketTransfer(int bytes) => _transferred = unchecked(_transferred + bytes);
     internal static void Validate(DefaultFileRegion region, long position)
     {
         // If the amount of written data is 0 we need to check if the requested count is bigger then the
