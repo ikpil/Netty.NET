@@ -38,7 +38,7 @@ internal sealed class SourceTestChannel : AbstractChannel
     {
         // NOOP
     }
-    protected override Task DoWriteAsync(object message)
+    protected override Task DoWrite(object message)
     {
         // NOOP
         return Task.CompletedTask;

@@ -96,7 +96,7 @@ public class SocketHalfClosedContractTest
     {
         internal readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Failure = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override Task DoWriteAsync(object message) { Started.TrySetResult(); return Failure.Task; }
+        protected override Task DoWrite(object message) { Started.TrySetResult(); return Failure.Task; }
     }
 
     [Fact(Timeout = 10000)]

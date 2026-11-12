@@ -116,7 +116,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) { SetActive(true); return Task.CompletedTask; }
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWriteAsync(object message) => Task.FromException(new IOException());
+        protected override Task DoWrite(object message) => Task.FromException(new IOException());
         private sealed class MyChannelPipeline(MyChannel channel) : DefaultChannelPipeline(channel)
         {
             protected override void OnUnhandledInboundChannelActive() => channel.Active?.Invoke();

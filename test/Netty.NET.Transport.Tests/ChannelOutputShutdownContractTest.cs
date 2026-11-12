@@ -144,7 +144,7 @@ public class ChannelOutputShutdownContractTest
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
         protected override void DoClose() { AllOnOwner &= EventLoop.InEventLoop(); NativeCloses++; }
         protected override void DoBeginRead() { }
-        protected override Task DoWriteAsync(object message) => Write.Task;
+        protected override Task DoWrite(object message) => Write.Task;
         protected override void DoShutdownOutput()
         {
             AllOnOwner &= EventLoop.InEventLoop();

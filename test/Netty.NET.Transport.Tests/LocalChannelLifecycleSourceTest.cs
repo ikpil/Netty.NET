@@ -310,7 +310,7 @@ public partial class LocalChannelSourceTest
     private sealed class CountingWriteLocalChannel : LocalChannel
     {
         internal int WriteAttempts;
-        protected override Task DoWriteAsync(object message) { WriteAttempts++; return base.DoWriteAsync(message); }
+        protected override Task DoWrite(object message) { WriteAttempts++; return base.DoWrite(message); }
     }
     private sealed class CheckConnectCompletion(Func<Task> connect, TaskCompletionSource asserted) : TestHandler
     {

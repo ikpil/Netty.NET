@@ -491,7 +491,7 @@ public class ChannelOutboundBufferTest
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => throw new NotSupportedException();
         protected override void DoClose() => throw new NotSupportedException();
         protected override void DoBeginRead() => throw new NotSupportedException();
-        protected override Task DoWriteAsync(object message) => throw new NotSupportedException();
+        protected override Task DoWrite(object message) => throw new NotSupportedException();
     }
 }
 #pragma warning restore xUnit1051, xUnit1069

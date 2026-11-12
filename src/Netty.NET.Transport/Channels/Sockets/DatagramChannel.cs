@@ -266,11 +266,11 @@ public class DatagramChannel : AbstractChannel
             return message;
         throw new NotSupportedException("UDP writes require a ByteBuf or an addressed ByteBuf envelope.");
     }
-    protected override int? WriteMessageLimit => Config is DefaultChannelConfig config
+    protected override int? MaxMessagesPerWrite() => Config is DefaultChannelConfig config
         ? config.GetMaxMessagesPerWrite()
         : Config.TryGetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, out int value) ? value : int.MaxValue;
 
-    protected override async Task DoWriteAsync(object message)
+    protected override async Task DoWrite(object message)
     {
         var envelope = message as IAddressedEnvelope<ByteBuf, EndPoint>;
         ByteBuf data = envelope?.Content ?? (ByteBuf)message;

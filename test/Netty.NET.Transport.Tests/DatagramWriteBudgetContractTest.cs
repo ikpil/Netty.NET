@@ -336,7 +336,7 @@ public class DatagramWriteBudgetContractTest
     {
         internal readonly List<int> Attempts = new();
         internal Func<int, Task> Write;
-        protected override Task DoWriteAsync(object message)
+        protected override Task DoWrite(object message)
         {
             var buffer = Assert.IsAssignableFrom<ByteBuf>(message);
             int id = buffer.IsReadable ? buffer.GetByte(buffer.ReaderIndex) : -1;

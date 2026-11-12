@@ -283,20 +283,20 @@ public class ManualOutboundIoContractTest
     private sealed class HeldStream(Socket socket) : TcpSocketChannel(socket)
     {
         internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override async Task DoWriteAsync(object message)
+        protected override async Task DoWrite(object message)
         {
             await Release.Task.ConfigureAwait(false);
-            await base.DoWriteAsync(message).ConfigureAwait(false);
+            await base.DoWrite(message).ConfigureAwait(false);
         }
     }
 
     private sealed class HeldDatagram : DatagramChannel
     {
         internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override async Task DoWriteAsync(object message)
+        protected override async Task DoWrite(object message)
         {
             await Release.Task.ConfigureAwait(false);
-            await base.DoWriteAsync(message).ConfigureAwait(false);
+            await base.DoWrite(message).ConfigureAwait(false);
         }
     }
 }

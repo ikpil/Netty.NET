@@ -194,14 +194,14 @@ public class AbstractChannelTest
             Task.FromException(new NotSupportedException());
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWriteAsync(object message) => Task.CompletedTask;
+        protected override Task DoWrite(object message) => Task.CompletedTask;
     }
 
     private sealed class FailingChannel(IOException error) : TestChannel(false)
     {
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
         { SetActive(true); return Task.CompletedTask; }
-        protected override Task DoWriteAsync(object message) => Task.FromException(error);
+        protected override Task DoWrite(object message) => Task.FromException(error);
     }
 
     private sealed class LifecycleHandler : ChannelInboundHandlerAdapter

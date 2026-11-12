@@ -183,7 +183,7 @@ public class LocalChannel : AbstractChannel
             while (_inbound.TryDequeue(out var message))
                 ReferenceCountUtil.Release(message);
     }
-    protected override Task DoWriteAsync(object message)
+    protected override Task DoWrite(object message)
     {
         _writeInProgress = true;
         var peer = _peer;

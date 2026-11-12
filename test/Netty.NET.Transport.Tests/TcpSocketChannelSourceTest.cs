@@ -42,14 +42,14 @@ public class TcpSocketChannelSourceTest
         IChannel server = null;
         try
         {
-            var bootstrap = new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>();
-            bootstrap.ChildHandler(new FlushAfterGatheredHandler());
-            server = await bootstrap.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-            using var client = new TcpClient();
-            await client.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
-            var bytes = new byte[3];
-            await client.GetStream().ReadExactlyAsync(bytes).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
-            Assert.Equal("abc", Encoding.ASCII.GetString(bytes));
+            var sb = new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>();
+            sb.ChildHandler(new FlushAfterGatheredHandler());
+            server = await sb.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            using var s = new TcpClient();
+            await s.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
+            var buf = new byte[3];
+            await s.GetStream().ReadExactlyAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal("abc", Encoding.ASCII.GetString(buf));
         }
         finally
         {
@@ -60,19 +60,19 @@ public class TcpSocketChannelSourceTest
     }
     private sealed class FlushAfterGatheredHandler : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(ChannelHandlerContext ctx)
         {
             // Trigger a gathering write by writing two buffers.
-            _ = context.WriteAsync(Unpooled.Buffer(1).WriteByte('a'));
-            Task write = context.WriteAsync(Unpooled.Buffer(1).WriteByte('b'));
-            _ = WriteAfterCompletionAsync(write, context);
-            context.Flush();
+            _ = ctx.WriteAsync(Unpooled.Buffer(1).WriteByte('a'));
+            Task f = ctx.WriteAsync(Unpooled.Buffer(1).WriteByte('b'));
+            _ = WriteAfterCompletionAsync(f, ctx);
+            ctx.Flush();
         }
-        private static async Task WriteAfterCompletionAsync(Task write, ChannelHandlerContext context)
+        private static async Task WriteAfterCompletionAsync(Task future, ChannelHandlerContext ctx)
         {
-            await write.ConfigureAwait(false);
+            await future.ConfigureAwait(false);
             // This message must be flushed
-            await context.WriteAndFlushAsync(Unpooled.Buffer(1).WriteByte('c')).ConfigureAwait(false);
+            await ctx.WriteAndFlushAsync(Unpooled.Buffer(1).WriteByte('c')).ConfigureAwait(false);
         }
     }
 
@@ -88,33 +88,33 @@ public class TcpSocketChannelSourceTest
         IChannel server = null;
         try
         {
-            var bootstrap = new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
+            var sb = new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
                 .ChildOption(ChannelOption.SO_SNDBUF, 1024)
                 .ChildHandler(new FlushCloseHandler(futures, closed));
-            server = await bootstrap.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-            using var client = new TcpClient();
-            await client.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
-            var bytes = new byte[8192];
+            server = await sb.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            using var s = new TcpClient();
+            await s.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
+            var buf = new byte[8192];
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             for (; ; )
             {
-                if (await client.GetStream().ReadAsync(bytes, timeout.Token) == 0)
+                if (await s.GetStream().ReadAsync(buf, timeout.Token) == 0)
                     break;
                 // Wait a little bit so that the write attempts are split into multiple flush attempts.
                 await Task.Delay(10, timeout.Token);
             }
             await closed.Task.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(3, futures.Count);
-            Assert.True(futures.TryDequeue(out var first));
-            Assert.True(futures.TryDequeue(out var second));
-            Assert.True(futures.TryDequeue(out var third));
-            Assert.True(first.IsCompletedSuccessfully);
-            Assert.True(second.IsCompleted);
-            Assert.False(second.IsCompletedSuccessfully);
-            await Assert.ThrowsAsync<IOException>(() => second);
-            Assert.True(third.IsCompleted);
-            Assert.False(third.IsCompletedSuccessfully);
-            await Assert.ThrowsAsync<IOException>(() => third);
+            Assert.True(futures.TryDequeue(out var f1));
+            Assert.True(futures.TryDequeue(out var f2));
+            Assert.True(futures.TryDequeue(out var f3));
+            Assert.True(f1.IsCompletedSuccessfully);
+            Assert.True(f2.IsCompleted);
+            Assert.False(f2.IsCompletedSuccessfully);
+            await Assert.ThrowsAsync<IOException>(() => f2);
+            Assert.True(f3.IsCompleted);
+            Assert.False(f3.IsCompletedSuccessfully);
+            await Assert.ThrowsAsync<IOException>(() => f3);
         }
         finally
         {
@@ -141,57 +141,57 @@ public class TcpSocketChannelSourceTest
         // Just some random bytes
         byte[] bytes = new byte[1024];
         Random.Shared.NextBytes(bytes);
-        IChannel server = null, client = null;
+        IChannel sc = null, cc = null;
         try
         {
-            server = await new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
+            sc = await new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
                 .ChildOption(ChannelOption.SO_KEEPALIVE, true)
                 .ChildHandler(new ActionChannelInitializer<IChannel>(ch => ch.Pipeline.AddLast(
                     new ReRegisterHandler(group, sameEventLoop, latch, eventLoopCheck))))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
-            client = await new Bootstrap().Group(group).Channel<TcpSocketChannel>()
-                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(server.LocalAddress, cancellationToken: TestContext.Current.CancellationToken);
-            await client.WriteAndFlushAsync(Unpooled.WrappedBuffer(bytes), TestContext.Current.CancellationToken);
+            cc = await new Bootstrap().Group(group).Channel<TcpSocketChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(sc.LocalAddress, cancellationToken: TestContext.Current.CancellationToken);
+            await cc.WriteAndFlushAsync(Unpooled.WrappedBuffer(bytes), TestContext.Current.CancellationToken);
             Assert.True(latch.Wait(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken));
             await eventLoopCheck.Task.WaitAsync(TestContext.Current.CancellationToken);
         }
         finally
         {
-            if (client != null)
-                await client.CloseAsync();
-            if (server != null)
-                await server.CloseAsync();
+            if (cc != null)
+                await cc.CloseAsync();
+            if (sc != null)
+                await sc.CloseAsync();
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }
     private sealed class ReRegisterHandler(DefaultEventLoopGroup group, bool sameEventLoop, CountdownEvent latch,
         TaskCompletionSource eventLoopCheck) : SimpleChannelInboundHandler<ByteBuf>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        protected override void ChannelRead0(ChannelHandlerContext ctx, ByteBuf byteBuf)
         {
             // We was able to read something from the Channel after reregister.
             if (!latch.IsSet)
                 latch.Signal();
         }
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(ChannelHandlerContext ctx)
         {
             var loop = group.Next();
             if (sameEventLoop)
-                _ = Deregister(context, loop);
+                _ = Deregister(ctx, loop);
             else
-                loop.Execute(() => _ = Deregister(context, loop));
+                loop.Execute(() => _ = Deregister(ctx, loop));
         }
-        private async Task Deregister(ChannelHandlerContext context, IEventLoop loop)
+        private async Task Deregister(ChannelHandlerContext ctx, IEventLoop loop)
         {
             // As soon as the channel becomes active re-register it to another
             // EventLoop. After this is done we should still receive the data that
             // was written to the channel.
             try
             {
-                await context.DeregisterAsync().ConfigureAwait(false);
-                Assert.NotSame(loop, context.Channel.EventLoop);
+                await ctx.DeregisterAsync().ConfigureAwait(false);
+                Assert.NotSame(loop, ctx.Channel.EventLoop);
                 eventLoopCheck.TrySetResult();
-                await group.Next().RegisterAsync(context.Channel).ConfigureAwait(false);
+                await group.Next().RegisterAsync(ctx.Channel).ConfigureAwait(false);
             }
             catch (Exception error) { eventLoopCheck.TrySetException(error); }
         }
@@ -200,15 +200,15 @@ public class TcpSocketChannelSourceTest
     public async Task TestShutdownOutputAndClose()
     {
         var group = new DefaultEventLoopGroup(1);
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
+        var socket = new TcpListener(IPAddress.Loopback, 0);
+        socket.Start();
         TcpClient accepted = null;
         try
         {
             var channel = (TcpSocketChannel)await new Bootstrap().Group(group).Channel<TcpSocketChannel>()
-                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(listener.LocalEndpoint,
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(socket.LocalEndpoint,
                     cancellationToken: TestContext.Current.CancellationToken);
-            accepted = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
+            accepted = await socket.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
             await channel.ShutdownOutputAsync();
             await channel.CloseAsync(TestContext.Current.CancellationToken);
         }
@@ -221,7 +221,7 @@ public class TcpSocketChannelSourceTest
                 // ignore
             }
             try
-            { listener.Stop(); }
+            { socket.Stop(); }
             catch (IOException)
             {
                 // ignore
@@ -231,21 +231,21 @@ public class TcpSocketChannelSourceTest
     }
     private sealed class FlushCloseHandler(ConcurrentQueue<Task> futures, TaskCompletionSource closed) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(ChannelHandlerContext ctx)
         {
             // Write a large enough data so that it is split into two loops.
-            Task first = context.WriteAsync(context.Allocator.Buffer().WriteZero(1048576));
+            Task first = ctx.WriteAsync(ctx.Allocator.Buffer().WriteZero(1048576));
             futures.Enqueue(first);
-            _ = CloseAfterFirstAsync(first, context);
-            futures.Enqueue(context.WriteAsync(context.Allocator.Buffer().WriteZero(1048576)));
-            context.Flush();
-            futures.Enqueue(context.WriteAsync(context.Allocator.Buffer().WriteZero(1048576)));
-            context.Flush();
+            _ = CloseAfterFirstAsync(first, ctx);
+            futures.Enqueue(ctx.WriteAsync(ctx.Allocator.Buffer().WriteZero(1048576)));
+            ctx.Flush();
+            futures.Enqueue(ctx.WriteAsync(ctx.Allocator.Buffer().WriteZero(1048576)));
+            ctx.Flush();
         }
-        private async Task CloseAfterFirstAsync(Task first, ChannelHandlerContext context)
+        private async Task CloseAfterFirstAsync(Task first, ChannelHandlerContext ctx)
         {
             try
-            { await first.ConfigureAwait(false); await context.CloseAsync().ConfigureAwait(false); closed.TrySetResult(); }
+            { await first.ConfigureAwait(false); await ctx.CloseAsync().ConfigureAwait(false); closed.TrySetResult(); }
             catch (Exception error) { closed.TrySetException(error); }
         }
     }

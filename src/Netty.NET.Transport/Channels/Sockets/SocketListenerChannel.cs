@@ -69,7 +69,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
         _socket.Dispose();
     }
     protected override object FilterOutboundMessage(object message) => throw new NotSupportedException("A server channel cannot write.");
-    protected override Task DoWriteAsync(object message) => Task.FromException(new NotSupportedException());
+    protected override Task DoWrite(object message) => Task.FromException(new NotSupportedException());
     protected override void DoBeginRead()
     {
         _readRequested = true;

@@ -145,7 +145,7 @@ public class EmbeddedChannel : AbstractChannel
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken) { SetActive(false); return Task.CompletedTask; }
     protected override void DoClose() { }
     protected override void DoBeginRead() { }
-    protected override Task DoWriteAsync(object message)
+    protected override Task DoWrite(object message)
     {
         ReferenceCountUtil.Retain(message);
         HandleOutboundMessage(message);

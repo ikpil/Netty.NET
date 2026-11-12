@@ -84,8 +84,8 @@ public class CoalescingBufferQueueContractTest
     private sealed class DelayedChannel : EmbeddedChannel
     {
         internal readonly TaskCompletionSource AllowWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override async Task DoWriteAsync(object message)
-        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWriteAsync(message).ConfigureAwait(false); }
+        protected override async Task DoWrite(object message)
+        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(message).ConfigureAwait(false); }
     }
     private sealed class EmptyHandler : ChannelHandlerAdapter { }
     private sealed class RejectableExecutor : AbstractEventExecutor

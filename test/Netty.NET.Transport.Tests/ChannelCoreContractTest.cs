@@ -266,7 +266,7 @@ public class ChannelCoreContractTest
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWriteAsync(object message) => _write;
+        protected override Task DoWrite(object message) => _write;
     }
     private sealed class ReleaseObserver(ByteBuf content, Action released) : DefaultByteBufHolder(content)
     {
@@ -290,7 +290,7 @@ public class ChannelCoreContractTest
         protected override Task DoConnectAsync(System.Net.EndPoint remote, System.Net.EndPoint local, CancellationToken token) => Task.CompletedTask;
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWriteAsync(object message) => Task.CompletedTask;
+        protected override Task DoWrite(object message) => Task.CompletedTask;
     }
     private sealed class Recorder(string name, List<string> calls) : ChannelDuplexHandler
     {

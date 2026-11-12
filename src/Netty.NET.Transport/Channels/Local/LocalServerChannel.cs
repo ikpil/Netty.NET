@@ -37,7 +37,7 @@ public class LocalServerChannel : AbstractChannel, IServerChannel
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     { cancellationToken.ThrowIfCancellationRequested(); _local = LocalChannelRegistry.Register(this, _local, address); SetActive(true); return Task.CompletedTask; }
     protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.FromException(new NotSupportedException("Server channels cannot connect."));
-    protected override Task DoWriteAsync(object message) => Task.FromException(new NotSupportedException("Server channels cannot write."));
+    protected override Task DoWrite(object message) => Task.FromException(new NotSupportedException("Server channels cannot write."));
     protected override object FilterOutboundMessage(object message) => throw new NotSupportedException("Server channels cannot write.");
     protected override void DoClose()
     {

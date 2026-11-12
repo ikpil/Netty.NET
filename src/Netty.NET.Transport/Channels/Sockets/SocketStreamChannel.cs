@@ -96,11 +96,85 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
         return message is ByteBuf or IFileRegion ? message : throw new NotSupportedException("Stream writes require ByteBuf or IFileRegion.");
     }
 
-    // Custom channels can override DoWriteAsync; only the built-in socket types opt into batching.
+    // Custom channels can override DoWrite; only the built-in socket types opt into batching.
     internal virtual bool SupportsGatheringWrites =>
         GetType() == typeof(TcpSocketChannel) || GetType() == typeof(DomainSocketChannel);
 
     internal void ResetGatheringWriteLimit() => Volatile.Write(ref _gatheringWriteLimit, 0);
+
+    /**
+     * Write objects to the OS.
+     * @param in the collection which contains objects to write.
+     * @return The value that should be decremented from the write quantum which starts at
+     * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
+     * <ul>
+     *     <li>0 - if no write was attempted. This is appropriate if an empty {@link ByteBuf} (or other empty content)
+     * is encountered</li>
+     *     <li>1 - if a single call to write data was made to the OS</li>
+     *     <li>{@link ChannelUtils#WRITE_STATUS_SNDBUF_FULL} - if an attempt to write data was made to the OS, but no
+     * data was accepted</li>
+     * </ul>
+     * @throws Exception if an I/O exception occurs during write.
+     */
+    internal override Task<int> DoWrite0(ChannelOutboundBuffer @in)
+    {
+        if (@in.IsClosed || !SupportsGatheringWrites)
+            return null;
+        object msg = @in.Current;
+        if (msg == null)
+        {
+            // Directly return here so incompleteWrite(...) is not called.
+            return Task.FromResult(0);
+        }
+        // CLR: null delegates non-ByteBuf/custom producers to their existing whole-message path.
+        if (msg is not ByteBuf) return null;
+        return DoWriteInternal(@in, msg);
+    }
+
+    private async Task<int> DoWriteInternal(ChannelOutboundBuffer @in, object msg)
+    {
+        var buf = (ByteBuf)msg;
+        if (!buf.IsReadable)
+        {
+            @in.Remove();
+            return 0;
+        }
+
+        // CLR Socket.SendAsync does not advance ByteBuf indices. Commit the returned byte count on the owner.
+        int expectedWrittenBytes = buf.ReadableBytes;
+        int localFlushedAmount;
+        bool pending;
+        buf.Retain();
+        try
+        {
+            Task<int> operation = DoWriteBytes(buf);
+            pending = !operation.IsCompleted;
+            localFlushedAmount = await operation.ConfigureAwait(false);
+            // A CLR asynchronous send waits for write readiness. A successful nonempty send cannot return zero.
+            if (localFlushedAmount <= 0 || localFlushedAmount > expectedWrittenBytes)
+                throw new IOException("Socket reported an invalid scalar write length.");
+        }
+        finally { ReferenceCountUtil.SafeRelease(buf); }
+
+        await CompleteOutboundIoAsync(() =>
+        {
+            if (!IsOpen || @in.IsClosed) return false;
+            buf.ReaderIndex += localFlushedAmount;
+            @in.Progress(localFlushedAmount);
+            if (IsOpen && !@in.IsClosed && !buf.IsReadable)
+                @in.Remove();
+            return true;
+        }, pending).ConfigureAwait(false);
+        return 1;
+    }
+
+    /**
+     * Write bytes form the given {@link ByteBuf} to the underlying {@link java.nio.channels.Channel}.
+     * @param buf           the {@link ByteBuf} from which the bytes should be written
+     * @return amount       the amount of written bytes
+     */
+    protected virtual Task<int> DoWriteBytes(ByteBuf buf) =>
+        Socket.SendAsync(buf.ReadableSequence.First, SocketFlags.None).AsTask();
 
     internal override Task<int> TryGatherWriteAsync()
     {
@@ -185,21 +259,21 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
             Interlocked.CompareExchange(ref _gatheringWriteLimit, attempted / 2, previous);
     }
 
-    protected override async Task DoWriteAsync(object message)
+    protected override async Task DoWrite(object msg)
     {
-        if (message is ByteBuf buffer)
+        if (msg is ByteBuf buf)
         {
-            while (buffer.ReadableBytes != 0)
+            while (buf.ReadableBytes != 0)
             {
-                // A composite buffer has multiple borrowed segments and need not expose contiguous memory.
-                int sent = await Socket.SendAsync(buffer.ReadableSequence.First, SocketFlags.None).ConfigureAwait(false);
-                if (sent == 0)
+                // A composite buf has multiple borrowed segments and need not expose contiguous memory.
+                int localFlushedAmount = await DoWriteBytes(buf).ConfigureAwait(false);
+                if (localFlushedAmount == 0)
                     throw new IOException("Socket accepted zero bytes.");
-                await OnSocketLoopAsync(() => { buffer.ReaderIndex += sent; OutboundBuffer.Progress(sent); }).ConfigureAwait(false);
+                await OnSocketLoopAsync(() => { buf.ReaderIndex += localFlushedAmount; OutboundBuffer.Progress(localFlushedAmount); }).ConfigureAwait(false);
             }
             return;
         }
-        var region = (IFileRegion)message;
+        var region = (IFileRegion)msg;
         if (region.Transferred() >= region.Count()) return;
         // Preserve virtual/custom FileRegion producers. Only the exact default region exposes a plain file range.
         if (SupportsNativeFileTransfer && region.GetType() == typeof(DefaultFileRegion) &&

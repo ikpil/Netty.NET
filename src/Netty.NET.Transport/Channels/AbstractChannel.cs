@@ -188,7 +188,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
 
     internal virtual bool UsesSocketCompletions => false;
 
-    private Task CompleteOutboundIoAsync(Func<bool> action, bool pending) =>
+    protected Task CompleteOutboundIoAsync(Func<bool> action, bool pending) =>
         pending && UsesSocketCompletions ? DispatchSocketAsync(action, true) : OnLoopAsync(() => action());
 
     protected void StartSocketWork(Action action)
@@ -502,13 +502,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
     private async Task DrainWritesAsync()
     {
-        int gatheredWrites = 0;
         bool handedOff = false;
         try
         {
             // Snapshot the message-channel quantum for this write pass, as in AbstractNioMessageChannel.doWrite.
             // Byte streams, embedded and local transports retain their own write policies.
-            int? messagesRemaining = WriteMessageLimit;
+            int? maxMessagesPerWrite = MaxMessagesPerWrite();
+            int writeSpinCount = Config.GetWriteSpinCount();
+            bool writeSpinCountUsed = false;
             while (_open && OutboundBuffer.Current is { } message)
             {
                 bool pending = false;
@@ -516,6 +517,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 {
                     if (TryGatherWriteAsync() is { } gather)
                     {
+                        writeSpinCountUsed = true;
                         pending = !gather.IsCompleted;
                         int written = await gather.ConfigureAwait(false);
                         await CompleteOutboundIoAsync(() =>
@@ -524,7 +526,15 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                             OutboundBuffer.RemoveBytes(written);
                             return true;
                         }, pending).ConfigureAwait(false);
-                        gatheredWrites++;
+                        --writeSpinCount;
+                    }
+                    else if (DoWrite0(OutboundBuffer) is { } write)
+                    {
+                        writeSpinCountUsed = true;
+                        // We have something else beside ByteBuffers to write so fallback to normal writes.
+                        // CLR: the scalar producer commits its progress/removal on the owner and returns the quantum cost.
+                        pending = !write.IsCompleted;
+                        writeSpinCount -= await write.ConfigureAwait(false);
                     }
                     else
                     {
@@ -532,7 +542,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         ReferenceCountUtil.Retain(message);
                         try
                         {
-                            Task operation = DoWriteAsync(message);
+                            Task operation = DoWrite(message);
                             pending = !operation.IsCompleted;
                             await operation.ConfigureAwait(false);
                         }
@@ -552,12 +562,11 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     }, pending).ConfigureAwait(false);
                 }
                 // A recoverable message write failure consumes the same quantum as a successful message.
-                messagesRemaining--;
+                maxMessagesPerWrite--;
                 // The next iteration must inspect state on the event loop, including after an asynchronous write.
                 bool inEventLoop = EventLoop.InEventLoop();
-                bool messageLimitReached = messagesRemaining == 0;
-                bool yield = inEventLoop && (messageLimitReached || gatheredWrites != 0 &&
-                    gatheredWrites >= Config.GetWriteSpinCount()) && OutboundBuffer.Current != null;
+                bool messageLimitReached = maxMessagesPerWrite == 0;
+                bool yield = inEventLoop && (messageLimitReached || writeSpinCountUsed && writeSpinCount <= 0) && OutboundBuffer.Current != null;
                 if (!inEventLoop || yield)
                 {
                     void ResumeWrites()
@@ -596,7 +605,8 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return ready;
         }, true);
     }
-    protected virtual int? WriteMessageLimit => null;
+    protected virtual int? MaxMessagesPerWrite() => null;
+    internal virtual Task<int> DoWrite0(ChannelOutboundBuffer @in) => null;
     internal virtual Task<int> TryGatherWriteAsync() => null;
     internal void BeginRead()
     {
@@ -720,7 +730,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * Schedule a read operation.
      */
     protected abstract void DoBeginRead();
-    protected abstract Task DoWriteAsync(object message);
+    protected abstract Task DoWrite(object message);
     protected virtual void DoWriteComplete() { }
     protected internal virtual void OnUnhandledInboundMessage(object message) => ReferenceCountUtil.Release(message);
     protected internal virtual void OnUnhandledUserEvent(object evt) => ReferenceCountUtil.Release(evt);
