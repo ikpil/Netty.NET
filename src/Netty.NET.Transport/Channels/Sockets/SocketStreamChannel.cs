@@ -32,6 +32,7 @@ namespace Netty.NET.Transport.Channels.Sockets;
 public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
 {
     protected readonly Socket Socket;
+    private readonly bool _supportsGatheringWrites;
     private bool _reading;
     private bool _readRequested;
     private volatile bool _inputShutdown;
@@ -40,6 +41,9 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
     protected SocketStreamChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false, 16))
     {
         Socket = socket ?? throw new ArgumentNullException(nameof(socket));
+        // CLR-only dispatch policy: bind the actual whole-message virtual slot without invoking it.
+        // This respects inherited overrides, hidden/new slots and covariant Task<T> returns.
+        _supportsGatheringWrites = ((Func<object, Task>)DoWrite).Method.DeclaringType == typeof(SocketStreamChannel);
         SetActive(socket.Connected);
         CalculateMaxBytesPerGatheringWrite();
     }
@@ -97,9 +101,8 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
         return message is ByteBuf or IFileRegion ? message : throw new NotSupportedException("Stream writes require ByteBuf or IFileRegion.");
     }
 
-    // Custom channels can override DoWrite; only the built-in socket types opt into batching.
-    internal virtual bool SupportsGatheringWrites =>
-        GetType() == typeof(TcpSocketChannel) || GetType() == typeof(DomainSocketChannel);
+    // CLR-only dispatch policy: ordinary subclasses inherit native writes; custom whole-message overrides keep ownership.
+    internal virtual bool SupportsGatheringWrites => _supportsGatheringWrites;
 
     internal int GetMaxBytesPerGatheringWrite() => Volatile.Read(ref _maxBytesPerGatheringWrite);
 
