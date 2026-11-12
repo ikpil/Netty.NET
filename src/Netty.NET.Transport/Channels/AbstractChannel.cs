@@ -503,8 +503,12 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private async Task DrainWritesAsync()
     {
         int gatheredWrites = 0;
+        bool handedOff = false;
         try
         {
+            // Snapshot the message-channel quantum for this write pass, as in AbstractNioMessageChannel.doWrite.
+            // Byte streams, embedded and local transports retain their own write policies.
+            int? messagesRemaining = WriteMessageLimit;
             while (_open && OutboundBuffer.Current is { } message)
             {
                 bool pending = false;
@@ -547,32 +551,52 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         return handled;
                     }, pending).ConfigureAwait(false);
                 }
+                // A recoverable message write failure consumes the same quantum as a successful message.
+                messagesRemaining--;
                 // The next iteration must inspect state on the event loop, including after an asynchronous write.
                 bool inEventLoop = EventLoop.InEventLoop();
-                bool yield = inEventLoop && gatheredWrites != 0 &&
-                    gatheredWrites >= Config.GetWriteSpinCount() && OutboundBuffer.Current != null;
+                bool messageLimitReached = messagesRemaining == 0;
+                bool yield = inEventLoop && (messageLimitReached || gatheredWrites != 0 &&
+                    gatheredWrites >= Config.GetWriteSpinCount()) && OutboundBuffer.Current != null;
                 if (!inEventLoop || yield)
                 {
                     void ResumeWrites()
                     {
-                        _writing = false;
                         // Resume the existing flush without admitting writes queued after it.
-                        if (IsOpen && OutboundBuffer.Current != null)
-                        {
-                            _writing = true;
-                            _ = DrainWritesAsync();
-                        }
+                        // Keep single-writer ownership across the handoff, including a pending native operation.
+                        _ = DrainWritesAsync();
                     }
-                    Task resume = yield ? QueueSocketWorkAsync(ResumeWrites)
-                        : UsesSocketCompletions ? OnSocketLoopAsync(ResumeWrites) : OnLoopAsync(ResumeWrites);
-                    await resume.ConfigureAwait(false);
+                    handedOff = true;
+                    try
+                    {
+                        // Did not write all messages.
+                        // CLR: re-arm message writes in the next I/O phase instead of creating selector operations.
+                        Task resume = yield && messageLimitReached ? QueueMessageWriteAsync(ResumeWrites)
+                            : yield ? QueueSocketWorkAsync(ResumeWrites)
+                            : UsesSocketCompletions ? OnSocketLoopAsync(ResumeWrites) : OnLoopAsync(ResumeWrites);
+                        await resume.ConfigureAwait(false);
+                    }
+                    catch { handedOff = false; throw; }
                     return;
                 }
             }
+            // Wrote all messages.
         }
         catch (Exception error) { OnUnhandledException(error); }
-        finally { if (EventLoop.InEventLoop()) { _writing = false; DoWriteComplete(); } }
+        finally { if (!handedOff && EventLoop.InEventLoop()) { _writing = false; DoWriteComplete(); } }
     }
+    private Task QueueMessageWriteAsync(Action resume)
+    {
+        if (EventLoop is not (DefaultEventLoop or ManualIoEventLoop))
+            return QueueSocketWorkAsync(resume);
+        return DispatchSocketAsync(() =>
+        {
+            bool ready = IsOpen && OutboundBuffer.Current != null;
+            resume();
+            return ready;
+        }, true);
+    }
+    protected virtual int? WriteMessageLimit => null;
     internal virtual Task<int> TryGatherWriteAsync() => null;
     internal void BeginRead()
     {

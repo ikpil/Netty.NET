@@ -35,7 +35,7 @@
     {
       "name": "UDP and remaining portable transport contracts",
       "status": "in-progress",
-      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries. Added native UDP receive batches and the complete IPv4-mapped unicast fixture with 22 original allocator cases. Added IPv6 source multicast operations and two original Unix ICMP fixtures. The inherited IPv6 multicast fixture and the Linux IPv6 traffic class mapping are verified. Linux UDP disconnect preserves its socket and local binding across reconnect. Linux validates all eight Unix TCP reset cases. Linux dual-mode IPv4 multicast membership and per-socket multicast delivery are verified with shared-port packet tests. Mapped six original epoll datagram scenarios to the portable CLR receive path. Ported segmented sends, Linux UDP GRO, and native receive batching with five original tests. Mapped original destination metadata, IP_FREEBIND, and the mixed-family multicast source scenario with its Linux route limitation. Linux UDP and TCP listeners now expose kernel port sharing. TCP listener and stream native configuration fixtures are mapped.",
+      "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries. Added native UDP receive batches and the complete IPv4-mapped unicast fixture with 22 original allocator cases. Added IPv6 source multicast operations and two original Unix ICMP fixtures. The inherited IPv6 multicast fixture and the Linux IPv6 traffic class mapping are verified. Linux UDP disconnect preserves its socket and local binding across reconnect. Linux validates all eight Unix TCP reset cases. Linux dual-mode IPv4 multicast membership and per-socket multicast delivery are verified with shared-port packet tests. Mapped six original epoll datagram scenarios to the portable CLR receive path. Ported segmented sends, Linux UDP GRO, and native receive batching with five original tests. Mapped original destination metadata, IP_FREEBIND, and the mixed-family multicast source scenario with its Linux route limitation. Linux UDP and TCP listeners now expose kernel port sharing. TCP listener and stream native configuration fixtures are mapped. Connected MAX_MESSAGES_PER_WRITE to native UDP write passes, including recoverable failures, cancellation, config snapshots and readied I/O/task phases; fixed empty/cancelled-buffer native sends and private-config registration assumptions. Repeated both original unicast fixtures and their allocator variants on Windows/Linux.",
       "next": "Continue the remaining native transport contracts. Keep the exact mixed-family Java route limitation recorded."
     }
   ],
@@ -63,18 +63,18 @@
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 26,
-    "supplementalExecutedCases": 363,
+    "supplementalExecutedCases": 389,
     "debug": {
       "failed": 0,
-      "passed": 970,
+      "passed": 996,
       "skipped": 80,
-      "total": 1050
+      "total": 1076
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 970,
+      "passed": 996,
       "skipped": 80,
-      "total": 1050
+      "total": 1076
     },
     "solutionRelease": {
       "Netty.NET.Common.Tests": {
@@ -97,33 +97,31 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 970,
+        "passed": 996,
         "skipped": 80,
-        "total": 1050
+        "total": 1076
       }
     },
-    "solutionPassed": 33268,
+    "solutionPassed": 33294,
     "solutionSkipped": 94,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51,
-      "transientSourceTiming": {
-        "initialLinux": "The initial 1044-case intermediate build had one pre-existing ScheduleTaskAtFixedRateB failure: 77.4942 ms fell below the original 80 ms bound. The final unchanged 1050-case Linux run and checked focus pass.",
-        "parallelWindowsSolution": "The final-code parallel solution run had one pre-existing ScheduleTaskAtFixedRateA failure: 221.6181 ms exceeded the original 220 ms bound. Full Debug and checked Transport pass. Final full solution is rerun with -m:1 to avoid cross-project load; no assertion, deadline or source condition is changed."
-      }
+      "correctedSupplementalExpectation": "The first Windows/Linux full runs each failed only the existing supplemental SendPreservesDatagramBytesAndReleasesPayload(length:0,composite:false), which expected an actual empty packet. Unchanged original implementations on both OSes prove empty buffers must complete without a send. That supplemental case now requires the following nonempty marker as the first/only packet and still verifies owned buffer release. Original JUnit bodies, conditions and assertions are unchanged. Final full Windows/Linux, Debug and checked runs pass."
     },
-    "javaEvidence": "Unmodified pinned EpollServerSocketChannelConfigTest (five), EpollSocketChannelConfigTest (eight) and the inherited NioServerDomainSocketChannel config methods (two) execute under JUnit Jupiter on Linux: fifteen passed with no skips/failures. Separate original-implementation probes on Windows and Linux verify role admission, SOMAXCONN, backlog range, nonpositive buffer rejection, linger clamp and traffic-class validation; these probes are not original fixture mappings.",
-    "note": "Final Windows Release full solution is run serially (-m:1): 33268 passed / 94 skips / zero failures. Final Transport Debug and checked Release each pass 970 / 80 skips; Linux full final Transport passes 1042 / eight existing source-disabled skips. The three new Windows skips are supplemental Linux-specific native traffic-class cases and all execute on Linux. Twenty-seven new supplemental cases preserve source config contracts; fifteen original Java config methods are repeated without remapping or assertion reduction. Isolated previous-runtime comparisons fail eighteen Windows and twenty Linux cases, establishing actual behavior differences. Intermediate parallel source timing failures and final clean reruns remain recorded.",
+    "javaEvidence": "Unmodified pinned DatagramUnicastInetTest and DatagramUnicastIPv6Test execute under JUnit Jupiter on Windows and Linux: twenty-two successful wrappers / forty-four original allocator executions per platform, no skips/failures. Separate original-implementation probes verify message-pass quanta, config snapshots, recovered failures, cancelled placeholders and actual empty/cancelled native sends. They are not counted as original JUnit mappings.",
+    "note": "Final Windows serial Release solution: 33294 passed / 94 existing skips / zero failures. Final Transport Debug and checked Release: 996 passed / 80 existing skips each. Linux final full Transport: 1068 passed / eight existing source-disabled skips; new checked focus: 26/26. Existing unicast original fixtures and allocators repeat unchanged on both OSes. Twenty-six supplemental cases verify runtime omissions rather than adding mapped original counts. The inconsistent earlier supplemental empty-send expectation is corrected from actual original implementation evidence; receiving real empty datagrams is unchanged. Previous-runtime copies reproduce twenty-two failures on each OS. No source assertion or timing bound is reduced.",
     "commands": [
-      "python artifacts/transport-core/run-socket-config-originals.py",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter FullyQualifiedName~SocketConfigurationContractTest",
+      "python artifacts/transport-core/run-write-budget-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter FullyQualifiedName~DatagramWriteBudgetContractTest",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter \"FullyQualifiedName~DatagramWriteBudgetContractTest|FullyQualifiedName~DatagramTransportContractTest\"",
+      "dotnet test Netty.NET.sln -c Release --no-build --no-restore -m:1 --results-directory artifacts/transport-core/write-budget-final-results --logger \"trx;LogFilePrefix=write-budget-final\"",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/socket-config-checked-out -p:NuGetAudit=false",
-      "python artifacts/transport-core/run-socket-config-linux.py",
-      "python artifacts/transport-core/run-socket-config-regressions.py",
-      "python artifacts/transport-core/run-socket-config-linux-regressions.py",
-      "dotnet test Netty.NET.sln -c Release --no-build --no-restore -m:1 --results-directory artifacts/transport-core/socket-config-sequential-results --logger \"trx;LogFilePrefix=socket-config-sequential\"",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/write-budget-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-write-budget-linux.py",
+      "python artifacts/transport-core/run-write-budget-regressions.py",
+      "python artifacts/transport-core/run-write-budget-linux-regressions.py",
       "pwsh -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -167,8 +165,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 1050,
-      "passed": 1042,
+      "total": 1076,
+      "passed": 1068,
       "failed": 0,
       "skipped": 8
     },
@@ -499,6 +497,50 @@
       },
       "counting": "The thirteen native TCP and two inherited domain original methods are repeated compatibility checks, not new original mappings. All twenty-seven new cases are explicitly supplemental source-contract/CLR-adaptation coverage. Original Java sources match the pinned checkout, and the separate implementation probe is not counted as an original test.",
       "comparison": "An isolated copy restores only the two changed runtime files from the previous HEAD while retaining the new tests. No main-worktree runtime rollback is used. Linux confirms both IPv6/dual-mode wrong-family traffic-class regressions."
+    },
+    "writeBudgetEvidence": {
+      "newMappedOriginalMethods": 0,
+      "newSupplementalCases": 26,
+      "focusedWindows": {
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0
+      },
+      "focusedWindowsIncludingExistingUdpContracts": {
+        "passed": 33,
+        "skipped": 0,
+        "failed": 0
+      },
+      "focusedLinuxChecked": {
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0
+      },
+      "repeatedOriginalJavaPerPlatform": {
+        "junitInvocations": 22,
+        "allocatorExecutions": 44,
+        "skipped": 0,
+        "failed": 0
+      },
+      "sourceImplementationProbes": [
+        "Windows",
+        "Linux"
+      ],
+      "counterfactualPreviousWindows": {
+        "failed": 22,
+        "passed": 4,
+        "skipped": 0,
+        "total": 26
+      },
+      "counterfactualPreviousLinux": {
+        "failed": 22,
+        "passed": 4,
+        "skipped": 0,
+        "total": 26
+      },
+      "counting": "The existing DatagramUnicastInetTest and DatagramUnicastIPv6Test wrappers and two original allocators are repeated compatibility checks, not new original mappings. The separate protected-loop/native-send source probe is explicitly not a JUnit source fixture. All twenty-six new CLR cases are supplemental source-contract/CLR-adaptation coverage.",
+      "sourceProbe": "An AbstractNioMessageChannel subclass controls completed writes while invoking the unchanged original protected doWrite method. Real final NioDatagramChannel instances use that same protected method via a reflective invocation for native empty/cancelled sends. No original runtime/test source is patched.",
+      "comparison": "An isolated copy restores only AbstractChannel.cs and DatagramChannel.cs from the prior HEAD while retaining the new twenty-six cases. Both OSes reproduce twenty-two failures; the main worktree is not rolled back."
     }
   },
   "entries": [
@@ -755,7 +797,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised.",
+        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Implemented the original message-channel MAX_MESSAGES_PER_WRITE quantum with a per-pass snapshot and per-entry accounting, including continued write failures and cancelled empty placeholders. UDP re-arms the next native I/O phase, allowing ordinary work without admitting unflushed writes. Byte-stream, local and embedded policies are unchanged. Native writer/borrow ownership remains exclusive through asynchronous resumption. Datagram zero-length buffers complete without a send, matching NioDatagramChannel.doWriteMessage; receiving externally sent empty datagrams is unchanged. Custom configs use the public budget option or the original unlimited fallback and optional active-on-registration lookup, without a private-config registration cast.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
@@ -782,7 +824,10 @@
           "src/Netty.NET.Transport/Channels/Sockets/IDuplexChannel.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketReuseFdSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DomainSocketDataReadInitialStateSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+          "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs"
         ]
       }
     },
@@ -2774,8 +2819,8 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 32,
-        "preservedCount": 1,
-        "unreviewedCount": 31,
+        "preservedCount": 2,
+        "unreviewedCount": 30,
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
@@ -2864,7 +2909,7 @@
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs"
       ],
       "review": {
-        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler operation submission and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices. Linux UDP uses per-packet original destination metadata when enabled, falling back to the bound address when absent.",
+        "scope": "Reviewed message-read completion/error ordering and source closeOnReadError semantics for the UDP counterpart: complete batch before exception; SocketException remains recoverable and all other read failures close. CLR native read is an overridable async template; failed synchronous receives yield before retry. Selector/native-IoHandler operation submission and remaining source contracts/comments remain open. Native server counterpart now preserves accept message batching, partial-batch delivery before completion/error, I/O-error continuation and fatal closure, plus pending-read ownership. SocketException is treated as Java IOException despite CLR hierarchy differences. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices. Linux UDP uses per-packet original destination metadata when enabled, falling back to the bound address when absent. Implemented the original message-channel MAX_MESSAGES_PER_WRITE quantum with a per-pass snapshot and per-entry accounting, including continued write failures and cancelled empty placeholders. UDP re-arms the next native I/O phase, allowing ordinary work without admitting unflushed writes. Byte-stream, local and embedded policies are unchanged. Native writer/borrow ownership remains exclusive through asynchronous resumption. Datagram zero-length buffers complete without a send, matching NioDatagramChannel.doWriteMessage; receiving externally sent empty datagrams is unchanged. Custom configs use the public budget option or the original unlimited fallback and optional active-on-registration lookup, without a private-config registration cast.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
@@ -2880,14 +2925,17 @@
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+          "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs"
         ]
       },
       "comments": {
         "status": "partial",
         "uniqueCount": 17,
-        "preservedCount": 10,
-        "unreviewedCount": 7,
+        "preservedCount": 12,
+        "unreviewedCount": 5,
         "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       }
     },
@@ -3891,7 +3939,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, shared output shutdown and Task operation APIs. Any remaining comments stay explicitly unreviewed."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels. A native connect error closes the datagram channel, preserving the original socket failure. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices. Linux UDP uses per-packet original destination metadata when enabled, falling back to the bound address when absent.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Process queued UDP packets in a bounded receive cycle using the allocator message budget. The CLR readiness probe allows short datagrams and commits partial results before read completion and error notification. An incomplete speculative receive keeps its borrow for the next cycle, where read admission still applies. IPv6 source-specific join, leave and block use the native interface index. Membership identity uses the address bytes and interface, matching Java IPv6 address equality. Linux ICMP receive and write behavior is verified by the original allocator rows. On Linux UDP disconnect detaches the peer from the same socket and restores the original ephemeral port when necessary. Linux dual-mode sockets use IPv4 multicast membership operations for IPv4 groups and mirror relevant socket configuration across both IP levels. A native connect error closes the datagram channel, preserving the original socket failure. Preparation, allocator accounting and delivery of ready UDP packets now share one I/O callback. A follow-up receive that is still pending starts the next batch; the loop rechecks read admission before delivery. Linux optional recvmsg and recvmmsg use the same owner delivery phase and retain exact UDP segment slices. Linux UDP uses per-packet original destination metadata when enabled, falling back to the bound address when absent. Implemented the original message-channel MAX_MESSAGES_PER_WRITE quantum with a per-pass snapshot and per-entry accounting, including continued write failures and cancelled empty placeholders. UDP re-arms the next native I/O phase, allowing ordinary work without admitting unflushed writes. Byte-stream, local and embedded policies are unchanged. Native writer/borrow ownership remains exclusive through asynchronous resumption. Datagram zero-length buffers complete without a send, matching NioDatagramChannel.doWriteMessage; receiving externally sent empty datagrams is unchanged. Custom configs use the public budget option or the original unlimited fallback and optional active-on-registration lookup, without a private-config registration cast.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs",
@@ -3907,7 +3955,10 @@
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+          "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs",
+          "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs"
         ]
       }
     },
@@ -8338,7 +8389,7 @@
     "reviewedImplementationFiles": 47,
     "portedOriginalFixtures": 81,
     "portedOriginalMethods": 472,
-    "supplementalClrCases": 390,
+    "supplementalClrCases": 416,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 39,
@@ -8965,6 +9016,22 @@
         "transport/src/main/java/io/netty/channel/socket/DefaultSocketChannelConfig.java",
         "transport/src/main/java/io/netty/channel/socket/SocketChannelConfig.java"
       ]
+    },
+    {
+      "subject": "Message write quanta and empty UDP buffers",
+      "decision": "Use a nullable write-message limit hook in the shared native drain: UDP snapshots DefaultChannelConfig.GetMaxMessagesPerWrite or the public option on custom configs, falling back to int.MaxValue when absent. Other transports retain their own policies. Each removed message, including a recoverable failure or cancelled empty placeholder, consumes one slot. Re-arm a native I/O continuation at quantum expiry, with next-phase snapshots and ordinary-task opportunity; no selector or promise facade is introduced. A resumed drain owns the same exclusive writer claim, including pending native borrows, close and reentrant flush. Do not send zero-length buffers: the original NIO message writer completes them before checking a peer. Native empty receive behavior remains intact. Read the optional active-on-registration setting through IChannelConfig instead of casting custom configs to a private type. The old supplemental zero-send expectation was inconsistent with the original and is corrected to assert that a following marker is the first/only received datagram; original JUnit mappings/assertions are unchanged.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
+        "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs"
+      ],
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/AbstractChannel.java",
+        "transport/src/main/java/io/netty/channel/nio/AbstractNioMessageChannel.java",
+        "transport/src/main/java/io/netty/channel/socket/nio/NioDatagramChannel.java",
+        "transport/src/main/java/io/netty/channel/DefaultChannelConfig.java"
+      ]
     }
   ],
   "openWork": [
@@ -8981,12 +9048,12 @@
     {
       "area": "Outbound buffer",
       "state": "review-gap",
-      "detail": "All 15 outbound-buffer and six reentrant-channel original methods are mapped. Cross-executor enqueue byte accounting and reentrant write-and-flush are implemented. Native IProgress reporting is now connected to accepted queue bytes, channel/native Task metadata and original message totals. Remaining internal runtime comments and other unreviewed contracts still require review. The file-region source fixture and four outbound/lifetime fixtures now cover mixed ByteBuf/empty/file writes, framed logical completion, retained application references, exception closure and 100 MiB writable-driven production. File transfer progress is committed on the owner; CLR worker borrows remain until native producer completion. Default-file native socket submission now preserves the opened handle, cursor, long offset, accepted progress and close lifetime; custom producers and supplied synchronous streams use the worker fallback. The original domain file-region inheritance is mapped."
+      "detail": "All 15 outbound-buffer and six reentrant-channel original methods are mapped. Cross-executor enqueue byte accounting and reentrant write-and-flush are implemented. Native IProgress reporting is now connected to accepted queue bytes, channel/native Task metadata and original message totals. Remaining internal runtime comments and other unreviewed contracts still require review. The file-region source fixture and four outbound/lifetime fixtures now cover mixed ByteBuf/empty/file writes, framed logical completion, retained application references, exception closure and 100 MiB writable-driven production. File transfer progress is committed on the owner; CLR worker borrows remain until native producer completion. Default-file native socket submission now preserves the opened handle, cursor, long offset, accepted progress and close lifetime; custom producers and supplied synchronous streams use the worker fallback. The original domain file-region inheritance is mapped. Native message writes now enforce their configured pass quantum with exclusive ownership across resumption; unflushed admission, recoverable failure, cancellation and close lifetimes are verified."
     },
     {
       "area": "TCP and UDP",
       "state": "test-and-implementation-review",
-      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path. The shared duplex contract and TCP/AF_UNIX address tests, native domain peer shutdown and 100-connection reuse body are mapped. Real network connection-attempt originals replace former held-connect mappings; deterministic cases remain supplemental. TCP config role admission, platform backlog, buffer/linger ranges, native option preservation after construction and Linux IPv6 traffic-class behavior are now covered. Other socket config subinterface comments and non-Linux IPv6 traffic-class policy remain review work."
+      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path. The shared duplex contract and TCP/AF_UNIX address tests, native domain peer shutdown and 100-connection reuse body are mapped. Real network connection-attempt originals replace former held-connect mappings; deterministic cases remain supplemental. TCP config role admission, platform backlog, buffer/linger ranges, native option preservation after construction and Linux IPv6 traffic-class behavior are now covered. Other socket config subinterface comments and non-Linux IPv6 traffic-class policy remain review work. UDP MAX_MESSAGES_PER_WRITE and original empty-send semantics are implemented. The former supplemental zero-send expectation has been corrected against original implementation probes; external empty-datagram reception remains covered by the unchanged original fixtures."
     },
     {
       "area": "Bootstrap and groups",
@@ -9074,7 +9141,8 @@
     "test/Netty.NET.Transport.Tests/DuplexChannelContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelWriteProgressContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelGroupSetContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs",
+    "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -15093,10 +15161,50 @@
         },
         "note": "Windows full solution run: 33244 passed / 91 existing skips / zero failures. Full final Transport Release/Debug/checked: 946 passed / 77 existing skips; Linux final Transport: 1015 passed / eight existing source-disabled skips. Forty-four new cases pass on Windows and Linux checked builds. Replacing only progress notification with the former counter-only branch in an isolated current-source copy reproduces fifteen failures and twenty-nine passes; the main worktree is not modified by that comparison. Real TCP partial vectors, async/sync files, UDP, executor-bound encoding and native progress/terminal observation are included. No new skip or source assertion reduction."
       }
+    },
+    {
+      "checkpoint": "39c22b2e62a4f11c7c63e25a60a8441c51a22d62",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "debug": {
+          "failed": 0,
+          "passed": 970,
+          "skipped": 80,
+          "total": 1050
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 970,
+          "skipped": 80,
+          "total": 1050
+        },
+        "solutionPassed": 33268,
+        "solutionSkipped": 94,
+        "mappedOriginalMethods": 472,
+        "originalExecutedCases": 607,
+        "supplementalExecutedCases": 363,
+        "linuxTransportRelease": {
+          "total": 1050,
+          "passed": 1042,
+          "failed": 0,
+          "skipped": 8
+        },
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51,
+          "transientSourceTiming": {
+            "initialLinux": "The initial 1044-case intermediate build had one pre-existing ScheduleTaskAtFixedRateB failure: 77.4942 ms fell below the original 80 ms bound. The final unchanged 1050-case Linux run and checked focus pass.",
+            "parallelWindowsSolution": "The final-code parallel solution run had one pre-existing ScheduleTaskAtFixedRateA failure: 221.6181 ms exceeded the original 220 ms bound. Full Debug and checked Transport pass. Final full solution is rerun with -m:1 to avoid cross-project load; no assertion, deadline or source condition is changed."
+          }
+        },
+        "note": "Final Windows Release full solution is run serially (-m:1): 33268 passed / 94 skips / zero failures. Final Transport Debug and checked Release each pass 970 / 80 skips; Linux full final Transport passes 1042 / eight existing source-disabled skips. The three new Windows skips are supplemental Linux-specific native traffic-class cases and all execute on Linux. Twenty-seven new supplemental cases preserve source config contracts; fifteen original Java config methods are repeated without remapping or assertion reduction. Isolated previous-runtime comparisons fail eighteen Windows and twenty Linux cases, establishing actual behavior differences. Intermediate parallel source timing failures and final clean reruns remain recorded."
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete remaining Transport contracts and original source-disabled/runtime comment review. TCP role-specific configuration is corrected and the server config role is reviewed; keep non-Linux IPv6 traffic-class policy and socket subinterface comments explicit. Preserve native Task/progress ownership and distinguish original methods from supplemental CLR cases.",
+    "Continue concrete remaining Transport contracts and original source-disabled/runtime comment review. Message write quanta, empty/cancelled UDP sends and custom-config budget fallback are now connected to native runtime behavior. Preserve native Task/progress and producer ownership. Keep other socket/backend contracts and original subinterface comments explicit.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
     "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."

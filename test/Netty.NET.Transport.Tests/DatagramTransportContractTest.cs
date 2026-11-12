@@ -64,8 +64,17 @@ public class DatagramTransportContractTest
                     .AddComponent(Unpooled.CopiedBuffer(bytes.AsSpan(length / 2)), true)
                 : Unpooled.Buffer(Math.Max(1, length)).WriteBytes(bytes);
             await channel.WriteAndFlushAsync(new DatagramPacket(buffer, (IPEndPoint)peer.Client.LocalEndPoint));
+            // NioDatagramChannel.doWriteMessage completes an empty buffer without a native send.
+            // A following marker must therefore be the first received packet, including after an owned empty buffer.
+            byte[] expected = bytes;
+            if (length == 0)
+            {
+                expected = new byte[] { 42 };
+                await channel.WriteAndFlushAsync(new DatagramPacket(Unpooled.CopiedBuffer(expected), (IPEndPoint)peer.Client.LocalEndPoint));
+            }
             var packet = await peer.ReceiveAsync().WaitAsync(TimeSpan.FromSeconds(10));
-            Assert.Equal(bytes, packet.Buffer);
+            Assert.Equal(expected, packet.Buffer);
+            if (length == 0) Assert.False(peer.Client.Poll(10_000, SelectMode.SelectRead));
             Assert.Equal(0, buffer.ReferenceCount);
         }
         finally

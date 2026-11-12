@@ -148,7 +148,7 @@ public class DatagramChannel : AbstractChannel
             else
                 _socket.Disconnect(true);
             Volatile.Write(ref _connectedAddress, null);
-            SetActive(_socket.IsBound || ((DatagramConfig)Config).ActiveOnRegistration);
+            SetActive(_socket.IsBound || ActiveOnRegistration);
         }
         return Task.CompletedTask;
     }
@@ -189,11 +189,15 @@ public class DatagramChannel : AbstractChannel
      * Return {@code true} if the {@link DatagramChannel} is connected to the remote peer.
      */
     public bool IsConnected => RemoteAddress != null;
+#pragma warning disable CS0612, CS0618 // Preserve the original optional active-on-registration setting.
+    private bool ActiveOnRegistration =>
+        Config.TryGetOption(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, out bool active) && active;
+#pragma warning restore CS0612, CS0618
     protected override void DoRegister()
     {
         lock (_socket)
             _offloadConfigurationClosed = true;
-        SetActive(_socket.IsBound || ((DatagramConfig)Config).ActiveOnRegistration);
+        SetActive(_socket.IsBound || ActiveOnRegistration);
     }
 
     private void SetUdpGro(bool enabled)
@@ -262,14 +266,20 @@ public class DatagramChannel : AbstractChannel
             return message;
         throw new NotSupportedException("UDP writes require a ByteBuf or an addressed ByteBuf envelope.");
     }
+    protected override int? WriteMessageLimit => Config is DefaultChannelConfig config
+        ? config.GetMaxMessagesPerWrite()
+        : Config.TryGetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, out int value) ? value : int.MaxValue;
+
     protected override async Task DoWriteAsync(object message)
     {
         var envelope = message as IAddressedEnvelope<ByteBuf, EndPoint>;
+        ByteBuf data = envelope?.Content ?? (ByteBuf)message;
+        int length = data.ReadableBytes;
+        // Empty buffers, including cancelled outbound entries, complete without a native send.
+        if (length == 0) return;
         if (envelope?.Recipient == null && !IsConnected)
             throw new SocketException((int)SocketError.NotConnected);
-        ByteBuf data = envelope?.Content ?? (ByteBuf)message;
         var sequence = data.ReadableSequence;
-        int length = data.ReadableBytes;
         var target = envelope?.Recipient;
         if (message is SegmentedDatagramPacket segmented && length > segmented.SegmentSize)
         {
