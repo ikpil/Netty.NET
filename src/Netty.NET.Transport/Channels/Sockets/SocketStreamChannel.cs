@@ -67,7 +67,7 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
         {
             // If the connect future is cancelled we also cancel the timeout and close the
             // underlying socket.
-            try { await OnSocketLoopAsync(() => _ = CloseTransportAsync()).ConfigureAwait(false); }
+            try { await OnSocketLoopAsync(() => _ = Close()).ConfigureAwait(false); }
             catch (RejectedExecutionException) when (EventLoop.IsShuttingDown()) { }
             if (error is OperationCanceledException && !cancellationToken.IsCancellationRequested)
                 throw new ConnectTimeoutException("Connection timed out: " + remote);
@@ -553,7 +553,7 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
                             if (Config.TryGetOption(ChannelOption.ALLOW_HALF_CLOSURE, out bool half) && half)
                                 Pipeline.FireUserEventTriggered(ChannelInputShutdownEvent.INSTANCE);
                             else
-                                _ = CloseTransportAsync();
+                                _ = Close();
                         }
                         again = IsOpen && !_inputShutdown && (more || Config.IsAutoRead() || _readRequested);
                     }).ConfigureAwait(false);
@@ -570,7 +570,7 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
         catch (Exception error)
         {
             try
-            { await OnSocketLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
+            { await OnSocketLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = Close(); } }).ConfigureAwait(false); }
             catch { }
         }
         finally

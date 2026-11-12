@@ -38,9 +38,11 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     private readonly object _registrationGate = new();
     private Exception _writeCloseCause;
     private ChannelOutputShutdownException _outputShutdownCause;
-    private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource _closeFuture = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Lazy<IChannelConfig> _config;
     private volatile IEventLoop _eventLoop;
+    private bool _closeInitiated;
+    private bool _closePending;
     private bool _registering;
     private int _registrationEpoch;
     private TaskCompletionSource _readResumed;
@@ -80,7 +82,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     public bool IsActive => _active;
     public abstract EndPoint LocalAddress { get; }
     public abstract EndPoint RemoteAddress { get; }
-    public Task CloseCompletion => _closed.Task;
+    public Task CloseCompletion => _closeFuture.Task;
     public ChannelOutboundBuffer OutboundBuffer { get; }
     public bool IsWritable => _open && !OutboundBuffer.IsClosed && OutboundBuffer.IsWritable;
     public long BytesBeforeUnwritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeUnwritable : 0;
@@ -153,7 +155,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 ResumeRead();
                 try
                 { DoClose(); }
-                finally { OutboundBuffer.Close(new IOException("Channel registration failed.")); _closed.TrySetResult(); }
+                finally { OutboundBuffer.Close(new IOException("Channel registration failed.")); _closeFuture.TrySetResult(); }
                 throw;
             }
             finally
@@ -290,14 +292,16 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
     protected internal void ExecuteOnLoop(Action action)
     { if (EventLoop.InEventLoop()) action(); else EventLoop.Execute(action); }
-    private void OnLoopShutdown() => _ = CloseTransportAsync();
+    private void OnLoopShutdown() => _ = Close();
     internal void CloseForcibly()
     {
+        // An offloaded native close already owns disposal; keep its queue and completion ownership intact.
+        if (_closePending) return;
         _open = _active = false;
         ResumeRead();
         try
         { DoClose(); }
-        finally { OutboundBuffer.Close(new IOException("Channel is closed.")); _closed.TrySetResult(); }
+        finally { OutboundBuffer.Close(new IOException("Channel is closed.")); _closeFuture.TrySetResult(); }
     }
     protected void EnsureOpen()
     { if (!_open) throw NewClosedChannelException(); }
@@ -378,7 +382,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     if (!wasActive && _active)
                     { Pipeline.FireChannelActive(); if (!canceled && (Config.IsAutoRead() || _readBeforeActive)) BeginRead(); }
                     // If a user cancelled the connection attempt, close the channel, which is followed by channelInactive().
-                    if (canceled) _ = CloseTransportAsync();
+                    if (canceled) _ = Close();
                     return true;
                 }, pending).ConfigureAwait(false);
             }
@@ -404,42 +408,109 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     internal virtual Task DisconnectTransportAsync(CancellationToken cancellationToken)
     {
         if (!Metadata.HasDisconnect())
-            return CloseTransportAsync();
+            return Close();
         bool wasActive = _active;
         return Operation(() => DoDisconnectAsync(cancellationToken), () =>
         { if (wasActive && !_active) Pipeline.FireChannelInactive(); });
     }
-    internal virtual Task CloseTransportAsync()
+    internal virtual Task Close()
     {
-        if (!_open)
-            return Task.CompletedTask;
+        if (_closeInitiated || !_open)
+        {
+            // This means close() was called before so we just register a listener and return
+            // CLR: repeat callers join the existing Task rather than completing before native close.
+            return _closeFuture.Task;
+        }
+        _closeInitiated = true;
         bool wasActive = _active;
+        ChannelOutboundBuffer outboundBuffer = OutboundBuffer;
+        // Disallow adding any messages and flushes to outboundBuffer.
+        outboundBuffer.BeginOutputShutdown();
+        // CLR socket completions replace selection keys. Quiesce logical read/write admission before offloading disposal.
         _open = _active = false;
         ResumeRead();
-        Exception failure = null;
-        try
-        { DoClose(); }
-        catch (Exception error) { failure = error; }
-        var closedCause = NewClosedChannelException();
-        OutboundBuffer.Close(_outputShutdownCause ?? _writeCloseCause ?? closedCause, _outputShutdownCause ?? closedCause);
-        void CompleteClose()
+        TaskScheduler closeExecutor = PrepareToClose();
+        var promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (closeExecutor != null)
         {
+            _closePending = true;
+            // Reserve the owner callback before starting native close, including during immediate shutdown.
+            // This is CLR completion admission, not a Java Executor/Promise facade.
+            Action<Action> invokeLater = EventLoop switch
+            {
+                SingleThreadEventLoop loop => loop.ReserveCloseCompletion(),
+                ManualIoEventLoop loop => loop.ReserveCloseCompletion(),
+                _ => EventLoop.Execute
+            };
             try
             {
-                if (wasActive)
-                    Pipeline.FireChannelInactive();
-                DeregisterTransportAsync().GetAwaiter().GetResult();
+                _ = Task.Factory.StartNew(() =>
+                {
+                    // Execute the close.
+                    Exception t = DoClose0();
+                    // Call invokeLater so closeAndDeregister is executed in the EventLoop again!
+                    invokeLater(() => CloseAndDeregister(t));
+                }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, closeExecutor);
             }
-            finally { _closed.TrySetResult(); }
+            catch (Exception t)
+            {
+                // A rejected CLR scheduler must not leave the native resource and the reserved owner callback stranded.
+                Exception failure = DoClose0() ?? t;
+                invokeLater(() => CloseAndDeregister(failure));
+            }
         }
-        // A handler closing its own channel must finish its current callback before handlerRemoved runs.
-        // Shutdown hooks already run outside user callbacks and cannot submit after shutdown admission closes.
-        if (EventLoop.IsShuttingDown())
-            CompleteClose();
         else
-            EventLoop.Execute(CompleteClose);
-        return failure == null ? _closed.Task : Task.FromException(failure);
+        {
+            // Close the channel and fail the queued messages in all cases.
+            CloseAndDeregister(DoClose0());
+        }
+        return promise.Task;
+
+        void CloseAndDeregister(Exception t)
+        {
+            _closePending = false;
+            var closeCause = NewClosedChannelException();
+            // Fail all the queued messages
+            outboundBuffer.Close(_outputShutdownCause ?? _writeCloseCause ?? closeCause, _outputShutdownCause ?? closeCause);
+            void CompleteClose()
+            {
+                try { FireChannelInactiveAndDeregister(wasActive); }
+                catch (Exception error) { t ??= error; }
+                finally
+                {
+                    _closeFuture.TrySetResult();
+                    if (t == null) promise.TrySetResult();
+                    else promise.TrySetException(t);
+                }
+            }
+            // A handler closing its own channel must finish its current callback before handlerRemoved runs.
+            // An offloaded close is already on a later owner callback; shutdown cannot accept an ordinary task.
+            if (closeExecutor != null || EventLoop.IsShuttingDown()) CompleteClose();
+            else EventLoop.Execute(CompleteClose);
+        }
     }
+    private Exception DoClose0()
+    {
+        // Return native failure to the owner so queued releases and Task completion remain serialized there.
+        try { DoClose(); return null; }
+        catch (Exception t) { return t; }
+    }
+    private void FireChannelInactiveAndDeregister(bool wasActive)
+    {
+        if (wasActive) Pipeline.FireChannelInactive();
+        bool registered = _registered;
+        DeregisterTransportAsync().GetAwaiter().GetResult();
+        // Explicit deregistration may precede completion of the native close.
+        if (!registered) Pipeline.Destroy();
+    }
+    /**
+     * Prepares to close the {@link Channel}. If this method returns an {@link Executor}, the
+     * caller must call the {@link Executor#execute(Runnable)} method with a task that calls
+     * {@link #doClose()} on the returned {@link Executor}. If this method returns {@code null},
+     * {@link #doClose()} must be called from the caller thread. (i.e. {@link EventLoop})
+     */
+    // CLR: TaskScheduler selects the native close worker; no Java executor abstraction is required.
+    protected virtual TaskScheduler PrepareToClose() => null;
     internal Task DeregisterTransportAsync()
     {
         if (!_registered)
@@ -451,7 +522,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             worker.RemoveShutdownHook(OnLoopShutdown);
         DoDeregister();
         Pipeline.FireChannelUnregistered();
-        if (!_open)
+        if (!_open && !_closePending)
             Pipeline.Destroy();
         return Task.CompletedTask;
     }
@@ -622,7 +693,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         _readBeforeActive = false;
         try
         { DoBeginRead(); }
-        catch (Exception error) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); }
+        catch (Exception error) { Pipeline.FireExceptionCaught(error); _ = Close(); }
     }
     /**
      * Invoked when a new message is added to a {@link ChannelOutboundBuffer} of this {@link AbstractChannel}, so that
@@ -684,7 +755,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         // The source default closes the transport. CLR channel state and deferred lifecycle callbacks
         // are owned here, so use the ordinary close path with the output-shutdown queue cause.
-        Task close = CloseTransportAsync();
+        Task close = Close();
         if (close.IsFaulted) close.GetAwaiter().GetResult();
     }
     protected void CloseOnWriteError(Exception error)
@@ -698,7 +769,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
          * may still return {@code true} even if the channel should be closed as result of the exception.
          */
         _writeCloseCause = error;
-        _ = CloseTransportAsync();
+        _ = Close();
     }
     /**
      * Is called after the {@link Channel} is registered with its {@link EventLoop} as part of the register process.

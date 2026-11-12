@@ -737,7 +737,7 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
         public override Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken) => channel.BindTransportAsync(localAddress, cancellationToken);
         public override Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken) => channel.ConnectTransportAsync(remoteAddress, localAddress, cancellationToken);
         public override Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.DisconnectTransportAsync(cancellationToken);
-        public override Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.CloseTransportAsync();
+        public override Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.Close();
         public override Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.DeregisterTransportAsync();
         public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken) => channel.WriteTransportAsync(message, cancellationToken);
         public override void Read(ChannelHandlerContext context) => channel.BeginRead();

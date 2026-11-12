@@ -78,7 +78,7 @@ public class NioIoHandlerSourceTest
         finally
         {
             // Let's now close the ServerSocketChannel and after that destroy the IoHandler.
-            var close = listener.CloseTransportAsync();
+            var close = listener.Close();
             loop.RunNow();
             close.GetAwaiter().GetResult();
             Terminate(loop);

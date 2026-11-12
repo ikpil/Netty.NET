@@ -50,6 +50,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
     private readonly Ticker _ticker;
     private Thread _owner;
     private int _state;
+    private int _pendingCloseCompletions;
     private bool _wakeRequested;
     private bool _running;
     private long _quietPeriod;
@@ -136,6 +137,25 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
             _tasks.TryEnqueue(task);
             Monitor.Pulse(_gate);
         }
+    }
+
+    // CLR-only native-close admission; public task submission remains closed after StopAsync.
+    internal Action<Action> ReserveCloseCompletion()
+    {
+        if (!InEventLoop()) throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        _pendingCloseCompletions++;
+        return completion =>
+        {
+            lock (_gate)
+            {
+                _tasks.TryEnqueue(() =>
+                {
+                    try { completion(); }
+                    finally { _pendingCloseCompletions--; }
+                });
+                Monitor.Pulse(_gate);
+            }
+        };
     }
 
     internal Task SubmitIoAsync(object source, Func<(Task Completion, bool Handled)> dispatch,
@@ -409,6 +429,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
 
         lock (_gate)
         {
+            if (_pendingCloseCompletions != 0) return count;
             long now = _ticker.NanoTime();
             // There were tasks in the queue. Wait a little bit more until no tasks are queued for the quiet period or
             // terminate if the quiet period is 0.
@@ -427,6 +448,7 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
         CloseRegisteredChannels();
         count += RunIo();
         CancelScheduledTasks();
+        if (_pendingCloseCompletions != 0) return count;
         _ioHandler.CloseAll();
         Volatile.Write(ref _state, Terminated);
         _termination.SetResult();
@@ -444,6 +466,6 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
         }
 
         foreach (var channel in channels)
-            SafeExecute(() => channel.CloseTransportAsync().GetAwaiter().GetResult());
+            SafeExecute(() => _ = channel.Close());
     }
 }

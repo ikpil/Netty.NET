@@ -31,6 +31,31 @@ public class TcpSocketChannel : SocketStreamChannel
 {
     private EndPoint _assignedLocalAddress;
 
+    protected override TaskScheduler PrepareToClose()
+    {
+        try
+        {
+            if (!Socket.SafeHandle.IsClosed && Socket.LingerState is { Enabled: true, LingerTime: > 0 })
+            {
+                // We need to cancel this key of the channel so we may not end up in a eventloop spin
+                // because we try to read or write until the actual close happens which may be later due
+                // SO_LINGER handling.
+                // See https://github.com/netty/netty/issues/4449
+                // CLR: AbstractChannel has quiesced completion admission; there is no selection key to cancel.
+                return TaskScheduler.Default;
+            }
+        }
+        catch (Exception ignore)
+        {
+            // Ignore the error as the underlying channel may be closed in the meantime and so
+            // getSoLinger() may produce an exception. In this case we just return null.
+            // See https://github.com/netty/netty/issues/4449
+            _ = ignore;
+        }
+        return null;
+    }
+
+
     public TcpSocketChannel() : this(new Socket(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), null)
     { if (Socket.AddressFamily == AddressFamily.InterNetworkV6) Socket.DualMode = true; }
     public TcpSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp), null) { }

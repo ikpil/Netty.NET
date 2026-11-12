@@ -116,7 +116,7 @@ public class DatagramChannel : AbstractChannel
         {
             // NioDatagramChannel closes when the native connect fails. The socket may own multicast
             // state that cannot be copied to a replacement descriptor by Socket.ConnectAsync.
-            try { await OnSocketLoopAsync(() => { _ = CloseTransportAsync(); }).ConfigureAwait(false); }
+            try { await OnSocketLoopAsync(() => { _ = Close(); }).ConfigureAwait(false); }
             catch (RejectedExecutionException) { } // The event loop's shutdown hook owns cleanup.
             throw;
         }
@@ -177,7 +177,7 @@ public class DatagramChannel : AbstractChannel
         catch
         {
             // The peer is already detached. Close if we cannot restore the promised binding.
-            _ = CloseTransportAsync();
+            _ = Close();
             throw;
         }
     }
@@ -463,7 +463,7 @@ public class DatagramChannel : AbstractChannel
                         // We do not want to close on SocketException when using DatagramChannel as we usually can continue receiving.
                         // See https://github.com/netty/netty/issues/5893
                         Pipeline.FireExceptionCaught(failure);
-                        if (failure is not SocketException && IsOpen) _ = CloseTransportAsync();
+                        if (failure is not SocketException && IsOpen) _ = Close();
                     }
                     // Check if there is a readPending which was not processed yet.
                     // This could be for two reasons:
@@ -484,7 +484,7 @@ public class DatagramChannel : AbstractChannel
                 {
                     if (!IsOpen) return;
                     Pipeline.FireExceptionCaught(error);
-                    _ = CloseTransportAsync();
+                    _ = Close();
                 }).ConfigureAwait(false);
             }
             catch { }

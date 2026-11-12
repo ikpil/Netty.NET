@@ -313,11 +313,11 @@ public class EmbeddedChannel : AbstractChannel
         { return base.CloseAsync(cancellationToken); }
         finally { _executingStack--; MaybeRunPendingTasks(); Loop.CancelTasks(); }
     }
-    internal override Task CloseTransportAsync()
+    internal override Task Close()
     {
         _executingStack++;
         try
-        { return base.CloseTransportAsync(); }
+        { return base.Close(); }
         finally { _executingStack--; MaybeRunPendingTasks(); }
     }
     internal override Task DisconnectTransportAsync(CancellationToken cancellationToken)

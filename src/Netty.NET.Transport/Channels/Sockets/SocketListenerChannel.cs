@@ -145,7 +145,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
                         {
                             bool close = CloseOnReadError(failure);
                             Pipeline.FireExceptionCaught(failure);
-                            if (close && IsOpen) _ = CloseTransportAsync();
+                            if (close && IsOpen) _ = Close();
                         }
                         again = IsOpen && IsActive && (Config.IsAutoRead() || _readRequested);
                     }).ConfigureAwait(false);
@@ -158,7 +158,7 @@ public abstract class SocketListenerChannel : AbstractChannel, IServerChannel
         catch (Exception error)
         {
             try
-            { await OnSocketLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = CloseTransportAsync(); } }).ConfigureAwait(false); }
+            { await OnSocketLoopAsync(() => { if (IsOpen) { Pipeline.FireExceptionCaught(error); _ = Close(); } }).ConfigureAwait(false); }
             catch { }
         }
         finally

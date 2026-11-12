@@ -96,7 +96,7 @@ public class LocalChannel : AbstractChannel
         {
             // No asynchronous connection is being awaited. Close and release the local binding.
             _connecting = false;
-            _ = CloseTransportAsync();
+            _ = Close();
             throw;
         }
         return FinishConnectAsync(cancellationToken);
@@ -112,7 +112,7 @@ public class LocalChannel : AbstractChannel
             await OnLoopAsync(() =>
             {
                 _connection.TrySetCanceled(canceled.CancellationToken);
-                _ = CloseTransportAsync();
+                _ = Close();
             }).ConfigureAwait(false);
             throw;
         }
@@ -178,7 +178,7 @@ public class LocalChannel : AbstractChannel
             _peer = null;
         }
         if (IsOpen)
-            _ = CloseTransportAsync();
+            _ = Close();
         else
             while (_inbound.TryDequeue(out var message))
                 ReferenceCountUtil.Release(message);
@@ -214,7 +214,7 @@ public class LocalChannel : AbstractChannel
         _wrote = false;
         try
         { FinishPeerRead(peer); }
-        catch { _ = CloseTransportAsync(); peer.CloseForcibly(); throw; }
+        catch { _ = Close(); peer.CloseForcibly(); throw; }
     }
     private void FinishPeerRead(LocalChannel peer)
     {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
@@ -31,6 +32,8 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
 {
     protected static readonly int DEFAULT_MAX_PENDING_TASKS = Math.Max(16, SystemPropertyUtil.GetInt("io.netty.eventLoop.maxPendingTasks", int.MaxValue));
     private readonly IQueue<Action> _tailTasks;
+    private readonly ConcurrentQueue<Action> _closeCompletions = new();
+    private int _pendingCloseCompletions;
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp)
         : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
     protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory factory, bool addTaskWakesUp)
@@ -73,10 +76,45 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
      */
     public bool RemoveAfterEventLoopIterationTask(Action task)
     { ArgumentNullException.ThrowIfNull(task); return _tailTasks.TryRemove(task); }
-    protected override void AfterRunningAllTasks() => RunAllTasksFrom(_tailTasks);
+    // CLR-only native-close admission. A reserved callback survives public task rejection during shutdown.
+    internal Action<Action> ReserveCloseCompletion()
+    {
+        if (!InEventLoop()) throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        _pendingCloseCompletions++;
+        return completion =>
+        {
+            _closeCompletions.Enqueue(() =>
+            {
+                try { completion(); }
+                finally { _pendingCloseCompletions--; }
+            });
+            Wakeup(false);
+        };
+    }
+    protected override void AfterRunningAllTasks()
+    {
+        RunAllTasksFrom(_tailTasks);
+        RunCloseCompletions();
+    }
+    protected override Action TakeTask()
+    {
+        Action task = base.TakeTask();
+        // A native worker wakes a blocking loop with its sentinel. Return executable owner work even in custom loops.
+        return task ?? (_closeCompletions.IsEmpty ? null : RunCloseCompletions);
+    }
+    private void RunCloseCompletions()
+    {
+        while (_closeCompletions.TryDequeue(out var completion)) SafeExecute(completion);
+    }
+    protected override bool ConfirmShutdown()
+    {
+        bool shutdown = base.ConfirmShutdown();
+        return shutdown && _pendingCloseCompletions == 0;
+    }
+    protected override bool CanSuspend(int state) => _pendingCloseCompletions == 0 && base.CanSuspend(state);
     protected bool HasTailTasks => _tailTasks.Count != 0;
-    protected override bool HasTasks() => base.HasTasks() || HasTailTasks;
-    public override int PendingTasks() => base.PendingTasks() + _tailTasks.Count;
+    protected override bool HasTasks() => base.HasTasks() || HasTailTasks || !_closeCompletions.IsEmpty;
+    public override int PendingTasks() => base.PendingTasks() + _tailTasks.Count + _closeCompletions.Count;
     protected override int GetNumOfRegisteredChannels() => RegisteredChannels();
     /**
      * Returns the number of {@link Channel}s registered with this {@link EventLoop} or {@code -1}
