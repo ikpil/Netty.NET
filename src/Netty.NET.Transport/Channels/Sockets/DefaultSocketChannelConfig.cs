@@ -169,7 +169,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)value);
             Socket.SendBufferSize = (int)value;
-            if (Channel is SocketStreamChannel stream) stream.ResetGatheringWriteLimit();
+            if (Channel is SocketStreamChannel stream) stream.CalculateMaxBytesPerGatheringWrite();
         }
         else if (ReferenceEquals(option, ChannelOption.TCP_NODELAY))
             Socket.NoDelay = (bool)value;

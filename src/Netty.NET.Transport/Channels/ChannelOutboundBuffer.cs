@@ -44,19 +44,19 @@ public sealed class ChannelOutboundBuffer
     private readonly IChannel _channel;
     private readonly LinkedList<Entry> _entries = new();
     public static readonly int EntryOverhead = Math.Max(0, SystemPropertyUtil.GetInt("io.netty.transport.outboundBufferEntrySizeOverhead", 96));
-    private ReadOnlyMemory<byte>[] _memories = new ReadOnlyMemory<byte>[1024];
+    private ReadOnlyMemory<byte>[] _nioBuffers = new ReadOnlyMemory<byte>[1024];
     /**
      * Returns the number of {@link ByteBuffer} that can be written out of the {@link ByteBuffer} array that was
      * obtained via {@link #nioBuffers()}. This method <strong>MUST</strong> be called after {@link #nioBuffers()}
      * was called.
      */
-    public int MemoryCount { get; private set; }
+    public int NioBufferCount { get; private set; }
     /**
      * Returns the number of bytes that can be written out of the {@link ByteBuffer} array that was
      * obtained via {@link #nioBuffers()}. This method <strong>MUST</strong> be called after {@link #nioBuffers()}
      * was called.
      */
-    public long MemorySize { get; private set; }
+    public long NioBufferSize { get; private set; }
     private long _pendingBytes;
     private int _unwritable;
     private int _flushed;
@@ -169,7 +169,7 @@ public sealed class ChannelOutboundBuffer
     {
         if (_flushed == 0)
         {
-            ClearMemories();
+            ClearNioBuffers();
             return false;
         }
         var entry = _entries.First.Value;
@@ -216,44 +216,58 @@ public sealed class ChannelOutboundBuffer
                 break;
             }
         }
-        ClearMemories();
+        ClearNioBuffers();
     }
     // CLR borrowed ReadOnlyMemory segments replace NIO ByteBuffer views. The reusable array must not
     // escape the transport's write iteration; it does not retain any of the underlying buffers.
-    public ReadOnlyMemory<byte>[] GetReadableMemories(int maxCount = int.MaxValue, long maxBytes = int.MaxValue)
+    /**
+     * Returns an array of direct NIO buffers if the currently pending messages are made of {@link ByteBuf} only.
+     * {@link #nioBufferCount()} and {@link #nioBufferSize()} will return the number of NIO buffers in the returned
+     * array and the total number of readable bytes of the NIO buffers respectively.
+     * <p>
+     * Note that the returned array is reused and thus should not escape
+     * {@link AbstractChannel#doWrite(ChannelOutboundBuffer)}.
+     * Refer to {@link NioSocketChannel#doWrite(ChannelOutboundBuffer)} for an example.
+     * </p>
+     * @param maxCount The maximum amount of buffers that will be added to the return value.
+     * @param maxBytes A hint toward the maximum number of bytes to include as part of the return value. Note that this
+     *                 value maybe exceeded because we make a best effort to include at least 1 {@link ByteBuffer}
+     *                 in the return value to ensure write progress is made.
+     */
+    public ReadOnlyMemory<byte>[] NioBuffers(int maxCount = int.MaxValue, long maxBytes = int.MaxValue)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCount);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
-        ClearMemories();
-        for (var node = _entries.First; node != null && node.Value.Flushed && node.Value.Message is ByteBuf; node = node.Next)
+        ClearNioBuffers();
+        for (var entry = _entries.First; entry != null && entry.Value.Flushed && entry.Value.Message is ByteBuf; entry = entry.Next)
         {
-            var buffer = (ByteBuf)node.Value.Message;
-            int readable = buffer.ReadableBytes;
-            if (readable == 0)
+            var buf = (ByteBuf)entry.Value.Message;
+            int readableBytes = buf.ReadableBytes;
+            if (readableBytes == 0)
                 continue;
-            if (maxBytes - readable < MemorySize && MemoryCount != 0)
+            if (maxBytes - readableBytes < NioBufferSize && NioBufferCount != 0)
                 break;
-            MemorySize += readable;
-            foreach (var memory in buffer.ReadableSequence)
+            NioBufferSize += readableBytes;
+            foreach (var nioBuf in buf.ReadableSequence)
             {
-                if (memory.IsEmpty)
+                if (nioBuf.IsEmpty)
                     continue;
-                if (MemoryCount == _memories.Length)
-                    Array.Resize(ref _memories, checked(_memories.Length * 2));
-                _memories[MemoryCount++] = memory;
-                if (MemoryCount == maxCount)
-                    return _memories;
+                if (NioBufferCount == _nioBuffers.Length)
+                    Array.Resize(ref _nioBuffers, checked(_nioBuffers.Length * 2));
+                _nioBuffers[NioBufferCount++] = nioBuf;
+                if (NioBufferCount == maxCount)
+                    return _nioBuffers;
             }
         }
-        return _memories;
+        return _nioBuffers;
     }
     // Clear all ByteBuffer from the array so these can be GC'ed.
     // See https://github.com/netty/netty/issues/3837
-    private void ClearMemories()
+    private void ClearNioBuffers()
     {
-        Array.Clear(_memories, 0, MemoryCount);
-        MemoryCount = 0;
-        MemorySize = 0;
+        Array.Clear(_nioBuffers, 0, NioBufferCount);
+        NioBufferCount = 0;
+        NioBufferSize = 0;
     }
     /**
      * Call {@link MessageProcessor#processMessage(Object)} for each flushed message
@@ -361,7 +375,7 @@ public sealed class ChannelOutboundBuffer
         var entries = new List<Entry>(_entries);
         _entries.Clear();
         _flushed = 0;
-        ClearMemories();
+        ClearNioBuffers();
         long size = 0;
         foreach (var entry in entries)
         { entry.Node = null; size += entry.Size; }

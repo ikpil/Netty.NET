@@ -36,11 +36,12 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
     private bool _readRequested;
     private volatile bool _inputShutdown;
     private bool _inputReadComplete;
-    private int _gatheringWriteLimit;
+    private int _maxBytesPerGatheringWrite = int.MaxValue;
     protected SocketStreamChannel(Socket socket, IChannel parent) : base(parent, new ChannelMetadata(false, 16))
     {
         Socket = socket ?? throw new ArgumentNullException(nameof(socket));
         SetActive(socket.Connected);
+        CalculateMaxBytesPerGatheringWrite();
     }
     public override EndPoint LocalAddress => IsOpen ? Normalize(Socket.LocalEndPoint) : null;
     public override EndPoint RemoteAddress => IsOpen ? Normalize(Socket.RemoteEndPoint) : null;
@@ -100,7 +101,18 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
     internal virtual bool SupportsGatheringWrites =>
         GetType() == typeof(TcpSocketChannel) || GetType() == typeof(DomainSocketChannel);
 
-    internal void ResetGatheringWriteLimit() => Volatile.Write(ref _gatheringWriteLimit, 0);
+    internal int GetMaxBytesPerGatheringWrite() => Volatile.Read(ref _maxBytesPerGatheringWrite);
+
+    internal void SetMaxBytesPerGatheringWrite(int maxBytesPerGatheringWrite) =>
+        Volatile.Write(ref _maxBytesPerGatheringWrite, maxBytesPerGatheringWrite);
+
+    internal void CalculateMaxBytesPerGatheringWrite()
+    {
+        // Multiply by 2 to give some extra space in case the OS can process write data faster than we can provide.
+        int newSendBufferSize = unchecked(Socket.SendBufferSize << 1);
+        if (newSendBufferSize > 0)
+            SetMaxBytesPerGatheringWrite(newSendBufferSize);
+    }
 
     /**
      * Write objects to the OS.
@@ -132,6 +144,7 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
     }
 
     private const int WRITE_STATUS_SNDBUF_FULL = int.MaxValue;
+    private const int MAX_BYTES_PER_GATHERING_WRITE_ATTEMPTED_LOW_THRESHOLD = 4096;
 
     private async Task<int> DoWriteInternal(ChannelOutboundBuffer @in, object msg)
     {
@@ -144,7 +157,8 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
             }
 
             // CLR Socket.SendAsync does not advance ByteBuf indices. Commit the returned byte count on the owner.
-            int expectedWrittenBytes = buf.ReadableBytes;
+            int expectedWrittenBytes = buf.ReadableSequence.First.Length;
+            int maxBytesPerGatheringWrite = GetMaxBytesPerGatheringWrite();
             int localFlushedAmount;
             bool pending;
             buf.Retain();
@@ -162,6 +176,7 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
             await CompleteOutboundIoAsync(() =>
             {
                 if (!IsOpen || @in.IsClosed) return false;
+                AdjustMaxBytesPerGatheringWrite(expectedWrittenBytes, localFlushedAmount, maxBytesPerGatheringWrite);
                 buf.ReaderIndex += localFlushedAmount;
                 @in.Progress(localFlushedAmount);
                 if (IsOpen && !@in.IsClosed && !buf.IsReadable)
@@ -225,23 +240,21 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
 
         // A small vector bound is portable across supported socket backends.
         const int maxSegments = 16;
-        int limit = Volatile.Read(ref _gatheringWriteLimit);
-        if (limit == 0)
-        {
-            // Multiply by 2 to give some extra space in case the OS can process write data faster than we can provide.
-            int initial = (int)Math.Clamp(Socket.SendBufferSize * 2L, 1, int.MaxValue);
-            int previous = Interlocked.CompareExchange(ref _gatheringWriteLimit, initial, 0);
-            limit = previous == 0 ? initial : previous;
-        }
+        int maxBytesPerGatheringWrite = GetMaxBytesPerGatheringWrite();
         List<ArraySegment<byte>> segments = null;
         List<ByteBuf> buffers = null;
-        int attempted = 0;
+        int attemptedBytes = 0;
         // Ensure the pending writes are made of ByteBufs only.
-        OutboundBuffer.ForEachFlushedMessage(message =>
+        OutboundBuffer.ForEachFlushedMessage(msg =>
         {
-            if (message is not ByteBuf buffer) return false;
+            if (msg is not ByteBuf buf) return false;
+            int readableBytes = buf.ReadableBytes;
+            if (readableBytes == 0) return true;
+            // maxBytes is a hint: include the first buffer whole to ensure progress, then stop at message boundaries.
+            // CLR: retain the portable vector-count bound and fall back when memory cannot be represented by an array.
+            if (maxBytesPerGatheringWrite - readableBytes < attemptedBytes && segments != null) return false;
             bool added = false;
-            foreach (var memory in buffer.ReadableSequence)
+            foreach (var memory in buf.ReadableSequence)
             {
                 // Zero length buffers are not added to nioBuffers by ChannelOutboundBuffer, so there is no need
                 // to check if the total size of all the buffers is non-zero.
@@ -249,14 +262,12 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
                 if (!MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> segment)) return false;
                 if (!added)
                 {
-                    (buffers ??= new List<ByteBuf>(maxSegments)).Add(buffer);
+                    (buffers ??= new List<ByteBuf>(maxSegments)).Add(buf);
                     added = true;
                 }
-                int length = Math.Min(segment.Count, limit - attempted);
-                (segments ??= new List<ArraySegment<byte>>(maxSegments))
-                    .Add(new ArraySegment<byte>(segment.Array, segment.Offset, length));
-                attempted += length;
-                if (segments.Count == maxSegments || attempted == limit) return false;
+                (segments ??= new List<ArraySegment<byte>>(maxSegments)).Add(segment);
+                attemptedBytes += segment.Count;
+                if (segments.Count == maxSegments) return false;
             }
             return true;
         });
@@ -270,11 +281,11 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
             try
             {
                 for (; retained < buffers.Count; retained++) buffers[retained].Retain();
-                int written = await SendGatheredAsync(segments).ConfigureAwait(false);
-                if (written <= 0 || written > attempted)
+                int localWrittenBytes = await SendGatheredAsync(segments).ConfigureAwait(false);
+                if (localWrittenBytes <= 0 || localWrittenBytes > attemptedBytes)
                     throw new IOException("Socket reported an invalid gathered write length.");
-                AdjustGatheringWriteLimit(attempted, written, limit);
-                return written;
+                AdjustMaxBytesPerGatheringWrite(attemptedBytes, localWrittenBytes, maxBytesPerGatheringWrite);
+                return localWrittenBytes;
             }
             finally
             {
@@ -286,18 +297,19 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
     internal virtual Task<int> SendGatheredAsync(IList<ArraySegment<byte>> segments) =>
         Socket.SendAsync(segments, SocketFlags.None);
 
-    private void AdjustGatheringWriteLimit(int attempted, int written, int previous)
+    private void AdjustMaxBytesPerGatheringWrite(int attempted, int written, int oldMaxBytesPerGatheringWrite)
     {
         // By default we track the SO_SNDBUF when ever it is explicitly set. However some OSes may dynamically change
         // SO_SNDBUF (and other characteristics that determine how much data can be written at once) so we should try
         // make a best effort to adjust as OS behavior changes.
         if (attempted == written)
         {
-            int next = (int)Math.Min(attempted * 2L, int.MaxValue);
-            if (next > previous) Interlocked.CompareExchange(ref _gatheringWriteLimit, next, previous);
+            // CLR: a pending completion must not replace a newer explicit SO_SNDBUF configuration.
+            if (unchecked(attempted << 1) > oldMaxBytesPerGatheringWrite)
+                Interlocked.CompareExchange(ref _maxBytesPerGatheringWrite, unchecked(attempted << 1), oldMaxBytesPerGatheringWrite);
         }
-        else if (attempted > 4096 && written < attempted / 2)
-            Interlocked.CompareExchange(ref _gatheringWriteLimit, attempted / 2, previous);
+        else if (attempted > MAX_BYTES_PER_GATHERING_WRITE_ATTEMPTED_LOW_THRESHOLD && written < attempted >>> 1)
+            Interlocked.CompareExchange(ref _maxBytesPerGatheringWrite, attempted >>> 1, oldMaxBytesPerGatheringWrite);
     }
 
     protected override async Task DoWrite(object msg)

@@ -38,19 +38,21 @@ public class ChannelOutboundBufferTest
     [Fact]
     public void TestEmptyNioBuffers()
     {
-        var buffer = new ChannelOutboundBuffer(new TestChannel());
-        Assert.Equal(0, buffer.MemoryCount);
-        var memories = buffer.GetReadableMemories();
-        Assert.NotNull(memories);
-        foreach (var memory in memories)
-            Assert.True(memory.IsEmpty);
-        Assert.Equal(0, buffer.MemoryCount);
+        var channel = new TestChannel();
+        var buffer = new ChannelOutboundBuffer(channel);
+        Assert.Equal(0, buffer.NioBufferCount);
+        var buffers = buffer.NioBuffers();
+        Assert.NotNull(buffers);
+        foreach (var b in buffers)
+            Assert.True(b.IsEmpty);
+        Assert.Equal(0, buffer.NioBufferCount);
         Release(buffer);
     }
     [Fact]
     public void TestNioBuffersCancelledRemoveBytes()
     {
-        var buffer = new ChannelOutboundBuffer(new TestChannel());
+        var channel = new TestChannel();
+        var buffer = new ChannelOutboundBuffer(channel);
         var b1 = Unpooled.WrappedBuffer(new byte[] { 0 });
         int r1 = b1.ReadableBytes;
         Task p1 = buffer.AddMessage(b1, r1);
@@ -63,11 +65,11 @@ public class ChannelOutboundBufferTest
         int r3 = b3.ReadableBytes;
         Task p3 = buffer.AddMessage(b3, r3);
         buffer.AddFlush();
-        var memories = buffer.GetReadableMemories();
-        Assert.Equal(2, buffer.MemoryCount);
-        Assert.NotNull(memories);
-        Assert.Equal(r1, memories[0].Length);
-        Assert.Equal(r3, memories[1].Length);
+        var buffers = buffer.NioBuffers();
+        Assert.Equal(2, buffer.NioBufferCount);
+        Assert.NotNull(buffers);
+        Assert.Equal(r1, buffers[0].Length);
+        Assert.Equal(r3, buffers[1].Length);
         buffer.RemoveBytes(r1 + r3);
         Assert.Equal(0, b1.ReferenceCount);
         Assert.Equal(0, b2.ReferenceCount);
@@ -81,82 +83,86 @@ public class ChannelOutboundBufferTest
     [Fact]
     public void TestNioBuffersSingleBacked()
     {
-        var buffer = new ChannelOutboundBuffer(new TestChannel());
-        Assert.Equal(0, buffer.MemoryCount);
-        var data = Unpooled.CopiedBuffer("buf1", Encoding.ASCII);
-        var memory = data.ReadableMemory;
-        buffer.AddMessage(data, data.ReadableBytes);
-        Assert.Equal(0, buffer.MemoryCount);
+        var channel = new TestChannel();
+        var buffer = new ChannelOutboundBuffer(channel);
+        Assert.Equal(0, buffer.NioBufferCount);
+        var buf = Unpooled.CopiedBuffer("buf1", Encoding.ASCII);
+        var nioBuf = buf.ReadableMemory;
+        buffer.AddMessage(buf, buf.ReadableBytes);
+        Assert.Equal(0, buffer.NioBufferCount);
         buffer.AddFlush();
-        var memories = buffer.GetReadableMemories();
-        Assert.NotNull(memories);
-        Assert.Equal(1, buffer.MemoryCount);
-        for (int i = 0; i < buffer.MemoryCount; i++)
+        var buffers = buffer.NioBuffers();
+        Assert.NotNull(buffers);
+        Assert.Equal(1, buffer.NioBufferCount);
+        for (int i = 0; i < buffer.NioBufferCount; i++)
             if (i == 0)
-                Assert.True(memories[i].Span.SequenceEqual(memory.Span));
+                Assert.True(buffers[i].Span.SequenceEqual(nioBuf.Span));
             else
-                Assert.True(memories[i].IsEmpty);
+                Assert.True(buffers[i].IsEmpty);
         Release(buffer);
     }
     [Fact]
     public void TestNioBuffersExpand()
     {
-        var buffer = new ChannelOutboundBuffer(new TestChannel());
-        var data = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
+        var channel = new TestChannel();
+        var buffer = new ChannelOutboundBuffer(channel);
+        var buf = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
         for (int i = 0; i < 64; i++)
-            buffer.AddMessage(data.Copy(), data.ReadableBytes);
-        Assert.Equal(0, buffer.MemoryCount);
+            buffer.AddMessage(buf.Copy(), buf.ReadableBytes);
+        Assert.Equal(0, buffer.NioBufferCount);
         buffer.AddFlush();
-        var memories = buffer.GetReadableMemories();
-        Assert.Equal(64, buffer.MemoryCount);
-        for (int i = 0; i < buffer.MemoryCount; i++)
-            Assert.True(memories[i].Span.SequenceEqual(data.ReadableMemory.Span));
+        var buffers = buffer.NioBuffers();
+        Assert.Equal(64, buffer.NioBufferCount);
+        for (int i = 0; i < buffer.NioBufferCount; i++)
+            Assert.True(buffers[i].Span.SequenceEqual(buf.ReadableMemory.Span));
         Release(buffer);
-        data.Release();
+        buf.Release();
     }
     [Fact]
     public void TestNioBuffersExpand2()
     {
-        var buffer = new ChannelOutboundBuffer(new TestChannel());
-        var composite = Unpooled.CompositeBuffer(256);
-        var data = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
+        var channel = new TestChannel();
+        var buffer = new ChannelOutboundBuffer(channel);
+        var comp = Unpooled.CompositeBuffer(256);
+        var buf = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
         for (int i = 0; i < 65; i++)
-            composite.AddComponent(data.Copy(), true);
-        buffer.AddMessage(composite, composite.ReadableBytes);
-        Assert.Equal(0, buffer.MemoryCount);
+            comp.AddComponent(buf.Copy(), true);
+        buffer.AddMessage(comp, comp.ReadableBytes);
+        Assert.Equal(0, buffer.NioBufferCount);
         buffer.AddFlush();
-        var memories = buffer.GetReadableMemories();
-        Assert.Equal(65, buffer.MemoryCount);
-        for (int i = 0; i < buffer.MemoryCount; i++)
+        var buffers = buffer.NioBuffers();
+        Assert.Equal(65, buffer.NioBufferCount);
+        for (int i = 0; i < buffer.NioBufferCount; i++)
             if (i < 65)
-                Assert.True(memories[i].Span.SequenceEqual(data.ReadableMemory.Span));
+                Assert.True(buffers[i].Span.SequenceEqual(buf.ReadableMemory.Span));
             else
-                Assert.True(memories[i].IsEmpty);
+                Assert.True(buffers[i].IsEmpty);
         Release(buffer);
-        data.Release();
+        buf.Release();
     }
     [Fact]
     public void TestNioBuffersMaxCount()
     {
-        var buffer = new ChannelOutboundBuffer(new TestChannel());
-        var composite = Unpooled.CompositeBuffer(256);
-        var data = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
+        var channel = new TestChannel();
+        var buffer = new ChannelOutboundBuffer(channel);
+        var comp = Unpooled.CompositeBuffer(256);
+        var buf = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
         for (int i = 0; i < 65; i++)
-            composite.AddComponent(data.Copy(), true);
+            comp.AddComponent(buf.Copy(), true);
         int segments = 0;
-        foreach (var _ in composite.ReadableSequence)
+        foreach (var _ in comp.ReadableSequence)
             segments++;
         Assert.Equal(65, segments);
-        buffer.AddMessage(composite, composite.ReadableBytes);
-        Assert.Equal(0, buffer.MemoryCount);
+        buffer.AddMessage(comp, comp.ReadableBytes);
+        Assert.Equal(0, buffer.NioBufferCount);
         buffer.AddFlush();
         const int maxCount = 10; // less than comp.nioBufferCount()
-        var memories = buffer.GetReadableMemories(maxCount, int.MaxValue);
-        Assert.True(buffer.MemoryCount <= maxCount, "Should not be greater than maxCount");
-        for (int i = 0; i < buffer.MemoryCount; i++)
-            Assert.True(memories[i].Span.SequenceEqual(data.ReadableMemory.Span));
+        var buffers = buffer.NioBuffers(maxCount, int.MaxValue);
+        Assert.True(buffer.NioBufferCount <= maxCount, "Should not be greater than maxCount");
+        for (int i = 0; i < buffer.NioBufferCount; i++)
+            Assert.True(buffers[i].Span.SequenceEqual(buf.ReadableMemory.Span));
         Release(buffer);
-        data.Release();
+        buf.Release();
     }
     [Fact]
     public void TestWritability()
