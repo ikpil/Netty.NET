@@ -29,7 +29,7 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows). Added the shared IDuplexChannel/IsShutdown API, original TCP/domain address scenarios, inherited domain initial-read and peer-shutdown fixtures, the complete 100-connection descriptor-reuse body and registration-before-write original. Restored real-network connection-attempt originals and implemented the measured Windows AF_UNIX EOF workaround. Channel groups expose native ISet bulk operations and ordinal-name/identity ordering while preserving Id admission, automatic removal, stayClosed and server-first snapshots. Corrected separate TCP stream/listener option admission, platform backlog defaults/visibility, JDK positive buffer sizes and linger clamp, one-time best-effort NoDelay defaults and Linux IPv6 traffic-class configuration. Repeated the original native/domain config tests without changing their mappings. Scalar ByteBuf sends now share the original per-pass writeSpinCount with vectors, including zero-cost empty buffers, partial progress and native borrow lifetime. Source write-method names and reviewed TCP test identifiers are aligned.",
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows). Added the shared IDuplexChannel/IsShutdown API, original TCP/domain address scenarios, inherited domain initial-read and peer-shutdown fixtures, the complete 100-connection descriptor-reuse body and registration-before-write original. Restored real-network connection-attempt originals and implemented the measured Windows AF_UNIX EOF workaround. Channel groups expose native ISet bulk operations and ordinal-name/identity ordering while preserving Id admission, automatic removal, stayClosed and server-first snapshots. Corrected separate TCP stream/listener option admission, platform backlog defaults/visibility, JDK positive buffer sizes and linger clamp, one-time best-effort NoDelay defaults and Linux IPv6 traffic-class configuration. Repeated the original native/domain config tests without changing their mappings. Scalar ByteBuf sends now share the original per-pass writeSpinCount with vectors, including zero-cost empty buffers, partial progress and native borrow lifetime. Source write-method names and reviewed TCP test identifiers are aligned. Eligible file-region writes now share the original per-attempt spin quantum, including zero-progress retry, physical/logical completion separation, native partial errors and close-owned borrows. The protected DoWriteFileRegion producer retains source identifiers and original comments.",
       "next": "Continue remaining portable socket and selector/backend contracts against their original fixtures and runtime comments."
     },
     {
@@ -63,18 +63,18 @@
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 26,
-    "supplementalExecutedCases": 408,
+    "supplementalExecutedCases": 427,
     "debug": {
       "failed": 0,
-      "passed": 1015,
+      "passed": 1034,
       "skipped": 80,
-      "total": 1095
+      "total": 1114
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 1015,
+      "passed": 1034,
       "skipped": 80,
-      "total": 1095
+      "total": 1114
     },
     "solutionRelease": {
       "Netty.NET.Common.Tests": {
@@ -97,28 +97,30 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 1015,
+        "passed": 1034,
         "skipped": 80,
-        "total": 1095
+        "total": 1114
       }
     },
-    "solutionPassed": 33313,
+    "solutionPassed": 33332,
     "solutionSkipped": 94,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
-      "existingCommonCheckedRebuild": 51
+      "existingCommonCheckedRebuild": 51,
+      "correctedSupplementalZeroProgress": "The first focused run failed only the previous supplemental ARegionWithoutPhysicalOrLogicalProgressFailsWithoutSpinning expectation, which assumed zero was an error. Direct unmodified Java implementation probes on both OSes verify retry/full-buffer status instead. The supplemental test now verifies a retry, ordinary task opportunity, pending result, close failure and final release. Original tests, timing bounds and assertions remain unchanged."
     },
-    "javaEvidence": "Unmodified pinned NioSocketChannelTest and its socket/nio AbstractNioChannelTest base run under JUnit Jupiter on Windows/Linux: eight passed per OS, no skips/failures. Separate original AbstractNioByteChannel.doWrite probes verify scalar partial-write cost, cross-buffer quantum, empty-buffer cost and config snapshots, using the unmodified original implementation and source method/variable names. Probe bodies are explicitly not mapped original fixtures.",
-    "note": "Windows full Release solution run: 33313 passed / 94 existing skips / zero failures. After the protected DoWrite identifier rename, final whole Transport Release, Debug and checked Release pass 1015 / 80 existing skips each; Linux final whole Transport passes 1087 / eight existing source-disabled skips. Nineteen new scalar contract cases and seventy-two focused compatibility cases pass. All eight original Java TCP/option executions repeat unchanged on both OSes. An isolated scalar-dispatch removal produces fifteen failures and four passes while keeping producer declarations compileable. Original comments, test conditions and assertions remain preserved; the existing TCP source fixture changes only corresponding identifiers. Naming policy is recorded without claiming historical repository-wide identifier review is complete.",
+    "javaEvidence": "Unmodified pinned NioSocketChannelTest runs eight original TCP/option cases on Windows and Linux. Unmodified SocketFileRegionTest runs seven wrappers / fourteen original allocator executions on Windows; Linux runs it plus EpollSocketFileRegionTest and EpollDomainSocketFileRegionTest, twenty-one wrappers / forty-two original allocator executions. All pass with no skips/failures. Separate original AbstractNioByteChannel.doWrite file probes verify pass quantum, zero-progress retry and logical completion with zero physical bytes; these probes are not original fixture mappings.",
+    "note": "Final Windows serial Release solution: 33332 passed / 94 existing skips / zero failures. Full Transport Debug and checked Release: 1034 passed / 80 existing skips each; Linux full Transport: 1106 passed / eight existing source-disabled skips. New checked Linux focus: 19/19. Existing native-file/scalar compatibility focus: 43/43. Nineteen supplemental file-quantum/lifetime cases are added without increasing original mapped method totals. The incorrect older supplemental zero-progress failure expectation is replaced with directly proven original retry/close semantics. Isolating the previous whole-message file dispatch reproduces eleven failures and eight passes with producer declarations retained and successful compilation. Original comments and source identifiers are preserved; no new skip or reduced original assertion.",
     "commands": [
-      "python artifacts/transport-core/run-byte-spin-originals.py",
-      "dotnet test Netty.NET.sln -c Release --no-restore -m:1 --results-directory artifacts/transport-core/byte-spin-results --logger \"trx;LogFilePrefix=byte-spin\"",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --results-directory artifacts/transport-core/byte-spin-final-results --logger \"trx;LogFilePrefix=byte-spin-final\"",
+      "python artifacts/transport-core/run-file-spin-originals.py",
+      "python artifacts/transport-core/run-file-spin-region-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter FullyQualifiedName~SocketFileRegionWriteSpinCountContractTest",
+      "dotnet test Netty.NET.sln -c Release --no-restore -m:1 --results-directory artifacts/transport-core/file-spin-results --logger \"trx;LogFilePrefix=file-spin\"",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/byte-spin-checked-out -p:NuGetAudit=false --no-restore",
-      "python artifacts/transport-core/run-byte-spin-linux.py",
-      "python artifacts/transport-core/run-byte-spin-regressions.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/file-spin-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-file-spin-linux.py",
+      "python artifacts/transport-core/run-file-spin-regressions.py",
       "pwsh -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -162,8 +164,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 1095,
-      "passed": 1087,
+      "total": 1114,
+      "passed": 1106,
       "failed": 0,
       "skipped": 8
     },
@@ -596,6 +598,62 @@
       "comparison": "The isolated current-source copy removes only the shared scalar-dispatch branch while retaining new producer declarations, so it still compiles. Fifteen failures establish actual behavior differences rather than compile failures; the main worktree is not rolled back.",
       "javaCounting": "Eight original NioSocketChannelTest executions (five declared plus three inherited native option tests) repeat without new original mappings. The separate AbstractNioByteChannel implementation probe is not an original JUnit fixture.",
       "finalIdentifierValidation": "Full solution passes before the final protected-identifier/parameter-only rename. Final entire Transport Release/Debug/checked and Linux are rerun after that rename. Common/Buffer/Resolver source is unchanged; no second full-solution invocation is invented."
+    },
+    "fileWriteQuantumEvidence": {
+      "newMappedOriginalMethods": 0,
+      "newSupplementalCases": 19,
+      "focusedPassed": 19,
+      "compatibilityFocusedPassed": 43,
+      "javaRepeated": {
+        "windows": {
+          "tcp": 8,
+          "file": 7,
+          "originalFileAllocatorExecutions": 14
+        },
+        "linux": {
+          "tcp": 8,
+          "file": 21,
+          "originalFileAllocatorExecutions": 42
+        }
+      },
+      "javaSkipped": 0,
+      "javaSourceContractProbesPassedPerPlatform": 1,
+      "sourceIdentifierMappings": [
+        {
+          "upstream": "transport/src/main/java/io/netty/channel/socket/nio/NioSocketChannel.java",
+          "javaMethod": "doWriteFileRegion",
+          "clrMethod": "DoWriteFileRegion",
+          "variables": [
+            "region",
+            "position"
+          ]
+        },
+        {
+          "upstream": "transport/src/main/java/io/netty/channel/nio/AbstractNioByteChannel.java",
+          "javaMethod": "doWriteInternal",
+          "clrMethod": "DoWriteInternal",
+          "variables": [
+            "in",
+            "msg",
+            "buf",
+            "region",
+            "localFlushedAmount"
+          ]
+        },
+        {
+          "upstream": "transport/src/main/java/io/netty/channel/internal/ChannelUtils.java",
+          "javaField": "WRITE_STATUS_SNDBUF_FULL",
+          "clrField": "WRITE_STATUS_SNDBUF_FULL"
+        }
+      ],
+      "isolatedFileDispatchRemoval": {
+        "failed": 11,
+        "passed": 8,
+        "skipped": 0,
+        "total": 19
+      },
+      "comparison": "Only file-region eligibility in DoWrite0 is removed in an isolated current-source copy; new producer declarations remain, and the project compiles. Eleven failing cases establish the quantum/ordering distinction; the main worktree is not rolled back.",
+      "javaCounting": "The TCP and file-region original fixtures are repeated compatibility checks, not new mapped methods. The separate AbstractNioByteChannel implementation probes are never counted as original JUnit fixtures."
     }
   },
   "entries": [
@@ -852,7 +910,7 @@
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Implemented the original message-channel MAX_MESSAGES_PER_WRITE quantum with a per-pass snapshot and per-entry accounting, including continued write failures and cancelled empty placeholders. UDP re-arms the next native I/O phase, allowing ordinary work without admitting unflushed writes. Byte-stream, local and embedded policies are unchanged. Native writer/borrow ownership remains exclusive through asynchronous resumption. Datagram zero-length buffers complete without a send, matching NioDatagramChannel.doWriteMessage; receiving externally sent empty datagrams is unchanged. Custom configs use the public budget option or the original unlimited fallback and optional active-on-registration lookup, without a private-config registration cast. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. File-region per-native-attempt quantum accounting and other unreviewed contracts remain open. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names.",
+        "scope": "Registration-first active notification, initial write-failure causes, inactive flush and all portable AbstractChannelTest declarations remain mapped. Shared output shutdown now rejects admission before invoking the native primitive, releases flushed/unflushed ownership with the shutdown cause and fires the owner event. IOException/native SocketException with AutoClose closes; other stream/channel failures use the output override, whose default performs full native lifecycle cleanup. Pre-activation manual read permission survives until bind/connect/registration activation and is cleared with read-pending state. Broader runtime comments/contracts remain open. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Implemented the original message-channel MAX_MESSAGES_PER_WRITE quantum with a per-pass snapshot and per-entry accounting, including continued write failures and cancelled empty placeholders. UDP re-arms the next native I/O phase, allowing ordinary work without admitting unflushed writes. Byte-stream, local and embedded policies are unchanged. Native writer/borrow ownership remains exclusive through asynchronous resumption. Datagram zero-length buffers complete without a send, matching NioDatagramChannel.doWriteMessage; receiving externally sent empty datagrams is unchanged. Custom configs use the public budget option or the original unlimited fallback and optional active-on-registration lookup, without a private-config registration cast. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. Other unreviewed contracts remain open. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names. The eligible built-in/native-capability file path now uses source-named DoWriteFileRegion(region), preserving position and localFlushedAmount. DoWriteInternal shares its snapshotted writeSpinCount across ByteBuf and file producer attempts: already-complete regions cost zero, accepted positive transfers cost one, and zero transfer returns WRITE_STATUS_SNDBUF_FULL for a later turn. Logical transferred() controls completion independently of physical accepted bytes. The native producer submits at most one bounded file-handle range; the Stream fallback invokes TransferTo once on a worker. Partial native errors still record accepted bytes/progress before failure; unsupported zero-byte capability rejection resumes safely through TransferTo. Worker borrows survive close/stop until the producer returns. Native output closure is checked before new work. Existing custom whole-message overrides retain their separate opt-out policy; broader custom transport eligibility and other unreviewed contracts remain open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
@@ -884,7 +942,8 @@
           "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs",
           "test/Netty.NET.Transport.Tests/SocketWriteSpinCountContractTest.cs",
-          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketFileRegionWriteSpinCountContractTest.cs"
         ]
       }
     },
@@ -2876,12 +2935,12 @@
       "comments": {
         "status": "partial",
         "uniqueCount": 32,
-        "preservedCount": 5,
-        "unreviewedCount": 27,
+        "preservedCount": 7,
+        "unreviewedCount": 25,
         "scope": "Original comments retained at corresponding reviewed CLR declarations, file-region producer contracts and native socket fixtures. Remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open. Output-shutdown mechanics and original shared comments now reside in AbstractChannel. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. File-region per-native-attempt quantum accounting and other unreviewed contracts remain open. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names.",
+        "scope": "One manual Read now owns all currently available receives admitted by the original allocator batch. The first pending CLR receive still obeys AutoRead/registration admission. A separate once-only logical read after input shutdown fires ReadComplete then ChannelInputShutdownReadComplete, on the owner and only after AutoRead/manual admission. Source 16KB/one-byte/two-read helper and all four AutoRead/half-close combinations are ported. Broader NIO contracts/comments remain open. Output-shutdown mechanics and original shared comments now reside in AbstractChannel. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. Other unreviewed contracts remain open. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names. The eligible built-in/native-capability file path now uses source-named DoWriteFileRegion(region), preserving position and localFlushedAmount. DoWriteInternal shares its snapshotted writeSpinCount across ByteBuf and file producer attempts: already-complete regions cost zero, accepted positive transfers cost one, and zero transfer returns WRITE_STATUS_SNDBUF_FULL for a later turn. Logical transferred() controls completion independently of physical accepted bytes. The native producer submits at most one bounded file-handle range; the Stream fallback invokes TransferTo once on a worker. Partial native errors still record accepted bytes/progress before failure; unsupported zero-byte capability rejection resumes safely through TransferTo. Worker borrows survive close/stop until the producer returns. Native output closure is checked before new work. Existing custom whole-message overrides retain their separate opt-out policy; broader custom transport eligibility and other unreviewed contracts remain open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketShutdownSourceTest.cs",
@@ -2902,7 +2961,8 @@
           "test/Netty.NET.Transport.Tests/DomainSocketShutdownOutputByPeerSourceTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketWriteSpinCountContractTest.cs",
-          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketFileRegionWriteSpinCountContractTest.cs"
         ]
       }
     },
@@ -4194,7 +4254,7 @@
         "scope": "Original comments retained at the reviewed CLR producer, observer contract, group collection or exact source regression body. JVM-specific progress type checks are preserved with an explicit CLR null-observer adaptation; remaining runtime comments stay explicit."
       },
       "review": {
-        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Queue entries now snapshot a standard IProgress observer and original byte/file/holder/unknown total. Actual accepted progress carries channel identity and native queue Task, is emitted before native Task completion, and isolates direct observer errors. Checked arithmetic retains Java long-counter wraparound and invalid reports are suppressed. No final progress is invented for transports that do not call Progress. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. File-region per-native-attempt quantum accounting and other unreviewed contracts remain open. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names.",
+        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Previous shutdown/close review stands; broader source declarations/comments remain open. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Remaining Java backend and implementation comments are open. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Queue entries now snapshot a standard IProgress observer and original byte/file/holder/unknown total. Actual accepted progress carries channel identity and native queue Task, is emitted before native Task completion, and isolates direct observer errors. Checked arithmetic retains Java long-counter wraparound and invalid reports are suppressed. No final progress is invented for transports that do not call Progress. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. Other unreviewed contracts remain open. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names. The eligible built-in/native-capability file path now uses source-named DoWriteFileRegion(region), preserving position and localFlushedAmount. DoWriteInternal shares its snapshotted writeSpinCount across ByteBuf and file producer attempts: already-complete regions cost zero, accepted positive transfers cost one, and zero transfer returns WRITE_STATUS_SNDBUF_FULL for a later turn. Logical transferred() controls completion independently of physical accepted bytes. The native producer submits at most one bounded file-handle range; the Stream fallback invokes TransferTo once on a worker. Partial native errors still record accepted bytes/progress before failure; unsupported zero-byte capability rejection resumes safely through TransferTo. Worker borrows survive close/stop until the producer returns. Native output closure is checked before new work. Existing custom whole-message overrides retain their separate opt-out policy; broader custom transport eligibility and other unreviewed contracts remain open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/NioLifecycleSourceTest.cs",
@@ -4226,7 +4286,8 @@
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/Sockets/DatagramChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketWriteSpinCountContractTest.cs",
-          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/TcpSocketChannelSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketFileRegionWriteSpinCountContractTest.cs"
         ]
       }
     },
@@ -8454,7 +8515,7 @@
     "reviewedImplementationFiles": 47,
     "portedOriginalFixtures": 81,
     "portedOriginalMethods": 472,
-    "supplementalClrCases": 435,
+    "supplementalClrCases": 454,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 39,
@@ -9100,7 +9161,7 @@
     },
     {
       "subject": "Scalar ByteBuf write quantum and source identifiers",
-      "decision": "Port DoWrite0/DoWriteInternal/DoWriteBytes with the original names and mapped variables, using Task results for CLR native producers. Commit ByteBuf state on the event-loop owner and keep an independent native borrow until completion. Successful nonempty scalar/vector OS writes each consume one shared spin; empty entries consume zero. Config is read once per pass. Asynchronous CLR sends already wait for readiness, so an invalid completed nonempty result fails rather than creating a fake selector operation. Preserve custom whole-message DoWrite overrides and expose the source-named DoWriteBytes producer in the existing fallback too. The protected DoWriteAsync contract is renamed DoWrite throughout Transport implementations/tests; the earlier CLR message-limit hook is now MaxMessagesPerWrite. Preserve original method/variable names going forward, with only requested capitalization/underscore changes. File-region per-native-attempt quantum review is not claimed complete.",
+      "decision": "Port DoWrite0/DoWriteInternal/DoWriteBytes with the original names and mapped variables, using Task results for CLR native producers. Commit ByteBuf state on the event-loop owner and keep an independent native borrow until completion. Successful nonempty scalar/vector OS writes each consume one shared spin; empty entries consume zero. Config is read once per pass. Asynchronous CLR sends already wait for readiness, so an invalid completed nonempty result fails rather than creating a fake selector operation. Preserve custom whole-message DoWrite overrides and expose the source-named DoWriteBytes producer in the existing fallback too. The protected DoWriteAsync contract is renamed DoWrite throughout Transport implementations/tests; the earlier CLR message-limit hook is now MaxMessagesPerWrite. Preserve original method/variable names going forward, with only requested capitalization/underscore changes. File-region quantum behavior is recorded separately; broader custom whole-message eligibility remains under review.",
       "sourceEvidence": [
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
         "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
@@ -9112,6 +9173,22 @@
         "transport/src/main/java/io/netty/channel/nio/AbstractNioByteChannel.java",
         "transport/src/main/java/io/netty/channel/socket/nio/NioSocketChannel.java",
         "transport/src/main/java/io/netty/channel/AbstractChannel.java"
+      ]
+    },
+    {
+      "subject": "Per-attempt file-region production and zero-progress retry",
+      "decision": "Keep DoWriteFileRegion, region, position, localFlushedAmount and WRITE_STATUS_SNDBUF_FULL source identifiers. The native-capable write loop retains a file producer through one attempt, charges zero for already-complete regions and one for accepted positive bytes, and retries a zero result on a later write turn using the original full-buffer status. Do not infer logical completion from physical byte count. The native default-file producer sends one bounded range and commits its accepted counter on the owner; custom/synchronous producers invoke TransferTo once on a worker. Preserve partial-error progress, opened-handle identity, long offsets, async-file constraints, safe capability fallback and independent producer borrows through close. The older supplemental zero-progress failure expectation is corrected from direct original-implementation evidence; no original JUnit assertion changes. Custom whole-message opt-out eligibility remains a separate adaptation to review.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/SocketStreamChannel.cs",
+        "test/Netty.NET.Transport.Tests/SocketFileRegionWriteSpinCountContractTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketFileRegionContractTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketNativeFileRegionContractTest.cs"
+      ],
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/nio/AbstractNioByteChannel.java",
+        "transport/src/main/java/io/netty/channel/socket/nio/NioSocketChannel.java",
+        "transport/src/main/java/io/netty/channel/internal/ChannelUtils.java"
       ]
     }
   ],
@@ -9129,7 +9206,7 @@
     {
       "area": "Outbound buffer",
       "state": "review-gap",
-      "detail": "All 15 outbound-buffer and six reentrant-channel original methods are mapped. Cross-executor enqueue byte accounting and reentrant write-and-flush are implemented. Native IProgress reporting is now connected to accepted queue bytes, channel/native Task metadata and original message totals. Remaining internal runtime comments and other unreviewed contracts still require review. The file-region source fixture and four outbound/lifetime fixtures now cover mixed ByteBuf/empty/file writes, framed logical completion, retained application references, exception closure and 100 MiB writable-driven production. File transfer progress is committed on the owner; CLR worker borrows remain until native producer completion. Default-file native socket submission now preserves the opened handle, cursor, long offset, accepted progress and close lifetime; custom producers and supplied synchronous streams use the worker fallback. The original domain file-region inheritance is mapped. Native message writes now enforce their configured pass quantum with exclusive ownership across resumption; unflushed admission, recoverable failure, cancellation and close lifetimes are verified. Scalar and vector ByteBuf writes now share a snapshotted native-attempt quantum. Per-native-attempt file-region quantum accounting remains explicit review work."
+      "detail": "All 15 outbound-buffer and six reentrant-channel original methods are mapped. Cross-executor enqueue byte accounting and reentrant write-and-flush are implemented. Native IProgress reporting is now connected to accepted queue bytes, channel/native Task metadata and original message totals. Remaining internal runtime comments and other unreviewed contracts still require review. The file-region source fixture and four outbound/lifetime fixtures now cover mixed ByteBuf/empty/file writes, framed logical completion, retained application references, exception closure and 100 MiB writable-driven production. File transfer progress is committed on the owner; CLR worker borrows remain until native producer completion. Default-file native socket submission now preserves the opened handle, cursor, long offset, accepted progress and close lifetime; custom producers and supplied synchronous streams use the worker fallback. The original domain file-region inheritance is mapped. Native message writes now enforce their configured pass quantum with exclusive ownership across resumption; unflushed admission, recoverable failure, cancellation and close lifetimes are verified. Scalar and vector ByteBuf writes now share a snapshotted native-attempt quantum. Eligible built-in file-region producer attempts now share the original byte/file write quantum. Broader custom whole-message transport eligibility remains explicit review work."
     },
     {
       "area": "TCP and UDP",
@@ -9224,7 +9301,8 @@
     "test/Netty.NET.Transport.Tests/ChannelGroupSetContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs",
     "test/Netty.NET.Transport.Tests/DatagramWriteBudgetContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketWriteSpinCountContractTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketWriteSpinCountContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketFileRegionWriteSpinCountContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -15320,10 +15398,46 @@
         },
         "note": "Final Windows serial Release solution: 33294 passed / 94 existing skips / zero failures. Final Transport Debug and checked Release: 996 passed / 80 existing skips each. Linux final full Transport: 1068 passed / eight existing source-disabled skips; new checked focus: 26/26. Existing unicast original fixtures and allocators repeat unchanged on both OSes. Twenty-six supplemental cases verify runtime omissions rather than adding mapped original counts. The inconsistent earlier supplemental empty-send expectation is corrected from actual original implementation evidence; receiving real empty datagrams is unchanged. Previous-runtime copies reproduce twenty-two failures on each OS. No source assertion or timing bound is reduced."
       }
+    },
+    {
+      "checkpoint": "b09f6c48ed4f843a509ddf6b440b6599218f6790",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "debug": {
+          "failed": 0,
+          "passed": 1015,
+          "skipped": 80,
+          "total": 1095
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 1015,
+          "skipped": 80,
+          "total": 1095
+        },
+        "solutionPassed": 33313,
+        "solutionSkipped": 94,
+        "mappedOriginalMethods": 472,
+        "originalExecutedCases": 607,
+        "supplementalExecutedCases": 408,
+        "linuxTransportRelease": {
+          "total": 1095,
+          "passed": 1087,
+          "failed": 0,
+          "skipped": 8
+        },
+        "warnings": {
+          "transportImplementation": 0,
+          "transportTests": 0,
+          "existingCommonCheckedRebuild": 51
+        },
+        "note": "Windows full Release solution run: 33313 passed / 94 existing skips / zero failures. After the protected DoWrite identifier rename, final whole Transport Release, Debug and checked Release pass 1015 / 80 existing skips each; Linux final whole Transport passes 1087 / eight existing source-disabled skips. Nineteen new scalar contract cases and seventy-two focused compatibility cases pass. All eight original Java TCP/option executions repeat unchanged on both OSes. An isolated scalar-dispatch removal produces fifteen failures and four passes while keeping producer declarations compileable. Original comments, test conditions and assertions remain preserved; the existing TCP source fixture changes only corresponding identifiers. Naming policy is recorded without claiming historical repository-wide identifier review is complete."
+      }
     }
   ],
   "nextWork": [
-    "Continue remaining source-backed Transport contracts and original runtime comments, preserving source identifiers under sourceIdentifierPolicy. Scalar/vector ByteBuf write quanta and the protected DoWrite name are reviewed. File-region per-native-attempt quantum accounting and historical identifier differences still need explicit review; do not confuse fixture completion with whole-Transport completion.",
+    "Continue concrete remaining Transport/source-comment review under sourceIdentifierPolicy. Built-in/native-capability ByteBuf and FileRegion producer attempts now share the source write quantum; native and worker fallback file lifetimes are verified. Review broader custom whole-message transport eligibility and historical naming differences explicitly, without treating repeated original fixtures as new mappings.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
     "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."

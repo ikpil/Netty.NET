@@ -126,46 +126,87 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
             // Directly return here so incompleteWrite(...) is not called.
             return Task.FromResult(0);
         }
-        // CLR: null delegates non-ByteBuf/custom producers to their existing whole-message path.
-        if (msg is not ByteBuf) return null;
+        // CLR: custom whole-message overrides opt out above; built-in byte/file producers share the source quantum.
+        if (msg is not (ByteBuf or IFileRegion)) return null;
         return DoWriteInternal(@in, msg);
     }
 
+    private const int WRITE_STATUS_SNDBUF_FULL = int.MaxValue;
+
     private async Task<int> DoWriteInternal(ChannelOutboundBuffer @in, object msg)
     {
-        var buf = (ByteBuf)msg;
-        if (!buf.IsReadable)
+        if (msg is ByteBuf buf)
         {
-            @in.Remove();
-            return 0;
-        }
-
-        // CLR Socket.SendAsync does not advance ByteBuf indices. Commit the returned byte count on the owner.
-        int expectedWrittenBytes = buf.ReadableBytes;
-        int localFlushedAmount;
-        bool pending;
-        buf.Retain();
-        try
-        {
-            Task<int> operation = DoWriteBytes(buf);
-            pending = !operation.IsCompleted;
-            localFlushedAmount = await operation.ConfigureAwait(false);
-            // A CLR asynchronous send waits for write readiness. A successful nonempty send cannot return zero.
-            if (localFlushedAmount <= 0 || localFlushedAmount > expectedWrittenBytes)
-                throw new IOException("Socket reported an invalid scalar write length.");
-        }
-        finally { ReferenceCountUtil.SafeRelease(buf); }
-
-        await CompleteOutboundIoAsync(() =>
-        {
-            if (!IsOpen || @in.IsClosed) return false;
-            buf.ReaderIndex += localFlushedAmount;
-            @in.Progress(localFlushedAmount);
-            if (IsOpen && !@in.IsClosed && !buf.IsReadable)
+            if (!buf.IsReadable)
+            {
                 @in.Remove();
-            return true;
-        }, pending).ConfigureAwait(false);
-        return 1;
+                return 0;
+            }
+
+            // CLR Socket.SendAsync does not advance ByteBuf indices. Commit the returned byte count on the owner.
+            int expectedWrittenBytes = buf.ReadableBytes;
+            int localFlushedAmount;
+            bool pending;
+            buf.Retain();
+            try
+            {
+                Task<int> operation = DoWriteBytes(buf);
+                pending = !operation.IsCompleted;
+                localFlushedAmount = await operation.ConfigureAwait(false);
+                // A CLR asynchronous send waits for write readiness. A successful nonempty send cannot return zero.
+                if (localFlushedAmount <= 0 || localFlushedAmount > expectedWrittenBytes)
+                    throw new IOException("Socket reported an invalid scalar write length.");
+            }
+            finally { ReferenceCountUtil.SafeRelease(buf); }
+
+            await CompleteOutboundIoAsync(() =>
+            {
+                if (!IsOpen || @in.IsClosed) return false;
+                buf.ReaderIndex += localFlushedAmount;
+                @in.Progress(localFlushedAmount);
+                if (IsOpen && !@in.IsClosed && !buf.IsReadable)
+                    @in.Remove();
+                return true;
+            }, pending).ConfigureAwait(false);
+            return 1;
+        }
+        else if (msg is IFileRegion region)
+        {
+            if (region.Transferred() >= region.Count())
+            {
+                @in.Remove();
+                return 0;
+            }
+            long localFlushedAmount;
+            bool pending;
+            region.Retain();
+            try
+            {
+                Task<long> operation = DoWriteFileRegion(region);
+                pending = !operation.IsCompleted;
+                localFlushedAmount = await operation.ConfigureAwait(false);
+                if (localFlushedAmount < 0)
+                    throw new IOException("File region reported a negative transfer length.");
+            }
+            finally { ReferenceCountUtil.SafeRelease(region); }
+            await CompleteOutboundIoAsync(() =>
+            {
+                if (!IsOpen || @in.IsClosed) return false;
+                if (localFlushedAmount > 0)
+                {
+                    @in.Progress(localFlushedAmount);
+                    if (IsOpen && !@in.IsClosed && region.Transferred() >= region.Count())
+                        @in.Remove();
+                }
+                return true;
+            }, pending).ConfigureAwait(false);
+            return localFlushedAmount > 0 ? 1 : WRITE_STATUS_SNDBUF_FULL;
+        }
+        else
+        {
+            // Should not reach here.
+            throw new NotSupportedException("Unexpected message type: " + msg.GetType().Name);
+        }
     }
 
     /**
@@ -274,29 +315,46 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
             return;
         }
         var region = (IFileRegion)msg;
-        if (region.Transferred() >= region.Count()) return;
+        while (region.Transferred() < region.Count())
+        {
+            long localFlushedAmount = await DoWriteFileRegion(region).ConfigureAwait(false);
+            if (localFlushedAmount < 0)
+                throw new IOException("File region reported a negative transfer length.");
+            if (localFlushedAmount > 0)
+                await OnSocketLoopAsync(() =>
+                {
+                    if (!OutboundBuffer.IsClosed) OutboundBuffer.Progress(localFlushedAmount);
+                }).ConfigureAwait(false);
+            else if (region.Transferred() < region.Count())
+                await QueueSocketWorkAsync(static () => { }).ConfigureAwait(false);
+        }
+    }
+
+    /**
+     * Write a {@link FileRegion}
+     * @param region        the {@link FileRegion} from which the bytes should be written
+     * @return amount       the amount of written bytes
+     */
+    protected virtual async Task<long> DoWriteFileRegion(IFileRegion region)
+    {
+        long position = region.Transferred();
+        await OnSocketLoopAsync(() =>
+        {
+            EnsureOpen();
+            if (OutboundBuffer.IsClosed) throw new IOException("Channel output is shut down.");
+        }).ConfigureAwait(false);
         // Preserve virtual/custom FileRegion producers. Only the exact default region exposes a plain file range.
-        if (SupportsNativeFileTransfer && region.GetType() == typeof(DefaultFileRegion) &&
-            await TryWriteNativeFileRegionAsync((DefaultFileRegion)region).ConfigureAwait(false))
-            return;
-        // Portable synchronous FileRegion implementations are offloaded, never run on the event-loop worker.
-        await Task.Run(async () =>
+        if (SupportsNativeFileTransfer && region.GetType() == typeof(DefaultFileRegion))
+        {
+            long? localFlushedAmount = await TryWriteNativeFileRegionAsync((DefaultFileRegion)region).ConfigureAwait(false);
+            if (localFlushedAmount.HasValue) return localFlushedAmount.Value;
+            position = region.Transferred();
+        }
+        // CLR: invoke the synchronous producer once on a worker; the outer write loop owns retries and quantum accounting.
+        return await Task.Run(() =>
         {
             using var stream = new FileRegionSocketStream(Socket);
-            while (region.Transferred() < region.Count())
-            {
-                // A custom region can advance its logical transfer counter by more than the bytes
-                // written to the target (for example, a complete framed or encrypted source chunk).
-                // The source contract uses transferred(), both as the position and the completion test.
-                long count = region.TransferTo(stream, region.Transferred());
-                if (count < 0 || count == 0 && region.Transferred() < region.Count())
-                    throw new IOException("File region made no forward progress.");
-                if (count > 0)
-                    await OnSocketLoopAsync(() =>
-                    {
-                        if (!OutboundBuffer.IsClosed) OutboundBuffer.Progress(count);
-                    }).ConfigureAwait(false);
-            }
+            return region.TransferTo(stream, position);
         }).ConfigureAwait(false);
     }
     internal virtual bool SupportsNativeFileTransfer => OperatingSystem.IsLinux() ||
@@ -305,63 +363,63 @@ public abstract class SocketStreamChannel : AbstractChannel, IDuplexChannel
         SocketFileRegionSender.SendAsync(Socket, file, offset, count);
     internal const int NativeFileChunkSize = 1024 * 1024;
 
-    private async Task<bool> TryWriteNativeFileRegionAsync(DefaultFileRegion region)
+    private async Task<long?> TryWriteNativeFileRegionAsync(DefaultFileRegion region)
     {
         // File open can block on storage. A supplied stream keeps its identity and mode; .NET 10 only
         // accepts asynchronous FileStreams in SendPacketsElement, so synchronous streams use TransferTo.
         FileStream file = await Task.Run(region.OpenForSocketTransfer).ConfigureAwait(false);
-        if (!file.IsAsync || !file.CanRead) return false;
-        for (;;)
+        if (!file.IsAsync || !file.CanRead) return null;
+        Task<FileRegionSendResult> sending = null;
+        int requested = 0;
+        await OnSocketLoopAsync(() =>
         {
-            Task<FileRegionSendResult> sending = null;
-            int requested = 0;
-            await OnSocketLoopAsync(() =>
+            EnsureOpen();
+            if (OutboundBuffer.IsClosed) throw new IOException("Channel output is shut down.");
+            long position = region.Transferred();
+            long remaining = region.Count() - position;
+            if (remaining <= 0) return;
+            if (position > long.MaxValue - region.Position()) throw new IOException("File region offset exceeds Int64 range.");
+            long offset = region.Position() + position;
+            long available = RandomAccess.GetLength(file.SafeFileHandle) - offset;
+            if (available <= 0)
             {
-                EnsureOpen();
-                if (OutboundBuffer.IsClosed) throw new IOException("Channel output is shut down.");
-                long position = region.Transferred();
-                long remaining = region.Count() - position;
-                if (remaining <= 0) return;
-                if (position > long.MaxValue - region.Position()) throw new IOException("File region offset exceeds Int64 range.");
-                long offset = region.Position() + position;
-                long available = RandomAccess.GetLength(file.SafeFileHandle) - offset;
-                if (available <= 0)
-                {
-                    DefaultFileRegion.Validate(region, position);
-                    throw new IOException("File region made no forward progress.");
-                }
-                requested = (int)Math.Min(Math.Min(remaining, available), NativeFileChunkSize);
-                sending = SendFilePacketAsync(file, offset, requested);
-            }).ConfigureAwait(false);
-            if (sending == null) return true;
-
-            FileRegionSendResult result;
-            try { result = await sending.ConfigureAwait(false); }
-            catch (PlatformNotSupportedException) { return false; }
-            if (result.BytesTransferred < 0 || result.BytesTransferred > requested)
-                throw new IOException("Socket reported an invalid file transfer length.");
-            await OnSocketLoopAsync(() =>
-            {
-                region.RecordSocketTransfer(result.BytesTransferred);
-                if (!OutboundBuffer.IsClosed && result.BytesTransferred > 0) OutboundBuffer.Progress(result.BytesTransferred);
-            }).ConfigureAwait(false);
-
-            if (result.Error != SocketError.Success)
-            {
-                // The file may have shrunk between the range check and the kernel call.
-                if (result.Error == SocketError.InvalidArgument) DefaultFileRegion.Validate(region, region.Transferred());
-                // A capability rejection before sending is safe to retry through the portable Stream producer.
-                // Never resend a partially accepted range as if it had not reached the socket.
-                if (result.BytesTransferred == 0 && result.Error is SocketError.OperationNotSupported or SocketError.ProtocolNotSupported or SocketError.InvalidArgument)
-                    return false;
-                throw new IOException("Socket file transfer failed.", new SocketException((int)result.Error));
-            }
-            if (result.BytesTransferred == 0)
-            {
-                DefaultFileRegion.Validate(region, region.Transferred());
+                DefaultFileRegion.Validate(region, position);
                 throw new IOException("File region made no forward progress.");
             }
+            requested = (int)Math.Min(Math.Min(remaining, available), NativeFileChunkSize);
+            sending = SendFilePacketAsync(file, offset, requested);
+        }).ConfigureAwait(false);
+        if (sending == null) return 0;
+
+        FileRegionSendResult result;
+        try { result = await sending.ConfigureAwait(false); }
+        catch (PlatformNotSupportedException) { return null; }
+        if (result.BytesTransferred < 0 || result.BytesTransferred > requested)
+            throw new IOException("Socket reported an invalid file transfer length.");
+        await OnSocketLoopAsync(() =>
+        {
+            region.RecordSocketTransfer(result.BytesTransferred);
+            // A failing producer cannot return its accepted count to DoWriteInternal. Preserve partial-error progress here.
+            if (result.Error != SocketError.Success && !OutboundBuffer.IsClosed && result.BytesTransferred > 0)
+                OutboundBuffer.Progress(result.BytesTransferred);
+        }).ConfigureAwait(false);
+
+        if (result.Error != SocketError.Success)
+        {
+            // The file may have shrunk between the range check and the kernel call.
+            if (result.Error == SocketError.InvalidArgument) DefaultFileRegion.Validate(region, region.Transferred());
+            // A capability rejection before sending is safe to retry through the portable Stream producer.
+            // Never resend a partially accepted range as if it had not reached the socket.
+            if (result.BytesTransferred == 0 && result.Error is SocketError.OperationNotSupported or SocketError.ProtocolNotSupported or SocketError.InvalidArgument)
+                return null;
+            throw new IOException("Socket file transfer failed.", new SocketException((int)result.Error));
         }
+        if (result.BytesTransferred == 0)
+        {
+            DefaultFileRegion.Validate(region, region.Transferred());
+            throw new IOException("File region made no forward progress.");
+        }
+        return result.BytesTransferred;
     }
     // NetworkStream rejects nonblocking sockets. Keep the caller's socket mode and consume every
     // Stream.Write span through partial sends, waiting for write readiness only on the file worker.

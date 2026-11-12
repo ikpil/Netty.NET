@@ -115,13 +115,28 @@ public class SocketFileRegionContractTest
     }
 
     [Fact(Timeout = 10000)]
-    public async Task ARegionWithoutPhysicalOrLogicalProgressFailsWithoutSpinning()
+    public async Task ZeroProgressWaitsForAnotherWriteTurnAndCloseReleasesTheQueue()
     {
         await using var socket = await Connected.Open();
-        var region = new Region(1, 0, (_, _, _) => 0);
-        var error = await Assert.ThrowsAsync<IOException>(() => socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken));
-        Assert.Equal("File region made no forward progress.", error.Message);
-        Assert.Single(region.Positions);
+        var retried = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int attempts = 0;
+        var region = new Region(1, 0, (_, _, _) =>
+        {
+            if (Interlocked.Increment(ref attempts) == 2) retried.TrySetResult();
+            return 0;
+        });
+        Task write = socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
+        try
+        {
+            await retried.Task.WaitAsync(TestContext.Current.CancellationToken);
+            await socket.Channel.EventLoop.SubmitAsync(static () => { }, TestContext.Current.CancellationToken);
+            Assert.False(write.IsCompleted);
+            Assert.True(socket.Channel.IsOpen);
+        }
+        finally { await socket.Channel.CloseAsync(); }
+        await Assert.ThrowsAsync<IOException>(() => write);
+        await region.Deallocated.Task.WaitAsync(TestContext.Current.CancellationToken);
+        Assert.True(region.Positions.Count >= 2);
         Assert.Equal(0, region.ReferenceCount);
     }
 
