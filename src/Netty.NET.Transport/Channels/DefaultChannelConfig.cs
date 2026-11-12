@@ -38,6 +38,12 @@ public class DefaultChannelConfig : IChannelConfig
     private volatile bool _autoClose = true;
     private volatile bool _pinExecutor = true;
     private WriteBufferWaterMark _waterMark = WriteBufferWaterMark.DEFAULT;
+    private IProgress<ChannelWriteProgress> _writeProgress;
+    public IProgress<ChannelWriteProgress> WriteProgress
+    {
+        get => Volatile.Read(ref _writeProgress);
+        set => Volatile.Write(ref _writeProgress, value);
+    }
     public DefaultChannelConfig(IChannel channel) : this(channel, new AdaptiveRecvByteBufAllocator()) { }
     protected DefaultChannelConfig(IChannel channel, IRecvByteBufAllocator allocator)
     {

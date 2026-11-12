@@ -31,7 +31,7 @@ namespace Netty.NET.Transport.Channels.Groups;
 /**
  * The default {@link ChannelGroup} implementation.
  */
-public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>
+public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>, IComparable<DefaultChannelGroup>
 {
     private readonly ConcurrentDictionary<IChannelId, IChannel> _channels = new();
     private readonly bool _stayClosed;

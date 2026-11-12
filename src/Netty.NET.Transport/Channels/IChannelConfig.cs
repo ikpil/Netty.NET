@@ -62,6 +62,19 @@ namespace Netty.NET.Transport.Channels;
  */
 public interface IChannelConfig
 {
+    /// <summary>Optional observer captured for each write when it enters the transport queue.</summary>
+    /// <remarks>
+    /// Report is called on the channel owner before the native write Task completes. The supplied
+    /// IProgress controls callback dispatch. Set null to disable observation for later writes.
+    /// </remarks>
+    /**
+     * An {@link EventListener} listener which will be called once the sending task associated with future is
+     * being transferred.
+     */
+    // Just a type alias
+    // CLR: use the standard IProgress interface rather than another channel-specific listener alias.
+    IProgress<ChannelWriteProgress> WriteProgress { get; set; }
+
 
     /**
      * Return all set {@link ChannelOption}'s.

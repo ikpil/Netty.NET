@@ -22,6 +22,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Transport.Channels;
 
@@ -39,6 +40,7 @@ namespace Netty.NET.Transport.Channels;
  */
 public sealed class ChannelOutboundBuffer
 {
+    private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(ChannelOutboundBuffer));
     private readonly IChannel _channel;
     private readonly LinkedList<Entry> _entries = new();
     public static readonly int EntryOverhead = Math.Max(0, SystemPropertyUtil.GetInt("io.netty.transport.outboundBufferEntrySizeOverhead", 96));
@@ -103,7 +105,8 @@ public sealed class ChannelOutboundBuffer
         ArgumentNullException.ThrowIfNull(message);
         if (cancellationToken.IsCancellationRequested)
         { ReferenceCountUtil.SafeRelease(message); return Task.FromCanceled(cancellationToken); }
-        var entry = new Entry(message, (long)size + EntryOverhead, cancellationToken);
+        var entry = new Entry(message, (long)size + EntryOverhead, cancellationToken,
+            _channel.Config.WriteProgress);
         entry.Node = _entries.AddLast(entry);
         IncrementPendingOutboundBytes(entry.Size);
         if (cancellationToken.CanBeCanceled)
@@ -270,7 +273,21 @@ public sealed class ChannelOutboundBuffer
     public void Progress(long amount)
     {
         if (_flushed > 0)
-            _entries.First.Value.Progress += amount;
+        {
+            var entry = _entries.First.Value;
+            long progress = entry.Progress = unchecked(entry.Progress + amount);
+            // fast-path to save O(n) ChannelProgressivePromise's type check on OpenJDK
+            // this is going to save from type pollution due to https://bugs.openjdk.org/browse/JDK-8180450
+            // and makes better use of virtual calls vs interface ones
+            // CLR: a captured nullable IProgress replaces these JVM-specific promise type checks.
+            if (entry.Observer == null || entry.Completion.Task.IsCompleted || progress < 0 ||
+                entry.Total >= 0 && progress > entry.Total)
+                return;
+            // Native IProgress replaces a producer-owned ChannelProgressivePromise. Report before
+            // completing the queue Task; observer failure must not fail or interrupt the socket write.
+            try { entry.Observer.Report(new ChannelWriteProgress(_channel, entry.Completion.Task, new TransferProgress(progress, entry.Total))); }
+            catch (Exception error) { Logger.Warn("An exception was thrown by a write progress observer.", error); }
+        }
     }
     /**
      * Increment the pending bytes which will be written at some point.
@@ -360,8 +377,17 @@ public sealed class ChannelOutboundBuffer
             entry.Completion.TrySetException(entry.Flushed ? flushedCause : unflushedCause);
         }
     }
-    private sealed class Entry(object message, long size, CancellationToken token)
+    private static long Total(object message) => message switch
     {
+        ByteBuf buffer => buffer.ReadableBytes,
+        IFileRegion region => region.Count(),
+        IByteBufHolder holder => holder.Content.ReadableBytes,
+        _ => -1
+    };
+    private sealed class Entry(object message, long size, CancellationToken token, IProgress<ChannelWriteProgress> observer)
+    {
+        internal readonly long Total = ChannelOutboundBuffer.Total(message);
+        internal readonly IProgress<ChannelWriteProgress> Observer = observer;
         internal object Message = message;
         internal long Size = size;
         internal int Claim; // 0 cancellable, 1 flushed/closed, 2 cancelled.
