@@ -27,13 +27,19 @@ namespace Netty.NET.Transport.Channels.Sockets;
 /**
  * The default {@link SocketChannelConfig} implementation.
  */
+/**
+ * The default {@link ServerSocketChannelConfig} implementation.
+ */
+// CLR: one implementation shares the option dispatch, with separate listener,
+// TCP stream and domain option sets. Typed ChannelOption access replaces Java's
+// fluent config subinterfaces. Socket performance preferences have no CLR API.
 public class DefaultSocketChannelConfig : DefaultChannelConfig
 {
     protected override void AutoReadCleared()
     { if (Channel is AbstractChannel channel) channel.ClearReadPending(); }
     protected readonly Socket Socket;
     private volatile bool _halfClosure;
-    private int _backlog = 128;
+    private int _backlog = NetUtil.DefaultListenBacklog;
     private int _tcpFastOpen;
     private bool _tcpFastOpenConnect;
     private LinuxTcpMd5Keys _tcpMd5Keys;
@@ -44,15 +50,14 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         : base(channel, channel is IServerChannel ? new ServerChannelRecvByteBufAllocator() : new AdaptiveRecvByteBufAllocator())
     {
         Socket = socket ?? throw new ArgumentNullException(nameof(socket));
-        if (socket.AddressFamily == AddressFamily.Unix && channel is IServerChannel)
-            _backlog = NetUtil.DefaultListenBacklog;
-        if (socket.AddressFamily != AddressFamily.Unix && socket.SocketType == SocketType.Stream && channel.Parent != null)
-            socket.NoDelay = true;
     }
-    private static readonly ChannelOption[] Options = {
+    private static readonly ChannelOption[] StreamOptions = {
         ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.TCP_NODELAY,
         ChannelOption.SO_KEEPALIVE, ChannelOption.SO_REUSEADDR, ChannelOption.SO_LINGER,
-        ChannelOption.IP_TOS, ChannelOption.ALLOW_HALF_CLOSURE, ChannelOption.SO_BACKLOG
+        ChannelOption.IP_TOS, ChannelOption.ALLOW_HALF_CLOSURE
+    };
+    private static readonly ChannelOption[] ListenerOptions = {
+        ChannelOption.SO_RCVBUF, ChannelOption.SO_REUSEADDR, ChannelOption.SO_BACKLOG
     };
     private static readonly ChannelOption[] DomainStreamOptions = {
         ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.ALLOW_HALF_CLOSURE
@@ -70,7 +75,8 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         (ChannelOption.TCP_NOTSENT_LOWAT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpNotSentLowAt)
     };
     private ChannelOption[] SupportedSocketOptions => Socket.AddressFamily != AddressFamily.Unix
-        ? Options : Channel is IServerChannel ? DomainListenerOptions : DomainStreamOptions;
+        ? Channel is IServerChannel ? ListenerOptions : StreamOptions
+        : Channel is IServerChannel ? DomainListenerOptions : DomainStreamOptions;
     private bool IsLinuxTcp => OperatingSystem.IsLinux() && Socket.ProtocolType == ProtocolType.Tcp;
     private bool HasTcpFastOpen => IsLinuxTcp && Channel is IServerChannel;
     private bool IsTcpStream => Socket.ProtocolType == ProtocolType.Tcp && Channel is not IServerChannel;
@@ -94,7 +100,10 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
     }
     protected override bool TryGetValue(ChannelOption option, out object value)
     {
-        if (Socket.AddressFamily == AddressFamily.Unix && Array.IndexOf(SupportedSocketOptions, option) < 0)
+        if (Array.IndexOf(SupportedSocketOptions, option) < 0 &&
+            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen) &&
+            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream) &&
+            FindLinuxOption(option) == null)
             return base.TryGetValue(option, out value);
         if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
             value = Socket.ReceiveBufferSize;
@@ -109,11 +118,11 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         else if (ReferenceEquals(option, ChannelOption.SO_LINGER))
             value = Socket.LingerState.Enabled ? Socket.LingerState.LingerTime : -1;
         else if (ReferenceEquals(option, ChannelOption.IP_TOS))
-            value = (int)Socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
+            value = GetTrafficClass();
         else if (ReferenceEquals(option, ChannelOption.ALLOW_HALF_CLOSURE))
             value = _halfClosure;
         else if (ReferenceEquals(option, ChannelOption.SO_BACKLOG))
-            value = _backlog;
+            value = Volatile.Read(ref _backlog);
         else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
             value = Volatile.Read(ref _tcpFastOpen);
         else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
@@ -146,12 +155,19 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
             keys.Replace((IReadOnlyDictionary<IPAddress, byte[]>)value);
             return true;
         }
-        if (Socket.AddressFamily == AddressFamily.Unix && Array.IndexOf(SupportedSocketOptions, option) < 0)
+        if (Array.IndexOf(SupportedSocketOptions, option) < 0 &&
+            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen) &&
+            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream) &&
+            FindLinuxOption(option) == null)
             return base.SetValue(option, value);
         if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)value);
             Socket.ReceiveBufferSize = (int)value;
+        }
         else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
         {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)value);
             Socket.SendBufferSize = (int)value;
             if (Channel is SocketStreamChannel stream) stream.ResetGatheringWriteLimit();
         }
@@ -162,13 +178,14 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, (bool)value);
         else if (ReferenceEquals(option, ChannelOption.SO_LINGER))
-            Socket.LingerState = new LingerOption((int)value >= 0, Math.Max(0, (int)value));
+            // java.net.Socket disables negative linger and clamps enabled linger to an unsigned short.
+            Socket.LingerState = new LingerOption((int)value >= 0, Math.Clamp((int)value, 0, ushort.MaxValue));
         else if (ReferenceEquals(option, ChannelOption.IP_TOS))
-            Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, (int)value);
+            SetTrafficClass((int)value);
         else if (ReferenceEquals(option, ChannelOption.ALLOW_HALF_CLOSURE))
             _halfClosure = (bool)value;
         else if (ReferenceEquals(option, ChannelOption.SO_BACKLOG))
-        { ArgumentOutOfRangeException.ThrowIfNegative((int)value); _backlog = (int)value; }
+        { ArgumentOutOfRangeException.ThrowIfNegative((int)value); Volatile.Write(ref _backlog, (int)value); }
         else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
         {
             int queue = (int)value;
@@ -193,6 +210,31 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         else
             return base.SetValue(option, value);
         return true;
+    }
+
+    // Linux IPV6_TCLASS has no SocketOptionName mapping. An IPv6 TCP socket must
+    // read and set its IPv6 class, even when it can also accept IPv4-mapped peers.
+    private const int LinuxIPv6TrafficClass = 67;
+
+    private int GetTrafficClass()
+    {
+        if (OperatingSystem.IsLinux() && Socket.AddressFamily == AddressFamily.InterNetworkV6)
+            return LinuxSocketOptions.GetInt(Socket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass);
+        return (int)Socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
+    }
+
+    private void SetTrafficClass(int value)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(value);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 255);
+        if (OperatingSystem.IsLinux() && Socket.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            LinuxSocketOptions.SetInt(Socket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, value);
+            if (Socket.DualMode)
+                Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, value);
+        }
+        else
+            Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, value);
     }
 
     private (int Level, int Name)? FindLinuxOption(ChannelOption option)

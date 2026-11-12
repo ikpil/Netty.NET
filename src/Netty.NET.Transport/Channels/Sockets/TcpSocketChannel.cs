@@ -40,7 +40,14 @@ public class TcpSocketChannel : SocketStreamChannel
     public TcpSocketChannel(Socket socket) : this(socket, null) { }
     internal TcpSocketChannel(Socket socket, IChannel parent) : base(socket, parent)
     {
-        Socket.NoDelay = true;
+        // Enable TCP_NODELAY by default if possible.
+        // CLR: initialize once at construction, before caller/child options are
+        // applied; lazy configuration access must not reset the native socket.
+        try { Socket.NoDelay = true; }
+        catch (Exception error) when (error is SocketException or ObjectDisposedException)
+        {
+            // Ignore.
+        }
     }
 
     protected override ValueTask ConnectSocketAsync(EndPoint remote, CancellationToken cancellationToken)

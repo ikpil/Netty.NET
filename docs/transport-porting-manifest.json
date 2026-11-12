@@ -29,7 +29,7 @@
     {
       "name": "Bootstrap, Resolver integration and TCP",
       "status": "in-progress",
-      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows). Added the shared IDuplexChannel/IsShutdown API, original TCP/domain address scenarios, inherited domain initial-read and peer-shutdown fixtures, the complete 100-connection descriptor-reuse body and registration-before-write original. Restored real-network connection-attempt originals and implemented the measured Windows AF_UNIX EOF workaround. Channel groups expose native ISet bulk operations and ordinal-name/identity ordering while preserving Id admission, automatic removal, stayClosed and server-first snapshots.",
+      "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows). Added the shared IDuplexChannel/IsShutdown API, original TCP/domain address scenarios, inherited domain initial-read and peer-shutdown fixtures, the complete 100-connection descriptor-reuse body and registration-before-write original. Restored real-network connection-attempt originals and implemented the measured Windows AF_UNIX EOF workaround. Channel groups expose native ISet bulk operations and ordinal-name/identity ordering while preserving Id admission, automatic removal, stayClosed and server-first snapshots. Corrected separate TCP stream/listener option admission, platform backlog defaults/visibility, JDK positive buffer sizes and linger clamp, one-time best-effort NoDelay defaults and Linux IPv6 traffic-class configuration. Repeated the original native/domain config tests without changing their mappings.",
       "next": "Continue remaining portable socket and selector/backend contracts against their original fixtures and runtime comments."
     },
     {
@@ -63,20 +63,32 @@
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
     "javaOnlyReviewedCases": 26,
-    "supplementalExecutedCases": 339,
+    "supplementalExecutedCases": 363,
     "debug": {
       "failed": 0,
-      "passed": 946,
-      "skipped": 77,
-      "total": 1023
+      "passed": 970,
+      "skipped": 80,
+      "total": 1050
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 946,
-      "skipped": 77,
-      "total": 1023
+      "passed": 970,
+      "skipped": 80,
+      "total": 1050
     },
     "solutionRelease": {
+      "Netty.NET.Common.Tests": {
+        "failed": 0,
+        "passed": 2678,
+        "skipped": 14,
+        "total": 2692
+      },
+      "Netty.NET.Buffer.Tests": {
+        "failed": 0,
+        "passed": 29556,
+        "skipped": 0,
+        "total": 29556
+      },
       "Netty.NET.Resolver.Tests": {
         "failed": 0,
         "passed": 64,
@@ -85,40 +97,33 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 946,
-        "skipped": 77,
-        "total": 1023
-      },
-      "Netty.NET.Buffer.Tests": {
-        "failed": 0,
-        "passed": 29556,
-        "skipped": 0,
-        "total": 29556
-      },
-      "Netty.NET.Common.Tests": {
-        "failed": 0,
-        "passed": 2678,
-        "skipped": 14,
-        "total": 2692
+        "passed": 970,
+        "skipped": 80,
+        "total": 1050
       }
     },
-    "solutionPassed": 33244,
-    "solutionSkipped": 91,
+    "solutionPassed": 33268,
+    "solutionSkipped": 94,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
-      "existingCommonCheckedRebuild": 51
+      "existingCommonCheckedRebuild": 51,
+      "transientSourceTiming": {
+        "initialLinux": "The initial 1044-case intermediate build had one pre-existing ScheduleTaskAtFixedRateB failure: 77.4942 ms fell below the original 80 ms bound. The final unchanged 1050-case Linux run and checked focus pass.",
+        "parallelWindowsSolution": "The final-code parallel solution run had one pre-existing ScheduleTaskAtFixedRateA failure: 221.6181 ms exceeded the original 220 ms bound. Full Debug and checked Transport pass. Final full solution is rerun with -m:1 to avoid cross-project load; no assertion, deadline or source condition is changed."
+      }
     },
-    "javaEvidence": "Unmodified pinned Java AbstractNioChannelTest, ChannelOutboundBufferTest and DefaultChannelGroupTest execute under JUnit Jupiter on Windows and Linux: seventeen passed per platform, no skips/failures. A separate custom probe checks the original implementation progress/total/before-completion and inherited set/identity-order contracts; it is explicitly not counted as an original fixture.",
-    "note": "Windows full solution run: 33244 passed / 91 existing skips / zero failures. Full final Transport Release/Debug/checked: 946 passed / 77 existing skips; Linux final Transport: 1015 passed / eight existing source-disabled skips. Forty-four new cases pass on Windows and Linux checked builds. Replacing only progress notification with the former counter-only branch in an isolated current-source copy reproduces fifteen failures and twenty-nine passes; the main worktree is not modified by that comparison. Real TCP partial vectors, async/sync files, UDP, executor-bound encoding and native progress/terminal observation are included. No new skip or source assertion reduction.",
+    "javaEvidence": "Unmodified pinned EpollServerSocketChannelConfigTest (five), EpollSocketChannelConfigTest (eight) and the inherited NioServerDomainSocketChannel config methods (two) execute under JUnit Jupiter on Linux: fifteen passed with no skips/failures. Separate original-implementation probes on Windows and Linux verify role admission, SOMAXCONN, backlog range, nonpositive buffer rejection, linger clamp and traffic-class validation; these probes are not original fixture mappings.",
+    "note": "Final Windows Release full solution is run serially (-m:1): 33268 passed / 94 skips / zero failures. Final Transport Debug and checked Release each pass 970 / 80 skips; Linux full final Transport passes 1042 / eight existing source-disabled skips. The three new Windows skips are supplemental Linux-specific native traffic-class cases and all execute on Linux. Twenty-seven new supplemental cases preserve source config contracts; fifteen original Java config methods are repeated without remapping or assertion reduction. Isolated previous-runtime comparisons fail eighteen Windows and twenty Linux cases, establishing actual behavior differences. Intermediate parallel source timing failures and final clean reruns remain recorded.",
     "commands": [
-      "python artifacts/transport-core/run-progress-group-originals.py",
-      "dotnet test Netty.NET.sln -c Release --no-restore --results-directory artifacts/transport-core/progress-group-results --logger \"trx;LogFilePrefix=progress-group\"",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --results-directory artifacts/transport-core/progress-group-final-results --logger \"trx;LogFilePrefix=progress-group-final\"",
+      "python artifacts/transport-core/run-socket-config-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter FullyQualifiedName~SocketConfigurationContractTest",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/progress-group-checked-out -p:NuGetAudit=false --no-restore",
-      "python artifacts/transport-core/run-progress-group-linux.py",
-      "python artifacts/transport-core/run-progress-group-regressions.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/socket-config-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-socket-config-linux.py",
+      "python artifacts/transport-core/run-socket-config-regressions.py",
+      "python artifacts/transport-core/run-socket-config-linux-regressions.py",
+      "dotnet test Netty.NET.sln -c Release --no-build --no-restore -m:1 --results-directory artifacts/transport-core/socket-config-sequential-results --logger \"trx;LogFilePrefix=socket-config-sequential\"",
       "pwsh -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
@@ -162,8 +167,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 1023,
-      "passed": 1015,
+      "total": 1050,
+      "passed": 1042,
       "failed": 0,
       "skipped": 8
     },
@@ -451,6 +456,49 @@
       "javaCounting": "Only AbstractNioChannelTest adds one newly selected original method. All fifteen outbound-buffer and the one group original are repeated compatibility checks. The custom source progress/set probe is source-implementation evidence, never an original test mapping.",
       "finalRecordMetadata": "Final progress records include channel association, actual native queue Task and immutable counts. Re-executed full Transport Release/Debug/checked and Linux after this final metadata addition.",
       "solutionValidation": "Full solution run passed; the final change afterward only added the channel metadata field to the new Transport record and its constructor/corresponding assertion. Full final Transport Release/Debug/checked plus Linux and focused metadata cases pass; unchanged Common/Buffer/Resolver solution results are retained without inventing another full-solution run."
+    },
+    "socketConfigEvidence": {
+      "newMappedOriginalMethods": 0,
+      "newSupplementalCases": 27,
+      "windowsSupplemental": {
+        "passed": 24,
+        "skipped": 3,
+        "failed": 0
+      },
+      "linuxSupplemental": {
+        "passed": 27,
+        "skipped": 0,
+        "failed": 0
+      },
+      "linuxFocusedIncludingOriginalConfig": {
+        "passed": 42,
+        "skipped": 0,
+        "failed": 0
+      },
+      "originalJavaRepeated": {
+        "platform": "Linux",
+        "passed": 15,
+        "skipped": 0,
+        "failed": 0
+      },
+      "sourceImplementationProbes": [
+        "Windows",
+        "Linux"
+      ],
+      "counterfactualPreviousWindows": {
+        "failed": 18,
+        "passed": 6,
+        "skipped": 3,
+        "total": 27
+      },
+      "counterfactualPreviousLinux": {
+        "failed": 20,
+        "passed": 7,
+        "skipped": 0,
+        "total": 27
+      },
+      "counting": "The thirteen native TCP and two inherited domain original methods are repeated compatibility checks, not new original mappings. All twenty-seven new cases are explicitly supplemental source-contract/CLR-adaptation coverage. Original Java sources match the pinned checkout, and the separate implementation probe is not counted as an original test.",
+      "comparison": "An isolated copy restores only the two changed runtime files from the previous HEAD while retaining the new tests. No main-worktree runtime rollback is used. Linux confirms both IPv6/dual-mode wrong-family traffic-class regressions."
     }
   },
   "entries": [
@@ -3717,23 +3765,28 @@
       "sha256": "aef539f8e2c52d86b40a95f1f5d4494b145bafd6a35d6a833e10b2cccd7afacd",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "in-progress",
+      "status": "clr-adapted",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
       ],
       "comments": {
-        "status": "partial",
+        "status": "preserved",
         "uniqueCount": 3,
-        "preservedCount": 2,
-        "unreviewedCount": 1,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at reviewed CLR config/transport declarations; the NoDelay default and Ignore comments reside at native channel construction. Remaining source comments stay explicit in partial entries."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Reviewed the complete server config implementation role and its original comments. Common inherited config methods remain on IChannelConfig. Unsupported stream options return false without a native socket call. Linux-specific extensions remain separate from the portable three-option listener surface.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+          "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs",
+          "test/Netty.NET.Transport.Tests/LinuxServerSocketConfigSourceTest.cs",
+          "src/Netty.NET.Transport/Channels/DefaultChannelConfig.cs",
+          "src/Netty.NET.Common/NetUtil.cs"
         ]
-      }
+      },
+      "clrDecision": "Typed ChannelOption getters/setters and the shared native config replace Java fluent config subinterfaces. Listener options remain distinct from connected stream options. Backlog defaults to NetUtil.DefaultListenBacklog (SOMAXCONN), accepts every nonnegative int and uses Volatile publication. Standard CLR socket options preserve native values/errors and the server receive allocator/AutoRead callback; Java performance preferences have no corresponding CLR API and no dummy method is introduced."
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/socket/DefaultSocketChannelConfig.java",
@@ -3742,17 +3795,18 @@
       "kind": "implementation",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs"
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs"
       ],
       "comments": {
-        "status": "partial",
+        "status": "preserved",
         "uniqueCount": 5,
-        "preservedCount": 3,
-        "unreviewedCount": 2,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "preservedCount": 5,
+        "unreviewedCount": 0,
+        "scope": "Original comments retained at reviewed CLR config/transport declarations; the NoDelay default and Ignore comments reside at native channel construction. Remaining source comments stay explicit in partial entries."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. Reviewed TCP stream/listener/domain option roles, positive buffer sizes, negative/oversized linger, traffic-class validation, Linux IPv6 native traffic class and default NoDelay construction. CLR lazy config access no longer resets caller/child socket options. Remaining wider socket subinterface documentation and non-Linux IPv6 traffic-class policy review stay explicit; this entry remains in progress.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
           "src/Netty.NET.Transport/Channels/Sockets/LinuxSocketOptions.cs",
@@ -3761,7 +3815,8 @@
           "test/Netty.NET.Transport.Tests/LinuxTcpConnectOptionsContractTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketConnectSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs"
+          "test/Netty.NET.Transport.Tests/TcpFastOpenContractTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs"
         ]
       }
     },
@@ -8280,16 +8335,17 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 43,
+    "reviewedImplementationFiles": 47,
     "portedOriginalFixtures": 81,
     "portedOriginalMethods": 472,
-    "supplementalClrCases": 363,
+    "supplementalClrCases": 390,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 39,
     "sourceDisabledMethodsMapped": 8,
     "nativeTestSources": 13,
-    "mappedInheritedScenarios": 16
+    "mappedInheritedScenarios": 16,
+    "reviewedImplementationFilesBasis": "Count of core Transport implementation entries with status clr-adapted, including explicitly reviewed CLR role aliases; not a count of distinct C# files. Recomputed from entries to remove earlier incremental-count drift."
   },
   "clrDecisions": [
     {
@@ -8895,6 +8951,20 @@
         "transport/src/main/java/io/netty/channel/group/DefaultChannelGroup.java",
         "transport/src/main/java/io/netty/channel/group/ChannelGroup.java"
       ]
+    },
+    {
+      "subject": "TCP configuration roles and JDK versus CLR socket option semantics",
+      "decision": "Keep the existing typed ChannelOption API and shared DefaultSocketChannelConfig, with separate TCP listener/stream and domain option sets; no fluent Java config hierarchy is recreated. Unsupported options return false and do not touch the native socket. Listener backlog uses the platform SOMAXCONN equivalent with Volatile access. JDK Socket rejects nonpositive receive/send sizes and limits enabled linger to 65535 seconds, while negative linger disables it; enforce those semantics before passing CLR socket options. Initialize TCP_NODELAY once, best effort, when constructing the native channel so lazy Config creation cannot overwrite later caller/accepted-socket choices. Linux IPv6 uses raw IPV6_TCLASS, also setting IPv4 TOS for dual-mode peers. Traffic-class input must be 0..255. Native get returns actual OS policy rather than a fabricated cached echo. Java performance preferences have no CLR counterpart and are not represented by a no-op API. Non-Linux IPv6 traffic-class policy and wider subinterface source comments are not claimed complete.",
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/Sockets/DefaultSocketChannelConfig.cs",
+        "src/Netty.NET.Transport/Channels/Sockets/TcpSocketChannel.cs",
+        "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs"
+      ],
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/socket/DefaultServerSocketChannelConfig.java",
+        "transport/src/main/java/io/netty/channel/socket/DefaultSocketChannelConfig.java",
+        "transport/src/main/java/io/netty/channel/socket/SocketChannelConfig.java"
+      ]
     }
   ],
   "openWork": [
@@ -8916,7 +8986,7 @@
     {
       "area": "TCP and UDP",
       "state": "test-and-implementation-review",
-      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path. The shared duplex contract and TCP/AF_UNIX address tests, native domain peer shutdown and 100-connection reuse body are mapped. Real network connection-attempt originals replace former held-connect mappings; deterministic cases remain supplemental."
+      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path. The shared duplex contract and TCP/AF_UNIX address tests, native domain peer shutdown and 100-connection reuse body are mapped. Real network connection-attempt originals replace former held-connect mappings; deterministic cases remain supplemental. TCP config role admission, platform backlog, buffer/linger ranges, native option preservation after construction and Linux IPv6 traffic-class behavior are now covered. Other socket config subinterface comments and non-Linux IPv6 traffic-class policy remain review work."
     },
     {
       "area": "Bootstrap and groups",
@@ -9003,7 +9073,8 @@
     "test/Netty.NET.Transport.Tests/SocketConnectTimingContractTest.cs",
     "test/Netty.NET.Transport.Tests/DuplexChannelContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelWriteProgressContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ChannelGroupSetContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ChannelGroupSetContractTest.cs",
+    "test/Netty.NET.Transport.Tests/SocketConfigurationContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -14991,10 +15062,41 @@
           "pwsh -File tools/Test-TransportPortingManifest.ps1"
         ]
       }
+    },
+    {
+      "checkpoint": "7b3cf8e5745e0f5cdba235bb18eb7f0e3189eacf",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "debug": {
+          "failed": 0,
+          "passed": 946,
+          "skipped": 77,
+          "total": 1023
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 946,
+          "skipped": 77,
+          "total": 1023
+        },
+        "solutionPassed": 33244,
+        "solutionSkipped": 91,
+        "mappedOriginalMethods": 472,
+        "originalExecutedCases": 607,
+        "supplementalExecutedCases": 339,
+        "linuxTransportRelease": {
+          "total": 1023,
+          "passed": 1015,
+          "failed": 0,
+          "skipped": 8
+        },
+        "note": "Windows full solution run: 33244 passed / 91 existing skips / zero failures. Full final Transport Release/Debug/checked: 946 passed / 77 existing skips; Linux final Transport: 1015 passed / eight existing source-disabled skips. Forty-four new cases pass on Windows and Linux checked builds. Replacing only progress notification with the former counter-only branch in an isolated current-source copy reproduces fifteen failures and twenty-nine passes; the main worktree is not modified by that comparison. Real TCP partial vectors, async/sync files, UDP, executor-bound encoding and native progress/terminal observation are included. No new skip or source assertion reduction."
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete remaining Transport contracts and original source-disabled/runtime comment review. Native progress reporting and group set/comparison semantics are now implemented; preserve channel/native queue Task ownership across handler transforms and keep source tests distinct from CLR contract tests.",
+    "Continue concrete remaining Transport contracts and original source-disabled/runtime comment review. TCP role-specific configuration is corrected and the server config role is reviewed; keep non-Linux IPv6 traffic-class policy and socket subinterface comments explicit. Preserve native Task/progress ownership and distinguish original methods from supplemental CLR cases.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
     "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."
