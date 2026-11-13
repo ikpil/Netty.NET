@@ -6,7 +6,7 @@
   ],
   "objective": "Port portable Transport behavior and original tests using CLR-native Tasks, delegates, sockets and explicit executor dispatch; preserve original comments and test intent. Preserve corresponding Java variable and method identifiers, allowing only the requested C# capitalization/underscore adaptations.",
   "status": "in-progress",
-  "statusMeaning": "pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported. A clr-adapted fixture may contain per-method clr-not-applicable decisions only with source contract/reason/real CLR evidence. These methods are reviewed but never counted as mapped original cases or skipped CLR tests.",
+  "statusMeaning": "pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported. A clr-adapted fixture may contain per-method clr-not-applicable decisions only with source contract/reason/real CLR evidence. These methods are reviewed but never counted as mapped original cases or skipped CLR tests. BCL-replaced JVM wrapper roles are clr-adapted with clrReplacement evidence. Wrapper-only comments retain exact text and explicit dispositions; this comment rule is forbidden for test entries. Such roles are not new physical C# wrapper files.",
   "stages": [
     {
       "name": "Channel dependencies",
@@ -42,10 +42,10 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 537,
-    "javaOriginalInvocations": 542,
-    "transportJavaOriginalPassed": 393,
-    "coreTransportJavaOriginalPassed": 323,
+    "javaOriginalPassed": 547,
+    "javaOriginalInvocations": 552,
+    "transportJavaOriginalPassed": 403,
+    "coreTransportJavaOriginalPassed": 333,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
     "testsuiteJavaJUnitInvocations": 102,
@@ -55,26 +55,26 @@
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 476,
-    "originalExecutedCases": 615,
+    "mappedOriginalMethods": 478,
+    "originalExecutedCases": 617,
     "originalSkippedCases": 53,
-    "transportMappedOriginalExecutions": 369,
+    "transportMappedOriginalExecutions": 371,
     "testsuiteMappedOriginalExecutions": 202,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
-    "javaOnlyReviewedCases": 26,
-    "supplementalExecutedCases": 482,
+    "javaOnlyReviewedCases": 34,
+    "supplementalExecutedCases": 487,
     "debug": {
       "failed": 0,
-      "passed": 1097,
+      "passed": 1104,
       "skipped": 80,
-      "total": 1177
+      "total": 1184
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 1097,
+      "passed": 1104,
       "skipped": 80,
-      "total": 1177
+      "total": 1184
     },
     "solutionRelease": {
       "Netty.NET.Common.Tests": {
@@ -97,29 +97,32 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 1097,
+        "passed": 1104,
         "skipped": 80,
-        "total": 1177
+        "total": 1184
       }
     },
-    "solutionPassed": 33395,
+    "solutionPassed": 33402,
     "solutionSkipped": 94,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51,
-      "correctedSupplementalZeroProgress": "The first focused run failed only the previous supplemental ARegionWithoutPhysicalOrLogicalProgressFailsWithoutSpinning expectation, which assumed zero was an error. Direct unmodified Java implementation probes on both OSes verify retry/full-buffer status instead. The supplemental test now verifies a retry, ordinary task opportunity, pending result, close failure and final release. Original tests, timing bounds and assertions remain unchanged."
+      "correctedSupplementalZeroProgress": "The first focused run failed only the previous supplemental ARegionWithoutPhysicalOrLogicalProgressFailsWithoutSpinning expectation, which assumed zero was an error. Direct unmodified Java implementation probes on both OSes verify retry/full-buffer status instead. The supplemental test now verifies a retry, ordinary task opportunity, pending result, close failure and final release. Original tests, timing bounds and assertions remain unchanged.",
+      "linuxTimingRecheck": "First Linux full run had one unchanged original ScheduleTaskAtFixedRateA timing sample at 220.4294 ms, just above its strict 220 ms bound. Pinned Java and C# assertions were compared and kept intact. Full Linux rerun after other builds finished passes all 1176 active cases; no skip, timeout or assertion was changed. The observed boundary miss is recorded without claiming a proven cause."
     },
-    "javaEvidence": "Unmodified pinned CompositeBufferGatheringWriteTest (two wrappers/four allocator executions), NioSocketChannelTest (eight), and SocketGatheringWriteTest (six wrappers/twelve allocator executions) pass on Windows and Linux: sixteen original wrappers per OS, no skips/failures. Linux additionally passes two inherited EpollCompositeBufferGatheringWriteTest wrappers across twelve allocator/backend executions, recorded only as Java compatibility evidence. Separate pinned NioSocketChannel implementation probes verify ordinary inheritance and unrelated-overload gathering within one write quantum; no probe is counted as an original JUnit mapping.",
-    "note": "Final Windows serial Release solution: 33395 passed / 94 existing skips / zero failures. Transport Debug and checked Release: 1097 passed / 80 existing skips each. Linux Transport: 1169 passed / eight existing skips; checked focused source/supplemental tests: 23/23. Two new original declarations produce four allocator cases; nineteen supplemental inheritance cases remain separate. Original comments, source identifiers, payloads, slice boundaries, ACK protocol and ten-second deadlines are retained. The covariance regression caught the initial metadata heuristic before commit; final implementation uses actual CLR virtual dispatch. Isolated exact-type restriction reproduces fourteen failures and five passes. NativeAOT-specific inventory and remaining backend/runtime comments are still open.",
+    "javaEvidence": "All ten unchanged pinned CompleteChannelFutureTest, SucceededChannelFutureTest, FailedChannelFutureTest, DefaultChannelPromiseTest and DelegatingChannelPromiseNotifierTest methods pass on Windows and Linux against their compiled original implementations. Two portable constant-property methods map to actual channel Task production; eight Java representation methods are reviewed separately and are neither C# original mappings nor xUnit skips.",
+    "note": "Windows serial Release solution: 33402 passed / 94 existing skips / zero failures. Transport Debug/checked Release: 1104 passed / 80 existing skips each. Linux full rerun: 1176 passed / eight existing skips; checked new focus: 7/7. No runtime change or Java promise facade was necessary. New original mappings=2; representation-specific original exclusions=8; new supplemental native Task cases=5. Strict comments/test accounting remains for physical ports; exact wrapper-only comment dispositions are validated only for reviewed BCL implementation replacements. The first Linux timing boundary miss and unchanged successful full rerun are retained in warnings.",
     "commands": [
-      "python artifacts/transport-core/run-inherited-write-originals.py",
+      "python artifacts/transport-core/run-channel-task-originals.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter \"FullyQualifiedName~SucceededChannelFutureSourceTest|FullyQualifiedName~FailedChannelFutureSourceTest|FullyQualifiedName~ChannelPromiseTaskContractTest\"",
+      "dotnet test Netty.NET.sln -c Release --no-restore -m:1 --results-directory artifacts/transport-core/channel-task-results --logger \"trx;LogFilePrefix=channel-task\"",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test Netty.NET.sln -c Release --no-restore -m:1 --results-directory artifacts/transport-core/inherited-write-final-results --logger \"trx;LogFilePrefix=inherited-write-final\"",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/inherited-write-checked-out -p:NuGetAudit=false",
-      "python artifacts/transport-core/run-inherited-write-linux.py",
-      "python artifacts/transport-core/run-inherited-write-final-regression.py",
-      "pwsh -File tools/Test-TransportPortingManifest.ps1"
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/channel-task-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-channel-task-linux.py",
+      "python artifacts/transport-core/run-channel-task-regressions.py",
+      "pwsh -File tools/Test-TransportPortingManifest.ps1",
+      "python artifacts/transport-core/check-channel-task-manifest-guards.py"
     ],
     "domainJavaOriginalExecutions": 8,
     "echoJavaJUnitInvocations": 7,
@@ -162,8 +165,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 1177,
-      "passed": 1169,
+      "total": 1184,
+      "passed": 1176,
       "failed": 0,
       "skipped": 8
     },
@@ -806,6 +809,41 @@
         "NewRandomBytes",
         "OperationComplete"
       ]
+    },
+    "channelTaskEvidence": {
+      "reviewedOriginalMethods": 10,
+      "newMappedOriginalMethods": 2,
+      "newClrInapplicableMethods": 8,
+      "newSupplementalCases": 5,
+      "bclWrapperRolesReviewed": 5,
+      "javaOriginalPassedPerPlatform": 10,
+      "javaFailed": 0,
+      "javaSkipped": 0,
+      "linuxCheckedFocusPassed": 7,
+      "isolatedInlineContinuations": {
+        "total": 1,
+        "failed": 1,
+        "passed": 0,
+        "skipped": 0
+      },
+      "isolatedCanceledFlushedWrites": {
+        "total": 2,
+        "failed": 2,
+        "passed": 0,
+        "skipped": 0
+      },
+      "comparison": "Isolated compiling copies remove only queue-TCS asynchronous continuation dispatch, or the paired flush cancellation-claim/unregistration guards. Each targeted native contract fails; main worktree and original tests remain unchanged.",
+      "runtimeChanges": "No Transport runtime change was needed: existing Task/TCS paths satisfy the reviewed native contracts.",
+      "comments": "Only implementation entries reviewed as BCL substitutions may disposition wrapper-only docs; exact unmatched text, counts, source contract, BCL types and CLR file evidence are mandatory. Test comments/assertions retain the existing strict rules.",
+      "manifestGuardChecks": {
+        "validAccepted": 1,
+        "invalidRejected": 3,
+        "cases": [
+          "altered original comment text",
+          "test-comment waiver attempt",
+          "missing CLR evidence file"
+        ]
+      }
     }
   },
   "entries": [
@@ -1865,8 +1903,52 @@
       "sha256": "70f572c44ad831e978a52d660e8412fc4b54ee3283a564495eff5ab900a12c6f",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+        "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs"
+      ],
+      "clrReplacement": {
+        "kind": "bcl",
+        "requiresFacade": false,
+        "clrTypes": [
+          "System.Threading.Tasks.Task",
+          "System.Threading.Tasks.TaskCompletionSource"
+        ],
+        "sourceContract": "A channel-attached completed Future with fluent Java waits, listener operations and void result access. CLR Task owns completion/wait state; channel identity stays outside Task. Java fluent blocking/uninterruptible waits and channel() are not reproduced.",
+        "reason": "Use standard CLR completion primitives and existing channel/context ownership instead of porting a Java Future/Promise facade. Portable state/cause and native ownership/cancellation/continuation contracts are verified; representation-specific APIs are explicitly absent.",
+        "clrEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs"
+        ]
+      },
+      "review": {
+        "scope": "A channel-attached completed Future with fluent Java waits, listener operations and void result access. CLR Task owns completion/wait state; channel identity stays outside Task. Java fluent blocking/uninterruptible waits and channel() are not reproduced.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "clr-replaced",
+        "uniqueCount": 3,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "A skeletal {@link ChannelFuture} implementation which represents a {@link ChannelFuture} which has been completed already.",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          },
+          {
+            "sourceComment": "Creates a new instance. @param channel the {@link Channel} associated with this future",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          }
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ConnectTimeoutException.java",
@@ -2008,8 +2090,52 @@
       "sha256": "8ed7fbac16de3bf9cca4a4717df705010837752058476edea6373dc630aef215",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "clrReplacement": {
+        "kind": "bcl",
+        "requiresFacade": false,
+        "clrTypes": [
+          "System.Threading.Tasks.Task",
+          "System.Threading.Tasks.TaskCompletionSource"
+        ],
+        "sourceContract": "A mutable channel/executor-associated promise, fluent notifications and legacy FlushCheckpoint storage. TaskCompletionSource produces the native Task; channel/context and queue entries own scheduling, cancellation claims and byte accounting. The original legacy notifier is referenced only by its own class and checkpoint implementors in pinned Transport. Java blocking deadlock guards and fluent waits are not injected into Task; consumers use await.",
+        "reason": "Use standard CLR completion primitives and existing channel/context ownership instead of porting a Java Future/Promise facade. Portable state/cause and native ownership/cancellation/continuation contracts are verified; representation-specific APIs are explicitly absent.",
+        "clrEvidence": [
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+        ]
+      },
+      "review": {
+        "scope": "A mutable channel/executor-associated promise, fluent notifications and legacy FlushCheckpoint storage. TaskCompletionSource produces the native Task; channel/context and queue entries own scheduling, cancellation claims and byte accounting. The original legacy notifier is referenced only by its own class and checkpoint implementors in pinned Transport. Java blocking deadlock guards and fluent waits are not injected into Task; consumers use await.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "clr-replaced",
+        "uniqueCount": 3,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "The default {@link ChannelPromise} implementation. It is recommended to use {@link Channel#newPromise()} to create a new {@link ChannelPromise} rather than calling the constructor explicitly.",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          },
+          {
+            "sourceComment": "Creates a new instance. @param channel the {@link Channel} associated with this future",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          }
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/DefaultEventLoop.java",
@@ -2159,8 +2285,43 @@
       "sha256": "9e1e6f028dd17081b45313336fededbde1a58b15236120d69da750617c1736fd",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "clrReplacement": {
+        "kind": "bcl",
+        "requiresFacade": false,
+        "clrTypes": [
+          "System.Threading.Tasks.Task",
+          "System.Threading.Tasks.TaskCompletionSource"
+        ],
+        "sourceContract": "A forwarding Java Promise/FutureListener combining completion notification and varargs listener mutation. Native Task/TCS completion and ordinary Task observation replace the wrapper; Java add/remove listeners, void/unvoid and attached-channel facade methods have no CLR API counterpart.",
+        "reason": "Use standard CLR completion primitives and existing channel/context ownership instead of porting a Java Future/Promise facade. Portable state/cause and native ownership/cancellation/continuation contracts are verified; representation-specific APIs are explicitly absent.",
+        "clrEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+        ]
+      },
+      "review": {
+        "scope": "A forwarding Java Promise/FutureListener combining completion notification and varargs listener mutation. Native Task/TCS completion and ordinary Task observation replace the wrapper; Java add/remove listeners, void/unvoid and attached-channel facade methods have no CLR API counterpart.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "clr-replaced",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "notApplicable": []
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/embedded/EmbeddedChannel.java",
@@ -2337,8 +2498,52 @@
       "sha256": "74b41e3c8d3d0e3ab2b4428b65f5a4be6ec5a9e59c2c927e32cc51f34075827e",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs"
+      ],
+      "clrReplacement": {
+        "kind": "bcl",
+        "requiresFacade": false,
+        "clrTypes": [
+          "System.Threading.Tasks.Task",
+          "System.Threading.Tasks.TaskCompletionSource"
+        ],
+        "sourceContract": "An already failed ChannelFuture retaining an identical non-null cause. Actual failed channel writes retain that exception in Task.Exception/await; BCL failure factories own null validation.",
+        "reason": "Use standard CLR completion primitives and existing channel/context ownership instead of porting a Java Future/Promise facade. Portable state/cause and native ownership/cancellation/continuation contracts are verified; representation-specific APIs are explicitly absent.",
+        "clrEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs"
+        ]
+      },
+      "review": {
+        "scope": "An already failed ChannelFuture retaining an identical non-null cause. Actual failed channel writes retain that exception in Task.Exception/await; BCL failure factories own null validation.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "clr-replaced",
+        "uniqueCount": 3,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "The {@link CompleteChannelFuture} which is failed already. It is recommended to use {@link Channel#newFailedFuture(Throwable)} instead of calling the constructor of this future.",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          },
+          {
+            "sourceComment": "Creates a new instance. @param channel the {@link Channel} associated with this future @param cause the cause of failure",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          }
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/FileRegion.java",
@@ -4671,8 +4876,52 @@
       "sha256": "b816faf555c03210fea8cfcba9c64817f235c8fb565c33d457261ed307c45b18",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs"
+      ],
+      "clrReplacement": {
+        "kind": "bcl",
+        "requiresFacade": false,
+        "clrTypes": [
+          "System.Threading.Tasks.Task",
+          "System.Threading.Tasks.TaskCompletionSource"
+        ],
+        "sourceContract": "An already successful completed ChannelFuture with null cause. Actual channel writes expose completed successful Task with no exception; there is no Netty completed-future constructor.",
+        "reason": "Use standard CLR completion primitives and existing channel/context ownership instead of porting a Java Future/Promise facade. Portable state/cause and native ownership/cancellation/continuation contracts are verified; representation-specific APIs are explicitly absent.",
+        "clrEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs"
+        ]
+      },
+      "review": {
+        "scope": "An already successful completed ChannelFuture with null cause. Actual channel writes expose completed successful Task with no exception; there is no Netty completed-future constructor.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+          "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "clr-replaced",
+        "uniqueCount": 3,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "The {@link CompleteChannelFuture} which is succeeded already. It is recommended to use {@link Channel#newSucceededFuture()} instead of calling the constructor of this future.",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          },
+          {
+            "sourceComment": "Creates a new instance. @param channel the {@link Channel} associated with this future",
+            "reason": "Documents the replaced JVM wrapper declaration/constructor, not an existing local CLR API. Preserve the exact original here with its BCL replacement decision."
+          }
+        ]
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/ThreadPerChannelEventLoop.java",
@@ -5746,8 +5995,71 @@
       "sha256": "f31f64e785ccc0d2946a9dd92839893074978198e5b26c3198b55331ae7d3180",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "caseMappings": [],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original fixture comments retained at its native Task replacement evidence. No test-comment waiver is used."
+      },
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 0,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "shouldDisallowNullChannel",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The CompleteChannelFuture constructor must reject null Channel.",
+            "reason": "The CLR API exposes Task and TaskCompletionSource, not a completed-future constructor taking Channel. Channel ownership is supplied by the operation/context; testing a different null argument or adding a future wrapper would change this original constructor test.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "shouldNotDoAnythingOnRemove",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Removing a listener from an already completed Future must not invoke that listener or interact with its attached mock Channel.",
+            "reason": "Task has no removable GenericFutureListener registration. Await/ContinueWith and cancellation of a separate wait are different mechanisms. The entire original method remains outside mapped counts.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConstantProperties",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The completed Future must expose the identical Channel, be done, return itself from fluent await/awaitUninterruptibly methods, and satisfy millisecond/nanosecond wait overloads without channel interactions.",
+            "reason": "Task does not carry Channel metadata or fluent Java wait methods. Removing these assertions would weaken the original. Portable successful/failed state is mapped in the two concrete fixtures; native wait/lifetime contracts are separate supplemental tests.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "All original declarations reviewed against the pinned implementation. Portable constant state/cause is mapped only in the two concrete fixtures. Java constructor/channel/fluent-await/listener representation assertions are excluded as whole methods with explicit contracts and reasons, not converted into skips or partial mappings. Five native Task ownership/continuation tests are separate supplemental evidence.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/DefaultChannelIdTest.java",
@@ -6322,8 +6634,67 @@
       "sha256": "84cda860d5f2b5d9034b7ed9b9a885193c9cc91b8bbe89a21c2a22e83e5e8eb6",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "caseMappings": [],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original fixture comments retained at its native Task replacement evidence. No test-comment waiver is used."
+      },
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 0,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testNullChannel",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "DefaultChannelPromise(null) must reject its null Channel.",
+            "reason": "TaskCompletionSource has no Channel constructor argument; context/queue ownership and Task production are separate. There is no corresponding public CLR constructor to test.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testChannelWithNullExecutor",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "DefaultChannelPromise(valid EmbeddedChannel, explicit null Executor) must reject the null Executor.",
+            "reason": "TaskCompletionSource has no channel-owned Executor parameter. Native work returns to the event loop; consumers use standard Task continuation scheduling. Testing RegisterAsync(null) would exercise a different API and is not an original mapping.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testNullChannelWithExecutor",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "DefaultChannelPromise(null, ImmediateEventExecutor) must reject its null Channel even with a valid Executor.",
+            "reason": "The Java channel/executor promise representation is replaced by BCL TaskCompletionSource plus explicit channel/context ownership. No equivalent constructor exists; no facade or weakened constructor assertion is introduced.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "All original declarations reviewed against the pinned implementation. Portable constant state/cause is mapped only in the two concrete fixtures. Java constructor/channel/fluent-await/listener representation assertions are excluded as whole methods with explicit contracts and reasons, not converted into skips or partial mappings. Five native Task ownership/continuation tests are separate supplemental evidence.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/DefaultFileRegionTest.java",
@@ -6403,8 +6774,45 @@
       "sha256": "e98a50e7803ad5ad60307a56ed9b25005a25f09f1bf89c7e0710f88f4c040979",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "caseMappings": [],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original fixture comments retained at its native Task replacement evidence. No test-comment waiver is used."
+      },
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "varargsNotifiersAllowed",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "DelegatingChannelPromiseNotifier must forward the identical varargs GenericFutureListener array to addListeners and removeListeners on its delegate Promise.",
+            "reason": "CLR Task/TCS and await/continuations have no Java Promise delegate with mutable varargs listener registration/removal. The source API-forwarding contract is not mapped to a different Task operation.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "All original declarations reviewed against the pinned implementation. Portable constant state/cause is mapped only in the two concrete fixtures. Java constructor/channel/fluent-await/listener representation assertions are excluded as whole methods with explicit contracts and reasons, not converted into skips or partial mappings. Five native Task ownership/continuation tests are separate supplemental evidence.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/embedded/CustomChannelId.java",
@@ -6660,8 +7068,53 @@
       "sha256": "ec2206ced15250b21d524fdb18a18024cf25dd2a174cd4bd400665838ab3388d",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testConstantProperties",
+          "clrMethod": "TestConstantProperties",
+          "adaptation": "Keep the original success/null-cause or failure/identical-cause assertions and channel/future/e identifiers. Produce the Task through a real in-memory channel pipeline and outbound queue; no standalone Task-only test or Java Future wrapper is introduced."
+        }
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original fixture comments retained at its native Task replacement evidence. No test-comment waiver is used."
+      },
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 1,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "shouldDisallowNullException",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "FailedChannelFuture(Channel, Executor, Throwable) must reject a null failure cause.",
+            "reason": "Netty.NET has no failed-future constructor. Task.FromException/TaskCompletionSource own the BCL null-exception validation, while actual channel failures preserve their real cause. Do not invent a Netty constructor or substitute a different null-argument test.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "All original declarations reviewed against the pinned implementation. Portable constant state/cause is mapped only in the two concrete fixtures. Java constructor/channel/fluent-await/listener representation assertions are excluded as whole methods with explicit contracts and reasons, not converted into skips or partial mappings. Five native Task ownership/continuation tests are separate supplemental evidence.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/group/DefaultChannelGroupTest.java",
@@ -8670,8 +9123,41 @@
       "sha256": "6afda814ef11318cade9539dd7ed5f9d6ff266edc21f7f524ba726fb326a8c5a",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testConstantProperties",
+          "clrMethod": "TestConstantProperties",
+          "adaptation": "Keep the original success/null-cause or failure/identical-cause assertions and channel/future/e identifiers. Produce the Task through a real in-memory channel pipeline and outbound queue; no standalone Task-only test or Java Future wrapper is introduced."
+        }
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "Original fixture comments retained at its native Task replacement evidence. No test-comment waiver is used."
+      },
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "review": {
+        "scope": "All original declarations reviewed against the pinned implementation. Portable constant state/cause is mapped only in the two concrete fixtures. Java constructor/channel/fluent-await/listener representation assertions are excluded as whole methods with explicit contracts and reasons, not converted into skips or partial mappings. Five native Task ownership/continuation tests are separate supplemental evidence.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
+          "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+          "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs"
+        ]
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/ThreadPerChannelEventLoopGroupTest.java",
@@ -8692,10 +9178,10 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 47,
-    "portedOriginalFixtures": 83,
-    "portedOriginalMethods": 476,
-    "supplementalClrCases": 509,
+    "reviewedImplementationFiles": 52,
+    "portedOriginalFixtures": 85,
+    "portedOriginalMethods": 478,
+    "supplementalClrCases": 514,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 41,
@@ -9416,6 +9902,26 @@
         "test/Netty.NET.Transport.Tests/CompositeBufferGatheringWriteSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SocketInheritedWriteContractTest.cs"
       ]
+    },
+    {
+      "subject": "Completed channel futures and Java promise representation",
+      "decision": "Task/TCS replaces the five reviewed Java wrapper roles. Two concrete completed-state original tests run through actual channel writes; all eight representation-specific original methods retain full contracts/reasons outside mapped and skip counts. Five supplemental native queue tests verify post-flush cancellation ownership, wait-only cancellation, release-before-consumer execution, asynchronous continuations and independent write/close outcomes. BCL Task does not acquire Java channel(), fluent/uninterruptible waits or mutable listener lists. Preserve wrapper-only original comment text in explicit inventory dispositions rather than pasting nonexistent Java API documentation on CLR primitives.",
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/CompleteChannelFuture.java",
+        "transport/src/main/java/io/netty/channel/SucceededChannelFuture.java",
+        "transport/src/main/java/io/netty/channel/FailedChannelFuture.java",
+        "transport/src/main/java/io/netty/channel/DefaultChannelPromise.java",
+        "transport/src/main/java/io/netty/channel/DelegatingChannelPromiseNotifier.java"
+      ],
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
+        "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
+        "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+        "src/Netty.NET.Transport/Channels/ChannelWriteProgress.cs",
+        "test/Netty.NET.Transport.Tests/SucceededChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -9531,7 +10037,8 @@
     "test/Netty.NET.Transport.Tests/SocketFileRegionWriteSpinCountContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketGatheringWriteBudgetContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketLingerCloseContractTest.cs",
-    "test/Netty.NET.Transport.Tests/SocketInheritedWriteContractTest.cs"
+    "test/Netty.NET.Transport.Tests/SocketInheritedWriteContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -15753,10 +16260,40 @@
           "skipped": 8
         }
       }
+    },
+    {
+      "checkpoint": "fd264f6414e9fe503ed1abbe06ce705211344767",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "debug": {
+          "failed": 0,
+          "passed": 1097,
+          "skipped": 80,
+          "total": 1177
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 1097,
+          "skipped": 80,
+          "total": 1177
+        },
+        "solutionPassed": 33395,
+        "solutionSkipped": 94,
+        "mappedOriginalMethods": 476,
+        "originalExecutedCases": 615,
+        "supplementalExecutedCases": 482,
+        "linuxTransportRelease": {
+          "total": 1177,
+          "passed": 1169,
+          "failed": 0,
+          "skipped": 8
+        }
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete remaining Transport/backend contracts under sourceIdentifierPolicy. Ordinary stream-subclass native write inheritance and actual whole-message override ownership are reviewed, including C# covariance/hidden slots; original composite gathering fixture is mapped. Historical identifier differences and other custom-transport contracts remain open.",
+    "Continue concrete remaining Transport roles/backend contracts under sourceIdentifierPolicy. Five completed Future/Promise wrapper roles are reviewed as BCL Task/TCS substitutions; two portable original methods are mapped and eight Java-representation methods are explicitly inapplicable. Do not introduce Future/Promise facades to satisfy inventory counts. Remaining native-image, ID, protocol-family and selector/OIO inventories need independent source review.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
     "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."

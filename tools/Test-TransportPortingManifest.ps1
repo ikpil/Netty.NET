@@ -48,6 +48,7 @@ $mappedCount = 0
 $inheritedMappedCount = 0
 $notApplicableCount = 0
 $partialCommentCount = 0
+$replacedCommentCount = 0
 $testsuiteEntries = @($manifest.testsuiteEntries | Where-Object { $null -ne $_ })
 $nativeTestEntries = @($manifest.nativeTestEntries | Where-Object { $null -ne $_ })
 if (@($testsuiteEntries.upstream | Select-Object -Unique).Count -ne $testsuiteEntries.Count) {
@@ -99,6 +100,35 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
                 throw "Incorrect partial comment accounting: $($entry.upstream)"
             }
             $partialCommentCount += $missing.Count
+        } elseif ($entry.comments.status -eq 'clr-replaced') {
+            # A BCL replacement has no local declaration on which to paste JVM wrapper documentation.
+            # Keep every unmatched original comment verbatim with an explicit disposition; never waive test comments.
+            $replacement = $entry.clrReplacement
+            $dispositions = @($entry.comments.notApplicable | Where-Object { $null -ne $_ })
+            if ($entry.kind -ne 'implementation' -or $entry.status -ne 'clr-adapted' -or
+                $replacement.kind -ne 'bcl' -or $replacement.requiresFacade -isnot [bool] -or
+                $replacement.requiresFacade -ne $false -or
+                -not $replacement.sourceContract -or -not $replacement.reason -or
+                @($replacement.clrTypes).Count -eq 0 -or @($replacement.clrEvidence).Count -eq 0 -or
+                $entry.comments.unreviewedCount -ne 0 -or $entry.comments.notApplicableCount -ne $missing.Count -or
+                $entry.comments.preservedCount -ne $comments.Count - $missing.Count -or
+                $dispositions.Count -ne $missing.Count) { throw 'Invalid BCL wrapper/comment replacement.' }
+            if ($missing.Count -gt 0 -and
+                (Compare-Object $missing @($dispositions | ForEach-Object { $_.sourceComment }) -CaseSensitive)) {
+                throw 'BCL replacement must account for every unmatched original comment exactly.'
+            }
+            foreach ($disposition in $dispositions) {
+                if (-not $disposition.reason) { throw 'Missing original-comment replacement reason.' }
+            }
+            foreach ($clrType in $replacement.clrTypes) {
+                if ($null -eq [type]::GetType($clrType)) { throw "Missing BCL replacement type: $clrType" }
+            }
+            foreach ($evidencePath in $replacement.clrEvidence) {
+                if (-not (Test-Path (Join-Path $repositoryRoot $evidencePath) -PathType Leaf)) {
+                    throw "Missing BCL replacement evidence: $evidencePath"
+                }
+            }
+            $replacedCommentCount += $missing.Count
         } elseif ($missing.Count) {
             throw "Missing original comment in $($entry.upstream): $($missing[0])"
         }
@@ -184,4 +214,4 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
         $inheritedMappedCount += $inherited.Count
     }
 }
-Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) selected testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) selected testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods and $replacedCommentCount BCL wrapper comments reviewed separately, $partialCommentCount original comments still awaiting review in partial entries. Pending entries remain unreviewed."
