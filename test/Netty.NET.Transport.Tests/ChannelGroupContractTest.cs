@@ -97,9 +97,10 @@ public class ChannelGroupContractTest
     public async Task BroadcastRetainsIndependentBufferOrHolderViews(bool holder, bool flush)
     {
         var group = new DefaultChannelGroup();
-        var first = new EmbeddedChannel();
-        var second = new EmbeddedChannel();
-        var excluded = new EmbeddedChannel();
+        // Distinct group members need explicit IDs; default embedded channels intentionally share their ID.
+        var first = new EmbeddedChannel(DefaultChannelId.NewInstance());
+        var second = new EmbeddedChannel(DefaultChannelId.NewInstance());
+        var excluded = new EmbeddedChannel(DefaultChannelId.NewInstance());
         var server = new Mock<IServerChannel>();
         server.SetupGet(channel => channel.Id).Returns(DefaultChannelId.NewInstance());
         server.SetupGet(channel => channel.CloseCompletion).Returns(new TaskCompletionSource().Task);
@@ -191,9 +192,10 @@ public class ChannelGroupContractTest
     public async Task CloseSnapshotKeepsRemovedMembersAndExcludesLaterMembers()
     {
         var group = new DefaultChannelGroup();
-        var first = new EmbeddedChannel();
-        var removed = new EmbeddedChannel();
-        var later = new EmbeddedChannel();
+        // Distinct group members need explicit IDs; default embedded channels intentionally share their ID.
+        var first = new EmbeddedChannel(DefaultChannelId.NewInstance());
+        var removed = new EmbeddedChannel(DefaultChannelId.NewInstance());
+        var later = new EmbeddedChannel(DefaultChannelId.NewInstance());
         try
         {
             group.Add(first);

@@ -87,8 +87,9 @@ public class DatagramTransportContractTest
     [Fact]
     public async Task GroupWritesUseIndependentBufferIndicesAndReleaseEveryOwner()
     {
-        var first = new EmbeddedChannel();
-        var second = new EmbeddedChannel();
+        // Distinct broadcast recipients need explicit IDs; default embedded IDs are equal in the original transport.
+        var first = new EmbeddedChannel(DefaultChannelId.NewInstance());
+        var second = new EmbeddedChannel(DefaultChannelId.NewInstance());
         var group = new DefaultChannelGroup();
         group.Add(first);
         group.Add(second);

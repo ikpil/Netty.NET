@@ -90,7 +90,7 @@ public class EmbeddedChannel : AbstractChannel
      * @param channelId the {@link ChannelId} that will be used to identify this channel
      * @param handlers the {@link ChannelHandler}s which will be added to the {@link ChannelPipeline}
      */
-    public EmbeddedChannel(IChannelId id, params IChannelHandler[] handlers) : this(null, id, true, false, null, handlers) { }
+    public EmbeddedChannel(IChannelId channelId, params IChannelHandler[] handlers) : this(null, channelId ?? throw new ArgumentNullException(nameof(channelId)), true, false, null, handlers) { }
     public EmbeddedChannel(Ticker ticker, params IChannelHandler[] handlers) : this(null, null, true, false, ticker, handlers) { }
     /**
      * Create a new instance with the channel ID set to the given ID and the pipeline
@@ -125,10 +125,10 @@ public class EmbeddedChannel : AbstractChannel
      * @param config the {@link ChannelConfig} which will be returned by {@link #config()}.
      * @param handlers the {@link ChannelHandler}s which will be added to the {@link ChannelPipeline}
      */
-    public EmbeddedChannel(IChannel parent, IChannelId id, bool register, bool hasDisconnect, params IChannelHandler[] handlers)
-        : this(parent, id, register, hasDisconnect, null, handlers) { }
-    private EmbeddedChannel(IChannel parent, IChannelId id, bool register, bool hasDisconnect, Ticker ticker, IChannelHandler[] handlers)
-        : base(parent, new ChannelMetadata(hasDisconnect), id)
+    public EmbeddedChannel(IChannel parent, IChannelId channelId, bool register, bool hasDisconnect, params IChannelHandler[] handlers)
+        : this(parent, channelId ?? throw new ArgumentNullException(nameof(channelId)), register, hasDisconnect, null, handlers) { }
+    private EmbeddedChannel(IChannel parent, IChannelId channelId, bool register, bool hasDisconnect, Ticker ticker, IChannelHandler[] handlers)
+        : base(parent, new ChannelMetadata(hasDisconnect), channelId ?? EmbeddedChannelId.Instance)
     {
         _loop = new EmbeddedEventLoop(ticker);
         Pipeline.AddLast(handlers);

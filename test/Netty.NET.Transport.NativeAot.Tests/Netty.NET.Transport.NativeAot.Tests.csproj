@@ -5,6 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Netty.NET.Transport/Netty.NET.Transport.csproj" />
+    <Compile Include="../Netty.NET.Transport.Tests/ChannelIdJsonContext.cs" Link="ChannelIdJsonContext.cs" />
+    <Compile Include="../Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs" Link="ChannelIdContractScenarios.cs" />
     <Compile Include="../Netty.NET.Transport.Tests/NativeAotContractScenarios.cs" Link="NativeAotContractScenarios.cs" />
   </ItemGroup>
 </Project>

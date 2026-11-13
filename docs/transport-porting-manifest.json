@@ -42,10 +42,10 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 548,
-    "javaOriginalInvocations": 553,
-    "transportJavaOriginalPassed": 404,
-    "coreTransportJavaOriginalPassed": 334,
+    "javaOriginalPassed": 555,
+    "javaOriginalInvocations": 560,
+    "transportJavaOriginalPassed": 411,
+    "coreTransportJavaOriginalPassed": 341,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
     "testsuiteJavaJUnitInvocations": 102,
@@ -55,26 +55,26 @@
     "shutdownJavaPassedWrappers": 12,
     "shutdownJavaBackendBypassedWrappers": 1,
     "shutdownJavaPlatformAbortedWrappers": 1,
-    "mappedOriginalMethods": 478,
-    "originalExecutedCases": 617,
+    "mappedOriginalMethods": 481,
+    "originalExecutedCases": 620,
     "originalSkippedCases": 53,
     "transportMappedOriginalExecutions": 371,
     "testsuiteMappedOriginalExecutions": 202,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
-    "javaOnlyReviewedCases": 35,
-    "supplementalExecutedCases": 498,
+    "javaOnlyReviewedCases": 39,
+    "supplementalExecutedCases": 507,
     "debug": {
       "failed": 0,
-      "passed": 1115,
+      "passed": 1127,
       "skipped": 80,
-      "total": 1195
+      "total": 1207
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 1115,
+      "passed": 1127,
       "skipped": 80,
-      "total": 1195
+      "total": 1207
     },
     "solutionRelease": {
       "Netty.NET.Common.Tests": {
@@ -97,36 +97,33 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 1115,
+        "passed": 1127,
         "skipped": 80,
-        "total": 1195
+        "total": 1207
       }
     },
-    "solutionPassed": 33413,
+    "solutionPassed": 33425,
     "solutionSkipped": 94,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51,
       "correctedSupplementalZeroProgress": "The first focused run failed only the previous supplemental ARegionWithoutPhysicalOrLogicalProgressFailsWithoutSpinning expectation, which assumed zero was an error. Direct unmodified Java implementation probes on both OSes verify retry/full-buffer status instead. The supplemental test now verifies a retry, ordinary task opportunity, pending result, close failure and final release. Original tests, timing bounds and assertions remain unchanged.",
-      "linuxTimingRecheck": "Historical checkpoint 86a5572: an unchanged fixed-rate sample of 220.4294 ms exceeded its original 220 ms bound, followed by a passing unchanged full rerun. The current Linux 1195-case run passes on its first execution. No assertion/timeout/skip was changed.",
+      "linuxTimingRecheck": "Historical checkpoint 86a5572 contained an unchanged fixed-rate boundary miss followed by a passing unchanged rerun. Current full Linux run passes on its first execution; source time bounds are intact.",
       "existingCommonTestRebuild": 1020,
       "nativeAot": "Native publishing retains existing Common custom leak-detector construction (runtime generic reflection), stack-method metadata and Buffer EventSource object[] serialization trim/AOT warnings. No warning is suppressed. The successful eleven-scenario executable does not establish those unexecuted paths as safe."
     },
-    "javaEvidence": "Unchanged NativeImageHandlerMetadataTest and ChannelHandlerMetadataUtil pass their exact committed GraalVM reflection-JSON comparison on Windows against pinned 64cc10f sources/artifacts. ChannelHandlerMask.java was also compiled unchanged; six separate supplemental Java probes verify default, inherited override, re-skip, outbound and exception-only mask behavior. The JVM-only metadata comparison adds one reviewed inapplicable original method and zero C# original mappings.",
-    "note": "Windows serial Release solution: 33413 passed / 94 existing skips / zero failures. Transport Debug and isolated checked Release: 1115 passed / 80 existing skips each. Linux full: 1187 passed / eight existing skips; checked focus 16/16. All eleven shared supplemental scenarios pass both managed and actual NativeAOT execution (dynamic code disabled). Actual native failures were reproduced before the fixes; no original source test or timing assertion was weakened. Native coverage is limited to the listed scenarios; remaining trim warnings are retained.",
+    "javaEvidence": "All seven unchanged DefaultChannelIdTest/EmbeddedChannelIdTest methods pass on both Windows and Linux against the pinned compiled original implementations. Separate Java probes confirm shared default embedded IDs, explicit custom IDs, duplicate-ID group admission and explicit null-ID rejection. Three portable original methods map to CLR (exact short-text assertion and both serialization value invariants); four Java component-layout methods are separately inapplicable under the existing Guid design, with no source assertion modified.",
+    "note": "Final serial Windows Release solution: 33425 passed / 94 existing skips / zero failures. Full Transport Debug/isolated checked Release: 1127 passed / 80 existing skips each. Linux full: 1199 passed / eight existing skips; checked identity/group focus: 71/71. Actual Linux NativeAOT: eleven existing pipeline scenarios plus nine new identity/JSON scenarios pass with dynamic code disabled. A source-matching shared embedded identity exposed six supplemental group rows that assumed unique defaults; only their explicit-ID setup was corrected. The initial failed full run is retained in channelIdEvidence. No source test/assertion was weakened.",
     "commands": [
-      "python artifacts/transport-core/run-native-metadata-original.py",
-      "python artifacts/transport-core/run-native-mask-probe.py",
+      "python artifacts/transport-core/run-channel-id-originals.py",
       "dotnet test Netty.NET.sln -c Release -m:1 -p:NuGetAudit=false",
-      "dotnet run --project test/Netty.NET.Transport.NativeAot.Tests -c Release --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/native-aot-checked-out -p:NuGetAudit=false",
-      "python artifacts/transport-core/run-native-aot-linux.py",
-      "dotnet publish test/Netty.NET.Transport.NativeAot.Tests -c Release -r linux-x64 -p:PublishAot=true -o /tmp/native-out -p:NuGetAudit=false",
-      "/tmp/native-out/Netty.NET.Transport.NativeAot.Tests --require-native",
-      "pwsh -File tools/Test-TransportPortingManifest.ps1",
-      "pwsh -File tools/Test-CommonCommentCoverage.ps1 -Name ResourceLeakDetector"
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/channel-id-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-channel-id-linux.py",
+      "python artifacts/transport-core/run-channel-id-native.py",
+      "python artifacts/transport-core/run-channel-id-regression-final.py",
+      "pwsh -File tools/Test-TransportPortingManifest.ps1"
     ],
     "domainJavaOriginalExecutions": 8,
     "echoJavaJUnitInvocations": 7,
@@ -169,8 +166,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 1195,
-      "passed": 1187,
+      "total": 1207,
+      "passed": 1199,
       "failed": 0,
       "skipped": 8
     },
@@ -872,6 +869,45 @@
       },
       "sourceIdentifiers": "Mask, Mask0, IsSkippable, handlerType, clazz, mask, m and MASK_* constants retain source identifiers with permitted case/underscore adaptation. The additional representative handler/delegate binding and cache state are explicit CLR plumbing. AddExclusions retains nameSet/oldMethods/newMethods. Existing Task-based Async APIs were referenced, not introduced or represented as newly renamed Java methods.",
       "limits": "Pipeline dispatch, exact mask selection, instance-independent cache, exclusion validation and stream write-ownership construction are covered. Real native network I/O, broader handlers/transports, Windows NativeAOT, remaining helper inventory/comments and other Common/Buffer trim paths remain open."
+    },
+    "channelIdEvidence": {
+      "newMappedOriginalMethods": 3,
+      "newClrInapplicableMethods": 4,
+      "newSupplementalCases": 9,
+      "javaOriginalPassedPerPlatform": 7,
+      "javaOriginalFailed": 0,
+      "javaOriginalSkipped": 0,
+      "sourceHashBaseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+      "javaSupplementalProbe": "Default embedded IDs share identity/text/hash, custom IDs admit distinct group members, equal IDs collide, and both explicit channelId constructors reject null. These are supplemental source-implementation probes, not extra JUnit mappings.",
+      "nativeIdentityScenariosPassed": 9,
+      "nativeExistingPipelineScenariosPassed": 11,
+      "nativeExecutableTotalPassed": 20,
+      "nativeDynamicCodeSupported": false,
+      "linuxCheckedFocusPassed": 71,
+      "previousRuntimeRegression": {
+        "failed": 6,
+        "passed": 9,
+        "skipped": 0,
+        "total": 15
+      },
+      "regressionScope": "An isolated source copy restores only the prior DefaultChannelId and EmbeddedChannel constructors while retaining the new EmbeddedChannelId type and tests so the comparison compiles. Six cases fail and nine pass in the 15-case ID filter. This is a control for the prior generation/serialization branches, not a claim that the entire old commit contains the new helper.",
+      "initialSolutionRun": {
+        "commonPassed": 2678,
+        "bufferPassed": 29556,
+        "resolverPassed": 64,
+        "transportFailed": 1,
+        "transportPassed": 1126,
+        "transportSkipped": 80,
+        "reason": "The UDP supplemental group-broadcast setup also used two default embedded IDs. After source matching made these equal, its second read was null. Distinct explicit IDs restore the intended two-member scenario without changing any assertion. The final complete solution rerun passes."
+      },
+      "supplementalSetupCorrections": {
+        "channelGroupRows": 5,
+        "datagramGroupRows": 1,
+        "change": "Keep every existing assertion; supply DefaultChannelId.NewInstance() to members intended to be distinct. Do not alter DefaultChannelGroup admission or original tests."
+      },
+      "sourceIdentifiers": "Reopened channelId constructor parameters, Instance, NewInstance, AsShortText/AsLongText, CompareTo(o), Equals(obj), longValue and original test text/a/b/buf/normalInstance/deserializedInstance names follow source spelling with allowed C# case/underscore or required object-override conventions. Converter Read/Write, Guid storage and generated JSON metadata are explicitly CLR-only plumbing.",
+      "serializationScope": "Concrete DefaultChannelId and EmbeddedChannelId JSON strings with source-generated type metadata; equality, distinct instances, full text, hash, comparison and stream ownership are checked. Java binary serialization and arbitrary IChannelId polymorphic deserialization are not provided.",
+      "remainingComments": "DefaultChannelId implementation retains seven pending source comments; its original fixture retains two fixed-layout-only comments in explicit partial status. No test comment waiver was added."
     }
   },
   "entries": [
@@ -2081,12 +2117,15 @@
         "uniqueCount": 10,
         "preservedCount": 3,
         "unreviewedCount": 7,
-        "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
+        "scope": "Original comments remain at applicable implementation/test declarations. Comments tied to unimplemented Java MAC/PID fixed-layout cases remain explicit review work; test comments are never waived or pasted as detached text."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Retain the existing explicit Guid identity/ordinal-text adaptation; the Java MAC/PID/time layout is not introduced. Original short-text and serialization equality/not-same/long-text assertions are ported. The concrete DefaultChannelId JSON contract preserves its complete native Guid through a public converter usable by source-generated contexts. Do not claim Java byte-layout compatibility, PID discovery or arbitrary IChannelId polymorphic serialization. The other source implementation comments and layout contracts remain partial.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/DefaultChannelId.cs"
+          "src/Netty.NET.Transport/Channels/DefaultChannelId.cs",
+          "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/ChannelIdJsonContext.cs"
         ]
       }
     },
@@ -2380,9 +2419,12 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. Default ID selection now follows the original EmbeddedChannelId singleton; supplied IDs are retained. Existing constructor variants and explicit group duplicate-ID admission are exercised on CLR and NativeAOT. Explicit channelId constructor arguments reject null as in the upstream builder; internal default-constructor routing still selects the shared ID. Reopened channelId parameters retain source names.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs"
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs",
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannelId.cs",
+          "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/EmbeddedChannelIdTest.cs"
         ]
       }
     },
@@ -2391,8 +2433,27 @@
       "sha256": "476a2afb4aba2ee602b5b6360d84be965eb34848f7c47eb6a673134e5378efc6",
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannelId.cs"
+      ],
+      "review": {
+        "scope": "Port the original dummy identity: singleton default, embedded short/long text, zero hash, type-based equality across separately materialized instances and text comparison against other ID types. EmbeddedChannel now uses it when no explicit ID is supplied. A concrete-type BCL JSON converter replaces Java Serializable/ObjectStreams without an arbitrary-type interface polymorphism protocol. Native comparison against null follows IComparable convention. The separate source constructor probe also verifies explicit null-ID rejection.",
+        "sourceEvidence": [
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannelId.cs",
+          "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs",
+          "test/Netty.NET.Transport.Tests/EmbeddedChannelIdTest.cs",
+          "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/ChannelIdJsonContext.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at applicable implementation/test declarations. Comments tied to unimplemented Java MAC/PID fixed-layout cases remain explicit review work; test comments are never waived or pasted as detached text."
+      }
     },
     {
       "upstream": "transport/src/main/java/io/netty/channel/embedded/EmbeddedEventLoop.java",
@@ -6106,8 +6167,82 @@
       "sha256": "aaef72a344b142eae40a38e14a3605744016c0de425be2df5f04f6844b1f3882",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelIdJsonContext.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testShortText",
+          "clrMethod": "TestShortText",
+          "adaptation": "Retain the exact original eight lowercase hexadecimal character assertion and text variable."
+        },
+        {
+          "upstreamMethod": "testSerialization",
+          "clrMethod": "TestSerialization",
+          "adaptation": "Retain a/b identity equality, distinct restored instance and equal complete long text. MemoryStream and BCL JSON with explicit concrete-type generated metadata replace ByteBuf/ObjectStreams. The original Java serialization envelope is not asserted or reproduced; the existing Guid identity is preserved intact."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 2,
+        "reviewedCount": 6,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testLongText",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "A generated long text matches the exact five-field machine/process/sequence/timestamp/random hexadecimal layout.",
+            "reason": "The pre-existing CLR design uses a complete Guid, with no machine/process/sequence/time components or constructor. This entire layout-specific original method is excluded from mapping and skip counts; no assertion is weakened or relabeled. Supplemental native tests check the chosen 32-character Guid representation and identity instead. Java process discovery remains independently inapplicable; no Guid replacement decision is reversed here.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/DefaultChannelId.cs",
+              "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testIdempotentMachineId",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Two generated IDs have an identical first sixteen-character machine-ID field.",
+            "reason": "The pre-existing CLR design uses a complete Guid, with no machine/process/sequence/time components or constructor. This entire layout-specific original method is excluded from mapping and skip counts; no assertion is weakened or relabeled. Supplemental native tests check the chosen 32-character Guid representation and identity instead. Java process discovery remains independently inapplicable; no Guid replacement decision is reversed here.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/DefaultChannelId.cs",
+              "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testIdempotentProcessId",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Two generated IDs have the same substring at the original process-ID offset.",
+            "reason": "The pre-existing CLR design uses a complete Guid, with no machine/process/sequence/time components or constructor. This entire layout-specific original method is excluded from mapping and skip counts; no assertion is weakened or relabeled. Supplemental native tests check the chosen 32-character Guid representation and identity instead. Java process discovery remains independently inapplicable; no Guid replacement decision is reversed here.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/DefaultChannelId.cs",
+              "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testDeserialization",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Construct exact six/eight-byte machine IDs and supplied PID/sequence/timestamp/random values; assert both complete fixed hexadecimal field strings.",
+            "reason": "The pre-existing CLR design uses a complete Guid, with no machine/process/sequence/time components or constructor. This entire layout-specific original method is excluded from mapping and skip counts; no assertion is weakened or relabeled. Supplemental native tests check the chosen 32-character Guid representation and identity instead. Java process discovery remains independently inapplicable; no Guid replacement decision is reversed here.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/DefaultChannelId.cs",
+              "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+              "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "partial",
+        "uniqueCount": 3,
+        "preservedCount": 1,
+        "unreviewedCount": 2,
+        "scope": "Original comments remain at applicable implementation/test declarations. Comments tied to unimplemented Java MAC/PID fixed-layout cases remain explicit review work; test comments are never waived or pasted as detached text."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/DefaultChannelPipelineTailTest.java",
@@ -6889,8 +7024,31 @@
       "sha256": "e10d073f9c77551a5dcabf64374beaabd2852c53b31e26cedd19c2e0d9697840",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/EmbeddedChannelIdTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelIdJsonContext.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSerialization",
+          "clrMethod": "TestSerialization",
+          "adaptation": "Retain the exact issue #2869 comment, normalInstance/deserializedInstance identity comparison, equal hash codes and zero comparison. Concrete-type JSON via MemoryStream replaces Java ObjectStreams; the normal singleton and restored separate value instance must obey the same original equality/order/hash contract."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0,
+        "scope": "Original comments remain at applicable implementation/test declarations. Comments tied to unimplemented Java MAC/PID fixed-layout cases remain explicit review work; test comments are never waived or pasted as detached text."
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/embedded/EmbeddedChannelTest.java",
@@ -9253,10 +9411,10 @@
   ],
   "summary": {
     "inventoryEntries": 274,
-    "reviewedImplementationFiles": 52,
-    "portedOriginalFixtures": 85,
-    "portedOriginalMethods": 478,
-    "supplementalClrCases": 525,
+    "reviewedImplementationFiles": 53,
+    "portedOriginalFixtures": 87,
+    "portedOriginalMethods": 481,
+    "supplementalClrCases": 534,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 41,
@@ -9276,7 +9434,7 @@
     },
     {
       "subject": "ChannelId",
-      "decision": "Guid identity and ordinal text ordering replace the Java MAC/PID/time layout. The Java binary layout is not a wire format; short/long string layout tests remain unreviewed, not marked ported."
+      "decision": "Guid identity and ordinal text ordering retain the earlier CLR replacement of Java MAC/PID/time fields. Original short text and both portable identity serialization contracts are now mapped; four component-layout originals have explicit CLR-inapplicable dispositions, without weakened assertions. EmbeddedChannel uses the original shared dummy identity. Concrete ID JSON converters preserve native values; Java binary layout/interoperability and arbitrary interface polymorphism are not provided. Remaining layout-only comments stay partial."
     },
     {
       "subject": "Embedded scheduling resolution",
@@ -10013,6 +10171,26 @@
         "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
         "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
       ]
+    },
+    {
+      "subject": "Embedded identity and concrete native ID serialization",
+      "decision": "Restore the original shared dummy embedded identity and preserve explicit custom IDs. Keep the existing Guid default identity choice. BCL JSON converters and generated metadata preserve the original portable serialization invariants across separately materialized instances; no BinaryFormatter, Java serialization envelope or arbitrary IChannelId polymorphism is added. Four Java Guid-inapplicable layout methods retain full dispositions. Six existing supplemental group rows now supply distinct IDs explicitly while keeping every assertion. Original fixed-layout-only test comments remain partial, not waived.",
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/DefaultChannelId.java",
+        "transport/src/main/java/io/netty/channel/embedded/EmbeddedChannelId.java",
+        "transport/src/test/java/io/netty/channel/DefaultChannelIdTest.java",
+        "transport/src/test/java/io/netty/channel/embedded/EmbeddedChannelIdTest.java"
+      ],
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/DefaultChannelId.cs",
+        "src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannelId.cs",
+        "test/Netty.NET.Transport.Tests/DefaultChannelIdTest.cs",
+        "test/Netty.NET.Transport.Tests/EmbeddedChannelIdTest.cs",
+        "test/Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs",
+        "test/Netty.NET.Transport.Tests/ChannelIdJsonContext.cs",
+        "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
+        "test/Netty.NET.Transport.Tests/DatagramTransportContractTest.cs"
+      ]
     }
   ],
   "openWork": [
@@ -10072,7 +10250,7 @@
     {
       "area": "NativeAOT scope",
       "state": "partially-verified",
-      "detail": "Eleven pipeline/metadata/exclusion/stream-ownership scenarios pass as a native Linux x64 executable. Exact GraalVM JSON comparison passes unchanged on the JVM and is separately CLR-inapplicable. This is not full Transport AOT support: real network operations, additional handlers/transports, Windows native publishing and existing Common resource-detector/stack metadata and Buffer EventSource trim warnings remain unverified. The native-metadata helper source inventory remains pending."
+      "detail": "Twenty supplemental scenarios pass as a Linux x64 native executable: eleven earlier pipeline/metadata/exclusion/stream-ownership cases and nine ID/JSON/admission cases. Real native network I/O, additional handlers/transports, Windows native publishing, the Java native-metadata helper inventory and existing Common/Buffer trim paths remain open. BCL JSON metadata generation is exercised rather than enabling reflection serialization."
     }
   ],
   "supplementalTests": [
@@ -10135,7 +10313,8 @@
     "test/Netty.NET.Transport.Tests/SocketLingerCloseContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketInheritedWriteContractTest.cs",
     "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
-    "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs"
+    "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+    "test/Netty.NET.Transport.Tests/ChannelIdContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -16417,10 +16596,64 @@
           "skipped": 8
         }
       }
+    },
+    {
+      "checkpoint": "e54ceb0383e5ba8c59de42945f7821be034d622c",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "debug": {
+          "failed": 0,
+          "passed": 1115,
+          "skipped": 80,
+          "total": 1195
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 1115,
+          "skipped": 80,
+          "total": 1195
+        },
+        "solutionPassed": 33413,
+        "solutionSkipped": 94,
+        "mappedOriginalMethods": 478,
+        "originalExecutedCases": 617,
+        "supplementalExecutedCases": 498,
+        "linuxTransportRelease": {
+          "total": 1195,
+          "passed": 1187,
+          "failed": 0,
+          "skipped": 8
+        },
+        "nativeAotEvidence": {
+          "reviewedOriginalMethods": 1,
+          "newMappedOriginalMethods": 0,
+          "newClrInapplicableMethods": 1,
+          "newSupplementalCases": 11,
+          "javaOriginalPassed": 1,
+          "javaOriginalFailed": 0,
+          "javaOriginalSkipped": 0,
+          "supplementalJavaMaskProbesPassed": 6,
+          "windowsManagedConsumerPassed": 11,
+          "linuxNativeExecutablePassed": 11,
+          "linuxCheckedFocusPassed": 16,
+          "nativeDynamicCodeSupported": false,
+          "nativeRuntimeIdentifier": "linux-x64",
+          "toolchain": ".NET SDK 10.0.403 / runtime 10.0.14 SDK container with clang for native Linux x64 publishing",
+          "beforeFix": {
+            "baseline": "Native executable aborts during ReferenceCountUtil initialization: AddExclusions cannot find unused Touch methods after trimming.",
+            "withOnlyExclusionMetadata": "Native executable starts but active inbound ChannelRead override is lost by the existing Type/interface-map mask.",
+            "withOnlyBoundDelegates": "Without handler metadata preservation, a bound HeadHandler.BindAsync delegate cannot provide MethodInfo.",
+            "scope": "Three successive real native probe failures, not fabricated xUnit failures or a claim that eleven final scenarios were run unchanged on every prior variant."
+          },
+          "sourceIdentifiers": "Mask, Mask0, IsSkippable, handlerType, clazz, mask, m and MASK_* constants retain source identifiers with permitted case/underscore adaptation. The additional representative handler/delegate binding and cache state are explicit CLR plumbing. AddExclusions retains nameSet/oldMethods/newMethods. Existing Task-based Async APIs were referenced, not introduced or represented as newly renamed Java methods.",
+          "limits": "Pipeline dispatch, exact mask selection, instance-independent cache, exclusion validation and stream write-ownership construction are covered. Real native network I/O, broader handlers/transports, Windows NativeAOT, remaining helper inventory/comments and other Common/Buffer trim paths remain open."
+        }
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete remaining Transport roles/backend contracts under sourceIdentifierPolicy. Completed Future/Promise wrapper decisions and the GraalVM metadata-comparison disposition are explicit. The Java metadata generator helper remains independently pending; its JVM-only comments are not waived or pasted as a detached archive. ID, protocol-family and selector/OIO inventories need independent source review.",
+    "Continue concrete remaining Transport roles/backend contracts under sourceIdentifierPolicy. Completed Task/Graal decisions and ID fixture review are explicit. Embedded dummy identity and portable ID serialization are ported; four Java component-layout methods are inapplicable under the existing Guid model, and remaining original implementation/layout comments stay partial. Protocol-family and selector/OIO inventories still need independent source review.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
     "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."
