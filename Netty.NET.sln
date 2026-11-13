@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netty.NET.Transport", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netty.NET.Transport.Tests", "test\Netty.NET.Transport.Tests\Netty.NET.Transport.Tests.csproj", "{C2418F39-5383-4FFB-ADA8-885A51989456}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netty.NET.Transport.NativeAot.Tests", "test\Netty.NET.Transport.NativeAot.Tests\Netty.NET.Transport.NativeAot.Tests.csproj", "{EACA8457-1929-4CD0-8BC1-25CDB932ED70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,6 +131,18 @@ Global
 		{C2418F39-5383-4FFB-ADA8-885A51989456}.Release|x64.Build.0 = Release|Any CPU
 		{C2418F39-5383-4FFB-ADA8-885A51989456}.Release|x86.ActiveCfg = Release|Any CPU
 		{C2418F39-5383-4FFB-ADA8-885A51989456}.Release|x86.Build.0 = Release|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Debug|x64.Build.0 = Debug|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Debug|x86.Build.0 = Debug|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Release|x64.ActiveCfg = Release|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Release|x64.Build.0 = Release|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Release|x86.ActiveCfg = Release|Any CPU
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,5 +156,6 @@ Global
 		{37368F98-B0A1-49C5-9C64-0743AA6F09C3} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 		{D3256DAC-99B4-4040-A3A1-79BEC97F36AE} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{C2418F39-5383-4FFB-ADA8-885A51989456} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
+		{EACA8457-1929-4CD0-8BC1-25CDB932ED70} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 	EndGlobalSection
 EndGlobal

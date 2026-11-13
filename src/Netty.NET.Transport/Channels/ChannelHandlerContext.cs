@@ -105,7 +105,7 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         Name = name;
         Handler = handler;
         _executor = executor;
-        _executionMask = ChannelHandlerMask.Mask(handler.GetType());
+        _executionMask = ChannelHandlerMask.Mask(handler);
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
         _ordered = executor == null || executor is IOrderedEventExecutor;
         State = 3;
@@ -185,7 +185,7 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         // Their owner must run queued HandlerAdded callbacks before deciding whether to invoke or forward.
         var context = Next;
         var executor = Executor;
-        while (context != null && (context.State == 2 || SkipContext(context, executor, mask, ChannelHandlerMask.OnlyInbound)))
+        while (context != null && (context.State == 2 || SkipContext(context, executor, mask, ChannelHandlerMask.MaskOnlyInbound)))
             context = context.Next;
         return context;
     }
@@ -193,7 +193,7 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
     {
         var context = Previous;
         var executor = Executor;
-        while (context != null && (context.State == 2 || SkipContext(context, executor, mask, ChannelHandlerMask.OnlyOutbound)))
+        while (context != null && (context.State == 2 || SkipContext(context, executor, mask, ChannelHandlerMask.MaskOnlyOutbound)))
             context = context.Previous;
         return context;
     }
@@ -224,20 +224,20 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         catch { ReferenceCountUtil.Release(ownedMessage); throw; }
         return this;
     }
-    public virtual ChannelHandlerContext FireChannelRegistered() => Fire((h, c) => h.ChannelRegistered(c), ChannelHandlerMask.ChannelRegistered);
-    public virtual ChannelHandlerContext FireChannelUnregistered() => Fire((h, c) => h.ChannelUnregistered(c), ChannelHandlerMask.ChannelUnregistered);
-    public virtual ChannelHandlerContext FireChannelActive() => Fire((h, c) => h.ChannelActive(c), ChannelHandlerMask.ChannelActive);
-    public virtual ChannelHandlerContext FireChannelInactive() => Fire((h, c) => h.ChannelInactive(c), ChannelHandlerMask.ChannelInactive);
+    public virtual ChannelHandlerContext FireChannelRegistered() => Fire((h, c) => h.ChannelRegistered(c), ChannelHandlerMask.MaskChannelRegistered);
+    public virtual ChannelHandlerContext FireChannelUnregistered() => Fire((h, c) => h.ChannelUnregistered(c), ChannelHandlerMask.MaskChannelUnregistered);
+    public virtual ChannelHandlerContext FireChannelActive() => Fire((h, c) => h.ChannelActive(c), ChannelHandlerMask.MaskChannelActive);
+    public virtual ChannelHandlerContext FireChannelInactive() => Fire((h, c) => h.ChannelInactive(c), ChannelHandlerMask.MaskChannelInactive);
     public virtual ChannelHandlerContext FireChannelRead(object message)
-    { ArgumentNullException.ThrowIfNull(message); return Fire((h, c) => h.ChannelRead(c, message), ChannelHandlerMask.ChannelRead, message); }
-    public virtual ChannelHandlerContext FireChannelReadComplete() => Fire((h, c) => h.ChannelReadComplete(c), ChannelHandlerMask.ChannelReadComplete);
+    { ArgumentNullException.ThrowIfNull(message); return Fire((h, c) => h.ChannelRead(c, message), ChannelHandlerMask.MaskChannelRead, message); }
+    public virtual ChannelHandlerContext FireChannelReadComplete() => Fire((h, c) => h.ChannelReadComplete(c), ChannelHandlerMask.MaskChannelReadComplete);
     public virtual ChannelHandlerContext FireUserEventTriggered(object evt)
-    { ArgumentNullException.ThrowIfNull(evt); return Fire((h, c) => h.UserEventTriggered(c, evt), ChannelHandlerMask.UserEventTriggered, evt); }
-    public virtual ChannelHandlerContext FireChannelWritabilityChanged() => Fire((h, c) => h.ChannelWritabilityChanged(c), ChannelHandlerMask.ChannelWritabilityChanged);
+    { ArgumentNullException.ThrowIfNull(evt); return Fire((h, c) => h.UserEventTriggered(c, evt), ChannelHandlerMask.MaskUserEventTriggered, evt); }
+    public virtual ChannelHandlerContext FireChannelWritabilityChanged() => Fire((h, c) => h.ChannelWritabilityChanged(c), ChannelHandlerMask.MaskChannelWritabilityChanged);
     public virtual ChannelHandlerContext FireExceptionCaught(Exception cause)
     {
         ArgumentNullException.ThrowIfNull(cause);
-        var next = FindInbound(ChannelHandlerMask.ExceptionCaught);
+        var next = FindInbound(ChannelHandlerMask.MaskExceptionCaught);
         if (next == null)
         { Pipeline.Owner.OnUnhandledException(cause); return this; }
         void Invoke()
@@ -321,15 +321,15 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         }
     }
     public virtual Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(localAddress); return Outbound((h, c) => h.BindAsync(c, localAddress, cancellationToken), cancellationToken, ChannelHandlerMask.Bind); }
+    { ArgumentNullException.ThrowIfNull(localAddress); return Outbound((h, c) => h.BindAsync(c, localAddress, cancellationToken), cancellationToken, ChannelHandlerMask.MaskBind); }
     public virtual Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(remoteAddress); return Outbound((h, c) => h.ConnectAsync(c, remoteAddress, localAddress, cancellationToken), cancellationToken, ChannelHandlerMask.Connect); }
+    { ArgumentNullException.ThrowIfNull(remoteAddress); return Outbound((h, c) => h.ConnectAsync(c, remoteAddress, localAddress, cancellationToken), cancellationToken, ChannelHandlerMask.MaskConnect); }
     public virtual Task DisconnectAsync(CancellationToken cancellationToken = default) => Channel.Metadata.HasDisconnect()
-        ? Outbound((h, c) => h.DisconnectAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.Disconnect) : CloseAsync(cancellationToken);
-    public virtual Task CloseAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.CloseAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.Close);
-    public virtual Task DeregisterAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.DeregisterAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.Deregister);
+        ? Outbound((h, c) => h.DisconnectAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.MaskDisconnect) : CloseAsync(cancellationToken);
+    public virtual Task CloseAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.CloseAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.MaskClose);
+    public virtual Task DeregisterAsync(CancellationToken cancellationToken = default) => Outbound((h, c) => h.DeregisterAsync(c, cancellationToken), cancellationToken, ChannelHandlerMask.MaskDeregister);
     public virtual Task WriteAsync(object message, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(message); return Outbound((h, c) => h.WriteAsync(c, message, cancellationToken), cancellationToken, ChannelHandlerMask.Write, message); }
+    { ArgumentNullException.ThrowIfNull(message); return Outbound((h, c) => h.WriteAsync(c, message, cancellationToken), cancellationToken, ChannelHandlerMask.MaskWrite, message); }
     public virtual Task WriteAndFlushAsync(object message, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -341,7 +341,7 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
             try { handler.Flush(context); }
             catch (Exception error) { context.NotifyException(error); }
             return write;
-        }, cancellationToken, ChannelHandlerMask.Write | ChannelHandlerMask.Flush, message);
+        }, cancellationToken, ChannelHandlerMask.MaskWrite | ChannelHandlerMask.MaskFlush, message);
     }
     private void OutboundVoid(Action<IChannelOutboundHandler, ChannelHandlerContext> action, int mask)
     {
@@ -361,6 +361,6 @@ public class ChannelHandlerContext : IChannelOutboundInvoker, IAttributeMap
         else
             previous.Executor.Execute(Invoke);
     }
-    public virtual IChannelOutboundInvoker Read() { OutboundVoid((h, c) => h.Read(c), ChannelHandlerMask.Read); return this; }
-    public virtual IChannelOutboundInvoker Flush() { OutboundVoid((h, c) => h.Flush(c), ChannelHandlerMask.Flush); return this; }
+    public virtual IChannelOutboundInvoker Read() { OutboundVoid((h, c) => h.Read(c), ChannelHandlerMask.MaskRead); return this; }
+    public virtual IChannelOutboundInvoker Flush() { OutboundVoid((h, c) => h.Flush(c), ChannelHandlerMask.MaskFlush); return this; }
 }

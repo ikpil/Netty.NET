@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Threading;
@@ -104,29 +105,31 @@ public static class ResourceLeakDetector
      */
     public static ResourceLeakDetectorLevel GetLevel() => (ResourceLeakDetectorLevel)Volatile.Read(ref level);
 
-    public static void AddExclusions(Type clz, params string[] methodNames)
+    public static void AddExclusions(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type clz,
+        params string[] methodNames)
     {
         ArgumentNullException.ThrowIfNull(clz);
         ArgumentNullException.ThrowIfNull(methodNames);
-        var names = new HashSet<string>(methodNames);
+        var nameSet = new HashSet<string>(methodNames);
         // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
         // NoSuchMethodException.
         foreach (MethodInfo method in clz.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
                      BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-            if (names.Remove(method.Name) && names.Count == 0) break;
-        if (names.Count != 0) throw new ArgumentException("Can't find '[" + string.Join(", ", names) + "]' in " + clz.FullName);
-        string[] before, after;
+            if (nameSet.Remove(method.Name) && nameSet.Count == 0) break;
+        if (nameSet.Count != 0) throw new ArgumentException("Can't find '[" + string.Join(", ", nameSet) + "]' in " + clz.FullName);
+        string[] oldMethods, newMethods;
         do
         {
-            before = excludedMethods.Get();
-            after = new string[before.Length + 2 * methodNames.Length];
-            Array.Copy(before, after, before.Length);
+            oldMethods = excludedMethods.Get();
+            newMethods = new string[oldMethods.Length + 2 * methodNames.Length];
+            Array.Copy(oldMethods, newMethods, oldMethods.Length);
             for (int i = 0; i < methodNames.Length; i++)
             {
-                after[before.Length + i * 2] = ExclusionTypeName(clz);
-                after[before.Length + i * 2 + 1] = methodNames[i];
+                newMethods[oldMethods.Length + i * 2] = ExclusionTypeName(clz);
+                newMethods[oldMethods.Length + i * 2 + 1] = methodNames[i];
             }
-        } while (!excludedMethods.CompareAndSet(before, after));
+        } while (!excludedMethods.CompareAndSet(oldMethods, newMethods));
     }
     // CLR stack methods can expose an open declaring type even for a closed
     // generic invocation. Java exclusions identify the class across all T.

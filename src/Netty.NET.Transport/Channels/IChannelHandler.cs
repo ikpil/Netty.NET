@@ -15,6 +15,8 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+
 namespace Netty.NET.Transport.Channels;
 /**
  * Handles an I/O event or intercepts an I/O operation, and forwards it to its next handler in
@@ -166,6 +168,7 @@ namespace Netty.NET.Transport.Channels;
  * what fundamental differences they have, how they flow in a  pipeline,  and how to handle
  * the operation in your application.
  */
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)]
 public interface IChannelHandler
 {
     /**

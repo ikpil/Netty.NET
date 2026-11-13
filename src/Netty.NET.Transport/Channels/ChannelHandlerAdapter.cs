@@ -16,10 +16,13 @@
 
 using System;
 using System.Threading;
+using System.Diagnostics.CodeAnalysis;
+
 namespace Netty.NET.Transport.Channels;
 /**
  * Skeleton implementation of a {@link ChannelHandler}.
  */
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)]
 public abstract class ChannelHandlerAdapter : IChannelHandler
 {
     private int _added;

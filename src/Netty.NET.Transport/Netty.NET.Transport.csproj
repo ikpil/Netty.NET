@@ -7,5 +7,6 @@
     <ProjectReference Include="..\Netty.NET.Buffer\Netty.NET.Buffer.csproj" />
     <ProjectReference Include="..\Netty.NET.Resolver\Netty.NET.Resolver.csproj" />
     <InternalsVisibleTo Include="Netty.NET.Transport.Tests" />
+    <InternalsVisibleTo Include="Netty.NET.Transport.NativeAot.Tests" />
   </ItemGroup>
 </Project>

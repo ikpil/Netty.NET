@@ -42,10 +42,10 @@
   "validation": {
     "framework": "net10.0",
     "platform": "Windows",
-    "javaOriginalPassed": 547,
-    "javaOriginalInvocations": 552,
-    "transportJavaOriginalPassed": 403,
-    "coreTransportJavaOriginalPassed": 333,
+    "javaOriginalPassed": 548,
+    "javaOriginalInvocations": 553,
+    "transportJavaOriginalPassed": 404,
+    "coreTransportJavaOriginalPassed": 334,
     "eventLoopJavaOriginalPassed": 24,
     "ioLifecycleJavaOriginalPassed": 15,
     "testsuiteJavaJUnitInvocations": 102,
@@ -62,19 +62,19 @@
     "testsuiteMappedOriginalExecutions": 202,
     "datagramMappedOriginalExecutions": 68,
     "shutdownMappedOriginalExecutions": 36,
-    "javaOnlyReviewedCases": 34,
-    "supplementalExecutedCases": 487,
+    "javaOnlyReviewedCases": 35,
+    "supplementalExecutedCases": 498,
     "debug": {
       "failed": 0,
-      "passed": 1104,
+      "passed": 1115,
       "skipped": 80,
-      "total": 1184
+      "total": 1195
     },
     "checkedRelease": {
       "failed": 0,
-      "passed": 1104,
+      "passed": 1115,
       "skipped": 80,
-      "total": 1184
+      "total": 1195
     },
     "solutionRelease": {
       "Netty.NET.Common.Tests": {
@@ -97,32 +97,36 @@
       },
       "Netty.NET.Transport.Tests": {
         "failed": 0,
-        "passed": 1104,
+        "passed": 1115,
         "skipped": 80,
-        "total": 1184
+        "total": 1195
       }
     },
-    "solutionPassed": 33402,
+    "solutionPassed": 33413,
     "solutionSkipped": 94,
     "warnings": {
       "transportImplementation": 0,
       "transportTests": 0,
       "existingCommonCheckedRebuild": 51,
       "correctedSupplementalZeroProgress": "The first focused run failed only the previous supplemental ARegionWithoutPhysicalOrLogicalProgressFailsWithoutSpinning expectation, which assumed zero was an error. Direct unmodified Java implementation probes on both OSes verify retry/full-buffer status instead. The supplemental test now verifies a retry, ordinary task opportunity, pending result, close failure and final release. Original tests, timing bounds and assertions remain unchanged.",
-      "linuxTimingRecheck": "First Linux full run had one unchanged original ScheduleTaskAtFixedRateA timing sample at 220.4294 ms, just above its strict 220 ms bound. Pinned Java and C# assertions were compared and kept intact. Full Linux rerun after other builds finished passes all 1176 active cases; no skip, timeout or assertion was changed. The observed boundary miss is recorded without claiming a proven cause."
+      "linuxTimingRecheck": "Historical checkpoint 86a5572: an unchanged fixed-rate sample of 220.4294 ms exceeded its original 220 ms bound, followed by a passing unchanged full rerun. The current Linux 1195-case run passes on its first execution. No assertion/timeout/skip was changed.",
+      "existingCommonTestRebuild": 1020,
+      "nativeAot": "Native publishing retains existing Common custom leak-detector construction (runtime generic reflection), stack-method metadata and Buffer EventSource object[] serialization trim/AOT warnings. No warning is suppressed. The successful eleven-scenario executable does not establish those unexecuted paths as safe."
     },
-    "javaEvidence": "All ten unchanged pinned CompleteChannelFutureTest, SucceededChannelFutureTest, FailedChannelFutureTest, DefaultChannelPromiseTest and DelegatingChannelPromiseNotifierTest methods pass on Windows and Linux against their compiled original implementations. Two portable constant-property methods map to actual channel Task production; eight Java representation methods are reviewed separately and are neither C# original mappings nor xUnit skips.",
-    "note": "Windows serial Release solution: 33402 passed / 94 existing skips / zero failures. Transport Debug/checked Release: 1104 passed / 80 existing skips each. Linux full rerun: 1176 passed / eight existing skips; checked new focus: 7/7. No runtime change or Java promise facade was necessary. New original mappings=2; representation-specific original exclusions=8; new supplemental native Task cases=5. Strict comments/test accounting remains for physical ports; exact wrapper-only comment dispositions are validated only for reviewed BCL implementation replacements. The first Linux timing boundary miss and unchanged successful full rerun are retained in warnings.",
+    "javaEvidence": "Unchanged NativeImageHandlerMetadataTest and ChannelHandlerMetadataUtil pass their exact committed GraalVM reflection-JSON comparison on Windows against pinned 64cc10f sources/artifacts. ChannelHandlerMask.java was also compiled unchanged; six separate supplemental Java probes verify default, inherited override, re-skip, outbound and exception-only mask behavior. The JVM-only metadata comparison adds one reviewed inapplicable original method and zero C# original mappings.",
+    "note": "Windows serial Release solution: 33413 passed / 94 existing skips / zero failures. Transport Debug and isolated checked Release: 1115 passed / 80 existing skips each. Linux full: 1187 passed / eight existing skips; checked focus 16/16. All eleven shared supplemental scenarios pass both managed and actual NativeAOT execution (dynamic code disabled). Actual native failures were reproduced before the fixes; no original source test or timing assertion was weakened. Native coverage is limited to the listed scenarios; remaining trim warnings are retained.",
     "commands": [
-      "python artifacts/transport-core/run-channel-task-originals.py",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release --no-restore --filter \"FullyQualifiedName~SucceededChannelFutureSourceTest|FullyQualifiedName~FailedChannelFutureSourceTest|FullyQualifiedName~ChannelPromiseTaskContractTest\"",
-      "dotnet test Netty.NET.sln -c Release --no-restore -m:1 --results-directory artifacts/transport-core/channel-task-results --logger \"trx;LogFilePrefix=channel-task\"",
+      "python artifacts/transport-core/run-native-metadata-original.py",
+      "python artifacts/transport-core/run-native-mask-probe.py",
+      "dotnet test Netty.NET.sln -c Release -m:1 -p:NuGetAudit=false",
+      "dotnet run --project test/Netty.NET.Transport.NativeAot.Tests -c Release --no-restore",
       "dotnet test test/Netty.NET.Transport.Tests -c Debug --no-restore",
-      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/channel-task-checked-out -p:NuGetAudit=false",
-      "python artifacts/transport-core/run-channel-task-linux.py",
-      "python artifacts/transport-core/run-channel-task-regressions.py",
+      "dotnet test test/Netty.NET.Transport.Tests -c Release -p:CheckForOverflowUnderflow=true --artifacts-path artifacts/transport-core/native-aot-checked-out -p:NuGetAudit=false",
+      "python artifacts/transport-core/run-native-aot-linux.py",
+      "dotnet publish test/Netty.NET.Transport.NativeAot.Tests -c Release -r linux-x64 -p:PublishAot=true -o /tmp/native-out -p:NuGetAudit=false",
+      "/tmp/native-out/Netty.NET.Transport.NativeAot.Tests --require-native",
       "pwsh -File tools/Test-TransportPortingManifest.ps1",
-      "python artifacts/transport-core/check-channel-task-manifest-guards.py"
+      "pwsh -File tools/Test-CommonCommentCoverage.ps1 -Name ResourceLeakDetector"
     ],
     "domainJavaOriginalExecutions": 8,
     "echoJavaJUnitInvocations": 7,
@@ -165,8 +169,8 @@
     "ipv6MulticastJavaJUnitInvocations": 1,
     "ipv6MulticastJavaAllocatorExecutions": 2,
     "linuxTransportRelease": {
-      "total": 1184,
-      "passed": 1176,
+      "total": 1195,
+      "passed": 1187,
       "failed": 0,
       "skipped": 8
     },
@@ -844,6 +848,30 @@
           "missing CLR evidence file"
         ]
       }
+    },
+    "nativeAotEvidence": {
+      "reviewedOriginalMethods": 1,
+      "newMappedOriginalMethods": 0,
+      "newClrInapplicableMethods": 1,
+      "newSupplementalCases": 11,
+      "javaOriginalPassed": 1,
+      "javaOriginalFailed": 0,
+      "javaOriginalSkipped": 0,
+      "supplementalJavaMaskProbesPassed": 6,
+      "windowsManagedConsumerPassed": 11,
+      "linuxNativeExecutablePassed": 11,
+      "linuxCheckedFocusPassed": 16,
+      "nativeDynamicCodeSupported": false,
+      "nativeRuntimeIdentifier": "linux-x64",
+      "toolchain": ".NET SDK 10.0.403 / runtime 10.0.14 SDK container with clang for native Linux x64 publishing",
+      "beforeFix": {
+        "baseline": "Native executable aborts during ReferenceCountUtil initialization: AddExclusions cannot find unused Touch methods after trimming.",
+        "withOnlyExclusionMetadata": "Native executable starts but active inbound ChannelRead override is lost by the existing Type/interface-map mask.",
+        "withOnlyBoundDelegates": "Without handler metadata preservation, a bound HeadHandler.BindAsync delegate cannot provide MethodInfo.",
+        "scope": "Three successive real native probe failures, not fabricated xUnit failures or a claim that eleven final scenarios were run unchanged on every prior variant."
+      },
+      "sourceIdentifiers": "Mask, Mask0, IsSkippable, handlerType, clazz, mask, m and MASK_* constants retain source identifiers with permitted case/underscore adaptation. The additional representative handler/delegate binding and cache state are explicit CLR plumbing. AddExclusions retains nameSet/oldMethods/newMethods. Existing Task-based Async APIs were referenced, not introduced or represented as newly renamed Java methods.",
+      "limits": "Pipeline dispatch, exact mask selection, instance-independent cache, exclusion validation and stream write-ownership construction are covered. Real native network I/O, broader handlers/transports, Windows NativeAOT, remaining helper inventory/comments and other Common/Buffer trim paths remain open."
     }
   },
   "entries": [
@@ -1158,14 +1186,17 @@
         "scope": "Original comments retained at reviewed CLR counterparts and original/explicit native-alternative helpers. Remaining implementation comments/contracts stay explicit."
       },
       "review": {
-        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review. Cross-executor write task bytes use the configured message estimator and source overhead. Remove the reservation before invoking the handler and on rejected dispatch. Write-and-flush shares one executor dispatch. Writability callbacks for reservations are deferred.",
+        "scope": "Named implementation remains partial. Pending-handler selection, executor-local invocation checks and source volatile link/state visibility were additionally reviewed against the original initializer executor case and a gated after-close reproduction. Other source contracts/comments remain open. Reviewed ADD_PENDING admission using existing IOrderedEventExecutor, volatile/Interlocked added-state transition, removal-finally state and primary added-failure propagation against new original tests and a gated unordered reproduction. This remains a partial source review. Cross-executor write task bytes use the configured message estimator and source overhead. Remove the reservation before invoking the handler and on rejected dispatch. Write-and-flush shares one executor dispatch. Writability callbacks for reservations are deferred. NativeAOT review: actual callback method metadata is retained on handler interfaces/adapters and masks bind to actual interface targets; eleven supplemental scenarios include explicit implementations, hidden slots and direct implementations. Existing partial source review remains open.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ChannelHandlerContext.cs",
           "test/Netty.NET.Transport.Tests/ChannelInitializerTest.cs",
           "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineEventSourceTest.cs",
           "test/Netty.NET.Transport.Tests/PipelineHandlerAdmissionContractTest.cs",
-          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/ReentrantChannelSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+          "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
         ]
       }
     },
@@ -1393,9 +1424,12 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. NativeAOT review: actual callback method metadata is retained on handler interfaces/adapters and masks bind to actual interface targets; eleven supplemental scenarios include explicit implementations, hidden slots and direct implementations. Existing partial source review remains open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/IChannelHandler.cs"
+          "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+          "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
         ]
       }
     },
@@ -1416,9 +1450,12 @@
         "scope": "Original comment text at implemented CLR counterparts; missing comments remain explicit review work."
       },
       "review": {
-        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps.",
+        "scope": "Named implementation only; unreviewed contracts remain open. See openWork for specific gaps. NativeAOT review: actual callback method metadata is retained on handler interfaces/adapters and masks bind to actual interface targets; eleven supplemental scenarios include explicit implementations, hidden slots and direct implementations. Existing partial source review remains open.",
         "sourceEvidence": [
-          "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs"
+          "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+          "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
         ]
       }
     },
@@ -1455,18 +1492,21 @@
         "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs"
       ],
       "review": {
-        "scope": "Portable event bits, non-inherited method skip contract, override/explicit-interface dispatch and weak caching are implemented. ConditionalWeakTable replaces JVM FastThreadLocal<WeakHashMap<Class,Integer>>; CLR interface maps replace public-method reflection and AccessController. Remaining source-only comments stay explicit.",
+        "scope": "Portable event bits and non-inherited Skip semantics retain the original mask/mask0/isSkippable algorithm and MASK_* identifiers (case/underscore adaptation only). ConditionalWeakTable replaces JVM FastThreadLocal/WeakHashMap. Strongly bound interface delegates select the actual virtual or explicit target instead of a trim-sensitive GetInterfaceMap scan. Handler public/private method metadata is preserved through CLR annotations. Cache values contain only the mask; no representative instance is retained. Unchanged Java metadata comparison and six supplemental Java mask probes were verified; eleven supplemental CLR cases run under both xUnit and an actual Linux NativeAOT executable. The source-only impossible reflection-exception comment remains unreviewed; this is not whole-Transport AOT certification.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelPipelineCompletionSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs"
+          "test/Netty.NET.Transport.Tests/PipelineMaskAndTaskContractTest.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+          "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+          "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
         ]
       },
       "comments": {
         "status": "partial",
         "uniqueCount": 9,
-        "preservedCount": 7,
-        "unreviewedCount": 2,
+        "preservedCount": 8,
+        "unreviewedCount": 1,
         "scope": "Original comments retained at reviewed CLR counterparts and original/explicit native-alternative helpers. Remaining implementation comments/contracts stay explicit."
       }
     },
@@ -7766,8 +7806,43 @@
       "sha256": "11385def91056cbd95358f6fa6da78ec0cf9427cb1f710d6cb8c2d99fa842d62",
       "hashMode": "utf8-lf",
       "kind": "test",
-      "status": "pending",
-      "implementation": []
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+        "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+        "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+      ],
+      "caseMappings": [],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The original 2022 Apache header is retained on the shared CLR native-metadata scenarios. The source has no other comments. Supplemental CLR scenarios are not mappings of the GraalVM JSON assertion."
+      },
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "collectAndCompareMetadata",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Find all production ChannelHandler subtypes in io.netty.bootstrap/io.netty.channel (exclude /test-classes/), add ChannelHandler itself, and compare the exact set of GraalVM name/condition.typeReachable/queryAllPublicMethods records to the committed META-INF/native-image handlers/reflect-config.json. Missing, added or removed entries fail the original JUnit test.",
+            "reason": "GraalVM reflection JSON, Java package/class scanning and those JVM type names are not consumed by the CLR. The original test and generator were compiled unchanged against the pinned transport and passed the exact committed JSON comparison. No equivalent C# original mapping is claimed. The CLR alternative preserves required method metadata and executes real trimmed native code; it is explicitly supplemental, without a Java/Graal configuration facade or an xUnit skip.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs",
+              "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+              "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs",
+              "src/Netty.NET.Common/ResourceLeakDetector.cs",
+              "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+              "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+              "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+            ]
+          }
+        ]
+      }
     },
     {
       "upstream": "transport/src/test/java/io/netty/channel/nio/AbstractNioChannelTest.java",
@@ -9181,7 +9256,7 @@
     "reviewedImplementationFiles": 52,
     "portedOriginalFixtures": 85,
     "portedOriginalMethods": 478,
-    "supplementalClrCases": 514,
+    "supplementalClrCases": 525,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
     "testsuiteSources": 41,
@@ -9922,6 +9997,22 @@
         "test/Netty.NET.Transport.Tests/FailedChannelFutureSourceTest.cs",
         "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
       ]
+    },
+    {
+      "subject": "GraalVM handler metadata and CLR NativeAOT dispatch",
+      "decision": "The exact Graal JSON comparison remains a JVM-specific original test, not a mapped C# test. Use CLR method-preservation annotations and actual interface delegate targets to retain precise non-inherited Skip masks under trimming. Keep exclusion validation for unused public/private methods in Common rather than bypassing it. A shared eleven-scenario supplemental body executes through xUnit and a native ELF consumer with dynamic code disabled. Publishing is explicit; ordinary solution builds do not require a native compiler. Broader NativeAOT coverage and existing Common/Buffer trim warnings remain open.",
+      "upstreamSources": [
+        "transport/src/main/java/io/netty/channel/ChannelHandlerMask.java",
+        "transport/src/test/java/io/netty/channel/NativeImageHandlerMetadataTest.java",
+        "transport/src/test/java/io/netty/nativeimage/ChannelHandlerMetadataUtil.java"
+      ],
+      "sourceEvidence": [
+        "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs",
+        "src/Netty.NET.Common/ResourceLeakDetector.cs",
+        "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+        "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs",
+        "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+      ]
     }
   ],
   "openWork": [
@@ -9977,6 +10068,11 @@
       "area": "Generic channel write-failure fallback",
       "state": "verified-for-reviewed-contracts",
       "detail": "Shared generic output shutdown, default full close and overridden half close are implemented. The twelve-way AutoClose/error-kind/override matrix, native primitive failure, reentrant write rejection and both manual-read-before-connect allocator cases pass on Windows and Linux. Restoring only the previous write-error and read-admission branches while retaining new hook signatures produces ten failures and six passes in the same sixteen native cases. Other AbstractChannel contracts/comments remain open."
+    },
+    {
+      "area": "NativeAOT scope",
+      "state": "partially-verified",
+      "detail": "Eleven pipeline/metadata/exclusion/stream-ownership scenarios pass as a native Linux x64 executable. Exact GraalVM JSON comparison passes unchanged on the JVM and is separately CLR-inapplicable. This is not full Transport AOT support: real network operations, additional handlers/transports, Windows native publishing and existing Common resource-detector/stack metadata and Buffer EventSource trim warnings remain unverified. The native-metadata helper source inventory remains pending."
     }
   ],
   "supplementalTests": [
@@ -10038,7 +10134,8 @@
     "test/Netty.NET.Transport.Tests/SocketGatheringWriteBudgetContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketLingerCloseContractTest.cs",
     "test/Netty.NET.Transport.Tests/SocketInheritedWriteContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ChannelPromiseTaskContractTest.cs",
+    "test/Netty.NET.Transport.Tests/NativeAotContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -16290,10 +16387,40 @@
           "skipped": 8
         }
       }
+    },
+    {
+      "checkpoint": "86a5572351ce69de68daded68c612f02a4cacf20",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "debug": {
+          "failed": 0,
+          "passed": 1104,
+          "skipped": 80,
+          "total": 1184
+        },
+        "checkedRelease": {
+          "failed": 0,
+          "passed": 1104,
+          "skipped": 80,
+          "total": 1184
+        },
+        "solutionPassed": 33402,
+        "solutionSkipped": 94,
+        "mappedOriginalMethods": 478,
+        "originalExecutedCases": 617,
+        "supplementalExecutedCases": 487,
+        "linuxTransportRelease": {
+          "total": 1184,
+          "passed": 1176,
+          "failed": 0,
+          "skipped": 8
+        }
+      }
     }
   ],
   "nextWork": [
-    "Continue concrete remaining Transport roles/backend contracts under sourceIdentifierPolicy. Five completed Future/Promise wrapper roles are reviewed as BCL Task/TCS substitutions; two portable original methods are mapped and eight Java-representation methods are explicitly inapplicable. Do not introduce Future/Promise facades to satisfy inventory counts. Remaining native-image, ID, protocol-family and selector/OIO inventories need independent source review.",
+    "Continue concrete remaining Transport roles/backend contracts under sourceIdentifierPolicy. Completed Future/Promise wrapper decisions and the GraalVM metadata-comparison disposition are explicit. The Java metadata generator helper remains independently pending; its JVM-only comments are not waived or pasted as a detached archive. ID, protocol-family and selector/OIO inventories need independent source review.",
     "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
     "Complete remaining original runtime comments at their reviewed CLR counterparts; selected fixture completion is not whole-Transport completion.",
     "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."

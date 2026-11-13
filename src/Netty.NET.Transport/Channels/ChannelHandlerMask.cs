@@ -21,64 +21,71 @@ namespace Netty.NET.Transport.Channels;
 
 internal static class ChannelHandlerMask
 {
-    internal const int ExceptionCaught = 1;
-    internal const int ChannelRegistered = 1 << 1, ChannelUnregistered = 1 << 2, ChannelActive = 1 << 3, ChannelInactive = 1 << 4;
-    internal const int ChannelRead = 1 << 5, ChannelReadComplete = 1 << 6, UserEventTriggered = 1 << 7, ChannelWritabilityChanged = 1 << 8;
-    internal const int Bind = 1 << 9, Connect = 1 << 10, Disconnect = 1 << 11, Close = 1 << 12, Deregister = 1 << 13;
-    internal const int Read = 1 << 14, Write = 1 << 15, Flush = 1 << 16;
-    internal const int OnlyInbound = ChannelRegistered | ChannelUnregistered | ChannelActive | ChannelInactive | ChannelRead | ChannelReadComplete | UserEventTriggered | ChannelWritabilityChanged;
-    internal const int OnlyOutbound = Bind | Connect | Disconnect | Close | Deregister | Read | Write | Flush;
-    // CLR: immutable masks can share a thread-safe weak-key cache. The value does not retain its Type key.
+    // Using to mask which methods must be called for a ChannelHandler.
+    internal const int MaskExceptionCaught = 1;
+    internal const int MaskChannelRegistered = 1 << 1, MaskChannelUnregistered = 1 << 2, MaskChannelActive = 1 << 3, MaskChannelInactive = 1 << 4;
+    internal const int MaskChannelRead = 1 << 5, MaskChannelReadComplete = 1 << 6, MaskUserEventTriggered = 1 << 7, MaskChannelWritabilityChanged = 1 << 8;
+    internal const int MaskBind = 1 << 9, MaskConnect = 1 << 10, MaskDisconnect = 1 << 11, MaskClose = 1 << 12, MaskDeregister = 1 << 13;
+    internal const int MaskRead = 1 << 14, MaskWrite = 1 << 15, MaskFlush = 1 << 16;
+    internal const int MaskOnlyInbound = MaskChannelRegistered | MaskChannelUnregistered | MaskChannelActive | MaskChannelInactive | MaskChannelRead | MaskChannelReadComplete | MaskUserEventTriggered | MaskChannelWritabilityChanged;
+    private const int MaskAllInbound = MaskExceptionCaught | MaskOnlyInbound;
+    internal const int MaskOnlyOutbound = MaskBind | MaskConnect | MaskDisconnect | MaskClose | MaskDeregister | MaskRead | MaskWrite | MaskFlush;
+    private const int MaskAllOutbound = MaskExceptionCaught | MaskOnlyOutbound;
+    // CLR: immutable masks share a weak-key cache. Neither the cached value nor its factory retains a handler instance.
     private static readonly ConditionalWeakTable<Type, CachedMask> Masks = new();
     private sealed class CachedMask(int value) { internal readonly int Value = value; }
     /**
      * Return the {@code executionMask}.
      */
-    internal static int Mask(Type type)
+    internal static int Mask(IChannelHandler handler)
     {
         // Try to obtain the mask from the cache first. If this fails calculate it and put it in the cache for fast
         // lookup in the future.
-        return Masks.GetValue(type, static key => new CachedMask(Calculate(key))).Value;
+        Type clazz = handler.GetType();
+        return Masks.GetOrAdd(clazz, static (handlerType, handler) => new CachedMask(Mask0(handlerType, handler)), handler).Value;
     }
     /**
      * Calculate the {@code executionMask}.
      */
-    private static int Calculate(Type type) => InterfaceMask(type, typeof(IChannelHandler)) |
-        InterfaceMask(type, typeof(IChannelInboundHandler)) | InterfaceMask(type, typeof(IChannelOutboundHandler));
-    private static int InterfaceMask(Type type, Type contract)
+    private static int Mask0(Type handlerType, IChannelHandler handler)
     {
-        if (!contract.IsAssignableFrom(type))
-            return 0;
-        var map = type.GetInterfaceMap(contract);
-        int mask = 0;
-        for (int i = 0; i < map.InterfaceMethods.Length; i++)
+        int mask = MaskExceptionCaught;
+        // CLR: a bound interface delegate identifies the actual virtual or explicit implementation, including in NativeAOT.
+        // The source Class parameter remains the cache/type discriminator; the representative instance is not invoked.
+        if (typeof(IChannelInboundHandler).IsAssignableFrom(handlerType))
         {
-            // CLR interface maps include explicit implementations; inspecting only public method names would miss them.
-            if (map.TargetMethods[i].IsDefined(typeof(SkipAttribute), inherit: false))
-                continue;
-            mask |= map.InterfaceMethods[i].Name switch
-            {
-                nameof(IChannelHandler.ExceptionCaught) => ExceptionCaught,
-                nameof(IChannelInboundHandler.ChannelRegistered) => ChannelRegistered,
-                nameof(IChannelInboundHandler.ChannelUnregistered) => ChannelUnregistered,
-                nameof(IChannelInboundHandler.ChannelActive) => ChannelActive,
-                nameof(IChannelInboundHandler.ChannelInactive) => ChannelInactive,
-                nameof(IChannelInboundHandler.ChannelRead) => ChannelRead,
-                nameof(IChannelInboundHandler.ChannelReadComplete) => ChannelReadComplete,
-                nameof(IChannelInboundHandler.UserEventTriggered) => UserEventTriggered,
-                nameof(IChannelInboundHandler.ChannelWritabilityChanged) => ChannelWritabilityChanged,
-                nameof(IChannelOutboundHandler.BindAsync) => Bind,
-                nameof(IChannelOutboundHandler.ConnectAsync) => Connect,
-                nameof(IChannelOutboundHandler.DisconnectAsync) => Disconnect,
-                nameof(IChannelOutboundHandler.CloseAsync) => Close,
-                nameof(IChannelOutboundHandler.DeregisterAsync) => Deregister,
-                nameof(IChannelOutboundHandler.Read) => Read,
-                nameof(IChannelOutboundHandler.WriteAsync) => Write,
-                nameof(IChannelOutboundHandler.Flush) => Flush,
-                _ => 0
-            };
+            var inbound = (IChannelInboundHandler)handler;
+            mask |= MaskAllInbound;
+            if (IsSkippable(inbound.ChannelRegistered)) mask &= ~MaskChannelRegistered;
+            if (IsSkippable(inbound.ChannelUnregistered)) mask &= ~MaskChannelUnregistered;
+            if (IsSkippable(inbound.ChannelActive)) mask &= ~MaskChannelActive;
+            if (IsSkippable(inbound.ChannelInactive)) mask &= ~MaskChannelInactive;
+            if (IsSkippable(inbound.ChannelRead)) mask &= ~MaskChannelRead;
+            if (IsSkippable(inbound.ChannelReadComplete)) mask &= ~MaskChannelReadComplete;
+            if (IsSkippable(inbound.ChannelWritabilityChanged)) mask &= ~MaskChannelWritabilityChanged;
+            if (IsSkippable(inbound.UserEventTriggered)) mask &= ~MaskUserEventTriggered;
         }
+        if (typeof(IChannelOutboundHandler).IsAssignableFrom(handlerType))
+        {
+            var outbound = (IChannelOutboundHandler)handler;
+            mask |= MaskAllOutbound;
+            if (IsSkippable(outbound.BindAsync)) mask &= ~MaskBind;
+            if (IsSkippable(outbound.ConnectAsync)) mask &= ~MaskConnect;
+            if (IsSkippable(outbound.DisconnectAsync)) mask &= ~MaskDisconnect;
+            if (IsSkippable(outbound.CloseAsync)) mask &= ~MaskClose;
+            if (IsSkippable(outbound.DeregisterAsync)) mask &= ~MaskDeregister;
+            if (IsSkippable(outbound.Read)) mask &= ~MaskRead;
+            if (IsSkippable(outbound.WriteAsync)) mask &= ~MaskWrite;
+            if (IsSkippable(outbound.Flush)) mask &= ~MaskFlush;
+        }
+        if (IsSkippable(handler.ExceptionCaught)) mask &= ~MaskExceptionCaught;
         return mask;
+    }
+    private static bool IsSkippable(Delegate method)
+    {
+        // CLR: handler annotations preserve method metadata; binding selects the actual interface implementation.
+        var m = method.Method;
+        return m.IsDefined(typeof(SkipAttribute), inherit: false);
     }
     /**
      * Indicates that the annotated event handler method in {@link ChannelHandler} will not be invoked by
