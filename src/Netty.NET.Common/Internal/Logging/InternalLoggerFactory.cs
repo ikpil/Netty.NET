@@ -20,7 +20,7 @@ using System.Threading;
 namespace Netty.NET.Common.Internal.Logging;
 
 /**
- * Creates an {@link IInternalLogger} or changes the default factory
+ * Creates an {@link InternalLogger} or changes the default factory
  * implementation.  This factory allows you to choose what logging framework
  * Netty should use.  The default factory is {@link Slf4JLoggerFactory}.  If SLF4J
  * is not available, {@link Log4JLoggerFactory} is used.  If Log4J is not available,
@@ -36,11 +36,25 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public abstract class InternalLoggerFactory : IInternalLoggerFactory
 {
+    // CLR: the field type is the IInternalLoggerFactory extension point so that any CLR logging
+    // provider (including the TraceSource default) can be installed; Java uses this abstract class.
     private static IInternalLoggerFactory defaultFactory;
 
     private static IInternalLoggerFactory NewDefaultFactory(string name)
     {
-        return new InternalDefaultLoggerFactory();
+        // CLR: the SLF4J, Log4J2 and Log4J probes (useSlf4JLoggerFactory, useLog4J2LoggerFactory,
+        // useLog4JLoggerFactory) bind JVM providers that are not-applicable; their original comments
+        // are archived in docs/common-jvm-source-exclusions.md. Only the final JDK step remains.
+        return UseJdkLoggerFactory(name);
+    }
+
+    private static IInternalLoggerFactory UseJdkLoggerFactory(string name)
+    {
+        // CLR: InternalDefaultLoggerFactory (System.Diagnostics.TraceSource) is the recorded
+        // replacement of JdkLoggerFactory.INSTANCE (java.util.logging).
+        IInternalLoggerFactory f = new InternalDefaultLoggerFactory();
+        f.NewInstance(name).Debug("Using System.Diagnostics.TraceSource as the default logging framework");
+        return f;
     }
 
     /**
@@ -78,14 +92,16 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
     /**
      * Creates a new logger instance with the name of the specified class.
      */
+    public static IInternalLogger GetInstance(Type clazz)
+    {
+        // CLR: Class.getName() maps to Type.FullName (nested types use '+', not '$').
+        return GetInstance(clazz.FullName);
+    }
+
+    // CLR: generic convenience overload of GetInstance(Type); no Java counterpart.
     public static IInternalLogger GetInstance<T>()
     {
         return GetInstance(typeof(T));
-    }
-
-    public static IInternalLogger GetInstance(Type type)
-    {
-        return GetInstance(type.FullName);
     }
 
 
@@ -100,5 +116,6 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
     /**
      * Creates a new logger instance with the specified name.
      */
+    // CLR: public rather than protected because it implements IInternalLoggerFactory.NewInstance.
     public abstract IInternalLogger NewInstance(string name);
 }

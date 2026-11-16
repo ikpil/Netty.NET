@@ -103,7 +103,8 @@ public sealed class HostsFileEntriesProvider
      */
     public static IParser Parser() => ParserImpl.Instance;
 
-    public static readonly HostsFileEntriesProvider Empty = new(
+    // CLR: package-private static final EMPTY becomes internal; tests see it through InternalsVisibleTo.
+    internal static readonly HostsFileEntriesProvider Empty = new(
         new Dictionary<string, IReadOnlyList<IPAddress>>(), new Dictionary<string, IReadOnlyList<IPAddress>>());
 
     private readonly IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> _ipv4Entries;
@@ -129,10 +130,19 @@ public sealed class HostsFileEntriesProvider
      */
     public IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> Ipv6Entries() => _ipv6Entries;
 
+    // CLR: Java StandardCharsets.UTF_16 decoding has no Encoding counterpart: a leading BOM selects the byte order
+    // and is consumed, and input without a BOM is big-endian. Encoding.Unicode is little-endian only, so this
+    // instance is recognized by identity and decoded explicitly (see docs/common-clr-design.md, UTF-16 row).
+    internal static readonly Encoding UTF_16 = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
+
     private sealed class ParserImpl : IParser
     {
-        private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(IParser));
-        private static readonly Regex Whitespaces = new("[ \t]+", RegexOptions.CultureInvariant);
+        private const string WINDOWS_DEFAULT_SYSTEM_ROOT = "C:\\Windows";
+        private const string WINDOWS_HOSTS_FILE_RELATIVE_PATH = "\\system32\\drivers\\etc\\hosts";
+        private const string X_PLATFORMS_HOSTS_FILE_PATH = "/etc/hosts";
+
+        private static readonly Regex WHITESPACES = new("[ \t]+", RegexOptions.CultureInvariant);
+        private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(IParser));
         internal static readonly ParserImpl Instance = new();
 
         private ParserImpl()
@@ -149,22 +159,23 @@ public sealed class HostsFileEntriesProvider
             ArgumentNullException.ThrowIfNull(charsets);
             if (charsets.Length == 0)
                 charsets = new[] { Encoding.Default };
+            // CLR: FileInfo caches Exists; refresh so each call checks the file system like File.exists().
+            // Exists is false for a directory, as file.exists() && file.isFile() requires.
+            file.Refresh();
             if (file.Exists)
             {
-                foreach (var charset in charsets)
+                foreach (Encoding charset in charsets)
                 {
                     ArgumentNullException.ThrowIfNull(charset);
-                    // The caller supplies each encoding in order. Do not let BOM autodetection
-                    // turn a failed first encoding into an implicit successful later attempt.
-                    using var reader = new StreamReader(file.OpenRead(), charset, detectEncodingFromByteOrderMarks: false);
-                    // Java UTF_16 consumes a matching BOM. Keep UTF-16 first-line entries intact
-                    // without letting a different requested encoding silently change byte order.
-                    if ((charset.CodePage == Encoding.Unicode.CodePage || charset.CodePage == Encoding.BigEndianUnicode.CodePage)
-                        && reader.Peek() == '\uFEFF')
-                        reader.Read();
-                    var entries = Parse(reader);
-                    if (!ReferenceEquals(entries, Empty))
-                        return entries;
+                    // CLR: decode the whole file like InputStreamReader (see Decode for the BOM rules).
+                    using (var reader = new StringReader(Decode(File.ReadAllBytes(file.FullName), charset)))
+                    {
+                        HostsFileEntriesProvider entries = Parse(reader);
+                        if (!ReferenceEquals(entries, Empty))
+                        {
+                            return entries;
+                        }
+                    }
                 }
             }
             return Empty;
@@ -196,7 +207,7 @@ public sealed class HostsFileEntriesProvider
                         continue;
 
                     // split
-                    var lineParts = Whitespaces.Split(line);
+                    var lineParts = WHITESPACES.Split(line);
                     // a valid line should be [IP, hostname, alias*]
                     if (lineParts.Length < 2)
                     {
@@ -209,15 +220,21 @@ public sealed class HostsFileEntriesProvider
                         // skip invalid IP
                         continue;
                     }
-                    var address = new IPAddress(ipBytes);
-                    // InetAddress.getByAddress collapses IPv4-mapped IPv6 literals to Inet4Address.
-                    if (address.IsIPv4MappedToIPv6)
-                        address = address.MapToIPv4();
                     // loop over hostname and aliases
                     for (int i = 1; i < lineParts.Length; i++)
                     {
-                        string hostnameLower = lineParts[i].ToLowerInvariant();
-                        var entries = address.AddressFamily == AddressFamily.InterNetwork ? ipv4Entries : ipv6Entries;
+                        string hostname = lineParts[i];
+                        string hostnameLower = hostname.ToLowerInvariant();
+                        // CLR: getByAddress(hostname, ipBytes) creates one address per name. IPAddress is mutable
+                        // (ScopeId), so names never share an instance. An IPv4-mapped literal becomes IPv4 as
+                        // InetAddress.getByAddress does.
+                        var address = new IPAddress(ipBytes);
+                        if (address.IsIPv4MappedToIPv6)
+                        {
+                            address = address.MapToIPv4();
+                        }
+                        Dictionary<string, IReadOnlyList<IPAddress>> entries =
+                            address.AddressFamily == AddressFamily.InterNetwork ? ipv4Entries : ipv6Entries;
                         if (!entries.TryGetValue(hostnameLower, out var addresses))
                         {
                             addresses = new List<IPAddress>();
@@ -235,26 +252,63 @@ public sealed class HostsFileEntriesProvider
         public HostsFileEntriesProvider ParseSilently(FileInfo file, params Encoding[] charsets)
         {
             try
-            { return Parse(file, charsets); }
-            catch (IOException error)
             {
-                Logger.Warn("Failed to load and parse hosts file at " + file.FullName, error);
+                return Parse(file, charsets);
+            }
+            catch (IOException e)
+            {
+                logger.Warn("Failed to load and parse hosts file at " + file.FullName, e);
                 return Empty;
             }
             // CLR file access denial is UnauthorizedAccessException, not Java IOException.
-            catch (UnauthorizedAccessException error)
+            catch (UnauthorizedAccessException e)
             {
-                Logger.Warn("Failed to load and parse hosts file at " + file.FullName, error);
+                logger.Warn("Failed to load and parse hosts file at " + file.FullName, e);
                 return Empty;
             }
         }
 
         private static FileInfo LocateHostsFile()
         {
-            if (!OperatingSystem.IsWindows())
-                return new FileInfo("/etc/hosts");
-            var path = Path.Combine(Environment.GetEnvironmentVariable("SystemRoot") ?? @"C:\Windows", "system32", "drivers", "etc", "hosts");
-            return new FileInfo(File.Exists(path) ? path : @"C:\Windows\system32\drivers\etc\hosts");
+            FileInfo hostsFile;
+            if (OperatingSystem.IsWindows())
+            {
+                // CLR: as System.getenv("SystemRoot") + path, a missing variable yields the "null" path segment.
+                hostsFile = new FileInfo((Environment.GetEnvironmentVariable("SystemRoot") ?? "null") + WINDOWS_HOSTS_FILE_RELATIVE_PATH);
+                if (!hostsFile.Exists)
+                {
+                    hostsFile = new FileInfo(WINDOWS_DEFAULT_SYSTEM_ROOT + WINDOWS_HOSTS_FILE_RELATIVE_PATH);
+                }
+            }
+            else
+            {
+                hostsFile = new FileInfo(X_PLATFORMS_HOSTS_FILE_PATH);
+            }
+            return hostsFile;
+        }
+
+        private static string Decode(byte[] bytes, Encoding charset)
+        {
+            if (ReferenceEquals(charset, UTF_16))
+            {
+                if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+                {
+                    return new UnicodeEncoding(bigEndian: false, byteOrderMark: false).GetString(bytes, 2, bytes.Length - 2);
+                }
+                if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+                {
+                    return new UnicodeEncoding(bigEndian: true, byteOrderMark: false).GetString(bytes, 2, bytes.Length - 2);
+                }
+                return new UnicodeEncoding(bigEndian: true, byteOrderMark: false).GetString(bytes);
+            }
+            // An Encoding that declares a preamble consumes it, as Java's BOM-consuming UTF-16 charsets do. A
+            // preamble-less Encoding keeps a leading BOM as U+FEFF, as Java UTF_8, UTF_16LE and UTF_16BE do.
+            ReadOnlySpan<byte> preamble = charset.Preamble;
+            if (preamble.Length > 0 && bytes.AsSpan().StartsWith(preamble))
+            {
+                return charset.GetString(bytes, preamble.Length, bytes.Length - preamble.Length);
+            }
+            return charset.GetString(bytes);
         }
     }
 }

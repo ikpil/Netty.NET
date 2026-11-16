@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Embedded;
 using Netty.NET.Transport.Channels.Groups;
 using Netty.NET.Transport.Channels.Sockets;
@@ -22,12 +23,12 @@ public class DatagramTransportContractTest
     [InlineData(4096)]
     public async Task ReceivePreservesDatagramBoundarySenderAndConfiguredTruncation(int length)
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel channel = null;
         var received = new TaskCompletionSource<(byte[], IPEndPoint)>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            channel = await new Bootstrap().Group(group).Channel<DatagramChannel>().Handler(new CaptureHandler(received))
+            channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new CaptureHandler(received))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
             using var peer = new UdpClient(AddressFamily.InterNetwork);
             byte[] bytes = Enumerable.Range(0, length).Select(i => unchecked((byte)i)).ToArray();
@@ -49,12 +50,12 @@ public class DatagramTransportContractTest
     [InlineData(1024, true)]
     public async Task SendPreservesDatagramBytesAndReleasesPayload(int length, bool composite)
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel channel = null;
         using var peer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         try
         {
-            channel = await new Bootstrap().Group(group).Channel<DatagramChannel>().Handler(new ChannelInboundHandlerAdapter())
+            channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new ChannelInboundHandlerAdapter())
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
             byte[] bytes = new byte[length];
             Random.Shared.NextBytes(bytes);
@@ -75,7 +76,7 @@ public class DatagramTransportContractTest
             var packet = await peer.ReceiveAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(expected, packet.Buffer);
             if (length == 0) Assert.False(peer.Client.Poll(10_000, SelectMode.SelectRead));
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
         }
         finally
         {
@@ -102,13 +103,13 @@ public class DatagramTransportContractTest
         Assert.Equal(0, two.ReaderIndex);
         one.Release();
         two.Release();
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
         await group.CloseAsync();
         Assert.Empty(group);
     }
     private sealed class CaptureHandler(TaskCompletionSource<(byte[], IPEndPoint)> received) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket packet) => received.TrySetResult((packet.Content.ReadableMemory.ToArray(), packet.Sender));
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => received.TrySetException(error);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet) => received.TrySetResult((packet.Content.ReadableMemory.ToArray(), packet.Sender));
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
     }
 }

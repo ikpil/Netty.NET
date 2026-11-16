@@ -13,6 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+using System;
+
 namespace Netty.NET.Buffer.Tests;
 
 /**
@@ -31,5 +33,29 @@ public class BigEndianHeapByteBufTest : AbstractContiguousByteBufTest
 
     [Fact]
     public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
+
+    [Fact]
+    public void ShouldNotAllowNullInConstructor1()
+    {
+        // CLR: ArgumentNullException replaces NullPointerException. The CLR array constructor
+        // UnpooledHeapByteBuf(byte[]) has no allocator parameter, so the public allocator constructor carries
+        // the null-allocator check; its capacity 1 stands for new byte[1], and the null check precedes the
+        // maxCapacity 0 range check as in the original.
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            new UnpooledHeapByteBuf(null, 1, 0);
+        });
+    }
+
+    [Fact]
+    public void ShouldNotAllowNullInConstructor2()
+    {
+        // CLR: ArgumentNullException replaces NullPointerException; the internal UnpooledHeapByteBuf(byte[])
+        // array constructor replaces the protected (alloc, byte[], maxCapacity) constructor.
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            new UnpooledHeapByteBuf((byte[])null);
+        });
+    }
 
 }

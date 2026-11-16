@@ -11,6 +11,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Embedded;
 using Netty.NET.Transport.Channels.Sockets;
 
@@ -70,7 +71,7 @@ public class ChannelWriteProgressContractTest
         var buffer = Unpooled.Buffer(3).WriteZero(3); Task write = queue.AddMessage(buffer, 3, cancellation.Token);
         cancellation.Cancel(); queue.AddFlush(); queue.Progress(0); queue.Remove();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => write);
-        Assert.Equal(0, reports); Assert.Equal(0, buffer.ReferenceCount); channel.FinishAndReleaseAll();
+        Assert.Equal(0, reports); Assert.Equal(0, buffer.RefCnt); channel.FinishAndReleaseAll();
     }
     [Fact]
     public async Task AReportFailureDoesNotFailTheWriteOrSkipLaterEntries()
@@ -97,12 +98,13 @@ public class ChannelWriteProgressContractTest
         var channel = new EmbeddedChannel(); var queue = new ChannelOutboundBuffer(channel);
         var a = Unpooled.Buffer(2).WriteZero(2); var b = Unpooled.Buffer(2).WriteZero(2);
         var closed = new IOException("closed from observer"); int calls = 0;
-        channel.Config.WriteProgress = new Observer(_ => { calls++; queue.Close(closed); });
+        // The transport closes a buffer as AbstractUnsafe does: failFlushed(cause, false) and then close(cause, ...).
+        channel.Config.WriteProgress = new Observer(_ => { calls++; queue.FailFlushed(closed, false); queue.Close(closed, true); });
         Task first = queue.AddMessage(a, 2), second = queue.AddMessage(b, 2);
         queue.AddFlush(); queue.RemoveBytes(4);
         Assert.Same(closed, await Assert.ThrowsAsync<IOException>(() => first));
         Assert.Same(closed, await Assert.ThrowsAsync<IOException>(() => second));
-        Assert.Equal(1, calls); Assert.Equal(0, a.ReferenceCount); Assert.Equal(0, b.ReferenceCount);
+        Assert.Equal(1, calls); Assert.Equal(0, a.RefCnt); Assert.Equal(0, b.RefCnt);
         Assert.Equal(0, queue.TotalPendingWriteBytes); Assert.True(queue.IsEmpty); channel.FinishAndReleaseAll();
     }
     [Fact]
@@ -177,23 +179,24 @@ public class ChannelWriteProgressContractTest
             await write; Assert.Equal(bytes.AsSpan(7).ToArray(), actual); Assert.False(wrongOwner);
             Assert.NotEmpty(reports); Assert.Equal(bytes.Length - 7, reports.Last().Progress.Completed);
             Assert.All(reports, r => { Assert.Equal(bytes.Length - 7, r.Progress.Total); Assert.True(r.Operation.IsCompletedSuccessfully); });
-            _ = Assert.Single(reports.Select(r => r.Operation).Distinct()); Assert.Equal(0, region.ReferenceCount);
+            _ = Assert.Single(reports.Select(r => r.Operation).Distinct()); Assert.Equal(0, region.RefCnt);
         }
         finally { File.Delete(path); }
     }
     [Fact(Timeout = 10000)]
     public async Task DatagramHolderProgressRetainsTheSinglePacketBoundary()
     {
-        var group = new DefaultEventLoopGroup(1); using var peer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory()); using var peer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         try
         {
-            var channel = (DatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(AddressFamily.InterNetwork))
+            var channel = (NioDatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new NioDatagramChannel(AddressFamily.InterNetwork))
                 .Handler(new ChannelInboundHandlerAdapter()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
             var reports = new List<ChannelWriteProgress>(); channel.Config.WriteProgress = new Observer(reports.Add);
             byte[] bytes = { 1, 2, 3, 4, 5 };
             await channel.WriteAndFlushAsync(new DatagramPacket(Unpooled.WrappedBuffer(bytes), (IPEndPoint)peer.Client.LocalEndPoint), TestContext.Current.CancellationToken);
             Assert.Equal(bytes, (await peer.ReceiveAsync(TestContext.Current.CancellationToken)).Buffer);
-            var report = Assert.Single(reports); Assert.Equal(5, report.Progress.Completed); Assert.Equal(5, report.Progress.Total); Assert.True(report.Operation.IsCompletedSuccessfully);
+            // AbstractNioMessageChannel.doWrite removes whole messages without progress(): a datagram reports nothing.
+            Assert.Empty(reports);
         }
         finally { await group.StopAsync(); }
     }
@@ -225,24 +228,23 @@ public class ChannelWriteProgressContractTest
     }
     private sealed class Encode : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken) =>
-            context.WriteAsync(message is string text ? Unpooled.CopiedBuffer("wire:" + text, System.Text.Encoding.ASCII) : message, cancellationToken);
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken) =>
+            ctx.WriteAsync(msg is string text ? Unpooled.CopiedBuffer("wire:" + text, System.Text.Encoding.ASCII) : msg, cancellationToken);
     }
     internal sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>
     { public void Report(ChannelWriteProgress value) => report(value); }
-    private sealed class ProbeChannel : TcpSocketChannel
+    private sealed class ProbeChannel : NioSocketChannel
     {
         internal int GatheredCalls;
-        internal override bool SupportsGatheringWrites => true;
-        internal override Task<int> SendGatheredAsync(IList<ArraySegment<byte>> segments)
+        // Accept at most four bytes of each gathered vector, as a partially writable socket would.
+        internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length)
         {
-            GatheredCalls++; int remaining = 4; var prefix = new List<ArraySegment<byte>>();
-            foreach (var segment in segments)
+            GatheredCalls++; int remaining = 4; var prefix = new List<ReadOnlyMemory<byte>>();
+            for (int i = offset; i < offset + length && remaining > 0; i++)
             {
-                int count = Math.Min(remaining, segment.Count); prefix.Add(new ArraySegment<byte>(segment.Array, segment.Offset, count)); remaining -= count;
-                if (remaining == 0) break;
+                int count = Math.Min(remaining, buffers[i].Length); prefix.Add(buffers[i][..count]); remaining -= count;
             }
-            return Socket.SendAsync(prefix, SocketFlags.None);
+            return base.WriteSocket(prefix.ToArray(), 0, prefix.Count);
         }
     }
     private sealed class Connected : IAsyncDisposable

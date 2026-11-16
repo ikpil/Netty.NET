@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -30,37 +31,48 @@ public partial class PooledByteBufAllocator
     // The allocator owns this registry; no thread-local root retains the allocator.
     // Weak thread identity prevents retaining terminated Thread objects and protects
     // against managed thread ID reuse. Each binding owns its optional region caches.
-    private readonly Dictionary<int, ThreadBinding> _threadBindings = new();
+    // CLR: allocation reads the registry without the allocator lock, as the source reads its FastThreadLocal;
+    // creation and removal stay serialized by _sync.
+    private readonly ConcurrentDictionary<int, ThreadBinding> _threadBindings = new();
 
     // Slow resize initializes the caller's binding, just like Java reallocate's
     // parent.threadCache(). A miss uses the old arena; a hit uses the cached owner.
     internal PoolThreadCache PrepareThreadBinding()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        lock (_sync)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            return GetThreadBinding()?.Cache;
-        }
+        return GetThreadBinding()?.Cache;
     }
 
     private ThreadBinding GetThreadBinding()
     {
-        Debug.Assert(Monitor.IsEntered(_sync));
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_heapArenas.Length == 0 && _directArenas.Length == 0) return null;
         Thread thread = Thread.CurrentThread;
+        if (_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) && binding.IsOwner(thread))
+            return binding;
+        lock (_sync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return NewThreadBinding(thread);
+        }
+    }
+
+    // PoolThreadLocalCache.initialValue()
+    private ThreadBinding NewThreadBinding(Thread thread)
+    {
+        Debug.Assert(Monitor.IsEntered(_sync));
         int id = thread.ManagedThreadId;
         if (_threadBindings.TryGetValue(id, out ThreadBinding binding) && binding.IsOwner(thread)) return binding;
         ReleaseTerminatedThreadBindingsCore();
         IEventExecutor executor = ThreadExecutorMap.CurrentExecutor();
-        bool useCache = _runtimeDefaults == null || _runtimeDefaults.UseCacheForAllThreads ||
+        bool useCache = _useCacheForAllThreads ||
             // If the current thread is a FastThreadLocalThread we will always use the cache
             FastThreadLocalThread.CurrentThreadHasFastThreadLocal() || executor != null;
         // No caching so just use 0 as sizes.
         binding = new ThreadBinding(thread, LeastUsedArena(_heapArenas), LeastUsedArena(_directArenas),
             useCache ? SmallCacheSize : 0, useCache ? NormalCacheSize : 0,
             useCache ? _maxCachedBufferCapacity : 0, useCache ? _cacheTrimInterval : 0);
-        _threadBindings.Add(id, binding);
+        _threadBindings[id] = binding;
         binding.HeapArena?.AddThreadBinding();
         binding.DirectArena?.AddThreadBinding();
         try
@@ -77,7 +89,7 @@ public partial class PooledByteBufAllocator
         catch
         {
             // Failed scheduling must not publish a partial binding/count or reserve storage.
-            _threadBindings.Remove(id);
+            _threadBindings.TryRemove(id, out _);
             binding.Detach();
             throw;
         }
@@ -97,7 +109,7 @@ public partial class PooledByteBufAllocator
             {
                 int id = Environment.CurrentManagedThreadId;
                 if (!owner._threadBindings.TryGetValue(id, out var current) || !ReferenceEquals(current, binding)) return;
-                owner._threadBindings.Remove(id);
+                owner._threadBindings.TryRemove(id, out _);
                 binding.Detach();
             }
         }
@@ -167,7 +179,7 @@ public partial class PooledByteBufAllocator
             Thread thread = Thread.CurrentThread;
             if (!_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) || !binding.IsOwner(thread))
                 return false;
-            _threadBindings.Remove(thread.ManagedThreadId);
+            _threadBindings.TryRemove(thread.ManagedThreadId, out _);
             binding.Detach();
             return true;
         }
@@ -192,8 +204,7 @@ public partial class PooledByteBufAllocator
         if (removed == null) return 0;
         foreach (int id in removed)
         {
-            ThreadBinding binding = _threadBindings[id];
-            _threadBindings.Remove(id);
+            _threadBindings.TryRemove(id, out ThreadBinding binding);
             binding.Detach();
         }
         return removed.Count;

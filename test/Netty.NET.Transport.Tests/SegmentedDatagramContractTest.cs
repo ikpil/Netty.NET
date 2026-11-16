@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -20,7 +21,7 @@ public class SegmentedDatagramContractTest
         using var receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         var local = new IPEndPoint(IPAddress.Loopback, 0);
         receiver.Bind(local);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             var bootstrap = NewSender(group, AddressFamily.InterNetwork);
@@ -49,7 +50,7 @@ public class SegmentedDatagramContractTest
                 Assert.Equal(1, duplicate.Content.ReaderIndex);
             }
             finally { duplicate.Release(); }
-            Assert.Equal(0, content.ReferenceCount);
+            Assert.Equal(0, content.RefCnt);
         }
         finally { await group.StopAsync(); }
     }
@@ -67,7 +68,7 @@ public class SegmentedDatagramContractTest
         receiver.Bind(local);
         LinuxUdpOffload.SetGro(receiver, true);
 
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             var sender = await NewSender(group, family).BindAsync(local, token);
@@ -78,8 +79,11 @@ public class SegmentedDatagramContractTest
             await sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer().WriteByte(33), target), token);
 
             byte[] actual = new byte[4096];
-            var result = await LinuxUdpOffload.ReceiveAsync(receiver, actual, local, slotSize: 2048)
-                .WaitAsync(TimeSpan.FromSeconds(3), token);
+            LinuxUdpOffload.ReadResult? received;
+            var deadline = DateTime.UtcNow.AddSeconds(3);
+            while ((received = LinuxUdpOffload.TryReceive(receiver, actual, local, 2048)) == null && DateTime.UtcNow < deadline)
+                receiver.Poll(100_000, SelectMode.SelectRead);
+            var result = received ?? throw new TimeoutException("No segmented datagram arrived.");
             Assert.Equal(2, result.Batch.Length);
             var aggregate = result.Batch[0];
             Assert.Equal(512, aggregate.SegmentSize);
@@ -95,6 +99,6 @@ public class SegmentedDatagramContractTest
         finally { await group.StopAsync(); }
     }
 
-    private static Bootstrap NewSender(DefaultEventLoopGroup loop, AddressFamily family) =>
-        new Bootstrap().Group(loop).ChannelFactory(() => new DatagramChannel(family)).Handler(new ChannelInboundHandlerAdapter());
+    private static Bootstrap NewSender(MultiThreadIoEventLoopGroup loop, AddressFamily family) =>
+        new Bootstrap().Group(loop).ChannelFactory(() => new NioDatagramChannel(family)).Handler(new ChannelInboundHandlerAdapter());
 }

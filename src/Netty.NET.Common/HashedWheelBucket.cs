@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Netty.NET.Common;
 
@@ -69,7 +70,8 @@ internal sealed class HashedWheelBucket
                 else
                 {
                     // The timeout was placed into a wrong slot. This should never happen.
-                    throw new InvalidOperationException($"timeout.deadline ({timeout._deadline}) > deadline ({deadline})");
+                    // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
+                    throw new InvalidOperationException(string.Create(CultureInfo.CurrentCulture, $"timeout.deadline ({timeout._deadline}) > deadline ({deadline})"));
                 }
             }
             else if (!timeout.IsCancelled())

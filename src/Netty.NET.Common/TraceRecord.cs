@@ -8,6 +8,7 @@ namespace Netty.NET.Common;
 
 internal sealed class TraceRecord : Exception
 {
+    internal const int BOTTOM_POS = -1;
     internal const int CLOSE_MARK_POS = -2;
     // Override fillInStackTrace() so we not populate the backtrace via a native call and so leak the
     // Classloader.
@@ -39,7 +40,7 @@ internal sealed class TraceRecord : Exception
     internal TraceRecord(bool closeMarker)
     {
         trace = closeMarker ? new StackTrace(0, true) : null;
-        position = closeMarker ? CLOSE_MARK_POS : -1;
+        position = closeMarker ? CLOSE_MARK_POS : BOTTOM_POS;
     }
     public override string StackTrace => trace?.ToString();
     internal int Pos() => position;

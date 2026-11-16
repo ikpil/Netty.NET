@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -29,7 +30,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
 #pragma warning disable xUnit1051 // Preserve the original one-second latch waits; connect/close use the test token.
     // The original one-thread LocalIoHandler group is represented by the CLR event loop:
     // the test's MyChannel has no native I/O, and every callback still crosses the real executor queue.
-    private readonly DefaultEventLoopGroup _group = new(1);
+    private readonly MultiThreadIoEventLoopGroup _group = new(1, LocalIoHandler.NewFactory());
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
     public async ValueTask DisposeAsync() => await _group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
     private Task<IChannel> Connect(MyChannel channel) => new Bootstrap().ChannelFactory(() => channel)
@@ -110,19 +111,19 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         internal Action<Exception> Error;
         public MyChannel() : base(null, new ChannelMetadata(false)) { }
         protected override DefaultChannelPipeline NewChannelPipeline() => new MyChannelPipeline(this);
-        public override EndPoint LocalAddress => null;
-        public override EndPoint RemoteAddress => null;
+        protected override EndPoint LocalAddress0() => null;
+        protected override EndPoint RemoteAddress0() => null;
         protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) { SetActive(true); return Task.CompletedTask; }
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object message) => Task.FromException(new IOException());
+        protected override Task DoWrite(object msg) => Task.FromException(new IOException());
         private sealed class MyChannelPipeline(MyChannel channel) : DefaultChannelPipeline(channel)
         {
             protected override void OnUnhandledInboundChannelActive() => channel.Active?.Invoke();
             protected override void OnUnhandledInboundChannelInactive() => channel.Inactive?.Invoke();
             protected override void OnUnhandledInboundException(Exception cause) => channel.Error?.Invoke(cause);
-            protected override void OnUnhandledInboundMessage(object message) => channel.Message?.Invoke(message);
+            protected override void OnUnhandledInboundMessage(object msg) => channel.Message?.Invoke(msg);
             protected override void OnUnhandledInboundChannelReadComplete() => channel.ReadComplete?.Invoke();
             protected override void OnUnhandledInboundUserEventTriggered(object evt) => channel.UserEvent?.Invoke(evt);
             protected override void OnUnhandledChannelWritabilityChanged() => channel.Writability?.Invoke();

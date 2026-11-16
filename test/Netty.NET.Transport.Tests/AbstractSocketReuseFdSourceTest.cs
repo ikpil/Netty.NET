@@ -13,9 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Runtime.ExceptionServices;
+using System.Net;
+using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,92 +29,209 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // Original peer closure and group cleanup are independently owned.
-public abstract class AbstractSocketReuseFdSourceTest
+#pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, which has no other cancellable wait.
+#pragma warning disable xUnit1051 // The source waits for and closes its channels independently of the test cancellation.
+public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
 {
-    [Theory(Timeout = 60000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestReuseFd(bool adaptive)
+    // CLR: the source re-declares newSocketAddress() and newFactories() abstract, and its concrete fixture,
+    // transport-native-epoll's EpollDomainSocketReuseFdTest, implements them with
+    // EpollSocketTestPermutation.newDomainSocketAddress() and EpollSocketTestPermutation.INSTANCE.domainSocket().
+    // That fixture's counterpart, DomainSocketReuseFdSourceTest, declares no members, so an abstract override here
+    // would leave it uncompilable; this class therefore supplies those domain-socket implementations (through
+    // DomainSocketTestPermutation) as ordinary overrides, and the class stays abstract as in the source.
+    protected override EndPoint NewSocketAddress()
+    {
+        return DomainSocketTestPermutation.NewDomainSocketAddress();
+    }
+
+    protected override List<TestsuitePermutation.IBootstrapComboFactory<ServerBootstrap, Bootstrap>> NewFactories()
     {
         DomainSocketSourceTest.RequireDomainSockets();
-        var cancellation = TestContext.Current.CancellationToken;
-        await using var fixture = new ShutdownFixture(adaptive, true);
+        return DomainSocketTestPermutation.INSTANCE.DomainSocket();
+    }
+
+    [Fact(Timeout = 60000)]
+    public async Task TestReuseFd()
+    {
+        await Run(TestContext.Current, TestReuseFd0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestReuseFd test name.
+    private async Task TestReuseFd0(ServerBootstrap sb, Bootstrap cb)
+    {
+        sb.ChildOption(ChannelOption.AUTO_READ, true);
+        cb.Option(ChannelOption.AUTO_READ, true);
+
         // Use a number which will typically not exceed /proc/sys/net/core/somaxconn (which is 128 on linux by default
         // often).
-        const int numChannels = 100;
-        var state = new SharedState();
-        var serverRemaining = new Remaining(numChannels);
-        var clientRemaining = new Remaining(numChannels);
-        var serverDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var clientDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Server.ChildOption(ChannelOption.AUTO_READ, true).ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
-            channel.Pipeline.AddLast(new ReuseFdHandler(false, state, serverRemaining, serverDone))));
-        fixture.Client.Option(ChannelOption.AUTO_READ, true).Handler(new ActionChannelInitializer<IChannel>(channel =>
-            channel.Pipeline.AddLast(new ReuseFdHandler(true, state, clientRemaining, clientDone))));
-        var server = await fixture.Server.BindAsync(DomainSocketSourceTest.NewAddress(), cancellation);
-        try
-        {
-            for (int i = 0; i < numChannels; i++) _ = ObserveConnect(fixture.Client.ConnectAsync(server.LocalAddress, cancellationToken: cancellation));
-            await clientDone.Task.WaitAsync(cancellation);
-            await serverDone.Task.WaitAsync(cancellation);
-            await server.CloseAsync();
-            if (state.Error != null && state.Error is not IOException) ExceptionDispatchInfo.Capture(state.Error).Throw();
-        }
-        finally { await server.CloseAsync(); }
+        int numChannels = 100;
+        // CLR: AtomicReference<Throwable> and AtomicInteger are StrongBox fields updated with Interlocked, and
+        // ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource (IChannel.cs: "Tasks replace
+        // ChannelFuture/Promise").
+        StrongBox<Exception> globalException = new StrongBox<Exception>();
+        StrongBox<int> serverRemaining = new StrongBox<int>(numChannels);
+        StrongBox<int> clientRemaining = new StrongBox<int>(numChannels);
+        TaskCompletionSource serverDonePromise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource clientDonePromise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        async Task ObserveConnect(Task<IChannel> connect)
+        // CLR: ActionChannelInitializer carries the initChannel body of each anonymous ChannelInitializer.
+        sb.ChildHandler(new ActionChannelInitializer<IChannel>(sch =>
         {
-            try { await connect; }
-            catch (Exception error) { clientDone.TrySetException(error); }
+            ReuseFdHandler sh = new ReuseFdHandler(
+                false,
+                globalException,
+                serverRemaining,
+                serverDonePromise);
+            sch.Pipeline.AddLast("handler", sh);
+        }));
+
+        cb.Handler(new ActionChannelInitializer<IChannel>(sch =>
+        {
+            ReuseFdHandler ch = new ReuseFdHandler(
+                true,
+                globalException,
+                clientRemaining,
+                clientDonePromise);
+            sch.Pipeline.AddLast("handler", ch);
+        }));
+
+        // CLR: the ChannelFutureListener becomes a continuation of each connect Task (this port's outbound operations
+        // return Tasks, IChannel.cs).
+        Action<Task> listener = future =>
+        {
+            if (!future.IsCompletedSuccessfully)
+            {
+                clientDonePromise.TrySetException(Cause(future));
+            }
+        };
+
+        IChannel sc = await sb.BindAsync();
+        for (int i = 0; i < numChannels; i++)
+        {
+            _ = cb.ConnectAsync(sc.LocalAddress).ContinueWith(listener, CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        await clientDonePromise.Task;
+        await serverDonePromise.Task;
+        await sc.CloseAsync();
+
+        if (Volatile.Read(ref globalException.Value) != null && !IsIOException(globalException.Value))
+        {
+            throw globalException.Value;
         }
     }
-    private sealed class SharedState { internal Exception Error; }
-    private sealed class Remaining(int value) { internal int Value = value; }
-    private sealed class ReuseFdHandler(bool client, SharedState global, Remaining remaining, TaskCompletionSource done) : ChannelInboundHandlerAdapter
+
+    // CLR: java.io.IOException covers the JDK's socket I/O failures, but a CLR SocketException derives from
+    // Win32Exception, not IOException (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketexception),
+    // so both types take the source's IOException branch, as AbstractNioByteChannel's read-error handling does.
+    private static bool IsIOException(Exception cause) => cause is IOException || cause is SocketException;
+
+    // CLR: Future.cause() of a failed or cancelled future. A faulted Task wraps its cause in an AggregateException; a
+    // cancelled Task has no exception, so it is represented by a TaskCanceledException, as a cancelled Netty future's
+    // cause is a CancellationException.
+    private static Exception Cause(Task future) =>
+            future.IsCanceled ? new TaskCanceledException(future) : future.Exception?.InnerException;
+
+    internal class ReuseFdHandler : ChannelInboundHandlerAdapter
     {
-        private const string ExpectedPayload = "payload";
-        private readonly StringBuilder _received = new();
-        private Exception _error;
-        public override void ChannelActive(ChannelHandlerContext context)
+        private const string EXPECTED_PAYLOAD = "payload";
+
+        private readonly TaskCompletionSource donePromise;
+        private readonly StrongBox<int> remaining;
+        private readonly bool client;
+        internal volatile IChannel channel;
+        internal readonly StrongBox<Exception> globalException;
+        // CLR: AtomicReference<Throwable>.compareAndSet(null, cause) is Interlocked.CompareExchange on this field.
+        internal Exception exception;
+        internal readonly StringBuilder received = new StringBuilder();
+
+        internal ReuseFdHandler(
+            bool client,
+            StrongBox<Exception> globalException,
+            StrongBox<int> remaining,
+            TaskCompletionSource donePromise)
         {
-            if (client) _ = ObserveWrite(context.WriteAndFlushAsync(Unpooled.CopiedBuffer(ExpectedPayload, Encoding.ASCII)));
+            this.client = client;
+            this.globalException = globalException;
+            this.remaining = remaining;
+            this.donePromise = donePromise;
         }
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            if (message is ByteBuf buffer)
+            channel = ctx.Channel;
+            if (client)
             {
-                _received.Append(buffer.GetString(Encoding.ASCII));
-                buffer.Release();
-                if (_received.ToString() == ExpectedPayload)
+                // CLR: Encoding.ASCII is CharsetUtil.US_ASCII.
+                FailOnError(ctx.WriteAndFlushAsync(Unpooled.CopiedBuffer(EXPECTED_PAYLOAD, Encoding.ASCII)));
+            }
+        }
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            if (msg is ByteBuf)
+            {
+                ByteBuf buf = (ByteBuf) msg;
+                received.Append(buf.ToString(Encoding.ASCII));
+                buf.Release();
+
+                if (received.ToString().Equals(EXPECTED_PAYLOAD))
                 {
-                    if (client) _ = context.CloseAsync();
-                    else _ = ObserveWrite(context.WriteAndFlushAsync(Unpooled.CopiedBuffer(ExpectedPayload, Encoding.ASCII)));
+                    if (client)
+                    {
+                        _ = ctx.CloseAsync();
+                    }
+                    else
+                    {
+                        FailOnError(ctx.WriteAndFlushAsync(Unpooled.CopiedBuffer(EXPECTED_PAYLOAD, Encoding.ASCII)));
+                    }
                 }
             }
         }
-        private async Task ObserveWrite(Task write)
+
+        // CLR: the write listener f -> { if (!f.isSuccess()) donePromise.tryFailure(f.cause()); } becomes a
+        // continuation of the write Task.
+        private void FailOnError(Task future)
         {
-            try { await write; }
-            catch (Exception error) { done.TrySetException(error); }
-        }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error)
-        {
-            if (Interlocked.CompareExchange(ref _error, error, null) == null)
+            _ = future.ContinueWith(f =>
             {
-                done.TrySetException(new InvalidOperationException("exceptionCaught: " + context.Channel, error));
-                _ = context.CloseAsync();
-            }
-            Interlocked.CompareExchange(ref global.Error, error, null);
+                if (!f.IsCompletedSuccessfully)
+                {
+                    donePromise.TrySetException(Cause(f));
+                }
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
-        public override void ChannelInactive(ChannelHandlerContext context)
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            if (Interlocked.CompareExchange(ref exception, cause, null) == null)
+            {
+                // CLR: InvalidOperationException ("thrown when a method call is invalid for the object's current
+                // state", https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception) is the
+                // IllegalStateException counterpart.
+                donePromise.TrySetException(new InvalidOperationException("exceptionCaught: " + ctx.Channel, cause));
+                _ = ctx.CloseAsync();
+            }
+            Interlocked.CompareExchange(ref globalException.Value, cause, null);
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             if (Interlocked.Decrement(ref remaining.Value) == 0)
             {
-                if (_received.ToString() == ExpectedPayload) done.TrySetResult();
-                else done.TrySetException(new Exception("Unexpected payload:" + _received));
+                if (received.ToString().Equals(EXPECTED_PAYLOAD))
+                {
+                    // CLR: SetResult throws when already completed, as Promise.setSuccess(null) does.
+                    donePromise.SetResult();
+                }
+                else
+                {
+                    donePromise.TrySetException(new Exception("Unexpected payload:" + received));
+                }
             }
         }
     }
 }
 #pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

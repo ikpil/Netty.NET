@@ -661,7 +661,7 @@ public class CompositeByteBufGatheringTest : IDisposable
         using var channel = new TestGatheringByteChannel();
         try
         {
-            while (buf.IsReadable)
+            while (buf.IsReadable())
             {
                 int before = buf.ReaderIndex;
                 int written = buf.ReadBytes(channel.Socket, buf.ReadableBytes);

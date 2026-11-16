@@ -45,8 +45,9 @@ least one candidate. Null arguments follow the native delegate/BCL boundaries.
 
 Async consumers yield rather than synchronously wait on executor-owned queues.
 The four Java blocking-guard scenarios therefore become four native queued async
-composition cases (all/any, with/without observer timeout). Their names explicitly
-identify the native counterpart. They verify the owner invokes work on its loop,
+composition cases (all/any, with/without observer timeout). Since the 2026-11-14
+one-to-one test naming decision they carry the original method names (the table
+below); they were previously named after the native counterpart. They verify the owner invokes work on its loop,
 yielding permits the queued child to execute, and subsequent owned access is
 explicitly dispatched. The removed Java rejection is recorded as an inherited
 blocking-API expectation with no retained CLR method; no claim is made that native
@@ -54,12 +55,12 @@ await rejects or that the removed callable must never run. Original comments in
 the surrounding source/test stay mapped. Test identities and skip changes are
 reported with full verification evidence.
 
-| Removed inherited guard test | Native consumer counterpart |
+| Removed inherited guard test | CLR test (native consumer counterpart) |
 | --- | --- |
-| testInvokeAnyInEventLoop | NativeWhenAnyYieldsInEventLoop |
-| testInvokeAnyInEventLoopWithTimeout | NativeWhenAnyWithObserverTimeoutYieldsInEventLoop |
-| testInvokeAllInEventLoop | NativeWhenAllYieldsInEventLoop |
-| testInvokeAllInEventLoopWithTimeout | NativeWhenAllWithObserverTimeoutYieldsInEventLoop |
+| testInvokeAnyInEventLoop | TestInvokeAnyInEventLoop (native WhenAny yields in the event loop) |
+| testInvokeAnyInEventLoopWithTimeout | TestInvokeAnyInEventLoopWithTimeout (native WhenAny with an observer timeout yields in the event loop) |
+| testInvokeAllInEventLoop | TestInvokeAllInEventLoop (native WhenAll yields in the event loop) |
+| testInvokeAllInEventLoopWithTimeout | TestInvokeAllInEventLoopWithTimeout (native WhenAll with an observer timeout yields in the event loop) |
 
 The existing TaskWhenAllPortTest already verifies all-failure aggregation, including
 both original exception objects, and null/empty/completed inputs. New batch

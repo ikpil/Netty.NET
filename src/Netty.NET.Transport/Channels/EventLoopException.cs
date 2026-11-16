@@ -20,10 +20,10 @@ namespace Netty.NET.Transport.Channels;
  * Special {@link ChannelException} which will be thrown by {@link EventLoop} and {@link EventLoopGroup}
  * implementations when an error occurs.
  */
-public class EventLoopException : Exception
+public class EventLoopException : ChannelException
 {
     public EventLoopException() { }
     public EventLoopException(string message) : base(message) { }
-    public EventLoopException(string message, Exception innerException) : base(message, innerException) { }
-    public EventLoopException(Exception cause) : base(cause.Message, cause) { }
+    public EventLoopException(string message, Exception cause) : base(message, cause) { }
+    public EventLoopException(Exception cause) : base(cause) { }
 }

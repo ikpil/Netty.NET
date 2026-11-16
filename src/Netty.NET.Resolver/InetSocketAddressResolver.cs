@@ -53,13 +53,15 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
         var endpoint = (DnsEndPoint)unresolvedAddress;
         if (endpoint.AddressFamily != AddressFamily.Unspecified)
         {
-            var addresses = await DoResolveAllAsync(endpoint, cancellationToken).ConfigureAwait(false);
-            if (addresses.Count == 0)
-                throw new SocketException((int)SocketError.HostNotFound);
-            return addresses[0];
+            IReadOnlyList<IPEndPoint> socketAddresses = await DoResolveAllAsync(endpoint, cancellationToken).ConfigureAwait(false);
+            if (socketAddresses.Count == 0)
+            {
+                throw new SocketException((int)SocketError.HostNotFound, endpoint.Host);
+            }
+            return socketAddresses[0];
         }
-        var address = await _nameResolver.ResolveAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
-        return new IPEndPoint(address, endpoint.Port);
+        IPAddress inetAddress = await _nameResolver.ResolveAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
+        return new IPEndPoint(inetAddress, endpoint.Port);
     }
 
     protected override async Task<IReadOnlyList<IPEndPoint>> DoResolveAllAsync(EndPoint unresolvedAddress,
@@ -68,12 +70,17 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
         // Note that InetSocketAddress.getHostName() will never incur a reverse lookup here,
         // because an unresolved address always has a host name.
         var endpoint = (DnsEndPoint)unresolvedAddress;
-        var addresses = await _nameResolver.ResolveAllAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
-        var result = new List<IPEndPoint>(addresses.Count);
-        foreach (var address in addresses)
-            if (endpoint.AddressFamily == AddressFamily.Unspecified || address.AddressFamily == endpoint.AddressFamily)
-                result.Add(new IPEndPoint(address, endpoint.Port));
-        return result;
+        IReadOnlyList<IPAddress> inetAddresses =
+            await _nameResolver.ResolveAllAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
+        var socketAddresses = new List<IPEndPoint>(inetAddresses.Count);
+        foreach (IPAddress inetAddress in inetAddresses)
+        {
+            if (endpoint.AddressFamily == AddressFamily.Unspecified || inetAddress.AddressFamily == endpoint.AddressFamily)
+            {
+                socketAddresses.Add(new IPEndPoint(inetAddress, endpoint.Port));
+            }
+        }
+        return socketAddresses;
     }
 
     public override void Dispose() => _nameResolver.Dispose();

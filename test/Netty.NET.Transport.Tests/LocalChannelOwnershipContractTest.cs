@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Local;
@@ -14,6 +18,115 @@ namespace Netty.NET.Transport.Tests;
 #pragma warning disable xUnit1051 // Finish both owners and release retained data independently of test cancellation.
 public class LocalChannelOwnershipContractTest
 {
+    [Fact]
+    public async Task SecondConnectWhileTheFirstIsPendingFailsWithConnectionPending()
+    {
+        var group = new DefaultEventLoopGroup(1);
+        IChannel server = null, client = null;
+        try
+        {
+            server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
+                .Option(ChannelOption.AUTO_READ, false).ChildHandler(new ChannelInboundHandlerAdapter())
+                .BindAsync(LocalAddress.ANY);
+            client = await new Bootstrap().Group(group).Channel<LocalChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).RegisterAsync();
+            Task first = null, second = null;
+            // The server does not accept yet, so LocalUnsafe.connect keeps its connectPromise pending.
+            IChannel copy = client;
+            await client.EventLoop.SubmitAsync(() =>
+            {
+                first = copy.ConnectAsync(server.LocalAddress);
+                second = copy.ConnectAsync(server.LocalAddress);
+            });
+            var error = await Assert.ThrowsAsync<SocketException>(() => second);
+            // CLR: SocketError.AlreadyInProgress stands for ConnectionPendingException.
+            Assert.Equal(SocketError.AlreadyInProgress, error.SocketErrorCode);
+            Assert.False(first.IsCompleted);
+            server.Config.SetAutoRead(true);
+            await first.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.True(client.IsActive);
+        }
+        finally
+        {
+            if (client != null)
+                await client.CloseAsync();
+            if (server != null)
+                await server.CloseAsync();
+            await group.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task RefusedConnectionsCarryTheSourceMessages()
+    {
+        var group = new DefaultEventLoopGroup(1);
+        var accepted = new TaskCompletionSource<LocalChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
+        IChannel server = null;
+        var unbound = new LocalAddress(Guid.NewGuid().ToString());
+        try
+        {
+            var refused = await Assert.ThrowsAsync<SocketException>(() => new Bootstrap().Group(group).Channel<LocalChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(unbound));
+            Assert.Equal(SocketError.ConnectionRefused, refused.SocketErrorCode);
+            Assert.Equal("connection refused: " + unbound, refused.Message);
+
+            server = await new ServerBootstrap().Group(group).ChannelFactory(() => new ObservedQueuedServer(accepted))
+                .Option(ChannelOption.AUTO_READ, false).ChildHandler(new ChannelInboundHandlerAdapter())
+                .BindAsync(LocalAddress.ANY);
+            Task<IChannel> connect = new Bootstrap().Group(group).Channel<LocalChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(server.LocalAddress);
+            await accepted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            // Closing the server closes the queued accepted channel, which fails the connect in LocalChannel.tryClose.
+            await server.CloseAsync();
+            var closed = await Assert.ThrowsAsync<SocketException>(() => connect.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.Equal(SocketError.ConnectionRefused, closed.SocketErrorCode);
+            Assert.Equal("connection refused: the accepted channel was closed", closed.Message);
+        }
+        finally
+        {
+            if (server != null)
+                await server.CloseAsync();
+            await group.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ReentrantReadsAreBoundedByTheReaderStackDepth()
+    {
+        const int messages = 20;
+        var group = new DefaultEventLoopGroup(1);
+        var reader = new ReadAgainOnRead(messages);
+        IChannel server = null, client = null;
+        try
+        {
+            server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
+                .ChildOption(ChannelOption.AUTO_READ, false)
+                .ChildHandler(new ActionChannelInitializer<LocalChannel>(child => child.Pipeline.AddLast(reader)))
+                .BindAsync(LocalAddress.ANY);
+            client = await new Bootstrap().Group(group).Channel<LocalChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(server.LocalAddress);
+            await reader.Active.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            for (int i = 0; i < messages; i++)
+                _ = client.WriteAsync(i);
+            client.Flush();
+            await reader.Done.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            // Each channelRead() calls read() again, so doBeginRead() nests readInbound() until
+            // MAX_READER_STACK_DEPTH (8) and then continues through readTask from a new event-loop task.
+            Assert.Equal(messages, reader.Depths.Count);
+            Assert.Equal(8, reader.Depths.Max());
+            Assert.Contains(0, reader.Depths.GetRange(1, messages - 1));
+            Assert.Equal(0, await group.SubmitAsync(() => InternalThreadLocalMap.Get().LocalChannelReaderStackDepth()));
+        }
+        finally
+        {
+            if (client != null)
+                await client.CloseAsync();
+            if (server != null)
+                await server.CloseAsync();
+            await group.StopAsync();
+        }
+    }
+
     [Fact]
     public async Task PendingInitializerReceivesRegisteredBeforePipelineDestruction()
     {
@@ -46,7 +159,11 @@ public class LocalChannelOwnershipContractTest
             var peer = await accepted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             await client.WriteAndFlushAsync("Hello World");
             await client.CloseAsync();
-            await peer.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await peer.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            // AbstractUnsafe.close completes closeFuture before its deferred deregistration (#4435) runs on the loop.
+            var deadline = Stopwatch.StartNew();
+            while (peer.IsRegistered && deadline.Elapsed < TimeSpan.FromSeconds(5))
+                await peer.EventLoop.SubmitAsync(() => { });
             Assert.False(peer.IsRegistered);
             // Source ChannelInitializerTest requires registration, read and removal to survive an offloaded
             // initializer. Force HandlerAdded to run only after close so it must receive queued Registered.
@@ -64,8 +181,10 @@ public class LocalChannelOwnershipContractTest
                 await client.CloseAsync();
             if (server != null)
                 await server.CloseAsync();
-            await group.StopAsync();
+            // CLR: fireChannelRegistered hops to the offloaded initializer's executor first (as in the source), which
+            // may still forward one queued event to the channel loop; drain that executor while the group still runs.
             await executor.StopAsync();
+            await group.StopAsync();
         }
     }
 
@@ -96,7 +215,7 @@ public class LocalChannelOwnershipContractTest
             Assert.False(client.IsActive);
             var child = await queued.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             server.Config.SetAutoRead(true);
-            await child.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await child.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(child.IsOpen);
             Assert.False(child.IsActive);
             Assert.False(client.IsActive);
@@ -115,7 +234,7 @@ public class LocalChannelOwnershipContractTest
     public async Task ReentrantPeerWriteCannotDeliverTheReplyBeforeTheOriginalWrite()
     {
         var group = new DefaultEventLoopGroup(1);
-        var sender = new ReentrantWriteCompletionChannel();
+        var sender = new LocalChannel();
         IChannel server = null;
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var received = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -133,9 +252,10 @@ public class LocalChannelOwnershipContractTest
             var peer = await accepted.Task;
             Task reply = null;
             // The source promise listener can write to the peer before the original doWrite exits.
-            // Force that same frame boundary without changing the native Task producer's dispatch policy.
-            sender.BeforeCompletion = () => reply = peer.WriteAndFlushAsync(2);
-            await client.WriteAndFlushAsync(1);
+            // Native Task continuations run asynchronously, so run the reply from the release in in.remove(), the
+            // same frame boundary: doWrite still has writeInProgress set and has not called finishPeerRead(peer).
+            var message = new ReleaseHookMessage(() => reply = peer.WriteAndFlushAsync(2));
+            await client.WriteAndFlushAsync(message);
             Assert.Equal(new[] { "server", "client" }, await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             if (reply != null)
                 await reply;
@@ -186,10 +306,10 @@ public class LocalChannelOwnershipContractTest
             // Force all close/read notifications to drain before Retain returns and enqueue can resume.
             await peer.EventLoop.SubmitAsync(() => { });
             allowPublish.Set();
-            await Assert.ThrowsAsync<IOException>(() => write);
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
             await sender.EventLoop.SubmitAsync(() => { });
-            Assert.True(peer.IsInboundBufferEmpty);
-            Assert.Equal(0, message.ReferenceCount);
+            Assert.True(peer.inboundBuffer.IsEmpty);
+            Assert.Equal(0, message.RefCnt);
             Assert.Equal(1, message.Deallocations);
         }
         finally
@@ -200,7 +320,7 @@ public class LocalChannelOwnershipContractTest
             if (server != null)
                 await server.CloseAsync();
             await Task.WhenAll(writers.StopAsync(), readers.StopAsync());
-            while (message.ReferenceCount > 0)
+            while (message.RefCnt > 0)
                 message.Release();
         }
     }
@@ -213,23 +333,53 @@ public class LocalChannelOwnershipContractTest
     private sealed class RemovedReadMarker(TaskCompletionSource removed) : ChannelInboundHandlerAdapter
     {
         internal int Reads, Removals;
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { if (Equals("Hello World", message)) Reads++; }
-        public override void HandlerRemoved(ChannelHandlerContext context)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { if (Equals("Hello World", msg)) Reads++; }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
         { Removals++; removed.TrySetResult(); }
     }
-    private sealed class ReentrantWriteCompletionChannel : LocalChannel
+    [Sharable]
+    private sealed class ReadAgainOnRead(int expected) : ChannelInboundHandlerAdapter
     {
-        internal Action BeforeCompletion;
-        protected override void DoWriteComplete()
+        internal readonly TaskCompletionSource Active = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource Done = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly List<int> Depths = new();
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            Interlocked.Exchange(ref BeforeCompletion, null)?.Invoke();
-            base.DoWriteComplete();
+            ctx.FireChannelActive();
+            ctx.Read();
+            Active.TrySetResult();
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            Depths.Add(InternalThreadLocalMap.Get().LocalChannelReaderStackDepth());
+            if (Depths.Count == expected)
+                Done.TrySetResult();
+            ctx.Read();
+        }
+    }
+
+    // Runs a callback on its first release, which is ChannelOutboundBuffer.remove() releasing the written message.
+    internal sealed class ReleaseHookMessage(Action released) : IReferenceCounted
+    {
+        private Action _released = released;
+        private int _refCnt = 1;
+        public int RefCnt => Volatile.Read(ref _refCnt);
+        public IReferenceCounted Retain() => Retain(1);
+        public IReferenceCounted Retain(int increment) { Interlocked.Add(ref _refCnt, increment); return this; }
+        public IReferenceCounted Touch() => this;
+        public IReferenceCounted Touch(object hint) => this;
+        public bool Release() => Release(1);
+        public bool Release(int decrement)
+        {
+            bool deallocated = Interlocked.Add(ref _refCnt, -decrement) == 0;
+            Interlocked.Exchange(ref _released, null)?.Invoke();
+            return deallocated;
         }
     }
     private sealed class RecordRead(string name, List<string> events, TaskCompletionSource<string[]> received) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { events.Add(name); if (events.Count == 2) received.TrySetResult(events.ToArray()); }
     }
     private sealed class ReentrantRetainMessage(Action retained) : AbstractReferenceCounted
@@ -239,7 +389,8 @@ public class LocalChannelOwnershipContractTest
         public override IReferenceCounted Retain(int increment)
         {
             base.Retain(increment);
-            if (Interlocked.Increment(ref _retains) == 2)
+            // The first retain is doWrite publishing the message to the peer (peer.inboundBuffer.add(retain(msg))).
+            if (Interlocked.Increment(ref _retains) == 1)
                 retained();
             return this;
         }

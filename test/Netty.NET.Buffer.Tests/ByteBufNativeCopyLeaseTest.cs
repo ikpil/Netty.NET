@@ -124,7 +124,7 @@ public class ByteBufNativeCopyLeaseTest
             else
             {
                 ByteBuf result = view.Copy(index, length);
-                Assert.Same(allocator.Last, result); Assert.Same(allocator, result.Allocator);
+                Assert.Same(allocator.Last, result); Assert.Same(allocator, result.Alloc());
                 Assert.True(result.IsDirect); Assert.False(result.IsReadOnly);
                 Assert.Equal(length, result.Capacity); Assert.Equal(64, result.MaxCapacity);
                 Assert.Equal(0, result.ReaderIndex); Assert.Equal(length, result.WriterIndex);
@@ -144,13 +144,13 @@ public class ByteBufNativeCopyLeaseTest
             }
             // CLR policy releases a newly allocated result after a failed write;
             // Java leaves that result owned by the allocator/caller's failure path.
-            if (!invalid && failure == 2) Assert.Equal(0, allocator.Last.ReferenceCount);
+            if (!invalid && failure == 2) Assert.Equal(0, allocator.Last.RefCnt);
             Assert.Equal(16, allocator.SourceNative.ReservedBytes);
-            Assert.Equal(1, root.ReferenceCount); AssertIndices(root, view);
+            Assert.Equal(1, root.RefCnt); AssertIndices(root, view);
         }
         finally
         {
-            if (allocator.Last is { ReferenceCount: > 0 }) allocator.Last.Release();
+            if (allocator.Last is { RefCnt: > 0 }) allocator.Last.Release();
             root.Release();
             Assert.Equal(0, allocator.SourceNative.ReservedBytes);
             Assert.Equal(0, allocator.TargetNative.ReservedBytes);
@@ -180,7 +180,7 @@ public class ByteBufNativeCopyLeaseTest
         {
             // Fail BEFORE resize/release on the broken implementation, avoiding a
             // test that would deliberately read a freed native address.
-            Assert.Equal(1, Pins(owner)); Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(1, Pins(owner)); Assert.Equal(1, root.RefCnt);
             if (action is 0 or 2)
             {
                 root.Capacity = 32; root.SetByte(offset + 3, 99);
@@ -189,7 +189,7 @@ public class ByteBufNativeCopyLeaseTest
             }
             else
             {
-                Assert.True(root.Release()); Assert.Equal(0, root.ReferenceCount);
+                Assert.True(root.Release()); Assert.Equal(0, root.RefCnt);
                 Assert.Equal(16, allocator.SourceNative.ReservedBytes);
             }
             Assert.Equal(1, Pins(owner));
@@ -208,7 +208,7 @@ public class ByteBufNativeCopyLeaseTest
             Assert.Equal(action is 0 or 2 ? 32 : 0, allocator.SourceNative.ReservedBytes);
             Assert.Equal(1, allocator.Calls); Assert.Equal(action == 2 ? 0 : 1, allocator.Writes);
             if (action != 2) Assert.Equal(expected, allocator.Input);
-            if (action == 3) Assert.Equal(0, allocator.Last.ReferenceCount);
+            if (action == 3) Assert.Equal(0, allocator.Last.RefCnt);
             if (action is 0 or 2)
             {
                 Assert.Equal(99, root.GetByte(offset + 3)); AssertIndices(root, view);
@@ -216,8 +216,8 @@ public class ByteBufNativeCopyLeaseTest
         }
         finally
         {
-            if (allocator.Last is { ReferenceCount: > 0 }) allocator.Last.Release();
-            if (root.ReferenceCount > 0) root.Release();
+            if (allocator.Last is { RefCnt: > 0 }) allocator.Last.Release();
+            if (root.RefCnt > 0) root.Release();
             Assert.Equal(0, allocator.SourceNative.ReservedBytes);
             Assert.Equal(0, allocator.TargetNative.ReservedBytes);
         }

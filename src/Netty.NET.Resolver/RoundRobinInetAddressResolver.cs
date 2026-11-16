@@ -50,26 +50,37 @@ public class RoundRobinInetAddressResolver : InetNameResolver
         // hijack the doResolve request, but do a doResolveAll request under the hood.
         // Note that InetSocketAddress.getHostName() will never incur a reverse lookup here,
         // because an unresolved address always has a host name.
-        var addresses = await _nameResolver.ResolveAllAsync(inetHost, cancellationToken).ConfigureAwait(false);
-        if (addresses.Count == 0)
-            throw new SocketException((int)SocketError.HostNotFound);
-        // if there are multiple addresses: we shall pick one by one
-        // to support the round robin distribution
-        return addresses[RandomIndex(addresses.Count)];
+        IReadOnlyList<IPAddress> inetAddresses =
+            await _nameResolver.ResolveAllAsync(inetHost, cancellationToken).ConfigureAwait(false);
+        int numAddresses = inetAddresses.Count;
+        if (numAddresses > 0)
+        {
+            // if there are multiple addresses: we shall pick one by one
+            // to support the round robin distribution
+            return inetAddresses[RandomIndex(numAddresses)];
+        }
+        // CLR: UnknownHostException(inetHost) maps to SocketException(HostNotFound) carrying the host.
+        throw new SocketException((int)SocketError.HostNotFound, inetHost);
     }
 
     protected override async Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
     {
-        var addresses = await _nameResolver.ResolveAllAsync(inetHost, cancellationToken).ConfigureAwait(false);
-        if (addresses.Count == 0)
-            return addresses;
-        // create a copy to make sure that it's modifiable random access collection
-        var result = new IPAddress[addresses.Count];
-        // rotate by different distance each time to force round robin distribution
-        var distance = RandomIndex(addresses.Count);
-        for (int i = 0; i < result.Length; i++)
-            result[(i + distance) % result.Length] = addresses[i];
-        return result;
+        IReadOnlyList<IPAddress> inetAddresses =
+            await _nameResolver.ResolveAllAsync(inetHost, cancellationToken).ConfigureAwait(false);
+        if (inetAddresses.Count != 0)
+        {
+            // create a copy to make sure that it's modifiable random access collection
+            var result = new IPAddress[inetAddresses.Count];
+            // rotate by different distance each time to force round robin distribution
+            // CLR: Collections.rotate(result, distance) moves element i to (i + distance) % size.
+            int distance = RandomIndex(inetAddresses.Count);
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[(i + distance) % result.Length] = inetAddresses[i];
+            }
+            return result;
+        }
+        return inetAddresses;
     }
 
     private static int RandomIndex(int numAddresses) => numAddresses == 1 ? 0 : Random.Shared.Next(numAddresses);

@@ -56,8 +56,8 @@ public class ByteBufTextSearchTest
         Assert.Equal(-1, empty.ForEachByte(_ => throw new InvalidOperationException()));
         Assert.Equal(-1, empty.ForEachByteDesc(_ => throw new InvalidOperationException()));
         // CLR text APIs consistently accept an empty span with a non-null Encoding, including the sentinel.
-        Assert.Equal(0, empty.SetString(0, "", Encoding.UTF8));
-        Assert.Equal(0, empty.WriteString("", Encoding.UTF8));
+        Assert.Equal(0, empty.SetCharSequence(0, "", Encoding.UTF8));
+        Assert.Equal(0, empty.WriteCharSequence("", Encoding.UTF8));
         Assert.Equal("", empty.ReadString(0, Encoding.UTF8));
         ByteBuf owned = Unpooled.Buffer(0, 1);
         try { Assert.Equal(-1, owned.IndexOf(0, 1, 1)); }
@@ -238,17 +238,17 @@ public class ByteBufTextSearchTest
         {
             buffer.WriteByte(0x7f);
             // This should expand the buffer.
-            Assert.Equal(expected.Length, buffer.WriteString("Aé", encoding));
+            Assert.Equal(expected.Length, buffer.WriteCharSequence("Aé", encoding));
             Assert.Equal(expected.Length + 1, buffer.WriterIndex);
             Assert.Equal(0x7f, buffer.ReadByte());
             Assert.Equal(expected, buffer.ReadableMemory.ToArray());
-            Assert.Equal(text, buffer.GetString(encoding));
+            Assert.Equal(text, buffer.ToString(encoding));
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(text, buffer.ReadString(expected.Length, encoding));
             Assert.Equal(buffer.WriterIndex, buffer.ReaderIndex);
-            Assert.Equal(expected.Length, buffer.SetString(1, "Aé", encoding));
+            Assert.Equal(expected.Length, buffer.SetCharSequence(1, "Aé", encoding));
             Assert.Equal(buffer.WriterIndex, buffer.ReaderIndex);
-            Assert.Equal(text, buffer.GetString(1, expected.Length, encoding));
+            Assert.Equal(text, buffer.ToString(1, expected.Length, encoding));
         }
         finally { buffer.Release(); }
     }
@@ -262,16 +262,16 @@ public class ByteBufTextSearchTest
         Encoding strict = new UTF8Encoding(false, true);
         try
         {
-            Assert.Throws<EncoderFallbackException>(() => buffer.WriteString("\ud800", strict));
+            Assert.Throws<EncoderFallbackException>(() => buffer.WriteCharSequence("\ud800", strict));
             Assert.Equal(1, buffer.Capacity);
             Assert.Equal(0, buffer.WriterIndex);
-            Assert.Equal(1, buffer.SetString(0, "A", strict));
+            Assert.Equal(1, buffer.SetCharSequence(0, "A", strict));
             Assert.Equal(0, buffer.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadString(1, strict));
             Assert.Equal(0, buffer.ReaderIndex);
-            Assert.Throws<ArgumentOutOfRangeException>(() => buffer.SetString(0, "é", strict));
+            Assert.Throws<ArgumentOutOfRangeException>(() => buffer.SetCharSequence(0, "é", strict));
             Assert.Equal(65, buffer.GetByte(0));
-            Assert.Equal(1, buffer.WriteString("A", strict));
+            Assert.Equal(1, buffer.WriteCharSequence("A", strict));
         }
         finally { buffer.Release(); }
 
@@ -282,23 +282,23 @@ public class ByteBufTextSearchTest
             Assert.Throws<DecoderFallbackException>(() => buffer.ReadString(1, strict));
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal("�", buffer.ReadString(1, Encoding.UTF8));
-            Assert.Equal(3, buffer.WriteString("\ud800", Encoding.UTF8));
+            Assert.Equal(3, buffer.WriteCharSequence("\ud800", Encoding.UTF8));
             Assert.Equal(new byte[] { 0xef, 0xbf, 0xbd }, buffer.AsMemory(2, 3).ToArray());
             Encoding custom = (Encoding)Encoding.ASCII.Clone();
             custom.EncoderFallback = new EncoderReplacementFallback("[bad]");
-            Assert.Equal(5, buffer.WriteString("é", custom));
+            Assert.Equal(5, buffer.WriteCharSequence("é", custom));
             Assert.Equal(new byte[] { 91, 98, 97, 100, 93 }, buffer.AsMemory(5, 5).ToArray());
-            Assert.Equal(0, buffer.WriteString(ReadOnlySpan<char>.Empty, strict));
-            Assert.Equal("?", buffer.GetString(0, 1, Encoding.ASCII));
-            Assert.Equal("ÿ", buffer.GetString(0, 1, Encoding.Latin1));
+            Assert.Equal(0, buffer.WriteCharSequence(ReadOnlySpan<char>.Empty, strict));
+            Assert.Equal("?", buffer.ToString(0, 1, Encoding.ASCII));
+            Assert.Equal("ÿ", buffer.ToString(0, 1, Encoding.Latin1));
             ByteBuf slice = buffer.Slice(2, 3);
-            Assert.Equal("�", slice.GetString(Encoding.UTF8));
-            Assert.Equal(1, slice.SetString(1, "Z", Encoding.ASCII));
+            Assert.Equal("�", slice.ToString(Encoding.UTF8));
+            Assert.Equal(1, slice.SetCharSequence(1, "Z", Encoding.ASCII));
             Assert.Equal(90, buffer.GetByte(3));
         }
         finally { buffer.Release(); }
-        Assert.Throws<IllegalReferenceCountException>(() => buffer.GetString(0, 0, strict));
-        Assert.Throws<IllegalReferenceCountException>(() => buffer.SetString(0, "", strict));
+        Assert.Throws<IllegalReferenceCountException>(() => buffer.ToString(0, 0, strict));
+        Assert.Throws<IllegalReferenceCountException>(() => buffer.SetCharSequence(0, "", strict));
         Assert.Throws<IllegalReferenceCountException>(() => buffer.ForEachByte(_ => true));
     }
 
@@ -387,7 +387,7 @@ public class ByteBufTextSearchTest
             ByteBuf duplicate = buffer.Duplicate();
             int written = kind switch
             {
-                0 => duplicate.WriteString(source, Encoding.UTF8),
+                0 => duplicate.WriteCharSequence(source, Encoding.UTF8),
                 1 => ByteBufUtil.WriteUtf8(duplicate, source), _ => ByteBufUtil.WriteAscii(duplicate, source)
             };
             Assert.Equal(1, written);

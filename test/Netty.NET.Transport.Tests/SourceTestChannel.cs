@@ -24,8 +24,8 @@ namespace Netty.NET.Transport.Tests;
 internal sealed class SourceTestChannel : AbstractChannel
 {
     internal SourceTestChannel() : base(null, new ChannelMetadata(false)) => SetActive(true);
-    public override EndPoint LocalAddress => null;
-    public override EndPoint RemoteAddress => null;
+    protected override EndPoint LocalAddress0() => null;
+    protected override EndPoint RemoteAddress0() => null;
     protected override IChannelConfig NewConfig() => new TestConfig(this);
     protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
@@ -38,7 +38,7 @@ internal sealed class SourceTestChannel : AbstractChannel
     {
         // NOOP
     }
-    protected override Task DoWrite(object message)
+    protected override Task DoWrite(object msg)
     {
         // NOOP
         return Task.CompletedTask;

@@ -70,10 +70,10 @@ public partial class CompositeByteBufIterationKernelTest
             Assert.Equal(form == 3 ? seen.Count : 0, s.Observation.Gets); Assert.Equal(0, s.Observation.Iterations);
             Assert.Equal(2, outer.ReaderIndex); Assert.Equal(18, outer.WriterIndex);
             Assert.Equal(6 - adjustment, source.ReaderIndex); Assert.Equal(26 - adjustment, source.WriterIndex);
-            Assert.Equal(2, s.Owner.ReferenceCount);
+            Assert.Equal(2, s.Owner.RefCnt);
         }
         finally { outer.Release(); }
-        Assert.Equal(1, s.Owner.ReferenceCount);
+        Assert.Equal(1, s.Owner.RefCnt);
     }
     public static IEnumerable<object[]> CallbackCases()
     {
@@ -113,7 +113,7 @@ public partial class CompositeByteBufIterationKernelTest
         Assert.Equal(s.Expected(descending ? 5 : 2, 1, fixedComposite)[0], seen[0]);
         if (action == 1) Assert.Equal((byte)(0x33 ^ (fixedComposite ? 0x80 : 0)), seen[1]);
         if (action < 2) { Assert.Equal(2, s.Owner.ReaderIndex); Assert.Equal(6, s.Owner.WriterIndex); }
-        else { Assert.Equal(0, s.Owner.ReferenceCount); Assert.Equal(0, s.Native.ReservedBytes); }
+        else { Assert.Equal(0, s.Owner.RefCnt); Assert.Equal(0, s.Native.ReservedBytes); }
     }
     public static IEnumerable<object[]> SearchSessions()
     {
@@ -185,10 +185,10 @@ public partial class CompositeByteBufIterationKernelTest
             Assert.Equal(first, s.First.AsReadOnlyMemory(0, 32).ToArray()); Assert.Equal(second, s.Second.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(1, view.ReaderIndex);
             Assert.Equal(operation >= 4 ? index + (fixedComposite ? 0 : 4) : 2, view.WriterIndex);
-            Assert.Equal(2, s.Owner.ReferenceCount); Assert.Equal(1, view.ReferenceCount);
+            Assert.Equal(2, s.Owner.RefCnt); Assert.Equal(1, view.RefCnt);
         }
         finally { view.Release(); }
-        Assert.Equal(1, s.Owner.ReferenceCount);
+        Assert.Equal(1, s.Owner.RefCnt);
     }
 
     public static IEnumerable<object[]> PatternPairs()
@@ -248,7 +248,7 @@ public partial class CompositeByteBufIterationKernelTest
             Assert.Equal(0, composite.ReaderIndex); Assert.Equal(40, composite.WriterIndex);
         }
         finally { composite.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
     }
 
     [Theory]
@@ -268,8 +268,8 @@ public partial class CompositeByteBufIterationKernelTest
         int Visit() => descending ? s.Owner.ForEachByteDesc(2, 4, processor) : s.Owner.ForEachByte(2, 4, processor);
         if (last) Assert.Equal(-1, Visit());
         else Assert.Throws<IllegalReferenceCountException>(() => Visit());
-        Assert.Equal(last ? 4 : 1, calls); Assert.Equal(0, s.Owner.ReferenceCount); Assert.Equal(1, s.First.ReferenceCount);
-        Assert.Equal(0, s.Second.ReferenceCount);
+        Assert.Equal(last ? 4 : 1, calls); Assert.Equal(0, s.Owner.RefCnt); Assert.Equal(1, s.First.RefCnt);
+        Assert.Equal(0, s.Second.RefCnt);
     }
     public static IEnumerable<object[]> HighCoordinateOperations()
     { for (int operation = 0; operation < 17; ++operation) yield return [operation]; }
@@ -314,7 +314,7 @@ public partial class CompositeByteBufIterationKernelTest
             Assert.Equal(0, composite.ReaderIndex); Assert.Equal(40, composite.WriterIndex);
         }
         finally { peer.Release(); composite.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
     }
 
 }

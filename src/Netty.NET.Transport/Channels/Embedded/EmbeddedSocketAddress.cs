@@ -18,7 +18,11 @@ using System.Net;
 
 namespace Netty.NET.Transport.Channels.Embedded;
 
-public sealed class EmbeddedSocketAddress(string text) : EndPoint
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart.
+internal sealed class EmbeddedSocketAddress : EndPoint
 {
-    public override string ToString() => text;
+    public override string ToString()
+    {
+        return "embedded";
+    }
 }

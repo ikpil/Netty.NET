@@ -31,8 +31,7 @@ namespace Netty.NET.Buffer;
  */
 /// <remarks>Shared striped and physical-thread local magazines pool heap/native chunks.
 /// Local magazines require guaranteed FastThreadLocal cleanup and, by default, an executor mapping.
-/// lowMemory is explicit; CLR GC heap limits are
-/// not treated as native memory budgets. Dispose closes allocations and drains all groups;
+/// lowMemory defaults to the source's IS_LOW_MEM. Dispose closes allocations and drains all groups;
 /// live buffers and pin/operation claims keep their regions until final return. Raw Memory
 /// remains borrowed. Empty sentinels/composites reserve no storage and remain available.
 /// The global default is selected through IByteBufAllocator.Default.</remarks>
@@ -53,17 +52,20 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
      * The default size is twice {@link NettyRuntime#availableProcessors()},
      * same as the maximum number of magazines per magazine group.
      */
-    /// <summary>Creates an adaptive allocator with explicit native reservations.</summary>
+    /// <summary>Creates an adaptive allocator.</summary>
     /// <param name="preferDirect">Null follows io.netty.noPreferDirect; an explicit value overrides it.</param>
-    /// <param name="lowMemory">Null reads io.netty.allocator.lowMemory (default false).
-    /// CLR GC heap limits are not used to infer native memory budgets.</param>
     /// <param name="useCacheForNonEventLoopThreads">Enables local magazines for eligible cleanup scopes
     /// without an executor mapping. Null reads io.netty.allocator.useCachedMagazinesForNonEventLoopThreads
     /// (default false). Ordinary CLR workers always use shared magazines.</param>
-    public AdaptiveByteBufAllocator(bool? preferDirect = null, bool? lowMemory = null, NativeMemoryAllocator nativeAllocator = null,
-        bool? useCacheForNonEventLoopThreads = null)
+    /// <param name="lowMemory">CLR: a per-instance override of the source's process-wide IS_LOW_MEM. Null uses
+    /// AdaptivePoolingAllocator.IS_LOW_MEM.</param>
+    /// <param name="nativeAllocator">CLR: the native memory source; null uses the shared one.</param>
+    // CLR: optional parameters replace the source's (), (preferDirect) and (preferDirect,
+    // useCacheForNonEventLoopThreads) constructors, keeping their argument order.
+    public AdaptiveByteBufAllocator(bool? preferDirect = null, bool? useCacheForNonEventLoopThreads = null,
+        bool? lowMemory = null, NativeMemoryAllocator nativeAllocator = null)
         : this(preferDirect ?? ByteBufUtil.PreferDirect,
-            lowMemory ?? SystemPropertyUtil.GetBoolean("io.netty.allocator.lowMemory", false), nativeAllocator,
+            lowMemory ?? AdaptivePoolingAllocator.IS_LOW_MEM, nativeAllocator,
             Math.Max(2, SystemPropertyUtil.GetInt("io.netty.allocator.chunkReuseQueueCapacity", MaxStripes())),
             Math.Max(1, SystemPropertyUtil.GetLong("io.netty.allocator.chunkPurgePollsShared", 128)),
             Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.chunkPurgeThreshold", 3)), MaxStripes(),
@@ -86,19 +88,10 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
         int localMaxBytes = 8 * 1024 * 1024, int localMinBytes = 4 * 1024 * 1024) : base(preferDirect)
     {
         NativeMemoryAllocator native = nativeAllocator ?? NativeMemoryAllocator.Shared;
-        HeapPool = new AdaptivePoolingAllocator((size, max) => new UnpooledHeapByteBuf(this, size, max),
+        HeapPool = new AdaptivePoolingAllocator(new HeapChunkAllocator(this),
             lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
             useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);
-        /**
-         * Allocates direct buffers for chunks used in the pooling allocators.
-         * @param alloc The allocator we're creating a chunk for.
-         * @param initialCapacity The initial capacity.
-         * @param maxCapacity The max capacity.
-         * @return The {@link UnpooledDirectByteBuf} with the chunk memory.
-         */
-        // CLR: this callback and the pooled allocator's arena-free fallback use
-        // the same owned native constructor instead of JVM Unsafe/Cleaner selection.
-        DirectPool = new AdaptivePoolingAllocator((size, max) => new UnpooledDirectByteBuf(this, size, max, native),
+        DirectPool = new AdaptivePoolingAllocator(new DirectChunkAllocator(this, native),
             lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
             useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);
     }
@@ -122,6 +115,49 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
             if (_disposed) return;
             Volatile.Write(ref _disposed, true);
             HeapPool.Dispose(); DirectPool.Dispose();
+        }
+    }
+
+    // CLR: the CLR heap buffer has no Unsafe/non-Unsafe variants to choose from.
+    private sealed class HeapChunkAllocator : AdaptivePoolingAllocator.IChunkAllocator
+    {
+        private readonly IByteBufAllocator _allocator;
+
+        internal HeapChunkAllocator(IByteBufAllocator allocator)
+        {
+            _allocator = allocator;
+        }
+
+        public ByteBuf Allocate(int initialCapacity, int maxCapacity)
+        {
+            return new UnpooledHeapByteBuf(_allocator, initialCapacity, maxCapacity);
+        }
+    }
+
+    // CLR: nativeAllocator is the allocator's native reservation domain.
+    private sealed class DirectChunkAllocator : AdaptivePoolingAllocator.IChunkAllocator
+    {
+        private readonly IByteBufAllocator _allocator;
+        private readonly NativeMemoryAllocator _nativeAllocator;
+
+        internal DirectChunkAllocator(IByteBufAllocator allocator, NativeMemoryAllocator nativeAllocator)
+        {
+            _allocator = allocator;
+            _nativeAllocator = nativeAllocator;
+        }
+
+        /**
+         * Allocates direct buffers for chunks used in the pooling allocators.
+         * @param alloc The allocator we're creating a chunk for.
+         * @param initialCapacity The initial capacity.
+         * @param maxCapacity The max capacity.
+         * @return The {@link UnpooledDirectByteBuf} with the chunk memory.
+         */
+        // CLR: this callback and the pooled allocator's arena-free fallback use
+        // the same owned native constructor instead of JVM Unsafe/Cleaner selection.
+        public ByteBuf Allocate(int initialCapacity, int maxCapacity)
+        {
+            return new UnpooledDirectByteBuf(_allocator, initialCapacity, maxCapacity, _nativeAllocator);
         }
     }
 }

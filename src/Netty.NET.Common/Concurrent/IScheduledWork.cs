@@ -10,11 +10,12 @@ public interface IScheduledWork
     /// <remarks>Return the same non-null Action instance throughout this membership's lifetime.</remarks>
     Action QueueCallback { get; }
     bool IsCanceled { get; }
-    void CancelForShutdown();
+    void CancelWithoutRemove();
     long DeadlineNanos();
     long DelayNanos(long now);
     long DelayNanos();
     long GetId();
-    void AssignId(long id);
+    // CLR: Java setId returns this for chaining at its single call site; no caller uses it.
+    void SetId(long id);
     void SetConsumed();
 }

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using static Netty.NET.Transport.Tests.SocketConnectionAttemptSourceTest;
 using static Netty.NET.Transport.Tests.SocketMultipleConnectSourceTest;
 
@@ -20,7 +21,7 @@ public class SocketConnectTimingContractTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var address = Loopback();
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new PendingSocketConnect(address.AddressFamily);
         try
         {
@@ -40,7 +41,7 @@ public class SocketConnectTimingContractTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var address = Loopback();
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new PendingSocketConnect(address.AddressFamily);
         using var connectCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         try
@@ -50,7 +51,7 @@ public class SocketConnectTimingContractTest
             await channel.Started.Task.WaitAsync(cancellation);
             await Assert.ThrowsAsync<TimeoutException>(() => connect.WaitAsync(TimeSpan.FromMilliseconds(1000), cancellation));
             connectCancellation.Cancel();
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromMilliseconds(500), cancellation);
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromMilliseconds(500), cancellation);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connect);
             Assert.True(connect.IsCanceled);
         }
@@ -61,7 +62,7 @@ public class SocketConnectTimingContractTest
         }
     }
 
-    private static Bootstrap PendingBootstrap(DefaultEventLoopGroup group, PendingSocketConnect channel,
+    private static Bootstrap PendingBootstrap(MultiThreadIoEventLoopGroup group, PendingSocketConnect channel,
         bool adaptive, int timeout) => new Bootstrap().Group(group).ChannelFactory(() => channel)
         .Handler(new ChannelInboundHandlerAdapter()).Option(ChannelOption.ALLOCATOR, SelectAllocator(adaptive))
         .Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout);

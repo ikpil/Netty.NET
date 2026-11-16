@@ -15,8 +15,9 @@
  */
 
 using System;
-using System.Threading;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels;
 /**
@@ -25,30 +26,63 @@ namespace Netty.NET.Transport.Channels;
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)]
 public abstract class ChannelHandlerAdapter : IChannelHandler
 {
-    private int _added;
-    /**
-     * Return {@code true} if the implementation is {@link Sharable} and so can be added
-     * to different {@link ChannelPipeline}s.
-     */
-    public virtual bool IsSharable => GetType().IsDefined(typeof(SharableAttribute), true);
-    internal void CheckMultiplicity()
-    {
-        if (!IsSharable && Interlocked.Exchange(ref _added, 1) != 0)
-            throw new ChannelPipelineException("A non-sharable handler cannot be added more than once.");
-    }
+    // Not using volatile because it's used only for a sanity check.
+    internal bool added;
+
     /**
      * Throws {@link IllegalStateException} if {@link ChannelHandlerAdapter#isSharable()} returns {@code true}
      */
     protected void EnsureNotSharable()
     {
         if (IsSharable)
-            throw new InvalidOperationException("This handler cannot be sharable.");
+        {
+            throw new InvalidOperationException("ChannelHandler " + GetType().FullName + " is not allowed to be shared");
+        }
     }
+
+    /**
+     * Return {@code true} if the implementation is {@link Sharable} and so can be added
+     * to different {@link ChannelPipeline}s.
+     */
+    public virtual bool IsSharable
+    {
+        get
+        {
+            /**
+             * Cache the result of {@link Sharable} annotation detection to workaround a condition. We use a
+             * {@link ThreadLocal} and {@link WeakHashMap} to eliminate the volatile write/reads. Using different
+             * {@link WeakHashMap} instances per {@link Thread} is good enough for us and the number of
+             * {@link Thread}s are quite limited anyway.
+             *
+             * See <a href="https://github.com/netty/netty/issues/2289">#2289</a>.
+             */
+            Type clazz = GetType();
+            ConditionalWeakTable<Type, StrongBox<bool>> cache = InternalThreadLocalMap.Get().HandlerSharableCache();
+            if (!cache.TryGetValue(clazz, out StrongBox<bool> sharable))
+            {
+                sharable = new StrongBox<bool>(clazz.IsDefined(typeof(SharableAttribute), true));
+                cache.AddOrUpdate(clazz, sharable);
+            }
+            return sharable.Value;
+        }
+    }
+
     /**
      * Do nothing by default, sub-classes may override this method.
      */
-    public virtual void HandlerAdded(ChannelHandlerContext context) { }
-    public virtual void HandlerRemoved(ChannelHandlerContext context) { }
+    public virtual void HandlerAdded(IChannelHandlerContext ctx)
+    {
+        // NOOP
+    }
+
+    /**
+     * Do nothing by default, sub-classes may override this method.
+     */
+    public virtual void HandlerRemoved(IChannelHandlerContext ctx)
+    {
+        // NOOP
+    }
+
     /**
      * Calls {@link ChannelHandlerContext#fireExceptionCaught(Throwable)} to forward
      * to the next {@link ChannelHandler} in the {@link ChannelPipeline}.
@@ -58,5 +92,5 @@ public abstract class ChannelHandlerAdapter : IChannelHandler
      * @deprecated is part of {@link ChannelInboundHandler}
      */
     [ChannelHandlerMask.Skip]
-    public virtual void ExceptionCaught(ChannelHandlerContext context, Exception cause) => context.FireExceptionCaught(cause);
+    public virtual void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => ctx.FireExceptionCaught(cause);
 }

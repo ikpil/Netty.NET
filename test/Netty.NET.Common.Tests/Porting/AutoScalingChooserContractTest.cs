@@ -97,7 +97,7 @@ public class AutoScalingChooserContractTest
         public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
         public override bool IsSuspended() => suspended;
         public override bool IsShuttingDown() => shuttingDown;
-        public override Task Termination => termination.Task;
+        public override Task TerminationFuture => termination.Task;
         public override bool TrySuspend()
         {
             ++suspensionAttempts;

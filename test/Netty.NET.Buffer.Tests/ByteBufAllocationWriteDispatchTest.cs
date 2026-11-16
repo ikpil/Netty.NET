@@ -164,7 +164,7 @@ public class ByteBufAllocationWriteDispatchTest
             Assert.Equal(2, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
             owner.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
-            Assert.Equal(1, owner.ReferenceCount); Assert.Equal(1, calls.Result.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, calls.Result.RefCnt);
             Assert.Equal(201, calls.Result.GetByte(0));
         }
         finally
@@ -223,7 +223,7 @@ public class ByteBufAllocationWriteDispatchTest
                 Assert.Equal(new byte[] { 12, 13, 14, 15, 16, 17 }[..length], observation.Input);
                 if (!copy) { Assert.Same(source, observation.Source); Assert.Equal(2, observation.Index); }
                 Assert.Equal(mode is 1 or 4 ? 0 : length, allocator.Last.WriterIndex);
-                Assert.Equal(failure ? 0 : 1, allocator.Last.ReferenceCount);
+                Assert.Equal(failure ? 0 : 1, allocator.Last.RefCnt);
             }
             if (!invalid && !failure)
             {
@@ -233,7 +233,7 @@ public class ByteBufAllocationWriteDispatchTest
                 {
                     Assert.Equal(length, allocator.Last.Capacity); Assert.Equal(16, allocator.Last.MaxCapacity);
                     Assert.Equal(copy ? direct : !direct, allocator.Last.IsDirect);
-                    Assert.Same(allocator, allocator.Last.Allocator);
+                    Assert.Same(allocator, allocator.Last.Alloc());
                     if (mode != 4)
                     {
                         Assert.Equal(new byte[] { 12, 13, 14, 15, 16, 17 }[..length], ByteBufUtil.GetBytes(allocator.Last));
@@ -242,7 +242,7 @@ public class ByteBufAllocationWriteDispatchTest
                 }
             }
             Assert.Equal(!copy && !invalid && !failure ? 2 + length : 2, source.ReaderIndex);
-            Assert.Equal(7, source.WriterIndex); Assert.Equal(8, source.Capacity); Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(7, source.WriterIndex); Assert.Equal(8, source.Capacity); Assert.Equal(1, source.RefCnt);
             Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(source, 0, 8));
             source.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex);
@@ -251,7 +251,7 @@ public class ByteBufAllocationWriteDispatchTest
         finally
         {
             // A deliberately redirected copy result leaves ownership with the custom allocator probe.
-            if (allocator.Last is { ReferenceCount: > 0 }) Assert.True(allocator.Last.Release());
+            if (allocator.Last is { RefCnt: > 0 }) Assert.True(allocator.Last.Release());
             Assert.True(source.Release());
         }
         Assert.Equal(0, allocator.Native.ReservedBytes);

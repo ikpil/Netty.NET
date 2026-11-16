@@ -17,6 +17,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -63,9 +64,9 @@ public class UnpooledNativeResizeOwnershipTest
         {
             Assert.Equal(31, native.ReservedBytes);
             b.Capacity = 16; // A no-op does not need a second reservation.
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = capacity);
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = capacity);
             Assert.Equal(16, root.Capacity); Assert.Equal(bytes, ByteBufUtil.GetBytes(root, 0, 16));
-            Assert.Equal((3, 14, 1), (root.ReaderIndex, root.WriterIndex, root.ReferenceCount));
+            Assert.Equal((3, 14, 1), (root.ReaderIndex, root.WriterIndex, root.RefCnt));
             Assert.Equal(facade == 4 ? (4, 12) : (3, 14), (b.ReaderIndex, b.WriterIndex));
             Assert.Equal(borrowed ? 0 : 16, allocator.Metric.UsedDirectMemory);
             Assert.Equal(31, native.ReservedBytes);
@@ -74,7 +75,7 @@ public class UnpooledNativeResizeOwnershipTest
             pressure.Dispose();
             b.Capacity = capacity;
             Assert.Equal(capacity, root.Capacity); Assert.Equal(bytes.AsSpan(0, capacity).ToArray(), ByteBufUtil.GetBytes(root, 0, capacity));
-            Assert.Equal((Math.Min(3, capacity), capacity, 1), (root.ReaderIndex, root.WriterIndex, root.ReferenceCount));
+            Assert.Equal((Math.Min(3, capacity), capacity, 1), (root.ReaderIndex, root.WriterIndex, root.RefCnt));
             // Duplicate capacity follows its parent, but shrinking the parent does
             // not repair that duplicate's independent cursors (the original rule).
             Assert.Equal(facade == 4 ? (4, 12) : (Math.Min(3, capacity), capacity), (b.ReaderIndex, b.WriterIndex));
@@ -120,7 +121,7 @@ public class UnpooledNativeResizeOwnershipTest
         finally
         {
             pressure.Dispose();
-            if (root.ReferenceCount > 0) b.Release();
+            if (root.RefCnt > 0) b.Release();
             external.Dispose(); pin.Dispose();
             Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, externalDomain.ReservedBytes);
         }

@@ -30,9 +30,9 @@ public class AbstractReferenceCountedByteBufTest
     {
         var buffer = new CountingBuffer();
         buffer.SetCount(int.MaxValue);
-        Assert.Equal(int.MaxValue, buffer.ReferenceCount);
+        Assert.Equal(int.MaxValue, buffer.RefCnt);
         Assert.Throws<IllegalReferenceCountException>(() => buffer.Retain());
-        Assert.Equal(int.MaxValue, buffer.ReferenceCount);
+        Assert.Equal(int.MaxValue, buffer.RefCnt);
         Assert.True(buffer.Release(int.MaxValue));
     }
 
@@ -40,9 +40,9 @@ public class AbstractReferenceCountedByteBufTest
     public void TestRetainOverflow2()
     {
         var buffer = new CountingBuffer();
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         Assert.Throws<IllegalReferenceCountException>(() => buffer.Retain(int.MaxValue));
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         Assert.True(buffer.Release());
     }
 
@@ -51,7 +51,7 @@ public class AbstractReferenceCountedByteBufTest
     {
         var buffer = new CountingBuffer();
         buffer.SetCount(0);
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
         Assert.Throws<IllegalReferenceCountException>(() => buffer.Release(int.MaxValue));
         buffer.SetCount(1);
         Assert.True(buffer.Release());
@@ -66,15 +66,25 @@ public class AbstractReferenceCountedByteBufTest
         Assert.Equal("refCnt: 0, decrement: 1", error.Message);
     }
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    public void TestRetainResurrect(int increment)
+    [Fact]
+    public void TestRetainResurrect()
     {
         var buffer = new CountingBuffer();
         Assert.True(buffer.Release());
-        Assert.Equal(0, buffer.ReferenceCount);
-        Assert.Throws<IllegalReferenceCountException>(() => buffer.Retain(increment));
+        Assert.Equal(0, buffer.RefCnt);
+        Assert.Throws<IllegalReferenceCountException>(() => buffer.Retain());
+        // CLR: the failed retain does not deallocate a second time.
+        Assert.Equal(1, buffer.Deallocations);
+    }
+
+    [Fact]
+    public void TestRetainResurrect2()
+    {
+        var buffer = new CountingBuffer();
+        Assert.True(buffer.Release());
+        Assert.Equal(0, buffer.RefCnt);
+        Assert.Throws<IllegalReferenceCountException>(() => buffer.Retain(2));
+        // CLR: the failed retain does not deallocate a second time.
         Assert.Equal(1, buffer.Deallocations);
     }
 
@@ -87,7 +97,7 @@ public class AbstractReferenceCountedByteBufTest
         var buffer = new CountingBuffer();
         Assert.Throws<ArgumentException>(() => buffer.Retain(change));
         Assert.Throws<ArgumentException>(() => buffer.Release(change));
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         Assert.True(buffer.Release());
     }
 
@@ -98,7 +108,7 @@ public class AbstractReferenceCountedByteBufTest
         buffer.Retain(49);
         bool[] releases = await Task.WhenAll(Enumerable.Range(0, 50).Select(_ => Task.Run(() => buffer.Release())));
         Assert.Single(releases, final => final);
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
         Assert.Equal(1, buffer.Deallocations);
         Assert.Throws<IllegalReferenceCountException>(() => buffer.GetByte(0));
     }

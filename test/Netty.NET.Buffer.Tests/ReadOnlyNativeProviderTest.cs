@@ -66,7 +66,7 @@ public class ReadOnlyNativeProviderTest
                 try
                 {
                     Assert.Equal(32, copy.MaxCapacity); Assert.Equal(length, copy.Capacity);
-                    Assert.Same(allocator, copy.Allocator); Assert.True(copy.IsDirect); Assert.False(copy.IsReadOnly);
+                    Assert.Same(allocator, copy.Alloc()); Assert.True(copy.IsDirect); Assert.False(copy.IsReadOnly);
                     Assert.Equal(expected, ByteBufUtil.GetBytes(copy)); Assert.Equal(length, copy.WriterIndex); Assert.Equal(0, copy.ReaderIndex);
                     copy.Capacity = 32;
                     Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 33);
@@ -74,7 +74,7 @@ public class ReadOnlyNativeProviderTest
                     if (length != 0) { copy.SetByte(0, 200); Assert.NotEqual(200, view.GetByte(index)); }
                 }
                 finally { copy.Release(); }
-                Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex); Assert.Equal(1, source.ReferenceCount);
+                Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex); Assert.Equal(1, source.RefCnt);
             }
             view.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
         }
@@ -82,10 +82,8 @@ public class ReadOnlyNativeProviderTest
         Assert.Equal(0, targetNative.ReservedBytes); Assert.Equal(48, sourceNative.ReservedBytes);
     }
 
-    /**
-     * Needs unsafe to run
-     */
-    // CLR: native allocation and scoped pins replace the JVM Unsafe availability assumption.
+    // CLR: native allocation and scoped pins replace the JVM Unsafe availability assumption
+    // (see ReadOnlyUnsafeDirectByteBufferBufTest.cs for the original fixture and its comment).
     [Theory]
     [InlineData(1)] [InlineData(3)] [InlineData(8)]
     public unsafe void CapturedNativeOffsetControlsPrimitiveReadsBulkTransfersAndPinnedAddress(int offset)
@@ -169,8 +167,8 @@ public class ReadOnlyNativeProviderTest
         try
         {
             Assert.Throws<NotSupportedException>(() => source.Copy(1, 4));
-            Assert.Equal(8, allocator.LastMaximum); Assert.Equal(0, allocator.Last.ReferenceCount);
-            Assert.Equal(8, native.ReservedBytes); Assert.Equal(71, source.GetByte(1)); Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(8, allocator.LastMaximum); Assert.Equal(0, allocator.Last.RefCnt);
+            Assert.Equal(8, native.ReservedBytes); Assert.Equal(71, source.GetByte(1)); Assert.Equal(1, source.RefCnt);
         }
         finally { source.Release(); }
     }
@@ -198,7 +196,7 @@ public class ReadOnlyNativeProviderTest
         {
             Assert.Same(allocator.Last, copy); Assert.Equal(8, allocator.LastMaximum);
             Assert.Equal(8, copy.MaxCapacity); Assert.Equal(0, copy.Capacity); Assert.Equal(0, copy.WriterIndex);
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
         }
         finally { source.Release(); copy.Release(); }
         Assert.Equal(8, native.ReservedBytes);

@@ -46,8 +46,8 @@ public class ByteBufIndexStateSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -135,7 +135,7 @@ public class ByteBufIndexStateSourceTest
                 Assert.Equal(capacity / 2, s.Root.WriterIndex);
                 break;
         }
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     public static IEnumerable<object[]> MarkCases()
@@ -156,7 +156,7 @@ public class ByteBufIndexStateSourceTest
             1 => s.Root.Duplicate(), 2 => s.Root.Slice(2, 8), 3 => s.Root.AsReadOnly(),
             4 => s.Root.RetainedDuplicate(), 5 => s.Root.RetainedSlice(2, 8), _ => s.Root
         };
-        int count = s.Root.ReferenceCount, viewCount = view.ReferenceCount;
+        int count = s.Root.RefCnt, viewCount = view.RefCnt;
         try
         {
             Assert.Same(view, view.SetIndex(2, 6));
@@ -178,11 +178,11 @@ public class ByteBufIndexStateSourceTest
             view.ResetReaderIndex();
             Assert.Throws<ArgumentOutOfRangeException>(() => view.SkipBytes(-1));
             Assert.Equal(2, view.ReaderIndex); Assert.Equal(6, view.WriterIndex);
-            Assert.Equal(count, s.Root.ReferenceCount); Assert.Equal(viewCount, view.ReferenceCount);
+            Assert.Equal(count, s.Root.RefCnt); Assert.Equal(viewCount, view.RefCnt);
             Assert.Equal(bytes, ByteBufUtil.GetBytes(s.Root, 0, 16));
             if (shape != 0) { Assert.Equal(3, s.Root.ReaderIndex); Assert.Equal(13, s.Root.WriterIndex); }
         }
         finally { if (shape is 4 or 5) view.Release(); }
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 }

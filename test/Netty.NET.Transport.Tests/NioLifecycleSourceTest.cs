@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -31,7 +32,7 @@ public class NioEventLoopSourceTest
     [Fact(Timeout = 5000)]
     public async Task TestScheduleBigDelayNotOverflow()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var cancel = new CancellationTokenSource();
         try
         {
@@ -49,7 +50,7 @@ public class NioEventLoopSourceTest
         // Just run often enough to trigger it normally.
         for (int i = 0; i < 250; i++)
         {
-            var group = new DefaultEventLoopGroup(1);
+            var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
             var loop = group.Next();
             using var started = new ManualResetEventSlim();
             var thread = new Thread(() =>
@@ -71,9 +72,9 @@ public class NioEventLoopSourceTest
     [Fact(Timeout = 3000)]
     public async Task TestChannelsRegistered()
     {
-        var group = new DefaultEventLoopGroup(1);
-        var loop = (DefaultEventLoop)group.Next();
-        var ch1 = new TcpServerSocketChannel(); var ch2 = new TcpServerSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var loop = (SingleThreadIoEventLoop)group.Next();
+        var ch1 = new NioServerSocketChannel(); var ch2 = new NioServerSocketChannel();
         try
         {
             Assert.Equal(0, await RegisteredChannels(loop));
@@ -90,8 +91,56 @@ public class NioEventLoopSourceTest
         finally { await ch1.CloseAsync(); await ch2.CloseAsync(); await group.StopAsync(); }
     }
     // Only reliable if run from event loop
-    private static Task<int> RegisteredChannels(DefaultEventLoop loop)
-        => loop.SubmitAsync(loop.RegisteredChannels).WaitAsync(TimeSpan.FromSeconds(1));
+    // CLR: NioEventLoop.registeredChannels() returns NioIoHandler.numRegistered(); the deprecated NioEventLoop is not
+    // ported, so the count is read from the loop's NioIoHandler.
+    private static Task<int> RegisteredChannels(SingleThreadIoEventLoop loop)
+        => loop.SubmitAsync(() => ((NioIoHandler)typeof(SingleThreadIoEventLoop)
+            .GetMethod("IoHandler", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(loop, null)).NumRegistered()).WaitAsync(TimeSpan.FromSeconds(1));
+
+    [Fact(Timeout = 3000)]
+    public async Task TestSelectableChannel()
+    {
+        IIoEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        IIoEventLoop loop = group.Next();
+
+        try
+        {
+            IChannel channel = new NioServerSocketChannel();
+            await loop.RegisterAsync(channel);
+            await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+
+            Socket selectableChannel = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            selectableChannel.Blocking = false;
+            try { selectableChannel.Connect(channel.LocalAddress); }
+            catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock) { }
+
+            using CountdownEvent latch = new CountdownEvent(1);
+
+            IIoRegistration registration = await loop.RegisterAsync(
+                            new LatchHandle(selectableChannel, latch));
+
+            registration.Submit(NioIoOps.ValueOf(NioIoOps.CONNECT.Value()));
+
+            latch.Wait(TestContext.Current.CancellationToken);
+
+            selectableChannel.Close();
+            await channel.CloseAsync();
+        }
+        finally
+        {
+            _ = group.ShutdownGracefullyAsync();
+        }
+    }
+
+    // CLR: the anonymous NioSelectableChannelIoHandle subclass of the Java method is a nested class.
+    private sealed class LatchHandle(Socket channel, CountdownEvent latch) : NioSelectableChannelIoHandle<Socket>(channel)
+    {
+        protected override void Handle(Socket channel, NioIoOps key)
+        {
+            if (!latch.IsSet) latch.Signal();
+        }
+    }
 }
 
 public class TcpServerSocketSourceTest
@@ -101,7 +150,7 @@ public class TcpServerSocketSourceTest
     {
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         var channel = new ProbeServer(socket);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             await group.RegisterAsync(channel); await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
@@ -114,7 +163,7 @@ public class TcpServerSocketSourceTest
     [Fact]
     public async Task TestIsActiveFalseAfterClose()
     {
-        var channel = new TcpServerSocketChannel(); var group = new DefaultEventLoopGroup(1);
+        var channel = new NioServerSocketChannel(); var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             await group.RegisterAsync(channel); await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
@@ -123,7 +172,7 @@ public class TcpServerSocketSourceTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
-    private sealed class ProbeServer(Socket socket) : TcpServerSocketChannel(socket)
+    private sealed class ProbeServer(Socket socket) : NioServerSocketChannel(socket)
     { internal bool ShouldClose(Exception error) => CloseOnReadError(error); }
 }
 
@@ -135,8 +184,8 @@ public class AbstractSocketChannelOptionsSourceTest
     public async Task TestNioChannelOption(bool server)
     {
         var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        IChannel channel = server ? new TcpServerSocketChannel(socket) : new TcpSocketChannel(socket);
-        var group = new DefaultEventLoopGroup(1);
+        IChannel channel = server ? new NioServerSocketChannel(socket) : new NioSocketChannel(socket);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             bool value1 = (int)socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
@@ -155,8 +204,8 @@ public class AbstractSocketChannelOptionsSourceTest
     public async Task TestGetOptions(bool server)
     {
         var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        IChannel channel = server ? new TcpServerSocketChannel(socket) : new TcpSocketChannel(socket);
-        var group = new DefaultEventLoopGroup(1);
+        IChannel channel = server ? new NioServerSocketChannel(socket) : new NioSocketChannel(socket);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try { channel.Config.GetOptions(); }
         finally { await group.RegisterAsync(channel); await channel.CloseAsync(); await group.StopAsync(); }
     }

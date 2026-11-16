@@ -69,7 +69,7 @@ public class ByteBufFileTransferTest
             Assert.Equal(new byte[] { 97, 98, 99, 100 }, Bytes(target, 0, 4));
             Assert.Equal(channelPosition, file.Stream.Position);
             Assert.Equal(0, file.Stream.ReadByte()); // The next sequential read still starts at offset 7.
-            Assert.False(file.Handle.IsClosed); Assert.Equal(1, target.ReferenceCount);
+            Assert.False(file.Handle.IsClosed); Assert.Equal(1, target.RefCnt);
         }
         finally { source.Release(); target.Release(); }
     }

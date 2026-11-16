@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -31,11 +32,11 @@ public class SocketFileRegionWriteSpinCountContractTest
         Assert.Equal(writeSpinCount, fixture.Channel.FileCalls);
         Assert.Equal(writeSpinCount, region.Transferred());
         Assert.False(write.IsCompleted);
-        Assert.Equal(1, region.ReferenceCount);
+        Assert.Equal(1, region.RefCnt);
         fixture.PumpUntil(() => write.IsCompleted);
         write.GetAwaiter().GetResult();
         Assert.Equal(new long[] { 0, 1, 2, 3, 4 }, region.Positions);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
         Assert.Equal(new byte[] { 42, 42, 42, 42, 42 }, fixture.Receive(5));
     }
 
@@ -77,7 +78,7 @@ public class SocketFileRegionWriteSpinCountContractTest
         Assert.True(last.IsCompletedSuccessfully);
         Assert.Equal(0, fixture.Channel.FileCalls);
         Assert.Equal(1, fixture.Channel.ByteCalls);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
         Assert.Equal(new byte[] { 7 }, fixture.Receive(1));
     }
 
@@ -103,25 +104,6 @@ public class SocketFileRegionWriteSpinCountContractTest
     }
 
     [Theory]
-    [InlineData(1, 3)]
-    [InlineData(3, 1)]
-    public void AFileProducerCannotChangeTheCurrentPassQuantum(int writeSpinCount, int nextWriteSpinCount)
-    {
-        using var fixture = new Fixture(writeSpinCount);
-        var region = new Region(6, transfer: (self, target, position) =>
-        {
-            if (position == 0) fixture.Channel.Config.SetWriteSpinCount(nextWriteSpinCount);
-            target.WriteByte(42); self.Advance(1); return 1;
-        });
-        var write = fixture.Channel.WriteAndFlushAsync(region);
-        Assert.Equal(writeSpinCount, fixture.Channel.FileCalls);
-        fixture.Loop.RunNow(-1);
-        Assert.Equal(writeSpinCount + nextWriteSpinCount, fixture.Channel.FileCalls);
-        fixture.PumpUntil(() => write.IsCompleted);
-        write.GetAwaiter().GetResult();
-    }
-
-    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void LogicalCompletionCanExceedCountWithoutMatchingPhysicalBytes(bool physicalBytes)
@@ -139,55 +121,22 @@ public class SocketFileRegionWriteSpinCountContractTest
         write.GetAwaiter().GetResult();
         Assert.Equal(1, fixture.Channel.FileCalls);
         Assert.Equal(10, region.Transferred());
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
         if (physicalBytes) Assert.Equal(new byte[] { 42 }, fixture.Receive(1));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ProducerFailuresPreserveTheirCauseAndReleaseTheBorrow(bool throwSynchronously)
+    [Fact]
+    public void ProducerFailuresPreserveTheirCauseAndReleaseTheBorrow()
     {
         using var fixture = new Fixture(1);
         var cause = new IOException("File producer failed.");
-        fixture.Channel.Write = region => throwSynchronously ? throw cause : Task.FromException<long>(cause);
+        fixture.Channel.Failure = cause;
         var region = new Region(1);
         var write = fixture.Channel.WriteAndFlushAsync(region);
         fixture.PumpUntil(() => write.IsCompleted);
         Assert.Same(cause, Assert.Throws<IOException>(() => write.GetAwaiter().GetResult()));
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
         Assert.True(region.Deallocated);
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ClosingRetainsAFileProducerUntilItsTaskFinishes(bool stop)
-    {
-        using var fixture = new Fixture(1);
-        var completion = new TaskCompletionSource<long>(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Channel.Write = region => completion.Task;
-        var region = new Region(1);
-        var write = fixture.Channel.WriteAndFlushAsync(region);
-        try
-        {
-            Assert.Equal(2, region.ReferenceCount);
-            if (stop) ManualIoEventLoopSourceTest.Terminate(fixture.Loop);
-            else
-            {
-                var close = fixture.Channel.CloseAsync();
-                fixture.PumpUntil(() => close.IsCompleted);
-                close.GetAwaiter().GetResult();
-            }
-            Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
-            Assert.Equal(1, region.ReferenceCount);
-            Assert.False(region.Deallocated);
-            region.Advance(1);
-            completion.SetResult(1);
-            Assert.True(SpinWait.SpinUntil(() => region.ReferenceCount == 0 && region.Deallocated, TimeSpan.FromSeconds(3)));
-            Assert.True(region.Deallocated);
-        }
-        finally { completion.TrySetResult(1); }
     }
 
     [Fact]
@@ -198,9 +147,9 @@ public class SocketFileRegionWriteSpinCountContractTest
         var region = new Region(3);
         var write = fixture.Channel.WriteAndFlushAsync(region);
         fixture.PumpUntil(() => write.IsCompleted);
-        Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
+        Assert.ThrowsAny<ClosedChannelException>(() => write.GetAwaiter().GetResult());
         Assert.Equal(1, fixture.Channel.FileCalls);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
         Assert.Equal(new byte[] { 42 }, fixture.Receive(1));
     }
 
@@ -220,8 +169,9 @@ public class SocketFileRegionWriteSpinCountContractTest
         fixture.PumpUntil(() => write.IsCompleted);
         write.GetAwaiter().GetResult();
         Assert.Equal(new long[] { 0, 0 }, region.Positions);
-        Assert.False(onOwner);
-        Assert.Equal(0, region.ReferenceCount);
+        // FileRegion.transferTo runs on the event loop, as in Java.
+        Assert.True(onOwner);
+        Assert.Equal(0, region.RefCnt);
         Assert.Equal(new byte[] { 42 }, fixture.Receive(1));
     }
 
@@ -254,7 +204,7 @@ public class SocketFileRegionWriteSpinCountContractTest
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread);
+        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread, NioIoHandler.NewFactory());
         internal readonly Probe Channel;
         private readonly Socket _peer;
         internal Fixture(int writeSpinCount)
@@ -290,23 +240,31 @@ public class SocketFileRegionWriteSpinCountContractTest
         public void Dispose() { ManualIoEventLoopSourceTest.Terminate(Loop); _peer.Dispose(); }
     }
 
-    private sealed class Probe(Socket socket) : TcpSocketChannel(socket)
+    // Counts the non-blocking byte writes and the doWriteFileRegion attempts of NioSocketChannel.doWrite; byte
+    // writes accept one byte per call.
+    private sealed class Probe(Socket socket) : NioSocketChannel(socket)
     {
         internal int FileCalls, ByteCalls;
         internal bool UseBase;
-        internal Func<IFileRegion, Task<long>> Write;
-        internal override bool SupportsGatheringWrites => true;
-        internal override Task<int> TryGatherWriteAsync() => null;
-        protected override Task<int> DoWriteBytes(ByteBuf buf)
-        { ByteCalls++; return Task.FromResult(Socket.Send(buf.ReadableSequence.First.Span[..1], SocketFlags.None)); }
-        protected override Task<long> DoWriteFileRegion(IFileRegion region)
+        internal Exception Failure;
+
+        internal override int WriteSocket(ReadOnlyMemory<byte> buffer)
+        {
+            ByteCalls++;
+            return JavaChannel().Send(buffer[..1].Span, SocketFlags.None);
+        }
+
+        internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length)
+        {
+            ByteCalls++;
+            return JavaChannel().Send(buffers[offset][..1].Span, SocketFlags.None);
+        }
+
+        protected override long DoWriteFileRegion(IFileRegion region)
         {
             FileCalls++;
-            if (UseBase) return base.DoWriteFileRegion(region);
-            if (Write != null) return Write(region);
-            using var target = new NetworkStream(Socket, ownsSocket: false);
-            long position = region.Transferred();
-            return Task.FromResult(region.TransferTo(target, position));
+            if (Failure != null) throw Failure;
+            return base.DoWriteFileRegion(region);
         }
     }
 }

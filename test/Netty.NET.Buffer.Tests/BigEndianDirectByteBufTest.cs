@@ -35,4 +35,12 @@ public class BigEndianDirectByteBufTest : AbstractContiguousByteBufTest
     [Fact]
     public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
 
+    [Fact]
+    public void TestIsContiguous()
+    {
+        ByteBuf buf = NewBuffer(4);
+        Assert.True(buf.IsContiguous);
+        buf.Release();
+    }
+
 }

@@ -36,7 +36,7 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public abstract bool IsShuttingDown();
     public abstract bool IsTerminated();
     public abstract bool AwaitTermination(TimeSpan timeout);
-    public abstract Task Termination { get; }
+    public abstract Task TerminationFuture { get; }
     public abstract IEnumerable<IEventExecutor> Iterator();
 
     public virtual Ticker Ticker()
@@ -48,7 +48,7 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public virtual Task StopAsync()
     {
         Shutdown();
-        return Termination;
+        return TerminationFuture;
     }
     public abstract IEventExecutor Next();
 

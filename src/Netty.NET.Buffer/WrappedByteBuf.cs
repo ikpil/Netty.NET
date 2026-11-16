@@ -39,16 +39,16 @@ public partial class WrappedByteBuf : ByteBuf
     protected WrappedByteBuf(ByteBuf buffer) : base(buffer) => Buffer = buffer;
 
     public override int Capacity { get => Buffer.Capacity; set => Buffer.Capacity = value; }
-    public override IByteBufAllocator Allocator => Buffer.Allocator;
+    public override IByteBufAllocator Alloc() => Buffer.Alloc();
     public override bool IsContiguous => Buffer.IsContiguous;
     public override int MaxFastWritableBytes => Buffer.MaxFastWritableBytes;
     public override bool IsDirect => Buffer.IsDirect;
     public override bool IsReadOnly => Buffer.IsReadOnly;
-    public override bool CanRead(int byteCount) => Buffer.CanRead(byteCount);
-    public override bool CanWrite(int byteCount) => Buffer.CanWrite(byteCount);
+    public override bool IsReadable(int size) => Buffer.IsReadable(size);
+    public override bool IsWritable(int size) => Buffer.IsWritable(size);
     public override ByteBuf Unwrap() => Buffer;
     public override string ToString() => StringUtil.SimpleClassName(this) + '(' + Buffer.ToString() + ')';
-    public override int ReferenceCount => Buffer.ReferenceCount;
+    public override int RefCnt => Buffer.RefCnt;
     public override ByteBuf Retain(int increment = 1) { Buffer.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => Buffer.Release(decrement);
     public override ByteBuf Touch(object hint = null) { Buffer.Touch(hint); return this; }
@@ -87,13 +87,16 @@ public partial class WrappedByteBuf : ByteBuf
     public override int BytesBefore(byte value) => Buffer.BytesBefore(value);
     public override int BytesBefore(int length, byte value) => Buffer.BytesBefore(length, value);
     public override int BytesBefore(int index, int length, byte value) => Buffer.BytesBefore(index, length, value);
-    public override string GetString(Encoding encoding) => Buffer.GetString(encoding);
-    public override string GetString(int index, int length, Encoding encoding)
-        => Buffer.GetString(index, length, encoding);
-    public override string ReadString(int length, Encoding encoding) => Buffer.ReadString(length, encoding);
-    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
-        => Buffer.SetString(index, text, encoding);
-    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => Buffer.WriteString(text, encoding);
+    public override string ToString(Encoding charset) => Buffer.ToString(charset);
+    public override string ToString(int index, int length, Encoding charset)
+        => Buffer.ToString(index, length, charset);
+    public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
+        => Buffer.GetCharSequence(index, length, charset);
+    public override ICharSequence ReadCharSequence(int length, Encoding charset) => Buffer.ReadCharSequence(length, charset);
+    public override string ReadString(int length, Encoding charset) => Buffer.ReadString(length, charset);
+    public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
+        => Buffer.SetCharSequence(index, sequence, charset);
+    public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => Buffer.WriteCharSequence(sequence, charset);
     public override int ForEachByte(Func<byte, bool> processor) => Buffer.ForEachByte(processor);
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         => Buffer.ForEachByte(index, length, processor);

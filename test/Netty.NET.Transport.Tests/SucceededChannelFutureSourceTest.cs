@@ -17,6 +17,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -28,7 +29,7 @@ public class SucceededChannelFutureSourceTest
     public void TestConstantProperties()
     {
         var channel = new TaskTestChannel(_ => Task.CompletedTask);
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         try
         {
             loop.RegisterAsync(channel, TestContext.Current.CancellationToken).GetAwaiter().GetResult();

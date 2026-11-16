@@ -23,7 +23,8 @@ necessary; changing global ThreadPool settings would not configure this executor
 
 ## Native API and implementation
 
-The four constructor overloads remain, with the C# argument named workerCount.
+The four constructor overloads remain, with the source argument name corePoolSize
+(renamed from workerCount on 2026-11-16 under the Java-name policy).
 Negative values, null factory and null rejection delegate fail before admission.
 Worker count, factory and raw rejection delegate are readonly for the pool's
 lifetime. The factory may implement its own stateful thread creation; worker

@@ -143,7 +143,7 @@ public class ByteBufScalarUtilTest
             b.ReaderIndex = 3;
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadUnsignedShortBE(b));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadIntBE(b));
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(3, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(1, b.RefCnt);
             ByteBuf readOnly = b.AsReadOnly();
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.SetShortBE(readOnly, 0, 7));
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.WriteShortBE(readOnly, 7));
@@ -162,7 +162,7 @@ public class ByteBufScalarUtilTest
         ByteBuf b = Storage(kind, 4); ByteBuf retained = b.RetainedSlice(0, 4);
         ByteBuf[] views = { b, retained, b.Duplicate(), b.AsReadOnly(), Unpooled.UnreleasableBuffer(b) };
         foreach (ByteBuf view in views) { Assert.True(ByteBufUtil.IsAccessible(view)); Assert.Same(view, ByteBufUtil.EnsureAccessible(view)); }
-        Assert.Equal(2, b.ReferenceCount); b.Release(); Assert.True(ByteBufUtil.IsAccessible(b)); retained.Release();
+        Assert.Equal(2, b.RefCnt); b.Release(); Assert.True(ByteBufUtil.IsAccessible(b)); retained.Release();
         foreach (ByteBuf view in views)
         {
             Assert.False(ByteBufUtil.IsAccessible(view));

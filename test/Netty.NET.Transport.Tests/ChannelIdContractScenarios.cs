@@ -66,7 +66,7 @@ internal static class ChannelIdContractScenarios
                     Check(buf.CanRead && buf.CanWrite, "Serialization closed the caller stream.");
                     buf.Position = 0;
                     var b = JsonSerializer.Deserialize(buf, ChannelIdJsonContext.Default.DefaultChannelId);
-                    Check(!ReferenceEquals(a, b) && a.Equals(b) && b.Equals(a), "Guid identity did not round trip.");
+                    Check(!ReferenceEquals(a, b) && a.Equals(b) && b.Equals(a), "Channel identity did not round trip.");
                     Check(a.GetHashCode() == b.GetHashCode() && a.CompareTo(b) == 0 && a.AsShortText() == b.AsShortText(), "Round-trip hash/order/text changed.");
                 }
                 break;
@@ -84,8 +84,8 @@ internal static class ChannelIdContractScenarios
                 {
                     var value = DefaultChannelId.NewInstance();
                     string longValue = value.AsLongText();
-                    Check(longValue.Length == 32 && Guid.TryParseExact(longValue, "N", out _), "Native Guid format changed.");
-                    Check(ids.Add(longValue), "Duplicate Guid identity.");
+                    Check(System.Text.RegularExpressions.Regex.IsMatch(longValue, "^[0-9a-f]{16}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{16}-[0-9a-f]{8}$"), "Long text layout changed.");
+                    Check(ids.Add(longValue), "Duplicate channel identity.");
                 }
                 break;
             case 8:

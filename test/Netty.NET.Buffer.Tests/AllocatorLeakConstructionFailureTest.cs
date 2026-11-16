@@ -94,7 +94,7 @@ public class AllocatorLeakConstructionFailureTest
                 0 => new UnpooledByteBufAllocator(true, native),
                 1 => new PooledByteBufAllocator(true, maxOrder: 1, nativeAllocator: native, smallCacheSize: 2),
                 2 => new PooledByteBufAllocator(true, poolHeap: false, poolDirect: false, nativeAllocator: native),
-                _ => new AdaptiveByteBufAllocator(true, false, native)
+                _ => new AdaptiveByteBufAllocator(true, lowMemory: false, nativeAllocator: native)
             };
             try
             {
@@ -105,7 +105,7 @@ public class AllocatorLeakConstructionFailureTest
                     4 => allocator.Buffer(64, 128), 5 => allocator.IoBuffer(64, 128), _ => allocator.CompositeBuffer(2)
                 };
                 Assert.Same(factory.Failure, Assert.Throws<InvalidOperationException>(() => Request()));
-                Assert.NotNull(factory.Tracked); Assert.Equal(0, factory.Tracked.ReferenceCount);
+                Assert.NotNull(factory.Tracked); Assert.Equal(0, factory.Tracked.RefCnt);
                 Assert.Equal(mode == 0 ? 0 : 1, factory.Closes);
                 if (allocator is PooledByteBufAllocator pooled)
                 { Assert.True(pooled.PinnedHeapMemory <= 0); Assert.True(pooled.PinnedDirectMemory <= 0); }
@@ -114,7 +114,7 @@ public class AllocatorLeakConstructionFailureTest
             }
             finally
             {
-                if (factory.Tracked?.ReferenceCount > 0) factory.Tracked.Release();
+                if (factory.Tracked?.RefCnt > 0) factory.Tracked.Release();
                 (allocator as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
             }
         }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -24,13 +25,13 @@ public class DatagramOriginalDestinationContractTest
         if (scatterAndGro) SegmentedDatagramSourceTest.RequireGro(AddressFamily.InterNetwork);
 
         var token = TestContext.Current.CancellationToken;
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var messages = Channel.CreateUnbounded<(IPEndPoint Recipient, IPEndPoint Sender, int Length)>();
         var any = dualMode ? IPAddress.IPv6Any : IPAddress.Any;
         try
         {
             var receiver = new Bootstrap().Group(group)
-                .ChannelFactory(() => new DatagramChannel(any.AddressFamily, dualMode))
+                .ChannelFactory(() => new NioDatagramChannel(any.AddressFamily, dualMode))
                 .Option(ChannelOption.AUTO_READ, false)
                 .Option(ChannelOption.IP_RECVORIGDSTADDR, receiveOriginalDestination)
                 .Handler(new Capture(messages.Writer));
@@ -74,11 +75,11 @@ public class DatagramOriginalDestinationContractTest
     {
         if (!OperatingSystem.IsLinux()) Assert.Skip("IP_FREEBIND requires Linux.");
         var token = TestContext.Current.CancellationToken;
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var address = IPAddress.Parse("192.0.2.1");
         try
         {
-            var bootstrap = new Bootstrap().Group(group).ChannelFactory(static () => new DatagramChannel())
+            var bootstrap = new Bootstrap().Group(group).ChannelFactory(static () => new NioDatagramChannel())
                 .Handler(new ChannelInboundHandlerAdapter());
             var channel = await bootstrap.Option(ChannelOption.IP_FREEBIND, true).BindAsync(new IPEndPoint(address, 0), token);
             Assert.Equal(address, ((IPEndPoint)channel.LocalAddress).Address);
@@ -88,7 +89,7 @@ public class DatagramOriginalDestinationContractTest
 
     private sealed class Capture(ChannelWriter<(IPEndPoint, IPEndPoint, int)> writer) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket message) =>
-            writer.TryWrite((message.Recipient, message.Sender, message.Content.ReadableBytes));
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg) =>
+            writer.TryWrite((msg.Recipient, msg.Sender, msg.Content.ReadableBytes));
     }
 }

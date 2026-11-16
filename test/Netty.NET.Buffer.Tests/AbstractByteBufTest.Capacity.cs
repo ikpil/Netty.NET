@@ -46,10 +46,10 @@ public abstract partial class AbstractByteBufTest
         int length = content1.Length + content2.Length;
         ByteBuf buffer = NewBuffer(length);
         buffer.SetIndex(0, 0);
-        buffer.WriteString(content1, Encoding.ASCII);
+        buffer.WriteCharSequence(content1, Encoding.ASCII);
         buffer.MarkWriterIndex();
         buffer.SkipBytes(content1.Length);
-        buffer.WriteString(content2, Encoding.ASCII);
+        buffer.WriteCharSequence(content2, Encoding.ASCII);
         buffer.SkipBytes(content2.Length);
         Assert.True(buffer.ReaderIndex <= buffer.WriterIndex);
 

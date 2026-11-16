@@ -24,13 +24,13 @@ public class PipelineOptionalRemovalContractTest
             {
                 Rendezvous(ref ready);
                 try
-                { first = channel.Pipeline.RemoveIfExists(name); }
+                { first = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name); }
                 catch (Exception error) { firstError = error; }
             });
             thread.Start();
             Rendezvous(ref ready);
             try
-            { second = channel.Pipeline.RemoveIfExists(name); }
+            { second = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name); }
             catch (Exception error) { secondError = error; }
             thread.Join();
             try
@@ -54,6 +54,6 @@ public class PipelineOptionalRemovalContractTest
     private sealed class RemovalCounter : ChannelInboundHandlerAdapter
     {
         internal int Removals;
-        public override void HandlerRemoved(ChannelHandlerContext context) => Interlocked.Increment(ref Removals);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removals);
     }
 }

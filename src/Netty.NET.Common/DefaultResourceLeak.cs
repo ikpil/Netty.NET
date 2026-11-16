@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -161,11 +162,11 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             string record = current.ToString();
             if (!seen.Add(record)) { duped++; continue; }
             if (current.Next() == TraceRecord.BOTTOM) buffer.Append("Created at:").Append(StringUtil.NEWLINE).Append(record);
-            else buffer.Append('#').Append(index++).Append(':').Append(StringUtil.NEWLINE).Append(record);
+            else buffer.Append('#').Append((index++).ToString(CultureInfo.InvariantCulture)).Append(':').Append(StringUtil.NEWLINE).Append(record);
         }
-        if (duped > 0) buffer.Append(": ").Append(duped).Append(" leak records were discarded because they were duplicates").Append(StringUtil.NEWLINE);
-        if (dropped > 0) buffer.Append(": ").Append(dropped).Append(" leak records were discarded because the leak record count is targeted to ")
-            .Append(TARGET_RECORDS).Append(". Use system property ").Append(PROP_TARGET_RECORDS).Append(" to increase the limit.").Append(StringUtil.NEWLINE);
+        if (duped > 0) buffer.Append(": ").Append(duped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because they were duplicates").Append(StringUtil.NEWLINE);
+        if (dropped > 0) buffer.Append(": ").Append(dropped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because the leak record count is targeted to ")
+            .Append(TARGET_RECORDS.ToString(CultureInfo.InvariantCulture)).Append(". Use system property ").Append(PROP_TARGET_RECORDS).Append(" to increase the limit.").Append(StringUtil.NEWLINE);
         buffer.Length -= StringUtil.NEWLINE.Length;
         return buffer.ToString();
     }

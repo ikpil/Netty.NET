@@ -35,7 +35,7 @@ public class ByteBufUtilitySourceTest
             {
                 0 => new UnpooledByteBufAllocator(false, true, Native),
                 1 => new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: Native),
-                _ => new AdaptiveByteBufAllocator(false, false, Native)
+                _ => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native)
             };
             bool direct = (provider & 1) != 0;
             ByteBuf Buffer(int size) => direct ? Allocator.DirectBuffer(size, maximum) : Allocator.HeapBuffer(size, maximum);
@@ -48,7 +48,7 @@ public class ByteBufUtilitySourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
+            if (Root.RefCnt > 0) Root.Release();
             (Allocator as IDisposable)?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -91,7 +91,7 @@ public class ByteBufUtilitySourceTest
             4 => ByteBufUtil.WriteUtf8(b, ascii), _ => ByteBufUtil.ReserveAndWriteUtf8(b, ascii, expected.Length)
         };
         Assert.Equal(expected.Length, written);
-        Assert.Equal((0, prefix + written, 1), (b.ReaderIndex, b.WriterIndex, b.ReferenceCount));
+        Assert.Equal((0, prefix + written, 1), (b.ReaderIndex, b.WriterIndex, b.RefCnt));
         if (prefix != 0) Assert.Equal(1, b.GetByte(0));
         // Skip the previously written byte.
         Assert.Equal(expected, ByteBufUtil.GetBytes(b, prefix, written));

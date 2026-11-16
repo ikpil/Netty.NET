@@ -71,20 +71,20 @@ public class CombinedChannelDuplexHandlerSourceTest
 
     private sealed class InboundExceptionHandler(Queue<IChannelHandler> queue, Exception exception, bool forward) : ChannelInboundHandlerAdapter
     {
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             Assert.Same(exception, cause);
             queue.Enqueue(this);
-            if (forward) context.FireExceptionCaught(cause);
+            if (forward) ctx.FireExceptionCaught(cause);
         }
     }
     private sealed class OutboundExceptionHandler(Queue<IChannelHandler> queue, Exception exception) : ChannelOutboundHandlerAdapter
     {
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             Assert.Same(exception, cause);
             queue.Enqueue(this);
-            context.FireExceptionCaught(cause);
+            ctx.FireExceptionCaught(cause);
         }
     }
     [Fact]
@@ -209,37 +209,37 @@ public class CombinedChannelDuplexHandlerSourceTest
     {
         private readonly Queue<Event> _queue = new();
         internal Event? PollEvent() => _queue.TryDequeue(out var evt) ? evt : null;
-        public override void HandlerAdded(ChannelHandlerContext context) => _queue.Enqueue(Event.HandlerAdded);
-        public override void HandlerRemoved(ChannelHandlerContext context) => _queue.Enqueue(Event.HandlerRemoved);
-        public override void ChannelRegistered(ChannelHandlerContext context) => _queue.Enqueue(Event.Registered);
-        public override void ChannelUnregistered(ChannelHandlerContext context) => _queue.Enqueue(Event.Unregistered);
-        public override void ChannelActive(ChannelHandlerContext context) => _queue.Enqueue(Event.Active);
-        public override void ChannelInactive(ChannelHandlerContext context) => _queue.Enqueue(Event.Inactive);
-        public override void ChannelRead(ChannelHandlerContext context, object message) => _queue.Enqueue(Event.ChannelRead);
-        public override void ChannelReadComplete(ChannelHandlerContext context) => _queue.Enqueue(Event.ChannelReadComplete);
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt) => _queue.Enqueue(Event.UserEventTriggered);
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context) => _queue.Enqueue(Event.ChannelWritabilityChanged);
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => _queue.Enqueue(Event.ExceptionCaught);
+        public override void HandlerAdded(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerAdded);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerRemoved);
+        public override void ChannelRegistered(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Registered);
+        public override void ChannelUnregistered(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Unregistered);
+        public override void ChannelActive(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Active);
+        public override void ChannelInactive(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Inactive);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _queue.Enqueue(Event.ChannelRead);
+        public override void ChannelReadComplete(IChannelHandlerContext ctx) => _queue.Enqueue(Event.ChannelReadComplete);
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => _queue.Enqueue(Event.UserEventTriggered);
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) => _queue.Enqueue(Event.ChannelWritabilityChanged);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _queue.Enqueue(Event.ExceptionCaught);
     }
     private sealed class OutboundEventHandler : ChannelOutboundHandlerAdapter
     {
         private readonly Queue<Event> _queue = new();
         internal Event? PollEvent() => _queue.TryDequeue(out var evt) ? evt : null;
-        public override void HandlerAdded(ChannelHandlerContext context) => _queue.Enqueue(Event.HandlerAdded);
-        public override void HandlerRemoved(ChannelHandlerContext context) => _queue.Enqueue(Event.HandlerRemoved);
-        public override Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken)
+        public override void HandlerAdded(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerAdded);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerRemoved);
+        public override Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken)
         { Assert.Same(LocalAddress, localAddress); _queue.Enqueue(Event.Bind); return Task.CompletedTask; }
-        public override Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
+        public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
         { Assert.Same(RemoteAddress, remoteAddress); Assert.Same(LocalAddress, localAddress); _queue.Enqueue(Event.Connect); return Task.CompletedTask; }
-        public override Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken)
+        public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
         {  _queue.Enqueue(Event.Disconnect); return Task.CompletedTask; }
-        public override Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken)
+        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
         {  _queue.Enqueue(Event.Close); return Task.CompletedTask; }
-        public override Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken)
+        public override Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
         {  _queue.Enqueue(Event.Deregister); return Task.CompletedTask; }
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken)
-        { Assert.Same(Msg, message); _queue.Enqueue(Event.Write); return Task.CompletedTask; }
-        public override void Read(ChannelHandlerContext context) => _queue.Enqueue(Event.Read);
-        public override void Flush(ChannelHandlerContext context) => _queue.Enqueue(Event.Flush);
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
+        { Assert.Same(Msg, msg); _queue.Enqueue(Event.Write); return Task.CompletedTask; }
+        public override void Read(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Read);
+        public override void Flush(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Flush);
     }
 }

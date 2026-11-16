@@ -98,7 +98,7 @@ public class ByteBufLeakListenerTest : IDisposable
         }
         finally
         {
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
             (allocator as IDisposable)?.Dispose();
         }
         Assert.Equal(0, native.ReservedBytes);

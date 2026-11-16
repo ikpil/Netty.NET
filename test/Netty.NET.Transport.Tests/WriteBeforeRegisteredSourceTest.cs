@@ -14,7 +14,6 @@
  * under the License.
  */
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
@@ -23,36 +22,57 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // The original starts connect/write/close without waiting between them.
-public class WriteBeforeRegisteredSourceTest
+#pragma warning disable xUnit1069 // The source starts connect/write/close without waiting for any of them.
+#pragma warning disable xUnit1051 // The source starts connect/write/close without waiting for any of them.
+public class WriteBeforeRegisteredSourceTest : AbstractClientSocketTest
 {
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestWriteBeforeConnect(bool adaptive)
+    [Fact(Timeout = 30000)]
+    public async Task TestWriteBeforeConnect()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var channel = new TcpSocketChannel();
-        // Keep channel access independent of the connect Task, as in connect(...).channel().
-        var bootstrap = new Bootstrap().Group(fixture.Client.Config.Group).ChannelFactory(() => channel)
-            .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator)fixture.Client.Config.Options[ChannelOption.ALLOCATOR]).Handler(new TestHandler());
-        Task<IChannel> connect = null;
+        await Run(TestContext.Current, TestWriteBeforeConnect0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestWriteBeforeConnect test name.
+    private Task TestWriteBeforeConnect0(Bootstrap cb)
+    {
+        TestHandler h = new TestHandler();
+        ISocketChannel ch = null;
+        // CLR: connect(...).channel() returns the channel of the pending ChannelFuture at once, before its
+        // registration has run. Bootstrap.ConnectAsync yields the channel only from a successful Task<IChannel>, but
+        // it calls the channel factory synchronously before its first await
+        // (src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs). cb's factory cannot be replaced ("channelFactory set
+        // already", as in AbstractBootstrap.channelFactory), so the connect runs on a Bootstrap with cb's group and
+        // allocator (the only option the harness sets) whose factory wraps cb's factory and captures the channel. As
+        // in the source, neither the connect, the write nor the close is awaited.
+        Func<IChannel> channelFactory = cb.Config.ChannelFactory;
+        IChannel channel = null;
+        Bootstrap connectBootstrap = new Bootstrap().Group(cb.Config.Group)
+                .ChannelFactory(() => channel = channelFactory())
+                .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator) cb.Config.Options[ChannelOption.ALLOCATOR]);
         try
         {
-            connect = bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Loopback, 0), cancellationToken: TestContext.Current.CancellationToken);
-            var buffer = (Random.Shared.Next(2) == 0 ? channel.Allocator.DirectBuffer(1) : channel.Allocator.HeapBuffer(1)).WriteByte(1);
-            _ = Observe(channel.WriteAndFlushAsync(buffer));
+            _ = connectBootstrap.Handler(h).ConnectAsync(NewSocketAddress());
+            ch = (ISocketChannel) channel;
+            _ = ch.WriteAndFlushAsync(TestsuitePermutation.RandomBufferType(ch.Alloc(), new byte[] { 1 }, 0, 1));
         }
         finally
         {
-            await Bootstrap.CleanupAsync(channel);
-            if (connect != null) await Observe(connect);
+            if (ch != null)
+            {
+                _ = ch.CloseAsync();
+            }
         }
+        return Task.CompletedTask;
     }
-    private static async Task Observe(Task operation) { try { await operation; } catch { } }
-    private sealed class TestHandler : ChannelInboundHandlerAdapter
+
+    private class TestHandler : ChannelInboundHandlerAdapter
     {
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => System.Diagnostics.Trace.WriteLine(error);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            // CLR: Throwable.printStackTrace() prints to the standard error stream.
+            Console.Error.WriteLine(cause);
+        }
     }
 }
 #pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

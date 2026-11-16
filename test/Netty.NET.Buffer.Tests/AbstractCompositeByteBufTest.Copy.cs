@@ -34,7 +34,7 @@ public abstract partial class AbstractCompositeByteBufTest
             copy = withIndexAndLength ? buffer.Copy(0, 4) : buffer.Copy();
             Assert.Equal(buffer, copy);
             Assert.Equal(buffer.IsDirect, copy.IsDirect);
-            Assert.Same(buffer.Allocator, copy.Allocator);
+            Assert.Same(buffer.Alloc(), copy.Alloc());
         }
         finally { buffer.Release(); copy?.Release(); }
     }

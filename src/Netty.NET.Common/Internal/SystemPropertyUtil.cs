@@ -70,7 +70,7 @@ public static class SystemPropertyUtil
         }
         catch (Exception e)
         {
-            logger.Warn($"Unable to retrieve a system property '{key}'; default values will be used.", e);
+            logger.Warn("Unable to retrieve a system property '{}'; default values will be used.", key, e);
         }
 
         return value ?? def;
@@ -115,7 +115,10 @@ public static class SystemPropertyUtil
             return false;
         }
 
-        logger.Warn($"Unable to parse the bool system property '{key}':{value} - using the default value: {def}");
+        logger.Warn(
+            "Unable to parse the boolean system property '{}':{} - using the default value: {}",
+            key, value, def
+        );
 
         return def;
     }
@@ -145,7 +148,10 @@ public static class SystemPropertyUtil
         // Ignore
         // CLR: malformed/out-of-range configuration is a TryParse result, not an exception.
 
-        logger.Warn($"Unable to parse the integer system property '{key}':{value} - using the default value: {def}");
+        logger.Warn(
+            "Unable to parse the integer system property '{}':{} - using the default value: {}",
+            key, value, def
+        );
 
         return def;
     }
@@ -175,7 +181,10 @@ public static class SystemPropertyUtil
         // Ignore
         // CLR: use the same invariant decimal grammar and explicit fallback as GetInt.
 
-        logger.Warn($"Unable to parse the long integer system property '{key}':{value} - using the default value: {def}");
+        logger.Warn(
+            "Unable to parse the long integer system property '{}':{} - using the default value: {}",
+            key, value, def
+        );
 
         return def;
     }

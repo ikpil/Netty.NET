@@ -8,6 +8,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Embedded;
 using Netty.NET.Transport.Channels.Sockets;
 
@@ -25,12 +26,12 @@ public class PendingWriteQueueContractTest
         Task write = queue.Add(message, cancellation.Token);
         cancellation.Cancel();
         Assert.True(write.IsCanceled);
-        Assert.Equal(1, message.ReferenceCount);
+        Assert.Equal(1, message.RefCnt);
         Assert.False(queue.IsEmpty);
         Task forwarded = queue.RemoveAndWriteAsync();
         channel.Flush();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => forwarded);
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
         Assert.Equal(0, queue.Bytes);
         Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
         Assert.Null(channel.ReadOutbound());
@@ -49,7 +50,7 @@ public class PendingWriteQueueContractTest
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => write);
         Assert.Same(write, forwarded);
         channel.Flush();
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
         var placeholder = channel.ReadOutbound<ByteBuf>();
         Assert.NotNull(placeholder);
         Assert.Equal(0, placeholder.ReadableBytes);
@@ -77,7 +78,7 @@ public class PendingWriteQueueContractTest
         var output = channel.ReadOutbound<ByteBuf>();
         Assert.Same(message, output);
         output.Release();
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
         Assert.False(channel.Finish());
     }
     [Fact]
@@ -92,7 +93,7 @@ public class PendingWriteQueueContractTest
         Assert.Same(producer, queue.Remove());
         cancellation.Cancel();
         Assert.False(producer.Task.IsCompleted);
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
         Assert.True(queue.IsEmpty);
         producer.SetResult();
         Assert.True(producer.Task.IsCompletedSuccessfully);
@@ -101,7 +102,7 @@ public class PendingWriteQueueContractTest
     [Fact]
     public async Task NativeSocketCompletionReturnsProducerCompletionToItsExecutor()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var handler = new QueueHandler();
@@ -109,7 +110,7 @@ public class PendingWriteQueueContractTest
         try
         {
             var accepting = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
-            channel = await new Bootstrap().Group(group).Channel<TcpSocketChannel>().Handler(handler)
+            channel = await new Bootstrap().Group(group).Channel<NioSocketChannel>().Handler(handler)
                 .ConnectAsync(listener.LocalEndpoint, cancellationToken: TestContext.Current.CancellationToken);
             using var peer = await accepting;
             var callback = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -139,23 +140,23 @@ public class PendingWriteQueueContractTest
     private sealed class DelayedEmbeddedChannel : EmbeddedChannel
     {
         internal readonly TaskCompletionSource AllowWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override async Task DoWrite(object message)
-        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(message).ConfigureAwait(false); }
+        protected override async Task DoWrite(object msg)
+        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(msg).ConfigureAwait(false); }
     }
     [Fact]
     public async Task OutputShutdownDetachesPendingAccountingAndMakesTheChannelUnwritable()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         IChannel channel = null;
         try
         {
             var accepting = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
-            channel = await new Bootstrap().Group(group).Channel<TcpSocketChannel>().Handler(new ChannelInboundHandlerAdapter())
+            channel = await new Bootstrap().Group(group).Channel<NioSocketChannel>().Handler(new ChannelInboundHandlerAdapter())
                 .ConnectAsync(listener.LocalEndpoint, cancellationToken: TestContext.Current.CancellationToken);
             using var peer = await accepting;
-            await ((TcpSocketChannel)channel).ShutdownOutputAsync();
+            await ((NioSocketChannel)channel).ShutdownOutputAsync();
             Assert.True(channel.IsOpen);
             Assert.False(channel.IsWritable);
             Assert.Equal(0, channel.BytesBeforeUnwritable);
@@ -169,7 +170,7 @@ public class PendingWriteQueueContractTest
                 Assert.True(queue.Bytes > 0);
                 Assert.Equal(0, ((AbstractChannel)channel).OutboundBuffer.TotalPendingWriteBytes);
                 queue.RemoveAndFailAll(new IOException("Pending owner cleanup."));
-                Assert.Equal(0, message.ReferenceCount);
+                Assert.Equal(0, message.RefCnt);
                 Assert.Equal(0, queue.Bytes);
                 Assert.Equal(0, ((AbstractChannel)channel).OutboundBuffer.TotalPendingWriteBytes);
             }, TestContext.Current.CancellationToken);
@@ -186,6 +187,6 @@ public class PendingWriteQueueContractTest
     private sealed class QueueHandler : ChannelOutboundHandlerAdapter
     {
         internal PendingWriteQueue Queue;
-        public override void HandlerAdded(ChannelHandlerContext context) => Queue = new PendingWriteQueue(context);
+        public override void HandlerAdded(IChannelHandlerContext ctx) => Queue = new PendingWriteQueue(ctx);
     }
 }

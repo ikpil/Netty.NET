@@ -20,10 +20,13 @@ namespace Netty.NET.Transport.Channels;
  * {@link ConnectException} which will be thrown if a connection could
  * not be established because of a connection timeout.
  */
+// CLR: java.net.ConnectException (a SocketException) has no CLR counterpart type; System.TimeoutException is the
+// BCL timeout exception (https://learn.microsoft.com/dotnet/api/system.timeoutexception), and the connect Task fails
+// with it as the Java promise fails with ConnectTimeoutException.
 public class ConnectTimeoutException : TimeoutException
 {
     public ConnectTimeoutException() { }
-    public ConnectTimeoutException(string message) : base(message) { }
-    public ConnectTimeoutException(string message, Exception innerException) : base(message, innerException) { }
-    public ConnectTimeoutException(Exception cause) : base(cause.Message, cause) { }
+    public ConnectTimeoutException(string msg) : base(msg) { }
+    public ConnectTimeoutException(string msg, Exception innerException) : base(msg, innerException) { }
+    public ConnectTimeoutException(Exception cause) : base(cause?.Message, cause) { }
 }

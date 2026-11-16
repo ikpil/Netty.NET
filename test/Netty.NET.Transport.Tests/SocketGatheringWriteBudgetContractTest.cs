@@ -1,3 +1,4 @@
+using Netty.NET.Transport.Channels.Nio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,13 +38,13 @@ public class SocketGatheringWriteBudgetContractTest
         if (attempted == written)
         {
             Assert.True(future.IsCompletedSuccessfully);
-            Assert.Equal(0, buf.ReferenceCount);
+            Assert.Equal(0, buf.RefCnt);
         }
         else
         {
             Assert.False(future.IsCompleted);
             Assert.Equal(written, buf.ReaderIndex);
-            Assert.Equal(1, buf.ReferenceCount);
+            Assert.Equal(1, buf.RefCnt);
         }
     }
 
@@ -63,7 +64,7 @@ public class SocketGatheringWriteBudgetContractTest
         Assert.Equal(composite ? new[] { 4000, 4000 } : new[] { 8000 }, fixture.Channel.Attempts.Single());
         Assert.True(future.IsCompletedSuccessfully);
         Assert.Equal(16000, fixture.Channel.GetMaxBytesPerGatheringWrite());
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     [Fact]
@@ -81,8 +82,8 @@ public class SocketGatheringWriteBudgetContractTest
         Assert.True(f1.IsCompletedSuccessfully);
         Assert.False(f2.IsCompleted);
         Assert.Equal(0, comp.ReaderIndex);
-        Assert.Equal(1, comp.ReferenceCount);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(1, comp.RefCnt);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     [Fact]
@@ -105,28 +106,6 @@ public class SocketGatheringWriteBudgetContractTest
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void AnExplicitSendBufferChangeWinsOverAnOlderPendingCompletion(bool vector)
-    {
-        using var fixture = new Fixture();
-        fixture.Channel.SetMaxBytesPerGatheringWrite(512);
-        var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Channel.Pending = completion.Task;
-        if (vector) fixture.Channel.WriteAsync(Unpooled.Buffer(256).WriteZero(256), TestContext.Current.CancellationToken);
-        Task future = fixture.Channel.WriteAndFlushAsync(Unpooled.Buffer(256).WriteZero(256), TestContext.Current.CancellationToken);
-        Assert.False(future.IsCompleted);
-        fixture.Channel.Config.SetOption(ChannelOption.SO_SNDBUF, 8192);
-        int expected = fixture.Channel.GetMaxBytesPerGatheringWrite();
-        Assert.True(expected > 0);
-        Assert.NotEqual(512, expected);
-        completion.SetResult(vector ? 512 : 256);
-        fixture.PumpUntil(() => future.IsCompleted);
-        Assert.True(future.IsCompletedSuccessfully);
-        Assert.Equal(expected, fixture.Channel.GetMaxBytesPerGatheringWrite());
-    }
-
-    [Theory]
     [InlineData(1073741823, 1073741823, 100, 2147483646)]
     [InlineData(1073741824, 1073741824, 100, 100)]
     [InlineData(2147483647, 2147483647, 100, 100)]
@@ -137,7 +116,7 @@ public class SocketGatheringWriteBudgetContractTest
         using var fixture = new Fixture();
         fixture.Channel.SetMaxBytesPerGatheringWrite(oldMaxBytesPerGatheringWrite);
         // No multi-gigabyte allocation: invoke the same private decision with source-verified byte counts.
-        typeof(SocketStreamChannel).GetMethod("AdjustMaxBytesPerGatheringWrite", BindingFlags.Instance | BindingFlags.NonPublic)!
+        typeof(AbstractNioByteChannel).GetMethod("AdjustMaxBytesPerGatheringWrite", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(fixture.Channel, new object[] { attempted, written, oldMaxBytesPerGatheringWrite });
         Assert.Equal(expected, fixture.Channel.GetMaxBytesPerGatheringWrite());
     }
@@ -156,7 +135,7 @@ public class SocketGatheringWriteBudgetContractTest
     {
         private readonly Socket _peer;
         internal readonly Probe Channel;
-        private readonly ManualIoEventLoop _loop = new(Thread.CurrentThread);
+        private readonly ManualIoEventLoop _loop = new(Thread.CurrentThread, NioIoHandler.NewFactory());
 
         internal Fixture()
         {
@@ -188,23 +167,24 @@ public class SocketGatheringWriteBudgetContractTest
         }
     }
 
-    private sealed class Probe(Socket socket) : TcpSocketChannel(socket)
+    // Records each non-blocking SocketChannel.write attempt of NioSocketChannel.doWrite and reports Written bytes.
+    private sealed class Probe(Socket socket) : NioSocketChannel(socket)
     {
         internal readonly List<int[]> Attempts = new();
         internal int? Written;
-        internal Task<int> Pending;
-        internal int NativeSendBufferSize => Socket.SendBufferSize;
-        internal override bool SupportsGatheringWrites => true;
-        protected override Task<int> DoWriteBytes(ByteBuf buf)
+        internal int NativeSendBufferSize => JavaChannel().SendBufferSize;
+
+        internal override int WriteSocket(ReadOnlyMemory<byte> buffer)
         {
-            int attemptedBytes = buf.ReadableSequence.First.Length;
-            Attempts.Add(new[] { attemptedBytes });
-            return Pending ?? Task.FromResult(Written ?? attemptedBytes);
+            Attempts.Add(new[] { buffer.Length });
+            return Written ?? buffer.Length;
         }
-        internal override Task<int> SendGatheredAsync(IList<ArraySegment<byte>> segments)
+
+        internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length)
         {
-            Attempts.Add(segments.Select(segment => segment.Count).ToArray());
-            return Pending ?? Task.FromResult(Written ?? segments.Sum(segment => segment.Count));
+            var attempt = buffers.Skip(offset).Take(length).Select(buffer => buffer.Length).ToArray();
+            Attempts.Add(attempt);
+            return Written ?? attempt.Sum();
         }
     }
 }

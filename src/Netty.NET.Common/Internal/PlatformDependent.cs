@@ -44,6 +44,10 @@ namespace Netty.NET.Common.Internal;
  */
 public static class PlatformDependent
 {
+    // only static method supported
+    // CLR: a static class replaces the private constructor; Microsoft Learn ("Static classes and static
+    // class members") describes a static class as a class with only static members and a private
+    // constructor whose instantiation the compiler forbids.
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(PlatformDependent));
 
     // constants borrowed from murmur3
@@ -73,25 +77,26 @@ public static class PlatformDependent
     public static readonly bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.NativeOrder() == ByteOrder.BIG_ENDIAN;
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
-    public static void AddFilesystemOsClassifiers(ICollection<string> availableClassifiers) {
+    // CLR: package-private in Java; internal (OsClassifiersTest reaches it through InternalsVisibleTo).
+    internal static void AddFilesystemOsClassifiers(ICollection<string> availableClassifiers) {
         if (ProcessOsReleaseFile("/etc/os-release", availableClassifiers)) {
             return;
         }
         ProcessOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool ProcessOsReleaseFile(string osReleaseFileName, ICollection<string> availableClassifiers)
+    // CLR: private in Java; internal so the bounded-read regression test can pass a file name.
+    internal static bool ProcessOsReleaseFile(string osReleaseFileName, ICollection<string> availableClassifiers)
     {
-        if (string.IsNullOrEmpty(osReleaseFileName) || availableClassifiers == null)
-            return false;
-
         string file = osReleaseFileName;
         try {
             if (File.Exists(file))
             {
                 try
                 {
-                    using var stream = File.OpenRead(osReleaseFileName);
+                    // CLR: BoundedInputStream keeps the source 8 KiB read limit; an oversized file fails
+                    // with IOException, is logged below and still counts as present.
+                    using var stream = new BoundedInputStream(File.OpenRead(osReleaseFileName));
                     using var reader = new StreamReader(stream, Encoding.UTF8);
 
                     string line;
@@ -126,7 +131,8 @@ public static class PlatformDependent
         return false;
     }
 
-    public static bool AddPropertyOsClassifiers(ICollection<string> availableClassifiers) {
+    // CLR: package-private in Java; internal (OsClassifiersTest reaches it through InternalsVisibleTo).
+    internal static bool AddPropertyOsClassifiers(ICollection<string> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
@@ -311,7 +317,7 @@ public static class PlatformDependent
      *     byte[] s2 = new {1, 2, 3};
      *     byte[] s3 = new {1, 2, 3};
      *     byte[] s4 = new {4, 5, 6};
-     *     bool equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
+     *     boolean equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
      *                       equalsConstantTime(s3, 0, s4, 0, s3.length)) != 0;
      * </pre>
      * @param bytes1 the first byte array.
@@ -372,6 +378,7 @@ public static class PlatformDependent
         }
     }
 
+    // CLR: System.String is not an ICharSequence; this overload wraps it for the hashCodeAscii tests.
     public static int HashCodeAscii(string bytes)
     {
         var scs = new StringCharSequence(bytes);
@@ -438,7 +445,9 @@ public static class PlatformDependent
                 return f;
             }
 
-            f = ToDirectory(SystemPropertyUtil.Get("java.io.tmpdir", Path.GetTempPath()));
+            // CLR: java.io.tmpdir is the JVM temporary directory; its CLR counterpart is Path.GetTempPath()
+            // (Windows GetTempPath2/GetTempPath, Unix $TMPDIR or /tmp/), not an environment key of that name.
+            f = ToDirectory(Path.GetTempPath());
             if (f != null) {
                 logger.Debug("-Dio.netty.tmpdir: {} (java.io.tmpdir)", f);
                 return f;
@@ -488,7 +497,6 @@ public static class PlatformDependent
         return f;
     }
 
-    //@SuppressWarnings("ResultOfMethodCallIgnored")
     private static DirectoryInfo ToDirectory(string path) {
         if (path == null)
             return null;
@@ -607,7 +615,8 @@ public static class PlatformDependent
         return sb.ToString();
     }
 
-    //replaces value.toLowerCase(CultureInfo.GetCultureInfo("en-US")).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
+    //replaces value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
+    // CLR: like the source loop's Character.toLowerCase, char.ToLowerInvariant is locale-independent.
     private static string Normalize(string value) {
         StringBuilder sb = new StringBuilder(value.Length);
         for (int i = 0; i < value.Length; i++) {

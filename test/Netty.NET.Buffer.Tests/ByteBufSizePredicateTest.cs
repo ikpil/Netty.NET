@@ -50,11 +50,11 @@ public class ByteBufSizePredicateTest
             int reader = slice ? 0 : 3, writer = slice ? 8 : 13;
             // Literal readable/writable budgets distinguish capacity from MaxCapacity (64).
             Check(view, slice ? 8 : 10, slice ? 0 : 3, backing == 5 || viewKind == 3);
-            int references = owner.ReferenceCount;
+            int references = owner.RefCnt;
             view.MarkReaderIndex().MarkWriterIndex();
             Check(view, slice ? 8 : 10, slice ? 0 : 3, backing == 5 || viewKind == 3);
             Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
-            Assert.Equal(references, owner.ReferenceCount);
+            Assert.Equal(references, owner.RefCnt);
             view.SetIndex(1, 7);
             Check(view, 6, slice ? 1 : 9, backing == 5 || viewKind == 3);
             view.ResetReaderIndex().ResetWriterIndex();
@@ -77,11 +77,11 @@ public class ByteBufSizePredicateTest
     {
         foreach (int count in Counts)
         {
-            Assert.Equal(count <= readable, b.CanRead(count));
-            Assert.Equal(!readOnly && count <= writable, b.CanWrite(count));
+            Assert.Equal(count <= readable, b.IsReadable(count));
+            Assert.Equal(!readOnly && count <= writable, b.IsWritable(count));
         }
-        Assert.Equal(readable > 0, b.IsReadable);
-        Assert.Equal(!readOnly && writable > 0, b.IsWritable);
+        Assert.Equal(readable > 0, b.IsReadable());
+        Assert.Equal(!readOnly && writable > 0, b.IsWritable());
     }
 
     private static ByteBuf Owner(int kind, NativeMemoryAllocator native, out IDisposable disposable)
@@ -113,9 +113,9 @@ public class ByteBufSizePredicateTest
             3 => new AdvancedLeakAwareByteBuf(empty, tracker), 4 => Unpooled.UnreleasableBuffer(empty),
             _ => new PlainWrapper(new AdvancedLeakAwareByteBuf(empty, tracker))
         };
-        foreach (int count in Counts) { Assert.False(b.CanRead(count)); Assert.False(b.CanWrite(count)); }
+        foreach (int count in Counts) { Assert.False(b.IsReadable(count)); Assert.False(b.IsWritable(count)); }
         Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex);
-        Assert.Equal(1, b.ReferenceCount); Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
+        Assert.Equal(1, b.RefCnt); Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
     }
 
     [Theory]
@@ -141,8 +141,8 @@ public class ByteBufSizePredicateTest
             2 => new AdvancedLeakAwareByteBuf(root, tracker), 3 => Unpooled.UnreleasableBuffer(root),
             _ => new PlainWrapper(new AdvancedLeakAwareByteBuf(root, tracker))
         };
-        Assert.True(b.CanRead(123)); Assert.False(b.CanRead(0));
-        Assert.True(b.CanWrite(456)); Assert.False(b.CanWrite(0));
+        Assert.True(b.IsReadable(123)); Assert.False(b.IsReadable(0));
+        Assert.True(b.IsWritable(456)); Assert.False(b.IsWritable(0));
         Assert.Equal(2, root.ReadQueries); Assert.Equal(2, root.WriteQueries);
         Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
     }
@@ -156,8 +156,8 @@ public class ByteBufSizePredicateTest
             : new SimpleLeakAwareCompositeByteBuf(root, tracker);
         try
         {
-            Assert.True(b.CanRead(123)); Assert.False(b.CanRead(0));
-            Assert.True(b.CanWrite(456)); Assert.False(b.CanWrite(0));
+            Assert.True(b.IsReadable(123)); Assert.False(b.IsReadable(0));
+            Assert.True(b.IsWritable(456)); Assert.False(b.IsWritable(0));
             Assert.Equal(2, root.ReadQueries); Assert.Equal(2, root.WriteQueries);
             Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
         }
@@ -168,7 +168,7 @@ public class ByteBufSizePredicateTest
     public void ReadabilityQueriesDoNotAccessCapacityStorageOrReferenceCount()
     {
         var b = new IndicesOnlyBuffer();
-        foreach (int count in Counts) Assert.Equal(count <= 0, b.CanRead(count));
+        foreach (int count in Counts) Assert.Equal(count <= 0, b.IsReadable(count));
     }
 
     [Fact]
@@ -179,9 +179,9 @@ public class ByteBufSizePredicateTest
         Assert.True(owner.Release());
         foreach (int count in Counts)
         {
-            Assert.Equal(count <= 10, owner.CanRead(count));
-            Assert.Equal(count <= 8, slice.CanRead(count));
-            Assert.Equal(count <= 10, duplicate.CanRead(count));
+            Assert.Equal(count <= 10, owner.IsReadable(count));
+            Assert.Equal(count <= 8, slice.IsReadable(count));
+            Assert.Equal(count <= 10, duplicate.IsReadable(count));
         }
     }
 
@@ -196,19 +196,19 @@ public class ByteBufSizePredicateTest
     private sealed class PredicateBuffer : IndicesOnlyBuffer
     {
         internal int ReadQueries, WriteQueries;
-        public override bool CanRead(int count) { ReadQueries++; return count == 123; }
-        public override bool CanWrite(int count) { WriteQueries++; return count == 456; }
+        public override bool IsReadable(int count) { ReadQueries++; return count == 123; }
+        public override bool IsWritable(int count) { WriteQueries++; return count == 456; }
     }
     private sealed class PredicateComposite : CompositeByteBuf
     {
         internal int ReadQueries, WriteQueries;
-        public override bool CanRead(int count) { ReadQueries++; return count == 123; }
-        public override bool CanWrite(int count) { WriteQueries++; return count == 456; }
+        public override bool IsReadable(int count) { ReadQueries++; return count == 123; }
+        public override bool IsWritable(int count) { WriteQueries++; return count == 456; }
     }
     private class IndicesOnlyBuffer() : ByteBuf(64)
     {
         public override int Capacity { get => throw new Exception("Capacity accessed"); set => throw new NotSupportedException(); }
-        public override int ReferenceCount => throw new Exception("Reference count accessed");
+        public override int RefCnt => throw new Exception("Reference count accessed");
         public override bool IsDirect => false;
         protected override Memory<byte> GetMemoryCore(int index, int length) => throw new Exception("Content accessed");
         public override ByteBuf Retain(int increment = 1) => throw new NotSupportedException();

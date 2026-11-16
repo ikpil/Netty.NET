@@ -22,6 +22,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -68,7 +69,7 @@ public class ByteBufOutputStreamTest : IDisposable
         output.WriteBytes("The first line\r\r\n"); output.Write(Array.Empty<byte>());
         output.Write(new byte[] { 1, 2, 3, 4 }, 0, 4); output.Write(new byte[] { 1, 3, 3, 4 }, 0, 0);
         int count = output.BytesWritten; Assert.Equal(buffer.WriterIndex - 1, count);
-        output.Dispose(); Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(count, output.BytesWritten);
+        output.Dispose(); Assert.Equal(1, buffer.RefCnt); Assert.Equal(count, output.BytesWritten);
         Assert.Equal(0, buffer.ReaderIndex); buffer.ReaderIndex = 1;
         Assert.Throws<ArgumentNullException>(() => new ByteBufOutputStream(null));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufOutputStream(buffer).Write(Array.Empty<byte>(), -1, 0));
@@ -78,11 +79,11 @@ public class ByteBufOutputStreamTest : IDisposable
         // Expected
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer.RetainedSlice(), buffer.Capacity + 1, true));
         // Expected
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         using var input = new ByteBufInputStream(buffer, true);
         input.Mark();
         Assert.Equal(count, input.Skip(long.MaxValue));
-        Assert.False(buffer.IsReadable);
+        Assert.False(buffer.IsReadable());
         input.Reset(); Assert.Equal(1, buffer.ReaderIndex);
         Assert.Equal(4, input.Skip(4)); Assert.Equal(5, buffer.ReaderIndex);
         input.Reset();
@@ -109,7 +110,7 @@ public class ByteBufOutputStreamTest : IDisposable
         {
             input.Dispose();
             Assert.Equal(count, input.BytesRead);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { Assert.True(buffer.Release()); }
     }
@@ -123,19 +124,19 @@ public class ByteBufOutputStreamTest : IDisposable
         // case1
         ByteBuf buffer = Owner(kind).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6 });
         var output = new ByteBufOutputStream(buffer, release);
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         output.WriteBoolean(true); output.WriteBoolean(false); output.WriteByte(42); output.WriteByte(224);
         output.WriteBytes("Hello, World!"); output.Write(new byte[] { 1, 3, 3, 4 }, 0, 0);
         await output.DisposeAsync(); output.Dispose(); output.Close();
         // When releaseOnClose is set to true, ByteBuf will be automatically released after calling the close method of
         // ByteBufOutputStream.
-        Assert.Equal(release ? 0 : 1, output.Buffer.ReferenceCount);
+        Assert.Equal(release ? 0 : 1, output.Buffer.RefCnt);
         if (!release)
         {
             // When releaseOnClose is not set or releaseOnClose is false, ByteBuf must be released manually.
             buffer.Release();
         }
-        Assert.Equal(0, buffer.ReferenceCount); Assert.False(output.CanWrite);
+        Assert.Equal(0, buffer.RefCnt); Assert.False(output.CanWrite);
     }
 
     [Theory]
@@ -204,7 +205,7 @@ public class ByteBufOutputStreamTest : IDisposable
         try
         {
             Assert.Throws<ObjectDisposedException>(writes[operation]);
-            Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(3, buffer.WriterIndex);
+            Assert.Equal(1, buffer.RefCnt); Assert.Equal(3, buffer.WriterIndex);
             Assert.Equal(3, output.BytesWritten); Assert.Same(buffer, output.Buffer);
             Assert.Throws<ObjectDisposedException>(() => output.Flush());
         }
@@ -224,7 +225,7 @@ public class ByteBufOutputStreamTest : IDisposable
         Assert.Throws<NotSupportedException>(() => output.WriteBytes(""));
         Assert.Throws<NotSupportedException>(() => output.WriteChars(""));
         Assert.Throws<NotSupportedException>(() => output.WriteUtf(""));
-        Assert.Equal(0, output.BytesWritten); Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(0, output.BytesWritten); Assert.Equal(1, buffer.RefCnt);
     }
 
     [Fact]
@@ -244,7 +245,7 @@ public class ByteBufOutputStreamTest : IDisposable
         Assert.Throws<NotSupportedException>(() => output.SetLength(1));
         Assert.Throws<NotSupportedException>(() => output.Length);
         Assert.Throws<NotSupportedException>(() => output.Position);
-        Assert.Equal(0, buffer.WriterIndex); Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.WriterIndex); Assert.Equal(1, buffer.RefCnt);
         ByteBuf dead = Unpooled.Buffer(0); dead.Release();
         Assert.Throws<IllegalReferenceCountException>(() => new ByteBufOutputStream(dead));
     }
@@ -301,7 +302,7 @@ public class ByteBufOutputStreamTest : IDisposable
         var allocator = new NativeMemoryAllocator(4);
         ByteBuf buffer = new UnpooledDirectByteBuf(2, 64, allocator).WriteByte(9);
         using var output = new ByteBufOutputStream(buffer, true);
-        Assert.Throws<OutOfMemoryException>(() => output.WriteUtf("a"));
+        Assert.Throws<OutOfDirectMemoryError>(() => output.WriteUtf("a"));
         Assert.Equal(0, output.BytesWritten); Assert.Equal(1, buffer.WriterIndex);
         Assert.Equal(9, buffer.GetByte(0)); Assert.Equal(2, allocator.ReservedBytes);
         output.Dispose(); Assert.Equal(0, allocator.ReservedBytes);
@@ -338,7 +339,7 @@ public class ByteBufOutputStreamTest : IDisposable
         ReadOnlyMemory<byte> source = native.AsReadOnlyMemory(0, 2);
         await output.WriteAsync(source, TestContext.Current.CancellationToken);
         Assert.Equal(new byte[] { 1, 2, 1, 2 }, buffer.ReadableSequence.ToArray());
-        Assert.Equal(2, output.BytesWritten); Assert.Equal(composite ? 0 : 1, native.ReferenceCount);
+        Assert.Equal(2, output.BytesWritten); Assert.Equal(composite ? 0 : 1, native.RefCnt);
         output.Dispose(); Assert.Equal(0, allocator.ReservedBytes);
     }
 }

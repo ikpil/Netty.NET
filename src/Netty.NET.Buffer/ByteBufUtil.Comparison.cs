@@ -134,6 +134,6 @@ public static partial class ByteBufUtil
 
     private static void EnsureComparisonAccessible(ByteBuf buffer)
     {
-        if (buffer.ReferenceCount == 0) throw new IllegalReferenceCountException(0);
+        if (buffer.RefCnt == 0) throw new IllegalReferenceCountException(0);
     }
 }

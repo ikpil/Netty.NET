@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
@@ -287,7 +288,8 @@ public class HashedWheelTimer : ITimer, IDisposable
         // Prevent overflow.
         if (duration >= long.MaxValue / _wheel.Length)
         {
-            throw new ArgumentException($"tickDuration: {tickDuration} (expected: 0 < tickDuration in nanos < {long.MaxValue / _wheel.Length}");
+            // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
+            throw new ArgumentException(string.Create(CultureInfo.CurrentCulture, $"tickDuration: {tickDuration} (expected: 0 < tickDuration in nanos < {long.MaxValue / _wheel.Length}"));
         }
 
         if (duration < MILLISECOND_NANOS)
@@ -363,7 +365,8 @@ public class HashedWheelTimer : ITimer, IDisposable
      */
     public virtual void Start()
     {
-        switch (Volatile.Read(ref _workerState))
+        int state = Volatile.Read(ref _workerState);
+        switch (state)
         {
             case WORKER_STATE_INIT:
                 if (Interlocked.CompareExchange(ref _workerState, WORKER_STATE_STARTED, WORKER_STATE_INIT) == WORKER_STATE_INIT)
@@ -377,7 +380,7 @@ public class HashedWheelTimer : ITimer, IDisposable
             case WORKER_STATE_SHUTDOWN:
                 throw new InvalidOperationException("cannot be started once stopped");
             default:
-                throw new InvalidOperationException("Invalid WorkerState");
+                throw new InvalidOperationException("Invalid WorkerState: " + state.ToString(CultureInfo.InvariantCulture));
         }
 
         // Wait until the startTime is initialized by the worker.
@@ -477,8 +480,8 @@ public class HashedWheelTimer : ITimer, IDisposable
         {
             Interlocked.Decrement(ref _pendingTimeouts);
             throw new RejectedExecutionException("Number of pending timeouts ("
-                                                 + pendingTimeoutsCount + ") is greater than or equal to maximum allowed pending "
-                                                 + "timeouts (" + _maxPendingTimeouts + ")");
+                                                 + pendingTimeoutsCount.ToString(CultureInfo.InvariantCulture) + ") is greater than or equal to maximum allowed pending "
+                                                 + "timeouts (" + _maxPendingTimeouts.ToString(CultureInfo.InvariantCulture) + ")");
         }
 
         try { Start(); }

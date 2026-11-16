@@ -19,84 +19,280 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
-using Netty.NET.Transport.Channels.Local;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
 public class MultiThreadIoEventLoopGroupSourceTest
 {
+    private sealed class TestIoHandle : IIoHandle
+    {
+        public void Handle(IIoRegistration registration, IIoEvent readyOps)
+        {
+        }
+
+        public void Close()
+        {
+        }
+    }
+
+    private sealed class TestIoHandlerFactory : IIoHandlerFactory
+    {
+        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor)
+        {
+            return new TestIoHandler();
+        }
+
+        public bool IsChangingThreadSupported()
+        {
+            return true;
+        }
+    }
+
+    // CLR: the anonymous IoHandler and IoRegistration of TestIoHandlerFactory become nested classes.
+    private sealed class TestIoHandler : IIoHandler
+    {
+        public int Run(IIoHandlerContext context)
+        {
+            return 0;
+        }
+
+        public void Wakeup()
+        {
+        }
+
+        public IIoRegistration Register(IIoHandle handle)
+        {
+            return new TestIoRegistration(handle);
+        }
+
+        public bool IsCompatible(Type handleType)
+        {
+            return true;
+        }
+    }
+
+    private sealed class TestIoRegistration(IIoHandle handle) : IIoRegistration
+    {
+        private readonly AtomicBoolean _valid = new AtomicBoolean(true);
+
+        public T Attachment<T>()
+        {
+            return (T)handle;
+        }
+
+        public long Submit(IIoOps ops)
+        {
+            return 0;
+        }
+
+        public bool IsValid()
+        {
+            return _valid.Get();
+        }
+
+        public bool Cancel()
+        {
+            return _valid.CompareAndSet(true, false);
+        }
+    }
+
+    private sealed class TestableIoEventLoop : SingleThreadIoEventLoop
+    {
+        private readonly AtomicBoolean _simulateWorkload = new AtomicBoolean(false);
+
+        internal TestableIoEventLoop(IIoEventLoopGroup parent, Action<Action> executor, IIoHandlerFactory ioHandlerFactory)
+            : base(parent, executor, ioHandlerFactory)
+        {
+        }
+
+        public void SetSimulateWorkload(bool active)
+        {
+            _simulateWorkload.Set(active);
+            if (active)
+            {
+                Execute(() => { /* NO-OP */ });
+            }
+        }
+
+        protected override void Run()
+        {
+            do
+            {
+                if (_simulateWorkload.Get())
+                {
+                    Thread.Sleep(100);
+                    ReportActiveIoTime(TimeSpan.FromMilliseconds(100).Ticks * 100);
+                }
+                else
+                {
+                    Action task = TakeTask();
+                    if (task != null)
+                    {
+                        SafeExecute(task);
+                    }
+                }
+            } while (!ConfirmShutdown() && !CanSuspend());
+        }
+
+        protected override IQueue<Action> NewTaskQueue(int maxPendingTasks)
+        {
+            return new LinkedBlockingQueue<Action>(maxPendingTasks);
+        }
+    }
+
+    private sealed class TestMultiThreadIoEventLoopGroup : MultiThreadIoEventLoopGroup
+    {
+        internal TestMultiThreadIoEventLoopGroup(int minThreads, int maxThreads, TimeSpan checkPeriod)
+            : base(maxThreads, (Action<Action>)null,
+                  new AutoScalingEventExecutorChooserFactory(
+                          minThreads, maxThreads, checkPeriod, 0.4, 0.8,
+                          maxThreads, 1, 1),
+                  new TestIoHandlerFactory())
+        {
+        }
+
+        protected override IIoEventLoop NewChild(Action<Action> executor, IIoHandlerFactory ioHandlerFactory, params object[] args)
+        {
+            return new TestableIoEventLoop(this, executor, ioHandlerFactory);
+        }
+    }
+
     [Fact(Timeout = 30000)]
     public async Task TestScalingWithIoRegistrationLifecycle()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var group = NewGroup();
-        using var workload = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+        TestMultiThreadIoEventLoopGroup group = new TestMultiThreadIoEventLoopGroup(0, 2, TimeSpan.FromMilliseconds(200));
         try
         {
-            await StartAllExecutors(group, cancellation);
+            StartAllExecutors(group);
             Assert.Equal(2, CountActiveExecutors(group));
 
-            await WaitForSuspension(group, 1, cancellation);
-            Assert.Equal(1, CountActiveExecutors(group));
-            var active = Assert.IsType<DefaultEventLoop>(FindActiveExecutor(group));
+            WaitForSuspension(group, 1, 2000);
+            Assert.Equal(1, CountActiveExecutors(group)); // One executor should have been suspended
 
-            var registration = await active.RegisterIoAsync(new TestIoHandle(), cancellation);
-            StartWorkload(active, workload.Token);
-            await Task.Delay(450, cancellation);
+            TestableIoEventLoop activeExecutor = (TestableIoEventLoop)FindActiveExecutor(group);
+            Assert.NotNull(activeExecutor); // One executor should remain active
+
+            IIoRegistration registration = await activeExecutor.RegisterAsync(new TestIoHandle());
+            activeExecutor.SetSimulateWorkload(true);
+
+            Thread.Sleep(450);
 
             // The executor will not be suspended because its workload generates utilization.
-            Assert.False(active.IsSuspended(), "Executor with active handle should not be suspended");
+            Assert.False(activeExecutor.IsSuspended(), "Executor with active handle should not be suspended");
 
-            workload.Cancel();
-            await CancelRegistration(registration, active, cancellation);
-            await WaitForSuspension(group, 2, cancellation);
-            Assert.True(active.IsSuspended(), "Executor should suspend after handle is cancelled and idle");
+            activeExecutor.SetSimulateWorkload(false);
+            Assert.True(registration.Cancel());
+
+            WaitForSuspension(group, 2, 2000);
+            Assert.True(activeExecutor.IsSuspended(),
+                       "Executor should suspend after handle is cancelled and idle");
         }
         finally
         {
-            workload.Cancel();
-            await group.StopAsync();
+            await group.ShutdownGracefullyAsync();
         }
     }
 
     [Fact(Timeout = 30000)]
     public async Task TestShouldNotSuspendExecutorWithActiveRegistration()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var group = NewGroup();
+        TestMultiThreadIoEventLoopGroup group = new TestMultiThreadIoEventLoopGroup(0, 2, TimeSpan.FromMilliseconds(200));
         try
         {
-            await StartAllExecutors(group, cancellation);
-            await WaitForSuspension(group, 1, cancellation);
-            Assert.Equal(1, CountActiveExecutors(group));
-            var active = Assert.IsType<DefaultEventLoop>(FindActiveExecutor(group));
+            StartAllExecutors(group);
+            WaitForSuspension(group, 1, 2000);
+            Assert.Equal(1, CountActiveExecutors(group)); // One executor should have been suspended
+
+            TestableIoEventLoop activeExecutor = (TestableIoEventLoop)FindActiveExecutor(group);
+            Assert.NotNull(activeExecutor); // One executor should remain active
 
             // Register a handle with the active executor. This makes registeredChannels() return 1.
-            var registration = await active.RegisterIoAsync(new TestIoHandle(), cancellation);
-            Assert.Equal(1, active.RegisteredIoHandles);
+            IIoRegistration registration = await activeExecutor.RegisterAsync(new TestIoHandle());
 
             // The executor is now a candidate for suspension based on utilization,
             // but not based on registered channels.
+            activeExecutor.SetSimulateWorkload(false);
+
             // Wait for a few monitor cycles. The monitor will run and see the executor is idle.
-            await Task.Delay(600, cancellation);
+            Thread.Sleep(600);
 
-            Assert.False(active.IsSuspended(),
-                "Executor with an active registration should not be suspended, even if idle");
-            Assert.Equal(1, CountActiveExecutors(group));
+            Assert.False(activeExecutor.IsSuspended(),
+                        "Executor with an active registration should not be suspended, even if idle");
+            Assert.Equal(1, CountActiveExecutors(group)); // Only one executor should still be active
 
-            await CancelRegistration(registration, active, cancellation);
-            await WaitForSuspension(group, 2, cancellation);
-            Assert.True(active.IsSuspended(), "Executor should suspend after registration is cancelled and it remains idle");
+            Assert.True(registration.Cancel());
+            WaitForSuspension(group, 2, 2000);
+            Assert.True(activeExecutor.IsSuspended(),
+                       "Executor should suspend after registration is cancelled and it remains idle");
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.ShutdownGracefullyAsync();
+        }
     }
 
-    internal static DefaultEventLoopGroup NewGroup(int minimum = 0, IThreadFactory threadFactory = null) =>
-        new(2, threadFactory, new AutoScalingEventExecutorChooserFactory(
-            minimum, 2, TimeSpan.FromMilliseconds(200), 0.4, 0.8, 2, 1, 1));
+    // CLR: CountdownEvent replaces CountDownLatch.
+    internal static void StartAllExecutors(MultiThreadIoEventLoopGroup group)
+    {
+        using CountdownEvent latch = new CountdownEvent(group.ExecutorCount());
+        foreach (IEventExecutor executor in group.Iterator())
+        {
+            executor.Execute(() => latch.Signal());
+        }
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "Executors did not start in time");
+    }
 
+    internal static int CountActiveExecutors(MultiThreadIoEventLoopGroup group)
+    {
+        int activeCount = 0;
+        foreach (IEventExecutor executor in group.Iterator())
+        {
+            if (!executor.IsSuspended())
+            {
+                activeCount++;
+            }
+        }
+        return activeCount;
+    }
+
+    internal static IEventExecutor FindActiveExecutor(MultiThreadIoEventLoopGroup group)
+    {
+        foreach (IEventExecutor executor in group.Iterator())
+        {
+            if (!executor.IsSuspended())
+            {
+                return executor;
+            }
+        }
+        return null;
+    }
+
+    internal static void WaitForSuspension(MultiThreadIoEventLoopGroup group, int expectedSuspendedCount,
+                                          long timeoutMillis)
+    {
+        var watch = Stopwatch.StartNew();
+        while (watch.ElapsedMilliseconds < timeoutMillis)
+        {
+            if (group.ExecutorCount() - CountActiveExecutors(group) >= expectedSuspendedCount)
+            {
+                return;
+            }
+            Thread.Sleep(50);
+        }
+        Assert.Fail("Timed out waiting for " + expectedSuspendedCount + " executor(s) to suspend.");
+    }
+
+    // CLR: shared with ScalableEventLoopGroupContractTest; a NIO-backed auto-scaling group of two workers.
+    internal static MultiThreadIoEventLoopGroup NewGroup(int minimum = 0) =>
+        new(2, (Action<Action>)null, new AutoScalingEventExecutorChooserFactory(
+            minimum, 2, TimeSpan.FromMilliseconds(200), 0.4, 0.8, 2, 1, 1), NioIoHandler.NewFactory());
+
+    // CLR: shared with ScalableEventLoopGroupContractTest; keeps an executor busy until cancelled. runAllTasks
+    // publishes its active time when its queue drains, so each piece of work is re-submitted from outside the loop.
     internal static void StartWorkload(IEventExecutor executor, CancellationToken cancellation)
     {
         executor.Execute(Work);
@@ -104,51 +300,13 @@ public class MultiThreadIoEventLoopGroupSourceTest
         void Work()
         {
             if (cancellation.IsCancellationRequested) return;
-            Thread.Sleep(100);
-            if (!cancellation.IsCancellationRequested) executor.Execute(Work);
+            Thread.Sleep(20);
+            if (!cancellation.IsCancellationRequested)
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    try { executor.Execute(Work); }
+                    catch (RejectedExecutionException) { }
+                });
         }
-    }
-
-    internal static async Task StartAllExecutors(DefaultEventLoopGroup group, CancellationToken cancellation)
-    {
-        var started = group.Iterator().Select(executor => executor.SubmitAsync(() => { /* NO-OP */ }, cancellation));
-        await Task.WhenAll(started).WaitAsync(TimeSpan.FromSeconds(2), cancellation);
-    }
-
-    internal static int CountActiveExecutors(DefaultEventLoopGroup group) =>
-        group.Iterator().Count(executor => !executor.IsSuspended());
-
-    internal static IEventExecutor FindActiveExecutor(DefaultEventLoopGroup group) =>
-        group.Iterator().FirstOrDefault(executor => !executor.IsSuspended());
-
-    internal static async Task WaitForSuspension(DefaultEventLoopGroup group, int count, CancellationToken cancellation)
-    {
-        var watch = Stopwatch.StartNew();
-        while (watch.ElapsedMilliseconds < 2000)
-        {
-            if (group.ExecutorCount() - CountActiveExecutors(group) >= count) return;
-            await Task.Delay(50, cancellation);
-        }
-        Assert.Fail($"Timed out waiting for {count} executor(s) to suspend.");
-    }
-
-    private static async Task CancelRegistration(IoRegistration registration, DefaultEventLoop owner, CancellationToken cancellation)
-    {
-        Assert.True(registration.IsValid);
-        Assert.True(await registration.CancelAsync().WaitAsync(cancellation));
-        Assert.False(registration.IsValid);
-        Assert.Equal(0, owner.RegisteredIoHandles);
-    }
-
-    private sealed class TestIoHandle : IIoHandle
-    {
-        public void HandleCompletion(IoRegistration registration, object completion) { }
-        public void Dispose() { }
-    }
-
-    internal static async Task Cleanup(DefaultEventLoopGroup group, LocalChannel channel)
-    {
-        try { if (channel.EventLoop != null) await channel.CloseAsync(); }
-        finally { await group.StopAsync(); }
     }
 }

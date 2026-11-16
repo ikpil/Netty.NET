@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Netty.NET.Common;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -119,7 +120,7 @@ public partial class AdaptiveByteBufKernelTest
                     Assert.True(!ReferenceEquals(raw, region.Root) || offset != region.Offset);
                     replacement.SetBytes(0, new byte[] { 0xEE, 0xEE, 0xEE, 0xEE });
                 }
-                Assert.Equal(1, raw.ReferenceCount);
+                Assert.Equal(1, raw.RefCnt);
             }
             return seen.Count < 2;
         };
@@ -129,7 +130,7 @@ public partial class AdaptiveByteBufKernelTest
             Assert.Equal(descending ? 5 : 4, result);
             Assert.Equal(descending ? new byte[] { (byte)((offset + 6) % 251), (byte)((offset + 5) % 251) }
                 : new byte[] { (byte)((offset + 3) % 251), (byte)((offset + 4) % 251) }, seen);
-            Assert.Equal(resize ? 1 : 0, b.ReferenceCount);
+            Assert.Equal(resize ? 1 : 0, b.RefCnt);
         }
         finally { replacement?.Release(); }
     }

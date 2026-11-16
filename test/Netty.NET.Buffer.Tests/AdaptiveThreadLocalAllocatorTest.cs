@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -53,7 +54,7 @@ public class AdaptiveThreadLocalAllocatorTest
                 {
                     bool local = fast && (mapping || nonEventLoop);
                     Assert.Equal(local ? 1 : 0, a.HeapPool.LocalBindingCount);
-                    Assert.Equal(local, a.HeapPool.CurrentThreadGroup(0) != null);
+                    Assert.Equal(local, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0] != null);
                 }
                 finally { b.Release(); }
             };
@@ -73,7 +74,7 @@ public class AdaptiveThreadLocalAllocatorTest
             try
             {
                 Assert.Equal(0, low.HeapPool.LocalBindingCount);
-                Assert.NotNull(normal.HeapPool.CurrentThreadGroup(0));
+                Assert.NotNull(normal.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
                 Assert.Equal(262144, normal.UsedHeapMemory);
             }
             finally { small.Release(); large.Release(); }
@@ -110,18 +111,18 @@ public class AdaptiveThreadLocalAllocatorTest
     [Fact]
     public void ScopeFailureCleansUpAndNextScopeCreatesNewGroups()
     {
-        using var a = Allocator(); AdaptiveMagazineGroup previous = null;
+        using var a = Allocator(); MagazineGroup previous = null;
         OnThread(() =>
         {
             Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() =>
             {
-                var b = a.HeapBuffer(7); b.Release(); previous = a.HeapPool.CurrentThreadGroup(0);
+                var b = a.HeapBuffer(7); b.Release(); previous = a.HeapPool.ThreadLocalGroup.GetIfExists()?[0];
                 throw new InvalidOperationException("scope failure");
             }));
-            Assert.True(previous.IsFreed); Assert.Equal(0, a.UsedHeapMemory);
+            Assert.True(previous.Freed); Assert.Equal(0, a.UsedHeapMemory);
             FastThreadLocalThread.RunWithFastThreadLocal(() =>
             {
-                var b = a.HeapBuffer(7); b.Release(); Assert.NotSame(previous, a.HeapPool.CurrentThreadGroup(0));
+                var b = a.HeapBuffer(7); b.Release(); Assert.NotSame(previous, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
             });
         });
         Assert.Equal(0, a.UsedHeapMemory); Assert.Equal(0, a.HeapPool.LocalBindingCount);
@@ -133,17 +134,17 @@ public class AdaptiveThreadLocalAllocatorTest
         using var a = Allocator();
         OnThread(() => ThreadExecutorMap.Apply(() =>
         {
-            var b = a.HeapBuffer(7); var owner = a.HeapPool.CurrentThreadGroup(0); Assert.NotNull(owner);
+            var b = a.HeapBuffer(7); var owner = a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]; Assert.NotNull(owner);
             try
             {
                 Task.Run(() =>
                 {
                     Assert.False(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
                     Assert.Null(ThreadExecutorMap.CurrentExecutor()); var other = a.HeapBuffer(7);
-                    try { Assert.Null(a.HeapPool.CurrentThreadGroup(0)); Assert.Equal(262144, a.UsedHeapMemory); }
+                    try { Assert.Null(a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]); Assert.Equal(262144, a.UsedHeapMemory); }
                     finally { other.Release(); }
                 }, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
-                Assert.Same(owner, a.HeapPool.CurrentThreadGroup(0));
+                Assert.Same(owner, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
             }
             finally { b.Release(); }
         }, ImmediateEventExecutor.INSTANCE)(), true);

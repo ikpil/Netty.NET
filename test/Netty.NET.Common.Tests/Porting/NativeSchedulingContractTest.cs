@@ -22,8 +22,8 @@ public class NativeSchedulingContractTest
         {
             task();
         }
-        public override Task Termination => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return Termination; }
+        public override Task TerminationFuture => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return TerminationFuture; }
         public override void Shutdown() { _shutdown = true; CancelScheduledTasks(); }
         public override bool IsShuttingDown() => _shutdown;
         public override bool IsShutdown() => _shutdown;

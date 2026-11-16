@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Netty.NET.Common;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -99,7 +100,7 @@ public partial class AdaptiveByteBufKernelTest
         public void Dispose()
         {
             Observation.Enabled = false;
-            if (Buffer.ReferenceCount > 0) Buffer.Release(); if (Guard.ReferenceCount > 0) Guard.Release();
+            if (Buffer.RefCnt > 0) Buffer.Release(); if (Guard.RefCnt > 0) Guard.Release();
             Allocator.Dispose(); Assert.Equal(0, Allocator.Native.ReservedBytes);
         }
     }
@@ -145,8 +146,8 @@ public partial class AdaptiveByteBufKernelTest
             if (operation is 6 or 7) Assert.Same(visitor, call.Peer);
             Assert.Equal(reader, b.ReaderIndex); Assert.Equal(writer, b.WriterIndex);
             Assert.Equal(0, peer.ReaderIndex); Assert.Equal(0, peer.WriterIndex);
-            Assert.Equal(1, b.ReferenceCount); Assert.Equal(1, s.Guard.ReferenceCount);
-            Assert.Equal(1, s.Raw[^1].ReferenceCount);
+            Assert.Equal(1, b.RefCnt); Assert.Equal(1, s.Guard.RefCnt);
+            Assert.Equal(1, s.Raw[^1].RefCnt);
         }
         finally { s.Observation.Enabled = false; peer.Release(); }
     }

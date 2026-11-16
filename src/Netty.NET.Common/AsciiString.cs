@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -39,7 +38,7 @@ namespace Netty.NET.Common;
  * {@link #array()}. If any changes are made to the underlying byte array it is the user's responsibility to call
  * {@link #arrayChanged()} so the state of this class can be reset.
  */
-public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<AsciiString>, IComparable
+public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<ICharSequence>, IComparable<AsciiString>, IComparable
 {
     public static readonly AsciiString EMPTY_STRING = Cached(string.Empty);
     private static readonly char MAX_CHAR_VALUE = (char)255;
@@ -102,14 +101,18 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public AsciiString(byte[] value, int start, int length, bool copy)
     {
         ArgumentNullException.ThrowIfNull(value);
+        // CLR: Java checks only the shared branch and lets System.arraycopy fail the copy branch with an
+        // ArrayIndexOutOfBoundsException; both branches report the source message here.
         if (IsOutOfBounds(start, length, value.Length))
         {
-            throw new ArgumentOutOfRangeException(nameof(start));
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= start(" + start.ToString(CultureInfo.InvariantCulture) + ") <= start + length(" +
+                length.ToString(CultureInfo.InvariantCulture) + ") <= " + "value.length(" + value.Length.ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         if (copy)
         {
-            _value = value.AsSpan(start, length).ToArray();
+            byte[] rangedCopy = value.AsSpan(start, length).ToArray();
+            _value = rangedCopy;
             _offset = 0;
         }
         else
@@ -236,8 +239,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         if (IsOutOfBounds(start, length, value.Length))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
-                                                  + ") <= " + "value.length(" + value.Length + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= start(" + start.ToString(CultureInfo.InvariantCulture) + ") <= start + length(" + length.ToString(CultureInfo.InvariantCulture)
+                                                  + ") <= " + "value.length(" + value.Length.ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         _value = GC.AllocateUninitializedArray<byte>(length);
@@ -283,8 +286,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         if (IsOutOfBounds(start, length, value.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
-                                                  + ") <= " + "value.length(" + value.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= start(" + start.ToString(CultureInfo.InvariantCulture) + ") <= start + length(" + length.ToString(CultureInfo.InvariantCulture)
+                                                  + ") <= " + "value.length(" + value.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         _value = GC.AllocateUninitializedArray<byte>(length);
@@ -343,8 +346,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         if (IsOutOfBounds(index, length, this.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
-                                                  + ") <= " + "length(" + this.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= index(" + index.ToString(CultureInfo.InvariantCulture) + ") <= start + length(" + length.ToString(CultureInfo.InvariantCulture)
+                                                  + ") <= " + "length(" + this.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         return ForEachByte0(index, length, visitor);
@@ -387,8 +390,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         if (IsOutOfBounds(index, length, this.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
-                                                  + ") <= " + "length(" + this.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= index(" + index.ToString(CultureInfo.InvariantCulture) + ") <= start + length(" + length.ToString(CultureInfo.InvariantCulture)
+                                                  + ") <= " + "length(" + this.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         return ForEachByteDesc0(index, length, visitor);
@@ -415,7 +418,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         // We rely on the array access itself to pick up the array out of bounds conditions
         if (index < 0 || index >= _length)
         {
-            throw new ArgumentOutOfRangeException("index: " + index + " must be in the range [0," + _length + ")");
+            throw new ArgumentOutOfRangeException(null, "index: " + index.ToString(CultureInfo.InvariantCulture) + " must be in the range [0," + _length.ToString(CultureInfo.InvariantCulture) + ")");
         }
 
         // CLR adaptation: indexed byte access retains the logical slice check;
@@ -509,8 +512,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         if (IsOutOfBounds(srcIdx, length, this.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= srcIdx(" + srcIdx.ToString(CultureInfo.InvariantCulture) + ") <= srcIdx + length("
+                                                  + length.ToString(CultureInfo.InvariantCulture) + ") <= srcLen(" + this.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         Arrays.Arraycopy(_value, srcIdx + _offset, CheckNotNull(dst, "dst"), dstIdx, length);
@@ -519,6 +522,17 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public char CharAt(int index)
     {
         return B2c(ByteAt(index));
+    }
+
+    /**
+     * Determines if this {@code String} contains the sequence of characters in the {@code CharSequence} passed.
+     *
+     * @param cs the character sequence to search for.
+     * @return {@code true} if the sequence of characters are contained in this string, otherwise {@code false}.
+     */
+    public bool Contains(ICharSequence cs)
+    {
+        return IndexOf(cs) >= 0;
     }
 
     /**
@@ -534,20 +548,22 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *         positive integer if this string is after the specified string.
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public int CompareTo(AsciiString str)
+    public int CompareTo(ICharSequence @string)
     {
-        if (Equals(str))
+        if (ReferenceEquals(this, @string))
         {
             return 0;
         }
+        // CLR: the documented NullPointerException becomes ArgumentNullException.
+        ArgumentNullException.ThrowIfNull(@string);
 
         int result;
         int length1 = Length();
-        int length2 = str.Length();
+        int length2 = @string.Length();
         int minLength = Math.Min(length1, length2);
         for (int i = 0, j = ArrayOffset(); i < minLength; i++, j++)
         {
-            result = B2c(_value[j]) - str.CharAt(i);
+            result = B2c(_value[j]) - @string.CharAt(i);
             if (result != 0)
             {
                 return result;
@@ -557,9 +573,19 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return length1 - length2;
     }
 
+    // CLR: IComparable<AsciiString> lets BCL sorting use the source Comparable<CharSequence> order.
+    public int CompareTo(AsciiString @string) => CompareTo((ICharSequence)@string);
+
+    // CLR: the non-generic IComparable contract orders null first and rejects other types
+    // (Microsoft Learn, IComparable.CompareTo); character sequences use compareTo(CharSequence).
     public int CompareTo(object obj)
     {
-        return CompareTo(obj as AsciiString);
+        return obj switch
+        {
+            null => 1,
+            ICharSequence @string => CompareTo(@string),
+            _ => throw new ArgumentException("Object must be an ICharSequence.", nameof(obj)),
+        };
     }
 
     /**
@@ -723,8 +749,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (IsOutOfBounds(start, length, this.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= start(" + start.ToString(CultureInfo.InvariantCulture) + ") <= srcIdx + length("
+                                                  + length.ToString(CultureInfo.InvariantCulture) + ") <= srcLen(" + this.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         char[] buffer = new char[length];
@@ -750,8 +776,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (IsOutOfBounds(srcIdx, length, this.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= srcIdx(" + srcIdx.ToString(CultureInfo.InvariantCulture) + ") <= srcIdx + length("
+                                                  + length.ToString(CultureInfo.InvariantCulture) + ") <= srcLen(" + this.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         int dstEnd = dstIdx + length;
@@ -767,10 +793,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return a new string containing the characters from start to the end of the string.
      * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
      */
-    public ICharSequence SubSequence(int start)
+    public AsciiString SubSequence(int start)
     {
         return SubSequence(start, Length());
     }
+
+    // CLR: Java narrows CharSequence.subSequence to AsciiString covariantly; the CLR interface
+    // members are implemented explicitly so the public methods keep the AsciiString return type.
+    ICharSequence ICharSequence.SubSequence(int start) => SubSequence(start);
+
+    ICharSequence ICharSequence.SubSequence(int start, int end) => SubSequence(start, end);
 
     /**
      * Copies a range of characters into a new string.
@@ -779,7 +811,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return a new string containing the characters from start to the end of the string.
      * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
      */
-    public ICharSequence SubSequence(int start, int end)
+    public AsciiString SubSequence(int start, int end)
     {
         return SubSequence(start, end, true);
     }
@@ -796,13 +828,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public AsciiString SubSequence(int start, int end, bool copy)
     {
         // Validate endpoints before subtraction, including in checked builds.
-        if (start < 0 || start > _length)
+        if (start < 0 || start > _length || end < start || end > _length)
         {
-            throw new ArgumentOutOfRangeException(nameof(start));
-        }
-        if (end < start || end > _length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(end));
+            throw new ArgumentOutOfRangeException(null, "expected: 0 <= start(" + start.ToString(CultureInfo.InvariantCulture) + ") <= end (" +
+                end.ToString(CultureInfo.InvariantCulture) + ") <= length(" + Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         if (start == 0 && end == Length())
@@ -816,6 +845,73 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         return new AsciiString(_value, start + _offset, end - start, copy);
+    }
+
+    /**
+     * Searches in this string for the first index of the specified string. The search for the string starts at the
+     * beginning and moves towards the end of this string.
+     *
+     * @param string the string to find.
+     * @return the index of the first character of the specified string in this string, -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code string} is {@code null}.
+     */
+    public int IndexOf(ICharSequence @string)
+    {
+        return IndexOf(@string, 0);
+    }
+
+    /**
+     * Searches in this string for the index of the specified string. The search for the string starts at the specified
+     * offset and moves towards the end of this string.
+     *
+     * @param subString the string to find.
+     * @param start the starting offset.
+     * @return the index of the first character of the specified string in this string, -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code subString} is {@code null}.
+     */
+    public int IndexOf(ICharSequence subString, int start)
+    {
+        // CLR: a null subString fails with ArgumentNullException instead of Java's implicit NPE.
+        ArgumentNullException.ThrowIfNull(subString);
+        int subCount = subString.Length();
+        if (start < 0)
+        {
+            start = 0;
+        }
+        if (subCount <= 0)
+        {
+            return start < _length ? start : _length;
+        }
+        if (subCount > _length - start)
+        {
+            return INDEX_NOT_FOUND;
+        }
+
+        char firstChar = subString.CharAt(0);
+        if (firstChar > MAX_CHAR_VALUE)
+        {
+            return INDEX_NOT_FOUND;
+        }
+        byte firstCharAsByte = C2b0(firstChar);
+        int len = _offset + _length - subCount;
+        for (int i = start + _offset; i <= len; ++i)
+        {
+            if (_value[i] == firstCharAsByte)
+            {
+                int o1 = i, o2 = 0;
+                while (++o2 < subCount && B2c(_value[++o1]) == subString.CharAt(o2))
+                {
+                    // Intentionally empty
+                }
+                if (o2 == subCount)
+                {
+                    return i - _offset;
+                }
+            }
+        }
+        return INDEX_NOT_FOUND;
     }
 
     /**
@@ -838,6 +934,70 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         // Bound the logical start before slicing; adding the backing offset can overflow.
         int index = AsSpan().Slice(start).IndexOf((byte)ch);
         return index < 0 ? INDEX_NOT_FOUND : start + index;
+    }
+
+    /**
+     * Searches in this string for the last index of the specified string. The search for the string starts at the end
+     * and moves towards the beginning of this string.
+     *
+     * @param string the string to find.
+     * @return the index of the first character of the specified string in this string, -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code string} is {@code null}.
+     */
+    public int LastIndexOf(ICharSequence @string)
+    {
+        // Use count instead of count - 1 so lastIndexOf("") answers count
+        return LastIndexOf(@string, _length);
+    }
+
+    /**
+     * Searches in this string for the index of the specified string. The search for the string starts at the specified
+     * offset and moves towards the beginning of this string.
+     *
+     * @param subString the string to find.
+     * @param start the starting offset.
+     * @return the index of the first character of the specified string in this string , -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code subString} is {@code null}.
+     */
+    public int LastIndexOf(ICharSequence subString, int start)
+    {
+        // CLR: a null subString fails with ArgumentNullException instead of Java's implicit NPE.
+        ArgumentNullException.ThrowIfNull(subString);
+        int subCount = subString.Length();
+        start = Math.Min(start, _length - subCount);
+        if (start < 0)
+        {
+            return INDEX_NOT_FOUND;
+        }
+        if (subCount == 0)
+        {
+            return start;
+        }
+
+        char firstChar = subString.CharAt(0);
+        if (firstChar > MAX_CHAR_VALUE)
+        {
+            return INDEX_NOT_FOUND;
+        }
+        byte firstCharAsByte = C2b0(firstChar);
+        for (int i = _offset + start; i >= _offset; --i)
+        {
+            if (_value[i] == firstCharAsByte)
+            {
+                int o1 = i, o2 = 0;
+                while (++o2 < subCount && B2c(_value[++o1]) == subString.CharAt(o2))
+                {
+                    // Intentionally empty
+                }
+                if (o2 == subCount)
+                {
+                    return i - _offset;
+                }
+            }
+        }
+        return INDEX_NOT_FOUND;
     }
 
     /**
@@ -891,7 +1051,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
     public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int count)
     {
-        Contract.Requires(seq != null);
+        // CLR: Contract.Requires is compiled only with CONTRACTS_FULL, so the documented null check is explicit.
+        ArgumentNullException.ThrowIfNull(seq);
 
         int thisLen = _length;
         if (thisStart < 0 || count > thisLen - thisStart)
@@ -1164,6 +1325,63 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     }
 
     /**
+     * Splits the specified {@link String} with the specified delimiter..
+     */
+    public AsciiString[] Split(char delim)
+    {
+        // CLR: InternalThreadLocalMap.arrayList() is a JVM allocation cache; a local list is used.
+        List<AsciiString> res = new List<AsciiString>();
+
+        int start = 0;
+        int length = Length();
+        for (int i = start; i < length; i++)
+        {
+            if (CharAt(i) == delim)
+            {
+                if (start == i)
+                {
+                    res.Add(EMPTY_STRING);
+                }
+                else
+                {
+                    res.Add(new AsciiString(_value, start + ArrayOffset(), i - start, false));
+                }
+                start = i + 1;
+            }
+        }
+
+        if (start == 0)
+        { // If no delimiter was found in the value
+            res.Add(this);
+        }
+        else
+        {
+            if (start != length)
+            {
+                // Add the last element if it's not empty.
+                res.Add(new AsciiString(_value, start + ArrayOffset(), length - start, false));
+            }
+            else
+            {
+                // Truncate trailing empty elements.
+                for (int i = res.Count - 1; i >= 0; i--)
+                {
+                    if (res[i].IsEmpty())
+                    {
+                        res.RemoveAt(i);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return res.Count == 0 ? EmptyArrays.EMPTY_ASCII_STRINGS : res.ToArray();
+    }
+
+    /**
      * {@inheritDoc}
      * <p>
      * Provides a case-insensitive hash code for Ascii like byte strings.
@@ -1257,8 +1475,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (IsOutOfBounds(start, length, this.Length()))
         {
-            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.Length() + ')');
+            throw new ArgumentOutOfRangeException(null, "expected: " + "0 <= start(" + start.ToString(CultureInfo.InvariantCulture) + ") <= srcIdx + length("
+                                                  + length.ToString(CultureInfo.InvariantCulture) + ") <= srcLen(" + this.Length().ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         //@SuppressWarnings("deprecation")
@@ -1281,8 +1499,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         if (start + 1 >= Length())
         {
-            throw new ArgumentOutOfRangeException("2 bytes required to convert to character. index " +
-                                                  start + " would go out of bounds.");
+            throw new ArgumentOutOfRangeException(null, "2 bytes required to convert to character. index " +
+                                                  start.ToString(CultureInfo.InvariantCulture) + " would go out of bounds.");
         }
 
         int startWithOffset = start + _offset;
@@ -1294,10 +1512,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     // Invalid slices/radices are argument errors; malformed numbers are format
     // errors and representable-range failures are overflow errors. TryParse leaves
     // zero on numeric failure and still rejects invalid arguments.
-    public short ParseInt16(int radix = 10) => ParseInteger<short>(AsSpan(), radix);
+    public short ParseShort() => ParseShort(10);
+
+    public short ParseShort(int radix) => ParseInteger<short>(AsSpan(), radix);
 
     // start is inclusive and end is exclusive, relative to this logical view.
-    public short ParseInt16(int start, int end, int radix = 10) =>
+    public short ParseShort(int start, int end) => ParseShort(start, end, 10);
+
+    public short ParseShort(int start, int end, int radix) =>
         ParseInteger<short>(NumericSlice(start, end), radix);
 
     public bool TryParseInt16(out short result, int radix = 10) =>
@@ -1306,10 +1528,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public bool TryParseInt16(int start, int end, out short result, int radix = 10) =>
         TryParseInteger(NumericSlice(start, end), radix, out result);
 
-    public int ParseInt32(int radix = 10) => ParseInteger<int>(AsSpan(), radix);
+    public int ParseInt() => ParseInt(10);
+
+    public int ParseInt(int radix) => ParseInteger<int>(AsSpan(), radix);
 
     // start is inclusive and end is exclusive, relative to this logical view.
-    public int ParseInt32(int start, int end, int radix = 10) =>
+    public int ParseInt(int start, int end) => ParseInt(start, end, 10);
+
+    public int ParseInt(int start, int end, int radix) =>
         ParseInteger<int>(NumericSlice(start, end), radix);
 
     public bool TryParseInt32(out int result, int radix = 10) =>
@@ -1318,10 +1544,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public bool TryParseInt32(int start, int end, out int result, int radix = 10) =>
         TryParseInteger(NumericSlice(start, end), radix, out result);
 
-    public long ParseInt64(int radix = 10) => ParseInteger<long>(AsSpan(), radix);
+    public long ParseLong() => ParseLong(10);
+
+    public long ParseLong(int radix) => ParseInteger<long>(AsSpan(), radix);
 
     // start is inclusive and end is exclusive, relative to this logical view.
-    public long ParseInt64(int start, int end, int radix = 10) =>
+    public long ParseLong(int start, int end) => ParseLong(start, end, 10);
+
+    public long ParseLong(int start, int end, int radix) =>
         ParseInteger<long>(NumericSlice(start, end), radix);
 
     public bool TryParseInt64(out long result, int radix = 10) =>
@@ -1436,10 +1666,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     // BCL byte-span conversion for decimals and exact binary rounding for hex.
     // Parse throws FormatException for numeric failure; TryParse returns false
     // and zero. Overflow/underflow produce signed infinity/zero, as in Java.
-    public float ParseSingle() => ParseFloatingPoint<float>(AsSpan());
+    public float ParseFloat() => ParseFloatingPoint<float>(AsSpan());
 
     // Logical [start,end) bounds are checked even for empty input.
-    public float ParseSingle(int start, int end) => ParseFloatingPoint<float>(NumericSlice(start, end));
+    public float ParseFloat(int start, int end) => ParseFloatingPoint<float>(NumericSlice(start, end));
 
     public bool TryParseSingle(out float result) => TryParseFloatingPoint(AsSpan(), out result);
 
@@ -1857,6 +2087,37 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return res;
     }
 
+
+    // CLR: Java's private nested CharEqualityComparator family (interface named with the CLR I prefix).
+    // GeneralCaseInsensitiveCharEqualityComparator is replaced by ordinal-ignore-case UTF-16 comparison
+    // (docs/common-clr-design.md#native-utf-16-comparison-and-ascii-protocol-comparison).
+    private interface ICharEqualityComparator
+    {
+        bool Equals(char a, char b);
+    }
+
+    private sealed class DefaultCharEqualityComparator : ICharEqualityComparator
+    {
+        internal static readonly DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
+        private DefaultCharEqualityComparator() { }
+
+        public bool Equals(char a, char b)
+        {
+            return a == b;
+        }
+    }
+
+    private sealed class AsciiCaseInsensitiveCharEqualityComparator : ICharEqualityComparator
+    {
+        internal static readonly AsciiCaseInsensitiveCharEqualityComparator
+                INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
+        private AsciiCaseInsensitiveCharEqualityComparator() { }
+
+        public bool Equals(char a, char b)
+        {
+            return EqualsIgnoreCase(a, b);
+        }
+    }
 
     private static bool Contains(ICharSequence a, ICharSequence b, ICharEqualityComparator cmp)
     {

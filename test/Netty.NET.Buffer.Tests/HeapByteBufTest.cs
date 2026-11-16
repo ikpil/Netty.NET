@@ -45,9 +45,9 @@ public class HeapByteBufTest
             Assert.Equal(0, buffer.WriterIndex);
             Assert.Equal(0, buffer.ReadableBytes);
             Assert.Equal(Capacity, buffer.WritableBytes);
-            Assert.False(buffer.IsReadable);
-            Assert.True(buffer.IsWritable);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.False(buffer.IsReadable());
+            Assert.True(buffer.IsWritable());
+            Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(UsesDirectMemory, buffer.IsDirect);
         }
         finally { Assert.True(buffer.Release()); }
@@ -242,7 +242,7 @@ public class HeapByteBufTest
             ByteBuf duplicate = buffer.Duplicate();
             Assert.Equal(new byte[] { 2, 3, 4, 5 }, copy.ReadableMemory.ToArray());
             Assert.Equal(buffer.ReadableMemory.ToArray(), duplicate.ReadableMemory.ToArray());
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             duplicate.ReadByte();
             Assert.Equal(1, buffer.ReaderIndex);
             duplicate.SetByte(2, 99);
@@ -268,7 +268,7 @@ public class HeapByteBufTest
                 Assert.Equal(slice.Capacity, duplicate.Capacity);
                 if (retain) Assert.False(duplicate.Release());
             }
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { buffer.Release(); }
     }
@@ -297,7 +297,7 @@ public class HeapByteBufTest
                         }
                 }
                 finally { retainedDuplicate.Release(); retainedSlice.Release(); }
-                Assert.Equal(1, buffer.ReferenceCount);
+                Assert.Equal(1, buffer.RefCnt);
             }
         }
         finally { buffer.Release(); }
@@ -320,7 +320,7 @@ public class HeapByteBufTest
         ByteBuf buffer = NewCopiedBuffer(new byte[] { 1, 2, 3 });
         ByteBuf ordinary = buffer.Slice(1, 2);
         ByteBuf retained = buffer.RetainedSlice(1, 2);
-        Assert.Equal(2, buffer.ReferenceCount);
+        Assert.Equal(2, buffer.RefCnt);
         Assert.False(buffer.Release());
         Assert.Equal(2, retained.ReadByte());
         Assert.True(retained.Release());
@@ -341,7 +341,7 @@ public class HeapByteBufTest
             try
             {
                 Assert.Equal(4, buffer.ReaderIndex);
-                Assert.Equal(2, buffer.ReferenceCount);
+                Assert.Equal(2, buffer.RefCnt);
                 Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadSlice(1));
                 Assert.Equal(4, buffer.ReaderIndex);
             }

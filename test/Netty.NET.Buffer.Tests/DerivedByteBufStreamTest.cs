@@ -93,8 +93,8 @@ public class DerivedByteBufStreamTest
         }
         public void Dispose()
         {
-            if (Owner?.ReferenceCount > 0) Assert.True(Owner.Release());
-            if (Root.ReferenceCount > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
+            if (Root.RefCnt > 0) Assert.True(Root.Release());
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -146,7 +146,7 @@ public class DerivedByteBufStreamTest
             await Assert.ThrowsAsync<NotSupportedException>(() => Transfer(s.View, stream, true, asynchronous, false));
             Assert.Equal(0, s.Observation.Calls); Assert.Equal(0, stream.Position); return;
         }
-        int references = s.Root.ReferenceCount;
+        int references = s.Root.RefCnt;
         await Transfer(s.View, stream, input, asynchronous, false);
         Observed(s, stream, s.Offset + 2, asynchronous);
         byte[] expected = Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
@@ -156,7 +156,7 @@ public class DerivedByteBufStreamTest
         Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(4, s.View.WriterIndex);
         s.View.SetIndex(0, s.View.Capacity).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(4, s.View.WriterIndex);
-        Assert.Equal(references, s.Root.ReferenceCount);
+        Assert.Equal(references, s.Root.RefCnt);
 
         s.Root.SetBytes(0, Enumerable.Range(0, 16).Select(i => (byte)i).ToArray());
         s.View.SetIndex(1, input ? 3 : 4); s.Observation.Calls = 0;
@@ -187,7 +187,7 @@ public class DerivedByteBufStreamTest
         Assert.Equal(0, s.Observation.Calls);
         if (s.Owner != null)
         {
-            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
             await Assert.ThrowsAsync<IllegalReferenceCountException>(() => Transfer(s.View, stream, input, asynchronous, false));
             Assert.Equal(0, s.Observation.Calls);
         }

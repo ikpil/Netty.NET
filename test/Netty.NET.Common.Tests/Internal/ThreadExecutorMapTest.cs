@@ -46,7 +46,7 @@ public class ThreadExecutorMapTest
             throw new NotSupportedException();
         }
 
-        public override Task Termination => throw new NotSupportedException();
+        public override Task TerminationFuture => throw new NotSupportedException();
 
         public override bool IsShutdown()
         {

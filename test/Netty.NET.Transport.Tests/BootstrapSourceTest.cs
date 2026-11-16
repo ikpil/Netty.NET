@@ -35,7 +35,7 @@ public class BootstrapSourceTest
     [Fact]
     public async Task TestSetOptionsThrow()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         SourceTestChannel created = null;
         try
         {
@@ -69,7 +69,7 @@ public class BootstrapSourceTest
     [Fact]
     public async Task OptionsAndAttributesMustBeAvailableOnChannelInit()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var key = AttributeKey<string>.ValueOf(Guid.NewGuid().ToString());
         try
         {
@@ -89,8 +89,8 @@ public class BootstrapSourceTest
     public Task TestConnectDeadLock() => CrossOwners(true, TestContext.Current.CancellationToken);
     private static async Task CrossOwners(bool connect, CancellationToken timeout)
     {
-        var groupA = new DefaultEventLoopGroup(1);
-        var groupB = new DefaultEventLoopGroup(1);
+        var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+        var groupB = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var handler = new DummyHandler();
         var bootstrapA = new Bootstrap().Group(groupA).Channel<LocalChannel>().Handler(handler);
         var bootstrapB = new Bootstrap().Group(groupB).Channel<LocalChannel>().Handler(handler);
@@ -120,7 +120,7 @@ public class BootstrapSourceTest
     {
         var options = new ConcurrentQueue<ChannelOption>();
         var initialized = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         try
         {
             await new Bootstrap().Group(group).ChannelFactory(() => new OptionOrderChannel(options))
@@ -138,7 +138,7 @@ public class BootstrapSourceTest
     {
         using var extension = new SourceInitializerExtension();
         using var registration = ChannelInitializerExtension.Register(extension);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         try
         {
             extension.ClearThreadLocals();

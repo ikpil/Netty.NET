@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -125,7 +126,7 @@ public class ByteBufZeroDispatchTest
                 for (int i = 0; i < length; ++i) Assert.Equal(0, owner.GetByte(3 + i));
             else Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
             owner.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex); Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex); Assert.Equal(1, owner.RefCnt);
         }
         finally { Assert.True(owner.Release()); }
         Assert.Equal(0, native.ReservedBytes);
@@ -191,7 +192,7 @@ public class ByteBufZeroDispatchTest
             else for (int i = write ? 3 : 1; i < (write ? 10 : 6); ++i) Assert.Equal(0, owner.GetByte(i));
             owner.SetIndex(0, Math.Min(11, owner.Capacity)).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(3, buffer.WriterIndex);
-            Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt);
         }
         finally { Assert.True(facade == 2 ? tracked.Release() : buffer.Release()); }
         Assert.Equal(1, inner.Closes); Assert.Equal(facade is 1 or 4 ? 1 : 0, outer.Closes);
@@ -206,7 +207,7 @@ public class ByteBufZeroDispatchTest
         ByteBuf owner = Create(1, calls, native);
         try
         {
-            Assert.Throws<OutOfMemoryException>(() => owner.WriteZero(17));
+            Assert.Throws<OutOfDirectMemoryError>(() => owner.WriteZero(17));
             Assert.Equal(1, calls.Write); Assert.Equal(1, calls.Ensure); Assert.Equal(0, calls.Set);
             Assert.Equal(8, owner.Capacity); Assert.Equal(8, native.ReservedBytes);
             Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));

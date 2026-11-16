@@ -52,21 +52,108 @@ namespace Netty.NET.Buffer;
 // CLR: each pool owns shared size-class magazine groups and a buddy group. A lifetime
 // gate closes allocation before Dispose drains every group; live regions/pins survive.
 // Physical-thread caches are eligible only within guaranteed FastThreadLocal cleanup scopes.
-internal sealed class AdaptivePoolingAllocator : IDisposable
+// CLR: the source's private and package-private nested types are internal nested types here,
+// one partial file per nested type or tight group, because other Buffer types and the test
+// project (InternalsVisibleTo) use them.
+internal sealed partial class AdaptivePoolingAllocator : IDisposable
 {
-    private readonly ReaderWriterLockSlim _lifetime = new();
+    private const int LOW_MEM_THRESHOLD = 512 * 1024 * 1024;
+    // CLR: GCMemoryInfo.TotalAvailableMemoryBytes (GCHeapHardLimit, a container limit or physical memory) is the
+    // counterpart of Runtime.maxMemory().
+    internal static readonly bool IS_LOW_MEM = SystemPropertyUtil.GetBoolean(
+            "io.netty.allocator.lowMemory",
+            GC.GetGCMemoryInfo().TotalAvailableMemoryBytes <= LOW_MEM_THRESHOLD);
+
     /**
-     * The strategy for how {@link AdaptivePoolingAllocator} should allocate chunk buffers.
+     * The 128 KiB minimum chunk size is chosen to encourage the system allocator to delegate to mmap for chunk
+     * allocations. For instance, glibc will do this.
+     * This pushes any fragmentation from chunk size deviations off physical memory, onto virtual memory,
+     * which is a much, much larger space. Chunks are also allocated in whole multiples of the minimum
+     * chunk size, which itself is a whole multiple of popular page sizes like 4 KiB, 16 KiB, and 64 KiB.
      */
-    private readonly Func<int, int, ByteBuf> _chunkAllocator;
-    private readonly Func<int, int, AdaptiveChunkAllocation> _reserve;
-    private readonly Func<int, int, AdaptiveChunkAllocation, AdaptiveChunkAllocation> _reallocate;
-    private readonly AdaptiveMagazineGroup[] _small;
-    private readonly AdaptiveMagazineGroup _large;
-    private readonly LocalGroups _threadLocal;
-    private readonly HashSet<AdaptiveMagazineGroup[]> _localBindings = new();
-    private readonly long _localPurgePolls;
-    private readonly int _purgeThreshold;
+    internal const int MIN_CHUNK_SIZE = 128 * 1024;
+    // The current fixed-class controller can produce chunks that are not multiples of this minimum.
+    private const int EXPANSION_ATTEMPTS = 3;
+    private const int INITIAL_MAGAZINES = 1;
+    private const int RETIRE_CAPACITY = 256;
+    private const int BUFS_PER_CHUNK = 8; // For large buffers, aim to have about this many buffers per chunk.
+
+    /**
+     * The size classes are chosen based on the following observation:
+     * <p>
+     * Most allocations, particularly ones above 256 bytes, aim to be a power-of-2. However, many use cases, such
+     * as framing protocols, are themselves operating or moving power-of-2 sized payloads, to which they add a
+     * small amount of overhead, such as headers or checksums.
+     * This means we seem to get a lot of mileage out of having both power-of-2 sizes, and power-of-2-plus-a-bit.
+     * <p>
+     * On the conflicting requirements of both having as few chunks as possible, and having as little wasted
+     * memory within each chunk as possible, this seems to strike a surprisingly good balance for the use cases
+     * tested so far.
+     */
+    private static readonly int[] SIZE_CLASSES = [
+            32,
+            64,
+            128,
+            256,
+            512,
+            640, // 512 + 128
+            1024,
+            1152, // 1024 + 128
+            2048,
+            2304, // 2048 + 256
+            4096,
+            4352, // 4096 + 256
+            8192,
+            8704, // 8192 + 512
+            16384,
+            16896, // 16384 + 512
+    ];
+
+    private static readonly int SIZE_CLASSES_COUNT = SIZE_CLASSES.Length;
+    private static readonly byte[] SIZE_INDEXES = CreateSizeIndexes();
+
+    // CLR: the source's static initializer block; it fills SIZE_INDEXES.
+    private static byte[] CreateSizeIndexes()
+    {
+        var indexes = new byte[SIZE_CLASSES[SIZE_CLASSES_COUNT - 1] / 32 + 1];
+        int lastIndex = 0;
+        for (int i = 0; i < SIZE_CLASSES_COUNT; i++)
+        {
+            int sizeClass = SIZE_CLASSES[i];
+            //noinspection ConstantValue
+            System.Diagnostics.Debug.Assert((sizeClass & 31) == 0, "Size class must be a multiple of 32");
+            int sizeIndex = SizeIndexOf(sizeClass);
+            Array.Fill(indexes, (byte)i, lastIndex + 1, sizeIndex - lastIndex);
+            lastIndex = sizeIndex;
+        }
+        return indexes;
+    }
+
+    // CLR: the source reads the following settings from class-initializer statics. Each pool
+    // carries them per instance instead (AdaptiveByteBufAllocator supplies the same defaults).
+    // IS_LOW_MEM
+    private readonly bool _isLowMem;
+    // MAX_STRIPES
+    private readonly int _maxStripes;
+    /**
+     * The maximum size of a pooled chunk, in bytes. Allocations bigger than this will never be pooled.
+     * <p>
+     * This number is 8 MiB, and is derived from the limitations of internal histograms.
+     */
+    // CLR: replaces the static MAX_CHUNK_SIZE.
+    internal readonly int MaxChunkSize;
+    // The original histogram rationale is retained above; the pinned implementation
+    // uses fixed classes and a remembered maximum for buddy chunks.
+    // CLR: replaces the static MAX_POOLED_BUF_SIZE.
+    internal readonly int MaxPooledBufSize;
+    // CHUNK_REUSE_QUEUE
+    private readonly int _chunkReuseQueue;
+    // CHUNK_PURGE_POLLS_THREAD_LOCAL
+    private readonly long _chunkPurgePollsThreadLocal;
+    // CHUNK_PURGE_POLLS_SHARED
+    private readonly long _chunkPurgePollsShared;
+    // CHUNK_PURGE_THRESHOLD
+    private readonly int _chunkPurgeThreshold;
     /**
      * Per-size-class upper bound (in bytes) on the thread-local chunk cache.
      * When a size class cache holds this many bytes worth of chunks,
@@ -74,116 +161,179 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
      * Chunks already in the cache are only evicted by the purge mechanism (they must be full and idle for
      * {@link #CHUNK_PURGE_THRESHOLD} consecutive purge cycles).
      */
-    private readonly int _localMaxBytes;
+    private readonly int _threadLocalCacheMaxBytes;
     /**
      * Per-size-class lower bound (in bytes) on the thread-local chunk cache.
      * The purge mechanism will not evict chunks below this retention floor, even if they are full and idle.
      * Clamped to {@link #THREAD_LOCAL_CACHE_MAX_BYTES} if the configured value exceeds it.
      * When equal to {@link #THREAD_LOCAL_CACHE_MAX_BYTES}, purge eviction is effectively disabled.
      */
-    private readonly int _localMinBytes;
+    private readonly int _threadLocalCacheMinBytes;
+
+    private readonly ReaderWriterLockSlim _lifetime = new();
+    private readonly IChunkAllocator _chunkAllocator;
+    private readonly ChunkRegistry _chunkRegistry;
+    private readonly MagazineGroup[] _sizeClassedMagazineGroups;
+    private readonly MagazineGroup _largeBufferMagazineGroup;
+    private readonly LocalGroups _threadLocalGroup;
+    private readonly HashSet<MagazineGroup[]> _localBindings = new();
+    // CLR: the buffer's reservation callbacks replace the chunk's allocator back-reference.
+    private readonly Func<int, int, AdaptiveChunkAllocation> _allocate;
+    private readonly Func<int, int, AdaptiveChunkAllocation, AdaptiveChunkAllocation> _reallocate;
     private bool _disposed;
-    internal AdaptiveAllocationPolicy Policy { get; }
-    internal AdaptiveChunkRegistry Registry { get; } = new();
-    internal long UsedMemory => Registry.TotalCapacity;
-    internal AdaptiveMagazineGroup Group(int index) => index < _small.Length ? _small[index] : _large;
-    internal AdaptiveMagazineGroup CurrentThreadGroup(int index) => _threadLocal.GetIfExists()?[index];
+    internal MagazineGroup[] SizeClassedMagazineGroups => _sizeClassedMagazineGroups;
+    internal MagazineGroup LargeBufferMagazineGroup => _largeBufferMagazineGroup;
+    internal LocalGroups ThreadLocalGroup => _threadLocalGroup;
     internal int LocalBindingCount { get { lock (_localBindings) return _localBindings.Count; } }
 
-    internal AdaptivePoolingAllocator(Func<int, int, ByteBuf> chunkAllocator, bool lowMemory,
-        int reuseCapacity, long purgePolls, int purgeThreshold, int maxStripes,
-        bool useCacheForNonEventLoopThreads = false, long localPurgePolls = 16,
-        int localMaxBytes = 8 * 1024 * 1024, int localMinBytes = 4 * 1024 * 1024)
+    // CLR: lowMemory and the remaining settings are the per-instance replacements listed above.
+    internal AdaptivePoolingAllocator(IChunkAllocator chunkAllocator, bool lowMemory,
+        int chunkReuseQueue, long chunkPurgePollsShared, int chunkPurgeThreshold, int maxStripes,
+        bool useCacheForNonEventLoopThreads = false, long chunkPurgePollsThreadLocal = 16,
+        int threadLocalCacheMaxBytes = 8 * 1024 * 1024, int threadLocalCacheMinBytes = 4 * 1024 * 1024)
     {
         ArgumentNullException.ThrowIfNull(chunkAllocator);
-        if (reuseCapacity < 2 || reuseCapacity > 1 << 28) throw new ArgumentOutOfRangeException(nameof(reuseCapacity));
-        ArgumentOutOfRangeException.ThrowIfLessThan(purgePolls, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(purgeThreshold, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(maxStripes, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(localPurgePolls, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(localMaxBytes, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(localMinBytes, 1);
-        _localPurgePolls = localPurgePolls; _purgeThreshold = purgeThreshold;
-        _localMaxBytes = localMaxBytes; _localMinBytes = Math.Min(localMaxBytes, localMinBytes);
-        _threadLocal = new LocalGroups(this, useCacheForNonEventLoopThreads);
         _chunkAllocator = chunkAllocator;
-        _reserve = Reserve; _reallocate = ReserveCore;
-        Policy = new AdaptiveAllocationPolicy(lowMemory);
-        int[] classes = AdaptiveAllocationPolicy.GetSizeClasses();
-        _small = new AdaptiveMagazineGroup[classes.Length];
-        for (int i = 0; i < classes.Length; i++)
-            _small[i] = new AdaptiveMagazineGroup(this, classes[i], reuseCapacity, purgePolls, purgeThreshold, lowMemory ? 1 : maxStripes);
-        _large = new AdaptiveMagazineGroup(this, 0, reuseCapacity, purgePolls, purgeThreshold, lowMemory ? 1 : maxStripes);
+        if (chunkReuseQueue < 2 || chunkReuseQueue > 1 << 28) throw new ArgumentOutOfRangeException(nameof(chunkReuseQueue));
+        ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgePollsShared, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgeThreshold, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxStripes, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgePollsThreadLocal, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(threadLocalCacheMaxBytes, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(threadLocalCacheMinBytes, 1);
+        _isLowMem = lowMemory;
+        _maxStripes = lowMemory ? 1 : maxStripes;
+        MaxChunkSize = lowMemory
+            ? 2 * 1024 * 1024 // 2 MiB for systems with small heaps.
+            : 8 * 1024 * 1024; // 8 MiB.
+        MaxPooledBufSize = MaxChunkSize / BUFS_PER_CHUNK;
+        _chunkReuseQueue = chunkReuseQueue;
+        _chunkPurgePollsShared = chunkPurgePollsShared;
+        _chunkPurgeThreshold = chunkPurgeThreshold;
+        _chunkPurgePollsThreadLocal = chunkPurgePollsThreadLocal;
+        _threadLocalCacheMaxBytes = threadLocalCacheMaxBytes;
+        _threadLocalCacheMinBytes = Math.Min(threadLocalCacheMaxBytes, threadLocalCacheMinBytes);
+        _allocate = (size, maxCapacity) => Allocate(size, maxCapacity, null);
+        _reallocate = Reallocate;
+        _chunkRegistry = new ChunkRegistry();
+        _sizeClassedMagazineGroups = CreateMagazineGroupSizeClasses(this, false);
+        _largeBufferMagazineGroup = new MagazineGroup(
+                this, chunkAllocator, new BuddyChunkManagementStrategy(this), false);
+        // CLR: the FastThreadLocal always exists; low-memory pools never consult it, which is
+        // the effect the source's disableThreadLocalGroups null check has on allocation.
+        _threadLocalGroup = new LocalGroups(this, useCacheForNonEventLoopThreads);
     }
 
-    internal ByteBuf Allocate(int size, int maxCapacity) => new AdaptiveByteBuf(size, maxCapacity, _reserve, _reallocate);
-    /**
-     * Allocate into the given buffer. Used by {@link AdaptiveByteBuf#capacity(int)}.
-     */
-    // CLR: return a replacement reservation; AdaptiveByteBuf publishes it after copying.
-    private AdaptiveChunkAllocation Reserve(int size, int maxCapacity) => ReserveCore(size, maxCapacity, null);
+    private static MagazineGroup[] CreateMagazineGroupSizeClasses(
+            AdaptivePoolingAllocator allocator, bool isThreadLocal)
+    {
+        MagazineGroup[] groups = new MagazineGroup[SIZE_CLASSES.Length];
+        for (int i = 0; i < SIZE_CLASSES.Length; i++)
+        {
+            int segmentSize = SIZE_CLASSES[i];
+            groups[i] = new MagazineGroup(allocator, allocator._chunkAllocator,
+                    new SizeClassChunkManagementStrategy(allocator, segmentSize), isThreadLocal);
+        }
+        return groups;
+    }
 
-    private AdaptiveChunkAllocation ReserveCore(int size, int maxCapacity, AdaptiveChunkAllocation previous)
+    internal ByteBuf Allocate(int size, int maxCapacity) => new AdaptiveByteBuf(size, maxCapacity, _allocate, _reallocate);
+
+    // CLR: returns a reservation instead of initializing a recycled buffer; buf is the reservation
+    // being replaced by a reallocation, or null.
+    private AdaptiveChunkAllocation Allocate(int size, int maxCapacity, AdaptiveChunkAllocation buf)
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         _lifetime.EnterReadLock();
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            AdaptiveChunkAllocation allocation = null;
-            if (Policy.IsPooled(size))
+            bool reallocate = buf != null;
+            AdaptiveChunkAllocation allocated = null;
+            if (size <= MaxPooledBufSize)
             {
-                int index = AdaptiveAllocationPolicy.SizeClassIndexOf(size);
-                AdaptiveMagazineGroup[] groups = _small;
-                if (!Policy.LowMemory && FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals())
-                    groups = _threadLocal.Get() ?? _small;
-                allocation = (index < groups.Length ? groups[index] : _large).TryAllocate(size, maxCapacity);
+                int index = SizeClassIndexOf(size);
+                MagazineGroup[] magazineGroups;
+                if (!FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals() ||
+                        _isLowMem ||
+                        (magazineGroups = _threadLocalGroup.Get()) == null)
+                {
+                    magazineGroups = _sizeClassedMagazineGroups;
+                }
+                if (index < magazineGroups.Length)
+                {
+                    allocated = magazineGroups[index].Allocate(size, maxCapacity, reallocate);
+                }
+                else if (!_isLowMem)
+                {
+                    allocated = _largeBufferMagazineGroup.Allocate(size, maxCapacity, reallocate);
+                }
             }
-            return allocation ?? AllocateFallback(size, maxCapacity, previous?.CurrentThreadLocalAssociation ?? false);
+            if (allocated == null)
+            {
+                allocated = AllocateFallback(size, maxCapacity, buf);
+            }
+            return allocated;
         }
         finally { _lifetime.ExitReadLock(); }
     }
 
-    private AdaptiveChunkAllocation AllocateFallback(int size, int maxCapacity, bool threadLocal)
+    private static int SizeIndexOf(int size)
     {
+        // this is aligning the size to the next multiple of 32 and dividing by 32 to get the size index.
+        // CLR widens before addition so valid nonnegative input is safe in checked builds.
+        return (int)(((long)size + 31) >> 5);
+    }
+
+    internal static int SizeClassIndexOf(int size)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(size);
+        int sizeIndex = SizeIndexOf(size);
+        if (sizeIndex < SIZE_INDEXES.Length)
+        {
+            return SIZE_INDEXES[sizeIndex];
+        }
+        return SIZE_CLASSES_COUNT;
+    }
+
+    internal static int[] GetSizeClasses() => (int[])SIZE_CLASSES.Clone();
+
+    private AdaptiveChunkAllocation AllocateFallback(int size, int maxCapacity, AdaptiveChunkAllocation buf)
+    {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         // If we don't already have a buffer, obtain one from the most conveniently available magazine.
         // CLR: the outer wrapper is fresh and already bound to this pool; no recycler magazine is needed.
+        // A dedicated Java fallback keeps its prior magazine association for
+        // metadata/reallocation. CLR needs only that bit, not a recycler owner.
+        bool threadLocal = buf?.CurrentThreadLocalAssociation ?? false;
         // Create a one-off chunk for this allocation.
-        AdaptiveChunk chunk = NewChunk(size, maxCapacity, 0, false, threadLocal);
+        ByteBuf innerChunk = _chunkAllocator.Allocate(size, maxCapacity);
+        Chunk chunk;
+        try
+        {
+            chunk = new Chunk(innerChunk, _chunkRegistry);
+            chunk.FallbackThreadLocal = threadLocal;
+            chunk.TrackAllocation(threadLocal);
+        }
+        catch { innerChunk.Release(); throw; }
         try { return chunk.TryAllocate(size) ?? throw new InvalidOperationException("A dedicated chunk was exhausted."); }
         finally
         {
             // As the chunk is an one-off we need to always call release explicitly as readInitInto(...)
             // will take care of retain once when successful. Once The AdaptiveByteBuf is released it will
             // completely release the Chunk and so the contained innerChunk.
-            chunk.Dispose();
+            chunk.MarkToDeallocate();
         }
     }
 
     /**
-     * Allocate a buffer for a chunk. This can be any kind of {@link AbstractByteBuf} implementation.
-     *
-     * @param initialCapacity The initial capacity of the returned {@link AbstractByteBuf}.
-     * @param maxCapacity     The maximum capacity of the returned {@link AbstractByteBuf}.
-     * @return The buffer that represents the chunk memory.
+     * Allocate into the given buffer. Used by {@link AdaptiveByteBuf#capacity(int)}.
      */
-    internal AdaptiveChunk NewChunk(int size, int maximum, int segmentSize, bool pooled, bool threadLocal = false)
-    {
-        using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        ByteBuf raw = _chunkAllocator(size, maximum);
-        try
-        {
-            AdaptiveChunk chunk = !pooled ? new AdaptiveChunk(raw, Registry)
-                : segmentSize != 0 ? new AdaptiveSizeClassedChunk(raw, Registry, segmentSize, threadLocal)
-                : new AdaptiveBuddyChunk(raw, Registry);
-            // A dedicated Java fallback keeps its prior magazine association for
-            // metadata/reallocation. CLR needs only that bit, not a recycler owner.
-            if (!pooled) chunk.FallbackThreadLocal = threadLocal;
-            chunk.TrackAllocation(threadLocal);
-            return chunk;
-        }
-        catch { raw.Release(); throw; }
-    }
+    // CLR: return a replacement reservation; AdaptiveByteBuf publishes it after copying.
+    private AdaptiveChunkAllocation Reallocate(int size, int maxCapacity, AdaptiveChunkAllocation into)
+        => Allocate(size, maxCapacity, into);
+
+    internal long UsedMemory => _chunkRegistry.TotalCapacity;
 
     public void Dispose()
     {
@@ -204,152 +354,56 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             }
             // CLR: explicit lifetime closes every group, including all fixed classes.
             // Native delegates additionally have SafeHandle cleanup when unreachable.
-            foreach (var group in _small) group.Dispose();
-            _large.Dispose();
+            foreach (var group in _sizeClassedMagazineGroups) group.Dispose();
+            _largeBufferMagazineGroup.Dispose();
         }
         finally { _lifetime.ExitWriteLock(); }
     }
 
-    private sealed class LocalGroups(AdaptivePoolingAllocator pool, bool useCacheForNonEventLoopThreads)
-        : FastThreadLocal<AdaptiveMagazineGroup[]>
+    // CLR: a named FastThreadLocal subclass replaces the source's anonymous threadLocalGroup class.
+    internal sealed class LocalGroups(AdaptivePoolingAllocator allocator, bool useCacheForNonEventLoopThreads)
+        : FastThreadLocal<MagazineGroup[]>
     {
-        protected override AdaptiveMagazineGroup[] InitialValue()
+        protected override MagazineGroup[] InitialValue()
         {
-            if (!useCacheForNonEventLoopThreads && ThreadExecutorMap.CurrentExecutor() == null) return null;
-            int[] classes = AdaptiveAllocationPolicy.GetSizeClasses();
-            var groups = new AdaptiveMagazineGroup[classes.Length];
-            for (int i = 0; i < groups.Length; i++)
-                groups[i] = new AdaptiveMagazineGroup(pool, classes[i], pool._localPurgePolls,
-                    pool._purgeThreshold, pool._localMaxBytes, pool._localMinBytes);
-            lock (pool._localBindings) pool._localBindings.Add(groups);
-            return groups;
+            if (useCacheForNonEventLoopThreads || ThreadExecutorMap.CurrentExecutor() != null)
+            {
+                MagazineGroup[] groups = CreateMagazineGroupSizeClasses(allocator, true);
+                lock (allocator._localBindings) allocator._localBindings.Add(groups);
+                return groups;
+            }
+            return null;
         }
 
-        protected override void OnRemoval(AdaptiveMagazineGroup[] groups)
+        protected override void OnRemoval(MagazineGroup[] groups)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             if (groups == null) return;
             // CLR: cleanup and allocator Dispose may run on different physical threads.
             // The write gate quiesces allocations/inspection before owner handoff.
-            pool._lifetime.EnterWriteLock();
+            allocator._lifetime.EnterWriteLock();
             try
             {
-                lock (pool._localBindings) pool._localBindings.Remove(groups);
-                foreach (var group in groups) group.Dispose();
+                lock (allocator._localBindings) allocator._localBindings.Remove(groups);
+                foreach (MagazineGroup group in groups) group.Dispose();
             }
-            finally { pool._lifetime.ExitWriteLock(); }
+            finally { allocator._lifetime.ExitWriteLock(); }
         }
-    }
-}
-
-internal sealed class AdaptiveMagazineGroup : IDisposable
-{
-    private readonly object _expandLock = new();
-    private readonly AdaptivePoolingAllocator _pool;
-    private readonly int _segmentSize, _maxStripes;
-    private readonly IAdaptiveChunkCache _cache;
-    private readonly AdaptiveMagazine _threadLocalMagazine;
-    private AdaptiveMagazine[] _magazines = [];
-    private bool _freed;
-    internal AdaptiveMagazine[] Magazines => Volatile.Read(ref _magazines);
-    internal IAdaptiveChunkCache Cache => _cache;
-    internal bool IsFreed => Volatile.Read(ref _freed);
-    internal int FastCapacity(int size, int max) => _pool.Policy.ComputeBufferCapacity(size, max);
-
-    internal AdaptiveMagazineGroup(AdaptivePoolingAllocator pool, int segmentSize, int reuseCapacity,
-        long purgePolls, int purgeThreshold, int maxStripes)
-    {
-        _pool = pool; _segmentSize = segmentSize; _maxStripes = maxStripes;
-        _cache = segmentSize != 0 ? new AdaptiveSharedChunkCache(reuseCapacity, purgePolls, purgeThreshold)
-            : new AdaptiveBuddyChunkCache(reuseCapacity);
-        _magazines = [new AdaptiveMagazine(this)];
-    }
-
-    internal AdaptiveMagazineGroup(AdaptivePoolingAllocator pool, int segmentSize, long purgePolls,
-        int purgeThreshold, int maxBytes, int minBytes)
-    {
-        _pool = pool; _segmentSize = segmentSize;
-        _cache = new AdaptiveThreadLocalChunkCache(pool.Policy.ComputeChunkSize(segmentSize),
-            purgePolls, purgeThreshold, maxBytes, minBytes);
-        _threadLocalMagazine = new AdaptiveMagazine(this, true);
-    }
-
-    internal AdaptiveChunkAllocation TryAllocate(int size, int maxCapacity)
-    {
-        using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        // Path for thread-local allocation.
-        if (_threadLocalMagazine != null) return _threadLocalMagazine.TryAllocate(size, maxCapacity);
-        // Path for concurrent allocation.
-        int threadId = Environment.CurrentManagedThreadId;
-        AdaptiveMagazine[] magazines; int expansions = 0;
-        do
-        {
-            magazines = Magazines;
-            int mask = magazines.Length - 1, index = threadId & mask;
-            for (int i = 0, attempts = magazines.Length << 1; i < attempts; i++)
-            {
-                AdaptiveChunkAllocation allocation = magazines[(index + i) & mask].TryAllocate(size, maxCapacity);
-                if (allocation != null)
-                {
-                    // Was able to allocate.
-                    return allocation;
-                }
-            }
-            expansions++;
-        } while (expansions <= 3 && TryExpandMagazines(magazines.Length));
-        // The magazines failed us; contention too high and we don't want to spend more effort expanding the array.
-        // CLR: no unused outer recycler object was claimed on this reservation path.
-        return null;
-    }
-
-    private bool TryExpandMagazines(int currentLength)
-    {
-        if (currentLength >= _maxStripes) return true;
-        if (!Monitor.TryEnter(_expandLock)) return true;
-        AdaptiveMagazine[] previous = null;
-        try
-        {
-            var magazines = Magazines;
-            if (magazines.Length >= _maxStripes || magazines.Length > currentLength || IsFreed) return true;
-            var expanded = new AdaptiveMagazine[magazines.Length * 2];
-            for (int i = 0; i < expanded.Length; i++) expanded[i] = new AdaptiveMagazine(this);
-            previous = magazines;
-            Volatile.Write(ref _magazines, expanded);
-        }
-        finally { Monitor.Exit(_expandLock); }
-        foreach (var magazine in previous) magazine.Dispose();
-        return true;
     }
 
     /**
-     * Allocate a new {@link Chunk} for the given {@link Magazine}.
+     * The strategy for how {@link AdaptivePoolingAllocator} should allocate chunk buffers.
      */
-    internal AdaptiveChunk NewChunk(int size, AdaptiveMagazine magazine)
+    internal interface IChunkAllocator
     {
-        int capacity = _pool.Policy.ComputeChunkSize(size);
-        AdaptiveChunk chunk = _pool.NewChunk(capacity, capacity, _segmentSize, true, _threadLocalMagazine != null);
-        chunk.AttachToMagazine(magazine);
-        return chunk;
-    }
-    internal AdaptiveChunk PollChunk(int size) => _cache.PollChunk(size);
-    internal bool OfferChunk(AdaptiveChunk chunk)
-    {
-        if (IsFreed) return false;
-        if (chunk.HasUnprocessedFreelistEntries) chunk.ProcessFreelistEntries();
-        bool added = _cache.OfferChunk(chunk);
-        if (IsFreed && added)
-        {
-            // Help to free the reuse queue.
-            _cache.Dispose();
-        }
-        return added;
-    }
-    public void Dispose()
-    {
-        using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        Volatile.Write(ref _freed, true);
-        if (_threadLocalMagazine != null) _threadLocalMagazine.Dispose();
-        else lock (_expandLock) foreach (var magazine in Magazines) magazine.Dispose();
-        _cache.Dispose();
+        /**
+         * Allocate a buffer for a chunk. This can be any kind of {@link AbstractByteBuf} implementation.
+         *
+         * @param initialCapacity The initial capacity of the returned {@link AbstractByteBuf}.
+         * @param maxCapacity     The maximum capacity of the returned {@link AbstractByteBuf}.
+         * @return The buffer that represents the chunk memory.
+         */
+        // CLR: ByteBuf is the CLR base for the source's AbstractByteBuf.
+        ByteBuf Allocate(int initialCapacity, int maxCapacity);
     }
 }

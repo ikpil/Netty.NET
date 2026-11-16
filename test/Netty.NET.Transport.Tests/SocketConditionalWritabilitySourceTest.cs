@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
@@ -24,60 +23,127 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // Source producer and native channel cleanup have independent lifetimes.
-public class SocketConditionalWritabilitySourceTest
+#pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, whose latch wait has no timeout in the source.
+#pragma warning disable xUnit1051 // The source's bind/connect/close calls and latch wait do not observe the test cancellation.
+public class SocketConditionalWritabilitySourceTest : AbstractSocketTest
 {
-    private const int ExpectedBytes = 100 * 1024 * 1024;
-    private const int MaxWriteChunkSize = 16 * 1024;
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestConditionalWritability(bool adaptive)
+    [Fact(Timeout = 30000)]
+    public async Task TestConditionalWritability()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        IChannel server = await fixture.Server.ChildOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 16 * 1024))
-            .ChildHandler(new ActionChannelInitializer<IChannel>(channel => channel.Pipeline.AddLast(new Writer(received))))
-            .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
-        IChannel client = null;
+        await Run(TestContext.Current, TestConditionalWritability0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestConditionalWritability test name.
+    private async Task TestConditionalWritability0(ServerBootstrap sb, Bootstrap cb)
+    {
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
         try
         {
-            client = await fixture.Client.Handler(new Reader(received)).ConnectAsync(server.LocalAddress, cancellationToken: TestContext.Current.CancellationToken);
-            await received.Task.WaitAsync(TestContext.Current.CancellationToken);
-        }
-        finally { if (client != null) await client.CloseAsync(); await server.CloseAsync(); }
-    }
-    private sealed class Writer(TaskCompletionSource received) : ChannelDuplexHandler
-    {
-        private int _bytesWritten;
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { ReferenceCountUtil.Release(message); WriteRemainingBytes(context); }
-        public override void Flush(ChannelHandlerContext context)
-        { if (context.Channel.IsWritable) WriteRemainingBytes(context); else context.Flush(); }
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context)
-        { if (context.Channel.IsWritable) WriteRemainingBytes(context); context.FireChannelWritabilityChanged(); }
-        private void WriteRemainingBytes(ChannelHandlerContext context)
-        {
-            while (context.Channel.IsWritable && _bytesWritten < ExpectedBytes)
+            int expectedBytes = 100 * 1024 * 1024;
+            int maxWriteChunkSize = 16 * 1024;
+            // CLR: CountDownLatch(1) is a TaskCompletionSource: countDown() is TrySetResult(), which returns false
+            // instead of failing once the Task is complete, as countDown() does nothing at a zero count
+            // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetresult,
+            // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/CountDownLatch.html),
+            // and await() awaits its Task.
+            TaskCompletionSource latch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            sb.ChildOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 16 * 1024));
+            // CLR: C# has no anonymous classes, so the source's anonymous ChannelInitializer bodies are
+            // ActionChannelInitializer delegates (src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs) and its anonymous
+            // handlers are the nested classes below, whose constructor parameters carry the captured final locals.
+            sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
             {
-                int chunk = Math.Min(ExpectedBytes - _bytesWritten, MaxWriteChunkSize);
-                _bytesWritten += chunk;
-                _ = context.WriteAsync(context.Allocator.Buffer(chunk).WriteZero(chunk));
-            }
-            context.Flush();
+                ch.Pipeline.AddLast(new WriterHandler(expectedBytes, maxWriteChunkSize));
+            }));
+
+            serverChannel = await sb.BindAsync();
+
+            cb.Handler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(new ReaderHandler(expectedBytes, latch));
+            }));
+            clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+            await latch.Task;
         }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => received.TrySetException(error);
-    }
-    private sealed class Reader(TaskCompletionSource received) : ChannelInboundHandlerAdapter
-    {
-        private int _totalRead;
-        public override void ChannelActive(ChannelHandlerContext context) => _ = context.WriteAndFlushAsync(context.Allocator.Buffer(1).WriteByte(0));
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        finally
         {
-            if (message is ByteBuf buffer) { _totalRead += buffer.ReadableBytes; if (_totalRead == ExpectedBytes) received.TrySetResult(); }
-            ReferenceCountUtil.Release(message);
+            if (serverChannel != null)
+            {
+                _ = serverChannel.CloseAsync();
+            }
+            if (clientChannel != null)
+            {
+                _ = clientChannel.CloseAsync();
+            }
         }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => received.TrySetException(error);
+    }
+
+    private sealed class WriterHandler(int expectedBytes, int maxWriteChunkSize) : ChannelDuplexHandler
+    {
+        private int bytesWritten;
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ReferenceCountUtil.Release(msg);
+            WriteRemainingBytes(ctx);
+        }
+
+        public override void Flush(IChannelHandlerContext ctx)
+        {
+            if (ctx.Channel.IsWritable)
+            {
+                WriteRemainingBytes(ctx);
+            }
+            else
+            {
+                ctx.Flush();
+            }
+        }
+
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            if (ctx.Channel.IsWritable)
+            {
+                WriteRemainingBytes(ctx);
+            }
+            ctx.FireChannelWritabilityChanged();
+        }
+
+        private void WriteRemainingBytes(IChannelHandlerContext ctx)
+        {
+            while (ctx.Channel.IsWritable && bytesWritten < expectedBytes)
+            {
+                int chunkSize = Math.Min(expectedBytes - bytesWritten, maxWriteChunkSize);
+                bytesWritten += chunkSize;
+                _ = ctx.WriteAsync(ctx.Alloc().Buffer(chunkSize).WriteZero(chunkSize));
+            }
+            ctx.Flush();
+        }
+    }
+
+    private sealed class ReaderHandler(int expectedBytes, TaskCompletionSource latch) : ChannelInboundHandlerAdapter
+    {
+        private int totalRead;
+
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer(1).WriteByte(0));
+        }
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            if (msg is ByteBuf)
+            {
+                totalRead += ((ByteBuf) msg).ReadableBytes;
+                if (totalRead == expectedBytes)
+                {
+                    latch.TrySetResult();
+                }
+            }
+            ReferenceCountUtil.Release(msg);
+        }
     }
 }
 #pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

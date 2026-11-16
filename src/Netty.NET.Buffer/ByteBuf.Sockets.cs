@@ -85,8 +85,8 @@ public abstract partial class ByteBuf
     /// The socket and buffer are borrowed; no reference count is acquired.</remarks>
     public virtual int SetBytes(int index, Socket source, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         if (length == 0) return 0;
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
@@ -143,8 +143,8 @@ public abstract partial class ByteBuf
     /// <remarks>Growth is retained on EOF, WouldBlock or I/O failure, as in Netty.</remarks>
     public virtual int WriteBytes(Socket source, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureWritable(length);
+        ArgumentNullException.ThrowIfNull(source);
         int count = SetBytes(_writerIndex, source, length);
         _writerIndex += count;
         return count;
@@ -181,8 +181,8 @@ public abstract partial class ByteBuf
     public virtual async ValueTask<int> SetBytesAsync(int index, Socket source, int length,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
         if (length == 0) return 0;
@@ -221,8 +221,8 @@ public abstract partial class ByteBuf
     public virtual async ValueTask<int> WriteBytesAsync(Socket source, int length,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         if (length > MaxWritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
         cancellationToken.ThrowIfCancellationRequested();

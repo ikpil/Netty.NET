@@ -10,10 +10,11 @@ namespace Netty.NET.Common.Tests.Porting;
 public class LoopbackOwnershipContractTest
 {
     [Fact]
-    public void LoopbackAddressesAreNativeReadOnlyPropertiesWithoutFieldAliases()
+    public void LoopbackAddressesAreReadOnlyPropertiesWithTheSourceNames()
     {
         Type type = typeof(NetUtil);
-        foreach (string name in new[] { "LoopbackAddress" })
+        // Owner decision 2026-11-14: the source names LOCALHOST4/LOCALHOST6/LOCALHOST are kept; each read is a copy.
+        foreach (string name in new[] { "LOCALHOST4", "LOCALHOST6", "LOCALHOST" })
         {
             PropertyInfo property = type.GetProperty(name);
             Assert.NotNull(property);
@@ -25,16 +26,17 @@ public class LoopbackOwnershipContractTest
         foreach (string name in new[] { "LOCALHOST4", "LOCALHOST6", "LOCALHOST" })
         {
             Assert.Null(type.GetField(name));
+        }
+        foreach (string name in new[] { "LoopbackAddress", "IPv4Loopback", "IPv6Loopback" })
+        {
             Assert.Null(type.GetProperty(name));
         }
-        Assert.Null(type.GetProperty("IPv4Loopback"));
-        Assert.Null(type.GetProperty("IPv6Loopback"));
     }
 
     [Fact]
     public void CallerMutationCannotChangeLaterReads()
     {
-        const string member = "LoopbackAddress";
+        const string member = "LOCALHOST";
         WithFreshNetUtil(type =>
         {
             IPAddress first = Read(type, member);
@@ -51,7 +53,7 @@ public class LoopbackOwnershipContractTest
     [Fact]
     public void IndependentEndpointsDoNotShareMutableAddresses()
     {
-        const string member = "LoopbackAddress";
+        const string member = "LOCALHOST";
         WithFreshNetUtil(type =>
         {
             var first = new IPEndPoint(Read(type, member), 443);
@@ -71,14 +73,14 @@ public class LoopbackOwnershipContractTest
     {
         WithFreshNetUtil(type =>
         {
-            IPAddress expected = Read(type, "LoopbackAddress");
+            IPAddress expected = Read(type, "LOCALHOST");
             byte[] bytes = expected.GetAddressBytes();
             long scope = expected.AddressFamily == AddressFamily.InterNetworkV6 ? expected.ScopeId : 0;
             Parallel.For(0, 64, new ParallelOptions { MaxDegreeOfParallelism = 4 }, index =>
             {
-                IPAddress address = Read(type, "LoopbackAddress");
+                IPAddress address = Read(type, "LOCALHOST");
                 Mutate(address, scope + index + 1);
-                IPAddress later = Read(type, "LoopbackAddress");
+                IPAddress later = Read(type, "LOCALHOST");
                 Assert.Equal(bytes, later.GetAddressBytes());
                 if (later.AddressFamily == AddressFamily.InterNetworkV6) Assert.Equal(scope, later.ScopeId);
                 Assert.NotSame(address, later);
@@ -87,22 +89,26 @@ public class LoopbackOwnershipContractTest
     }
 
     [Theory]
-    [InlineData("IPv4Loopback")]
-    [InlineData("IPv6Loopback")]
-    public void CanonicalFrameworkValuesRejectMutation(string member)
+    [InlineData("LOCALHOST4")]
+    [InlineData("LOCALHOST6")]
+    public void SourceLoopbackConstantsReturnIndependentCopies(string member)
     {
+        // LOCALHOST4/LOCALHOST6 hold the loopback values; a caller mutating its copy cannot change later reads.
         WithFreshNetUtil(type =>
         {
+            IPAddress expected = member == "LOCALHOST4" ? IPAddress.Loopback : IPAddress.IPv6Loopback;
             IPAddress address = Read(type, member);
-            Exception error = Record.Exception(() => Mutate(address, 42));
-            Assert.IsType<SocketException>(error is TargetInvocationException wrapped ? wrapped.InnerException : error);
-            Assert.Equal(member == "IPv4Loopback" ? IPAddress.Loopback : IPAddress.IPv6Loopback, address);
+            Assert.Equal(expected, address);
+            Mutate(address, 42);
+            IPAddress later = Read(type, member);
+            Assert.Equal(expected, later);
+            Assert.NotSame(address, later);
         });
     }
 
     [Theory]
-    [InlineData("IPv4Loopback", "127.0.0.1", AddressFamily.InterNetwork)]
-    [InlineData("IPv6Loopback", "::1", AddressFamily.InterNetworkV6)]
+    [InlineData("LOCALHOST4", "127.0.0.1", AddressFamily.InterNetwork)]
+    [InlineData("LOCALHOST6", "::1", AddressFamily.InterNetworkV6)]
     public void CanonicalValuesAndConsumerFormattingStayUnchanged(string member, string host, AddressFamily family)
     {
         WithFreshNetUtil(type =>
@@ -119,15 +125,9 @@ public class LoopbackOwnershipContractTest
         });
     }
 
-    // Read the old API only in the regression baseline; production has no alias.
     private static IPAddress Read(Type type, string member)
     {
-        PropertyInfo property = type.GetProperty(member);
-        if (property != null) return (IPAddress)property.GetValue(null);
-        string field = member switch { "IPv4Loopback" => "LOCALHOST4", "IPv6Loopback" => "LOCALHOST6", _ => "LOCALHOST" };
-        FieldInfo oldField = type.GetField(field);
-        if (oldField != null) return (IPAddress)oldField.GetValue(null);
-        return member == "IPv4Loopback" ? IPAddress.Loopback : IPAddress.IPv6Loopback;
+        return (IPAddress)type.GetProperty(member).GetValue(null);
     }
 
     private static void Mutate(IPAddress address, long scope)

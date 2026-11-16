@@ -23,6 +23,7 @@ using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using static Netty.NET.Buffer.Tests.PooledBufferEventTest;
 using Record = Netty.NET.Buffer.Tests.PooledBufferEventTest.Record;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -167,7 +168,7 @@ public class AdaptiveAllocatorEventTest
     {
         var native = new NativeMemoryAllocator(131072); using var allocator = NewAllocator(native); using var listener = Listen();
         ByteBuf buffer = Allocate(allocator, true, 7).WriteInt(0x12345678);
-        Assert.Throws<OutOfMemoryException>(() => buffer.Capacity = 64); Assert.Throws<OutOfMemoryException>(() => Allocate(allocator, true, 64));
+        Assert.Throws<OutOfDirectMemoryError>(() => buffer.Capacity = 64); Assert.Throws<OutOfDirectMemoryError>(() => Allocate(allocator, true, 64));
         Assert.Equal(new[] { 4, 1, 3 }, listener.Events.Select(e => e.Id));
         Assert.Equal(7, buffer.Capacity); Assert.Equal(4, buffer.WriterIndex); Assert.Equal(0x12345678, buffer.GetInt(0));
         buffer.Capacity = 8; buffer.Release(); allocator.Dispose(); Assert.Equal(new[] { 4, 1, 3, 2, 5 }, listener.Events.Select(e => e.Id)); Assert.Equal(0, native.ReservedBytes);
@@ -206,7 +207,7 @@ public class AdaptiveAllocatorEventTest
         {
             worker.Start(); Assert.True(SpinWait.SpinUntil(() => gate.WaitingReadCount > 0, TimeSpan.FromSeconds(5)));
             listener = Listen(); listener.Callback = _ => held |= gate.IsReadLockHeld || gate.IsWriteLockHeld || Monitor.IsEntered(dispose)
-                || allocator.DirectPool.Group(2).Magazines.Any(m => Monitor.IsEntered(m.AllocationLock));
+                || allocator.DirectPool.SizeClassedMagazineGroups[2].Magazines.Any(m => Monitor.IsEntered(m.AllocationLock));
         }
         finally { gate.ExitWriteLock(); }
         worker.Join();

@@ -87,7 +87,7 @@ public class PrimitiveAccessReplacementTest
                 if ((signed & 0x800000) != 0) signed -= 0x1000000;
                 Assert.Equal(signed, little ? b.GetMediumLE(index) : b.GetMedium(index));
             }
-            Assert.Equal(2, b.ReaderIndex); Assert.Equal(48, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(2, b.ReaderIndex); Assert.Equal(48, b.WriterIndex); Assert.Equal(1, b.RefCnt);
         }
         b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(2, b.ReaderIndex); Assert.Equal(48, b.WriterIndex);
     }
@@ -139,7 +139,7 @@ public class PrimitiveAccessReplacementTest
         }
         public void Dispose()
         {
-            if (Buffer.ReferenceCount != 0) Buffer.Release(Buffer.ReferenceCount);
+            if (Buffer.RefCnt != 0) Buffer.Release(Buffer.RefCnt);
             _allocator?.Dispose(); Assert.Equal(0, _native.ReservedBytes);
         }
     }

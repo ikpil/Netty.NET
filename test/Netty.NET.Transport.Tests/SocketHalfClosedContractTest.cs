@@ -33,8 +33,39 @@ public class SocketHalfClosedContractTest
     [Theory(Timeout = 10000)]
     [InlineData(false)]
     [InlineData(true)]
-    public Task AnActualHalfCloseAlsoEmitsEachAutoReadEventOnlyOnce(bool adaptive)
-        => SocketHalfClosedSourceTest.SingleEvent(adaptive, true).WaitAsync(TestContext.Current.CancellationToken);
+    public async Task AnActualHalfCloseAlsoEmitsEachAutoReadEventOnlyOnce(bool adaptive)
+    {
+        // The source testHalfClosureOnlyOneEventWhenAutoRead casts the context rather than its channel, so its peer
+        // closes instead of half-closing; this supplemental test checks the same counters after a real half-close.
+        await using var fixture = new ShutdownFixture(adaptive);
+        var handler = new SingleEventReader();
+        fixture.Server.ChildHandler(new HalfClosingPeer());
+        fixture.Client.Option(ChannelOption.ALLOW_HALF_CLOSURE, true).Option(ChannelOption.AUTO_READ, true).Handler(handler);
+        var server = await fixture.Server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+        var client = await fixture.Client.ConnectAsync(server.LocalAddress);
+        await client.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(1, handler.ShutdownEvents); Assert.Equal(1, handler.FinalEvents);
+        await server.CloseAsync();
+    }
+    private sealed class HalfClosingPeer : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelActive(IChannelHandlerContext ctx) => _ = ((NioSocketChannel)ctx.Channel).ShutdownOutputAsync();
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+    }
+    private sealed class SingleEventReader : ChannelInboundHandlerAdapter
+    {
+        internal int ShutdownEvents, FinalEvents;
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            if (ReferenceEquals(evt, ChannelInputShutdownEvent.INSTANCE)) Interlocked.Increment(ref ShutdownEvents);
+            else if (ReferenceEquals(evt, ChannelInputShutdownReadComplete.INSTANCE))
+            {
+                Interlocked.Increment(ref FinalEvents);
+                _ = ctx.Executor.ScheduleAsync(() => { _ = ctx.CloseAsync(); }, TimeSpan.FromMilliseconds(100));
+            }
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+    }
 
     [Theory(Timeout = 10000)]
     [InlineData(false, 0)]
@@ -58,7 +89,7 @@ public class SocketHalfClosedContractTest
             .ChannelFactory(() => new HeldWriteChannel()).Handler(handler).Option(ChannelOption.AUTO_CLOSE, autoClose)
             .Option(ChannelOption.ALLOW_HALF_CLOSURE, true).ConnectAsync(listener.LocalEndpoint);
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
-        var buffers = new[] { channel.Allocator.Buffer(1).WriteByte(1), channel.Allocator.Buffer(1).WriteByte(2), channel.Allocator.Buffer(1).WriteByte(3) };
+        var buffers = new[] { channel.Alloc().Buffer(1).WriteByte(1), channel.Alloc().Buffer(1).WriteByte(2), channel.Alloc().Buffer(1).WriteByte(3) };
         Task first = null, second = null, unflushed = null;
         await channel.EventLoop.SubmitAsync(() =>
         {
@@ -70,13 +101,13 @@ public class SocketHalfClosedContractTest
         var firstError = await Record.ExceptionAsync(() => first);
         var secondError = await Record.ExceptionAsync(() => second);
         var unflushedError = await Record.ExceptionAsync(() => unflushed);
-        foreach (var buffer in buffers) Assert.Equal(0, buffer.ReferenceCount);
+        foreach (var buffer in buffers) Assert.Equal(0, buffer.RefCnt);
         await channel.EventLoop.SubmitAsync(() => { });
         bool close = autoClose && error is IOException or SocketException;
         if (close)
         {
             Assert.Same(error, firstError); Assert.Same(error, secondError);
-            Assert.Same(error, Assert.IsType<IOException>(unflushedError).InnerException);
+            Assert.Same(error, Assert.IsAssignableFrom<ClosedChannelException>(unflushedError).InnerException);
             Assert.False(channel.IsOpen); Assert.False(channel.IsActive);
             Assert.Equal(0, handler.OutputEvents);
         }
@@ -92,11 +123,19 @@ public class SocketHalfClosedContractTest
             Assert.Equal(4, await handler.Bytes.Reader.ReadAsync(TestContext.Current.CancellationToken));
         }
     }
-    private sealed class HeldWriteChannel : TcpSocketChannel
+    private sealed class HeldWriteChannel : NioSocketChannel
     {
         internal readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Failure = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override Task DoWrite(object message) { Started.TrySetResult(); return Failure.Task; }
+        // The non-blocking socket write of NioSocketChannel.doWrite reports the test's failure.
+        // Until the failure is released the socket accepts nothing, so the write waits for OP_WRITE readiness.
+        internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length) { Fail(); return 0; }
+        internal override int WriteSocket(ReadOnlyMemory<byte> buffer) { Fail(); return 0; }
+        private void Fail()
+        {
+            Started.TrySetResult();
+            if (Failure.Task.IsCompleted) Failure.Task.GetAwaiter().GetResult();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -118,7 +157,7 @@ public class SocketHalfClosedContractTest
     public async Task ManualReadKeepsTheClrAdmissionPolicyAcrossTheLastByteAndFin(bool adaptive)
     {
         await using var fixture = new ShutdownFixture(adaptive);
-        var serverChild = new TaskCompletionSource<TcpSocketChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var serverChild = new TaskCompletionSource<NioSocketChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         fixture.Server.Option(ChannelOption.ALLOW_HALF_CLOSURE, true).Option(ChannelOption.AUTO_CLOSE, false)
             .ChildOption(ChannelOption.TCP_NODELAY, true).ChildHandler(new LastByteWriter(serverChild));
         var reader = new LastByteReader();
@@ -139,19 +178,19 @@ public class SocketHalfClosedContractTest
         Assert.False(reader.Final.Task.IsCompleted);
         client.Read();
         await reader.Final.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await client.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
+        await client.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
         Assert.Equal(3, reader.ReadCompletes); Assert.Equal(2, reader.EmptyReadCompletes);
         await server.CloseAsync();
     }
-    private sealed class LastByteWriter(TaskCompletionSource<TcpSocketChannel> child) : ChannelInboundHandlerAdapter
+    private sealed class LastByteWriter(TaskCompletionSource<NioSocketChannel> child) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext ctx)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            child.TrySetResult((TcpSocketChannel)ctx.Channel);
-            var buffer = ctx.Allocator.Buffer(1); buffer.WriterIndex = buffer.Capacity;
+            child.TrySetResult((NioSocketChannel)ctx.Channel);
+            var buffer = ctx.Alloc().Buffer(1); buffer.WriterIndex = buffer.Capacity;
             _ = ctx.WriteAndFlushAsync(buffer);
         }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
     }
     private sealed class LastByteReader : ChannelInboundHandlerAdapter
     {
@@ -160,11 +199,11 @@ public class SocketHalfClosedContractTest
         internal readonly TaskCompletionSource AllData = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Half = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Final = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelRead(ChannelHandlerContext ctx, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            var buffer = (ByteBuf)message; _bytesRead += buffer.ReadableBytes; _sinceComplete += buffer.ReadableBytes; buffer.Release();
+            var buffer = (ByteBuf)msg; _bytesRead += buffer.ReadableBytes; _sinceComplete += buffer.ReadableBytes; buffer.Release();
         }
-        public override void ChannelReadComplete(ChannelHandlerContext ctx)
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             if (_sinceComplete == 0) Interlocked.Increment(ref EmptyReadCompletes); else _sinceComplete = 0;
             Interlocked.Increment(ref ReadCompletes);
@@ -176,11 +215,11 @@ public class SocketHalfClosedContractTest
             }
             else ctx.Read();
         }
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             if (evt is ChannelInputShutdownEvent) Half.TrySetResult();
             else if (evt is ChannelInputShutdownReadComplete) { Final.TrySetResult(); _ = ctx.CloseAsync(); }
         }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) { ctx.FireExceptionCaught(cause); _ = ctx.CloseAsync(); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { ctx.FireExceptionCaught(cause); _ = ctx.CloseAsync(); }
     }
 }

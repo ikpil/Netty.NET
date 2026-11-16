@@ -170,14 +170,14 @@ public interface IChannelOutboundInvoker
      * This method will not request to actual flush, so be sure to call {@link #flush()}
      * once you want to request to flush all pending data to the actual transport.
      */
-    Task WriteAsync(object message, CancellationToken cancellationToken = default);
+    Task WriteAsync(object msg, CancellationToken cancellationToken = default);
     /**
      * Shortcut for call {@link #write(Object, ChannelPromise)} and {@link #flush()}.
      */
     /**
      * Shortcut for call {@link #write(Object)} and {@link #flush()}.
      */
-    Task WriteAndFlushAsync(object message, CancellationToken cancellationToken = default);
+    Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default);
     /**
      * Request to Read data from the {@link Channel} into the first inbound buffer, triggers an
      * {@link ChannelInboundHandler#channelRead(ChannelHandlerContext, Object)} event if data was

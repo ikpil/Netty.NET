@@ -81,7 +81,7 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.ReferenceCount > 0) buffer.Release();
+            if (buffer.RefCnt > 0) buffer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -128,7 +128,7 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.ReferenceCount > 0) buffer.Release();
+            if (buffer.RefCnt > 0) buffer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -169,7 +169,7 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.ReferenceCount > 0) buffer.Release();
+            if (buffer.RefCnt > 0) buffer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -195,7 +195,7 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.ReferenceCount > 0) buffer.Release();
+            if (buffer.RefCnt > 0) buffer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -224,7 +224,7 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.ReferenceCount > 0) buffer.Release();
+            if (buffer.RefCnt > 0) buffer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -284,7 +284,7 @@ public class ByteBufSearchSourceTest
             view.SetIndex(0, view.Capacity).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
             Assert.Equal(2, root.ReaderIndex); Assert.Equal(14, root.WriterIndex);
-            Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(1, root.RefCnt);
         }
         finally { root.Release(); Assert.Equal(0, native.ReservedBytes); }
     }
@@ -335,7 +335,7 @@ public class ByteBufSearchSourceTest
             Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(12, buffer.WriterIndex);
             buffer.SetIndex(0, 16).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(12, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
     }

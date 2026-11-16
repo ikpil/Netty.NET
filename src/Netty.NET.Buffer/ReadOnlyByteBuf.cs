@@ -80,7 +80,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return _parent.BorrowCopySequence(index, length); }
     internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
-    public override IByteBufAllocator Allocator => _parent.Allocator;
+    public override IByteBufAllocator Alloc() => _parent.Alloc();
     public override bool IsContiguous => _parent.IsContiguous;
     public override bool IsDirect => _parent.IsDirect;
     public override int Capacity
@@ -201,7 +201,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         CheckIndex(index, 8);
         return _parent.GetLongLE(index);
     }
-    public override int ReferenceCount => _parent.ReferenceCount;
+    public override int RefCnt => _parent.RefCnt;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => _parent.Release(decrement);
     public override ByteBuf Touch(object hint = null) { _parent.Touch(hint); return this; }

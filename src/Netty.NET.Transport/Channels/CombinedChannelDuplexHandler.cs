@@ -18,6 +18,9 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Buffer;
+using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Transport.Channels;
@@ -30,8 +33,8 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     where TOutbound : class, IChannelOutboundHandler
 {
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(CombinedChannelDuplexHandler<TInbound, TOutbound>));
-    private DelegatingContext _inboundContext;
-    private DelegatingContext _outboundContext;
+    private DelegatingChannelHandlerContext _inboundCtx;
+    private DelegatingChannelHandlerContext _outboundCtx;
     private volatile bool _handlerAdded;
     private TInbound _inboundHandler;
     private TOutbound _outboundHandler;
@@ -86,41 +89,41 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     /**
      * Removes the {@link ChannelInboundHandler} that was combined in this {@link CombinedChannelDuplexHandler}.
      */
-    public void RemoveInboundHandler() { CheckAdded(); _inboundContext.Remove(); }
+    public void RemoveInboundHandler() { CheckAdded(); _inboundCtx.Remove(); }
 
     /**
      * Removes the {@link ChannelOutboundHandler} that was combined in this {@link CombinedChannelDuplexHandler}.
      */
-    public void RemoveOutboundHandler() { CheckAdded(); _outboundContext.Remove(); }
+    public void RemoveOutboundHandler() { CheckAdded(); _outboundCtx.Remove(); }
 
-    public override void HandlerAdded(ChannelHandlerContext context)
+    public override void HandlerAdded(IChannelHandlerContext ctx)
     {
         if (_inboundHandler == null)
             throw new InvalidOperationException("Init() must be invoked before being added to a ChannelPipeline.");
-        _outboundContext = new DelegatingContext(context, _outboundHandler);
-        _inboundContext = new InboundContext(context, _inboundHandler, this);
+        _outboundCtx = new DelegatingChannelHandlerContext(ctx, _outboundHandler);
+        _inboundCtx = new InboundContext(ctx, _inboundHandler, this);
         // The inboundCtx and outboundCtx were created and set now it's safe to call removeInboundHandler() and
         // removeOutboundHandler().
         _handlerAdded = true;
-        try { _inboundHandler.HandlerAdded(_inboundContext); }
-        finally { _outboundHandler.HandlerAdded(_outboundContext); }
+        try { _inboundHandler.HandlerAdded(_inboundCtx); }
+        finally { _outboundHandler.HandlerAdded(_outboundCtx); }
     }
 
-    public override void HandlerRemoved(ChannelHandlerContext context)
+    public override void HandlerRemoved(IChannelHandlerContext ctx)
     {
-        try { _inboundContext.Remove(); }
-        finally { _outboundContext.Remove(); }
+        try { _inboundCtx.Remove(); }
+        finally { _outboundCtx.Remove(); }
     }
 
     private void ForwardInboundException(Exception cause)
     {
-        if (!_outboundContext.Removed)
+        if (!_outboundCtx.Removed)
         {
             try
             {
                 // We directly delegate to the ChannelOutboundHandler as this may override exceptionCaught(...)
                 // as well
-                _outboundHandler.ExceptionCaught(_outboundContext, cause);
+                _outboundHandler.ExceptionCaught(_outboundCtx, cause);
             }
             catch (Exception error)
             {
@@ -131,198 +134,207 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
             }
         }
         else
-            _outboundContext.Parent.FireExceptionCaught(cause);
+            _outboundCtx.Ctx.FireExceptionCaught(cause);
     }
 
-    public override void ChannelRegistered(ChannelHandlerContext context)
+    public override void ChannelRegistered(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelRegistered(_inboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelRegistered(_inboundCtx);
         else
-            _inboundContext.FireChannelRegistered();
+            _inboundCtx.FireChannelRegistered();
     }
 
-    public override void ChannelUnregistered(ChannelHandlerContext context)
+    public override void ChannelUnregistered(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelUnregistered(_inboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelUnregistered(_inboundCtx);
         else
-            _inboundContext.FireChannelUnregistered();
+            _inboundCtx.FireChannelUnregistered();
     }
 
-    public override void ChannelActive(ChannelHandlerContext context)
+    public override void ChannelActive(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelActive(_inboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelActive(_inboundCtx);
         else
-            _inboundContext.FireChannelActive();
+            _inboundCtx.FireChannelActive();
     }
 
-    public override void ChannelInactive(ChannelHandlerContext context)
+    public override void ChannelInactive(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelInactive(_inboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelInactive(_inboundCtx);
         else
-            _inboundContext.FireChannelInactive();
+            _inboundCtx.FireChannelInactive();
     }
 
-    public override void ExceptionCaught(ChannelHandlerContext context, Exception cause)
+    public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ExceptionCaught(_inboundContext, cause);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ExceptionCaught(_inboundCtx, cause);
         else
-            _inboundContext.FireExceptionCaught(cause);
+            _inboundCtx.FireExceptionCaught(cause);
     }
 
-    public override void UserEventTriggered(ChannelHandlerContext context, object evt)
+    public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.UserEventTriggered(_inboundContext, evt);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.UserEventTriggered(_inboundCtx, evt);
         else
-            _inboundContext.FireUserEventTriggered(evt);
+            _inboundCtx.FireUserEventTriggered(evt);
     }
 
-    public override void ChannelRead(ChannelHandlerContext context, object message)
+    public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelRead(_inboundContext, message);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelRead(_inboundCtx, msg);
         else
-            _inboundContext.FireChannelRead(message);
+            _inboundCtx.FireChannelRead(msg);
     }
 
-    public override void ChannelReadComplete(ChannelHandlerContext context)
+    public override void ChannelReadComplete(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelReadComplete(_inboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelReadComplete(_inboundCtx);
         else
-            _inboundContext.FireChannelReadComplete();
+            _inboundCtx.FireChannelReadComplete();
     }
 
-    public override void ChannelWritabilityChanged(ChannelHandlerContext context)
+    public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _inboundContext.Parent));
-        if (!_inboundContext.Removed)
-            _inboundHandler.ChannelWritabilityChanged(_inboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+        if (!_inboundCtx.Removed)
+            _inboundHandler.ChannelWritabilityChanged(_inboundCtx);
         else
-            _inboundContext.FireChannelWritabilityChanged();
+            _inboundCtx.FireChannelWritabilityChanged();
     }
 
-    public override Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken)
+    public override Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        return !_outboundContext.Removed
-            ? _outboundHandler.BindAsync(_outboundContext, localAddress, cancellationToken)
-            : _outboundContext.BindAsync(localAddress, cancellationToken);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        return !_outboundCtx.Removed
+            ? _outboundHandler.BindAsync(_outboundCtx, localAddress, cancellationToken)
+            : _outboundCtx.BindAsync(localAddress, cancellationToken);
     }
 
-    public override Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
+    public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        return !_outboundContext.Removed
-            ? _outboundHandler.ConnectAsync(_outboundContext, remoteAddress, localAddress, cancellationToken)
-            : _outboundContext.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        return !_outboundCtx.Removed
+            ? _outboundHandler.ConnectAsync(_outboundCtx, remoteAddress, localAddress, cancellationToken)
+            : _outboundCtx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
     }
 
-    public override Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken)
+    public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        return !_outboundContext.Removed
-            ? _outboundHandler.DisconnectAsync(_outboundContext, cancellationToken)
-            : _outboundContext.DisconnectAsync(cancellationToken);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        return !_outboundCtx.Removed
+            ? _outboundHandler.DisconnectAsync(_outboundCtx, cancellationToken)
+            : _outboundCtx.DisconnectAsync(cancellationToken);
     }
 
-    public override Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken)
+    public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        return !_outboundContext.Removed
-            ? _outboundHandler.CloseAsync(_outboundContext, cancellationToken)
-            : _outboundContext.CloseAsync(cancellationToken);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        return !_outboundCtx.Removed
+            ? _outboundHandler.CloseAsync(_outboundCtx, cancellationToken)
+            : _outboundCtx.CloseAsync(cancellationToken);
     }
 
-    public override Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken)
+    public override Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        return !_outboundContext.Removed
-            ? _outboundHandler.DeregisterAsync(_outboundContext, cancellationToken)
-            : _outboundContext.DeregisterAsync(cancellationToken);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        return !_outboundCtx.Removed
+            ? _outboundHandler.DeregisterAsync(_outboundCtx, cancellationToken)
+            : _outboundCtx.DeregisterAsync(cancellationToken);
     }
 
-    public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken)
+    public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        return !_outboundContext.Removed
-            ? _outboundHandler.WriteAsync(_outboundContext, message, cancellationToken)
-            : _outboundContext.WriteAsync(message, cancellationToken);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        return !_outboundCtx.Removed
+            ? _outboundHandler.WriteAsync(_outboundCtx, msg, cancellationToken)
+            : _outboundCtx.WriteAsync(msg, cancellationToken);
     }
 
-    public override void Read(ChannelHandlerContext context)
+    public override void Read(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        if (!_outboundContext.Removed)
-            _outboundHandler.Read(_outboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        if (!_outboundCtx.Removed)
+            _outboundHandler.Read(_outboundCtx);
         else
-            _outboundContext.Read();
+            _outboundCtx.Read();
     }
 
-    public override void Flush(ChannelHandlerContext context)
+    public override void Flush(IChannelHandlerContext ctx)
     {
-        Debug.Assert(ReferenceEquals(context, _outboundContext.Parent));
-        if (!_outboundContext.Removed)
-            _outboundHandler.Flush(_outboundContext);
+        Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+        if (!_outboundCtx.Removed)
+            _outboundHandler.Flush(_outboundCtx);
         else
-            _outboundContext.Flush();
+            _outboundCtx.Flush();
     }
 
-    private sealed class InboundContext : DelegatingContext
+    private sealed class InboundContext : DelegatingChannelHandlerContext
     {
         private readonly CombinedChannelDuplexHandler<TInbound, TOutbound> _owner;
-        internal InboundContext(ChannelHandlerContext parent, IChannelHandler handler,
-            CombinedChannelDuplexHandler<TInbound, TOutbound> owner) : base(parent, handler) => _owner = owner;
-        public override ChannelHandlerContext FireExceptionCaught(Exception cause)
+        internal InboundContext(IChannelHandlerContext ctx, IChannelHandler handler,
+            CombinedChannelDuplexHandler<TInbound, TOutbound> owner) : base(ctx, handler) => _owner = owner;
+        public override IChannelInboundInvoker FireExceptionCaught(Exception cause)
         {
             _owner.ForwardInboundException(cause);
             return this;
         }
     }
 
-    private class DelegatingContext : ChannelHandlerContext
+    private class DelegatingChannelHandlerContext : IChannelHandlerContext
     {
-        internal readonly ChannelHandlerContext Parent;
+        internal readonly IChannelHandlerContext Ctx;
         private readonly IChannelHandler _handler;
         internal bool Removed { get; private set; }
-        internal DelegatingContext(ChannelHandlerContext parent, IChannelHandler handler)
-            : base(parent.Pipeline, parent.Name, parent.Handler, parent.AssignedExecutor)
+        internal DelegatingChannelHandlerContext(IChannelHandlerContext ctx, IChannelHandler handler)
         {
-            Parent = parent;
+            Ctx = ctx;
             _handler = handler;
         }
-        public override bool IsRemoved => Removed || Parent.IsRemoved;
-        public override ChannelHandlerContext FireChannelRegistered() { Parent.FireChannelRegistered(); return this; }
-        public override ChannelHandlerContext FireChannelUnregistered() { Parent.FireChannelUnregistered(); return this; }
-        public override ChannelHandlerContext FireChannelActive() { Parent.FireChannelActive(); return this; }
-        public override ChannelHandlerContext FireChannelInactive() { Parent.FireChannelInactive(); return this; }
-        public override ChannelHandlerContext FireExceptionCaught(Exception cause) { Parent.FireExceptionCaught(cause); return this; }
-        public override ChannelHandlerContext FireUserEventTriggered(object evt) { Parent.FireUserEventTriggered(evt); return this; }
-        public override ChannelHandlerContext FireChannelRead(object message) { Parent.FireChannelRead(message); return this; }
-        public override ChannelHandlerContext FireChannelReadComplete() { Parent.FireChannelReadComplete(); return this; }
-        public override ChannelHandlerContext FireChannelWritabilityChanged() { Parent.FireChannelWritabilityChanged(); return this; }
-        public override Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default) => Parent.BindAsync(localAddress, cancellationToken);
-        public override Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default) => Parent.ConnectAsync(remoteAddress, localAddress, cancellationToken);
-        public override Task DisconnectAsync(CancellationToken cancellationToken = default) => Parent.DisconnectAsync(cancellationToken);
-        public override Task CloseAsync(CancellationToken cancellationToken = default) => Parent.CloseAsync(cancellationToken);
-        public override Task DeregisterAsync(CancellationToken cancellationToken = default) => Parent.DeregisterAsync(cancellationToken);
-        public override Task WriteAsync(object message, CancellationToken cancellationToken = default) => Parent.WriteAsync(message, cancellationToken);
-        public override Task WriteAndFlushAsync(object message, CancellationToken cancellationToken = default) => Parent.WriteAndFlushAsync(message, cancellationToken);
-        public override IChannelOutboundInvoker Read() { Parent.Read(); return this; }
-        public override IChannelOutboundInvoker Flush() { Parent.Flush(); return this; }
+        public IChannel Channel => Ctx.Channel;
+        public IEventExecutor Executor => Ctx.Executor;
+        public string Name => Ctx.Name;
+        public IChannelHandler Handler => Ctx.Handler;
+        public bool IsRemoved => Removed || Ctx.IsRemoved;
+        public IChannelPipeline Pipeline => Ctx.Pipeline;
+        public IByteBufAllocator Alloc() => Ctx.Alloc();
+        public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class => Ctx.Channel.Attr(key);
+        public bool HasAttr<T>(AttributeKey<T> key) where T : class => Ctx.Channel.HasAttr(key);
+        public IChannelInboundInvoker FireChannelRegistered() { Ctx.FireChannelRegistered(); return this; }
+        public IChannelInboundInvoker FireChannelUnregistered() { Ctx.FireChannelUnregistered(); return this; }
+        public IChannelInboundInvoker FireChannelActive() { Ctx.FireChannelActive(); return this; }
+        public IChannelInboundInvoker FireChannelInactive() { Ctx.FireChannelInactive(); return this; }
+        public virtual IChannelInboundInvoker FireExceptionCaught(Exception cause) { Ctx.FireExceptionCaught(cause); return this; }
+        public IChannelInboundInvoker FireUserEventTriggered(object @event) { Ctx.FireUserEventTriggered(@event); return this; }
+        public IChannelInboundInvoker FireChannelRead(object msg) { Ctx.FireChannelRead(msg); return this; }
+        public IChannelInboundInvoker FireChannelReadComplete() { Ctx.FireChannelReadComplete(); return this; }
+        public IChannelInboundInvoker FireChannelWritabilityChanged() { Ctx.FireChannelWritabilityChanged(); return this; }
+        public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default) => Ctx.BindAsync(localAddress, cancellationToken);
+        public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default) => Ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+        public Task DisconnectAsync(CancellationToken cancellationToken = default) => Ctx.DisconnectAsync(cancellationToken);
+        public Task CloseAsync(CancellationToken cancellationToken = default) => Ctx.CloseAsync(cancellationToken);
+        public Task DeregisterAsync(CancellationToken cancellationToken = default) => Ctx.DeregisterAsync(cancellationToken);
+        public Task WriteAsync(object msg, CancellationToken cancellationToken = default) => Ctx.WriteAsync(msg, cancellationToken);
+        public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default) => Ctx.WriteAndFlushAsync(msg, cancellationToken);
+        public IChannelOutboundInvoker Read() { Ctx.Read(); return this; }
+        public IChannelOutboundInvoker Flush() { Ctx.Flush(); return this; }
+        // CLR: keeps the text of the delegated context, as this context formerly inherited its toString().
+        public override string ToString() => Ctx.ToString();
 
         internal void Remove()
         {

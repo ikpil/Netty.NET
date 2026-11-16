@@ -152,7 +152,7 @@ public class ByteBufRelativeTransferDispatchTest
             destination.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex);
             Assert.Equal(0, destination.ReaderIndex); Assert.Equal(1, destination.WriterIndex);
-            Assert.Equal(1, source.ReferenceCount); Assert.Equal(1, destination.ReferenceCount);
+            Assert.Equal(1, source.RefCnt); Assert.Equal(1, destination.RefCnt);
         }
         finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
         Assert.Equal(0, native.ReservedBytes);
@@ -179,7 +179,7 @@ public class ByteBufRelativeTransferDispatchTest
             Assert.Equal(-1, calls.Index); Assert.Equal(write ? 2 : 5, calls.Length);
             Assert.Equal(2, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
             Assert.Equal(1, peer.ReaderIndex); Assert.Equal(3, peer.WriterIndex);
-            Assert.Equal(1, owner.ReferenceCount); Assert.Equal(1, peer.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, peer.RefCnt);
         }
         finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
         Assert.Equal(0, native.ReservedBytes);

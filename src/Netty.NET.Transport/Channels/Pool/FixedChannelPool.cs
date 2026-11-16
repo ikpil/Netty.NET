@@ -437,7 +437,9 @@ public class FixedChannelPool : SimpleChannelPool
             var request = _pending.First.Value;
             _pending.RemoveFirst();
             request.Node = null;
-            request.Fail(ClosedException());
+            // As in the source close0, pending acquires fail with ClosedChannelException; acquire after close
+            // keeps IllegalStateException("FixedChannelPool was closed") as InvalidOperationException.
+            request.Fail(new ClosedChannelException());
         }
         Interlocked.Exchange(ref _acquiredChannelCount, 0);
         // Ensure we dispatch this on another Thread as close0 will be called from the EventExecutor and we need

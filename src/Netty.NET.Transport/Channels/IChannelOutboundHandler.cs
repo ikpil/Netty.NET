@@ -31,7 +31,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param promise       the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception    thrown if an error occurs
      */
-    Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken);
+    Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken);
     /**
      * Called once a connect operation is made.
      *
@@ -41,7 +41,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
-    Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken);
+    Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken);
     /**
      * Called once a disconnect operation is made.
      *
@@ -49,7 +49,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
-    Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken);
+    Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken);
     /**
      * Called once a close operation is made.
      *
@@ -57,7 +57,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
-    Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken);
+    Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken);
     /**
      * Called once a deregister operation is made from the current registered {@link EventLoop}.
      *
@@ -65,7 +65,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
-    Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken);
+    Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken);
     /**
      * Called once a write operation is made. The write operation will write the messages through the
      * {@link ChannelPipeline}. Those are then ready to be flushed to the actual {@link Channel} once
@@ -76,12 +76,12 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param promise           the {@link ChannelPromise} to notify once the operation completes
      * @throws Exception        thrown if an error occurs
      */
-    Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken);
+    Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken);
 
     /**
      * Intercepts {@link ChannelHandlerContext#read()}.
      */
-    void Read(ChannelHandlerContext context);
+    void Read(IChannelHandlerContext ctx);
     /**
      * Called once a flush operation is made. The flush operation will try to flush out all previous written messages
      * that are pending.
@@ -89,5 +89,5 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @param ctx               the {@link ChannelHandlerContext} for which the flush operation is made
      * @throws Exception        thrown if an error occurs
      */
-    void Flush(ChannelHandlerContext context);
+    void Flush(IChannelHandlerContext ctx);
 }

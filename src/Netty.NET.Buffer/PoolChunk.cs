@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Netty.NET.Buffer;
 
@@ -316,7 +317,7 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
             //get run with min offset in this queue
             long handle = _runsAvail[queueIdx].Dequeue();
             handle <<= 32;
-            Debug.Assert(!IsUsed(handle), "invalid handle: " + handle);
+            Debug.Assert(!IsUsed(handle), "invalid handle: " + handle.ToString(CultureInfo.InvariantCulture));
             RemoveAvailRun0(handle);
             handle = SplitLargeRun(handle, pages);
             _freeBytes -= RunSize(PageShifts, handle);

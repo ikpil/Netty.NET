@@ -50,7 +50,7 @@ public class ExecutorLifecycleContractTest
             try { command(); }
             finally { running = false; }
         }
-        public override Task Termination => termination.Task;
+        public override Task TerminationFuture => termination.Task;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             shuttingDown = true;
@@ -65,7 +65,7 @@ public class ExecutorLifecycleContractTest
             ++stopRequests;
             Shutdown();
             if (stopFailure != null) throw stopFailure;
-            return Termination;
+            return TerminationFuture;
         }
         public override bool IsShuttingDown() => shuttingDown;
         public override bool IsShutdown() => stopped;
@@ -85,7 +85,7 @@ public class ExecutorLifecycleContractTest
         public override IEventExecutor Next() { ++selections; return child; }
         public override IEnumerable<IEventExecutor> Iterator() => new[] { child };
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => child.ShutdownGracefullyAsync(quietPeriod, timeout);
-        public override Task Termination => child.Termination;
+        public override Task TerminationFuture => child.TerminationFuture;
         public override void Shutdown() => child.Shutdown();
         public override bool IsShuttingDown() => child.IsShuttingDown();
         public override bool IsShutdown() => child.IsShutdown();
@@ -150,9 +150,9 @@ public class ExecutorLifecycleContractTest
     public async Task ShutdownReturnsThePersistentTerminationTask()
     {
         var executor = new DefaultEventExecutor();
-        var termination = executor.Termination;
+        var termination = executor.TerminationFuture;
         Assert.False(termination.IsCompleted);
-        Assert.Same(termination, executor.Termination);
+        Assert.Same(termination, executor.TerminationFuture);
         Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
         await termination.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(termination.IsCompletedSuccessfully);
@@ -180,7 +180,7 @@ public class ExecutorLifecycleContractTest
             Assert.False(termination.IsCompleted);
             Assert.False(ordinaryWait.IsCompleted);
             Assert.True(executor.IsShuttingDown());
-            Assert.Same(termination, executor.Termination);
+            Assert.Same(termination, executor.TerminationFuture);
             release.Set();
             await work.WaitAsync(TimeSpan.FromSeconds(5));
             await ordinaryWait;
@@ -198,7 +198,7 @@ public class ExecutorLifecycleContractTest
     public async Task TimingOutAnObservationDoesNotRequestShutdown()
     {
         var executor = new DefaultEventExecutor();
-        Task termination = executor.Termination;
+        Task termination = executor.TerminationFuture;
         try
         {
             await Assert.ThrowsAsync<TimeoutException>(() => termination.WaitAsync(TimeSpan.Zero));
@@ -242,7 +242,7 @@ public class ExecutorLifecycleContractTest
     public async Task TerminationDoesNotInlineUserContinuationsOnTheEventLoop()
     {
         var executor = new DefaultEventExecutor();
-        Task continuation = executor.Termination.ContinueWith(_ => Assert.False(executor.InEventLoop()),
+        Task continuation = executor.TerminationFuture.ContinueWith(_ => Assert.False(executor.InEventLoop()),
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         try
         {
@@ -277,7 +277,7 @@ public class ExecutorLifecycleContractTest
         finally { SynchronizationContext.SetSynchronizationContext(previous); }
         first.termination.SetResult();
         second.termination.SetResult();
-        await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(0, Volatile.Read(ref context.posts));
     }
 
@@ -291,11 +291,11 @@ public class ExecutorLifecycleContractTest
         failure.termination.SetException(new InvalidOperationException("child failed before registration"));
         canceled.termination.SetCanceled();
         var group = new ManualGroup(success, failure, canceled);
-        await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
-        Assert.True(group.Termination.IsCompletedSuccessfully);
+        await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(group.TerminationFuture.IsCompletedSuccessfully);
         Assert.True(group.IsTerminated());
-        Assert.True(failure.Termination.IsFaulted);
-        Assert.True(canceled.Termination.IsCanceled);
+        Assert.True(failure.TerminationFuture.IsFaulted);
+        Assert.True(canceled.TerminationFuture.IsCanceled);
     }
 
     [Fact]
@@ -309,13 +309,13 @@ public class ExecutorLifecycleContractTest
             start.Wait();
             child.termination.SetResult();
         })).ToArray();
-        Assert.False(group.Termination.IsCompleted);
+        Assert.False(group.TerminationFuture.IsCompleted);
         start.Set();
         await Task.WhenAll(completions).WaitAsync(TimeSpan.FromSeconds(5));
-        await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
-        Assert.True(group.Termination.IsCompletedSuccessfully);
+        await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(group.TerminationFuture.IsCompletedSuccessfully);
         Assert.True(group.IsTerminated());
-        Assert.Same(group.Termination, group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+        Assert.Same(group.TerminationFuture, group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
     }
 
     [Fact]
@@ -327,7 +327,7 @@ public class ExecutorLifecycleContractTest
             Assert.Throws<ArgumentException>(() => executor.ShutdownGracefullyAsync(TimeSpan.FromTicks(-1), TimeSpan.Zero));
             Assert.Throws<ArgumentException>(() => executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
             Assert.False(executor.IsShuttingDown());
-            Assert.False(executor.Termination.IsCompleted);
+            Assert.False(executor.TerminationFuture.IsCompleted);
         }
         finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
     }
@@ -337,7 +337,7 @@ public class ExecutorLifecycleContractTest
     {
         var backing = new RejectingExecutor();
         var executor = new DefaultEventExecutor(backing.Execute);
-        Task termination = executor.Termination;
+        Task termination = executor.TerminationFuture;
         Task failure = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         Assert.Same(termination, failure);
         Assert.Same(backing.failure, await Assert.ThrowsAsync<RejectedExecutionException>(() => failure));
@@ -347,7 +347,7 @@ public class ExecutorLifecycleContractTest
         await GlobalEventExecutor.INSTANCE.SubmitAsync(() =>
         {
             Assert.True(GlobalEventExecutor.INSTANCE.InEventLoop());
-            Assert.Same(termination, executor.Termination);
+            Assert.Same(termination, executor.TerminationFuture);
         }).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(executor.IsTerminated());
     }
@@ -369,7 +369,7 @@ public class ExecutorLifecycleContractTest
         Assert.True(termination.IsFaulted);
         Assert.False(termination.IsCanceled);
         Assert.Same(failure, termination.Exception.InnerException);
-        Assert.Same(termination, executor.Termination);
+        Assert.Same(termination, executor.TerminationFuture);
         Assert.True(executor.IsTerminated());
     }
 
@@ -378,13 +378,13 @@ public class ExecutorLifecycleContractTest
     {
         foreach (var executor in new IEventExecutor[] { GlobalEventExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE })
         {
-            var future = executor.Termination;
+            var future = executor.TerminationFuture;
             Assert.True(future.IsCompleted);
             Assert.True(future.IsFaulted);
             Assert.IsAssignableFrom<NotSupportedException>(future.Exception.InnerException);
             Assert.Same(future, executor.ShutdownGracefullyAsync());
             Assert.Same(future, executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(-2)));
-            Assert.Same(future, executor.Termination);
+            Assert.Same(future, executor.TerminationFuture);
             Assert.Same(future, executor.StopAsync());
             Assert.False(executor.IsShuttingDown());
             Assert.False(executor.IsShutdown());
@@ -398,7 +398,7 @@ public class ExecutorLifecycleContractTest
         var first = new Child();
         var second = new Child();
         var group = new ManualGroup(first, second);
-        var termination = group.Termination;
+        var termination = group.TerminationFuture;
         Assert.Same(termination, group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(20), TimeSpan.FromSeconds(1)));
         Assert.True(group.IsShuttingDown());
         Assert.False(group.IsShutdown());
@@ -410,7 +410,7 @@ public class ExecutorLifecycleContractTest
         await termination.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(termination.IsCompletedSuccessfully);
         Assert.True(group.IsTerminated());
-        Assert.Same(termination, group.Termination);
+        Assert.Same(termination, group.TerminationFuture);
     }
 
     [Theory]
@@ -433,7 +433,7 @@ public class ExecutorLifecycleContractTest
                 Assert.False(executor.IsShutdown());
             }
             Task stopping = executor.StopAsync();
-            Assert.Same(executor.Termination, stopping);
+            Assert.Same(executor.TerminationFuture, stopping);
             Assert.Same(stopping, executor.StopAsync());
             Assert.True(executor.IsShutdown());
             Assert.Same(stopping, executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2)));
@@ -469,7 +469,7 @@ public class ExecutorLifecycleContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task queued = surface.SubmitAsync(() => Assert.Fail("Withdrawn nonsticky work ran"));
             Task stopping = surface.StopAsync();
-            Assert.Same(underlying.Termination, stopping);
+            Assert.Same(underlying.TerminationFuture, stopping);
             Assert.Same(stopping, group.StopAsync());
             Assert.True(underlying.StopToken.IsCancellationRequested);
             Assert.True(queued.IsCanceled);
@@ -488,7 +488,7 @@ public class ExecutorLifecycleContractTest
         var second = new Child();
         IEventExecutorGroup group = new ManualGroup(first, second);
         Task stopping = group.StopAsync();
-        Assert.Same(group.Termination, stopping);
+        Assert.Same(group.TerminationFuture, stopping);
         Assert.Equal(1, first.stopRequests);
         Assert.Equal(1, second.stopRequests);
         Assert.True(group.IsShutdown());
@@ -509,9 +509,9 @@ public class ExecutorLifecycleContractTest
         AggregateException failure = Assert.Throws<AggregateException>(() => group.StopAsync());
         Assert.Equal(new[] { first.stopFailure, third.stopFailure }, failure.InnerExceptions);
         Assert.All(new[] { first, second, third }, child => Assert.Equal(1, child.stopRequests));
-        Assert.False(group.Termination.IsCompleted);
+        Assert.False(group.TerminationFuture.IsCompleted);
         foreach (Child child in new[] { first, second, third }) child.termination.SetResult();
-        await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -521,7 +521,7 @@ public class ExecutorLifecycleContractTest
         try
         {
             await executor.SubmitAsync(async () => await executor.StopAsync()).WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(executor.Termination.IsCompletedSuccessfully);
+            Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
         }
         finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
     }
@@ -535,11 +535,11 @@ public class ExecutorLifecycleContractTest
         Assert.Equal(children, group.Iterator());
         Assert.Equal(3, group.ExecutorCount());
         for (int i = 0; i < 12; ++i) Assert.Same(children[i % 3], group.Next());
-        Assert.Same(group.Termination, group.StopAsync());
+        Assert.Same(group.TerminationFuture, group.StopAsync());
         Assert.True(group.IsShutdown());
         Assert.All(children, child => Assert.Equal(1, child.stopRequests));
         foreach (var child in children) child.termination.SetResult();
-        await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -576,8 +576,8 @@ public class ExecutorLifecycleContractTest
         metric.SetUtilization(BitConverter.Int64BitsToDouble(payload));
         Assert.Equal(payload, BitConverter.DoubleToInt64Bits(metric.Utilization()));
         foreach (var child in children) child.termination.SetResult();
-        await ordinary.Termination.WaitAsync(TimeSpan.FromSeconds(5));
-        await observable.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        await ordinary.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
+        await observable.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -612,7 +612,7 @@ public class ExecutorLifecycleContractTest
         Assert.Equal(5, group.selections);
         Assert.Equal(2, executed);
         Assert.Same(Ticker.SystemTicker(), group.Ticker());
-        Assert.Same(group.Termination, group.ShutdownGracefullyAsync());
+        Assert.Same(group.TerminationFuture, group.ShutdownGracefullyAsync());
         Assert.Equal(TimeSpan.FromSeconds(2), group.child.quietPeriod);
         Assert.Equal(TimeSpan.FromSeconds(15), group.child.timeout);
     }
@@ -630,9 +630,9 @@ public class ExecutorLifecycleContractTest
             var first = group.SubmitAsync<Thread>(() => Thread.CurrentThread);
             var second = group.SubmitAsync<Thread>(() => Thread.CurrentThread);
             Assert.NotSame(first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult(), second.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.Same(group.Termination, group.StopAsync());
+            Assert.Same(group.TerminationFuture, group.StopAsync());
             Assert.True(group.AwaitTermination(TimeSpan.FromSeconds(5)));
-            await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+            await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         }
         finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
     }
@@ -668,9 +668,9 @@ public class ExecutorLifecycleContractTest
         var child = new Child { queued = true };
         var underlying = new SingleChildGroup(child);
         var group = new NonStickyEventExecutorGroup(underlying, 1);
-        Assert.Same(child.termination.Task, group.Termination);
+        Assert.Same(child.termination.Task, group.TerminationFuture);
         Assert.Same(child.termination.Task, group.ShutdownGracefullyAsync());
-        Assert.Same(child.termination.Task, group.Termination);
+        Assert.Same(child.termination.Task, group.TerminationFuture);
         var direct = group.SubmitAsync(() => { });
         Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(child.tasks.Peek()));
         child.Run(child.tasks.Dequeue());
@@ -680,7 +680,7 @@ public class ExecutorLifecycleContractTest
         Assert.NotSame(first, second);
         Assert.IsAssignableFrom<IOrderedEventExecutor>(first);
         Assert.Same(child, first.Parent());
-        Assert.Same(child.termination.Task, first.Termination);
+        Assert.Same(child.termination.Task, first.TerminationFuture);
         Assert.Same(child.termination.Task, first.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
         Assert.IsAssignableFrom<IOrderedEventExecutor>(Assert.Single(group.Iterator()));
     }
@@ -861,7 +861,7 @@ public class ExecutorLifecycleContractTest
             await executor.SubmitAsync(() => { }).WaitAsync(TimeSpan.FromSeconds(5));
             // The pinned termination promises bind their listeners to GlobalEventExecutor,
             // which remains available after the observed executor has stopped accepting work.
-            using var observation = new ExecutorCompletion(GlobalEventExecutor.INSTANCE, executor.Termination);
+            using var observation = new ExecutorCompletion(GlobalEventExecutor.INSTANCE, executor.TerminationFuture);
             bool earlyAffinity = false, lateAffinity = false, ranOnOwnedWorker = false;
             Task observedEarly = null, observedLate = null;
             using var early = observation.Register(task =>
@@ -882,8 +882,8 @@ public class ExecutorLifecycleContractTest
             Assert.True(earlyAffinity);
             Assert.True(lateAffinity);
             Assert.False(ranOnOwnedWorker);
-            Assert.Same(executor.Termination, observedEarly);
-            Assert.Same(executor.Termination, observedLate);
+            Assert.Same(executor.TerminationFuture, observedEarly);
+            Assert.Same(executor.TerminationFuture, observedLate);
         }
         finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
     }

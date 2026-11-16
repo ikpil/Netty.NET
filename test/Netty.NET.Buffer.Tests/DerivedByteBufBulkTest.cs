@@ -113,8 +113,8 @@ public class DerivedByteBufBulkTest
         }
         public void Dispose()
         {
-            if (Owner?.ReferenceCount > 0) Assert.True(Owner.Release());
-            if (Root.ReferenceCount > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
+            if (Root.RefCnt > 0) Assert.True(Root.Release());
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -184,7 +184,7 @@ public class DerivedByteBufBulkTest
             Assert.Throws<NotSupportedException>(() => Transfer(s.View, p, true, true));
             Assert.Empty(s.Observation.Visits); Assert.Equal(expected, Snapshot(s)); Assert.Equal(peer, p.Snapshot()); return;
         }
-        int refs = s.Root.ReferenceCount;
+        int refs = s.Root.RefCnt;
         Assert.Same(s.View, Transfer(s.View, p, input, false));
         Observed(s, p, input, s.Offset + 2, 4);
         if (input) peer.AsSpan(4, 3).CopyTo(expected.AsSpan(s.Offset + 2));
@@ -211,7 +211,7 @@ public class DerivedByteBufBulkTest
         {
             Assert.Equal(input ? 5 : 2, p.Buffer.ReaderIndex); Assert.Equal(input ? 9 : 12, p.Buffer.WriterIndex);
         }
-        Assert.Equal(refs, s.Root.ReferenceCount);
+        Assert.Equal(refs, s.Root.RefCnt);
         for (int attempt = 0; attempt < 2; attempt++)
         {
             s.View.SetIndex(1, input ? 3 : 4); p.Buffer?.SetIndex(2, 9);
@@ -248,7 +248,7 @@ public class DerivedByteBufBulkTest
         }
         if (s.Owner != null)
         {
-            s.Observation.Visits.Clear(); Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.ReferenceCount);
+            s.Observation.Visits.Clear(); Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => Transfer(s.View, p, input, false));
             Assert.Empty(s.Observation.Visits);
         }
@@ -291,6 +291,6 @@ public class DerivedByteBufBulkTest
         }
         Assert.Equal(expected, Snapshot(s)); Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(4, s.View.WriterIndex);
         Assert.Equal(2, s.Root.ReaderIndex); Assert.Equal(14, s.Root.WriterIndex);
-        Assert.Equal(s.Owner == null ? 1 : 2, s.Root.ReferenceCount);
+        Assert.Equal(s.Owner == null ? 1 : 2, s.Root.RefCnt);
     }
 }

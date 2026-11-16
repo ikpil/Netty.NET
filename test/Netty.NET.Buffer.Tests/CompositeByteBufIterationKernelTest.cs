@@ -69,9 +69,9 @@ public partial class CompositeByteBufIterationKernelTest
                 : i - 16 + (Fixed ? 65 : 68)) ^ (logical ? 0x80 : 0))).ToArray();
         public void Dispose()
         {
-            if (Retained?.ReferenceCount > 0) Retained.Release();
-            if (Owner.ReferenceCount > 0) Owner.Release();
-            if (First.ReferenceCount > 0) First.Release(); if (Second.ReferenceCount > 0) Second.Release();
+            if (Retained?.RefCnt > 0) Retained.Release();
+            if (Owner.RefCnt > 0) Owner.Release();
+            if (First.RefCnt > 0) First.Release(); if (Second.RefCnt > 0) Second.Release();
             Assert.Equal(0, Native.ReservedBytes);
         }
     }

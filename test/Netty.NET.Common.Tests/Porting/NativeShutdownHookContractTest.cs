@@ -87,7 +87,7 @@ public class NativeShutdownHookContractTest
             executor.AddShutdownHook(() => trace.Add("after"));
             await Stop(executor);
             Assert.Equal(new[] { "throw", "after" }, trace);
-            Assert.True(executor.Termination.IsCompletedSuccessfully);
+            Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
         }
         finally { await Stop(executor); }
     }

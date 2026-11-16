@@ -37,7 +37,7 @@ public class ExecutorSubmissionContractTest
         public override bool IsTerminated() => false;
         public override bool IsShuttingDown() => false;
         public override bool AwaitTermination(TimeSpan timeout) => false;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
     }
     [Fact]

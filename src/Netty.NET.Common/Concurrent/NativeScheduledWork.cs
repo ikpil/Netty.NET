@@ -37,6 +37,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     private readonly CancellationTokenRegistration _registration;
     private readonly Func<long> _clock;
     private readonly Func<bool> _canRun;
+    private readonly Func<bool> _canReschedule;
     private readonly Action<ITaskScheduledWork> _enqueue;
     private readonly Action<ITaskScheduledWork> _remove;
     private Func<CancellationToken, T> _function;
@@ -46,14 +47,14 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     private int _published;
     // set once when added to priority queue
     private long _id;
-    private long _deadline;
+    private long _deadlineNanos;
     private int _queueIndex = IPriorityQueueNode<IScheduledWork>.INDEX_NOT_IN_QUEUE;
     /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
     public long PeriodNanos { get; }
 
     internal NativeScheduledWork(Func<CancellationToken, T> function, CancellationToken token, long deadline,
         long period, Func<long> clock, Func<bool> canRun, Action<ITaskScheduledWork> enqueue,
-        Action<ITaskScheduledWork> remove, bool captureContext = true)
+        Action<ITaskScheduledWork> remove, bool captureContext = true, Func<bool> canReschedule = null)
     {
         // One opaque callback owns every submission, due transfer and cancellation
         // dispatch. Periodic execution and a full ready queue do not recreate it.
@@ -61,10 +62,13 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         _function = function;
         _context = captureContext ? ExecutionContext.Capture() : null;
         _token = token;
-        _deadline = deadline;
+        _deadlineNanos = deadline;
         PeriodNanos = period;
         _clock = clock;
         _canRun = canRun;
+        // CLR: ScheduledFutureTask.run checks executor().isShutdown() only before re-adding a
+        // periodic task; owners whose admission also gates execution pass one predicate for both.
+        _canReschedule = canReschedule ?? canRun;
         _enqueue = enqueue;
         _remove = remove;
         _registration = token.UnsafeRegister(static state => ((NativeScheduledWork<T>)state).Cancel(), this);
@@ -77,16 +81,16 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     public Action QueueCallback { get; }
     public Task Completion => _completion.Task;
     public bool IsCanceled => Completion.IsCanceled;
-    public long DeadlineNanos() => _deadline;
+    public long DeadlineNanos() => _deadlineNanos;
     public long DelayNanos() => DelayNanos(_clock());
-    public long DelayNanos(long now) => AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadline);
+    public long DelayNanos(long now) => AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadlineNanos);
     public long GetId() => _id;
-    public void AssignId(long id) { if (_id == 0) _id = id; }
+    public void SetId(long id) { if (_id == 0) _id = id; }
     public void SetConsumed()
     {
         // Optimization to avoid checking system clock again
         // after deadline has passed and task has been dequeued
-        if (PeriodNanos == 0) _deadline = 0;
+        if (PeriodNanos == 0) _deadlineNanos = 0;
     }
 
     internal void Publish()
@@ -122,7 +126,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         _remove(this);
     }
 
-    public void CancelForShutdown()
+    public void CancelWithoutRemove()
     {
         lock (_gate)
         {
@@ -183,8 +187,8 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
             }
             if (PeriodNanos != 0 && !Completion.IsCompleted)
             {
-                if (!_canRun()) { CancelForShutdown(); return; }
-                _deadline = PeriodNanos > 0 ? unchecked(_deadline + PeriodNanos) : unchecked(_clock() - PeriodNanos);
+                if (!_canReschedule()) { CancelWithoutRemove(); return; }
+                _deadlineNanos = PeriodNanos > 0 ? unchecked(_deadlineNanos + PeriodNanos) : unchecked(_clock() - PeriodNanos);
                 _enqueue(this);
             }
         }

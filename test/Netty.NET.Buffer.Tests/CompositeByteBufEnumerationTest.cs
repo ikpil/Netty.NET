@@ -30,26 +30,33 @@ public class CompositeByteBufEnumerationTest
     private static byte[] Bytes(ByteBuf buffer) => buffer.ReadableSequence.ToArray();
 
     [Fact]
-    public void IteratorIncludesEmptyComponentsAndUsesSharedBorrowedCache()
+    public void TestIteratorClrEnumeratorContract()
     {
-        var buffer = new CompositeByteBuf();
-        buffer.AddComponents(Unpooled.EmptyBuffer, Unpooled.EmptyBuffer);
-        using IEnumerator<ByteBuf> iterator = buffer.GetEnumerator();
+        var cbuf = new CompositeByteBuf();
+        cbuf.AddComponent(Unpooled.EmptyBuffer);
+        cbuf.AddComponent(Unpooled.EmptyBuffer);
+
+        using IEnumerator<ByteBuf> it = cbuf.GetEnumerator();
         try
         {
-            Assert.Throws<InvalidOperationException>(() => iterator.Current);
-            Assert.True(iterator.MoveNext());
-            Assert.Same(Unpooled.EmptyBuffer, iterator.Current);
-            Assert.Same(buffer.InternalComponent(0), iterator.Current);
-            Assert.True(iterator.MoveNext());
-            Assert.Same(Unpooled.EmptyBuffer, iterator.Current);
-            Assert.False(iterator.MoveNext());
-            Assert.False(iterator.MoveNext());
-            Assert.Throws<InvalidOperationException>(() => iterator.Current);
-            Assert.Throws<NotSupportedException>(() => iterator.Reset());
+            // CLR: MoveNext/Current replace hasNext/next; Current is invalid before the first MoveNext.
+            Assert.Throws<InvalidOperationException>(() => it.Current);
+            Assert.True(it.MoveNext());
+            Assert.Same(Unpooled.EmptyBuffer, it.Current);
+            // CLR: the enumerator returns the shared borrowed component cache.
+            Assert.Same(cbuf.InternalComponent(0), it.Current);
+            Assert.True(it.MoveNext());
+            Assert.Same(Unpooled.EmptyBuffer, it.Current);
+            Assert.False(it.MoveNext());
+
+            // CLR: an exhausted IEnumerator keeps returning false and its Current throws InvalidOperationException
+            // instead of next() throwing NoSuchElementException; Reset is unsupported.
+            Assert.False(it.MoveNext());
+            Assert.Throws<InvalidOperationException>(() => it.Current);
+            Assert.Throws<NotSupportedException>(() => it.Reset());
         }
-        finally { buffer.Release(); }
-        Assert.Equal(1, Unpooled.EmptyBuffer.ReferenceCount);
+        finally { cbuf.Release(); }
+        Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
     }
 
     [Fact]
@@ -67,7 +74,7 @@ public class CompositeByteBufEnumerationTest
     }
 
     [Fact]
-    public void TestEmptyIterator()
+    public void TestEmptyIteratorClrEnumeratorContract()
     {
         var buffer = new CompositeByteBuf();
         try
@@ -80,22 +87,48 @@ public class CompositeByteBufEnumerationTest
         finally { buffer.Release(); }
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void IteratorDetectsComponentCountChanges(bool remove)
+    [Fact]
+    public void TestIteratorConcurrentModificationAddClrEnumeratorContract()
     {
-        var buffer = new CompositeByteBuf();
-        buffer.AddComponent(Unpooled.EmptyBuffer);
-        using IEnumerator<ByteBuf> iterator = buffer.GetEnumerator();
+        var cbuf = new CompositeByteBuf();
+        cbuf.AddComponent(Unpooled.EmptyBuffer);
+
+        using IEnumerator<ByteBuf> it = cbuf.GetEnumerator();
+        cbuf.AddComponent(Unpooled.EmptyBuffer);
+
         try
         {
-            if (remove) buffer.RemoveComponent(0);
-            else buffer.AddComponent(Unpooled.EmptyBuffer);
-            Assert.Throws<InvalidOperationException>(() => iterator.MoveNext());
-            Assert.Throws<InvalidOperationException>(() => iterator.Current);
+            // CLR: MoveNext combines hasNext/next and detects the component-count change;
+            // InvalidOperationException replaces ConcurrentModificationException.
+            Assert.Throws<InvalidOperationException>(() => it.MoveNext());
+            Assert.Throws<InvalidOperationException>(() => it.Current);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            cbuf.Release();
+        }
+    }
+
+    [Fact]
+    public void TestIteratorConcurrentModificationRemoveClrEnumeratorContract()
+    {
+        var cbuf = new CompositeByteBuf();
+        cbuf.AddComponent(Unpooled.EmptyBuffer);
+
+        using IEnumerator<ByteBuf> it = cbuf.GetEnumerator();
+        cbuf.RemoveComponent(0);
+
+        try
+        {
+            // CLR: MoveNext combines hasNext/next and detects the component-count change;
+            // InvalidOperationException replaces ConcurrentModificationException.
+            Assert.Throws<InvalidOperationException>(() => it.MoveNext());
+            Assert.Throws<InvalidOperationException>(() => it.Current);
+        }
+        finally
+        {
+            cbuf.Release();
+        }
     }
 
     [Fact]
@@ -114,8 +147,8 @@ public class CompositeByteBufEnumerationTest
             Assert.False(iterator.MoveNext());
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
     }
 
     [Theory]
@@ -145,7 +178,7 @@ public class CompositeByteBufEnumerationTest
                 break;
             }
             Assert.Equal(7, buffer.GetByte(0));
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(3, source.WriterIndex);
             IEnumerator nongeneric = ((IEnumerable)buffer).GetEnumerator();
@@ -153,7 +186,7 @@ public class CompositeByteBufEnumerationTest
             finally { ((IDisposable)nongeneric).Dispose(); }
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -196,7 +229,7 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(1, duplicate.ReaderIndex);
             Assert.Equal(3, duplicate.WriterIndex);
             Assert.NotSame(duplicate, buffer.ComponentAtOffset(2));
-            Assert.Equal(new[] { 1, 1 }, new[] { whole.ReferenceCount, partial.ReferenceCount });
+            Assert.Equal(new[] { 1, 1 }, new[] { whole.RefCnt, partial.RefCnt });
         }
         finally { buffer.Release(); }
     }
@@ -254,7 +287,7 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(0, discarded.ReaderIndex);
             Assert.Equal(discarded.Capacity, discarded.WriterIndex);
             Assert.Same(discarded, buffer.Single());
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
         }
         finally { buffer.Release(); }
         Assert.Equal(0, allocator.ReservedBytes);
@@ -289,10 +322,10 @@ public class CompositeByteBufEnumerationTest
         // Take temporary ownership of the component.
         buffer.RemoveComponent(0).SetIndex(0, 0);
         buffer.Release();
-        Assert.Equal(1, retained.ReferenceCount);
+        Assert.Equal(1, retained.RefCnt);
         Assert.Equal(new byte[] { 1, 2 }, Bytes(retained));
         Assert.True(retained.Release());
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
 
         var other = new CompositeByteBuf();
         other.AddComponent(Unpooled.WrappedBuffer(new byte[] { 3 }));
@@ -321,10 +354,10 @@ public class CompositeByteBufEnumerationTest
             Assert.NotSame(cached, replacement);
             Assert.True(replacement.IsReadOnly);
             Assert.Equal(new byte[] { 1 }, Bytes(replacement));
-            Assert.Equal(1, nested.ReferenceCount);
+            Assert.Equal(1, nested.RefCnt);
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, nested.ReferenceCount);
+        Assert.Equal(0, nested.RefCnt);
     }
 
     [Fact]
@@ -345,7 +378,7 @@ public class CompositeByteBufEnumerationTest
             cached.ReaderIndex = 1;
             Assert.Equal(0, source.ReaderIndex);
             Assert.Equal(0, target.ReaderIndex);
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
         }
         finally { target.Release(); }
     }
@@ -362,10 +395,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(1, target.NumComponents);
             Assert.Same(source, target.Single());
             Assert.Equal(new byte[] { 1, 2 }, Bytes(target));
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
         }
         finally { target.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
     }
 
     [Fact]
@@ -408,8 +441,8 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(new byte[] { 1 }, Bytes(retained));
             Assert.Equal(new byte[] { 1, 2, 3 }, Bytes(buffer.Single()));
             Assert.NotSame(retained, buffer.InternalComponent(0));
-            Assert.Equal(1, first.ReferenceCount);
-            Assert.Equal(0, second.ReferenceCount);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(0, second.RefCnt);
         }
         finally { buffer.Release(); retained.Release(); }
     }
@@ -424,7 +457,7 @@ public class CompositeByteBufEnumerationTest
         {
             source.Capacity = 1;
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.InternalComponent(0));
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             source.Capacity = 4;
             source.SetByte(1, 1).SetByte(2, 2);
             ByteBuf cached = buffer.InternalComponent(0);
@@ -439,7 +472,7 @@ public class CompositeByteBufEnumerationTest
     [InlineData(true, false)]
     [InlineData(false, true)]
     [InlineData(true, true)]
-    public void ComponentSliceFromFlattenedCompositeCanBeRetainedRemovedAndAddedBack(bool direct, bool pooled)
+    public void ComponentSliceFromFlattenedCompositeShouldHaveCorrectView(bool direct, bool pooled)
     {
         // CLR: exercise the original pooled factory as well as heap/native unpooled storage.
         var allocator = new NativeMemoryAllocator(pooled ? 8192 : 64);
@@ -454,7 +487,7 @@ public class CompositeByteBufEnumerationTest
             source.WriteBytes(Encoding.ASCII.GetBytes("---01234"));
             first = (pooled ? pool.CompositeBuffer(8) : new CompositeByteBuf(8)).AddFlattenedComponents(source, true);
             source = null;
-            Assert.Equal("---", first.ReadString(3, Encoding.ASCII));
+            Assert.Equal("---", first.ReadCharSequence(3, Encoding.ASCII).ToString());
             second = (pooled ? pool.CompositeBuffer(8) : new CompositeByteBuf(8)).AddFlattenedComponents(first, true);
             first = null;
             Assert.Equal("01234", Encoding.ASCII.GetString(Bytes(second)));

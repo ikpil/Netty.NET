@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
@@ -281,9 +282,9 @@ public abstract class AbstractCoalescingBufferQueue
      * Writes all remaining elements in this queue.
      * @param ctx The context to write all elements to.
      */
-    public Task WriteAndRemoveAllAsync(ChannelHandlerContext context)
+    public Task WriteAndRemoveAllAsync(IChannelHandlerContext ctx)
     {
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(ctx);
         Exception pending = null;
         ByteBuf previous = null;
         var writes = new List<Task>();
@@ -295,19 +296,19 @@ public abstract class AbstractCoalescingBufferQueue
                 if (entry == null)
                 {
                     if (previous != null)
-                    { DecrementReadableBytes(previous.ReadableBytes); writes.Add(Write(context, previous, null)); }
+                    { DecrementReadableBytes(previous.ReadableBytes); writes.Add(Write(ctx, previous, null)); }
                     break;
                 }
                 if (entry is ByteBuf buffer)
                 {
                     if (previous != null)
-                    { DecrementReadableBytes(previous.ReadableBytes); writes.Add(Write(context, previous, null)); }
+                    { DecrementReadableBytes(previous.ReadableBytes); writes.Add(Write(ctx, previous, null)); }
                     previous = buffer;
                 }
                 else
                 {
                     DecrementReadableBytes(previous.ReadableBytes);
-                    writes.Add(Write(context, previous, entry));
+                    writes.Add(Write(ctx, previous, entry));
                     previous = null;
                 }
             }
@@ -324,11 +325,11 @@ public abstract class AbstractCoalescingBufferQueue
             throw new InvalidOperationException("Writing queued buffers failed.", pending);
         return Task.WhenAll(writes);
     }
-    private static Task Write(ChannelHandlerContext context, ByteBuf buffer, object completion)
+    private static Task Write(IChannelHandlerContext ctx, ByteBuf buffer, object completion)
     {
         if (completion is TaskCompletionSource producer && producer.Task.IsCanceled)
         { ReferenceCountUtil.SafeRelease(buffer); return producer.Task; }
-        Task operation = context.WriteAsync(buffer);
+        Task operation = ctx.WriteAsync(buffer);
         if (operation.IsCompleted)
         { NotifySafely(completion, operation); return operation; }
         return CompleteWriteAsync();
@@ -339,12 +340,12 @@ public abstract class AbstractCoalescingBufferQueue
             catch { /* Relay the original result below. */ }
             if (completion != null)
             {
-                if (context.Executor.InEventLoop())
+                if (ctx.Executor.InEventLoop())
                     NotifySafely(completion, operation);
                 else
                 {
                     try
-                    { await context.Executor.SubmitAsync(() => NotifySafely(completion, operation)).ConfigureAwait(false); }
+                    { await ctx.Executor.SubmitAsync(() => NotifySafely(completion, operation)).ConfigureAwait(false); }
                     catch (Exception error)
                     {
                         // A completion bridge must never leave a native producer pending if its executor
@@ -419,7 +420,7 @@ public abstract class AbstractCoalescingBufferQueue
     {
         long next = (long)_readableBytes + increment;
         if (next > int.MaxValue)
-            throw new InvalidOperationException("buffer queue length overflow: " + _readableBytes + " + " + increment);
+            throw new InvalidOperationException("buffer queue length overflow: " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " + " + increment.ToString(CultureInfo.InvariantCulture));
         _readableBytes = (int)next;
         _tracker?.IncrementPendingOutboundBytes(increment);
     }
@@ -436,10 +437,10 @@ public abstract class AbstractCoalescingBufferQueue
     {
         if (_readableBytes != 0 && _pairs.Count == 0)
         {
-            Logger.Error("readableBytes is " + _readableBytes + " but the queue is empty: a queued buffer was released or consumed " +
+            Logger.Error("readableBytes is " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " but the queue is empty: a queued buffer was released or consumed " +
                 "while still referenced by the queue. This indicates a bug in the code that produced the buffer. Resetting readableBytes to 0.");
             DecrementReadableBytes(_readableBytes);
         }
     }
-    public override string ToString() => "bytes: " + _readableBytes + " buffers: " + (Size >> 1);
+    public override string ToString() => "bytes: " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " buffers: " + ((Size >> 1).ToString(CultureInfo.InvariantCulture));
 }

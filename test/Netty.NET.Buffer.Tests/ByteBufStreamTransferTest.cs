@@ -78,7 +78,7 @@ public class ByteBufStreamTransferTest
             {
                 Assert.Same(b, b.ReadBytes(output, 8)); Assert.Equal(i + 8, b.ReaderIndex);
             }
-            Assert.Equal(expected, output.ToArray()); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(expected, output.ToArray()); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }
@@ -296,7 +296,7 @@ public class ByteBufStreamTransferTest
             Assert.Equal(4, b.WriteBytes(input, 4));
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, Bytes(b, 0, 8));
             Assert.Equal(4, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
-            Assert.Equal(0, input.Available); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(0, input.Available); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }

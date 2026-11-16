@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using System.Net;
 using System.Reflection;
 
 namespace Netty.NET.Common.Internal;
@@ -27,7 +26,7 @@ namespace Netty.NET.Common.Internal;
 public static class ResourcesUtil
 {
     /**
-     * Returns a {@link FileInfo} named {@code fileName} associated with {@link Class} {@code resourceClass} .
+     * Returns a {@link File} named {@code fileName} associated with {@link Class} {@code resourceClass} .
      *
      * @param resourceClass The associated class
      * @param fileName The file name
@@ -35,6 +34,11 @@ public static class ResourcesUtil
      */
     public static FileInfo GetFile(Type resourceClass, string fileName)
     {
+        // CLR: Class.getResource resolves fileName against the class's package on the class
+        // path and returns a URL whose path Java must URL-decode. CLR test resources are content
+        // files deployed next to the assembly of resourceClass, and Assembly.Location is already
+        // a file-system path, so no URL decoding (and no UnsupportedEncodingException fallback)
+        // applies. A missing file yields a FileInfo whose Exists is false instead of Java's NPE.
         Assembly assembly = resourceClass.Assembly;
 
         string assemblyLocation = assembly.Location;
@@ -43,9 +47,6 @@ public static class ResourcesUtil
         if (assemblyDir == null)
             throw new InvalidOperationException("Unable to determine assembly directory.");
 
-        string filePath = Path.Combine(assemblyDir, fileName);
-
-        filePath = WebUtility.UrlDecode(filePath);
-        return new FileInfo(filePath);
+        return new FileInfo(Path.Combine(assemblyDir, fileName));
     }
 }

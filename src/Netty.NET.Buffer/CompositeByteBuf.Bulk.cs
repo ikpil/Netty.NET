@@ -65,8 +65,9 @@ public partial class CompositeByteBuf
 
     public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
+        EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        EnsureCanWrite(); CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
+        CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
         if (length == 0) return this;
         if (BulkRangesOverlap(source, sourceIndex, this, index, length))
         {

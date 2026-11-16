@@ -38,6 +38,16 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
     protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory factory, bool addTaskWakesUp)
         : this(parent, new ThreadPerTaskExecutor(factory).Execute, addTaskWakesUp) { }
+    protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp,
+        bool supportSuspension)
+        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension) { }
+    protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
+        bool supportSuspension)
+        : this(parent, executor, addTaskWakesUp, supportSuspension, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
+    protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp,
+        bool supportSuspension, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
+        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension, maxPendingTasks,
+            rejectedExecutionHandler) { }
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler) { }
@@ -45,6 +55,14 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         bool supportSuspension, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : base(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler)
         => _tailTasks = NewTaskQueue(maxPendingTasks);
+    protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
+        IQueue<Action> taskQueue, IQueue<Action> tailTaskQueue, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
+        : this(parent, executor, addTaskWakesUp, false, taskQueue, tailTaskQueue, rejectedExecutionHandler) { }
+    protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
+        bool supportSuspension, IQueue<Action> taskQueue, IQueue<Action> tailTaskQueue,
+        Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
+        : base(parent, executor, addTaskWakesUp, supportSuspension, taskQueue, rejectedExecutionHandler)
+        => _tailTasks = ObjectUtil.CheckNotNull(tailTaskQueue, "tailTaskQueue");
     public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
     { ArgumentNullException.ThrowIfNull(channel); return channel.RegisterAsync(this, cancellationToken); }
     /**

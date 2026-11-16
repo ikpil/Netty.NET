@@ -111,7 +111,7 @@ public class ByteBufWritableKernelTest
             Assert.Equal(expectedPrefix, buffer.AsReadOnlySpan(0, capacity).ToArray());
             buffer.SetIndex(0, buffer.Capacity).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
     }
@@ -143,7 +143,7 @@ public class ByteBufWritableKernelTest
             Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
             buffer.SetIndex(0, buffer.Capacity).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
     }

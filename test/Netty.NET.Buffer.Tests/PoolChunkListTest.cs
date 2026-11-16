@@ -64,7 +64,7 @@ public class PoolChunkListTest
             Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
             Assert.Equal(0, a.Native.ReservedBytes);
         }
-        finally { foreach (var b in buffers) if (b.ReferenceCount != 0) b.Release(); }
+        finally { foreach (var b in buffers) if (b.RefCnt != 0) b.Release(); }
     }
 
     [Theory]
@@ -119,7 +119,7 @@ public class PoolChunkListTest
         }
         finally
         {
-            foreach (var b in first.Concat(second)) if (b.ReferenceCount != 0) b.Release();
+            foreach (var b in first.Concat(second)) if (b.RefCnt != 0) b.Release();
         }
         Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
     }
@@ -141,7 +141,7 @@ public class PoolChunkListTest
             try { Assert.Same(chunk, reused.Allocation.Chunk); Assert.Equal(5, ListIndex(a.Arena, chunk)); }
             finally { reused.Release(); }
         }
-        finally { foreach (var b in buffers) if (b.ReferenceCount != 0) b.Release(); }
+        finally { foreach (var b in buffers) if (b.RefCnt != 0) b.Release(); }
         Assert.Equal(8192, chunk.ChunkSize - chunk.FreeBytes);
     }
 

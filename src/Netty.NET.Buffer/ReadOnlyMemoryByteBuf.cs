@@ -51,7 +51,7 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         SetIndex(0, memory.Length);
     }
 
-    public override IByteBufAllocator Allocator => _allocator;
+    public override IByteBufAllocator Alloc() => _allocator;
     public override bool IsReadOnly => true;
     public override bool IsContiguous => true;
     public override bool IsDirect => _direct;
@@ -81,7 +81,7 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         ReadOnlyMemory<byte> source = _memory.Slice(index, length);
         // The original optimized native provider retains this captured range's maximum.
         // Managed/opaque memory follows the original generic read-only provider's factory default.
-        ByteBuf result = IsDirect ? Allocator.DirectBuffer(length, MaxCapacity) : Allocator.HeapBuffer(length);
+        ByteBuf result = IsDirect ? Alloc().DirectBuffer(length, MaxCapacity) : Alloc().HeapBuffer(length);
         try
         {
             // The native provider does not touch either range for an empty copy.

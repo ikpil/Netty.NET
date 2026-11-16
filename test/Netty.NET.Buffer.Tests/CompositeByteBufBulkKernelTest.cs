@@ -137,7 +137,7 @@ public partial class CompositeByteBufBulkKernelTest
                 Assert.Equal(method, visit.Method); Assert.Equal(rootIndex + (form == 4 ? 0 : 5), visit.Index);
                 Assert.Equal(boundary ? 1 : 4, visit.Length);
                 if (operation is 1 or 2 or 5 or 6) Assert.Same(external, visit.Other);
-                else if (operation == 8 && form != 4) Assert.Equal(0, visit.Other.ReferenceCount);
+                else if (operation == 8 && form != 4) Assert.Equal(0, visit.Other.RefCnt);
                 else Assert.Null(visit.Other);
             }
             Assert.Equal(reader, caller.ReaderIndex); Assert.Equal(writer, caller.WriterIndex);
@@ -146,15 +146,15 @@ public partial class CompositeByteBufBulkKernelTest
             Assert.Equal(2, external.ReaderIndex); Assert.Equal(12, external.WriterIndex);
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(form >= 5 ? 2 : 1, owner.ReferenceCount);
-            Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(form >= 5 ? 2 : 1, owner.RefCnt);
+            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
         }
         finally
         {
-            if (retained?.ReferenceCount > 0) retained.Release();
-            if (owner?.ReferenceCount > 0) owner.Release();
-            if (first.ReferenceCount > 0) first.Release();
-            if (second.ReferenceCount > 0) second.Release();
+            if (retained?.RefCnt > 0) retained.Release();
+            if (owner?.RefCnt > 0) owner.Release();
+            if (first.RefCnt > 0) first.Release();
+            if (second.RefCnt > 0) second.Release();
             external.Release(); Assert.Equal(0, native.ReservedBytes);
         }
     }

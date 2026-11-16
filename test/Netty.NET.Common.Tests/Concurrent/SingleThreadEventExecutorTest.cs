@@ -84,7 +84,7 @@ public class SingleThreadEventExecutorTest
         {
             while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Invoke();
         }
-        public override void Wakeup(bool inEventLoop) => InterruptThread();
+        protected internal override void Wakeup(bool inEventLoop) => InterruptThread();
     }
     private sealed class CountingExecutor : SingleThreadEventExecutor
     {
@@ -390,11 +390,11 @@ public class SingleThreadEventExecutorTest
     // The pinned four JDK blocking-guard tests have no retained bulk method.
     // Native async composition yields the owner and explicitly dispatches owned
     // state after await. The design record maps these replacement scenarios.
-    [Fact] public Task NativeWhenAnyYieldsInEventLoop() => TestNativeCompositionInEventLoop(true, false);
-    [Fact] public Task NativeWhenAnyWithObserverTimeoutYieldsInEventLoop() => TestNativeCompositionInEventLoop(true, true);
-    [Fact] public Task NativeWhenAllYieldsInEventLoop() => TestNativeCompositionInEventLoop(false, false);
-    [Fact] public Task NativeWhenAllWithObserverTimeoutYieldsInEventLoop() => TestNativeCompositionInEventLoop(false, true);
-    private static async Task TestNativeCompositionInEventLoop(bool any, bool timeout)
+    [Fact] public Task TestInvokeAnyInEventLoop() => TestInvokeInEventLoop(true, false);
+    [Fact] public Task TestInvokeAnyInEventLoopWithTimeout() => TestInvokeInEventLoop(true, true);
+    [Fact] public Task TestInvokeAllInEventLoop() => TestInvokeInEventLoop(false, false);
+    [Fact] public Task TestInvokeAllInEventLoopWithTimeout() => TestInvokeInEventLoop(false, true);
+    private static async Task TestInvokeInEventLoop(bool any, bool timeout)
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("compose"));
         int calls = 0;
@@ -434,7 +434,7 @@ public class SingleThreadEventExecutorTest
                 RunAllTasks();
             }
         }
-        public override void Wakeup(bool inEventLoop)
+        protected internal override void Wakeup(bool inEventLoop)
         {
             if (!inEventLoop) { lock (this) Monitor.PulseAll(this); }
         }
@@ -592,7 +592,7 @@ public class SingleThreadEventExecutorTest
         {
             // Noop.
         });
-        var future = executor.Termination;
+        var future = executor.TerminationFuture;
         var task = future;
         Assert.Same(exception, await Assert.ThrowsAsync<InvalidOperationException>(() =>
             task.WaitAsync(TimeSpan.FromSeconds(5))));

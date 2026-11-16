@@ -46,8 +46,8 @@ public class ByteBufArraySourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -144,7 +144,7 @@ public class ByteBufArraySourceTest
         }
         Assert.Equal(sequential ? capacity : 0, buffer.ReaderIndex);
         Assert.Equal(sequential ? capacity : 0, buffer.WriterIndex);
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
     }
 
     public static IEnumerable<object[]> SpanCases()
@@ -192,7 +192,7 @@ public class ByteBufArraySourceTest
         Assert.Equal(expectedContent, ByteBufUtil.GetBytes(buffer, 0, 32));
         Assert.Equal(operation == 2 ? 19 : reader, buffer.ReaderIndex);
         Assert.Equal(operation == 3 ? 19 : writer, buffer.WriterIndex);
-        Assert.Equal(32, buffer.Capacity); Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(32, buffer.Capacity); Assert.Equal(1, buffer.RefCnt);
         buffer.SetIndex(0, 32).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal(3, buffer.ReaderIndex); Assert.Equal(25, buffer.WriterIndex);
     }

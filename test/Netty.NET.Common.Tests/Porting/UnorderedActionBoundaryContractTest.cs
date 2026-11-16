@@ -154,7 +154,7 @@ public class UnorderedActionBoundaryContractTest
             _ = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             executor.Execute(static () => { });
             Assert.NotNull(stop);
-            Assert.Same(executor.Termination, stop);
+            Assert.Same(executor.TerminationFuture, stop);
             release.Set();
             await stop.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
@@ -208,7 +208,7 @@ public class UnorderedActionBoundaryContractTest
         await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(
                 () => Assert.Same(stopped.Termination, stopped.Owner.StopAsync()), TestContext.Current.CancellationToken)))
             .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        await stopped.Owner.Termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await stopped.Owner.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         if (kind != "raw") Assert.True(stopped.Result.IsCanceled);
         Assert.Equal(0, stopped.Owner.PendingTaskCount);
         for (int attempt = 0; attempt < 10 && stopped.Payload.IsAlive; attempt++)
@@ -228,10 +228,10 @@ public class UnorderedActionBoundaryContractTest
         group.Execute(() => calls++);
         Assert.Equal(1, pool.PendingTaskCount);
         Task stopping = group.StopAsync();
-        Assert.Same(pool.Termination, stopping);
+        Assert.Same(pool.TerminationFuture, stopping);
         Assert.Same(stopping, group.StopAsync());
         Assert.Equal(0, calls);
-        await pool.Termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await pool.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Same(stopping, group.StopAsync());
     }
 }

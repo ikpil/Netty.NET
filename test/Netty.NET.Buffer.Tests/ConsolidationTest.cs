@@ -60,9 +60,9 @@ public class ConsolidationTest
         }
         public void Dispose()
         {
-            if (Current.ReferenceCount > 0) Current.Release();
-            Assert.All(Leaves, leaf => Assert.Equal(0, leaf.ReferenceCount));
-            Assert.All(Nodes, node => Assert.Equal(0, node.ReferenceCount)); Assert.Equal(0, Native.ReservedBytes);
+            if (Current.RefCnt > 0) Current.Release();
+            Assert.All(Leaves, leaf => Assert.Equal(0, leaf.RefCnt));
+            Assert.All(Nodes, node => Assert.Equal(0, node.RefCnt)); Assert.Equal(0, Native.ReservedBytes);
         }
     }
 
@@ -70,7 +70,7 @@ public class ConsolidationTest
     public void ShouldWrapInSequence(int kind)
     {
         using var graph = new Graph(kind, 1); ByteBuf copy = graph.Current.Copy();
-        try { Assert.Equal("a=1&", copy.GetString(Encoding.ASCII)); }
+        try { Assert.Equal("a=1&", copy.ToString(Encoding.ASCII)); }
         finally { copy.Release(); }
     }
 
@@ -78,7 +78,7 @@ public class ConsolidationTest
     public void ShouldConsolidationInSequence(int kind)
     {
         using var graph = new Graph(kind, 5); ByteBuf copy = graph.Current.Copy();
-        try { Assert.Equal("a=1&b=2&c=3&d=4&e=5&", copy.GetString(Encoding.ASCII)); }
+        try { Assert.Equal("a=1&b=2&c=3&d=4&e=5&", copy.ToString(Encoding.ASCII)); }
         finally { copy.Release(); }
     }
 
@@ -91,15 +91,15 @@ public class ConsolidationTest
     public void ComponentLimitDeterminesWhenNestedOwnersAreCopiedAndReleased(int kind, int limit)
     {
         using var graph = new Graph(kind, 5, limit); CompositeByteBuf current = graph.Current;
-        Assert.Equal(graph.Expected, current.GetString(Encoding.ASCII)); Assert.Equal(limit <= 2 ? 1 : 3, current.NumComponents);
+        Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII)); Assert.Equal(limit <= 2 ? 1 : 3, current.NumComponents);
         Assert.Equal(limit, current.MaxNumComponents); Assert.Equal(0, current.ReaderIndex); Assert.Equal(20, current.WriterIndex);
-        Assert.All(graph.Leaves, leaf => Assert.Equal(limit <= 2 ? 0 : 1, leaf.ReferenceCount));
-        Assert.All(graph.Nodes.Take(graph.Nodes.Count - 1), node => Assert.Equal(limit <= 2 ? 0 : 1, node.ReferenceCount));
+        Assert.All(graph.Leaves, leaf => Assert.Equal(limit <= 2 ? 0 : 1, leaf.RefCnt));
+        Assert.All(graph.Nodes.Take(graph.Nodes.Count - 1), node => Assert.Equal(limit <= 2 ? 0 : 1, node.RefCnt));
         ByteBuf copy = current.Copy();
         try
         {
             Assert.False(copy.IsDirect); current.SetByte(0, 'z');
-            Assert.Equal(graph.Expected, copy.GetString(Encoding.ASCII)); Assert.Equal((byte)'z', current.GetByte(0));
+            Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII)); Assert.Equal((byte)'z', current.GetByte(0));
         }
         finally { copy.Release(); }
     }
@@ -112,13 +112,13 @@ public class ConsolidationTest
         try
         {
             foreach (ByteBuf leaf in graph.Leaves) leaf.SetIndex(0, 1);
-            Assert.Equal(graph.Expected, current.GetString(0, 20, Encoding.ASCII));
+            Assert.Equal(graph.Expected, current.ToString(0, 20, Encoding.ASCII));
             graph.Leaves[0].SetByte(1, 'z'); Assert.Equal((byte)'z', current.GetByte(0));
             Assert.Same(current, current.Consolidate()); Assert.Equal(1, current.NumComponents); Assert.False(current.IsDirect);
-            Assert.Equal("z=1&b=2&c=3&d=4&e=5&", current.GetString(0, 20, Encoding.ASCII));
-            Assert.Equal(graph.Expected, copy.GetString(Encoding.ASCII)); Assert.All(graph.Leaves, leaf => Assert.Equal(0, leaf.ReferenceCount));
+            Assert.Equal("z=1&b=2&c=3&d=4&e=5&", current.ToString(0, 20, Encoding.ASCII));
+            Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII)); Assert.All(graph.Leaves, leaf => Assert.Equal(0, leaf.RefCnt));
             current.SetIndex(3, 17).ResetReaderIndex().ResetWriterIndex(); Assert.Equal(2, current.ReaderIndex); Assert.Equal(18, current.WriterIndex);
-            Assert.Equal(1, current.ReferenceCount); Assert.Equal(1, copy.ReferenceCount); Assert.Equal(0, graph.Native.ReservedBytes);
+            Assert.Equal(1, current.RefCnt); Assert.Equal(1, copy.RefCnt); Assert.Equal(0, graph.Native.ReservedBytes);
         }
         finally { copy.Release(); }
     }
@@ -131,8 +131,8 @@ public class ConsolidationTest
         bool direct = leaf.IsDirect; byte original = leaf.GetByte(0);
         using (var pin = leaf.AsReadOnlyMemory(0, 1).Pin())
         {
-            current.Consolidate(); Assert.All(graph.Leaves, value => Assert.Equal(0, value.ReferenceCount));
-            Assert.Equal(graph.Expected, current.GetString(Encoding.ASCII)); Assert.Equal(original, *(byte*)pin.Pointer);
+            current.Consolidate(); Assert.All(graph.Leaves, value => Assert.Equal(0, value.RefCnt));
+            Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII)); Assert.Equal(original, *(byte*)pin.Pointer);
             current.Release(); Assert.Equal(original, *(byte*)pin.Pointer);
             if (direct) Assert.True(graph.Native.ReservedBytes > 0); else Assert.Equal(0, graph.Native.ReservedBytes);
         }

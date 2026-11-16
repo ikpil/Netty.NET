@@ -105,31 +105,33 @@ their manifest entries are framework replacements, with this decision as evidenc
 
 ### PromiseCombinerTest (12 original methods)
 
-| Original method | Native scenario / decision |
-| --- | --- |
-| testNullArgument | Required input rejection and recovery through TCS TrySetFromTask; a separate aggregate producer is optional. |
-| testNullAggregatePromise | An empty Task batch succeeds without an aggregate producer. |
-| testAddNullPromise | WhenAll rejects a null child; its native argument exception is used. |
-| testAddAllNullPromise | WhenAll rejects a null task array. |
-| testAddAfterFinish, testAddAllAfterFinish | A started batch snapshots the inputs; later collection additions cannot change that batch. Java builder prohibitions have no native counterpart. |
-| testFinishCalledTwiceThrows | Multiple independent observers are allowed; there is no builder instance to finish twice. |
-| testAddAllSuccess | Two pending Tasks complete the aggregate only after both finish. |
-| testAddSuccess | Incrementally collected already-completed Tasks succeed. |
-| testAddAllFail | Wait for all pending failures and retain both original exception objects. |
-| testAddFail | Already-completed failures retain their identities. |
-| testEventExecutor | Real-executor consumer collects different Task<T> values and explicitly transfers foreign completions on the event loop. No mutable combiner with a separate thread guard remains. |
+| Original method | CLR test (TaskWhenAllPortTest) | Native scenario / decision |
+| --- | --- | --- |
+| testNullArgument | TestNullArgument | Required input rejection and recovery through TCS TrySetFromTask; a separate aggregate producer is optional. |
+| testNullAggregatePromise | TestNullAggregatePromise | An empty Task batch succeeds without an aggregate producer. |
+| testAddNullPromise | TestAddNullPromise | WhenAll rejects a null child; its native argument exception is used. |
+| testAddAllNullPromise | TestAddAllNullPromise | WhenAll rejects a null task array. |
+| testAddAfterFinish | TestAddAfterFinish | A started batch snapshots the inputs; a later single collection addition cannot change that batch. The Java builder prohibition has no native counterpart. |
+| testAddAllAfterFinish | TestAddAllAfterFinish | A started batch snapshots the inputs; a later range addition cannot change that batch. The Java builder prohibition has no native counterpart. |
+| testFinishCalledTwiceThrows | TestFinishCalledTwiceThrows | Multiple independent observers are allowed; there is no builder instance to finish twice. |
+| testAddAllSuccess | TestAddAllSuccess | Two pending Tasks complete the aggregate only after both finish. |
+| testAddSuccess | TestAddSuccess | Incrementally collected already-completed Tasks succeed. |
+| testAddAllFail | TestAddAllFail | Wait for all pending failures and retain both original exception objects. |
+| testAddFail | TestAddFail | Already-completed failures retain their identities. |
+| testEventExecutor | TestEventExecutor | Real-executor consumer collects different Task<T> values and explicitly transfers foreign completions on the event loop. No mutable combiner with a separate thread guard remains. |
 
 Additional cases cover input duplication, fault/cancellation precedence in both
 orders, canceled token retention and synchronously revived write collection.
 
 ### PromiseNotifierTest (5 original methods)
 
-| Original method | Native scenario / decision |
-| --- | --- |
-| testNullPromisesArray, testNullPromiseInArray | The notifier constructor/array is removed. Required completed-source validation belongs to native TrySetFromTask; callers own any fan-out collection. |
-| testListenerSuccess | Two actual TCS producers receive the identical result reference. |
-| testListenerFailure | Two actual TCS producers receive the original failure object. |
-| testCancelPropagationWhenFusedFromFuture | Completed source cancellation/token is transferred, or the source Task is shared directly. Consumer cancellation requests use explicit owned tokens. |
+| Original method | CLR test (TaskCompletionTransferPortTest) | Native scenario / decision |
+| --- | --- | --- |
+| testNullPromisesArray | TestNullPromisesArray | The notifier constructor/array is removed; callers own any fan-out collection. Required completed-source validation belongs to native TrySetFromTask, which rejects a null source with ArgumentNullException without consuming the producer. |
+| testNullPromiseInArray | TestNullPromiseInArray | No notifier array element is validated; callers own any fan-out collection and its elements. Native TrySetFromTask validation rejects an invalid, incomplete source with ArgumentException without consuming the producer. |
+| testListenerSuccess | TestListenerSuccess | Two actual TCS producers receive the identical result reference. |
+| testListenerFailure | TestListenerFailure | Two actual TCS producers receive the original failure object. |
+| testCancelPropagationWhenFusedFromFuture | TestCancelPropagationWhenFusedFromFuture | Completed source cancellation/token is transferred, or the source Task is shared directly. Consumer cancellation requests use explicit owned tokens. |
 
 Additional cases cover already-completed targets, faulted cancellation exceptions,
 multiple/nested exception preservation, null successful results, incomplete-source
@@ -142,14 +144,14 @@ claimed for a removed notifier constructor.
 
 ### PromiseAggregatorTest (6 original methods)
 
-| Original method | Native scenario / decision |
-| --- | --- |
-| testNullAggregatePromise | No required aggregate-producer argument exists; an optional owner uses TCS TrySetFromTask and cannot overwrite its result. |
-| testAddNullFuture | A required task array cannot be null. |
-| testSuccessfulNoPending | An empty batch succeeds. |
-| testSuccessfulPending | Two pending Tasks are observed through their read-only views. Null entries are rejected rather than silently skipped. |
-| testFailedFutureFailPending | A failure cannot manufacture sibling producer outcomes. WhenAll waits for their real completion; explicit cancellation remains the owner's choice. |
-| testFailedFutureNoFailPending | Siblings remain unaffected. WhenAny supplies early observation when required, and WhenAll retains the eventual aggregate failure. |
+| Original method | CLR test (TaskAggregationOwnershipPortTest) | Native scenario / decision |
+| --- | --- | --- |
+| testNullAggregatePromise | TestNullAggregatePromise | No required aggregate-producer argument exists; an optional owner uses TCS TrySetFromTask and cannot overwrite its result. |
+| testAddNullFuture | TestAddNullFuture | A required task array cannot be null. |
+| testSuccessfulNoPending | TestSuccessfulNoPending | An empty batch succeeds. |
+| testSuccessfulPending | TestSuccessfulPending | Two pending Tasks are observed through their read-only views. Null entries are rejected rather than silently skipped. |
+| testFailedFutureFailPending | TestFailedFutureFailPending | A failure cannot manufacture sibling producer outcomes. WhenAll waits for their real completion; explicit cancellation remains the owner's choice. |
+| testFailedFutureNoFailPending | TestFailedFutureNoFailPending | Siblings remain unaffected. WhenAny supplies early observation when required, and WhenAll retains the eventual aggregate failure. |
 
 This intentionally does not recreate deprecated Java fail-pending mutation as a
 second native aggregation class.
@@ -197,7 +199,9 @@ step, not a claim that common is complete.
 
 The pending UnaryPromiseNotifier entry is a CLR replacement, not a missing native
 implementation. The pinned all-module search finds no caller. Its completion
-forwarding is already exercised by TaskCompletionTransferPortTest's ten cases:
+forwarding is already exercised by TaskCompletionTransferPortTest's cases (ten when
+this review was recorded; eleven since the 2026-11-14 split of the merged validation
+test into TestNullPromisesArray and TestNullPromiseInArray):
 result/failure identity, canceled token, target overwrite rejection, faulted
 OperationCanceledException, full non-generic failure transfer, validation, observer
 cancellation and real executor cancellation ownership. These cases run in the

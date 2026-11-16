@@ -16,6 +16,8 @@
 
 using System;
 using System.Text;
+using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -33,13 +35,22 @@ public abstract partial class ByteBuf
          *         current VM
          */
     /// <summary>Decodes readable bytes using the caller's encoding and fallback policy.</summary>
-    public virtual string GetString(Encoding encoding) => GetString(_readerIndex, ReadableBytes, encoding);
+    public virtual string ToString(Encoding charset) => ToString(_readerIndex, ReadableBytes, charset);
 
     /**
          * Decodes this buffer's sub-region into a string with the specified
          * character set.  This method does not modify {@code readerIndex} or
          * {@code writerIndex} of this buffer.
          */
+    /// <summary>Decodes a capacity-bounded range without changing either index.</summary>
+    public virtual string ToString(int index, int length, Encoding charset)
+    {
+        ArgumentNullException.ThrowIfNull(charset);
+        if (TryGetReadOnlyMemory(index, length, out var memory)) return charset.GetString(memory.Span);
+        byte[] bytes = new byte[length]; GetBytesCore(index, bytes);
+        return charset.GetString(bytes);
+    }
+
     /**
      * Gets a {@link CharSequence} with the given length at the given index.
      *
@@ -49,17 +60,37 @@ public abstract partial class ByteBuf
      * @throws IndexOutOfBoundsException
      *         if {@code length} is greater than {@code this.readableBytes}
      */
-    // CLR: CharSequence is represented by the same immutable string API.
-    /// <summary>Decodes a capacity-bounded range without changing either index.</summary>
-    public virtual string GetString(int index, int length, Encoding encoding)
+    // CLR: CharSequence is ICharSequence. .NET has no Charset identity, so US-ASCII and ISO-8859-1 are recognized by
+    // their code pages (20127, 28591); any other encoding returns the decoded string as a StringCharSequence.
+    public virtual ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
-        // Original single-byte CharSequence path:
-        // ByteBufUtil.getBytes(...) will return a new copy which the AsciiString uses directly
-        // CLR: Encoding and immutable strings replace the AsciiString byte-array representation.
-        ArgumentNullException.ThrowIfNull(encoding);
-        if (TryGetReadOnlyMemory(index, length, out var memory)) return encoding.GetString(memory.Span);
-        byte[] bytes = new byte[length]; GetBytesCore(index, bytes);
-        return encoding.GetString(bytes);
+        ArgumentNullException.ThrowIfNull(charset);
+        if (charset.CodePage is 20127 or 28591)
+        {
+            // ByteBufUtil.getBytes(...) will return a new copy which the AsciiString uses directly
+            return new AsciiString(ByteBufUtil.GetBytes(this, index, length, true), false);
+        }
+        return new StringCharSequence(ToString(index, length, charset));
+    }
+
+    /**
+     * Gets a {@link CharSequence} with the given length at the current {@code readerIndex}
+     * and increases the {@code readerIndex} by the given length.
+     *
+     * @param length the length to read
+     * @param charset that should be used
+     * @return the sequence
+     * @throws IndexOutOfBoundsException
+     *         if {@code length} is greater than {@code this.readableBytes}
+     */
+    // CLR: as ReadString does, the readable range is checked first (the Javadoc's IndexOutOfBoundsException contract)
+    // and the reader advances only after decoding succeeds.
+    public virtual ICharSequence ReadCharSequence(int length, Encoding charset)
+    {
+        CheckReadableBytes(length);
+        ICharSequence sequence = GetCharSequence(_readerIndex, length, charset);
+        _readerIndex += length;
+        return sequence;
     }
 
     /**
@@ -72,22 +103,11 @@ public abstract partial class ByteBuf
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
-    /**
-     * Gets a {@link CharSequence} with the given length at the current {@code readerIndex}
-     * and increases the {@code readerIndex} by the given length.
-     *
-     * @param length the length to read
-     * @param charset that should be used
-     * @return the sequence
-     * @throws IndexOutOfBoundsException
-     *         if {@code length} is greater than {@code this.readableBytes}
-     */
-    // CLR: CharSequence is represented by the same immutable string API.
     /// <summary>Decodes written bytes and advances the reader only after successful decoding.</summary>
-    public virtual string ReadString(int length, Encoding encoding)
+    public virtual string ReadString(int length, Encoding charset)
     {
         CheckReadableBytes(length);
-        string result = GetString(_readerIndex, length, encoding);
+        string result = ToString(_readerIndex, length, charset);
         _readerIndex += length;
         return result;
     }
@@ -104,12 +124,12 @@ public abstract partial class ByteBuf
          *         if the sequence at the given index would be out of bounds of the buffer capacity
          */
     /// <summary>Encodes text without growing the buffer or changing indices. No preamble is emitted.</summary>
-    public virtual int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
+    public virtual int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
     {
-        ArgumentNullException.ThrowIfNull(encoding);
+        ArgumentNullException.ThrowIfNull(charset);
         EnsureCanWrite();
-        int length = encoding.GetByteCount(text);
-        return EncodeString(index, text, encoding, length);
+        int length = charset.GetByteCount(sequence);
+        return EncodeString(index, sequence, charset, length);
     }
 
     private int EncodeString(int index, ReadOnlySpan<char> text, Encoding encoding, int length)
@@ -136,15 +156,15 @@ public abstract partial class ByteBuf
     /// <summary>Reserves the exact encoded length, writes text, and advances the writer after success.</summary>
     /// <remarks>The supplied Encoding controls malformed/unmappable input. No preamble is emitted.
     /// Use ByteBufUtil.WriteUtf8/WriteAscii when Netty's specialized byte mapping is required.</remarks>
-    public virtual int WriteString(ReadOnlySpan<char> text, Encoding encoding)
+    public virtual int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
     {
-        ArgumentNullException.ThrowIfNull(encoding);
+        ArgumentNullException.ThrowIfNull(charset);
         // A UTF-16 span can alias native storage through MemoryMarshal.Cast. Keep it alive across growth.
         using var lease = PinMemoryForWrite();
         EnsureAccessible();
-        int length = encoding.GetByteCount(text);
+        int length = charset.GetByteCount(sequence);
         EnsureWritable(length);
-        int written = EncodeString(_writerIndex, text, encoding, length);
+        int written = EncodeString(_writerIndex, sequence, charset, length);
         _writerIndex += written;
         return written;
     }

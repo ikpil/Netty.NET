@@ -40,14 +40,14 @@ public class CompositeByteBufStructuralDispatchTest
         {
             // Composites own their inserted sources; rejected inputs remain caller-owned.
             foreach (ByteBuf buffer in _buffers)
-                if (buffer is CompositeByteBuf && buffer.ReferenceCount > 0) buffer.Release();
+                if (buffer is CompositeByteBuf && buffer.RefCnt > 0) buffer.Release();
             foreach (ByteBuf buffer in _buffers)
             {
                 if (buffer is Trap trap)
                     foreach (ByteBuf rejected in trap.RejectedInputs)
-                        if (rejected.ReferenceCount > 0) rejected.Release();
-                if (buffer.ReferenceCount > 0) buffer.Release();
-                Assert.Equal(0, buffer.ReferenceCount);
+                        if (rejected.RefCnt > 0) rejected.Release();
+                if (buffer.RefCnt > 0) buffer.Release();
+                Assert.Equal(0, buffer.RefCnt);
             }
             (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -147,7 +147,7 @@ public class CompositeByteBufStructuralDispatchTest
         buffer.Capacity = 8;
         Assert.Equal(8, buffer.Capacity); Assert.Equal(1, buffer.NumComponents);
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(buffer, 0, 4));
-        Assert.Equal(direct, buffer.IsDirect); Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(direct, buffer.IsDirect); Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
         buffer.SetIndex(0, 8).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(3, buffer.WriterIndex);
         Assert.Empty(buffer.Calls);
@@ -169,12 +169,12 @@ public class CompositeByteBufStructuralDispatchTest
         {
             CompositeByteBuf source = s.Own(s.Allocator.CompositeBuffer(2).AddComponent(second, true));
             buffer.AddFlattenedComponents(source, true);
-            Assert.Equal(0, source.ReferenceCount);
+            Assert.Equal(0, source.RefCnt);
         }
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(buffer));
         Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex);
         Assert.Equal(1, buffer.NumComponents); Assert.Equal(direct, buffer.IsDirect);
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
         Assert.Empty(buffer.Calls);
     }
 
@@ -216,8 +216,8 @@ public class CompositeByteBufStructuralDispatchTest
             buffer.SetIndex(0, buffer.Capacity).ResetWriterIndex().ResetReaderIndex();
             Assert.Equal(reader, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
         }
-        Assert.Equal(2, buffer.NumComponents); Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(1, second.ReferenceCount); Assert.Equal(1, third.ReferenceCount); Assert.Empty(buffer.Calls);
+        Assert.Equal(2, buffer.NumComponents); Assert.Equal(0, first.RefCnt);
+        Assert.Equal(1, second.RefCnt); Assert.Equal(1, third.RefCnt); Assert.Empty(buffer.Calls);
     }
 
     [Theory]
@@ -230,7 +230,7 @@ public class CompositeByteBufStructuralDispatchTest
         ByteBuf source = s.Data(1, 2, 3, 4);
         Assert.Same(buffer, buffer.AddFlattenedComponents(source, true));
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(buffer));
-        Assert.Equal(1, source.ReferenceCount); Assert.Equal(1, buffer.NumComponents); Assert.Empty(buffer.Calls);
+        Assert.Equal(1, source.RefCnt); Assert.Equal(1, buffer.NumComponents); Assert.Empty(buffer.Calls);
     }
 
     [Theory]

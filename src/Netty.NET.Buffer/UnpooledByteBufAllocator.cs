@@ -14,8 +14,10 @@
  * under the License.
  */
 
+using System.Globalization;
 using System.Threading;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -105,6 +107,6 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
         internal void AddHeap(long amount) => Interlocked.Add(ref _heapBytes, amount);
         internal void AddDirect(long amount) => Interlocked.Add(ref _directBytes, amount);
         public override string ToString()
-            => $"{nameof(UnpooledByteBufAllocatorMetric)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory})";
+            => string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory})");
     }
 }

@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace Netty.NET.Common.Internal;
@@ -107,7 +108,7 @@ public class BoundedStream : Stream
     {
         if (_numRead > _maxBytesRead)
         {
-            throw new IOException($"Maximum number of bytes read: {_numRead}");
+            throw new IOException("Maximum number of bytes read: " + _numRead.ToString(CultureInfo.InvariantCulture));
         }
     }
 

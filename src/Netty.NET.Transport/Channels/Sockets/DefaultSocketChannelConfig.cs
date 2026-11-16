@@ -19,54 +19,47 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Netty.NET.Common;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Channels.Sockets;
 
-/// <summary>Socket options mapped to the CLR socket owned by the channel.</summary>
+/// <summary>Socket options mapped to the CLR socket owned by a connected stream channel.</summary>
 /**
  * The default {@link SocketChannelConfig} implementation.
  */
-/**
- * The default {@link ServerSocketChannelConfig} implementation.
- */
-// CLR: one implementation shares the option dispatch, with separate listener,
-// TCP stream and domain option sets. Typed ChannelOption access replaces Java's
-// fluent config subinterfaces. Socket performance preferences have no CLR API.
-public class DefaultSocketChannelConfig : DefaultChannelConfig
+// CLR: one implementation serves the connected TCP stream and the Unix domain stream. The domain
+// stream keeps the separate receive/send buffer and half-closure option set of Java's private
+// NioDomainSocketChannelConfig; Linux-only TCP stream options stay on the TCP stream. The listener
+// role is DefaultServerSocketChannelConfig. Typed accessors use the CLR Socket owned by the channel
+// and wrap SocketException in ChannelException where the source wraps java.net.SocketException.
+public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelConfig
 {
-    protected override void AutoReadCleared()
-    { if (Channel is AbstractChannel channel) channel.ClearReadPending(); }
-    protected readonly Socket Socket;
-    private volatile bool _halfClosure;
-    private int _backlog = NetUtil.DefaultListenBacklog;
-    private int _tcpFastOpen;
+    protected readonly Socket JavaSocket;
+    private volatile bool _allowHalfClosure;
     private bool _tcpFastOpenConnect;
     private LinuxTcpMd5Keys _tcpMd5Keys;
+
     /**
      * Creates a new instance.
      */
-    public DefaultSocketChannelConfig(IChannel channel, Socket socket)
-        : base(channel, channel is IServerChannel ? new ServerChannelRecvByteBufAllocator() : new AdaptiveRecvByteBufAllocator())
+    // CLR: TCP_NODELAY is enabled once by the NioSocketChannel constructor, under the same
+    // PlatformDependent.canEnableTcpNoDelayByDefault() guard and ignoring any failure, so lazy Config creation
+    // cannot overwrite a caller or accepted-socket choice made afterwards.
+    public DefaultSocketChannelConfig(IChannel channel, Socket javaSocket) : base(channel)
     {
-        Socket = socket ?? throw new ArgumentNullException(nameof(socket));
+        JavaSocket = javaSocket ?? throw new ArgumentNullException(nameof(javaSocket));
     }
+
+    protected override void AutoReadCleared()
+    { if (Channel is AbstractChannel channel) channel.ClearReadPending(); }
+
     private static readonly ChannelOption[] StreamOptions = {
         ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.TCP_NODELAY,
         ChannelOption.SO_KEEPALIVE, ChannelOption.SO_REUSEADDR, ChannelOption.SO_LINGER,
         ChannelOption.IP_TOS, ChannelOption.ALLOW_HALF_CLOSURE
     };
-    private static readonly ChannelOption[] ListenerOptions = {
-        ChannelOption.SO_RCVBUF, ChannelOption.SO_REUSEADDR, ChannelOption.SO_BACKLOG
-    };
     private static readonly ChannelOption[] DomainStreamOptions = {
         ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.ALLOW_HALF_CLOSURE
-    };
-    private static readonly ChannelOption[] DomainListenerOptions = { ChannelOption.SO_RCVBUF, ChannelOption.SO_BACKLOG };
-    private static readonly (ChannelOption Option, int Level, int Name)[] LinuxListenerOptions = {
-        (ChannelOption.SO_REUSEPORT, LinuxSocketOptions.SolSocket, LinuxSocketOptions.SoReusePort),
-        (ChannelOption.IP_FREEBIND, (int)SocketOptionLevel.IP, LinuxSocketOptions.IpFreeBind),
-        (ChannelOption.TCP_DEFER_ACCEPT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpDeferAccept)
     };
     private static readonly (ChannelOption Option, int Level, int Name)[] LinuxStreamOptions = {
         (ChannelOption.IP_BIND_ADDRESS_NO_PORT, (int)SocketOptionLevel.IP, LinuxSocketOptions.IpBindAddressNoPort),
@@ -74,14 +67,11 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         (ChannelOption.TCP_QUICKACK, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpQuickAck),
         (ChannelOption.TCP_NOTSENT_LOWAT, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpNotSentLowAt)
     };
-    private ChannelOption[] SupportedSocketOptions => Socket.AddressFamily != AddressFamily.Unix
-        ? Channel is IServerChannel ? ListenerOptions : StreamOptions
-        : Channel is IServerChannel ? DomainListenerOptions : DomainStreamOptions;
-    private bool IsLinuxTcp => OperatingSystem.IsLinux() && Socket.ProtocolType == ProtocolType.Tcp;
-    private bool HasTcpFastOpen => IsLinuxTcp && Channel is IServerChannel;
-    private bool IsTcpStream => Socket.ProtocolType == ProtocolType.Tcp && Channel is not IServerChannel;
-    private ReadOnlySpan<(ChannelOption Option, int Level, int Name)> LinuxOptions => !IsLinuxTcp
-        ? [] : Channel is IServerChannel ? LinuxListenerOptions : LinuxStreamOptions;
+    private ChannelOption[] SupportedSocketOptions => JavaSocket.AddressFamily != AddressFamily.Unix
+        ? StreamOptions : DomainStreamOptions;
+    private bool IsLinuxTcp => OperatingSystem.IsLinux() && JavaSocket.ProtocolType == ProtocolType.Tcp;
+    private bool IsTcpStream => JavaSocket.ProtocolType == ProtocolType.Tcp;
+    private ReadOnlySpan<(ChannelOption Option, int Level, int Name)> LinuxOptions => IsLinuxTcp ? LinuxStreamOptions : [];
 
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
@@ -92,55 +82,48 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         foreach (var option in LinuxOptions)
             if (TryGetValue(option.Option, out var value))
                 values[option.Option] = value;
-        if (HasTcpFastOpen)
-            values[ChannelOption.TCP_FASTOPEN] = Volatile.Read(ref _tcpFastOpen);
         if (IsTcpStream)
             values[ChannelOption.TCP_FASTOPEN_CONNECT] = Volatile.Read(ref _tcpFastOpenConnect);
         return values;
     }
+
     protected override bool TryGetValue(ChannelOption option, out object value)
     {
-        if (Array.IndexOf(SupportedSocketOptions, option) < 0 &&
-            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen) &&
-            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream) &&
-            FindLinuxOption(option) == null)
-            return base.TryGetValue(option, out value);
-        if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
-            value = Socket.ReceiveBufferSize;
-        else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
-            value = Socket.SendBufferSize;
-        else if (ReferenceEquals(option, ChannelOption.TCP_NODELAY))
-            value = Socket.NoDelay;
-        else if (ReferenceEquals(option, ChannelOption.SO_KEEPALIVE))
-            value = (int)Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive) != 0;
-        else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
-            value = (int)Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
-        else if (ReferenceEquals(option, ChannelOption.SO_LINGER))
-            value = Socket.LingerState.Enabled ? Socket.LingerState.LingerTime : -1;
-        else if (ReferenceEquals(option, ChannelOption.IP_TOS))
-            value = GetTrafficClass();
-        else if (ReferenceEquals(option, ChannelOption.ALLOW_HALF_CLOSURE))
-            value = _halfClosure;
-        else if (ReferenceEquals(option, ChannelOption.SO_BACKLOG))
-            value = Volatile.Read(ref _backlog);
-        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
-            value = Volatile.Read(ref _tcpFastOpen);
-        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
-            value = Volatile.Read(ref _tcpFastOpenConnect);
-        else if (FindLinuxOption(option) is { } native)
+        if (Array.IndexOf(SupportedSocketOptions, option) >= 0)
         {
-            int raw = LinuxSocketOptions.GetInt(Socket, native.Level, native.Name);
-            value = option switch
-            {
-                ChannelOption<bool> => raw != 0,
-                ChannelOption<long> => (long)unchecked((uint)raw),
-                _ => raw
-            };
+            if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
+                value = GetReceiveBufferSize();
+            else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
+                value = GetSendBufferSize();
+            else if (ReferenceEquals(option, ChannelOption.TCP_NODELAY))
+                value = IsTcpNoDelay();
+            else if (ReferenceEquals(option, ChannelOption.SO_KEEPALIVE))
+                value = IsKeepAlive();
+            else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
+                value = IsReuseAddress();
+            else if (ReferenceEquals(option, ChannelOption.SO_LINGER))
+                value = GetSoLinger();
+            else if (ReferenceEquals(option, ChannelOption.IP_TOS))
+                value = GetTrafficClass();
+            else if (ReferenceEquals(option, ChannelOption.ALLOW_HALF_CLOSURE))
+                value = IsAllowHalfClosure();
+            else
+                return base.TryGetValue(option, out value);
+            return true;
         }
-        else
-            return base.TryGetValue(option, out value);
-        return true;
+        if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
+        {
+            value = Volatile.Read(ref _tcpFastOpenConnect);
+            return true;
+        }
+        if (FindLinuxOption(option) is { } native)
+        {
+            value = LinuxSocketOptions.GetOptionValue(JavaSocket, option, native.Level, native.Name);
+            return true;
+        }
+        return base.TryGetValue(option, out value);
     }
+
     protected override bool SetValue(ChannelOption option, object value)
     {
         /**
@@ -151,91 +134,272 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig
         if (ReferenceEquals(option, ChannelOption.TCP_MD5SIG) && IsLinuxTcp)
         {
             var keys = LazyInitializer.EnsureInitialized(ref _tcpMd5Keys,
-                () => new LinuxTcpMd5Keys(Socket, Channel.Parent is IServerChannel));
+                () => new LinuxTcpMd5Keys(JavaSocket, Channel.Parent is IServerChannel));
             keys.Replace((IReadOnlyDictionary<IPAddress, byte[]>)value);
             return true;
         }
-        if (Array.IndexOf(SupportedSocketOptions, option) < 0 &&
-            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen) &&
-            !(ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream) &&
-            FindLinuxOption(option) == null)
-            return base.SetValue(option, value);
-        if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
+        if (Array.IndexOf(SupportedSocketOptions, option) >= 0)
         {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)value);
-            Socket.ReceiveBufferSize = (int)value;
+            if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
+                SetReceiveBufferSize((int)value);
+            else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
+                SetSendBufferSize((int)value);
+            else if (ReferenceEquals(option, ChannelOption.TCP_NODELAY))
+                SetTcpNoDelay((bool)value);
+            else if (ReferenceEquals(option, ChannelOption.SO_KEEPALIVE))
+                SetKeepAlive((bool)value);
+            else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
+                SetReuseAddress((bool)value);
+            else if (ReferenceEquals(option, ChannelOption.SO_LINGER))
+                SetSoLinger((int)value);
+            else if (ReferenceEquals(option, ChannelOption.IP_TOS))
+                SetTrafficClass((int)value);
+            else if (ReferenceEquals(option, ChannelOption.ALLOW_HALF_CLOSURE))
+                SetAllowHalfClosure((bool)value);
+            else
+                return base.SetValue(option, value);
+            return true;
         }
-        else if (ReferenceEquals(option, ChannelOption.SO_SNDBUF))
+        if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
         {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)value);
-            Socket.SendBufferSize = (int)value;
-            if (Channel is SocketStreamChannel stream) stream.CalculateMaxBytesPerGatheringWrite();
-        }
-        else if (ReferenceEquals(option, ChannelOption.TCP_NODELAY))
-            Socket.NoDelay = (bool)value;
-        else if (ReferenceEquals(option, ChannelOption.SO_KEEPALIVE))
-            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, (bool)value);
-        else if (ReferenceEquals(option, ChannelOption.SO_REUSEADDR))
-            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, (bool)value);
-        else if (ReferenceEquals(option, ChannelOption.SO_LINGER))
-            // java.net.Socket disables negative linger and clamps enabled linger to an unsigned short.
-            Socket.LingerState = new LingerOption((int)value >= 0, Math.Clamp((int)value, 0, ushort.MaxValue));
-        else if (ReferenceEquals(option, ChannelOption.IP_TOS))
-            SetTrafficClass((int)value);
-        else if (ReferenceEquals(option, ChannelOption.ALLOW_HALF_CLOSURE))
-            _halfClosure = (bool)value;
-        else if (ReferenceEquals(option, ChannelOption.SO_BACKLOG))
-        { ArgumentOutOfRangeException.ThrowIfNegative((int)value); Volatile.Write(ref _backlog, (int)value); }
-        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && HasTcpFastOpen)
-        {
-            int queue = (int)value;
-            ArgumentOutOfRangeException.ThrowIfNegative(queue);
-            Volatile.Write(ref _tcpFastOpen, queue);
-        }
-        else if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
             Volatile.Write(ref _tcpFastOpenConnect, (bool)value);
-        else if (FindLinuxOption(option) is { } native)
+            return true;
+        }
+        if (FindLinuxOption(option) is { } native)
         {
-            int raw;
-            if (value is long threshold)
+            LinuxSocketOptions.SetOptionValue(JavaSocket, native.Level, native.Name, value);
+            return true;
+        }
+        return base.SetValue(option, value);
+    }
+
+    // CLR: Socket.ReceiveBufferSize reads and writes SO_RCVBUF.
+    // https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.receivebuffersize
+    public int GetReceiveBufferSize()
+    {
+        try
+        {
+            return JavaSocket.ReceiveBufferSize;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    // CLR: Socket.SendBufferSize reads and writes SO_SNDBUF.
+    public int GetSendBufferSize()
+    {
+        try
+        {
+            return JavaSocket.SendBufferSize;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    // CLR: java.net.Socket.getSoLinger returns -1 when lingering is disabled; LingerOption carries
+    // the enabled flag separately. https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.lingerstate
+    public int GetSoLinger()
+    {
+        try
+        {
+            LingerOption linger = JavaSocket.LingerState;
+            return linger.Enabled ? linger.LingerTime : -1;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    public int GetTrafficClass()
+    {
+        try
+        {
+            if (OperatingSystem.IsLinux() && JavaSocket.AddressFamily == AddressFamily.InterNetworkV6)
+                return LinuxSocketOptions.GetInt(JavaSocket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass);
+            return (int)JavaSocket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    // CLR: SocketOptionName.KeepAlive at the socket level is SO_KEEPALIVE.
+    public bool IsKeepAlive()
+    {
+        try
+        {
+            return (int)JavaSocket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive) != 0;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    // CLR: SocketOptionName.ReuseAddress at the socket level is SO_REUSEADDR.
+    public bool IsReuseAddress()
+    {
+        try
+        {
+            return (int)JavaSocket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    // CLR: Socket.NoDelay reads and writes TCP_NODELAY.
+    public bool IsTcpNoDelay()
+    {
+        try
+        {
+            return JavaSocket.NoDelay;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+    }
+
+    public virtual ISocketChannelConfig SetKeepAlive(bool keepAlive)
+    {
+        try
+        {
+            JavaSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, keepAlive);
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    // CLR: OpenJDK java.net.Socket.setPerformancePreferences has an empty body ("Not implemented yet")
+    // and sun.nio.ch.SocketAdaptor does not override it, so the source call never reaches the OS.
+    // The CLR Socket has no counterpart; this keeps the source's observable no-op.
+    // https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/net/Socket.java
+    public virtual ISocketChannelConfig SetPerformancePreferences(
+            int connectionTime, int latency, int bandwidth)
+    {
+        return this;
+    }
+
+    // CLR: java.net.Socket rejects a nonpositive size with IllegalArgumentException before the
+    // native call; Socket.ReceiveBufferSize only rejects negative values.
+    public virtual ISocketChannelConfig SetReceiveBufferSize(int receiveBufferSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(receiveBufferSize);
+        try
+        {
+            JavaSocket.ReceiveBufferSize = receiveBufferSize;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    public virtual ISocketChannelConfig SetReuseAddress(bool reuseAddress)
+    {
+        try
+        {
+            JavaSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, reuseAddress);
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    // CLR: java.net.Socket rejects a nonpositive size with IllegalArgumentException before the
+    // native call. The NIO stream configs then recalculate the gathering-write limit
+    // (NioSocketChannelConfig/NioDomainSocketChannelConfig.setSendBufferSize).
+    public virtual ISocketChannelConfig SetSendBufferSize(int sendBufferSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sendBufferSize);
+        try
+        {
+            JavaSocket.SendBufferSize = sendBufferSize;
+            if (Channel is AbstractNioByteChannel stream) stream.CalculateMaxBytesPerGatheringWrite();
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    public virtual ISocketChannelConfig SetSoLinger(int soLinger)
+    {
+        try
+        {
+            // java.net.Socket disables negative linger and clamps enabled linger to an unsigned short.
+            JavaSocket.LingerState = new LingerOption(soLinger >= 0, Math.Clamp(soLinger, 0, ushort.MaxValue));
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    public virtual ISocketChannelConfig SetTcpNoDelay(bool tcpNoDelay)
+    {
+        try
+        {
+            JavaSocket.NoDelay = tcpNoDelay;
+        }
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    // CLR: java.net.Socket.setTrafficClass rejects values outside 0..255 before the native call.
+    // An IPv6 Linux socket sets IPV6_TCLASS, and also IP_TOS when it carries IPv4-mapped peers.
+    public virtual ISocketChannelConfig SetTrafficClass(int trafficClass)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(trafficClass);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(trafficClass, 255);
+        try
+        {
+            if (OperatingSystem.IsLinux() && JavaSocket.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                ArgumentOutOfRangeException.ThrowIfNegative(threshold);
-                ArgumentOutOfRangeException.ThrowIfGreaterThan(threshold, (long)uint.MaxValue);
-                raw = unchecked((int)threshold);
+                LinuxSocketOptions.SetInt(JavaSocket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, trafficClass);
+                if (JavaSocket.DualMode)
+                    JavaSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, trafficClass);
             }
             else
-                raw = value is bool enabled ? enabled ? 1 : 0 : (int)value;
-            LinuxSocketOptions.SetInt(Socket, native.Level, native.Name, raw);
+                JavaSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, trafficClass);
         }
-        else
-            return base.SetValue(option, value);
-        return true;
+        catch (SocketException e)
+        {
+            throw new ChannelException(e);
+        }
+        return this;
+    }
+
+    public bool IsAllowHalfClosure() => _allowHalfClosure;
+
+    public virtual IDuplexChannelConfig SetAllowHalfClosure(bool allowHalfClosure)
+    {
+        _allowHalfClosure = allowHalfClosure;
+        return this;
     }
 
     // Linux IPV6_TCLASS has no SocketOptionName mapping. An IPv6 TCP socket must
     // read and set its IPv6 class, even when it can also accept IPv4-mapped peers.
     private const int LinuxIPv6TrafficClass = 67;
-
-    private int GetTrafficClass()
-    {
-        if (OperatingSystem.IsLinux() && Socket.AddressFamily == AddressFamily.InterNetworkV6)
-            return LinuxSocketOptions.GetInt(Socket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass);
-        return (int)Socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
-    }
-
-    private void SetTrafficClass(int value)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(value);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 255);
-        if (OperatingSystem.IsLinux() && Socket.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            LinuxSocketOptions.SetInt(Socket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, value);
-            if (Socket.DualMode)
-                Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, value);
-        }
-        else
-            Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, value);
-    }
 
     private (int Level, int Name)? FindLinuxOption(ChannelOption option)
     {

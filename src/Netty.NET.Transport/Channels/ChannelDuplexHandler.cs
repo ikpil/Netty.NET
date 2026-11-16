@@ -34,7 +34,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken) => context.BindAsync(localAddress, cancellationToken);
+    public virtual Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken) => ctx.BindAsync(localAddress, cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#connect(SocketAddress, SocketAddress, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -42,7 +42,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken) => context.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+    public virtual Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken) => ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#disconnect(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -50,7 +50,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => context.DisconnectAsync(cancellationToken);
+    public virtual Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken) => ctx.DisconnectAsync(cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#close(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -58,7 +58,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => context.CloseAsync(cancellationToken);
+    public virtual Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken) => ctx.CloseAsync(cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#deregister(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -66,7 +66,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => context.DeregisterAsync(cancellationToken);
+    public virtual Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken) => ctx.DeregisterAsync(cancellationToken);
     /**
      * Calls {@link ChannelHandlerContext#write(Object, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -74,7 +74,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken) => context.WriteAsync(message, cancellationToken);
+    public virtual Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken) => ctx.WriteAsync(msg, cancellationToken);
 
     /**
      * Calls {@link ChannelHandlerContext#read()} to forward
@@ -83,7 +83,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual void Read(ChannelHandlerContext context) => context.Read();
+    public virtual void Read(IChannelHandlerContext ctx) => ctx.Read();
     /**
      * Calls {@link ChannelHandlerContext#flush()} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -91,5 +91,5 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
      * Sub-classes may override this method to change behavior.
      */
     [ChannelHandlerMask.Skip]
-    public virtual void Flush(ChannelHandlerContext context) => context.Flush();
+    public virtual void Flush(IChannelHandlerContext ctx) => ctx.Flush();
 }

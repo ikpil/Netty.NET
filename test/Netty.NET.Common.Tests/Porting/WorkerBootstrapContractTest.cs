@@ -166,8 +166,8 @@ public class WorkerBootstrapContractTest
             for (int i = 0; i < results.Length; i++) Assert.Equal(i + 1, results[i]);
             Assert.Equal(1, starts);
             Assert.NotSame(Thread.CurrentThread, worker);
-            Assert.False(executor.Termination.IsCompleted);
-            Assert.Same(executor.Termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+            Assert.False(executor.TerminationFuture.IsCompleted);
+            Assert.Same(executor.TerminationFuture, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
         }
         finally
         {
@@ -205,7 +205,7 @@ public class WorkerBootstrapContractTest
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.NotSame(a, b);
             Assert.Equal(2, starts);
-            Assert.Same(group.Termination, group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+            Assert.Same(group.TerminationFuture, group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
         }
         finally
         {

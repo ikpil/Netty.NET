@@ -46,8 +46,8 @@ public class ByteBufScalarSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -129,7 +129,7 @@ public class ByteBufScalarSourceTest
         // This is important as we may return a slice from newBuffer(...).
         s.Root.Clear(); Assert.True(s.Root.Release());
         Assert.Throws<IllegalReferenceCountException>(() => ReleasedOperations[operation](s.Root));
-        Assert.Equal(0, s.Root.ReferenceCount);
+        Assert.Equal(0, s.Root.RefCnt);
     }
 
     public static IEnumerable<object[]> BoundaryCases()
@@ -162,7 +162,7 @@ public class ByteBufScalarSourceTest
         int index = negative ? -1 : s.Root.Capacity - width + 1;
         Assert.Throws<ArgumentOutOfRangeException>(() => GetBoundaryValue(s.Root, operation, index));
         Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     public static IEnumerable<object[]> Providers()
@@ -179,7 +179,7 @@ public class ByteBufScalarSourceTest
         Assert.Equal(0, s.Root.ReadByte());
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReadByte());
         Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(1, s.Root.WriterIndex);
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     private static int Width(int operation) => operation switch { 0 => 1, 1 or 2 => 2, 3 or 4 => 3, 5 or 6 => 4, _ => 8 };
@@ -242,7 +242,7 @@ public class ByteBufScalarSourceTest
             Assert.Equal(15, s.Root.ReaderIndex); Assert.Equal(15 + width - 1, s.Root.WriterIndex);
             s.Root.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, s.Root.ReaderIndex); Assert.Equal(6, s.Root.WriterIndex);
-            Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 32)); Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 32)); Assert.Equal(1, s.Root.RefCnt);
         }
     }
 

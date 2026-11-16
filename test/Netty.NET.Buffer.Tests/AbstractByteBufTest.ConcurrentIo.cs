@@ -37,7 +37,7 @@ public abstract partial class AbstractByteBufTest
 
     private static void AssertToStringMultipleThreads(ByteBuf buffer)
     {
-        string expected = buffer.GetString(Encoding.Latin1);
+        string expected = buffer.ToString(Encoding.Latin1);
         using var startBarrier = new Barrier(10);
         var errors = new ConcurrentQueue<Exception>();
         var threads = new List<Thread>();
@@ -50,7 +50,7 @@ public abstract partial class AbstractByteBufTest
                     Assert.True(startBarrier.SignalAndWait(TimeSpan.FromSeconds(10)));
                     int counter = 3000;
                     while (errors.IsEmpty && counter-- > 0)
-                        Assert.Equal(expected, buffer.GetString(Encoding.Latin1));
+                        Assert.Equal(expected, buffer.ToString(Encoding.Latin1));
                 }
                 catch (Exception cause) { errors.Enqueue(cause); }
             });
@@ -132,7 +132,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestDuplicateReadOutputStreamMultipleThreads()
+    public virtual void TestDuplicateReadOutputStreamMultipleThreads()
     {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
@@ -143,7 +143,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestSliceReadOutputStreamMultipleThreads()
+    public virtual void TestSliceReadOutputStreamMultipleThreads()
     {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
@@ -172,7 +172,7 @@ public abstract partial class AbstractByteBufTest
                         if (slice) buf = buffer.Slice();
                         else buf = buffer.Duplicate();
                         using var output = new MemoryStream();
-                        while (buf.IsReadable)
+                        while (buf.IsReadable())
                         {
                             // Never happens
                             // CLR: an unexpected IOException is reported by the outer worker catch.
@@ -223,7 +223,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public async Task TestDuplicateBytesInArrayMultipleThreads()
+    public virtual async Task TestDuplicateBytesInArrayMultipleThreads()
     {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
@@ -234,7 +234,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public async Task TestSliceBytesInArrayMultipleThreads()
+    public virtual async Task TestSliceBytesInArrayMultipleThreads()
     {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);

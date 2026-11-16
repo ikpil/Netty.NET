@@ -27,7 +27,35 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class TaskCompletionTransferPortTest
 {
     [Fact]
-    public async Task SuccessIsForwardedToEveryProducerWithTheSameResultIdentity()
+    public void TestNullPromisesArray()
+    {
+        // CLR: the PromiseNotifier(Promise...) constructor and its array are removed; callers
+        // own any fan-out collection. The required argument of the native transfer is the
+        // completed source, and TrySetFromTask rejects a null one with ArgumentNullException
+        // (Java NullPointerException) without consuming the producer.
+        var target = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.Throws<ArgumentNullException>(() => target.TrySetFromTask(null));
+        Assert.False(target.Task.IsCompleted);
+    }
+
+    [Fact]
+    public void TestNullPromiseInArray()
+    {
+        // CLR: no notifier array exists whose null element could be rejected (Java
+        // IllegalArgumentException); callers own any fan-out collection and its elements.
+        // The native per-element validation is TrySetFromTask's: an invalid, still
+        // incomplete source is rejected with ArgumentException without consuming the
+        // producer, which accepts the source once it has completed.
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var target = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.Throws<ArgumentException>(() => target.TrySetFromTask(source.Task));
+        Assert.False(target.Task.IsCompleted);
+        source.SetResult(new object());
+        Assert.True(target.TrySetFromTask(source.Task));
+    }
+
+    [Fact]
+    public async Task TestListenerSuccess()
     {
         var value = new object();
         Task<object> source = Task.FromResult(value);
@@ -39,7 +67,7 @@ public class TaskCompletionTransferPortTest
     }
 
     [Fact]
-    public async Task FailureIsForwardedToEveryProducerWithItsOriginalIdentity()
+    public async Task TestListenerFailure()
     {
         var error = new InvalidOperationException("original");
         Task<object> source = Task.FromException<object>(error);
@@ -51,7 +79,7 @@ public class TaskCompletionTransferPortTest
     }
 
     [Fact]
-    public async Task SourceCancellationIsForwardedWithItsToken()
+    public async Task TestCancelPropagationWhenFusedFromFuture()
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -67,6 +95,10 @@ public class TaskCompletionTransferPortTest
         Assert.Same(source, shared);
     }
 
+    // CLR supplements: already-completed targets, faulted cancellation exceptions,
+    // multiple/nested exception preservation, null successful results, independently
+    // canceled waiters and explicitly linked cooperative cancellation
+    // (docs/common-task-composition.md, additional cases).
     [Fact]
     public async Task ACompletedTargetIsNeverOverwritten()
     {
@@ -118,18 +150,6 @@ public class TaskCompletionTransferPortTest
         var failure = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         Assert.True(failure.TrySetFromTask(Task.FromException<object>(error)));
         Assert.Same(error, await Assert.ThrowsAsync<AggregateException>(async () => await failure.Task));
-    }
-
-    [Fact]
-    public void InvalidOrIncompleteSourcesDoNotConsumeTheProducer()
-    {
-        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var target = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Assert.Throws<ArgumentNullException>(() => target.TrySetFromTask(null));
-        Assert.Throws<ArgumentException>(() => target.TrySetFromTask(source.Task));
-        Assert.False(target.Task.IsCompleted);
-        source.SetResult(new object());
-        Assert.True(target.TrySetFromTask(source.Task));
     }
 
     [Fact]

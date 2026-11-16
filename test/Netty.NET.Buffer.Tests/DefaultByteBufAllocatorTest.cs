@@ -54,7 +54,7 @@ public partial class DefaultByteBufAllocatorTest
         internal object Default => Track(Type("IByteBufAllocator").GetProperty("Default").GetValue(null));
         internal object UtilityDefault => Type("ByteBufUtil").GetProperty("DefaultAllocator", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
         internal object Singleton(string name) => Track(Type(name).GetProperty("Default").GetValue(null));
-        internal object Adaptive(bool? prefer = null, bool? low = null) => Track(Activator.CreateInstance(Type("AdaptiveByteBufAllocator"), prefer, low, null, null));
+        internal object Adaptive(bool? prefer = null, bool? low = null) => Track(Activator.CreateInstance(Type("AdaptiveByteBufAllocator"), prefer, null, low, null));
         internal object Track(object allocator) { lock (_allocators) _allocators.Add(allocator); return allocator; }
         internal object CommonTypeCall(string type, string method, params object[] args)
             => _common.GetType("Netty.NET.Common." + type, true).GetMethod(method).Invoke(null, args);
@@ -91,9 +91,9 @@ public partial class DefaultByteBufAllocatorTest
         try
         {
             Assert.Equal(direct, Property<bool>(b, "IsDirect")); Assert.Equal(9, Property<int>(b, "Capacity"));
-            Assert.Same(allocator, Property<object>(b, "Allocator")); Call(b, "WriteInt", 123456789);
+            Assert.Same(allocator, Call(b, "Alloc")); Call(b, "WriteInt", 123456789);
             object copy = Call(b, "Copy");
-            try { Assert.Same(allocator, Property<object>(copy, "Allocator")); Assert.Equal(123456789, Call(copy, "GetInt", 0)); }
+            try { Assert.Same(allocator, Call(copy, "Alloc")); Assert.Equal(123456789, Call(copy, "GetInt", 0)); }
             finally { Call(copy, "Release", 1); }
         }
         finally { Call(b, "Release", 1); }
@@ -167,11 +167,12 @@ public partial class DefaultByteBufAllocatorTest
         foreach (string name in new[] { "HeapPool", "DirectPool" })
         {
             object pool = allocator.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(allocator);
-            var groups = (Array)pool.GetType().GetField("_small", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(pool);
+            var groups = (Array)pool.GetType().GetField("_sizeClassedMagazineGroups", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(pool);
             object group = groups.GetValue(0);
-            Assert.Equal(processors * 2, group.GetType().GetField("_maxStripes", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(group));
-            object cache = group.GetType().GetField("_cache", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(group);
-            Assert.Equal(processors * 2, cache.GetType().GetField("_retentionFloor", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(cache));
+            // Magazine groups read the pool's per-instance MAX_STRIPES replacement.
+            Assert.Equal(processors * 2, pool.GetType().GetField("_maxStripes", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(pool));
+            object cache = group.GetType().GetField("_chunkCache", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(group);
+            Assert.Equal(processors * 2, cache.GetType().GetField("_chunkReuseQueue", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(cache));
         }
     }
 
@@ -206,7 +207,7 @@ public partial class DefaultByteBufAllocatorTest
     {
         using var scope = new Scope("adaptive", noPreferDirect.ToString());
         object b = scope.Type("Unpooled").GetMethod("Buffer").Invoke(null, new object[] { 9, 64 });
-        try { Assert.False(Property<bool>(b, "IsDirect")); Assert.Same(scope.Singleton("UnpooledByteBufAllocator"), Property<object>(b, "Allocator")); }
+        try { Assert.False(Property<bool>(b, "IsDirect")); Assert.Same(scope.Singleton("UnpooledByteBufAllocator"), Call(b, "Alloc")); }
         finally { Call(b, "Release", 1); }
         Assert.Equal("AdaptiveByteBufAllocator", scope.Default.GetType().Name);
     }

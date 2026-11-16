@@ -14,6 +14,7 @@ public class LeanCancellationException : TaskCanceledException
 
     public override string ToString()
     {
-        return nameof(TaskCanceledException);
+        // CLR: CancellationException.class.getName() names the CLR counterpart type.
+        return typeof(TaskCanceledException).FullName;
     }
 }

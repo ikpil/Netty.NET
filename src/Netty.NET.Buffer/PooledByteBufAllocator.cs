@@ -38,7 +38,8 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
     public static PooledByteBufAllocator Default => DefaultInstance.Value;
     private readonly object _sync = new();
     private readonly NativeMemoryAllocator _nativeAllocator;
-    private bool _disposed;
+    private volatile bool _disposed;
+    private readonly bool _useCacheForAllThreads;
     private readonly PoolArena[] _heapArenas;
     private readonly PoolArena[] _directArenas;
     internal IReadOnlyList<IPoolArenaMetric> HeapArenas { get; }
@@ -52,21 +53,129 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
     public PooledByteBufAllocatorMetric Metric { get; }
     IByteBufAllocatorMetric IByteBufAllocatorMetricProvider.Metric => Metric;
 
-    // CLR: explicit constructors retain their explicit options and cache-off defaults.
-    // The shared Default uses the snapshotted runtime configuration instead.
-    public PooledByteBufAllocator(bool preferDirect = false, bool poolHeap = true, bool poolDirect = true,
-        int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
-        NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,
-        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192, TimeSpan cacheTrimPeriod = default)
-        : this(preferDirect, poolHeap ? 1 : 0, poolDirect ? 1 : 0, pageSize, maxOrder,
-            directMemoryCacheAlignment, nativeAllocator, smallCacheSize, normalCacheSize,
-            maxCachedBufferCapacity, cacheTrimInterval, cacheTrimPeriod) { }
-
-    public PooledByteBufAllocator(bool preferDirect, int heapArenaCount, int directArenaCount,
-        int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
-        NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,
-        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192, TimeSpan cacheTrimPeriod = default) : base(preferDirect)
+    public PooledByteBufAllocator() : this(false)
     {
+    }
+
+#pragma warning disable CS0618 // @SuppressWarnings("deprecation")
+    public PooledByteBufAllocator(bool preferDirect)
+        : this(preferDirect, DefaultNumHeapArena(), DefaultNumDirectArena(), DefaultPageSize(), DefaultMaxOrder())
+    {
+    }
+
+    public PooledByteBufAllocator(int nHeapArena, int nDirectArena, int pageSize, int maxOrder)
+        : this(false, nHeapArena, nDirectArena, pageSize, maxOrder)
+    {
+    }
+#pragma warning restore CS0618
+
+    /**
+     * @deprecated use
+     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean)}
+     */
+    [Obsolete("Use PooledByteBufAllocator(bool, int, int, int, int, int, int, bool).")]
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena, int nDirectArena, int pageSize, int maxOrder)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize, maxOrder,
+             0, DefaultSmallCacheSize(), DefaultNormalCacheSize())
+    {
+    }
+
+    /**
+     * @deprecated use
+     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean)}
+     */
+    [Obsolete("Use PooledByteBufAllocator(bool, int, int, int, int, int, int, bool).")]
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena, int nDirectArena, int pageSize, int maxOrder,
+                                  int tinyCacheSize, int smallCacheSize, int normalCacheSize)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize, maxOrder, smallCacheSize,
+             normalCacheSize, DefaultUseCacheForAllThreads(), Configuration.Value.Alignment)
+    {
+    }
+
+    /**
+     * @deprecated use
+     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean)}
+     */
+    [Obsolete("Use PooledByteBufAllocator(bool, int, int, int, int, int, int, bool).")]
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena,
+                                  int nDirectArena, int pageSize, int maxOrder, int tinyCacheSize,
+                                  int smallCacheSize, int normalCacheSize,
+                                  bool useCacheForAllThreads)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize, maxOrder,
+             smallCacheSize, normalCacheSize,
+             useCacheForAllThreads)
+    {
+    }
+
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena,
+                                  int nDirectArena, int pageSize, int maxOrder,
+                                  int smallCacheSize, int normalCacheSize,
+                                  bool useCacheForAllThreads)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize, maxOrder,
+             smallCacheSize, normalCacheSize,
+             useCacheForAllThreads, Configuration.Value.Alignment)
+    {
+    }
+
+    /**
+     * @deprecated use
+     * {@link PooledByteBufAllocator#PooledByteBufAllocator(boolean, int, int, int, int, int, int, boolean, int)}
+     */
+    [Obsolete("Use PooledByteBufAllocator(bool, int, int, int, int, int, int, bool, int).")]
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena, int nDirectArena, int pageSize, int maxOrder,
+                                  int tinyCacheSize, int smallCacheSize, int normalCacheSize,
+                                  bool useCacheForAllThreads, int directMemoryCacheAlignment)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize, maxOrder,
+             smallCacheSize, normalCacheSize,
+             useCacheForAllThreads, directMemoryCacheAlignment)
+    {
+    }
+
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena, int nDirectArena, int pageSize, int maxOrder,
+                                  int smallCacheSize, int normalCacheSize,
+                                  bool useCacheForAllThreads, int directMemoryCacheAlignment)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize, maxOrder, directMemoryCacheAlignment, null,
+            smallCacheSize, normalCacheSize, null, null, null, useCacheForAllThreads)
+    {
+    }
+
+    // CLR: the native memory source, pool selection and per-instance overrides of the process-wide
+    // DEFAULT_MAX_CACHED_BUFFER_CAPACITY, DEFAULT_CACHE_TRIM_INTERVAL and DEFAULT_CACHE_TRIM_INTERVAL_MILLIS have no
+    // source constructor. These two constructors keep the source's longest positional order (pageSize, maxOrder,
+    // smallCacheSize, normalCacheSize, useCacheForAllThreads, directMemoryCacheAlignment) and append the CLR-only
+    // settings, so a source-shaped prefix keeps its meaning; an omitted (null) argument takes the DEFAULT_* value
+    // the source's shorter constructors pass. Calls matching a source signature exactly bind to the source overloads
+    // above. poolHeap/poolDirect select DEFAULT_NUM_*_ARENA or zero arenas for a storage kind.
+    public PooledByteBufAllocator(bool preferDirect = false, bool poolHeap = true, bool poolDirect = true,
+        int? pageSize = null, int? maxOrder = null, int? smallCacheSize = null, int? normalCacheSize = null,
+        bool? useCacheForAllThreads = null, int? directMemoryCacheAlignment = null,
+        NativeMemoryAllocator nativeAllocator = null, int? maxCachedBufferCapacity = null,
+        int? cacheTrimInterval = null, TimeSpan? cacheTrimPeriod = null)
+        : this(preferDirect, poolHeap ? DefaultNumHeapArena() : 0, poolDirect ? DefaultNumDirectArena() : 0, pageSize,
+            maxOrder, smallCacheSize, normalCacheSize, useCacheForAllThreads, directMemoryCacheAlignment,
+            nativeAllocator, maxCachedBufferCapacity, cacheTrimInterval, cacheTrimPeriod)
+    {
+    }
+
+    public PooledByteBufAllocator(bool preferDirect, int nHeapArena, int nDirectArena,
+        int? pageSize = null, int? maxOrder = null, int? smallCacheSize = null, int? normalCacheSize = null,
+        bool? useCacheForAllThreads = null, int? directMemoryCacheAlignment = null,
+        NativeMemoryAllocator nativeAllocator = null, int? maxCachedBufferCapacity = null,
+        int? cacheTrimInterval = null, TimeSpan? cacheTrimPeriod = null)
+        : this(preferDirect, nHeapArena, nDirectArena, pageSize ?? DefaultPageSize(), maxOrder ?? DefaultMaxOrder(),
+            directMemoryCacheAlignment ?? Configuration.Value.Alignment, nativeAllocator,
+            smallCacheSize ?? DefaultSmallCacheSize(), normalCacheSize ?? DefaultNormalCacheSize(),
+            maxCachedBufferCapacity, cacheTrimInterval, cacheTrimPeriod,
+            useCacheForAllThreads ?? DefaultUseCacheForAllThreads())
+    {
+    }
+
+    private PooledByteBufAllocator(bool preferDirect, int nHeapArena, int nDirectArena, int pageSize, int maxOrder,
+        int directMemoryCacheAlignment, NativeMemoryAllocator nativeAllocator, int smallCacheSize,
+        int normalCacheSize, int? maxCachedBufferCapacity, int? cacheTrimInterval, TimeSpan? cacheTrimPeriod,
+        bool useCacheForAllThreads) : base(preferDirect)
+    {
+        _useCacheForAllThreads = useCacheForAllThreads;
         if (directMemoryCacheAlignment < 0 ||
             directMemoryCacheAlignment != 0 && !BitOperations.IsPow2(directMemoryCacheAlignment))
             throw new ArgumentOutOfRangeException(nameof(directMemoryCacheAlignment));
@@ -80,77 +189,107 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         }
         if (pageSize < 4096 || !BitOperations.IsPow2(pageSize))
             throw new ArgumentOutOfRangeException(nameof(pageSize));
-        if (maxOrder < 0 || maxOrder > 14) throw new ArgumentOutOfRangeException(nameof(maxOrder));
+        if (maxOrder < 0 || maxOrder > 14)
+            throw new ArgumentOutOfRangeException(null,
+                "maxOrder: " + maxOrder.ToString(System.Globalization.CultureInfo.InvariantCulture) + " (expected: 0-14)");
         // Ensure the resulting chunkSize does not overflow.
         long chunkSize = (long)pageSize << maxOrder;
         if (chunkSize > 1 << 30) throw new ArgumentOutOfRangeException(nameof(maxOrder));
-        ArgumentOutOfRangeException.ThrowIfNegative(heapArenaCount);
-        ArgumentOutOfRangeException.ThrowIfNegative(directArenaCount);
-        ArgumentOutOfRangeException.ThrowIfNegative(smallCacheSize);
-        ArgumentOutOfRangeException.ThrowIfNegative(normalCacheSize);
-        ArgumentOutOfRangeException.ThrowIfNegative(maxCachedBufferCapacity);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cacheTrimInterval);
+        ArgumentOutOfRangeException.ThrowIfNegative(nHeapArena);
+        ArgumentOutOfRangeException.ThrowIfNegative(nDirectArena);
+        // The source passes cache sizes to PoolThreadCache unchecked: nonpositive sizes disable that cache, and the
+        // DEFAULT_* capacity/trim values are only validated once an eligible thread actually creates caches.
+        // CLR: explicit overrides of those process-wide values are validated here.
+        if (maxCachedBufferCapacity is int capacity)
+            ArgumentOutOfRangeException.ThrowIfNegative(capacity, nameof(maxCachedBufferCapacity));
+        if (cacheTrimInterval is int interval)
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(interval, nameof(cacheTrimInterval));
         if (cacheTrimPeriod < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(cacheTrimPeriod));
         SmallCacheSize = smallCacheSize;
         NormalCacheSize = normalCacheSize;
-        _maxCachedBufferCapacity = maxCachedBufferCapacity;
-        _cacheTrimInterval = cacheTrimInterval;
-        _cacheTrimPeriod = cacheTrimPeriod;
+        _maxCachedBufferCapacity = maxCachedBufferCapacity ?? Configuration.Value.MaxCachedCapacity;
+        _cacheTrimInterval = cacheTrimInterval ?? Configuration.Value.TrimInterval;
+        _cacheTrimPeriod = cacheTrimPeriod ?? Configuration.Value.TrimPeriod;
         ChunkSize = (int)chunkSize;
         // Logarithm base 2. At this point we know that pageSize is a power of two.
         int shifts = BitOperations.Log2((uint)pageSize);
         _nativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
-        _heapArenas = new PoolArena[heapArenaCount];
-        _directArenas = new PoolArena[directArenaCount];
-        if (heapArenaCount != 0)
+        _heapArenas = new PoolArena[nHeapArena];
+        _directArenas = new PoolArena[nDirectArena];
+        if (nHeapArena > 0)
         {
             var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, 0);
-            for (int i = 0; i < heapArenaCount; ++i) _heapArenas[i] = new PoolHeapArena(this, sizeClasses);
+            for (int i = 0; i < nHeapArena; ++i) _heapArenas[i] = new PoolHeapArena(this, sizeClasses);
         }
-        if (directArenaCount != 0)
+        if (nDirectArena > 0)
         {
             var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, directMemoryCacheAlignment);
-            for (int i = 0; i < directArenaCount; ++i)
+            for (int i = 0; i < nDirectArena; ++i)
                 _directArenas[i] = new PoolDirectArena(this, sizeClasses, _nativeAllocator);
         }
         HeapArenas = Array.AsReadOnly<IPoolArenaMetric>(_heapArenas);
         DirectArenas = Array.AsReadOnly<IPoolArenaMetric>(_directArenas);
         Metric = new PooledByteBufAllocatorMetric(this);
+        _threadCleanup = new ThreadCleanup(this);
     }
 
     public override bool IsDirectBufferPooled => _directArenas.Length != 0;
 
+    // The source takes no allocator-wide lock: the thread's cache selects its arena, and PoolArena/PoolThreadCache
+    // synchronize their own state.
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        ByteBuf buffer;
-        lock (_sync)
+        ThreadBinding cache = GetThreadBinding();
+        PoolArena heapArena = cache?.HeapArena;
+
+        ByteBuf buf;
+        if (heapArena != null)
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            ThreadBinding binding = GetThreadBinding();
-            PoolArena arena = binding?.HeapArena;
-            buffer = arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
-                : new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+            buf = AllocateFromArena(heapArena, initialCapacity, maxCapacity, cache.Cache);
         }
-        // CLR: detector callbacks run after the allocator lock; the buffer owns its reservation.
-        BufferAllocatorEventSource.Log.Allocated(buffer);
-        return ToLeakAwareBuffer(buffer);
+        else
+        {
+            buf = new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+        }
+
+        // CLR: detector callbacks run after allocation; the buffer owns its reservation.
+        BufferAllocatorEventSource.Log.Allocated(buf);
+        return ToLeakAwareBuffer(buf);
     }
 
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        ByteBuf buffer;
-        lock (_sync)
+        ThreadBinding cache = GetThreadBinding();
+        PoolArena directArena = cache?.DirectArena;
+
+        ByteBuf buf;
+        if (directArena != null)
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            ThreadBinding binding = GetThreadBinding();
-            PoolArena arena = binding?.DirectArena;
-            buffer = arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
-                : new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
+            buf = AllocateFromArena(directArena, initialCapacity, maxCapacity, cache.Cache);
         }
-        BufferAllocatorEventSource.Log.Allocated(buffer);
-        return ToLeakAwareBuffer(buffer);
+        else
+        {
+            buf = new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
+        }
+
+        BufferAllocatorEventSource.Log.Allocated(buf);
+        return ToLeakAwareBuffer(buf);
+    }
+
+    private ByteBuf AllocateFromArena(PoolArena arena, int initialCapacity, int maxCapacity, PoolThreadCache cache)
+    {
+        try
+        {
+            return arena.Allocate(initialCapacity, maxCapacity, cache);
+        }
+        catch (ObjectDisposedException) when (_disposed)
+        {
+            // CLR: Dispose raced with this allocation; report the allocator rather than its arena.
+            ObjectDisposedException.ThrowIf(true, this);
+            throw;
+        }
     }
 
     /**

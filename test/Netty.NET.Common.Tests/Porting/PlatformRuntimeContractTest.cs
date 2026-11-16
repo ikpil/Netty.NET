@@ -84,7 +84,9 @@ public class PlatformRuntimeContractTest
                 Assert.Equal(8L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));
                 var failure = Assert.Throws<TargetInvocationException>(() =>
                     allocate.Invoke(allocator, new object[] { 1, false }));
-                Assert.IsType<OutOfMemoryException>(failure.InnerException);
+                // CLR: the fresh load context has its own OutOfDirectMemoryError type, so compare by name.
+                Assert.IsAssignableFrom<OutOfMemoryException>(failure.InnerException);
+                Assert.Equal(typeof(OutOfDirectMemoryError).FullName, failure.InnerException.GetType().FullName);
                 owner.Memory.Span[0] = 0xa5;
             }
             Assert.Equal(0L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));

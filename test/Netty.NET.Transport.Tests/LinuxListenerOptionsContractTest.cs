@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -16,11 +17,11 @@ public class LinuxListenerOptionsContractTest
         if (!OperatingSystem.IsLinux()) Assert.Skip("Linux socket options require Linux.");
         var token = TestContext.Current.CancellationToken;
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var child = new AcceptedChild();
         try
         {
-            var listener = await new ServerBootstrap().Group(group).ChannelFactory(() => new TcpServerSocketChannel(socket))
+            var listener = await new ServerBootstrap().Group(group).ChannelFactory(() => new NioServerSocketChannel(socket))
                 .Option(ChannelOption.TCP_FASTOPEN, 10)
                 .Option(ChannelOption.TCP_DEFER_ACCEPT, 10)
                 .ChildHandler(child)
@@ -39,10 +40,10 @@ public class LinuxListenerOptionsContractTest
     private sealed class AcceptedChild : ChannelInboundHandlerAdapter
     {
         internal readonly TaskCompletionSource Accepted = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
             Accepted.TrySetResult();
-            base.ChannelActive(context);
+            base.ChannelActive(ctx);
         }
     }
 }

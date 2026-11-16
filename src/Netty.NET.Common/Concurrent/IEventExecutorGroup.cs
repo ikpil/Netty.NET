@@ -40,7 +40,7 @@ public interface IEventExecutorGroup : IExecutor
      * @return the {@link #terminationFuture()}
      */
     /// <summary>Requests graceful shutdown using the default quiet period and timeout.</summary>
-    /// <returns>The persistent <see cref="Termination"/> task.</returns>
+    /// <returns>The persistent <see cref="TerminationFuture"/> task.</returns>
     Task ShutdownGracefullyAsync();
 
     /**
@@ -64,7 +64,7 @@ public interface IEventExecutorGroup : IExecutor
     /// </remarks>
     Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
-    /// <summary>Requests shutdown without a quiet admission period and returns <see cref="Termination"/>.</summary>
+    /// <summary>Requests shutdown without a quiet admission period and returns <see cref="TerminationFuture"/>.</summary>
     /// <remarks>
     /// Ordered workers drain accepted invocations and cancel outstanding schedules.
     /// Unordered workers withdraw queued work and request their explicit StopToken.
@@ -89,7 +89,7 @@ public interface IEventExecutorGroup : IExecutor
     /// signal with the backend failure after surviving workers drain.
     /// This signal does not join custom thread-factory code outside the executor's worker loop.
     /// </remarks>
-    Task Termination { get; }
+    Task TerminationFuture { get; }
 
     /**
      * Initiates an orderly shutdown in which previously submitted

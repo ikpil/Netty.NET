@@ -46,6 +46,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     // Bind these to the owner once; calls still observe virtual clock and shutdown
     // state at invocation time. Every native scheduled membership shares them.
     private readonly Func<long> nativeClock;
+    private readonly Func<bool> nativeCanExecute;
     private readonly Func<bool> nativeCanRun;
     private readonly Action<ITaskScheduledWork> nativeEnqueue;
     private readonly Action<ITaskScheduledWork> nativeRemove;
@@ -65,6 +66,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     {
         selectedTicker = global::Netty.NET.Common.Concurrent.Ticker.FromTimeProvider(timeProvider);
         nativeClock = GetCurrentTimeNanos;
+        // CLR: like ScheduledFutureTask.run, a due ordered task still runs after shutdown (for
+        // example in the final confirmShutdown drain); shutdown only stops periodic re-adding.
+        nativeCanExecute = static () => true;
         nativeCanRun = () => !IsShutdown();
         nativeEnqueue = EnqueueNative;
         nativeRemove = RemoveNative;
@@ -193,7 +197,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
         foreach (IScheduledWork task in scheduledTasks)
         {
-            task.CancelForShutdown();
+            task.CancelWithoutRemove();
         }
 
         // CLR: A terminated executor may remain reachable. Release queued work
@@ -256,7 +260,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     // Transfer needs the actual membership for capacity rollback; consumers execute
     // only its native callback. Both polling overloads share this dequeue boundary.
-    private IScheduledWork PollScheduledWork(long nanoTime)
+    private protected IScheduledWork PollScheduledWork(long nanoTime)
     {
         Debug.Assert(InEventLoop());
 
@@ -336,7 +340,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         // nextTaskId a long and so there is no chance it will overflow back to 0
         if (task.GetId() == 0L)
         {
-            task.AssignId(++nextTaskId);
+            task.SetId(++nextTaskId);
         }
         ScheduledTaskQueue().TryEnqueue(task);
     }
@@ -349,7 +353,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         if (token.IsCancellationRequested) return Task.FromCanceled<T>(token);
         var task = new NativeScheduledWork<T>(function, token,
             DeadlineNanos(GetCurrentTimeNanos(), ToNanos(delay)), period, nativeClock,
-            nativeCanRun, nativeEnqueue, nativeRemove, captureContext);
+            nativeCanExecute, nativeEnqueue, nativeRemove, captureContext, nativeCanRun);
         try { if (!task.Completion.IsCompleted) SubmitScheduled(task); }
         catch (Exception error) { task.Reject(error); }
         task.Publish();
@@ -359,7 +363,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     private void EnqueueNative(ITaskScheduledWork task)
     {
         if (task.Completion.IsCompleted) return;
-        if (IsShutdown()) task.CancelForShutdown();
+        if (IsShutdown()) task.CancelWithoutRemove();
         else ScheduleFromEventLoop(task);
     }
 

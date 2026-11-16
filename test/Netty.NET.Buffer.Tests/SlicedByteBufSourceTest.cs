@@ -50,8 +50,8 @@ public class SlicedByteBufSourceTest
         }
         public void Dispose()
         {
-            if (!ReferenceEquals(Parent, Root) && Parent.ReferenceCount > 0) Parent.Release(Parent.ReferenceCount);
-            if (Root.ReferenceCount > 0) Root.Release(Root.ReferenceCount);
+            if (!ReferenceEquals(Parent, Root) && Parent.RefCnt > 0) Parent.Release(Parent.RefCnt);
+            if (Root.RefCnt > 0) Root.Release(Root.RefCnt);
             Pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -135,10 +135,10 @@ public class SlicedByteBufSourceTest
         Assert.Equal(23, duplicate.GetByte(path >= 5 ? offset + 4 : 4));
         Assert.Equal(path >= 5 ? 32 : 16, duplicate.Capacity);
         Assert.Equal(path >= 5 ? 64 : 16, duplicate.MaxCapacity);
-        int count = s.View.ReferenceCount;
-        s.View.Retain(); Assert.Equal(count + 1, nested.ReferenceCount);
-        Assert.False(nested.Release()); Assert.Equal(count, s.View.ReferenceCount);
-        Assert.Equal(path >= 5 ? 2 : 1, s.Root.ReferenceCount);
+        int count = s.View.RefCnt;
+        s.View.Retain(); Assert.Equal(count + 1, nested.RefCnt);
+        Assert.False(nested.Release()); Assert.Equal(count, s.View.RefCnt);
+        Assert.Equal(path >= 5 ? 2 : 1, s.Root.RefCnt);
         Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(31, s.Root.WriterIndex);
         s.Root.ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(31, s.Root.WriterIndex);

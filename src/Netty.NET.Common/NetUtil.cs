@@ -46,12 +46,14 @@ public static class NetUtil
     /**
      * The {@link Inet4Address} that represents the IPv4 loopback address '127.0.0.1'
      */
-    // CLR adaptation: use the standard read-only IPAddress.Loopback directly.
+    // CLR: IPAddress has a mutable ScopeId, so like LOCALHOST every read returns an independent copy.
+    public static IPAddress LOCALHOST4 => CopyAddress(localhost4);
 
     /**
      * The {@link Inet6Address} that represents the IPv6 loopback address '::1'
      */
-    // CLR adaptation: use the standard read-only IPAddress.IPv6Loopback directly.
+    // CLR: IPAddress has a mutable ScopeId, so like LOCALHOST every read returns an independent copy.
+    public static IPAddress LOCALHOST6 => CopyAddress(localhost6);
 
     /**
      * The {@link InetAddress} that represents the loopback address. If IPv6 stack is available, it will refer to
@@ -62,7 +64,7 @@ public static class NetUtil
     /// Compare address values rather than references; caller mutation does not change later reads.
     /// A recursive read from an initialization callback can observe null before selection completes.
     /// </summary>
-    public static IPAddress LoopbackAddress => localhost == null ? null : CopyAddress(localhost);
+    public static IPAddress LOCALHOST => localhost == null ? null : CopyAddress(localhost);
 
     /**
      * The loopback {@link NetworkInterface} of the current machine
@@ -70,7 +72,7 @@ public static class NetUtil
     /// <summary>
     /// Gets the native loopback interface selected during initialization, or null if none was found.
     /// </summary>
-    public static NetworkInterface LoopbackInterface { get; }
+    public static NetworkInterface LOOPBACK_IF { get; }
 
     /**
      * An unmodifiable Collection of all the interfaces on this machine.
@@ -79,7 +81,7 @@ public static class NetUtil
     /// Gets the read-only interface snapshot captured during initialization, in provider order.
     /// Collection membership is fixed; the entries retain their native NetworkInterface behavior.
     /// </summary>
-    public static IReadOnlyList<NetworkInterface> NetworkInterfaces { get; }
+    public static IReadOnlyList<NetworkInterface> NETWORK_INTERFACES { get; }
 
     /**
      * The SOMAXCONN value of the current machine.  If failed to get the value,  {@code 200} is used as a
@@ -89,7 +91,7 @@ public static class NetUtil
     /// Gets the default listen backlog captured from the OS during initialization, with a platform fallback.
     /// This is an initial server setting; it does not impose a limit on caller-supplied backlog values.
     /// </summary>
-    public static int DefaultListenBacklog { get; }
+    public static int SOMAXCONN { get; }
 
     /**
      * This defines how many words (represented as ints) are needed to represent an IPv6 address
@@ -148,7 +150,7 @@ public static class NetUtil
     /// Consumers must apply this policy when resolving addresses or creating sockets;
     /// it does not disable IPv6 in System.Net.
     /// </summary>
-    public static bool PreferIPv4Stack { get; }
+    public static bool IsIpV4StackPreferred { get; }
 
     /**
      * {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6 address.
@@ -163,51 +165,53 @@ public static class NetUtil
     // CLR adaptation: only true forces IPv6 preference; system/yes/1 do not.
     /// <summary>
     /// Gets the IPv6 address preference captured from the java.net.preferIPv6Addresses environment variable.
-    /// This is independent of PreferIPv4Stack and does not describe runtime IPv6 capability.
+    /// This is independent of IsIpV4StackPreferred and does not describe runtime IPv6 capability.
     /// </summary>
-    public static bool PreferIPv6Addresses { get; }
+    public static bool IsIpV6AddressesPreferred { get; }
 
     /**
      * The logger being used by this class
      */
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(NetUtil));
 
+    private static readonly IPAddress localhost4;
+    private static readonly IPAddress localhost6;
     private static readonly IPAddress localhost;
 
     static NetUtil()
     {
-        PreferIPv4Stack = SystemPropertyUtil.GetBoolean("java.net.preferIPv4Stack", false);
+        IsIpV4StackPreferred = SystemPropertyUtil.GetBoolean("java.net.preferIPv4Stack", false);
         string prefer = SystemPropertyUtil.Get("java.net.preferIPv6Addresses", "false");
         if (string.Equals("true", prefer.Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            PreferIPv6Addresses = true;
+            IsIpV6AddressesPreferred = true;
         }
         else
         {
             // Let's just use false in this case as only true is "forcing" ipv6.
-            PreferIPv6Addresses = false;
+            IsIpV6AddressesPreferred = false;
         }
 
-        logger.Debug("java.net.preferIPv4Stack: {}", PreferIPv4Stack);
+        logger.Debug("java.net.preferIPv4Stack: {}", IsIpV4StackPreferred);
         logger.Debug("java.net.preferIPv6Addresses: {}", prefer);
 
-        NetworkInterfaces = NetUtilInitializations.NetworkInterfaces();
+        NETWORK_INTERFACES = NetUtilInitializations.NetworkInterfaces();
 
         // Create IPv4 loopback address.
-        IPAddress localhost4 = IPAddress.Loopback;
+        localhost4 = IPAddress.Loopback;
 
         // Create IPv6 loopback address.
-        IPAddress localhost6 = IPAddress.IPv6Loopback;
+        localhost6 = IPAddress.IPv6Loopback;
 
         var loopback =
-            NetUtilInitializations.DetermineLoopback(NetworkInterfaces, localhost4, localhost6);
-        LoopbackInterface = loopback.Iface;
+            NetUtilInitializations.DetermineLoopback(NETWORK_INTERFACES, localhost4, localhost6);
+        LOOPBACK_IF = loopback.Iface;
         localhost = CopyAddress(loopback.Address);
 
         // As a SecurityManager may prevent reading the somaxconn file we wrap this in a privileged block.
         //
         // See https://github.com/netty/netty/issues/3680
-        DefaultListenBacklog = SoMaxConnAction.Run();
+        SOMAXCONN = SoMaxConnAction.Run();
     }
 
     private static IPAddress CopyAddress(IPAddress address)
@@ -480,7 +484,7 @@ public static class NetUtil
     {
         ArgumentNullException.ThrowIfNull(bytes);
         if (length != 4 && length != 16)
-            throw new ArgumentException("length: " + length + " (expected: 4 or 16)", nameof(length));
+            throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture) + " (expected: 4 or 16)", nameof(length));
         return BytesToIpAddress(bytes.AsSpan(offset, length));
     }
 
@@ -495,18 +499,18 @@ public static class NetUtil
             case 4:
             {
                 return new StringBuilder(15)
-                    .Append(bytes[0])
+                    .Append(bytes[0].ToString(CultureInfo.InvariantCulture))
                     .Append('.')
-                    .Append(bytes[1])
+                    .Append(bytes[1].ToString(CultureInfo.InvariantCulture))
                     .Append('.')
-                    .Append(bytes[2])
+                    .Append(bytes[2].ToString(CultureInfo.InvariantCulture))
                     .Append('.')
-                    .Append(bytes[3]).ToString();
+                    .Append(bytes[3].ToString(CultureInfo.InvariantCulture)).ToString();
             }
             case 16:
                 return ToAddressString(bytes, false);
             default:
-                throw new ArgumentException("length: " + bytes.Length + " (expected: 4 or 16)", nameof(bytes));
+                throw new ArgumentException("length: " + bytes.Length.ToString(CultureInfo.InvariantCulture) + " (expected: 4 or 16)", nameof(bytes));
         }
     }
 
@@ -1260,9 +1264,9 @@ public static class NetUtil
 
                     if (isIpv4Mapped && i > 5)
                     {
-                        b.Append(words[i] >> 8);
+                        b.Append((words[i] >> 8).ToString(CultureInfo.InvariantCulture));
                         b.Append('.');
-                        b.Append(words[i] & 0xff);
+                        b.Append((words[i] & 0xff).ToString(CultureInfo.InvariantCulture));
                     }
                     else
                     {
@@ -1406,7 +1410,8 @@ internal static class SoMaxConnAction
 
                 if (tmp == null)
                 {
-                    logger.Debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}");
+                    logger.Debug("Failed to get SOMAXCONN from sysctl and file {}. Default: {}", file,
+                            somaxconn);
                 }
             }
         }
@@ -1414,7 +1419,8 @@ internal static class SoMaxConnAction
         {
             if (logger.IsDebugEnabled())
             {
-                logger.Debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}", e);
+                logger.Debug("Failed to get SOMAXCONN from sysctl and file {}. Default: {}",
+                            file, somaxconn, e);
             }
         }
 

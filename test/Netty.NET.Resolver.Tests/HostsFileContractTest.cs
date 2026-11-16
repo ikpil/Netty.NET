@@ -125,8 +125,9 @@ public class HostsFileContractTest
         resolver.Address("host", ResolvedAddressTypes.Ipv4Only);
         resolver.Address("host", ResolvedAddressTypes.Ipv6Only);
         Assert.Single(parser.Invocations);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DefaultHostsFileEntriesResolver(parser.Object, -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => resolver.Address("host", (ResolvedAddressTypes)99));
+        // checkPositiveOrZero and the unknown-type default throw IllegalArgumentException.
+        Assert.Throws<ArgumentException>(() => new DefaultHostsFileEntriesResolver(parser.Object, -1));
+        Assert.Throws<ArgumentException>(() => resolver.Address("host", (ResolvedAddressTypes)99));
         Assert.Throws<ArgumentNullException>(() => resolver.Address(null, ResolvedAddressTypes.Ipv4Only));
     }
 

@@ -93,12 +93,12 @@ public class UnpooledWrappingTest
             Assert.Equal(direct, buffer.IsDirect);
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(3, source.WriterIndex);
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             buffer.SetByte(0, 7);
             Assert.Equal(7, source.GetByte(1));
         }
         finally { Assert.True(buffer.Release()); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -112,12 +112,12 @@ public class UnpooledWrappingTest
         ByteBuf wrapped = Unpooled.WrappedBuffer(first);
         Assert.Same(Unpooled.EmptyBuffer, wrapped);
         Assert.False(wrapped.Release()); // EMPTY_BUFFER cannot be released
-        Assert.Equal(0, first.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
         ByteBuf a = direct ? new UnpooledDirectByteBuf(12, allocator: allocator) : Unpooled.Buffer(12);
         ByteBuf b = direct ? new UnpooledDirectByteBuf(12, allocator: allocator) : Unpooled.Buffer(12);
         Assert.Same(Unpooled.EmptyBuffer, Unpooled.WrappedBuffer(0, a, b));
-        Assert.Equal(0, a.ReferenceCount);
-        Assert.Equal(0, b.ReferenceCount);
+        Assert.Equal(0, a.RefCnt);
+        Assert.Equal(0, b.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -137,8 +137,8 @@ public class UnpooledWrappingTest
             Assert.Equal(7, payload.GetByte(0));
         }
         finally { Assert.True(buffer.Release()); }
-        Assert.Equal(0, header.ReferenceCount);
-        Assert.Equal(0, payload.ReferenceCount);
+        Assert.Equal(0, header.RefCnt);
+        Assert.Equal(0, payload.RefCnt);
     }
 
     [Fact]
@@ -150,13 +150,13 @@ public class UnpooledWrappingTest
         ByteBuf third = Unpooled.Buffer(8);
         ByteBuf fourth = Unpooled.Buffer(8).WriteZero(8); // Ensure the ByteBuf is readable.
         ByteBuf buffer = Unpooled.WrappedBuffer(first, second, third, fourth);
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(1, third.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(1, third.RefCnt);
         Assert.Equal(3, Assert.IsType<CompositeByteBuf>(buffer).NumComponents);
         Assert.Equal(16, buffer.ReadableBytes);
         Assert.True(buffer.Release());
-        Assert.Equal(new[] { 0, 0, 0, 0 }, new[] { first.ReferenceCount, second.ReferenceCount, third.ReferenceCount, fourth.ReferenceCount });
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(new[] { 0, 0, 0, 0 }, new[] { first.RefCnt, second.RefCnt, third.RefCnt, fourth.RefCnt });
+        Assert.Equal(0, buffer.RefCnt);
     }
 
     [Theory]
@@ -170,8 +170,8 @@ public class UnpooledWrappingTest
         try
         {
             Assert.Equal(copies ? 1 : 2, Assert.IsType<CompositeByteBuf>(buffer).NumComponents);
-            Assert.Equal(copies ? 0 : 1, source.ReferenceCount);
-            Assert.Equal(copies ? 0 : 1, empty.ReferenceCount);
+            Assert.Equal(copies ? 0 : 1, source.RefCnt);
+            Assert.Equal(copies ? 0 : 1, empty.RefCnt);
             Assert.Equal(new byte[] { 1, 2 }, Bytes(buffer));
         }
         finally { buffer.Release(); }
@@ -243,8 +243,8 @@ public class UnpooledWrappingTest
         try
         {
             Assert.Equal(new byte[] { 1 }, Bytes(buffer));
-            Assert.Equal(0, tail.ReferenceCount);
-            Assert.Equal(1, first.ReferenceCount);
+            Assert.Equal(0, tail.RefCnt);
+            Assert.Equal(1, first.RefCnt);
         }
         finally { buffer.Release(); }
     }
@@ -254,8 +254,8 @@ public class UnpooledWrappingTest
     {
         ByteBuf empty = Unpooled.Buffer(1), tail = Unpooled.WrappedBuffer(new byte[] { 1 });
         Assert.Throws<ArgumentNullException>(() => Unpooled.WrappedBuffer(empty, null, tail));
-        Assert.Equal(0, empty.ReferenceCount);
-        Assert.Equal(1, tail.ReferenceCount);
+        Assert.Equal(0, empty.RefCnt);
+        Assert.Equal(1, tail.RefCnt);
         tail.Release();
     }
 
@@ -264,7 +264,7 @@ public class UnpooledWrappingTest
     {
         ByteBuf empty = Unpooled.Buffer(1), a = Unpooled.WrappedBuffer(new byte[] { 1 }), b = Unpooled.WrappedBuffer(new byte[] { 2 });
         Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(0, empty, a, b));
-        Assert.Equal(new[] { 0, 1, 1 }, new[] { empty.ReferenceCount, a.ReferenceCount, b.ReferenceCount });
+        Assert.Equal(new[] { 0, 1, 1 }, new[] { empty.RefCnt, a.RefCnt, b.RefCnt });
         a.Release(); b.Release();
         Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(0, new byte[] { 1 }, new byte[] { 2 }));
     }
@@ -296,8 +296,8 @@ public class UnpooledWrappingTest
             if (consolidate) buffer.SetByte(0, 7);
             else Assert.Throws<NotSupportedException>(() => buffer.SetByte(0, 7));
             buffer.SetByte(2, 8);
-            Assert.Equal(consolidate ? 0 : 1, a.ReferenceCount);
-            Assert.Equal(consolidate ? 0 : 1, b.ReferenceCount);
+            Assert.Equal(consolidate ? 0 : 1, a.RefCnt);
+            Assert.Equal(consolidate ? 0 : 1, b.RefCnt);
         }
         finally { buffer.Release(); }
         Assert.Equal(0, allocator.ReservedBytes);
@@ -314,12 +314,12 @@ public class UnpooledWrappingTest
         {
             Assert.Equal(3, Assert.IsType<CompositeByteBuf>(buffer).NumComponents);
             Assert.Equal(new byte[] { 1, 2, 1, 2, 3 }, Bytes(buffer));
-            Assert.Equal(2, shared.ReferenceCount);
-            Assert.Equal(1, nested.ReferenceCount);
+            Assert.Equal(2, shared.RefCnt);
+            Assert.Equal(1, nested.RefCnt);
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, shared.ReferenceCount);
-        Assert.Equal(0, nested.ReferenceCount);
+        Assert.Equal(0, shared.RefCnt);
+        Assert.Equal(0, nested.RefCnt);
     }
 
     [Fact]
@@ -330,7 +330,7 @@ public class UnpooledWrappingTest
         ByteBuf dead = Unpooled.Buffer(1).WriteByte(2); dead.Release();
         ByteBuf tail = new UnpooledDirectByteBuf(1, allocator: allocator).WriteByte(3);
         Assert.Throws<IllegalReferenceCountException>(() => Unpooled.WrappedBuffer(prefix, dead, tail));
-        Assert.Equal(new[] { 0, 0, 0 }, new[] { prefix.ReferenceCount, dead.ReferenceCount, tail.ReferenceCount });
+        Assert.Equal(new[] { 0, 0, 0 }, new[] { prefix.RefCnt, dead.RefCnt, tail.RefCnt });
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -340,8 +340,8 @@ public class UnpooledWrappingTest
         var failing = new FailingReadHeapByteBuf();
         ByteBuf other = Unpooled.Buffer(1).WriteByte(2);
         Assert.Same(failing.Failure, Assert.Throws<InvalidOperationException>(() => Unpooled.WrappedBuffer(1, failing, other)));
-        Assert.Equal(0, failing.ReferenceCount);
-        Assert.Equal(0, other.ReferenceCount);
+        Assert.Equal(0, failing.RefCnt);
+        Assert.Equal(0, other.RefCnt);
     }
 
     [Fact]
@@ -354,8 +354,8 @@ public class UnpooledWrappingTest
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(inputs));
-            Assert.Equal(0, leading.ReferenceCount);
-            Assert.Equal(2049, owner.ReferenceCount);
+            Assert.Equal(0, leading.RefCnt);
+            Assert.Equal(2049, owner.RefCnt);
         }
         finally { for (int i = 1; i < inputs.Length; ++i) inputs[i].Release(); owner.Release(); }
     }

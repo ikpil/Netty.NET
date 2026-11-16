@@ -18,6 +18,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -83,8 +84,8 @@ public class ByteBufWritableDispatchTest
         public int Calls => Owner switch { Heap h => h.Calls, Direct d => d.Calls, Composite c => c.Calls, _ => -1 };
         public void Dispose()
         {
-            if (Owner.ReferenceCount > 0) Assert.True(_tracked.Release());
-            Assert.Equal(0, Owner.ReferenceCount);
+            if (Owner.RefCnt > 0) Assert.True(_tracked.Release());
+            Assert.Equal(0, Owner.RefCnt);
             Assert.Equal(1, Tracker.Closes);
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -126,7 +127,7 @@ public class ByteBufWritableDispatchTest
         Assert.Equal(expectedCapacity, storage.Owner.Capacity);
         Assert.Equal(1, storage.Owner.ReaderIndex);
         Assert.Equal(3, storage.Owner.WriterIndex);
-        Assert.Equal(1, storage.Owner.ReferenceCount);
+        Assert.Equal(1, storage.Owner.RefCnt);
         Assert.Equal(new byte[] { 17, 34, 51, 68, 85, 102, 119, 136 }, storage.Owner.AsReadOnlySequence(0, 8).ToArray());
         storage.Owner.SetIndex(0, 4).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, storage.Owner.ReaderIndex);
@@ -140,7 +141,7 @@ public class ByteBufWritableDispatchTest
     {
         using var storage = new Storage(1, facade, 16);
         Assert.Equal(8, storage.Native.ReservedBytes);
-        Assert.Throws<OutOfMemoryException>(() =>
+        Assert.Throws<OutOfDirectMemoryError>(() =>
         {
             if (mode == 0) storage.Facade.EnsureWritable(6);
             else storage.Facade.EnsureWritable(6, mode == 2);

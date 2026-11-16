@@ -110,14 +110,14 @@ public class AbstractChannelTest
             await channel.ConnectAsync(new IPEndPoint(IPAddress.Loopback, 8888));
             Assert.Same(ioException, await Assert.ThrowsAsync<IOException>(() => channel.WriteAndFlushAsync("")));
             ByteBuf message = Unpooled.WrappedBuffer(new byte[16]);
-            Assert.Equal(1, message.ReferenceCount);
+            Assert.Equal(1, message.RefCnt);
             var submitted = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
             // The empty pipeline dispatches directly to the native transport head, replacing Unsafe.write.
             loop.Execute(() => submitted.SetResult(channel.WriteAsync(message)));
             Task write = await submitted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-            await Assert.ThrowsAsync<IOException>(() => write.WaitAsync(TimeSpan.FromSeconds(2)));
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write.WaitAsync(TimeSpan.FromSeconds(2)));
             Assert.True(write.IsCompleted);
-            Assert.Equal(0, message.ReferenceCount);
+            Assert.Equal(0, message.RefCnt);
         }
         finally
         {
@@ -141,7 +141,7 @@ public class AbstractChannelTest
             Assert.True(write.IsCompleted);
             var error = await Assert.ThrowsAsync<SocketException>(() => write);
             Assert.Equal(SocketError.NotConnected, error.SocketErrorCode);
-            Assert.Equal(0, message.ReferenceCount);
+            Assert.Equal(0, message.RefCnt);
         }
         finally { await channel.CloseAsync(); }
     }
@@ -163,16 +163,16 @@ public class AbstractChannelTest
                 channel.Flush();
             });
             Assert.True(write.IsCompleted);
-            await Assert.ThrowsAsync<IOException>(() => write);
-            Assert.Equal(0, message.ReferenceCount);
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
+            Assert.Equal(0, message.RefCnt);
         }
         finally { await channel.CloseAsync(); }
     }
 
     private static async Task AssertClosedChannelException(Task operation, IOException expected)
     {
-        // IOException is the CLR closed-channel representation; preserve the original cause identity.
-        var cause = await Assert.ThrowsAsync<IOException>(() => operation);
+        // CLR: ThrowsAnyAsync is assertInstanceOf; the original cause identity is preserved.
+        var cause = await Assert.ThrowsAnyAsync<ClosedChannelException>(() => operation);
         Assert.Same(expected, cause.InnerException);
     }
 
@@ -187,30 +187,30 @@ public class AbstractChannelTest
     private class TestChannel : AbstractChannel
     {
         internal TestChannel(bool active = true) : base(null, new ChannelMetadata(false)) => SetActive(active);
-        public override EndPoint LocalAddress => null;
-        public override EndPoint RemoteAddress => null;
+        protected override EndPoint LocalAddress0() => null;
+        protected override EndPoint RemoteAddress0() => null;
         protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) =>
             Task.FromException(new NotSupportedException());
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object message) => Task.CompletedTask;
+        protected override Task DoWrite(object msg) => Task.CompletedTask;
     }
 
     private sealed class FailingChannel(IOException error) : TestChannel(false)
     {
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
         { SetActive(true); return Task.CompletedTask; }
-        protected override Task DoWrite(object message) => Task.FromException(error);
+        protected override Task DoWrite(object msg) => Task.FromException(error);
     }
 
     private sealed class LifecycleHandler : ChannelInboundHandlerAdapter
     {
         internal int Added, Registered, Active, Unregistered;
-        public override void HandlerAdded(ChannelHandlerContext context) => Added++;
-        public override void ChannelRegistered(ChannelHandlerContext context) => Registered++;
-        public override void ChannelActive(ChannelHandlerContext context) => Active++;
-        public override void ChannelUnregistered(ChannelHandlerContext context) => Unregistered++;
+        public override void HandlerAdded(IChannelHandlerContext ctx) => Added++;
+        public override void ChannelRegistered(IChannelHandlerContext ctx) => Registered++;
+        public override void ChannelActive(IChannelHandlerContext ctx) => Active++;
+        public override void ChannelUnregistered(IChannelHandlerContext ctx) => Unregistered++;
     }
 }
 #pragma warning restore xUnit1051

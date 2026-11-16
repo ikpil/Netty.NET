@@ -57,7 +57,7 @@ public class NativeByteBufProviderTest
             Left.SetBytes(0, Filled(128, 0xa5));
             Right.SetBytes(0, Filled(128, 0x5a));
             Assert.True(Target.IsDirect); Assert.True(Target.IsContiguous);
-            Assert.Same(Allocator, Target.Allocator);
+            Assert.Same(Allocator, Target.Alloc());
             if (provider < 2)
             {
                 var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
@@ -87,7 +87,7 @@ public class NativeByteBufProviderTest
         }
         public void Dispose()
         {
-            foreach (ByteBuf b in new[] { Left, Target, Right }) if (b.ReferenceCount > 0) Assert.True(b.Release());
+            foreach (ByteBuf b in new[] { Left, Target, Right }) if (b.RefCnt > 0) Assert.True(b.Release());
             // Release/detach never disposes the caller's borrowed owner.
             BorrowedGuards();
             _borrowed?.Dispose();
@@ -218,7 +218,7 @@ public class NativeByteBufProviderTest
         ByteBuf copy = s.Target.Copy(s.Initial - length, length);
         try
         {
-            Assert.Same(s.Allocator, copy.Allocator); Assert.True(copy.IsDirect);
+            Assert.Same(s.Allocator, copy.Alloc()); Assert.True(copy.IsDirect);
             Assert.Equal(length, copy.Capacity); Assert.Equal(32768, copy.MaxCapacity);
             Assert.Equal(0, copy.ReaderIndex); Assert.Equal(length, copy.WriterIndex);
             Assert.Equal(Filled(length, 0x42), ByteBufUtil.GetBytes(copy));
@@ -226,7 +226,7 @@ public class NativeByteBufProviderTest
             Assert.Equal(0x42, s.Target.GetByte(s.Initial - 1));
             IndicesAndMarks(s.Target); s.Neighbors();
             Assert.True(s.Target.Release());
-            Assert.Equal(1, copy.ReferenceCount);
+            Assert.Equal(1, copy.RefCnt);
             if (length > 0) Assert.Equal(99, copy.GetByte(0));
         }
         finally { copy.Release(); }
@@ -341,7 +341,7 @@ public class NativeByteBufProviderTest
         ByteBuf next = s.Allocator.DirectBuffer(s.Initial, 32768);
         try
         {
-            Assert.NotSame(old, Owner(next)); Assert.Equal(0, old.ReferenceCount);
+            Assert.NotSame(old, Owner(next)); Assert.Equal(0, old.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => old.GetByte(0));
             Assert.Throws<IllegalReferenceCountException>(() => old.Retain());
             next.SetByte(0, 42); Assert.Equal(42, next.GetByte(0)); s.Neighbors();

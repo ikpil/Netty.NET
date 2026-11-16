@@ -31,7 +31,7 @@ public class PoolThreadCacheSchedulingTest
     private static readonly TimeSpan Period = TimeSpan.FromMilliseconds(10);
     private static PooledByteBufAllocator NewAllocator(TimeSpan? period = null, NativeMemoryAllocator native = null)
         => new(maxOrder: 4, nativeAllocator: native, smallCacheSize: 4, normalCacheSize: 4,
-            cacheTrimPeriod: period ?? Period);
+            cacheTrimPeriod: period ?? Period, useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
     private static ByteBuf Allocate(PooledByteBufAllocator a, bool direct, int size)
         => direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
     private static IPoolArenaMetric Arena(PooledByteBufAllocator a, bool direct)
@@ -85,7 +85,8 @@ public class PoolThreadCacheSchedulingTest
     [Fact]
     public void ZeroSizedCachesStillHaveOneExecutorScheduleForTheirOriginalBinding()
     {
-        var executor = new ManualExecutor(); using var a = new PooledByteBufAllocator(cacheTrimPeriod: Period);
+        var executor = new ManualExecutor();
+        using var a = new PooledByteBufAllocator(cacheTrimPeriod: Period, smallCacheSize: 0, normalCacheSize: 0);
         Mapped(executor, () => a.HeapBuffer(48).Release());
         Assert.Equal(1, executor.ScheduledCount); Assert.Equal(0, a.Metric.HeapArenas[0].NumActiveAllocations);
         executor.Advance(Period); Assert.Equal(1, executor.RunDue());
@@ -220,8 +221,8 @@ public class PoolThreadCacheSchedulingTest
         var native = new NativeMemoryAllocator(0); var executor = new ManualExecutor(); using var a = NewAllocator(native: native);
         Mapped(executor, () =>
         {
-            Assert.Throws<OutOfMemoryException>(() => a.DirectBuffer(48));
-            Assert.Throws<OutOfMemoryException>(() => a.DirectBuffer(48));
+            Assert.Throws<OutOfDirectMemoryError>(() => a.DirectBuffer(48));
+            Assert.Throws<OutOfDirectMemoryError>(() => a.DirectBuffer(48));
         });
         Assert.Equal(1, executor.ScheduledCount); Assert.Equal(1, a.Metric.NumThreadLocalCaches);
         a.ReleaseCurrentThreadBinding(); Assert.Equal(0, executor.ScheduledCount); Assert.Equal(0, native.ReservedBytes);
@@ -369,8 +370,8 @@ public class PoolThreadCacheSchedulingTest
         public override bool IsShuttingDown() => _shutdown;
         public override bool IsTerminated() => _shutdown;
         public override bool AwaitTermination(TimeSpan timeout) => _shutdown;
-        public override Task Termination => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Close(); return Termination; }
+        public override Task TerminationFuture => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Close(); return TerminationFuture; }
         internal void Close() { _shutdown = true; CancelScheduledTasks(); }
         [Obsolete]
         public override void Shutdown() => Close();
@@ -384,7 +385,7 @@ public class PoolThreadCacheSchedulingTest
         public override bool IsShuttingDown() => false;
         public override bool IsTerminated() => false;
         public override bool AwaitTermination(TimeSpan timeout) => false;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         [Obsolete]
         public override void Shutdown() { }

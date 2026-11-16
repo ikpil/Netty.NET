@@ -70,9 +70,14 @@ public abstract partial class AbstractCompositeByteBufTest : AbstractByteBufTest
 
         Assert.Equal(length, buffer.Capacity);
         Assert.Equal(length, buffer.ReadableBytes);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
         buffer.WriterIndex = 0;
         return buffer;
+    }
+
+    protected virtual CompositeByteBuf NewCompositeBuffer()
+    {
+        return Unpooled.CompositeBuffer();
     }
 
     // Composite buffer does not waste bandwidth on discardReadBytes, but

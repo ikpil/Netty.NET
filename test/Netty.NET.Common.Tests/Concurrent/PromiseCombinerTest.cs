@@ -28,15 +28,21 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class TaskWhenAllPortTest
 {
     [Fact]
-    public void NullTaskArrayIsRejected() =>
-        Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+    public async Task TestNullArgument()
+    {
+        // CLR: finish(aggregatePromise) becomes the optional owner's TrySetFromTask with the
+        // completed WhenAll result. Its required input rejects null without consuming the
+        // owner, which then still receives the empty batch's success.
+        var aggregate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.Throws<ArgumentNullException>(() => aggregate.TrySetFromTask(null));
+        Assert.False(aggregate.Task.IsCompleted);
+        Assert.True(aggregate.TrySetFromTask(Task.WhenAll(Array.Empty<Task>())));
+        await aggregate.Task;
+        Assert.True(aggregate.Task.IsCompletedSuccessfully);
+    }
 
     [Fact]
-    public void NullTaskEntryIsRejected() =>
-        Assert.Throws<ArgumentException>(() => Task.WhenAll(new Task[] { Task.CompletedTask, null }));
-
-    [Fact]
-    public async Task AnEmptyBatchSucceedsWithoutAnAggregateProducer()
+    public async Task TestNullAggregatePromise()
     {
         Task result = Task.WhenAll(Array.Empty<Task>());
         Assert.True(result.IsCompletedSuccessfully);
@@ -44,7 +50,61 @@ public class TaskWhenAllPortTest
     }
 
     [Fact]
-    public async Task AllSuccessWaitsForEveryOperation()
+    public void TestAddNullPromise() =>
+        Assert.Throws<ArgumentException>(() => Task.WhenAll(new Task[] { Task.CompletedTask, null }));
+
+    [Fact]
+    public void TestAddAllNullPromise() =>
+        Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+
+    [Fact]
+    public async Task TestAddAfterFinish()
+    {
+        // CLR: no builder rejects add after finish (IllegalStateException); WhenAll has
+        // snapshotted its inputs, so a later single addition cannot change that batch.
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var later = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = new List<Task> { first.Task };
+        Task result = Task.WhenAll(tasks);
+        tasks.Add(later.Task);
+        first.SetResult();
+        await result;
+        Assert.False(later.Task.IsCompleted);
+        later.SetResult();
+    }
+
+    [Fact]
+    public async Task TestAddAllAfterFinish()
+    {
+        // CLR: no builder rejects addAll after finish (IllegalStateException); WhenAll has
+        // snapshotted its inputs, so a later range addition cannot change that batch.
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var later = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = new List<Task> { first.Task };
+        Task result = Task.WhenAll(tasks);
+        tasks.AddRange(new[] { later.Task });
+        first.SetResult();
+        await result;
+        Assert.False(later.Task.IsCompleted);
+        later.SetResult();
+    }
+
+    [Fact]
+    public async Task TestFinishCalledTwiceThrows()
+    {
+        // CLR: there is no builder instance to finish twice (IllegalStateException);
+        // multiple independent observers may aggregate the same tasks.
+        var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task first = Task.WhenAll(source.Task);
+        Task second = Task.WhenAll(source.Task);
+        source.SetResult();
+        await Task.WhenAll(first, second);
+        Assert.True(first.IsCompletedSuccessfully);
+        Assert.True(second.IsCompletedSuccessfully);
+    }
+
+    [Fact]
+    public async Task TestAddAllSuccess()
     {
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -57,7 +117,7 @@ public class TaskWhenAllPortTest
     }
 
     [Fact]
-    public async Task IncrementallyCollectedAlreadyCompletedTasksSucceed()
+    public async Task TestAddSuccess()
     {
         var tasks = new List<Task> { Task.FromResult(123) };
         tasks.Add(Task.FromResult("text"));
@@ -65,7 +125,7 @@ public class TaskWhenAllPortTest
     }
 
     [Fact]
-    public async Task AllFailuresWaitAndRetainEachOriginalException()
+    public async Task TestAddAllFail()
     {
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -83,7 +143,7 @@ public class TaskWhenAllPortTest
     }
 
     [Fact]
-    public async Task AlreadyCompletedFailuresRetainTheirOriginalIdentity()
+    public async Task TestAddFail()
     {
         var first = new InvalidOperationException("first");
         var second = new ArgumentException("second");
@@ -94,31 +154,52 @@ public class TaskWhenAllPortTest
     }
 
     [Fact]
-    public async Task AddingToTheCollectionAfterWhenAllDoesNotChangeThatBatch()
+    public async Task TestEventExecutor()
     {
-        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var later = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var tasks = new List<Task> { first.Task };
-        Task result = Task.WhenAll(tasks);
-        tasks.Add(later.Task);
-        first.SetResult();
-        await result;
-        Assert.False(later.Task.IsCompleted);
-        later.SetResult();
+        // CLR: no mutable combiner with a foreign-thread guard remains. A real executor
+        // collects different Task<T> values and transfers foreign completions on its loop.
+        var executor = new DefaultEventExecutor();
+        var first = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var aggregate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task forwarding = executor.SubmitAsync(async () =>
+        {
+            Assert.True(executor.InEventLoop());
+            Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
+            ready.SetResult();
+            try { await all.ConfigureAwait(false); }
+            catch (Exception) { /* Transfer the complete native status, not the await exception alone. */ }
+            await executor.SubmitAsync(() =>
+            {
+                Assert.True(executor.InEventLoop());
+                Assert.True(aggregate.TrySetFromTask(all));
+            });
+        });
+        try
+        {
+            await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var firstError = new InvalidOperationException("foreign write one");
+            var secondError = new ArgumentException("foreign write two");
+            first.SetException(firstError);
+            Assert.False(aggregate.Task.IsCompleted);
+            second.SetException(secondError);
+            await forwarding.WaitAsync(TimeSpan.FromSeconds(5));
+            await Assert.ThrowsAnyAsync<Exception>(async () => await aggregate.Task);
+            Assert.Contains(firstError, aggregate.Task.Exception.InnerExceptions);
+            Assert.Contains(secondError, aggregate.Task.Exception.InnerExceptions);
+        }
+        finally
+        {
+            first.TrySetResult(null);
+            second.TrySetResult(0);
+            await forwarding.WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
-    [Fact]
-    public async Task MultipleObserversCanAggregateTheSameTasks()
-    {
-        var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Task first = Task.WhenAll(source.Task);
-        Task second = Task.WhenAll(source.Task);
-        source.SetResult();
-        await Task.WhenAll(first, second);
-        Assert.True(first.IsCompletedSuccessfully);
-        Assert.True(second.IsCompletedSuccessfully);
-    }
-
+    // CLR supplements: input duplication, fault/cancellation precedence and revived
+    // pending-write collection (docs/common-task-composition.md, additional cases).
     [Fact]
     public async Task DuplicateInputsDoNotDuplicateOrChangeTheOperation()
     {
@@ -160,49 +241,6 @@ public class TaskWhenAllPortTest
         OperationCanceledException error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await result);
         Assert.Equal(cancellation.Token, error.CancellationToken);
         Assert.True(result.IsCanceled);
-    }
-
-    [Fact]
-    public async Task ForeignCompletionsAreTransferredOnTheRealEventLoop()
-    {
-        var executor = new DefaultEventExecutor();
-        var first = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var aggregate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Task forwarding = executor.SubmitAsync(async () =>
-        {
-            Assert.True(executor.InEventLoop());
-            Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
-            ready.SetResult();
-            try { await all.ConfigureAwait(false); }
-            catch (Exception) { /* Transfer the complete native status, not the await exception alone. */ }
-            await executor.SubmitAsync(() =>
-            {
-                Assert.True(executor.InEventLoop());
-                Assert.True(aggregate.TrySetFromTask(all));
-            });
-        });
-        try
-        {
-            await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            var firstError = new InvalidOperationException("foreign write one");
-            var secondError = new ArgumentException("foreign write two");
-            first.SetException(firstError);
-            Assert.False(aggregate.Task.IsCompleted);
-            second.SetException(secondError);
-            await forwarding.WaitAsync(TimeSpan.FromSeconds(5));
-            await Assert.ThrowsAnyAsync<Exception>(async () => await aggregate.Task);
-            Assert.Contains(firstError, aggregate.Task.Exception.InnerExceptions);
-            Assert.Contains(secondError, aggregate.Task.Exception.InnerExceptions);
-        }
-        finally
-        {
-            first.TrySetResult(null);
-            second.TrySetResult(0);
-            await forwarding.WaitAsync(TimeSpan.FromSeconds(5));
-            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
-        }
     }
 
     [Fact]

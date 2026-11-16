@@ -94,8 +94,8 @@ public class DerivedByteBufIterationTest
         }
         public void Dispose()
         {
-            if (Owner?.ReferenceCount > 0) Assert.True(Owner.Release());
-            if (Root.ReferenceCount > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
+            if (Root.RefCnt > 0) Assert.True(Root.Release());
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -169,14 +169,14 @@ public class DerivedByteBufIterationTest
         Assert.Equal(reader, s.View.ReaderIndex); Assert.Equal(writer, s.View.WriterIndex);
         if (s.Owner != null)
         {
-            Assert.Equal(2, s.Root.ReferenceCount); Assert.Equal(1, s.Owner.ReferenceCount);
-            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.Equal(2, s.Root.RefCnt); Assert.Equal(1, s.Owner.RefCnt);
+            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
             // A live root cannot make an independently released pooled view accessible again.
             Assert.Throws<IllegalReferenceCountException>(() => Scan(s.View, descending, 2, 3, _ => true));
             Assert.Throws<IllegalReferenceCountException>(() => Scan(s.View, descending, _ => true));
             Assert.Equal(0, s.Root.GetByte(0));
         }
-        else Assert.Equal(1, s.Root.ReferenceCount);
+        else Assert.Equal(1, s.Root.RefCnt);
     }
 
     public static IEnumerable<object[]> Results()

@@ -293,7 +293,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     /**
      * Returns the {@link ByteBufAllocator} which created this buffer.
      */
-    public virtual IByteBufAllocator Allocator => UnpooledByteBufAllocator.Default;
+    public virtual IByteBufAllocator Alloc() => UnpooledByteBufAllocator.Default;
 
     protected abstract Memory<byte> GetMemoryCore(int index, int length);
     protected virtual ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length) => GetMemoryCore(index, length);
@@ -338,7 +338,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @return {@code null} if this buffer is not a wrapper
          */
     public virtual ByteBuf Unwrap() => null;
-    public abstract int ReferenceCount { get; }
+    public abstract int RefCnt { get; }
     public abstract ByteBuf Retain(int increment = 1);
     public abstract bool Release(int decrement = 1);
     public virtual ByteBuf Touch(object hint = null) => this;
@@ -409,20 +409,20 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * if and only if {@code (this.writerIndex - this.readerIndex)} is greater
          * than {@code 0}.
          */
-    public bool IsReadable => _writerIndex > _readerIndex;
+    public bool IsReadable() => _writerIndex > _readerIndex;
     /**
      * Returns {@code true} if and only if this buffer contains equal to or more than the specified number of elements.
      */
     /// <remarks>Queries readable indices without accessing content, retaining, or checking accessibility.
     /// Like Netty's isReadable(int), a nonpositive count succeeds on ordinary buffers.
     /// The shared empty sentinel always returns false.</remarks>
-    public virtual bool CanRead(int byteCount) => ReadableBytes >= byteCount;
+    public virtual bool IsReadable(int size) => ReadableBytes >= size;
     /**
          * Returns {@code true}
          * if and only if {@code (this.capacity - this.writerIndex)} is greater
          * than {@code 0}.
          */
-    public bool IsWritable => !IsReadOnly && Capacity > _writerIndex;
+    public bool IsWritable() => !IsReadOnly && Capacity > _writerIndex;
 
     private void CheckIndices(int reader, int writer)
     {
@@ -620,7 +620,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         // Normalize the target capacity to the power of 2.
         int fastWritable = MaxFastWritableBytes;
         int newCapacity = fastWritable >= minimumWritableBytes ? _writerIndex + fastWritable
-            : Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+            : Alloc().CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
         // Adjust to the new capacity.
         Capacity = newCapacity;
     }
@@ -657,7 +657,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         }
         int fastWritable = MaxFastWritableBytes;
         int newCapacity = fastWritable >= minimumWritableBytes ? _writerIndex + fastWritable
-            : Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+            : Alloc().CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
         // Adjust to the new capacity.
         Capacity = newCapacity;
         return 2;
@@ -688,7 +688,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     // CLR range/lifetime checks stay enabled; JVM opt-out properties are not applied.
     protected void EnsureAccessible()
     {
-        if (ReferenceCount == 0) throw new IllegalReferenceCountException(0);
+        if (RefCnt == 0) throw new IllegalReferenceCountException(0);
     }
     protected void CheckNewCapacity(int capacity)
     {
@@ -1637,8 +1637,9 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          */
     public virtual ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
+        EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        EnsureCanWrite(); CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
+        CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
         if (source.SupportsDirectBulkCopy && SupportsDirectBulkCopy &&
             source.TryGetReadOnlyMemoryCore(sourceIndex, length, out var input) &&
             TryGetMemoryCore(index, length, out var output)) input.Span.CopyTo(output.Span);
@@ -1743,7 +1744,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
-        ByteBuf result = Allocator.HeapBuffer(length, MaxCapacity);
+        ByteBuf result = Alloc().HeapBuffer(length, MaxCapacity);
         try { result.SetBytes(0, this, index, length); result.WriterIndex = length; return result; }
         catch { result.Release(); throw; }
     }
@@ -1765,7 +1766,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         CheckReadableBytes(length);
         if (length == 0) return Unpooled.EmptyBuffer;
-        ByteBuf result = Allocator.Buffer(length, MaxCapacity);
+        ByteBuf result = Alloc().Buffer(length, MaxCapacity);
         try { result.WriteBytes(this, _readerIndex, length); }
         catch { result.Release(); throw; }
         _readerIndex += length;

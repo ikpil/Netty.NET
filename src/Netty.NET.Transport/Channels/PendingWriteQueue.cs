@@ -49,12 +49,12 @@ public sealed class PendingWriteQueue
     private readonly PendingBytesTracker _tracker;
     // head and tail pointers for the linked-list structure. If empty head and tail are null.
     private Entry _head, _tail;
-    public PendingWriteQueue(ChannelHandlerContext context)
+    public PendingWriteQueue(IChannelHandlerContext ctx)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        _invoker = context;
-        _executor = context.Executor;
-        _tracker = new PendingBytesTracker(context.Channel);
+        ArgumentNullException.ThrowIfNull(ctx);
+        _invoker = ctx;
+        _executor = ctx.Executor;
+        _tracker = new PendingBytesTracker(ctx.Channel);
     }
     public PendingWriteQueue(IChannel channel)
     {
@@ -82,29 +82,29 @@ public sealed class PendingWriteQueue
     public object Current { get { AssertOwner(); return _head?.Message; } }
     [Conditional("DEBUG")]
     private void AssertOwner() => Debug.Assert(_executor.InEventLoop());
-    public Task Add(object message, CancellationToken cancellationToken = default)
+    public Task Add(object msg, CancellationToken cancellationToken = default)
     {
         var producer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Add(message, producer, cancellationToken);
+        Add(msg, producer, cancellationToken);
         return producer.Task;
     }
     /**
      * Add the given {@code msg} and {@link ChannelPromise}.
      */
-    public void Add(object message, TaskCompletionSource producer, CancellationToken cancellationToken = default)
+    public void Add(object msg, TaskCompletionSource producer, CancellationToken cancellationToken = default)
     {
         AssertOwner();
-        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(msg);
         ArgumentNullException.ThrowIfNull(producer);
         // It is possible for writes to be triggered from removeAndFailAll(). To preserve ordering,
         // we should add them to the queue and let removeAndFailAll() fail them later.
-        int estimate = _tracker.Size(message);
+        int estimate = _tracker.Size(msg);
         if (estimate < 0)
         {
             // Size may be unknown so just use 0
             estimate = 0;
         }
-        var entry = new Entry(message, (long)estimate + PendingWriteOverhead, producer, cancellationToken);
+        var entry = new Entry(msg, (long)estimate + PendingWriteOverhead, producer, cancellationToken);
         if (_tail == null)
             _head = _tail = entry;
         else
@@ -117,7 +117,7 @@ public sealed class PendingWriteQueue
         // this save both checking against the ReferenceCounted interface
         // and makes better use of virtual calls vs interface ones
         // CLR: ReferenceCountUtil dispatches to the native reference-counted object directly.
-        ReferenceCountUtil.Touch(message);
+        ReferenceCountUtil.Touch(msg);
         if (cancellationToken.CanBeCanceled)
         {
             entry.Cancellation = cancellationToken.UnsafeRegister(_ =>
@@ -318,9 +318,9 @@ public sealed class PendingWriteQueue
      * Holds all meta-data and construct the linked-list structure.
      */
     // CLR: ordinary managed entries replace JVM Recycler/ObjectPool handles.
-    private sealed class Entry(object message, long size, TaskCompletionSource producer, CancellationToken token)
+    private sealed class Entry(object msg, long size, TaskCompletionSource producer, CancellationToken token)
     {
-        internal readonly object Message = message;
+        internal readonly object Message = msg;
         internal readonly long Size = size;
         internal readonly TaskCompletionSource Producer = producer;
         internal readonly CancellationToken Token = token;

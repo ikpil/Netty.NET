@@ -19,6 +19,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Netty.NET.Common;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -46,7 +48,7 @@ public class UnsafeByteBufUtilTest
         }
         public void Dispose()
         {
-            if (Target.ReferenceCount > 0) Assert.True(Target.Release());
+            if (Target.RefCnt > 0) Assert.True(Target.Release());
             Pool?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -71,7 +73,7 @@ public class UnsafeByteBufUtilTest
         Assert.Equal(data, ByteBufUtil.GetBytes(s.Target, 0, data.Length));
         Assert.Equal(data, readOnly.ToArray());
         Assert.Equal(0, s.Target.ReaderIndex); Assert.Equal(0, s.Target.WriterIndex);
-        Assert.Equal(1, s.Target.ReferenceCount);
+        Assert.Equal(1, s.Target.RefCnt);
     }
 
     [Fact]
@@ -167,7 +169,7 @@ public class UnsafeByteBufUtilTest
         Assert.Equal(1, s.Target.ReaderIndex); Assert.Equal(capacity - 1, s.Target.WriterIndex);
         s.Target.SetIndex(0, capacity).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, s.Target.ReaderIndex); Assert.Equal(capacity - 1, s.Target.WriterIndex);
-        Assert.Equal(1, s.Target.ReferenceCount);
+        Assert.Equal(1, s.Target.RefCnt);
     }
 
     public static IEnumerable<object[]> ZeroAlignments()
@@ -238,7 +240,7 @@ public class UnsafeByteBufUtilTest
     }
 
     private static IByteBufAllocator Factory(bool adaptive, NativeMemoryAllocator native)
-        => adaptive ? new AdaptiveByteBufAllocator(true, false, native)
+        => adaptive ? new AdaptiveByteBufAllocator(true, lowMemory: false, nativeAllocator: native)
             : new PooledByteBufAllocator(true, poolHeap: false, poolDirect: false, nativeAllocator: native);
 
     [Theory]
@@ -251,7 +253,7 @@ public class UnsafeByteBufUtilTest
         try
         {
             b = allocator.DirectBuffer(length, length + 64);
-            Assert.True(b.IsDirect); Assert.Same(allocator, b.Allocator);
+            Assert.True(b.IsDirect); Assert.Same(allocator, b.Alloc());
             if (adaptive)
                 Assert.True(MemoryMarshal.TryGetMemoryManager<byte, AdaptiveChunkAllocation>(b.AsMemory(0, length), out _));
             else Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, length), out _));
@@ -259,7 +261,7 @@ public class UnsafeByteBufUtilTest
             byte[] prefix = Enumerable.Range(0, Math.Min(32, length)).Select(i => (byte)(i + 1)).ToArray();
             b.WriteBytes(prefix).MarkReaderIndex().MarkWriterIndex();
             copy = b.Copy(0, prefix.Length);
-            Assert.True(copy.IsDirect); Assert.Same(allocator, copy.Allocator);
+            Assert.True(copy.IsDirect); Assert.Same(allocator, copy.Alloc());
             Assert.Equal(prefix, ByteBufUtil.GetBytes(copy));
             b.Capacity = length + 64;
             Assert.Equal(prefix, ByteBufUtil.GetBytes(b, 0, prefix.Length));
@@ -275,7 +277,7 @@ public class UnsafeByteBufUtilTest
         finally
         {
             copy?.Release();
-            if (b?.ReferenceCount > 0) b.Release();
+            if (b?.RefCnt > 0) b.Release();
             ((IDisposable)allocator).Dispose();
         }
         Assert.Equal(0, native.ReservedBytes);
@@ -288,7 +290,7 @@ public class UnsafeByteBufUtilTest
     {
         var native = new NativeMemoryAllocator(0);
         IByteBufAllocator allocator = Factory(adaptive, native);
-        try { Assert.Throws<OutOfMemoryException>(() => allocator.DirectBuffer(128, 192)); }
+        try { Assert.Throws<OutOfDirectMemoryError>(() => allocator.DirectBuffer(128, 192)); }
         finally { ((IDisposable)allocator).Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(adaptive ? 0 : -1, ((IByteBufAllocatorMetricProvider)allocator).Metric.UsedDirectMemory);

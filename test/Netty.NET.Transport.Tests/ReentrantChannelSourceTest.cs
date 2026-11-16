@@ -117,7 +117,7 @@ public class ReentrantChannelSourceTest
         var client = await fixture.ConnectAsync();
         client.Pipeline.AddLast(new CloseInFlush());
         await client.WriteAsync(CreateTestBuffer(2000)).WaitAsync(TestContext.Current.CancellationToken);
-        await client.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
+        await client.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
         fixture.AssertLog("WRITE\nFLUSH\nCLOSE\n");
     }
 
@@ -130,16 +130,15 @@ public class ReentrantChannelSourceTest
         var error = await Record.ExceptionAsync(() =>
             client.WriteAndFlushAsync(CreateTestBuffer(2000)).WaitAsync(TestContext.Current.CancellationToken));
         // FIXME:  shouldn't this contain the "intentional failure" exception?
-        Assert.IsType<IOException>(error);
-        Assert.Equal("Channel is closed.", error.Message);
-        await client.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
+        Assert.IsAssignableFrom<ClosedChannelException>(error);
+        await client.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
         fixture.AssertLog("WRITE\nCLOSE\n");
     }
 
     [Fact(Timeout = 10000)]
     public async Task NestReentrancy()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var address = new LocalAddress(typeof(ReentrantChannelSourceTest).Name);
         var received = Channel.CreateUnbounded<string>();
         var token = TestContext.Current.CancellationToken;
@@ -182,7 +181,7 @@ public class ReentrantChannelSourceTest
         await using var fixture = new Fixture(writability: false);
         var client = (LocalChannel)await fixture.ConnectAsync();
         SetWatermarks(client);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var executor = group.Next();
         var token = TestContext.Current.CancellationToken;
         using var cancelWrite = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -217,7 +216,7 @@ public class ReentrantChannelSourceTest
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(() => write.WaitAsync(token));
             }
             Assert.Equal(0, client.OutboundBuffer.TotalPendingWriteBytes);
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
             Assert.True(client.IsWritable);
         }
         finally
@@ -237,8 +236,8 @@ public class ReentrantChannelSourceTest
 
     private sealed class Fixture(bool writability) : IAsyncDisposable
     {
-        private readonly DefaultEventLoopGroup _servers = new(1);
-        private readonly DefaultEventLoopGroup _clients = new(1);
+        private readonly MultiThreadIoEventLoopGroup _servers = new(1, LocalIoHandler.NewFactory());
+        private readonly MultiThreadIoEventLoopGroup _clients = new(1, LocalIoHandler.NewFactory());
         private readonly EventLog _log = new(writability);
 
         internal async Task<IChannel> ConnectAsync()
@@ -269,59 +268,59 @@ public class ReentrantChannelSourceTest
     {
         private readonly StringBuilder _log = new();
         internal string Text => _log.ToString();
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
-        { _log.Append("WRITE\n"); return context.WriteAsync(message, token); }
-        public override void Flush(ChannelHandlerContext context)
-        { _log.Append("FLUSH\n"); context.Flush(); }
-        public override Task CloseAsync(ChannelHandlerContext context, CancellationToken token)
-        { if (!writability) _log.Append("CLOSE\n"); return context.CloseAsync(token); }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error)
-        { if (!writability) _log.Append("EXCEPTION: ").Append(error).Append('\n'); }
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        { _log.Append("WRITE\n"); return ctx.WriteAsync(msg, token); }
+        public override void Flush(IChannelHandlerContext ctx)
+        { _log.Append("FLUSH\n"); ctx.Flush(); }
+        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token)
+        { if (!writability) _log.Append("CLOSE\n"); return ctx.CloseAsync(token); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        { if (!writability) _log.Append("EXCEPTION: ").Append(cause).Append('\n'); }
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
-            if (writability) _log.Append(context.Channel.IsWritable ? "WRITABILITY: writable=true\n" : "WRITABILITY: writable=false\n");
-            context.FireChannelWritabilityChanged();
+            if (writability) _log.Append(ctx.Channel.IsWritable ? "WRITABILITY: writable=true\n" : "WRITABILITY: writable=false\n");
+            ctx.FireChannelWritabilityChanged();
         }
     }
 
     private sealed class FlushWhenUnwritable : ChannelInboundHandlerAdapter
     {
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context)
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
-            if (!context.Channel.IsWritable) context.Channel.Flush();
-            context.FireChannelWritabilityChanged();
+            if (!ctx.Channel.IsWritable) ctx.Channel.Flush();
+            ctx.FireChannelWritabilityChanged();
         }
     }
 
     private sealed class PassWrite : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token) =>
-            context.WriteAsync(message, token);
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) =>
+            ctx.WriteAsync(msg, token);
     }
 
     private sealed class PingPong : ChannelOutboundHandlerAdapter
     {
         private int _writes;
         private int _flushes;
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
-            if (_writes++ < 5) context.Channel.Flush();
-            return context.WriteAsync(message, token);
+            if (_writes++ < 5) ctx.Channel.Flush();
+            return ctx.WriteAsync(msg, token);
         }
-        public override void Flush(ChannelHandlerContext context)
+        public override void Flush(IChannelHandlerContext ctx)
         {
-            if (_flushes++ < 5) _ = context.Channel.WriteAsync(CreateTestBuffer(2000));
-            context.Flush();
+            if (_flushes++ < 5) _ = ctx.Channel.WriteAsync(CreateTestBuffer(2000));
+            ctx.Flush();
         }
     }
 
     private sealed class CloseInFlush : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
-            Task write = context.WriteAsync(message, token);
-            _ = CloseOnCompletionAsync(context.Channel, write);
-            context.Channel.Flush();
+            Task write = ctx.WriteAsync(msg, token);
+            _ = CloseOnCompletionAsync(ctx.Channel, write);
+            ctx.Channel.Flush();
             return write;
         }
 
@@ -334,19 +333,19 @@ public class ReentrantChannelSourceTest
 
     private sealed class FailFlush : ChannelOutboundHandlerAdapter
     {
-        public override void Flush(ChannelHandlerContext context) => throw new InvalidOperationException("intentional failure");
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => _ = context.CloseAsync();
+        public override void Flush(IChannelHandlerContext ctx) => throw new InvalidOperationException("intentional failure");
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
     }
 
     private sealed class SplitInput : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            var buffer = (ByteBuf)message;
+            var buffer = (ByteBuf)msg;
             string text;
-            try { text = buffer.GetString(Encoding.UTF8); }
+            try { text = buffer.ToString(Encoding.UTF8); }
             finally { buffer.Release(); }
-            foreach (string line in text.Split('\n')) context.FireChannelRead(line);
+            foreach (string line in text.Split('\n')) ctx.FireChannelRead(line);
         }
     }
 
@@ -354,37 +353,37 @@ public class ReentrantChannelSourceTest
     {
         private readonly Queue<object> _queue = new();
         private bool _demand = true;
-        public override void HandlerAdded(ChannelHandlerContext context) => context.Read();
-        public override void ChannelRead(ChannelHandlerContext context, object message) => _queue.Enqueue(message);
-        public override void ChannelReadComplete(ChannelHandlerContext context)
+        public override void HandlerAdded(IChannelHandlerContext ctx) => ctx.Read();
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _queue.Enqueue(msg);
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             while (_demand && _queue.TryDequeue(out var item))
             {
                 _demand = false;
-                context.FireChannelRead(item);
+                ctx.FireChannelRead(item);
             }
-            context.FireChannelReadComplete();
+            ctx.FireChannelReadComplete();
         }
-        public override void Read(ChannelHandlerContext context)
+        public override void Read(IChannelHandlerContext ctx)
         {
-            if (_queue.TryDequeue(out var item)) context.FireChannelRead(item);
+            if (_queue.TryDequeue(out var item)) ctx.FireChannelRead(item);
             else
             {
                 _demand = true;
-                context.Read();
+                ctx.Read();
             }
         }
     }
 
     private sealed class SaveInput(ChannelWriter<string> received) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { received.TryWrite((string)message); context.FireChannelRead(message); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { received.TryWrite((string)msg); ctx.FireChannelRead(msg); }
     }
 
     private sealed class RequestInput : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message) => context.Read();
-        public override void ChannelReadComplete(ChannelHandlerContext context) => context.Read();
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ctx.Read();
+        public override void ChannelReadComplete(IChannelHandlerContext ctx) => ctx.Read();
     }
 }

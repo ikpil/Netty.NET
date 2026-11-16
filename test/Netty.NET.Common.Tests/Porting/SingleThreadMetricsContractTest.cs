@@ -190,7 +190,7 @@ public class SingleThreadMetricsContractTest
     public void ThreadPropertiesRemainReadableAfterTheNativeThreadStops()
     {
         var thread = new Thread(() => { }) { IsBackground = true, Priority = ThreadPriority.BelowNormal, Name = "properties" };
-        var properties = new DefaultThreadProperties(thread);
+        var properties = new SingleThreadEventExecutor.DefaultThreadProperties(thread);
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.False(properties.IsAlive());

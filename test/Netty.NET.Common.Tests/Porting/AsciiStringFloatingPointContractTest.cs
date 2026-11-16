@@ -14,7 +14,7 @@ public class AsciiStringFloatingPointContractTest
     public void JavaNumericFormsRemainAccepted(string text, double expected)
     {
         var value = new AsciiString(text);
-        Assert.Equal((float)expected, value.ParseSingle());
+        Assert.Equal((float)expected, value.ParseFloat());
         Assert.Equal(expected, value.ParseDouble());
         Assert.True(value.TryParseSingle(out float single));
         Assert.True(value.TryParseDouble(out double twice));
@@ -29,7 +29,7 @@ public class AsciiStringFloatingPointContractTest
     public void ClrOnlyNumericFormsAreRejected(string text)
     {
         var value = new AsciiString(text);
-        Assert.Throws<FormatException>(() => value.ParseSingle());
+        Assert.Throws<FormatException>(() => value.ParseFloat());
         Assert.Throws<FormatException>(() => value.ParseDouble());
         Assert.False(value.TryParseSingle(out float single));
         Assert.False(value.TryParseDouble(out double twice));
@@ -48,7 +48,7 @@ public class AsciiStringFloatingPointContractTest
             culture.NumberFormat.NumberGroupSeparator = ".";
             CultureInfo.CurrentCulture = culture;
             var value = new AsciiString("1.25");
-            Assert.Equal(1.25f, value.ParseSingle());
+            Assert.Equal(1.25f, value.ParseFloat());
             Assert.Equal(1.25, value.ParseDouble());
             Assert.True(value.TryParseSingle(out float single));
             Assert.True(value.TryParseDouble(out double twice));
@@ -65,7 +65,7 @@ public class AsciiStringFloatingPointContractTest
     public void EmptyRangesStillValidateTheLogicalView(int position)
     {
         var value = new AsciiString("12");
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseSingle(position, position));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseFloat(position, position));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseDouble(position, position));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseSingle(position, position, out _));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseDouble(position, position, out _));
@@ -82,7 +82,7 @@ public class AsciiStringFloatingPointContractTest
     public void NumericSlicesRespectBackingOffsetsAndDoNotConsumeSentinels(string text, double expected)
     {
         var value = new AsciiString(Encoding.ASCII.GetBytes("!!x" + text + "y!!"), 2, text.Length + 2, false);
-        Assert.Equal((float)expected, value.ParseSingle(1, text.Length + 1));
+        Assert.Equal((float)expected, value.ParseFloat(1, text.Length + 1));
         Assert.Equal(expected, value.ParseDouble(1, text.Length + 1));
         Assert.True(value.TryParseSingle(1, text.Length + 1, out float single));
         Assert.True(value.TryParseDouble(1, text.Length + 1, out double twice));
@@ -109,7 +109,7 @@ public class AsciiStringFloatingPointContractTest
     public void SingleRoundsDirectlyToNearestEvenAcrossAllIeeeBoundaries(string text, uint expected)
     {
         var value = new AsciiString(text);
-        Assert.Equal(expected, unchecked((uint)BitConverter.SingleToInt32Bits(value.ParseSingle())));
+        Assert.Equal(expected, unchecked((uint)BitConverter.SingleToInt32Bits(value.ParseFloat())));
         Assert.True(value.TryParseSingle(out float result));
         Assert.Equal(expected, unchecked((uint)BitConverter.SingleToInt32Bits(result)));
     }
@@ -144,7 +144,7 @@ public class AsciiStringFloatingPointContractTest
     public void NaNUsesTheNativeCanonicalRepresentation(string text)
     {
         var value = new AsciiString(text);
-        Assert.True(float.IsNaN(value.ParseSingle()));
+        Assert.True(float.IsNaN(value.ParseFloat()));
         Assert.True(double.IsNaN(value.ParseDouble()));
         Assert.True(value.TryParseSingle(out float single));
         Assert.True(value.TryParseDouble(out double twice));
@@ -163,7 +163,7 @@ public class AsciiStringFloatingPointContractTest
     public void InfinityAndNumericOverflowAreSuccessfulParses(string text, bool negative)
     {
         var value = new AsciiString(text);
-        Assert.Equal(negative ? float.NegativeInfinity : float.PositiveInfinity, value.ParseSingle());
+        Assert.Equal(negative ? float.NegativeInfinity : float.PositiveInfinity, value.ParseFloat());
         Assert.Equal(negative ? double.NegativeInfinity : double.PositiveInfinity, value.ParseDouble());
         Assert.True(value.TryParseSingle(out float single));
         Assert.True(value.TryParseDouble(out double twice));
@@ -181,7 +181,7 @@ public class AsciiStringFloatingPointContractTest
     public void ZeroAndUnderflowPreserveTheSign(string text)
     {
         var value = new AsciiString(text);
-        Assert.Equal(int.MinValue, BitConverter.SingleToInt32Bits(value.ParseSingle()));
+        Assert.Equal(int.MinValue, BitConverter.SingleToInt32Bits(value.ParseFloat()));
         Assert.Equal(long.MinValue, BitConverter.DoubleToInt64Bits(value.ParseDouble()));
         Assert.True(value.TryParseSingle(out float single));
         Assert.True(value.TryParseDouble(out double twice));
@@ -223,7 +223,7 @@ public class AsciiStringFloatingPointContractTest
         Assert.False(value.TryParseDouble(out double twice));
         Assert.Equal(0, BitConverter.SingleToInt32Bits(single));
         Assert.Equal(0L, BitConverter.DoubleToInt64Bits(twice));
-        Assert.Throws<FormatException>(() => value.ParseSingle());
+        Assert.Throws<FormatException>(() => value.ParseFloat());
         Assert.Throws<FormatException>(() => value.ParseDouble());
     }
 
@@ -233,7 +233,7 @@ public class AsciiStringFloatingPointContractTest
         for (int b = 0; b <= 32; b++)
         {
             var value = new AsciiString(new byte[] { (byte)b, (byte)'1', (byte)'.', (byte)'5', (byte)b });
-            Assert.Equal(1.5f, value.ParseSingle());
+            Assert.Equal(1.5f, value.ParseFloat());
             Assert.Equal(1.5, value.ParseDouble());
         }
         for (int b = 128; b <= 255; b++)
@@ -252,10 +252,10 @@ public class AsciiStringFloatingPointContractTest
         foreach (string text in new[] { "0x1." + zeros + "1p0", "0x0." + zeros + "1p40004" })
         {
             var value = new AsciiString(text);
-            Assert.Equal(1.0f, value.ParseSingle());
+            Assert.Equal(1.0f, value.ParseFloat());
             Assert.Equal(1.0, value.ParseDouble());
         }
-        Assert.Equal(float.PositiveInfinity, new AsciiString("0x1p" + exponent).ParseSingle());
+        Assert.Equal(float.PositiveInfinity, new AsciiString("0x1p" + exponent).ParseFloat());
         Assert.Equal(double.PositiveInfinity, new AsciiString("1e" + exponent).ParseDouble());
         Assert.Equal(0.0, new AsciiString("0x1p-" + exponent).ParseDouble());
         Assert.False(new AsciiString("0x1p" + exponent + "x").TryParseDouble(out _));
@@ -270,7 +270,7 @@ public class AsciiStringFloatingPointContractTest
     public void InvalidSlicesAreRejectedBeforeParsing(int start, int end)
     {
         var value = new AsciiString("12");
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseSingle(start, end));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseFloat(start, end));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseDouble(start, end));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseSingle(start, end, out _));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseDouble(start, end, out _));
@@ -280,7 +280,7 @@ public class AsciiStringFloatingPointContractTest
     public void EmptyValidSlicesAreNumericFailures()
     {
         var value = new AsciiString("1");
-        Assert.Throws<FormatException>(() => value.ParseSingle(1, 1));
+        Assert.Throws<FormatException>(() => value.ParseFloat(1, 1));
         Assert.Throws<FormatException>(() => value.ParseDouble(1, 1));
         Assert.False(value.TryParseSingle(1, 1, out _));
         Assert.False(value.TryParseDouble(1, 1, out _));
@@ -303,6 +303,6 @@ public class AsciiStringFloatingPointContractTest
     {
         value.TryParseSingle(out float single);
         value.TryParseDouble(out double twice);
-        return value.ParseSingle() + value.ParseDouble() + single + twice;
+        return value.ParseFloat() + value.ParseDouble() + single + twice;
     }
 }

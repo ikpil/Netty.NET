@@ -19,6 +19,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Groups;
 using Netty.NET.Transport.Channels.Sockets;
 
@@ -30,12 +31,12 @@ public class DefaultChannelGroupTest
     [Fact]
     public async Task TestNotThrowBlockingOperationException()
     {
-        var group = new DefaultEventLoopGroup();
+        var group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         // CLR aggregation uses Task.WhenAll; the original GlobalEventExecutor is not a Task owner.
         var allChannels = new DefaultChannelGroup();
         try
         {
-            var bootstrap = new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
+            var bootstrap = new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
                 .ChildHandler(new ActiveHandler(allChannels));
             IChannel server = await bootstrap.BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
             allChannels.Add(server);
@@ -45,6 +46,6 @@ public class DefaultChannelGroupTest
     }
     private sealed class ActiveHandler(DefaultChannelGroup channels) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context) => channels.Add(context.Channel);
+        public override void ChannelActive(IChannelHandlerContext ctx) => channels.Add(ctx.Channel);
     }
 }

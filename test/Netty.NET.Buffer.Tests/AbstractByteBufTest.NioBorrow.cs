@@ -16,6 +16,7 @@
 
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -40,6 +41,19 @@ public abstract partial class AbstractByteBufTest
         buffer.WriteBytes(value);
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
             AssertRemainingEquals(value.AsSpan(i, BLOCK_SIZE), buffer.AsReadOnlyMemory(i, BLOCK_SIZE));
+    }
+
+    protected void AssertOriginalToByteBuffer3()
+    {
+        // CLR: AbstractContiguousByteBufTest selects the providers of assumeTrue(buffer.nioBufferCount() == 1).
+        Assert.True(buffer.IsContiguous);
+
+        // CLR: neither ByteBuf nor ReadOnlyMemory has a byte-order property. Explicit BE/LE reads of the
+        // borrowed readable region must agree with the buffer's own explicit BE/LE accessors.
+        buffer.Clear().WriteInt(0x01020304);
+        ReadOnlySpan<byte> region = buffer.ReadableMemory.Span;
+        Assert.Equal(buffer.GetInt(0), BinaryPrimitives.ReadInt32BigEndian(region));
+        Assert.Equal(buffer.GetIntLE(0), BinaryPrimitives.ReadInt32LittleEndian(region));
     }
 
     private static void AssertRemainingEquals(ReadOnlySpan<byte> expected, ReadOnlyMemory<byte> actual)
@@ -93,10 +107,10 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestGetReadOnlyDirectDst() => AssertGetReadOnlyDst(true);
+    public virtual void TestGetReadOnlyDirectDst() => AssertGetReadOnlyDst(true);
 
     [Fact]
-    public void TestGetReadOnlyHeapDst() => AssertGetReadOnlyDst(false);
+    public virtual void TestGetReadOnlyHeapDst() => AssertGetReadOnlyDst(false);
 
     private void AssertGetReadOnlyDst(bool direct)
     {
@@ -190,12 +204,15 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestInternalNioBufferHelper()
+    public void Test_internalNioBuffer()
     {
         ByteBuf buf = Unpooled.Buffer(8, 16);
+        // CLR: Unpooled.Buffer never returns a SimpleLeakAwareByteBuf here and every CLR ByteBuf
+        // derives from ByteBuf, so the original unwrap and AbstractByteBuf assumption always hold.
         try
         {
-            // _internalNioBuffer exposes capacity, not just the currently empty readable region.
+            // CLR: _internalNioBuffer exposes capacity (internalNioBuffer(0, capacity)), not just the
+            // currently empty readable region; a bounded Memory and SequenceReader replace the ByteBuffer.
             var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buf.AsReadOnlyMemory(0, buf.Capacity)));
             Assert.Equal(0, reader.Consumed);
             Assert.True(reader.Remaining >= 8);

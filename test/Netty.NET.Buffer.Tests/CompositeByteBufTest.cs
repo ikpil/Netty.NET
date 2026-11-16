@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -47,7 +48,7 @@ public class CompositeByteBufTest
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetByte(0));
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ToComponentIndex(0));
         ByteBuf copy = buffer.Copy();
-        try { Assert.Equal(0, copy.Capacity); Assert.Equal(1, copy.ReferenceCount); }
+        try { Assert.Equal(0, copy.Capacity); Assert.Equal(1, copy.RefCnt); }
         finally { copy.Release(); }
         Assert.True(buffer.Release());
         Assert.Throws<IllegalReferenceCountException>(() => buffer.AsReadOnlySequence(0, 0));
@@ -64,7 +65,7 @@ public class CompositeByteBufTest
             buffer.AddComponent(source);
             Assert.Equal(2, buffer.Capacity);
             Assert.Equal(0, buffer.WriterIndex);
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(3, source.WriterIndex);
             source.SetIndex(0, 4);
@@ -82,7 +83,7 @@ public class CompositeByteBufTest
             Assert.Equal(7, buffer.GetByte(0));
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
     }
 
     [Fact]
@@ -94,10 +95,10 @@ public class CompositeByteBufTest
         CompositeByteBuf buffer = Unpooled.CompositeBuffer();
         buffer.AddComponent(c1, true).AddComponent(c2, true).AddComponent(c3, true);
         // Ensure that c[123]'s refCount did not change.
-        Assert.Equal(new[] { 1, 2, 3 }, new[] { c1.ReferenceCount, c2.ReferenceCount, c3.ReferenceCount });
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(new[] { 1, 2, 3 }, new[] { c1.RefCnt, c2.RefCnt, c3.RefCnt });
+        Assert.Equal(1, buffer.RefCnt);
         buffer.Release();
-        Assert.Equal(new[] { 0, 1, 2 }, new[] { c1.ReferenceCount, c2.ReferenceCount, c3.ReferenceCount });
+        Assert.Equal(new[] { 0, 1, 2 }, new[] { c1.RefCnt, c2.RefCnt, c3.RefCnt });
         c2.Release(); c3.Release(2);
     }
 
@@ -109,13 +110,13 @@ public class CompositeByteBufTest
         ByteBuf c2 = owner.ReadRetainedSlice(2);
         CompositeByteBuf buffer = Unpooled.CompositeBuffer();
         buffer.AddComponent(c1, true).AddComponent(c2, true);
-        Assert.Equal(3, owner.ReferenceCount);
+        Assert.Equal(3, owner.RefCnt);
         // releasing composite should release the components
         buffer.Release();
-        Assert.Equal(1, owner.ReferenceCount);
+        Assert.Equal(1, owner.RefCnt);
         // last remaining ref to buffer
         owner.Release();
-        Assert.Equal(0, owner.ReferenceCount);
+        Assert.Equal(0, owner.RefCnt);
     }
 
     [Theory]
@@ -217,7 +218,7 @@ public class CompositeByteBufTest
             finally { copy.Release(); }
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, nested.ReferenceCount);
+        Assert.Equal(0, nested.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -259,7 +260,7 @@ public class CompositeByteBufTest
             ByteBuf fourth = Segment(new byte[] { 7 }, direct, allocator); sources.Add(fourth);
             buffer.AddComponent(fourth, true);
             Assert.Equal(1, buffer.NumComponents);
-            Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+            Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
             Assert.Equal(direct, buffer.IsDirect);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7 }, Bytes(buffer));
             Assert.True(buffer.ReadableSequence.IsSingleSegment);
@@ -288,10 +289,10 @@ public class CompositeByteBufTest
         try
         {
             buffer.ReaderIndex = 1;
-            Assert.Throws<OutOfMemoryException>(() => buffer.Consolidate());
+            Assert.Throws<OutOfDirectMemoryError>(() => buffer.Consolidate());
             Assert.Equal(2, buffer.NumComponents);
-            Assert.Equal(1, first.ReferenceCount);
-            Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(4, buffer.WriterIndex);
             Assert.Equal(new byte[] { 2, 3, 4 }, Bytes(buffer));
@@ -311,14 +312,14 @@ public class CompositeByteBufTest
         buffer.AddComponent(first, true);
         try
         {
-            Assert.Throws<OutOfMemoryException>(() => buffer.AddComponent(second, true));
+            Assert.Throws<OutOfDirectMemoryError>(() => buffer.AddComponent(second, true));
             Assert.Equal(2, buffer.NumComponents);
             Assert.Equal(4, buffer.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(buffer));
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -338,12 +339,12 @@ public class CompositeByteBufTest
             buffer.ReaderIndex = 3;
             // reduce capacity down to two, will drop the second component
             buffer.Capacity = 2;
-            Assert.Equal(0, second.ReferenceCount);
+            Assert.Equal(0, second.RefCnt);
             Assert.Equal(2, buffer.ReaderIndex);
             Assert.Equal(2, buffer.WriterIndex);
             Assert.Equal(1, buffer.NumComponents);
             buffer.Capacity = 1;
-            Assert.Equal(1, first.ReferenceCount);
+            Assert.Equal(1, first.RefCnt);
             Assert.Equal(1, buffer.Capacity);
             Assert.Equal(2, first.Capacity);
             buffer.Clear(); buffer.WriterIndex = 1;
@@ -354,7 +355,7 @@ public class CompositeByteBufTest
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, Bytes(buffer));
             buffer.Capacity = 0;
             Assert.Equal(0, buffer.NumComponents);
-            Assert.Equal(0, first.ReferenceCount);
+            Assert.Equal(0, first.RefCnt);
         }
         finally { buffer.Release(); }
         Assert.Equal(0, allocator.ReservedBytes);
@@ -369,7 +370,7 @@ public class CompositeByteBufTest
         try
         {
             buffer.RemoveComponent(0);
-            Assert.Equal(0, first.ReferenceCount);
+            Assert.Equal(0, first.RefCnt);
             Assert.Equal(2, buffer.Capacity);
             Assert.Equal(4, buffer.WriterIndex);
             buffer.SetIndex(0, 2);
@@ -393,7 +394,7 @@ public class CompositeByteBufTest
         {
             buffer.ReaderIndex = 3; buffer.MarkReaderIndex(); buffer.MarkWriterIndex();
             buffer.DiscardSomeReadBytes();
-            Assert.Equal(0, first.ReferenceCount);
+            Assert.Equal(0, first.RefCnt);
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(3, buffer.WriterIndex);
             Assert.Equal(3, buffer.Capacity);
@@ -411,7 +412,7 @@ public class CompositeByteBufTest
             buffer.ReaderIndex = 2;
             buffer.DiscardReadComponents();
             Assert.Equal(0, buffer.Capacity);
-            Assert.Equal(0, second.ReferenceCount);
+            Assert.Equal(0, second.RefCnt);
         }
         finally { buffer.Release(); }
         Assert.Equal(0, allocator.ReservedBytes);
@@ -482,10 +483,10 @@ public class CompositeByteBufTest
         ByteBuf needle = Unpooled.WrappedBuffer(new byte[] { 0xe2, 0x82, 0xac });
         try
         {
-            int written = buffer.WriteString("a€😀z", Encoding.UTF8);
+            int written = buffer.WriteCharSequence("a€😀z", Encoding.UTF8);
             Assert.Equal(9, written);
             Assert.Equal(new byte[] { 0x61, 0xe2, 0x82, 0xac, 0xf0, 0x9f, 0x98, 0x80, 0x7a }, Bytes(buffer));
-            Assert.Equal("a€😀z", buffer.AsReadOnly().GetString(Encoding.UTF8));
+            Assert.Equal("a€😀z", buffer.AsReadOnly().ToString(Encoding.UTF8));
             Assert.Equal(1, ByteBufUtil.IndexOf(needle, buffer));
             Assert.Equal(8, buffer.IndexOf(0, 9, (byte)'z'));
             Assert.Equal(0, buffer.IndexOf(9, 0, (byte)'a'));
@@ -513,7 +514,7 @@ public class CompositeByteBufTest
         try
         {
             buffer.WriteBytes(buffer.AsReadOnlySpan(0, 4));
-            Assert.Equal(0, component.ReferenceCount);
+            Assert.Equal(0, component.RefCnt);
             Assert.Equal(1, buffer.NumComponents);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, Bytes(buffer));
             Assert.Equal(64, allocator.ReservedBytes);
@@ -540,7 +541,7 @@ public class CompositeByteBufTest
             buffer.Consolidate();
             buffer.SetInt(0, 0x05060708);
             Assert.Equal(new byte[] { 5, 6, 7, 8 }, Bytes(buffer));
-            Assert.Equal(0, first.ReferenceCount);
+            Assert.Equal(0, first.RefCnt);
             Assert.Equal(0, allocator.ReservedBytes);
         }
         finally { buffer.Release(); }
@@ -554,13 +555,13 @@ public class CompositeByteBufTest
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.AddComponent(1, incoming));
-            Assert.Equal(0, incoming.ReferenceCount);
+            Assert.Equal(0, incoming.RefCnt);
             Assert.Throws<ArgumentNullException>(() => buffer.AddComponent(null));
             Assert.Throws<ArgumentException>(() => buffer.AddComponent(buffer));
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             parent.AddComponent(buffer.Retain());
             Assert.Throws<ArgumentException>(() => buffer.AddComponent(parent));
-            Assert.Equal(1, parent.ReferenceCount);
+            Assert.Equal(1, parent.RefCnt);
         }
         finally { parent.Release(); buffer.Release(); }
     }
@@ -648,7 +649,7 @@ public class CompositeByteBufTest
         buffer.RemoveComponent(0);
         Assert.Equal(0, allocator.ReservedBytes);
         Assert.Throws<IllegalReferenceCountException>(() => buffer.Release());
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
     }
 
     [Fact]
@@ -665,11 +666,11 @@ public class CompositeByteBufTest
             });
             Assert.Equal(2047, buffer.NumComponents);
             Assert.Equal(2047 * capacity, buffer.Capacity);
-            Assert.Equal(2048, source.ReferenceCount);
+            Assert.Equal(2048, source.RefCnt);
             Assert.Equal(0, buffer.WriterIndex);
         }
         finally { buffer.Release(); source.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
     }
 
     [Theory]
@@ -690,12 +691,12 @@ public class CompositeByteBufTest
         {
             int written = encodingKind switch
             {
-                0 => buffer.WriteString(text, Encoding.UTF8),
+                0 => buffer.WriteCharSequence(text, Encoding.UTF8),
                 1 => ByteBufUtil.WriteUtf8(buffer, text),
                 _ => ByteBufUtil.WriteAscii(buffer, text)
             };
             Assert.Equal(encodingKind == 2 ? 2 : 4, written);
-            Assert.Equal(0, source.ReferenceCount);
+            Assert.Equal(0, source.RefCnt);
             Assert.Equal(1, buffer.NumComponents);
             Assert.Equal(64, allocator.ReservedBytes);
             byte[] expected = encodingKind == 2
@@ -708,20 +709,30 @@ public class CompositeByteBufTest
     }
 
     [Fact]
-    public void RetainingCompositeSliceDoesNotRetainRemovedComponentsOrExposeFreedStorage()
+    public void SliceOfCompositeBufferMustThrowISEAfterDiscardBytes()
     {
-        CompositeByteBuf buffer = new();
+        CompositeByteBuf composite = new();
         ByteBuf component = Unpooled.Buffer(8).WriteZero(8);
-        buffer.AddComponent(component, true);
-        ByteBuf slice = buffer.RetainedSlice();
+        composite.AddComponent(component, true);
+
+        ByteBuf slice = composite.RetainedSlice();
+        composite.SkipBytes(slice.ReadableBytes);
+        composite.DiscardSomeReadBytes();
+
         try
         {
-            buffer.SkipBytes(8).DiscardSomeReadBytes();
-            Assert.Equal(2, buffer.ReferenceCount);
-            Assert.Equal(0, component.ReferenceCount);
+            // CLR: discarding releases the component even though the slice keeps a composite claim.
+            Assert.Equal(2, composite.RefCnt);
+            Assert.Equal(0, component.RefCnt);
+            // CLR: the slice validates the remaining parent range first and throws ArgumentOutOfRangeException
+            // instead of IllegalStateException, without advancing its reader.
             Assert.Throws<ArgumentOutOfRangeException>(() => slice.ReadByte());
             Assert.Equal(0, slice.ReaderIndex);
         }
-        finally { slice.Release(); buffer.Release(); }
+        finally
+        {
+            slice.Release();
+            composite.Release();
+        }
     }
 }

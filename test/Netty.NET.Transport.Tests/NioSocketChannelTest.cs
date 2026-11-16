@@ -1,0 +1,264 @@
+/*
+ * Copyright 2013 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Buffer;
+using Netty.NET.Transport.Bootstrapping;
+using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
+using Netty.NET.Transport.Channels.Sockets;
+
+namespace Netty.NET.Transport.Tests;
+
+#pragma warning disable xUnit1051, xUnit1069 // Original default-token operations use bounded waits; registration helpers consume the test token.
+public class NioSocketChannelTest
+{
+    [Fact]
+    /**
+     * Reproduces the issue #1679
+     */
+    public async Task TestFlushAfterGatheredFlush()
+    {
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        IChannel server = null;
+        try
+        {
+            var sb = new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>();
+            sb.ChildHandler(new FlushAfterGatheredHandler());
+            server = await sb.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            using var s = new TcpClient();
+            await s.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
+            var buf = new byte[3];
+            await s.GetStream().ReadExactlyAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal("abc", Encoding.ASCII.GetString(buf));
+        }
+        finally
+        {
+            if (server != null)
+                await server.CloseAsync();
+            await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+    private sealed class FlushAfterGatheredHandler : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            // Trigger a gathering write by writing two buffers.
+            _ = ctx.WriteAsync(Unpooled.Buffer(1).WriteByte('a'));
+            Task f = ctx.WriteAsync(Unpooled.Buffer(1).WriteByte('b'));
+            _ = WriteAfterCompletionAsync(f, ctx);
+            ctx.Flush();
+        }
+        private static async Task WriteAfterCompletionAsync(Task future, IChannelHandlerContext ctx)
+        {
+            await future.ConfigureAwait(false);
+            // This message must be flushed
+            await ctx.WriteAndFlushAsync(Unpooled.Buffer(1).WriteByte('c')).ConfigureAwait(false);
+        }
+    }
+
+    [Fact]
+    /**
+     * Reproduces the issue #1600
+     */
+    public async Task TestFlushCloseReentrance()
+    {
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var futures = new ConcurrentQueue<Task>();
+        var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        IChannel server = null;
+        try
+        {
+            var sb = new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
+                .ChildOption(ChannelOption.SO_SNDBUF, 1024)
+                .ChildHandler(new FlushCloseHandler(futures, closed));
+            server = await sb.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            using var s = new TcpClient();
+            await s.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
+            var buf = new byte[8192];
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            for (; ; )
+            {
+                if (await s.GetStream().ReadAsync(buf, timeout.Token) == 0)
+                    break;
+                // Wait a little bit so that the write attempts are split into multiple flush attempts.
+                await Task.Delay(10, timeout.Token);
+            }
+            await closed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(3, futures.Count);
+            Assert.True(futures.TryDequeue(out var f1));
+            Assert.True(futures.TryDequeue(out var f2));
+            Assert.True(futures.TryDequeue(out var f3));
+            Assert.True(f1.IsCompletedSuccessfully);
+            Assert.True(f2.IsCompleted);
+            Assert.False(f2.IsCompletedSuccessfully);
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => f2);
+            Assert.True(f3.IsCompleted);
+            Assert.False(f3.IsCompletedSuccessfully);
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => f3);
+        }
+        finally
+        {
+            if (server != null)
+                await server.CloseAsync();
+            await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+    // Test for https://github.com/netty/netty/issues/4805
+    [Fact(Timeout = 30000)]
+    public async Task TestChannelReRegisterReadSameEventLoop() => await TestChannelReRegisterRead(true);
+
+    [Fact(Timeout = 30000)]
+    public async Task TestChannelReRegisterReadDifferentEventLoop() => await TestChannelReRegisterRead(false);
+
+    private static async Task TestChannelReRegisterRead(bool sameEventLoop)
+    {
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+        using var latch = new CountdownEvent(1);
+        // The source creates its completion promise on next(); retain that chooser step while the
+        // completion itself is a native TaskCompletionSource with no executor ownership.
+        group.Next();
+        var eventLoopCheck = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        // Just some random bytes
+        byte[] bytes = new byte[1024];
+        Random.Shared.NextBytes(bytes);
+        IChannel sc = null, cc = null;
+        try
+        {
+            sc = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
+                .ChildOption(ChannelOption.SO_KEEPALIVE, true)
+                .ChildHandler(new ActionChannelInitializer<IChannel>(ch => ch.Pipeline.AddLast(
+                    new ReRegisterHandler(group, sameEventLoop, latch, eventLoopCheck))))
+                .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
+            cc = await new Bootstrap().Group(group).Channel<NioSocketChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(sc.LocalAddress, cancellationToken: TestContext.Current.CancellationToken);
+            await cc.WriteAndFlushAsync(Unpooled.WrappedBuffer(bytes), TestContext.Current.CancellationToken);
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken));
+            await eventLoopCheck.Task.WaitAsync(TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            if (cc != null)
+                await cc.CloseAsync();
+            if (sc != null)
+                await sc.CloseAsync();
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
+    }
+    private sealed class ReRegisterHandler(MultiThreadIoEventLoopGroup group, bool sameEventLoop, CountdownEvent latch,
+        TaskCompletionSource eventLoopCheck) : SimpleChannelInboundHandler<ByteBuf>
+    {
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf byteBuf)
+        {
+            // We was able to read something from the Channel after reregister.
+            if (!latch.IsSet)
+                latch.Signal();
+        }
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            var loop = group.Next();
+            if (sameEventLoop)
+                _ = Deregister(ctx, loop);
+            else
+                loop.Execute(() => _ = Deregister(ctx, loop));
+        }
+        private async Task Deregister(IChannelHandlerContext ctx, IEventLoop loop)
+        {
+            // As soon as the channel becomes active re-register it to another
+            // EventLoop. After this is done we should still receive the data that
+            // was written to the channel.
+            try
+            {
+                await ctx.DeregisterAsync().ConfigureAwait(false);
+                Assert.NotSame(loop, ctx.Channel.EventLoop);
+                eventLoopCheck.TrySetResult();
+                await group.Next().RegisterAsync(ctx.Channel).ConfigureAwait(false);
+            }
+            catch (Exception error) { eventLoopCheck.TrySetException(error); }
+        }
+    }
+    [Fact(Timeout = 30000)]
+    public async Task TestShutdownOutputAndClose()
+    {
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var socket = new TcpListener(IPAddress.Loopback, 0);
+        socket.Start();
+        TcpClient accepted = null;
+        try
+        {
+            var channel = (NioSocketChannel)await new Bootstrap().Group(group).Channel<NioSocketChannel>()
+                .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(socket.LocalEndpoint,
+                    cancellationToken: TestContext.Current.CancellationToken);
+            accepted = await socket.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
+            await channel.ShutdownOutputAsync();
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            try
+            { accepted?.Dispose(); }
+            catch (IOException)
+            {
+                // ignore
+            }
+            try
+            { socket.Stop(); }
+            catch (IOException)
+            {
+                // ignore
+            }
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
+    }
+    private sealed class FlushCloseHandler(ConcurrentQueue<Task> futures, TaskCompletionSource closed) : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            // Write a large enough data so that it is split into two loops.
+            // CLR: ChannelFutureListener.CLOSE runs inside the write that completes the first future. A Task
+            // continuation runs later, so the close is issued from the write-progress observer on the event loop
+            // as soon as the write loop moves past the first (completed) future.
+            Task first = ctx.WriteAsync(ctx.Alloc().Buffer().WriteZero(1048576));
+            futures.Enqueue(first);
+            bool closing = false;
+            ctx.Channel.Config.WriteProgress = new Observer(report =>
+            {
+                if (closing || ReferenceEquals(report.Operation, first) || !first.IsCompletedSuccessfully) return;
+                closing = true;
+                _ = CloseAsync(ctx);
+            });
+            futures.Enqueue(ctx.WriteAsync(ctx.Alloc().Buffer().WriteZero(1048576)));
+            ctx.Flush();
+            futures.Enqueue(ctx.WriteAsync(ctx.Alloc().Buffer().WriteZero(1048576)));
+            ctx.Flush();
+        }
+        private async Task CloseAsync(IChannelHandlerContext ctx)
+        {
+            try
+            { await ctx.CloseAsync().ConfigureAwait(false); closed.TrySetResult(); }
+            catch (Exception error) { closed.TrySetException(error); }
+        }
+    }
+    private sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>
+    { public void Report(ChannelWriteProgress value) => report(value); }
+}

@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.Threading;
 using Netty.NET.Common.Internal;
 
@@ -85,7 +86,7 @@ public class DefaultThreadFactory : IThreadFactory
                 "Expected ThreadPriority.Lowest <= priority <= ThreadPriority.Highest.");
         }
 
-        _prefix = poolName + '-' + Interlocked.Increment(ref _poolId) + '-';
+        _prefix = poolName + '-' + Interlocked.Increment(ref _poolId).ToString(CultureInfo.InvariantCulture) + '-';
         _daemon = daemon;
         _priority = priority;
         _threadGroup = threadGroup;
@@ -94,7 +95,7 @@ public class DefaultThreadFactory : IThreadFactory
 
     public virtual Thread NewThread(Action r)
     {
-        Thread t = NewThread(FastThreadLocalRunnable.Wrap(r), _prefix + Interlocked.Increment(ref _nextId));
+        Thread t = NewThread(FastThreadLocalRunnable.Wrap(r), _prefix + Interlocked.Increment(ref _nextId).ToString(CultureInfo.InvariantCulture));
         try
         {
             if (t.IsBackground != _daemon)

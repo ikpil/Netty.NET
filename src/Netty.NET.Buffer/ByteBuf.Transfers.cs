@@ -207,8 +207,8 @@ public abstract partial class ByteBuf
     /// A failed copy leaves the writer index unchanged but may leave increased capacity or partially written bytes.</remarks>
     public virtual ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureWritable(length);
+        ArgumentNullException.ThrowIfNull(source);
         SetBytes(_writerIndex, source, sourceIndex, length);
         _writerIndex += length;
         return this;

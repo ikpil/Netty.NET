@@ -19,6 +19,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -68,10 +69,10 @@ public class LinuxServerSocketConfigSourceTest
     private static async Task WithListener(Action<IChannelConfig> assert)
     {
         if (!OperatingSystem.IsLinux()) Assert.Skip("Linux socket options require Linux.");
-        var loop = new DefaultEventLoopGroup(1);
+        var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
-            var channel = await new ServerBootstrap().Group(loop).ChannelFactory(static () => new TcpServerSocketChannel())
+            var channel = await new ServerBootstrap().Group(loop).ChannelFactory(static () => new NioServerSocketChannel())
                 .ChildHandler(new ChannelInboundHandlerAdapter()).BindAsync(new IPEndPoint(Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any, 0),
                     TestContext.Current.CancellationToken);
             assert(channel.Config);

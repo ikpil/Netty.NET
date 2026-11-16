@@ -91,7 +91,7 @@ public class ByteBufHexTest
             }
             Assert.Equal(3, b.ReaderIndex); Assert.Equal(200, b.WriterIndex);
             b.SetIndex(4, 201).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(200, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(3, b.ReaderIndex); Assert.Equal(200, b.WriterIndex); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }

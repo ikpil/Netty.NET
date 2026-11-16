@@ -71,9 +71,9 @@ public class ChannelOutboundBufferTest
         Assert.Equal(r1, buffers[0].Length);
         Assert.Equal(r3, buffers[1].Length);
         buffer.RemoveBytes(r1 + r3);
-        Assert.Equal(0, b1.ReferenceCount);
-        Assert.Equal(0, b2.ReferenceCount);
-        Assert.Equal(0, b3.ReferenceCount);
+        Assert.Equal(0, b1.RefCnt);
+        Assert.Equal(0, b2.RefCnt);
+        Assert.Equal(0, b3.RefCnt);
         Assert.True(buffer.IsEmpty);
         Assert.True(p1.IsCompletedSuccessfully);
         Assert.True(p2.IsCanceled);
@@ -169,8 +169,8 @@ public class ChannelOutboundBufferTest
     {
         var text = new StringBuilder();
         var channel = NewRecordingChannel(text);
-        channel.Config.SetWriteBufferLowWaterMark(128 + ChannelOutboundBuffer.EntryOverhead);
-        channel.Config.SetWriteBufferHighWaterMark(256 + ChannelOutboundBuffer.EntryOverhead);
+        channel.Config.SetWriteBufferLowWaterMark(128 + ChannelOutboundBuffer.CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD);
+        channel.Config.SetWriteBufferHighWaterMark(256 + ChannelOutboundBuffer.CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD);
         _ = channel.WriteAsync(Unpooled.Buffer().WriteZero(128));
         // Ensure exceeding the low watermark does not make channel unwritable.
         _ = channel.WriteAsync(Unpooled.Buffer().WriteZero(2));
@@ -182,7 +182,7 @@ public class ChannelOutboundBufferTest
         // Ensure going down to the low watermark makes channel writable again by flushing the first write.
         Assert.True(channel.OutboundBuffer.Remove());
         Assert.True(channel.OutboundBuffer.Remove());
-        Assert.Equal(127L + ChannelOutboundBuffer.EntryOverhead, channel.OutboundBuffer.TotalPendingWriteBytes);
+        Assert.Equal(127L + ChannelOutboundBuffer.CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD, channel.OutboundBuffer.TotalPendingWriteBytes);
         Assert.Equal("false true ", text.ToString());
         SafeClose(channel);
     }
@@ -278,7 +278,7 @@ public class ChannelOutboundBufferTest
         channel.Flush();
         Assert.True(channel.IsWritable);
         Assert.Single(writes);
-        Assert.Equal(0, cancelledBuffer.ReferenceCount);
+        Assert.Equal(0, cancelledBuffer.RefCnt);
         Assert.True(second.IsCompletedSuccessfully);
         Assert.True(writes[0].IsCompletedSuccessfully);
         var buffer = channel.OutboundBuffer;
@@ -315,11 +315,11 @@ public class ChannelOutboundBufferTest
         channel.RunPendingTasks();
         Assert.False(channel.IsOpen);
         Assert.Equal(1, inactive);
-        Assert.Equal(0, cancelledBuffer.ReferenceCount);
-        await Assert.ThrowsAsync<IOException>(() => secondFuture);
-        await Assert.ThrowsAsync<IOException>(() => thirdFuture);
-        Assert.Equal(0, second.ReferenceCount);
-        Assert.Equal(0, third.ReferenceCount);
+        Assert.Equal(0, cancelledBuffer.RefCnt);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => secondFuture);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => thirdFuture);
+        Assert.Equal(0, second.RefCnt);
+        Assert.Equal(0, third.RefCnt);
         Assert.Null(channel.ReadOutbound());
         Assert.False(channel.Finish());
     }
@@ -368,14 +368,14 @@ public class ChannelOutboundBufferTest
         Assert.Equal(6, buffer.Size);
         Assert.True(channel.IsWritable);
         foreach (var data in cancelledBuffers)
-            Assert.Equal(0, data.ReferenceCount);
-        Assert.Equal(1, live0.ReferenceCount);
+            Assert.Equal(0, data.RefCnt);
+        Assert.Equal(1, live0.RefCnt);
         foreach (var data in liveBuffers)
-            Assert.Equal(1, data.ReferenceCount);
+            Assert.Equal(1, data.RefCnt);
         Assert.True(channel.CloseAsync().IsCompletedSuccessfully);
-        Assert.Equal(0, live0.ReferenceCount);
+        Assert.Equal(0, live0.RefCnt);
         foreach (var data in liveBuffers)
-            Assert.Equal(0, data.ReferenceCount);
+            Assert.Equal(0, data.RefCnt);
         Assert.Equal(0, buffer.TotalPendingWriteBytes);
         foreach (var cancellation in cancellations)
             cancellation.Dispose();
@@ -397,7 +397,7 @@ public class ChannelOutboundBufferTest
         Assert.True(cancelled.IsCanceled);
         channel.Flush();
         Assert.Single(writes);
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
         Assert.True(second.IsCompletedSuccessfully);
         Assert.True(writes[0].IsCompletedSuccessfully);
         var buffer = channel.OutboundBuffer;
@@ -435,7 +435,7 @@ public class ChannelOutboundBufferTest
             Task future = channel.WriteAsync(data);
             channel.RunPendingTasks();
             await Assert.ThrowsAsync<RejectedExecutionException>(() => future);
-            Assert.Equal(0, data.ReferenceCount);
+            Assert.Equal(0, data.RefCnt);
             // In case of rejected task we should not have anything pending.
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             execute.Set();
@@ -465,18 +465,18 @@ public class ChannelOutboundBufferTest
         { if (expected == 0) Assert.Equal(0, buffer.ReadableBytes); else { Assert.Equal(1, buffer.ReadableBytes); Assert.Equal(expected, buffer.ReadByte()); } }
         finally { buffer.Release(); }
     }
-    private sealed class WritabilityHandler(Action<ChannelHandlerContext> callback, Action inactive = null) : ChannelInboundHandlerAdapter
+    private sealed class WritabilityHandler(Action<IChannelHandlerContext> callback, Action inactive = null) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context) => callback(context);
-        public override void ChannelInactive(ChannelHandlerContext context) { inactive?.Invoke(); context.FireChannelInactive(); }
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) => callback(ctx);
+        public override void ChannelInactive(IChannelHandlerContext ctx) { inactive?.Invoke(); ctx.FireChannelInactive(); }
     }
     private sealed class ReentrantMessage(Action deallocate) : AbstractReferenceCounted
     { protected override void Deallocate() => deallocate(); public override IReferenceCounted Touch(object hint) => this; }
-    private sealed class RejectWriteHandler(CountdownEvent added, CountdownEvent removed) : ChannelOutboundHandlerAdapter
+    private sealed class RejectWriteHandler(CountdownEvent handlerAddedLatch, CountdownEvent handlerRemovedLatch) : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token) => Task.FromException(new InvalidOperationException("Should not be called"));
-        public override void HandlerAdded(ChannelHandlerContext context) => added.Signal();
-        public override void HandlerRemoved(ChannelHandlerContext context) => removed.Signal();
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) => Task.FromException(new InvalidOperationException("Should not be called"));
+        public override void HandlerAdded(IChannelHandlerContext ctx) => handlerAddedLatch.Signal();
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => handlerRemovedLatch.Signal();
     }
     private sealed class OneSlotExecutor() : SingleThreadEventExecutor(null, new DefaultThreadFactory("executorPool"), true, 1, RejectedExecutionHandlers.Reject())
     {
@@ -490,14 +490,14 @@ public class ChannelOutboundBufferTest
     private sealed class TestChannel : AbstractChannel
     {
         internal TestChannel() : base(null, new ChannelMetadata(false)) { SetActive(true); }
-        public override EndPoint LocalAddress => throw new NotSupportedException();
-        public override EndPoint RemoteAddress => throw new NotSupportedException();
+        protected override EndPoint LocalAddress0() => throw new NotSupportedException();
+        protected override EndPoint RemoteAddress0() => throw new NotSupportedException();
         protected override bool IsCompatible(IEventLoop loop) => false;
         protected override Task DoBindAsync(EndPoint address, CancellationToken token) => throw new NotSupportedException();
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => throw new NotSupportedException();
         protected override void DoClose() => throw new NotSupportedException();
         protected override void DoBeginRead() => throw new NotSupportedException();
-        protected override Task DoWrite(object message) => throw new NotSupportedException();
+        protected override Task DoWrite(object msg) => throw new NotSupportedException();
     }
 }
 #pragma warning restore xUnit1051, xUnit1069

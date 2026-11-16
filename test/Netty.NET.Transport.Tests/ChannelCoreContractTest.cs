@@ -10,6 +10,7 @@ using Moq;
 using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Local;
 using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Transport.Tests;
@@ -43,7 +44,7 @@ public class ChannelCoreContractTest
         channel.Flush();
         await write;
         Assert.Same(buffer, channel.ReadOutbound());
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         Assert.True(buffer.Release());
         Assert.False(channel.Finish());
     }
@@ -57,7 +58,7 @@ public class ChannelCoreContractTest
         cancellation.Cancel();
         channel.Flush();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => write);
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
         // The source keeps a cancelled entry as an empty buffer until the flushed batch drains.
         var placeholder = Assert.IsAssignableFrom<ByteBuf>(channel.ReadOutbound());
         Assert.Equal(0, placeholder.ReadableBytes);
@@ -76,10 +77,10 @@ public class ChannelCoreContractTest
         Task write = channel.WriteAsync(buffer);
         calls.Clear();
         await channel.CloseAsync();
-        await Assert.ThrowsAsync<IOException>(() => write);
-        Assert.Equal(0, buffer.ReferenceCount);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
+        Assert.Equal(0, buffer.RefCnt);
         Assert.Equal(new[] { "a.inactive", "a.unregistered", "a.removed" }, calls);
-        Assert.True(channel.CloseCompletion.IsCompletedSuccessfully);
+        Assert.True(channel.CloseFuture.IsCompletedSuccessfully);
         Assert.False(channel.IsRegistered);
         Assert.False(channel.IsOpen);
     }
@@ -100,6 +101,9 @@ public class ChannelCoreContractTest
         Assert.False(channel.IsWritable);
         channel.OutboundBuffer.SetUserDefinedWritability(1, true);
         Assert.True(channel.IsWritable);
+        // Tracker and user-defined writability changes notify later on the event loop, as in the source.
+        Assert.Empty(calls);
+        channel.RunPendingTasks();
         Assert.Equal(new[] { "a.writable", "a.writable" }, calls);
         channel.Finish();
     }
@@ -158,7 +162,7 @@ public class ChannelCoreContractTest
         var accepted = Unpooled.Buffer(1);
         var channel = new EmbeddedChannel(new BufferConsumer());
         Assert.False(channel.WriteInbound(accepted));
-        Assert.Equal(0, accepted.ReferenceCount);
+        Assert.Equal(0, accepted.RefCnt);
         Assert.True(channel.WriteInbound("pass"));
         Assert.Equal("pass", channel.ReadInbound());
         channel.Finish();
@@ -168,13 +172,14 @@ public class ChannelCoreContractTest
     {
         var group = new DefaultEventLoopGroup(1);
         var calls = new List<string>();
-        var channel = new LoopChannel();
+        // A non-I/O SingleThreadEventLoop closes only channels that register a shutdown hook, as LocalChannel does.
+        var channel = new LocalChannel();
         channel.Pipeline.AddLast(new Recorder("a", calls));
         var loop = group.Next();
         await group.RegisterAsync(channel);
         await loop.SubmitAsync(() => Assert.True(channel.IsRegistered));
         await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
-        await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(10));
+        await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(10));
         Assert.False(channel.IsOpen);
         Assert.Contains("a.registered", calls);
         Assert.Contains("a.removed", calls);
@@ -206,15 +211,15 @@ public class ChannelCoreContractTest
             pending.SetException(failure);
             Assert.Same(failure, await Record.ExceptionAsync(() => firstWrite.WaitAsync(TimeSpan.FromSeconds(5))));
             Assert.Same(failure, await Record.ExceptionAsync(() => secondWrite.WaitAsync(TimeSpan.FromSeconds(5))));
-            var unflushedCause = await Assert.ThrowsAsync<IOException>(() => unflushed.WaitAsync(TimeSpan.FromSeconds(5)));
+            var unflushedCause = await Assert.ThrowsAnyAsync<ClosedChannelException>(() => unflushed.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Same(failure, unflushedCause.InnerException);
             Assert.True(Assert.Single(closedAtRelease));
-            Assert.Equal(0, first.ReferenceCount);
-            Assert.Equal(0, second.ReferenceCount);
-            Assert.Equal(0, third.ReferenceCount);
-            var late = await Assert.ThrowsAsync<IOException>(() => channel.WriteAsync(new object()));
+            Assert.Equal(0, first.RefCnt);
+            Assert.Equal(0, second.RefCnt);
+            Assert.Equal(0, third.RefCnt);
+            var late = await Assert.ThrowsAnyAsync<ClosedChannelException>(() => channel.WriteAsync(new object()));
             Assert.Same(failure, late.InnerException);
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
         }
         finally
         {
@@ -260,13 +265,13 @@ public class ChannelCoreContractTest
         private readonly Task _write;
         internal FailureChannel(Task write, bool active = true) : base(null, new ChannelMetadata(false))
         { _write = write; SetActive(active); }
-        public override EndPoint LocalAddress => null;
-        public override EndPoint RemoteAddress => null;
+        protected override EndPoint LocalAddress0() => null;
+        protected override EndPoint RemoteAddress0() => null;
         protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object message) => _write;
+        protected override Task DoWrite(object msg) => _write;
     }
     private sealed class ReleaseObserver(ByteBuf content, Action released) : DefaultByteBufHolder(content)
     {
@@ -280,29 +285,29 @@ public class ChannelCoreContractTest
     private sealed class Initializer(Action<EmbeddedChannel> initialize) : ChannelInitializer<EmbeddedChannel>
     { protected override void InitChannel(EmbeddedChannel channel) => initialize(channel); }
     private sealed class BufferConsumer : SimpleChannelInboundHandler<ByteBuf>
-    { protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message) { } }
+    { protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) { } }
     private sealed class LoopChannel() : AbstractChannel(null, new ChannelMetadata(false))
     {
-        public override System.Net.EndPoint LocalAddress => null;
-        public override System.Net.EndPoint RemoteAddress => null;
+        protected override System.Net.EndPoint LocalAddress0() => null;
+        protected override System.Net.EndPoint RemoteAddress0() => null;
         protected override void DoRegister() => SetActive(true);
         protected override Task DoBindAsync(System.Net.EndPoint address, CancellationToken token) => Task.CompletedTask;
         protected override Task DoConnectAsync(System.Net.EndPoint remote, System.Net.EndPoint local, CancellationToken token) => Task.CompletedTask;
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object message) => Task.CompletedTask;
+        protected override Task DoWrite(object msg) => Task.CompletedTask;
     }
     private sealed class Recorder(string name, List<string> calls) : ChannelDuplexHandler
     {
         internal string Name => name;
-        public override void HandlerAdded(ChannelHandlerContext context) => calls.Add(name + ".added");
-        public override void HandlerRemoved(ChannelHandlerContext context) => calls.Add(name + ".removed");
-        public override void ChannelRegistered(ChannelHandlerContext context) { calls.Add(name + ".registered"); context.FireChannelRegistered(); }
-        public override void ChannelInactive(ChannelHandlerContext context) { calls.Add(name + ".inactive"); context.FireChannelInactive(); }
-        public override void ChannelUnregistered(ChannelHandlerContext context) { calls.Add(name + ".unregistered"); context.FireChannelUnregistered(); }
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context) { calls.Add(name + ".writable"); context.FireChannelWritabilityChanged(); }
-        public override void ChannelRead(ChannelHandlerContext context, object message) { calls.Add(name + ".in"); context.FireChannelRead(message); }
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken)
-        { calls.Add(name + ".out"); return context.WriteAsync(message, cancellationToken); }
+        public override void HandlerAdded(IChannelHandlerContext ctx) => calls.Add(name + ".added");
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => calls.Add(name + ".removed");
+        public override void ChannelRegistered(IChannelHandlerContext ctx) { calls.Add(name + ".registered"); ctx.FireChannelRegistered(); }
+        public override void ChannelInactive(IChannelHandlerContext ctx) { calls.Add(name + ".inactive"); ctx.FireChannelInactive(); }
+        public override void ChannelUnregistered(IChannelHandlerContext ctx) { calls.Add(name + ".unregistered"); ctx.FireChannelUnregistered(); }
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) { calls.Add(name + ".writable"); ctx.FireChannelWritabilityChanged(); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { calls.Add(name + ".in"); ctx.FireChannelRead(msg); }
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
+        { calls.Add(name + ".out"); return ctx.WriteAsync(msg, cancellationToken); }
     }
 }

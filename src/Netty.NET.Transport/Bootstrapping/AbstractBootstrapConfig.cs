@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Bootstrapping;
@@ -65,7 +66,7 @@ public abstract class AbstractBootstrapConfig
         => "{" + string.Join(", ", values.Select(pair => pair.Key + "=" + Value(pair.Value))) + "}";
     protected virtual void Describe(List<string> values)
     {
-        if (Group != null) values.Add("group: " + Group.GetType().Name);
+        if (Group != null) values.Add("group: " + StringUtil.SimpleClassName(Group));
         if (ChannelFactory != null) values.Add("channelFactory: " + ChannelFactory);
         if (LocalAddress != null) values.Add("localAddress: " + LocalAddress);
         var options = Options; if (options.Count != 0) values.Add("options: " + Map(options));
@@ -76,6 +77,6 @@ public abstract class AbstractBootstrapConfig
     {
         var values = new List<string>();
         Describe(values);
-        return GetType().Name + "(" + string.Join(", ", values) + ")";
+        return StringUtil.SimpleClassName(this) + "(" + string.Join(", ", values) + ")";
     }
 }

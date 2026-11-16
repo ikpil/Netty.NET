@@ -18,62 +18,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
+// CLR: supplemental unpooled metric contracts. The original testUsedDirectMemory, testUsedHeapMemory,
+// testUsedDirectMemoryHuge and testUsedHeapMemoryHuge bodies run per allocator in AbstractByteBufAllocatorTest.
 public class ByteBufAllocatorMetricTest
 {
-    [Fact]
-    public void OriginalUsedDirectMemory()
-    {
-        var allocator = new UnpooledByteBufAllocator(true);
-        IByteBufAllocatorMetric metric = ((IByteBufAllocatorMetricProvider)allocator).Metric;
-        Assert.Equal(0, metric.UsedDirectMemory);
-        ByteBuf buffer = allocator.DirectBuffer(1024, 4096);
-        try
-        {
-            int capacity = buffer.Capacity;
-            Assert.Equal(capacity, metric.UsedDirectMemory);
-            // Double the size of the buffer
-            buffer.Capacity = capacity << 1;
-            Assert.Equal(buffer.Capacity, metric.UsedDirectMemory);
-        }
-        finally { buffer.Release(); }
-        Assert.Equal(0, metric.UsedDirectMemory);
-    }
-
-    [Fact]
-    public void OriginalUsedHeapMemory()
-    {
-        var allocator = new UnpooledByteBufAllocator(true);
-        IByteBufAllocatorMetric metric = allocator.Metric;
-        Assert.Equal(0, metric.UsedHeapMemory);
-        ByteBuf buffer = allocator.HeapBuffer(1024, 4096);
-        try
-        {
-            int capacity = buffer.Capacity;
-            Assert.Equal(capacity, metric.UsedHeapMemory);
-            // Double the size of the buffer
-            buffer.Capacity = capacity << 1;
-            Assert.Equal(buffer.Capacity, metric.UsedHeapMemory);
-        }
-        finally { buffer.Release(); }
-        Assert.Equal(0, metric.UsedHeapMemory);
-    }
-
-    [Theory]
-    [InlineData(false)] [InlineData(true)]
-    public void OriginalUsedMemoryHuge(bool direct)
-    {
-        var allocator = new UnpooledByteBufAllocator(true);
-        Assert.Equal(0, allocator.Metric.UsedHeapMemory);
-        const int size = 32 * 1024 * 1024;
-        ByteBuf buffer = Allocate(allocator, direct, size, size);
-        try { AssertUsage(allocator, direct, size); }
-        finally { buffer.Release(); }
-        AssertUsage(allocator, direct, 0);
-    }
-
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void GrowthShrinkAndRejectedResizeTrackOwnedCapacity(bool direct)
@@ -116,7 +68,7 @@ public class ByteBufAllocatorMetricTest
             Assert.False(b.Release()); AssertUsage(a, direct, 8);
             Assert.True(retained.Release()); AssertUsage(a, direct, 0);
         }
-        finally { if (b.ReferenceCount > 0) b.Release(b.ReferenceCount); }
+        finally { if (b.RefCnt > 0) b.Release(b.RefCnt); }
     }
 
     [Theory]
@@ -195,11 +147,11 @@ public class ByteBufAllocatorMetricTest
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
         try
         {
-            Assert.Throws<OutOfMemoryException>(() => a.DirectBuffer(8, 8));
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = 8);
+            Assert.Throws<OutOfDirectMemoryError>(() => a.DirectBuffer(8, 8));
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 8);
             AssertUsage(a, true, 4); Assert.Equal(4, native.ReservedBytes);
             ByteBuf full = a.DirectBuffer(4, 4);
-            try { Assert.Throws<OutOfMemoryException>(() => b.Copy()); AssertUsage(a, true, 8); }
+            try { Assert.Throws<OutOfDirectMemoryError>(() => b.Copy()); AssertUsage(a, true, 8); }
             finally { full.Release(); }
             Assert.Equal(0x01020304, b.GetInt(0)); Assert.Equal(4, b.WriterIndex); AssertUsage(a, true, 4);
         }
@@ -224,7 +176,7 @@ public class ByteBufAllocatorMetricTest
     public void UtilityWriteFailureReleasesInitiallyAllocatedNativeCapacity()
     {
         var native = new NativeMemoryAllocator(4); var a = new UnpooledByteBufAllocator(true, native);
-        Assert.Throws<OutOfMemoryException>(() => ByteBufUtil.WriteUtf8(a, new AsciiString("AB")));
+        Assert.Throws<OutOfDirectMemoryError>(() => ByteBufUtil.WriteUtf8(a, new AsciiString("AB")));
         AssertUsage(a, true, 0); Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -242,7 +194,7 @@ public class ByteBufAllocatorMetricTest
             finally { newPin.Dispose(); }
             Assert.Equal(4, native.ReservedBytes);
         }
-        finally { if (b.ReferenceCount > 0) b.Release(); oldPin.Dispose(); }
+        finally { if (b.RefCnt > 0) b.Release(); oldPin.Dispose(); }
         AssertUsage(a, true, 0); Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -276,7 +228,8 @@ public class ByteBufAllocatorMetricTest
         {
             Assert.Equal(preferDirect ? 0 : 3, a.Metric.UsedHeapMemory);
             Assert.Equal(preferDirect ? 8 : 5, a.Metric.UsedDirectMemory);
-            Assert.Equal($"UnpooledByteBufAllocatorMetric(usedHeapMemory: {(preferDirect ? 0 : 3)}; usedDirectMemory: {(preferDirect ? 8 : 5)})", a.Metric.ToString());
+            // simpleClassName(this) of the nested metric: UnpooledByteBufAllocator$UnpooledByteBufAllocatorMetric in Java.
+            Assert.Equal($"UnpooledByteBufAllocator+UnpooledByteBufAllocatorMetric(usedHeapMemory: {(preferDirect ? 0 : 3)}; usedDirectMemory: {(preferDirect ? 8 : 5)})", a.Metric.ToString());
         }
         finally { b.Release(); io.Release(); }
         AssertUsage(a, true, 0);

@@ -83,12 +83,12 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             task => ScheduleFromEventLoop(task), task => RemoveScheduled(task), captureContext: false
         );
         _quietPeriodCallback = _quietPeriodTask.QueueCallback;
-        ScheduledTaskQueue().TryEnqueue(_quietPeriodTask);
+        ScheduleFromEventLoop(_quietPeriodTask);
         _threadFactory = ThreadExecutorMap.Apply(new DefaultThreadFactory(
             GetType(), false, ThreadPriority.Normal), this);
 
-        NotSupportedException terminationFailure = ThrowableUtil.UnknownStackTrace(new StacklessUnsupportedOperationException(),
-            typeof(GlobalEventExecutor), "terminationFuture");
+        NotSupportedException terminationFailure =
+            StacklessUnsupportedOperationException.NewInstance(typeof(GlobalEventExecutor), "terminationFuture");
         _terminationTask = Task.FromException(terminationFailure);
         _taskRunner = new TaskRunner(this);
     }
@@ -157,11 +157,14 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     private void FetchFromScheduledTaskQueue()
     {
         long nanoTime = GetCurrentTimeNanos();
-        Action scheduledTask = PollScheduledTask(nanoTime);
-        while (scheduledTask != null)
+        IScheduledWork scheduledTask;
+        while ((scheduledTask = PollScheduledWork(nanoTime)) != null)
         {
-            _taskQueue.Add(scheduledTask);
-            scheduledTask = PollScheduledTask(nanoTime);
+            if (scheduledTask.IsCanceled)
+            {
+                continue;
+            }
+            _taskQueue.Add(scheduledTask.QueueCallback);
         }
     }
 
@@ -189,7 +192,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return Termination;
+        return TerminationFuture;
     }
 
     public override bool IsShuttingDown()
@@ -197,8 +200,8 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         return false;
     }
 
-    public override Task Termination => _terminationTask;
-    public override Task StopAsync() => Termination;
+    public override Task TerminationFuture => _terminationTask;
+    public override Task StopAsync() => TerminationFuture;
 
     [Obsolete]
     public override void Shutdown()
@@ -248,6 +251,12 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     public override void Execute(Action task)
     {
+        Execute0(task);
+    }
+
+    // CLR: the JetBrains @Schedule parameter annotation is IDE-only metadata with no CLR counterpart.
+    private void Execute0(Action task)
+    {
         AddTask(ObjectUtil.CheckNotNull(task, "task"));
         if (!InEventLoop())
         {
@@ -283,7 +292,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         // See:
         // - https://github.com/netty/netty/issues/7290
         // - https://bugs.openjdk.java.net/browse/JDK-7008595
-        //setContextClassLoader(t, null);
+        // CLR: no context class loader exists; StartThread() suppresses ExecutionContext flow instead.
 
         // Set the thread before starting it as otherwise inEventLoop() may return false and so produce
         // an assert error.
@@ -296,8 +305,6 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     private sealed class TaskRunner
     {
-        private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(TaskRunner));
-
         private readonly GlobalEventExecutor _this;
 
         public TaskRunner(GlobalEventExecutor executor)
@@ -371,7 +378,15 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         // Classloader. As the GlobalEventExecutor.INSTANCE is a singleton and holds on to this exception via its
         // terminationFuture, a populated backtrace would pin the Classloader of whatever thread happened to trigger
         // the lazy initialization of INSTANCE (see https://github.com/netty/netty/issues/17128).
-        // CLR synthetic text does not retain captured caller frames.
-        public override string StackTrace => "at GlobalEventExecutor.terminationFuture(...)";
+        // CLR: there is no fillInStackTrace(). The first non-null trace (the origin frame stored by
+        // ThrowableUtil.UnknownStackTrace) is frozen, so later throws or awaits do not add frames.
+        private string _stackTrace;
+
+        public override string StackTrace => _stackTrace ??= base.StackTrace;
+
+        internal static StacklessUnsupportedOperationException NewInstance(Type clazz, string method)
+        {
+            return ThrowableUtil.UnknownStackTrace(new StacklessUnsupportedOperationException(), clazz, method);
+        }
     }
 }

@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -84,12 +85,12 @@ public class LinuxTcpMd5SourceTest
         }
     }
 
-    internal static async Task WithServer(Func<DefaultEventLoopGroup, IChannel, CancellationToken, Task> scenario, bool ipv6 = false)
+    internal static async Task WithServer(Func<MultiThreadIoEventLoopGroup, IChannel, CancellationToken, Task> scenario, bool ipv6 = false)
     {
         if (!OperatingSystem.IsLinux()) Assert.Skip("TCP_MD5SIG requires Linux.");
         if (ipv6 && !Socket.OSSupportsIPv6) Assert.Skip("IPv6 unavailable.");
         var token = TestContext.Current.CancellationToken;
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             var server = await NewServer(group).BindAsync(
@@ -99,12 +100,12 @@ public class LinuxTcpMd5SourceTest
         finally { await group.StopAsync(); }
     }
 
-    private static ServerBootstrap NewServer(DefaultEventLoopGroup group) =>
-        new ServerBootstrap().Group(group).ChannelFactory(static () => new TcpServerSocketChannel())
+    private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup group) =>
+        new ServerBootstrap().Group(group).ChannelFactory(static () => new NioServerSocketChannel())
             .ChildHandler(new ChannelInboundHandlerAdapter());
 
-    internal static Bootstrap NewClient(DefaultEventLoopGroup group) =>
-        new Bootstrap().Group(group).ChannelFactory(static () => new TcpSocketChannel()).Handler(new ChannelInboundHandlerAdapter());
+    internal static Bootstrap NewClient(MultiThreadIoEventLoopGroup group) =>
+        new Bootstrap().Group(group).ChannelFactory(static () => new NioSocketChannel()).Handler(new ChannelInboundHandlerAdapter());
 
     internal static IReadOnlyDictionary<IPAddress, byte[]> Keys(IPAddress address, byte[] key) =>
         new Dictionary<IPAddress, byte[]> { [address] = key };

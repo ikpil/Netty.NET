@@ -39,7 +39,7 @@ public class HeapByteBufProviderTest
             Left.SetBytes(0, Enumerable.Repeat((byte)0xa5, 128).ToArray());
             Right.SetBytes(0, Enumerable.Repeat((byte)0x5a, 128).ToArray());
             Assert.False(Target.IsDirect); Assert.True(Target.IsContiguous);
-            Assert.Same(Allocator, Target.Allocator);
+            Assert.Same(Allocator, Target.Alloc());
             if (pooled)
             {
                 var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
@@ -58,7 +58,7 @@ public class HeapByteBufProviderTest
         public void Dispose()
         {
             foreach (ByteBuf buffer in new[] { Left, Target, Right })
-                if (buffer.ReferenceCount > 0) Assert.True(buffer.Release());
+                if (buffer.RefCnt > 0) Assert.True(buffer.Release());
             (Allocator as IDisposable)?.Dispose();
             var metric = ((IByteBufAllocatorMetricProvider)Allocator).Metric;
             Assert.Equal(0, metric.UsedHeapMemory);
@@ -185,7 +185,7 @@ public class HeapByteBufProviderTest
         try
         {
             Assert.NotSame(staleOwner, Owner(replacement));
-            Assert.Equal(0, staleOwner.ReferenceCount); Assert.Equal(1, replacement.ReferenceCount);
+            Assert.Equal(0, staleOwner.RefCnt); Assert.Equal(1, replacement.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => staleOwner.GetByte(0));
             Assert.Throws<IllegalReferenceCountException>(() => staleOwner.Retain());
             replacement.SetByte(0, 42); Assert.Equal(42, replacement.GetByte(0));

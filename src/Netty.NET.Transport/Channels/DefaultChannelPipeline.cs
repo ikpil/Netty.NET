@@ -17,12 +17,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
+using System.Globalization;
 using System.Net;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Transport.Channels;
@@ -32,576 +36,903 @@ namespace Netty.NET.Transport.Channels;
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */
-public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyValuePair<string, IChannelHandler>>
+public class DefaultChannelPipeline : IChannelPipeline
 {
-    private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(DefaultChannelPipeline));
+    internal static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(DefaultChannelPipeline));
+
+    // CLR: the JVM binary names generateName0(HeadContext.class)/generateName0(TailContext.class) are kept as text;
+    // StringUtil.SimpleClassName spells a nested CLR type Outer+Inner.
+    private const string HEAD_NAME = "DefaultChannelPipeline$HeadContext#0";
+    private const string TAIL_NAME = "DefaultChannelPipeline$TailContext#0";
+
+    // CLR: a weak, thread-safe ConditionalWeakTable replaces the per-thread WeakHashMap in a FastThreadLocal.
+    private static readonly ConditionalWeakTable<Type, string> nameCaches = new();
+
+    // CLR: Volatile.Read and Interlocked.CompareExchange on _estimatorHandle replace the AtomicReferenceFieldUpdater
+    // ESTIMATOR (https://learn.microsoft.com/dotnet/api/system.threading.interlocked.compareexchange).
+    internal readonly HeadContext Head;
+    internal readonly TailContext Tail;
+
+    // CLR: the channel is the AbstractChannel that folds Channel.Unsafe (2026-11-16 owner decision); there is no
+    // succeededFuture or voidPromise, because every operation returns its own Task.
+    private readonly AbstractChannel _channel;
+    private readonly bool _touch = ResourceLeakDetector.IsEnabled();
+
+    // CLR: a private lock object stands for synchronized (this)
+    // (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/lock).
     private readonly object _gate = new();
-    private readonly Dictionary<IEventExecutorGroup, IEventExecutor> _executors = new(ReferenceEqualityComparer.Instance);
-    private readonly List<(ChannelHandlerContext Context, bool Added)> _pendingCallbacks = new();
-    internal readonly ChannelHandlerContext Head;
-    internal readonly ChannelHandlerContext Tail;
-    private bool _registered;
+
+    private Dictionary<IEventExecutorGroup, IEventExecutor> _childExecutors;
     private IMessageSizeEstimator.IHandle _estimatorHandle;
-    internal IMessageSizeEstimator.IHandle EstimatorHandle
-    {
-        get
-        {
-            var handle = Volatile.Read(ref _estimatorHandle);
-            if (handle != null)
-                return handle;
-            handle = Channel.Config.GetMessageSizeEstimator().NewHandle();
-            return Interlocked.CompareExchange(ref _estimatorHandle, handle, null) ?? handle;
-        }
-    }
-    internal AbstractChannel Owner { get; }
+    private bool _firstRegistration = true;
+
     /**
-     * Returns the {@link Channel} that this pipeline is attached to.
-     *
-     * @return the channel. {@code null} if this pipeline is not attached yet.
+     * This is the head of a linked list that is processed by {@link #callHandlerAddedForAllHandlers()} and so process
+     * all the pending {@link #callHandlerAdded0(AbstractChannelHandlerContext)}.
+     * <p>
+     * We only keep the head because it is expected that the list is used infrequently and its size is small.
+     * Thus full iterations to do insertions is assumed to be a good compromised to saving memory and tail management
+     * complexity.
      */
-    public IChannel Channel => Owner;
-    public DefaultChannelPipeline(AbstractChannel channel)
+    private PendingHandlerCallback _pendingHandlerCallbackHead;
+
+    /**
+     * Set to {@code true} once the {@link AbstractChannel} is registered.Once set to {@code true} the value will never
+     * change.
+     */
+    private bool _registered;
+
+    // CLR: protected internal, because AbstractChannel.NewChannelPipeline() creates it outside a subclass.
+    protected internal DefaultChannelPipeline(AbstractChannel channel)
     {
-        ArgumentNullException.ThrowIfNull(channel);
-        Owner = channel;
-        Head = new(this, "DefaultChannelPipeline$HeadContext#0", new HeadHandler(channel)) { State = 1 };
-        Tail = new(this, "DefaultChannelPipeline$TailContext#0", new TailHandler(this)) { State = 1 };
+        _channel = ObjectUtil.CheckNotNull(channel, "channel");
+
+        Tail = new TailContext(this);
+        Head = new HeadContext(this);
+
         Head.Next = Tail;
-        Tail.Previous = Head;
+        Tail.Prev = Head;
     }
-    private ChannelHandlerContext Create(string name, IChannelHandler handler, IEventExecutorGroup group)
+
+    internal IMessageSizeEstimator.IHandle EstimatorHandle()
     {
-        ArgumentNullException.ThrowIfNull(handler);
-        if (handler is ChannelHandlerAdapter adapter)
-            adapter.CheckMultiplicity();
-        if (name == null)
+        IMessageSizeEstimator.IHandle handle = Volatile.Read(ref _estimatorHandle);
+        if (handle == null)
         {
-            string prefix = handler.GetType().Name + '#';
-            int suffix = 0;
-            while (Find(prefix + suffix) != null)
-                suffix++;
-            name = prefix + suffix;
+            handle = _channel.Config.GetMessageSizeEstimator().NewHandle();
+            IMessageSizeEstimator.IHandle witness = Interlocked.CompareExchange(ref _estimatorHandle, handle, null);
+            if (witness != null)
+            {
+                handle = witness;
+            }
         }
-        else if (Find(name) != null || name == Head.Name || name == Tail.Name)
-            throw new ArgumentException("Duplicate handler name: " + name, nameof(name));
-        IEventExecutor executor = null;
-        if (group != null)
+        return handle;
+    }
+
+    internal object Touch(object msg, AbstractChannelHandlerContext next)
+    {
+        return _touch ? ReferenceCountUtil.Touch(msg, next) : msg;
+    }
+
+    // CLR: the channel with Channel.Unsafe folded in (see the field).
+    internal AbstractChannel Owner => _channel;
+
+    private AbstractChannelHandlerContext NewContext(IEventExecutorGroup group, string name, IChannelHandler handler)
+    {
+        return new DefaultChannelHandlerContext(this, ChildExecutor(group), name, handler);
+    }
+
+    private IEventExecutor ChildExecutor(IEventExecutorGroup group)
+    {
+        if (group == null)
         {
-            bool pin = !Channel.Config.TryGetOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, out bool configured) || configured;
-            if (!pin)
-                executor = group.Next();
-            else if (!_executors.TryGetValue(group, out executor))
-                _executors.Add(group, executor = group.Next());
+            return null;
         }
-        return new(this, name, handler, executor);
+        // CLR: TryGetOption reports an unset option as false where getOption returns null (docs/common-clr-design.md,
+        // "Public name categories").
+        if (_channel.Config.TryGetOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, out bool pinEventExecutor) &&
+            !pinEventExecutor)
+        {
+            return group.Next();
+        }
+        Dictionary<IEventExecutorGroup, IEventExecutor> childExecutors = _childExecutors;
+        if (childExecutors == null)
+        {
+            // Use size of 4 as most people only use one extra EventExecutor.
+            // CLR: ReferenceEqualityComparer makes the Dictionary an identity map, as IdentityHashMap is
+            // (https://learn.microsoft.com/dotnet/api/system.collections.generic.referenceequalitycomparer).
+            childExecutors = _childExecutors =
+                new Dictionary<IEventExecutorGroup, IEventExecutor>(4, ReferenceEqualityComparer.Instance);
+        }
+        // Pin one of the child executors once and remember it so that the same child executor
+        // is used to fire events for the same channel.
+        if (!childExecutors.TryGetValue(group, out IEventExecutor childExecutor))
+        {
+            childExecutor = group.Next();
+            childExecutors[group] = childExecutor;
+        }
+        return childExecutor;
     }
-    private ChannelHandlerContext Find(string name)
+
+    public IChannel Channel => _channel;
+
+    public IChannelPipeline AddFirst(string name, IChannelHandler handler)
     {
-        for (var node = Head.Next; node != Tail; node = node.Next)
-            if (node.Name == name)
-                return node;
-        return null;
+        return AddFirst(null, name, handler);
     }
-    private static void Link(ChannelHandlerContext previous, ChannelHandlerContext context, ChannelHandlerContext next)
-    { context.Previous = previous; context.Next = next; previous.Next = context; next.Previous = context; }
-    private DefaultChannelPipeline Add(string anchor, string name, IChannelHandler handler, IEventExecutorGroup group, int position)
+
+    private enum AddStrategy
     {
-        ChannelHandlerContext context;
-        bool notify;
+        ADD_FIRST,
+        ADD_LAST,
+        ADD_BEFORE,
+        ADD_AFTER
+    }
+
+    private IChannelPipeline InternalAdd(IEventExecutorGroup group, string name,
+        IChannelHandler handler, string baseName,
+        AddStrategy addStrategy)
+    {
+        // CLR: the source's NullPointerException comes from handler.getClass() while the context is created.
+        ObjectUtil.CheckNotNull(handler, "handler");
+        AbstractChannelHandlerContext newCtx;
         lock (_gate)
         {
-            var adjacent = anchor == null ? (position == 0 ? Head : Tail) : Find(anchor) ?? throw new KeyNotFoundException(anchor);
-            context = Create(name, handler, group);
-            if (position == 0 || position == 3)
-                Link(adjacent, context, adjacent.Next);
-            else
-                Link(adjacent.Previous, context, adjacent);
-            notify = _registered;
-            if (!notify)
-                _pendingCallbacks.Add((context, true));
+            CheckMultiplicity(handler);
+            name = FilterName(name, handler);
+
+            newCtx = NewContext(group, name, handler);
+
+            switch (addStrategy)
+            {
+                case AddStrategy.ADD_FIRST:
+                    AddFirst0(newCtx);
+                    break;
+                case AddStrategy.ADD_LAST:
+                    AddLast0(newCtx);
+                    break;
+                case AddStrategy.ADD_BEFORE:
+                    AddBefore0(GetContextOrDie(baseName), newCtx);
+                    break;
+                case AddStrategy.ADD_AFTER:
+                    AddAfter0(GetContextOrDie(baseName), newCtx);
+                    break;
+                default:
+                    throw new ArgumentException("unknown add strategy: " + addStrategy);
+            }
+
+            // If the registered is false it means that the channel was not registered on an eventLoop yet.
+            // In this case we add the context to the pipeline and add a task that will call
+            // ChannelHandler.handlerAdded(...) once the channel is registered.
+            if (!_registered)
+            {
+                newCtx.SetAddPending();
+                CallHandlerCallbackLater(newCtx, true);
+                return this;
+            }
+
+            IEventExecutor executor = newCtx.Executor;
+            if (!executor.InEventLoop())
+            {
+                CallHandlerAddedInEventLoop(newCtx, executor);
+                return this;
+            }
         }
-        if (notify)
-            CallAdded(context);
+        CallHandlerAdded0(newCtx);
         return this;
     }
-    /**
-     * Inserts a {@link ChannelHandler} at the first position of this pipeline.
-     *
-     * @param name     the name of the handler to insert first
-     * @param handler  the handler to insert first
-     *
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified handler is {@code null}
-     */
-    public DefaultChannelPipeline AddFirst(string name, IChannelHandler handler) => Add(null, name, handler, null, 0);
-    /**
-     * Inserts a {@link ChannelHandler} at the first position of this pipeline.
-     *
-     * @param group    the {@link EventExecutorGroup} which will be used to execute the {@link ChannelHandler}
-     *                 methods
-     * @param name     the name of the handler to insert first
-     * @param handler  the handler to insert first
-     *
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified handler is {@code null}
-     * @deprecated use {@link #addFirst(String, ChannelHandler)}
-     */
-    public DefaultChannelPipeline AddFirst(IEventExecutorGroup group, string name, IChannelHandler handler) => Add(null, name, handler, group, 0);
-    /**
-     * Appends a {@link ChannelHandler} at the last position of this pipeline.
-     *
-     * @param name     the name of the handler to append
-     * @param handler  the handler to append
-     *
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified handler is {@code null}
-     */
-    public DefaultChannelPipeline AddLast(string name, IChannelHandler handler) => Add(null, name, handler, null, 1);
-    /**
-     * Appends a {@link ChannelHandler} at the last position of this pipeline.
-     *
-     * @param group    the {@link EventExecutorGroup} which will be used to execute the {@link ChannelHandler}
-     *                 methods
-     * @param name     the name of the handler to append
-     * @param handler  the handler to append
-     *
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified handler is {@code null}
-     * @deprecated use {@link #addLast(String, ChannelHandler)}
-     */
-    public DefaultChannelPipeline AddLast(IEventExecutorGroup group, string name, IChannelHandler handler) => Add(null, name, handler, group, 1);
-    /**
-     * Inserts a {@link ChannelHandler} before an existing handler of this
-     * pipeline.
-     *
-     * @param baseName  the name of the existing handler
-     * @param name      the name of the handler to insert before
-     * @param handler   the handler to insert before
-     *
-     * @throws NoSuchElementException
-     *         if there's no such entry with the specified {@code baseName}
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified baseName or handler is {@code null}
-     */
-    public DefaultChannelPipeline AddBefore(string anchor, string name, IChannelHandler handler) => Add(anchor, name, handler, null, 2);
-    /**
-     * Inserts a {@link ChannelHandler} after an existing handler of this
-     * pipeline.
-     *
-     * @param baseName  the name of the existing handler
-     * @param name      the name of the handler to insert after
-     * @param handler   the handler to insert after
-     *
-     * @throws NoSuchElementException
-     *         if there's no such entry with the specified {@code baseName}
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified baseName or handler is {@code null}
-     */
-    public DefaultChannelPipeline AddAfter(string anchor, string name, IChannelHandler handler) => Add(anchor, name, handler, null, 3);
-    /**
-     * Inserts a {@link ChannelHandler} before an existing handler of this
-     * pipeline.
-     *
-     * @param group     the {@link EventExecutorGroup} which will be used to execute the {@link ChannelHandler}
-     *                  methods
-     * @param baseName  the name of the existing handler
-     * @param name      the name of the handler to insert before
-     * @param handler   the handler to insert before
-     *
-     * @throws NoSuchElementException
-     *         if there's no such entry with the specified {@code baseName}
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified baseName or handler is {@code null}
-     * @deprecated use {@link #addBefore(String, String, ChannelHandler)}
-     */
-    public DefaultChannelPipeline AddBefore(IEventExecutorGroup group, string anchor, string name, IChannelHandler handler) => Add(anchor, name, handler, group, 2);
-    /**
-     * Inserts a {@link ChannelHandler} after an existing handler of this
-     * pipeline.
-     *
-     * @param group     the {@link EventExecutorGroup} which will be used to execute the {@link ChannelHandler}
-     *                  methods
-     * @param baseName  the name of the existing handler
-     * @param name      the name of the handler to insert after
-     * @param handler   the handler to insert after
-     *
-     * @throws NoSuchElementException
-     *         if there's no such entry with the specified {@code baseName}
-     * @throws IllegalArgumentException
-     *         if there's an entry with the same name already in the pipeline
-     * @throws NullPointerException
-     *         if the specified baseName or handler is {@code null}
-     * @deprecated use {@link #addAfter(String, String, ChannelHandler)}
-     */
-    public DefaultChannelPipeline AddAfter(IEventExecutorGroup group, string anchor, string name, IChannelHandler handler) => Add(anchor, name, handler, group, 3);
-    /**
-     * Inserts {@link ChannelHandler}s at the last position of this pipeline.
-     *
-     * @param handlers  the handlers to insert last
-     *
-     */
-    public DefaultChannelPipeline AddLast(params IChannelHandler[] handlers)
-    { ArgumentNullException.ThrowIfNull(handlers); foreach (var handler in handlers) { if (handler == null) break; AddLast((string)null, handler); } return this; }
-    /**
-     * Inserts {@link ChannelHandler}s at the first position of this pipeline.
-     *
-     * @param handlers  the handlers to insert first
-     *
-     */
-    public DefaultChannelPipeline AddFirst(params IChannelHandler[] handlers)
-    { ArgumentNullException.ThrowIfNull(handlers); int count = Array.IndexOf(handlers, null); if (count < 0) count = handlers.Length; for (int i = count - 1; i >= 0; i--) AddFirst((string)null, handlers[i]); return this; }
-    /**
-     * Returns the context object of the {@link ChannelHandler} with the
-     * specified name in this pipeline.
-     *
-     * @return the context object of the handler with the specified name.
-     *         {@code null} if there's no such handler in this pipeline.
-     */
-    /**
-     * Returns the context object of the {@link ChannelHandler} of the
-     * specified type in this pipeline.
-     *
-     * @return the context object of the handler of the specified type.
-     *         {@code null} if there's no such handler in this pipeline.
-     */
-    public ChannelHandlerContext Context(string name) { lock (_gate) return Find(name); }
-    /**
-     * Returns the context object of the specified {@link ChannelHandler} in
-     * this pipeline.
-     *
-     * @return the context object of the specified handler.
-     *         {@code null} if there's no such handler in this pipeline.
-     */
-    public ChannelHandlerContext Context(IChannelHandler handler)
-    { lock (_gate) { for (var c = Head.Next; c != Tail; c = c.Next) if (ReferenceEquals(c.Handler, handler)) return c; return null; } }
-    public ChannelHandlerContext Context(Type type)
-    { lock (_gate) { for (var c = Head.Next; c != Tail; c = c.Next) if (type.IsInstanceOfType(c.Handler)) return c; return null; } }
-    /**
-     * Returns the {@link ChannelHandler} with the specified name in this
-     * pipeline.
-     *
-     * @return the handler with the specified name.
-     *         {@code null} if there's no such handler in this pipeline.
-     */
-    /**
-     * Returns the {@link ChannelHandler} of the specified type in this
-     * pipeline.
-     *
-     * @return the handler of the specified handler type.
-     *         {@code null} if there's no such handler in this pipeline.
-     */
-    public IChannelHandler Get(string name) => Context(name)?.Handler;
-    public T Get<T>() where T : class, IChannelHandler => Context(typeof(T))?.Handler as T;
-    /**
-     * Returns the first {@link ChannelHandler} in this pipeline.
-     *
-     * @return the first handler.  {@code null} if this pipeline is empty.
-     */
-    public IChannelHandler First => FirstContext?.Handler;
-    /**
-     * Returns the last {@link ChannelHandler} in this pipeline.
-     *
-     * @return the last handler.  {@code null} if this pipeline is empty.
-     */
-    public IChannelHandler Last => LastContext?.Handler;
-    /**
-     * Returns the context of the first {@link ChannelHandler} in this pipeline.
-     *
-     * @return the context of the first handler.  {@code null} if this pipeline is empty.
-     */
-    public ChannelHandlerContext FirstContext { get { lock (_gate) return Head.Next == Tail ? null : Head.Next; } }
-    /**
-     * Returns the context of the last {@link ChannelHandler} in this pipeline.
-     *
-     * @return the context of the last handler.  {@code null} if this pipeline is empty.
-     */
-    public ChannelHandlerContext LastContext { get { lock (_gate) return Tail.Previous == Head ? null : Tail.Previous; } }
-    /**
-     * Removes the {@link ChannelHandler} with the specified name from this pipeline.
-     *
-     * @param  name             the name under which the {@link ChannelHandler} was stored.
-     *
-     * @return the removed handler
-     *
-     * @throws NoSuchElementException
-     *         if there's no such handler with the specified name in this pipeline
-     * @throws NullPointerException
-     *         if the specified name is {@code null}
-     */
-    /**
-     * Removes the {@link ChannelHandler} of the specified type from this pipeline.
-     *
-     * @param <T>           the type of the handler
-     * @param handlerType   the type of the handler
-     *
-     * @return the removed handler
-     *
-     * @throws NoSuchElementException
-     *         if there's no such handler of the specified type in this pipeline
-     * @throws NullPointerException
-     *         if the specified handler type is {@code null}
-     */
-    public IChannelHandler Remove(string name) => RemoveContext(Context(name) ?? throw new KeyNotFoundException(name));
-    /**
-     * Removes the specified {@link ChannelHandler} from this pipeline.
-     *
-     * @param  handler          the {@link ChannelHandler} to remove
-     *
-     * @throws NoSuchElementException
-     *         if there's no such handler in this pipeline
-     * @throws NullPointerException
-     *         if the specified handler is {@code null}
-     */
-    public DefaultChannelPipeline Remove(IChannelHandler handler) { RemoveContext(Context(handler) ?? throw new KeyNotFoundException()); return this; }
-    public T Remove<T>() where T : class, IChannelHandler => (T)RemoveContext(Context(typeof(T)) ?? throw new KeyNotFoundException());
-    public IChannelHandler RemoveIfExists(string name) => RemoveIfExistsContext(Context(name));
-    public IChannelHandler RemoveIfExists(Type handlerType) => RemoveIfExistsContext(Context(handlerType));
-    public IChannelHandler RemoveIfExists(IChannelHandler handler) => RemoveIfExistsContext(Context(handler));
-    private IChannelHandler RemoveIfExistsContext(ChannelHandlerContext context)
-        => context != null && TryRemoveContext(context) ? context.Handler : null;
-    /**
-     * Removes the first {@link ChannelHandler} in this pipeline.
-     *
-     * @return the removed handler
-     *
-     * @throws NoSuchElementException
-     *         if this pipeline is empty
-     */
-    public IChannelHandler RemoveFirst() => RemoveContext(FirstContext ?? throw new InvalidOperationException("Empty pipeline."));
-    /**
-     * Removes the last {@link ChannelHandler} in this pipeline.
-     *
-     * @return the removed handler
-     *
-     * @throws NoSuchElementException
-     *         if this pipeline is empty
-     */
-    public IChannelHandler RemoveLast() => RemoveContext(LastContext ?? throw new InvalidOperationException("Empty pipeline."));
-    private IChannelHandler RemoveContext(ChannelHandlerContext context)
+
+    public IChannelPipeline AddFirst(IEventExecutorGroup group, string name, IChannelHandler handler)
     {
-        if (!TryRemoveContext(context))
-            // The context was removed or replaced concurrently after it was looked up.
-            throw new KeyNotFoundException(context.Name);
-        return context.Handler;
+        return InternalAdd(group, name, handler, null, AddStrategy.ADD_FIRST);
     }
+
+    private void AddFirst0(AbstractChannelHandlerContext newCtx)
+    {
+        AbstractChannelHandlerContext nextCtx = Head.Next;
+        newCtx.Prev = Head;
+        newCtx.Next = nextCtx;
+        Head.Next = newCtx;
+        nextCtx.Prev = newCtx;
+    }
+
+    public IChannelPipeline AddLast(string name, IChannelHandler handler)
+    {
+        return AddLast(null, name, handler);
+    }
+
+    public IChannelPipeline AddLast(IEventExecutorGroup group, string name, IChannelHandler handler)
+    {
+        return InternalAdd(group, name, handler, null, AddStrategy.ADD_LAST);
+    }
+
+    private void AddLast0(AbstractChannelHandlerContext newCtx)
+    {
+        AbstractChannelHandlerContext prev = Tail.Prev;
+        newCtx.Prev = prev;
+        newCtx.Next = Tail;
+        prev.Next = newCtx;
+        Tail.Prev = newCtx;
+    }
+
+    public IChannelPipeline AddBefore(string baseName, string name, IChannelHandler handler)
+    {
+        return AddBefore(null, baseName, name, handler);
+    }
+
+    public IChannelPipeline AddBefore(
+        IEventExecutorGroup group, string baseName, string name, IChannelHandler handler)
+    {
+        return InternalAdd(group, name, handler, baseName, AddStrategy.ADD_BEFORE);
+    }
+
+    private static void AddBefore0(AbstractChannelHandlerContext ctx, AbstractChannelHandlerContext newCtx)
+    {
+        newCtx.Prev = ctx.Prev;
+        newCtx.Next = ctx;
+        ctx.Prev.Next = newCtx;
+        ctx.Prev = newCtx;
+    }
+
+    private string FilterName(string name, IChannelHandler handler)
+    {
+        if (name == null)
+        {
+            return GenerateName(handler);
+        }
+        CheckDuplicateName(name);
+        return name;
+    }
+
+    public IChannelPipeline AddAfter(string baseName, string name, IChannelHandler handler)
+    {
+        return AddAfter(null, baseName, name, handler);
+    }
+
+    public IChannelPipeline AddAfter(
+        IEventExecutorGroup group, string baseName, string name, IChannelHandler handler)
+    {
+        return InternalAdd(group, name, handler, baseName, AddStrategy.ADD_AFTER);
+    }
+
+    private static void AddAfter0(AbstractChannelHandlerContext ctx, AbstractChannelHandlerContext newCtx)
+    {
+        newCtx.Prev = ctx;
+        newCtx.Next = ctx.Next;
+        ctx.Next.Prev = newCtx;
+        ctx.Next = newCtx;
+    }
+
+    public IChannelPipeline AddFirst(params IChannelHandler[] handlers)
+    {
+        ObjectUtil.CheckNotNull(handlers, "handlers");
+        if (handlers.Length == 0 || handlers[0] == null)
+        {
+            return this;
+        }
+
+        int size;
+        for (size = 1; size < handlers.Length; size++)
+        {
+            if (handlers[size] == null)
+            {
+                break;
+            }
+        }
+
+        for (int i = size - 1; i >= 0; i--)
+        {
+            IChannelHandler h = handlers[i];
+            AddFirst((IEventExecutorGroup)null, null, h);
+        }
+
+        return this;
+    }
+
+    public IChannelPipeline AddLast(params IChannelHandler[] handlers)
+    {
+        ObjectUtil.CheckNotNull(handlers, "handlers");
+
+        foreach (IChannelHandler h in handlers)
+        {
+            if (h == null)
+            {
+                break;
+            }
+            AddLast((IEventExecutorGroup)null, null, h);
+        }
+
+        return this;
+    }
+
+    private string GenerateName(IChannelHandler handler)
+    {
+        Type handlerType = handler.GetType();
+        string name = nameCaches.GetValue(handlerType, GenerateName0);
+
+        // It's not very likely for a user to put more than one handler of the same type, but make sure to avoid
+        // any name conflicts.  Note that we don't cache the names generated here.
+        if (Context0(name) != null)
+        {
+            string baseName = name.Substring(0, name.Length - 1); // Strip the trailing '0'.
+            for (int i = 1; ; i++)
+            {
+                string newName = baseName + i.ToString(CultureInfo.InvariantCulture);
+                if (Context0(newName) == null)
+                {
+                    name = newName;
+                    break;
+                }
+            }
+        }
+        return name;
+    }
+
+    // CLR: StringUtil.SimpleClassName is the namespace-less Type.FullName, so nested types read Outer+Inner where the
+    // JVM binary name reads Outer$Inner.
+    private static string GenerateName0(Type handlerType)
+    {
+        return StringUtil.SimpleClassName(handlerType) + "#0";
+    }
+
+    public IChannelPipeline Remove(IChannelHandler handler)
+    {
+        Remove(GetContextOrDie(handler));
+        return this;
+    }
+
+    public IChannelHandler Remove(string name)
+    {
+        return Remove(GetContextOrDie(name)).Handler;
+    }
+
+    public T Remove<T>() where T : class, IChannelHandler
+    {
+        return (T)Remove(GetContextOrDie(typeof(T))).Handler;
+    }
+
+    public IChannelHandler RemoveIfExists(string name)
+    {
+        return RemoveIfExists(Context(name));
+    }
+
+    public IChannelHandler RemoveIfExists(Type handlerType)
+    {
+        return RemoveIfExists(Context(handlerType));
+    }
+
+    public IChannelHandler RemoveIfExists(IChannelHandler handler)
+    {
+        return RemoveIfExists(Context(handler));
+    }
+
+    private IChannelHandler RemoveIfExists(IChannelHandlerContext ctx)
+    {
+        if (ctx == null || !TryRemove((AbstractChannelHandlerContext)ctx))
+        {
+            return null;
+        }
+        return ctx.Handler;
+    }
+
+    private AbstractChannelHandlerContext Remove(AbstractChannelHandlerContext ctx)
+    {
+        if (!TryRemove(ctx))
+        {
+            // The context was removed or replaced concurrently after it was looked up.
+            throw new KeyNotFoundException(ctx.Name);
+        }
+        return ctx;
+    }
+
     /**
      * Removes the given context from the pipeline and schedules the call of
      * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)}.
      *
      * @return {@code false} if the context was not part of the pipeline anymore, in which case nothing is done.
      */
-    private bool TryRemoveContext(ChannelHandlerContext context)
+    private bool TryRemove(AbstractChannelHandlerContext ctx)
     {
+        Debug.Assert(ctx != Head && ctx != Tail);
+
         lock (_gate)
         {
-            if (!TryUnlinkContext(context))
+            if (!AtomicRemoveFromHandlerList(ctx))
+            {
                 return false;
+            }
+
+            // If the registered is false it means that the channel was not registered on an eventloop yet.
+            // In this case we remove the context from the pipeline and add a task that will call
+            // ChannelHandler.handlerRemoved(...) once the channel is registered.
             if (!_registered)
             {
-                // If the registered is false it means that the channel was not registered on an eventloop yet.
-                // In this case we remove the context from the pipeline and add a task that will call
-                // ChannelHandler.handlerRemoved(...) once the channel is registered.
-                _pendingCallbacks.Add((context, false));
+                CallHandlerCallbackLater(ctx, false);
                 return true;
             }
-            if (!context.Executor.InEventLoop())
+
+            IEventExecutor executor = ctx.Executor;
+            if (!executor.InEventLoop())
             {
-                context.Executor.Execute(() => CallRemoved0(context));
+                executor.Execute(() => CallHandlerRemoved0(ctx));
                 return true;
             }
         }
-        CallRemoved0(context);
+        CallHandlerRemoved0(ctx);
         return true;
     }
-    private bool TryUnlinkContext(ChannelHandlerContext context)
+
+    /**
+     * Returns {@code true} if the given context is still linked into the pipeline. A removed context keeps its
+     * {@code prev} and {@code next} pointers (and a replaced context points to its replacement), so the check must
+     * be done by looking at the neighbour.
+     */
+    private bool IsLinked(AbstractChannelHandlerContext ctx)
+    {
+        Debug.Assert(Monitor.IsEntered(_gate));
+        return ctx.Prev.Next == ctx;
+    }
+
+    /**
+     * Method is synchronized to make the handler removal from the double linked list atomic.
+     *
+     * @return {@code false} if the context was already removed or replaced, in which case the list is not modified.
+     */
+    private bool AtomicRemoveFromHandlerList(AbstractChannelHandlerContext ctx)
     {
         lock (_gate)
         {
-            if (!context.Linked)
+            if (!IsLinked(ctx))
+            {
+                // Unlinking the context again would link its stale neighbours back into the pipeline.
                 return false;
-            context.Previous.Next = context.Next;
-            context.Next.Previous = context.Previous;
-            context.Linked = false;
+            }
+            AbstractChannelHandlerContext prev = ctx.Prev;
+            AbstractChannelHandlerContext next = ctx.Next;
+            prev.Next = next;
+            next.Prev = prev;
             return true;
         }
     }
-    /**
-     * Replaces the {@link ChannelHandler} of the specified name with a new handler in this pipeline.
-     *
-     * @param  oldName       the name of the {@link ChannelHandler} to be replaced
-     * @param  newName       the name under which the replacement should be added
-     * @param  newHandler    the {@link ChannelHandler} which is used as replacement
-     *
-     * @return the removed handler
-     *
-     * @throws NoSuchElementException
-     *         if the handler with the specified old name does not exist in this pipeline
-     * @throws IllegalArgumentException
-     *         if a handler with the specified new name already exists in this
-     *         pipeline, except for the handler to be replaced
-     * @throws NullPointerException
-     *         if the specified old handler or new handler is
-     *         {@code null}
-     */
-    /**
-     * Replaces the {@link ChannelHandler} of the specified type with a new handler in this pipeline.
-     *
-     * @param  oldHandlerType   the type of the handler to be removed
-     * @param  newName          the name under which the replacement should be added
-     * @param  newHandler       the {@link ChannelHandler} which is used as replacement
-     *
-     * @return the removed handler
-     *
-     * @throws NoSuchElementException
-     *         if the handler of the specified old handler type does not exist
-     *         in this pipeline
-     * @throws IllegalArgumentException
-     *         if a handler with the specified new name already exists in this
-     *         pipeline, except for the handler to be replaced
-     * @throws NullPointerException
-     *         if the specified old handler or new handler is
-     *         {@code null}
-     */
-    public IChannelHandler Replace(string oldName, string newName, IChannelHandler handler)
-        => ReplaceContext(Context(oldName) ?? throw new KeyNotFoundException(oldName), newName, handler);
-    /**
-     * Replaces the specified {@link ChannelHandler} with a new handler in this pipeline.
-     *
-     * @param  oldHandler    the {@link ChannelHandler} to be replaced
-     * @param  newName       the name under which the replacement should be added
-     * @param  newHandler    the {@link ChannelHandler} which is used as replacement
-     *
-     * @return itself
 
-     * @throws NoSuchElementException
-     *         if the specified old handler does not exist in this pipeline
-     * @throws IllegalArgumentException
-     *         if a handler with the specified new name already exists in this
-     *         pipeline, except for the handler to be replaced
-     * @throws NullPointerException
-     *         if the specified old handler or new handler is
-     *         {@code null}
-     */
-    public DefaultChannelPipeline Replace(IChannelHandler oldHandler, string newName, IChannelHandler handler)
-    { ReplaceContext(Context(oldHandler) ?? throw new KeyNotFoundException(), newName, handler); return this; }
-    private IChannelHandler ReplaceContext(ChannelHandlerContext old, string newName, IChannelHandler handler)
+    // CLR: InvalidOperationException stands for NoSuchElementException on an empty pipeline, as
+    // LinkedList<T>.RemoveFirst() throws it for an empty list
+    // (https://learn.microsoft.com/dotnet/api/system.collections.generic.linkedlist-1.removefirst).
+    public IChannelHandler RemoveFirst()
     {
-        ChannelHandlerContext next;
+        if (Head.Next == Tail)
+        {
+            throw new InvalidOperationException();
+        }
+        return Remove(Head.Next).Handler;
+    }
+
+    public IChannelHandler RemoveLast()
+    {
+        if (Head.Next == Tail)
+        {
+            throw new InvalidOperationException();
+        }
+        return Remove(Tail.Prev).Handler;
+    }
+
+    public IChannelPipeline Replace(IChannelHandler oldHandler, string newName, IChannelHandler newHandler)
+    {
+        Replace(GetContextOrDie(oldHandler), newName, newHandler);
+        return this;
+    }
+
+    public IChannelHandler Replace(string oldName, string newName, IChannelHandler newHandler)
+    {
+        return Replace(GetContextOrDie(oldName), newName, newHandler);
+    }
+
+    public T Replace<T>(string newName, IChannelHandler newHandler) where T : class, IChannelHandler
+    {
+        return (T)Replace(GetContextOrDie(typeof(T)), newName, newHandler);
+    }
+
+    private IChannelHandler Replace(
+        AbstractChannelHandlerContext ctx, string newName, IChannelHandler newHandler)
+    {
+        Debug.Assert(ctx != Head && ctx != Tail);
+
+        // CLR: the source's NullPointerException comes from newHandler.getClass() while the context is created.
+        ObjectUtil.CheckNotNull(newHandler, "newHandler");
+        AbstractChannelHandlerContext newCtx;
         lock (_gate)
         {
-            if (!old.Linked)
-                throw new KeyNotFoundException(old.Name);
-            string oldName = old.Name;
-            var candidate = Create(newName == oldName ? null : newName, handler, null);
-            next = new(this, newName == oldName ? oldName : candidate.Name, handler, old.AssignedExecutor);
-            Link(old.Previous, next, old.Next);
-            old.Linked = false;
-            // A removed context continues through its replacement, including reentrant callbacks.
-            old.Previous = old.Next = next;
-            if (!_registered)
-            { _pendingCallbacks.Add((next, true)); _pendingCallbacks.Add((old, false)); }
-        }
-        if (_registered)
-        { CallAdded(next); CallRemoved(old); }
-        return old.Handler;
-    }
-    /**
-     * Returns the {@link List} of the handler names.
-     */
-    public IReadOnlyList<string> Names()
-    { lock (_gate) { var names = new List<string>(); for (var c = Head.Next; c != null; c = c.Next) names.Add(c.Name); return names; } }
-    public IReadOnlyDictionary<string, IChannelHandler> ToMap()
-    { lock (_gate) { var map = new Dictionary<string, IChannelHandler>(); for (var c = Head.Next; c != Tail; c = c.Next) map.Add(c.Name, c.Handler); return map; } }
-    public IEnumerator<KeyValuePair<string, IChannelHandler>> GetEnumerator() => ToMap().GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    internal void Registered()
-    {
-        (ChannelHandlerContext Context, bool Added)[] pending;
-        lock (_gate)
-        {
-            if (_registered)
-                return;
-            _registered = true;
-            pending = _pendingCallbacks.ToArray();
-            _pendingCallbacks.Clear();
-        }
-        foreach (var callback in pending)
-        { if (callback.Added) CallAdded(callback.Context); else CallRemoved(callback.Context); }
-    }
-    private void CallAdded(ChannelHandlerContext context)
-    {
-        void Invoke()
-        {
-            // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
-            // any pipeline events ctx.handler() will miss them because the state will not allow it.
-            if (!context.TrySetAdded())
-                return;
-            try
-            { context.Handler.HandlerAdded(context); }
-            catch (Exception error)
+            if (!IsLinked(ctx))
             {
-                bool removed = false;
-                try
+                // The context was removed or replaced concurrently after it was looked up.
+                throw new KeyNotFoundException(ctx.Name);
+            }
+            CheckMultiplicity(newHandler);
+            if (newName == null)
+            {
+                newName = GenerateName(newHandler);
+            }
+            else
+            {
+                bool sameName = ctx.Name.Equals(newName);
+                if (!sameName)
                 {
-                    // If handlerAdded(...) already removed or replaced the handler, whoever did that is responsible for
-                    // calling handlerRemoved(...).
-                    if (TryUnlinkContext(context))
-                        InvokeRemoved(context);
-                    removed = true;
+                    CheckDuplicateName(newName);
                 }
-                catch (Exception removalError) { Logger.Warn("Failed to remove a handler: " + context.Name, removalError); }
-                FireExceptionCaught(new ChannelPipelineException("HandlerAdded failed: " + context.Name +
-                    (removed ? "; removed." : "; also failed to remove."), error));
+            }
+
+            newCtx = NewContext(ctx.childExecutor, newName, newHandler);
+
+            Replace0(ctx, newCtx);
+
+            // If the registered is false it means that the channel was not registered on an eventloop yet.
+            // In this case we replace the context in the pipeline
+            // and add a task that will call ChannelHandler.handlerAdded(...) and
+            // ChannelHandler.handlerRemoved(...) once the channel is registered.
+            if (!_registered)
+            {
+                CallHandlerCallbackLater(newCtx, true);
+                CallHandlerCallbackLater(ctx, false);
+                return ctx.Handler;
+            }
+            IEventExecutor executor = ctx.Executor;
+            if (!executor.InEventLoop())
+            {
+                executor.Execute(() =>
+                {
+                    // Invoke newHandler.handlerAdded() first (i.e. before oldHandler.handlerRemoved() is invoked)
+                    // because callHandlerRemoved() will trigger channelRead() or flush() on newHandler and
+                    // those event handlers must be called after handlerAdded().
+                    CallHandlerAdded0(newCtx);
+                    CallHandlerRemoved0(ctx);
+                });
+                return ctx.Handler;
             }
         }
-        if (context.Executor.InEventLoop())
-            Invoke();
-        else
-            context.Executor.Execute(Invoke);
+        // Invoke newHandler.handlerAdded() first (i.e. before oldHandler.handlerRemoved() is invoked)
+        // because callHandlerRemoved() will trigger channelRead() or flush() on newHandler and those
+        // event handlers must be called after handlerAdded().
+        CallHandlerAdded0(newCtx);
+        CallHandlerRemoved0(ctx);
+        return ctx.Handler;
     }
-    private void CallRemoved(ChannelHandlerContext context)
+
+    private static void Replace0(AbstractChannelHandlerContext oldCtx, AbstractChannelHandlerContext newCtx)
     {
-        if (context.Executor.InEventLoop())
-            CallRemoved0(context);
-        else
-            context.Executor.Execute(() => CallRemoved0(context));
+        AbstractChannelHandlerContext prev = oldCtx.Prev;
+        AbstractChannelHandlerContext next = oldCtx.Next;
+        newCtx.Prev = prev;
+        newCtx.Next = next;
+
+        // Finish the replacement of oldCtx with newCtx in the linked list.
+        // Note that this doesn't mean events will be sent to the new handler immediately
+        // because we are currently at the event handler thread and no more than one handler methods can be invoked
+        // at the same time (we ensured that in replace().)
+        prev.Next = newCtx;
+        next.Prev = newCtx;
+
+        // update the reference to the replacement so forward of buffered content will work correctly
+        oldCtx.Prev = newCtx;
+        oldCtx.Next = newCtx;
     }
-    private void CallRemoved0(ChannelHandlerContext context)
+
+    private static void CheckMultiplicity(IChannelHandler handler)
     {
-        if (context.State == 2)
-            return;
-        try
-        { InvokeRemoved(context); }
-        catch (Exception error) { FireExceptionCaught(new ChannelPipelineException("HandlerRemoved failed: " + context.Name, error)); }
+        if (handler is ChannelHandlerAdapter h)
+        {
+            if (!h.IsSharable && h.added)
+            {
+                throw new ChannelPipelineException(
+                        h.GetType().FullName +
+                        " is not a @Sharable handler, so can't be added or removed multiple times.");
+            }
+            h.added = true;
+        }
     }
-    private static void InvokeRemoved(ChannelHandlerContext context)
+
+    private void CallHandlerAdded0(AbstractChannelHandlerContext ctx)
     {
         try
         {
-            // Only call handlerRemoved(...) if we called handlerAdded(...) before.
-            if (context.State == 1)
-                context.Handler.HandlerRemoved(context);
+            ctx.CallHandlerAdded();
         }
-        finally
+        catch (Exception t)
         {
-            // Mark the handler as removed in any case.
-            context.State = 2;
+            bool removed = false;
+            try
+            {
+                // If handlerAdded(...) already removed or replaced the handler, whoever did that is responsible for
+                // calling handlerRemoved(...).
+                if (AtomicRemoveFromHandlerList(ctx))
+                {
+                    ctx.CallHandlerRemoved();
+                }
+                removed = true;
+            }
+            catch (Exception t2)
+            {
+                if (logger.IsWarnEnabled())
+                {
+                    logger.Warn("Failed to remove a handler: " + ctx.Name, t2);
+                }
+            }
+
+            if (removed)
+            {
+                FireExceptionCaught(new ChannelPipelineException(
+                        ctx.Handler.GetType().FullName +
+                        ".handlerAdded() has thrown an exception; removed.", t));
+            }
+            else
+            {
+                FireExceptionCaught(new ChannelPipelineException(
+                        ctx.Handler.GetType().FullName +
+                        ".handlerAdded() has thrown an exception; also failed to remove.", t));
+            }
         }
     }
+
+    private void CallHandlerRemoved0(AbstractChannelHandlerContext ctx)
+    {
+        // Notify the complete removal.
+        try
+        {
+            ctx.CallHandlerRemoved();
+        }
+        catch (Exception t)
+        {
+            FireExceptionCaught(new ChannelPipelineException(
+                    ctx.Handler.GetType().FullName + ".handlerRemoved() has thrown an exception.", t));
+        }
+    }
+
+    internal void InvokeHandlerAddedIfNeeded()
+    {
+        Debug.Assert(_channel.EventLoop.InEventLoop());
+        if (_firstRegistration)
+        {
+            _firstRegistration = false;
+            // We are now registered to the EventLoop. It's time to call the callbacks for the ChannelHandlers,
+            // that were added before the registration was done.
+            CallHandlerAddedForAllHandlers();
+        }
+    }
+
+    public IChannelHandler First
+    {
+        get
+        {
+            IChannelHandlerContext first = FirstContext;
+            if (first == null)
+            {
+                return null;
+            }
+            return first.Handler;
+        }
+    }
+
+    public IChannelHandlerContext FirstContext
+    {
+        get
+        {
+            AbstractChannelHandlerContext first = Head.Next;
+            if (first == Tail)
+            {
+                return null;
+            }
+            return Head.Next;
+        }
+    }
+
+    public IChannelHandler Last
+    {
+        get
+        {
+            AbstractChannelHandlerContext last = Tail.Prev;
+            if (last == Head)
+            {
+                return null;
+            }
+            return last.Handler;
+        }
+    }
+
+    public IChannelHandlerContext LastContext
+    {
+        get
+        {
+            AbstractChannelHandlerContext last = Tail.Prev;
+            if (last == Head)
+            {
+                return null;
+            }
+            return last;
+        }
+    }
+
+    public IChannelHandler Get(string name)
+    {
+        IChannelHandlerContext ctx = Context(name);
+        if (ctx == null)
+        {
+            return null;
+        }
+        else
+        {
+            return ctx.Handler;
+        }
+    }
+
+    public T Get<T>() where T : class, IChannelHandler
+    {
+        IChannelHandlerContext ctx = Context(typeof(T));
+        if (ctx == null)
+        {
+            return null;
+        }
+        else
+        {
+            return (T)ctx.Handler;
+        }
+    }
+
+    public IChannelHandlerContext Context(string name)
+    {
+        return Context0(ObjectUtil.CheckNotNull(name, "name"));
+    }
+
+    public IChannelHandlerContext Context(IChannelHandler handler)
+    {
+        ObjectUtil.CheckNotNull(handler, "handler");
+
+        AbstractChannelHandlerContext ctx = Head.Next;
+        for (; ; )
+        {
+
+            if (ctx == null)
+            {
+                return null;
+            }
+
+            if (ctx.Handler == handler)
+            {
+                return ctx;
+            }
+
+            ctx = ctx.Next;
+        }
+    }
+
+    public IChannelHandlerContext Context(Type handlerType)
+    {
+        ObjectUtil.CheckNotNull(handlerType, "handlerType");
+
+        AbstractChannelHandlerContext ctx = Head.Next;
+        for (; ; )
+        {
+            if (ctx == null)
+            {
+                return null;
+            }
+            if (handlerType.IsAssignableFrom(ctx.Handler.GetType()))
+            {
+                return ctx;
+            }
+            ctx = ctx.Next;
+        }
+    }
+
+    public IReadOnlyList<string> Names()
+    {
+        List<string> list = new List<string>();
+        AbstractChannelHandlerContext ctx = Head.Next;
+        for (; ; )
+        {
+            if (ctx == null)
+            {
+                return list;
+            }
+            list.Add(ctx.Name);
+            ctx = ctx.Next;
+        }
+    }
+
+    public IReadOnlyDictionary<string, IChannelHandler> ToMap()
+    {
+        Dictionary<string, IChannelHandler> map = new Dictionary<string, IChannelHandler>();
+        AbstractChannelHandlerContext ctx = Head.Next;
+        for (; ; )
+        {
+            if (ctx == Tail)
+            {
+                return map;
+            }
+            map[ctx.Name] = ctx.Handler;
+            ctx = ctx.Next;
+        }
+    }
+
+    public IEnumerator<KeyValuePair<string, IChannelHandler>> GetEnumerator()
+    {
+        return ToMap().GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    /**
+     * Returns the {@link String} representation of this pipeline.
+     */
+    public sealed override string ToString()
+    {
+        StringBuilder buf = new StringBuilder()
+            .Append(StringUtil.SimpleClassName(this))
+            .Append('{');
+        AbstractChannelHandlerContext ctx = Head.Next;
+        for (; ; )
+        {
+            if (ctx == Tail)
+            {
+                break;
+            }
+
+            buf.Append('(')
+               .Append(ctx.Name)
+               .Append(" = ")
+               .Append(ctx.Handler.GetType().FullName)
+               .Append(')');
+
+            ctx = ctx.Next;
+            if (ctx == Tail)
+            {
+                break;
+            }
+
+            buf.Append(", ");
+        }
+        buf.Append('}');
+        return buf.ToString();
+    }
+
+    public IChannelInboundInvoker FireChannelRegistered()
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelRegistered(Head);
+            }
+            else
+            {
+                Head.FireChannelRegistered();
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelRegistered());
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireChannelUnregistered()
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelUnregistered(Head);
+            }
+            else
+            {
+                Head.FireChannelUnregistered();
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelUnregistered());
+        }
+        return this;
+    }
+
     /**
      * Removes all handlers from the pipeline one by one from tail (exclusive) to head (exclusive) to trigger
      * handlerRemoved().
@@ -612,135 +943,787 @@ public class DefaultChannelPipeline : IChannelOutboundInvoker, IEnumerable<KeyVa
      *
      * See: https://github.com/netty/netty/issues/3156
      */
+    // CLR: internal, because AbstractChannel also destroys the pipeline of a channel whose deregistration preceded
+    // the completion of an offloaded native close.
     internal void Destroy()
     {
         lock (_gate)
+        {
             DestroyUp(Head.Next, false);
+        }
     }
-    private void DestroyUp(ChannelHandlerContext context, bool inEventLoop)
+
+    private void DestroyUp(AbstractChannelHandlerContext ctx, bool inEventLoop)
     {
+        Thread currentThread = Thread.CurrentThread;
+        AbstractChannelHandlerContext tail = Tail;
         for (; ; )
         {
-            if (context == Tail)
-            { DestroyDown(Tail.Previous, inEventLoop); return; }
-            if (!inEventLoop && !context.Executor.InEventLoop())
+            if (ctx == tail)
             {
-                var next = context;
-                context.Executor.Execute(() => DestroyUp(next, true));
-                return;
+                DestroyDown(currentThread, tail.Prev, inEventLoop);
+                break;
             }
-            context = context.Next;
+
+            IEventExecutor executor = ctx.Executor;
+            if (!inEventLoop && !executor.InEventLoop(currentThread))
+            {
+                AbstractChannelHandlerContext finalCtx = ctx;
+                executor.Execute(() => DestroyUp(finalCtx, true));
+                break;
+            }
+
+            ctx = ctx.Next;
             inEventLoop = false;
         }
     }
-    private void DestroyDown(ChannelHandlerContext context, bool inEventLoop)
+
+    private void DestroyDown(Thread currentThread, AbstractChannelHandlerContext ctx, bool inEventLoop)
     {
         // We have reached at tail; now traverse backwards.
-        while (context != Head)
+        AbstractChannelHandlerContext head = Head;
+        for (; ; )
         {
-            if (inEventLoop || context.Executor.InEventLoop())
+            if (ctx == head)
             {
-                bool removed;
+                break;
+            }
+
+            IEventExecutor executor = ctx.Executor;
+            if (inEventLoop || executor.InEventLoop(currentThread))
+            {
                 // Skip a context that a handlerRemoved(...) callback already removed or replaced.
-                lock (_gate)
+                if (AtomicRemoveFromHandlerList(ctx))
                 {
-                    removed = context.Linked;
-                    if (removed)
-                    { context.Previous.Next = context.Next; context.Next.Previous = context.Previous; context.Linked = false; }
+                    CallHandlerRemoved0(ctx);
                 }
-                if (removed)
-                    CallRemoved0(context);
             }
             else
             {
-                var next = context;
-                context.Executor.Execute(() => DestroyDown(next, true));
-                return;
+                AbstractChannelHandlerContext finalCtx = ctx;
+                executor.Execute(() => DestroyDown(Thread.CurrentThread, finalCtx, true));
+                break;
             }
-            context = context.Previous;
+
+            ctx = ctx.Prev;
             inEventLoop = false;
         }
     }
-    internal void LogExceptionHandlerFailure(Exception error, Exception original) => Logger.Warn("An ExceptionCaught callback threw while handling an exception.", error);
-    public DefaultChannelPipeline FireChannelRegistered() { Head.FireChannelRegistered(); return this; }
-    public DefaultChannelPipeline FireChannelUnregistered() { Head.FireChannelUnregistered(); return this; }
-    public DefaultChannelPipeline FireChannelActive() { Head.FireChannelActive(); return this; }
-    public DefaultChannelPipeline FireChannelInactive() { Head.FireChannelInactive(); return this; }
-    public DefaultChannelPipeline FireChannelRead(object message) { Head.FireChannelRead(message); return this; }
-    public DefaultChannelPipeline FireChannelReadComplete() { Head.FireChannelReadComplete(); return this; }
-    public DefaultChannelPipeline FireUserEventTriggered(object evt) { Head.FireUserEventTriggered(evt); return this; }
-    public DefaultChannelPipeline FireExceptionCaught(Exception cause) { Head.FireExceptionCaught(cause); return this; }
-    public DefaultChannelPipeline FireChannelWritabilityChanged() { Head.FireChannelWritabilityChanged(); return this; }
-    public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default) => Tail.BindAsync(localAddress, cancellationToken);
-    public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default) => Tail.ConnectAsync(remoteAddress, localAddress, cancellationToken);
-    public Task DisconnectAsync(CancellationToken cancellationToken = default) => Tail.DisconnectAsync(cancellationToken);
-    public Task CloseAsync(CancellationToken cancellationToken = default) => Tail.CloseAsync(cancellationToken);
-    public Task DeregisterAsync(CancellationToken cancellationToken = default) => Tail.DeregisterAsync(cancellationToken);
-    public Task WriteAsync(object message, CancellationToken cancellationToken = default) => Tail.WriteAsync(message, cancellationToken);
-    public Task WriteAndFlushAsync(object message, CancellationToken cancellationToken = default) => Tail.WriteAndFlushAsync(message, cancellationToken);
-    public IChannelOutboundInvoker Read() { Tail.Read(); return this; }
-    public IChannelOutboundInvoker Flush() { Tail.Flush(); return this; }
+
+    public IChannelInboundInvoker FireChannelActive()
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelActive(Head);
+            }
+            else
+            {
+                Head.FireChannelActive();
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelActive());
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireChannelInactive()
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelInactive(Head);
+            }
+            else
+            {
+                Head.FireChannelInactive();
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelInactive());
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireExceptionCaught(Exception cause)
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ExceptionCaught(Head, cause);
+            }
+            else
+            {
+                Head.FireExceptionCaught(cause);
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireExceptionCaught(cause));
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireUserEventTriggered(object @event)
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.UserEventTriggered(Head, @event);
+            }
+            else
+            {
+                Head.FireUserEventTriggered(@event);
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireUserEventTriggered(@event));
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireChannelRead(object msg)
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelRead(Head, msg);
+            }
+            else
+            {
+                Head.FireChannelRead(msg);
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelRead(msg));
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireChannelReadComplete()
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelReadComplete(Head);
+            }
+            else
+            {
+                Head.FireChannelReadComplete();
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelReadComplete());
+        }
+        return this;
+    }
+
+    public IChannelInboundInvoker FireChannelWritabilityChanged()
+    {
+        if (Head.Executor.InEventLoop())
+        {
+            if (Head.InvokeHandler())
+            {
+                Head.ChannelWritabilityChanged(Head);
+            }
+            else
+            {
+                Head.FireChannelWritabilityChanged();
+            }
+        }
+        else
+        {
+            Head.Executor.Execute(() => FireChannelWritabilityChanged());
+        }
+        return this;
+    }
+
+    public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
+    {
+        return Tail.BindAsync(localAddress, cancellationToken);
+    }
+
+    public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default)
+    {
+        return Tail.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+    }
+
+    public Task DisconnectAsync(CancellationToken cancellationToken = default)
+    {
+        return Tail.DisconnectAsync(cancellationToken);
+    }
+
+    public Task CloseAsync(CancellationToken cancellationToken = default)
+    {
+        return Tail.CloseAsync(cancellationToken);
+    }
+
+    public Task DeregisterAsync(CancellationToken cancellationToken = default)
+    {
+        return Tail.DeregisterAsync(cancellationToken);
+    }
+
+    public IChannelOutboundInvoker Flush()
+    {
+        Tail.Flush();
+        return this;
+    }
+
+    public IChannelOutboundInvoker Read()
+    {
+        Tail.Read();
+        return this;
+    }
+
+    public Task WriteAsync(object msg, CancellationToken cancellationToken = default)
+    {
+        return Tail.WriteAsync(msg, cancellationToken);
+    }
+
+    public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
+    {
+        return Tail.WriteAndFlushAsync(msg, cancellationToken);
+    }
+
+    private void CheckDuplicateName(string name)
+    {
+        if (Context0(name) != null)
+        {
+            throw new ArgumentException("Duplicate handler name: " + name);
+        }
+    }
+
+    private AbstractChannelHandlerContext Context0(string name)
+    {
+        AbstractChannelHandlerContext context = Head.Next;
+        while (context != Tail)
+        {
+            if (context.Name.Equals(name))
+            {
+                return context;
+            }
+            context = context.Next;
+        }
+        return null;
+    }
+
+    // CLR: KeyNotFoundException stands for NoSuchElementException of a failed lookup
+    // (https://learn.microsoft.com/dotnet/api/system.collections.generic.keynotfoundexception).
+    private AbstractChannelHandlerContext GetContextOrDie(string name)
+    {
+        AbstractChannelHandlerContext ctx = (AbstractChannelHandlerContext)Context(name);
+        if (ctx == null)
+        {
+            throw new KeyNotFoundException(name);
+        }
+        else
+        {
+            return ctx;
+        }
+    }
+
+    private AbstractChannelHandlerContext GetContextOrDie(IChannelHandler handler)
+    {
+        AbstractChannelHandlerContext ctx = (AbstractChannelHandlerContext)Context(handler);
+        if (ctx == null)
+        {
+            throw new KeyNotFoundException(handler.GetType().FullName);
+        }
+        else
+        {
+            return ctx;
+        }
+    }
+
+    private AbstractChannelHandlerContext GetContextOrDie(Type handlerType)
+    {
+        AbstractChannelHandlerContext ctx = (AbstractChannelHandlerContext)Context(handlerType);
+        if (ctx == null)
+        {
+            throw new KeyNotFoundException(handlerType.FullName);
+        }
+        else
+        {
+            return ctx;
+        }
+    }
+
+    private void CallHandlerAddedForAllHandlers()
+    {
+        PendingHandlerCallback pendingHandlerCallbackHead;
+        lock (_gate)
+        {
+            Debug.Assert(!_registered);
+
+            // This Channel itself was registered.
+            _registered = true;
+
+            pendingHandlerCallbackHead = _pendingHandlerCallbackHead;
+            // Null out so it can be GC'ed.
+            _pendingHandlerCallbackHead = null;
+        }
+
+        // This must happen outside of the synchronized(...) block as otherwise handlerAdded(...) may be called while
+        // holding the lock and so produce a deadlock if handlerAdded(...) will try to add another handler from outside
+        // the EventLoop.
+        PendingHandlerCallback task = pendingHandlerCallbackHead;
+        while (task != null)
+        {
+            task.Execute();
+            task = task.next;
+        }
+    }
+
+    private void CallHandlerCallbackLater(AbstractChannelHandlerContext ctx, bool added)
+    {
+        Debug.Assert(!_registered);
+
+        PendingHandlerCallback task = added ? new PendingHandlerAddedTask(this, ctx) : new PendingHandlerRemovedTask(this, ctx);
+        PendingHandlerCallback pending = _pendingHandlerCallbackHead;
+        if (pending == null)
+        {
+            _pendingHandlerCallbackHead = task;
+        }
+        else
+        {
+            // Find the tail of the linked-list.
+            while (pending.next != null)
+            {
+                pending = pending.next;
+            }
+            pending.next = task;
+        }
+    }
+
+    private void CallHandlerAddedInEventLoop(AbstractChannelHandlerContext newCtx, IEventExecutor executor)
+    {
+        newCtx.SetAddPending();
+        executor.Execute(() => CallHandlerAdded0(newCtx));
+    }
+
+    /**
+     * Called once a {@link Throwable} hit the end of the {@link ChannelPipeline} without been handled by the user
+     * in {@link ChannelHandler#exceptionCaught(ChannelHandlerContext, Throwable)}.
+     */
+    protected virtual void OnUnhandledInboundException(Exception cause)
+    {
+        try
+        {
+            logger.Warn(
+                    "An exceptionCaught() event was fired, and it reached at the tail of the pipeline. " +
+                            "It usually means the last handler in the pipeline did not handle the exception.",
+                    cause);
+        }
+        finally
+        {
+            ReferenceCountUtil.Release(cause);
+        }
+    }
 
     /**
      * Called once the {@link ChannelInboundHandler#channelActive(ChannelHandlerContext)}event hit
      * the end of the {@link ChannelPipeline}.
      */
-    protected virtual void OnUnhandledInboundChannelActive() { }
+    protected virtual void OnUnhandledInboundChannelActive()
+    {
+    }
+
     /**
      * Called once the {@link ChannelInboundHandler#channelInactive(ChannelHandlerContext)} event hit
      * the end of the {@link ChannelPipeline}.
      */
-    protected virtual void OnUnhandledInboundChannelInactive() { }
-    /**
-     * Called once a {@link Throwable} hit the end of the {@link ChannelPipeline} without been handled by the user
-     * in {@link ChannelHandler#exceptionCaught(ChannelHandlerContext, Throwable)}.
-     */
-    protected virtual void OnUnhandledInboundException(Exception error) => Owner.OnUnhandledException(error);
+    protected virtual void OnUnhandledInboundChannelInactive()
+    {
+    }
+
     /**
      * Called once a message hit the end of the {@link ChannelPipeline} without been handled by the user
      * in {@link ChannelInboundHandler#channelRead(ChannelHandlerContext, Object)}. This method is responsible
      * to call {@link ReferenceCountUtil#release(Object)} on the given msg at some point.
      */
-    protected virtual void OnUnhandledInboundMessage(object message) => Owner.OnUnhandledInboundMessage(message);
-    protected virtual void OnUnhandledInboundMessage(ChannelHandlerContext context, object message) => OnUnhandledInboundMessage(message);
+    protected virtual void OnUnhandledInboundMessage(object msg)
+    {
+        try
+        {
+            logger.Debug(
+                    "Discarded inbound message {} that reached at the tail of the pipeline. " +
+                            "Please check your pipeline configuration.", msg);
+        }
+        finally
+        {
+            ReferenceCountUtil.Release(msg);
+        }
+    }
+
+    /**
+     * Called once a message hit the end of the {@link ChannelPipeline} without been handled by the user
+     * in {@link ChannelInboundHandler#channelRead(ChannelHandlerContext, Object)}. This method is responsible
+     * to call {@link ReferenceCountUtil#release(Object)} on the given msg at some point.
+     */
+    protected virtual void OnUnhandledInboundMessage(IChannelHandlerContext ctx, object msg)
+    {
+        OnUnhandledInboundMessage(msg);
+        if (logger.IsDebugEnabled())
+        {
+            logger.Debug("Discarded message pipeline : {}. Channel : {}.",
+                         ctx.Pipeline.Names(), ctx.Channel);
+        }
+    }
+
     /**
      * Called once the {@link ChannelInboundHandler#channelReadComplete(ChannelHandlerContext)} event hit
      * the end of the {@link ChannelPipeline}.
      */
-    protected virtual void OnUnhandledInboundChannelReadComplete() { }
+    protected virtual void OnUnhandledInboundChannelReadComplete()
+    {
+    }
+
     /**
      * Called once an user event hit the end of the {@link ChannelPipeline} without been handled by the user
      * in {@link ChannelInboundHandler#userEventTriggered(ChannelHandlerContext, Object)}. This method is responsible
      * to call {@link ReferenceCountUtil#release(Object)} on the given event at some point.
      */
-    protected virtual void OnUnhandledInboundUserEventTriggered(object evt) => Owner.OnUnhandledUserEvent(evt);
+    protected virtual void OnUnhandledInboundUserEventTriggered(object evt)
+    {
+        // This may not be a configuration error and so don't log anything.
+        // The event may be superfluous for the current pipeline configuration.
+        ReferenceCountUtil.Release(evt);
+    }
+
     /**
      * Called once the {@link ChannelInboundHandler#channelWritabilityChanged(ChannelHandlerContext)} event hit
      * the end of the {@link ChannelPipeline}.
      */
-    protected virtual void OnUnhandledChannelWritabilityChanged() { }
-
-    [Sharable]
-    private sealed class TailHandler(DefaultChannelPipeline pipeline) : ChannelInboundHandlerAdapter
+    protected virtual void OnUnhandledChannelWritabilityChanged()
     {
-        public override void ChannelActive(ChannelHandlerContext context) => pipeline.OnUnhandledInboundChannelActive();
-        public override void ChannelInactive(ChannelHandlerContext context) => pipeline.OnUnhandledInboundChannelInactive();
-        public override void ChannelRead(ChannelHandlerContext context, object message) => pipeline.OnUnhandledInboundMessage(context, message);
-        public override void ChannelReadComplete(ChannelHandlerContext context) => pipeline.OnUnhandledInboundChannelReadComplete();
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context) => pipeline.OnUnhandledChannelWritabilityChanged();
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt) => pipeline.OnUnhandledInboundUserEventTriggered(evt);
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => pipeline.OnUnhandledInboundException(cause);
     }
-    [Sharable]
-    private sealed class HeadHandler(AbstractChannel channel) : ChannelOutboundHandlerAdapter
+
+    // CLR: a closed ChannelOutboundBuffer stands for the null outboundBuffer() of a closed channel.
+    protected internal virtual void IncrementPendingOutboundBytes(long size)
     {
-        public override Task BindAsync(ChannelHandlerContext context, EndPoint localAddress, CancellationToken cancellationToken) => channel.BindTransportAsync(localAddress, cancellationToken);
-        public override Task ConnectAsync(ChannelHandlerContext context, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken) => channel.ConnectTransportAsync(remoteAddress, localAddress, cancellationToken);
-        public override Task DisconnectAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.DisconnectTransportAsync(cancellationToken);
-        public override Task CloseAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.Close();
-        public override Task DeregisterAsync(ChannelHandlerContext context, CancellationToken cancellationToken) => channel.DeregisterTransportAsync();
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken cancellationToken) => channel.WriteTransportAsync(message, cancellationToken);
-        public override void Read(ChannelHandlerContext context) => channel.BeginRead();
-        public override void Flush(ChannelHandlerContext context) => channel.FlushTransport();
+        ChannelOutboundBuffer buffer = _channel.OutboundBuffer;
+        if (buffer != null && !buffer.IsClosed)
+        {
+            buffer.IncrementPendingOutboundBytes(size);
+        }
+    }
+
+    protected internal virtual void DecrementPendingOutboundBytes(long size)
+    {
+        ChannelOutboundBuffer buffer = _channel.OutboundBuffer;
+        if (buffer != null && !buffer.IsClosed)
+        {
+            buffer.DecrementPendingOutboundBytes(size);
+        }
+    }
+
+    // A special catch-all handler that handles both bytes and messages.
+    internal sealed class TailContext : AbstractChannelHandlerContext, IChannelInboundHandler
+    {
+        // CLR: the source's inner class reaches the pipeline through DefaultChannelPipeline.this.
+        private readonly DefaultChannelPipeline _pipeline;
+
+        internal TailContext(DefaultChannelPipeline pipeline) : base(pipeline, null, TAIL_NAME, null)
+        {
+            _pipeline = pipeline;
+            SetAddComplete();
+        }
+
+        public override IChannelHandler Handler => this;
+
+        public void ChannelRegistered(IChannelHandlerContext ctx) { }
+
+        public void ChannelUnregistered(IChannelHandlerContext ctx) { }
+
+        public void ChannelActive(IChannelHandlerContext ctx)
+        {
+            _pipeline.OnUnhandledInboundChannelActive();
+        }
+
+        public void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            _pipeline.OnUnhandledInboundChannelInactive();
+        }
+
+        public void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            _pipeline.OnUnhandledChannelWritabilityChanged();
+        }
+
+        public void HandlerAdded(IChannelHandlerContext ctx) { }
+
+        public void HandlerRemoved(IChannelHandlerContext ctx) { }
+
+        public void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            _pipeline.OnUnhandledInboundUserEventTriggered(evt);
+        }
+
+        public void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _pipeline.OnUnhandledInboundException(cause);
+        }
+
+        public void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            _pipeline.OnUnhandledInboundMessage(ctx, msg);
+        }
+
+        public void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            _pipeline.OnUnhandledInboundChannelReadComplete();
+        }
+    }
+
+    // CLR: Channel.Unsafe is folded into AbstractChannel, so the head forwards outbound operations to its transport
+    // members (the source's unsafe field).
+    internal sealed class HeadContext : AbstractChannelHandlerContext, IChannelOutboundHandler, IChannelInboundHandler
+    {
+        // CLR: the source's inner class reaches the pipeline through DefaultChannelPipeline.this.
+        private readonly DefaultChannelPipeline _pipeline;
+        private readonly AbstractChannel _channel;
+
+        internal HeadContext(DefaultChannelPipeline pipeline) : base(pipeline, null, HEAD_NAME, null)
+        {
+            _pipeline = pipeline;
+            _channel = pipeline._channel;
+            SetAddComplete();
+        }
+
+        public override IChannelHandler Handler => this;
+
+        public void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            // NOOP
+        }
+
+        public void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            // NOOP
+        }
+
+        public Task BindAsync(
+            IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken)
+        {
+            return _channel.BindTransportAsync(localAddress, cancellationToken);
+        }
+
+        public Task ConnectAsync(
+            IChannelHandlerContext ctx,
+            EndPoint remoteAddress, EndPoint localAddress,
+            CancellationToken cancellationToken)
+        {
+            return _channel.ConnectTransportAsync(remoteAddress, localAddress, cancellationToken);
+        }
+
+        public Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
+        {
+            return _channel.DisconnectTransportAsync(cancellationToken);
+        }
+
+        public Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
+        {
+            return _channel.Close();
+        }
+
+        public Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
+        {
+            return _channel.DeregisterTransportAsync();
+        }
+
+        public void Read(IChannelHandlerContext ctx)
+        {
+            _channel.BeginRead();
+        }
+
+        public Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
+        {
+            return _channel.WriteTransportAsync(msg, cancellationToken);
+        }
+
+        public void Flush(IChannelHandlerContext ctx)
+        {
+            _channel.FlushTransport();
+        }
+
+        public void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            ctx.FireExceptionCaught(cause);
+        }
+
+        public void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            _pipeline.InvokeHandlerAddedIfNeeded();
+            ctx.FireChannelRegistered();
+        }
+
+        public void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelUnregistered();
+
+            // Remove all handlers sequentially if channel is closed and unregistered.
+            // CLR: AbstractChannel marks itself closed before an offloaded native close completes; that close destroys
+            // the pipeline when it finishes, while the source's isOpen() still reports the open socket here.
+            if (!_channel.IsOpen && !_channel.ClosePending)
+            {
+                _pipeline.Destroy();
+            }
+        }
+
+        public void ChannelActive(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelActive();
+
+            ReadIfIsAutoRead();
+        }
+
+        public void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelInactive();
+        }
+
+        public void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ctx.FireChannelRead(msg);
+        }
+
+        public void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelReadComplete();
+
+            ReadIfIsAutoRead();
+        }
+
+        private void ReadIfIsAutoRead()
+        {
+            if (_channel.Config.IsAutoRead())
+            {
+                _channel.Read();
+            }
+        }
+
+        public void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            ctx.FireUserEventTriggered(evt);
+        }
+
+        public void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelWritabilityChanged();
+        }
+    }
+
+    // CLR: the Runnable is the Run method, passed to execute(...) as an Action.
+    private abstract class PendingHandlerCallback
+    {
+        internal readonly AbstractChannelHandlerContext ctx;
+        internal PendingHandlerCallback next;
+
+        protected PendingHandlerCallback(AbstractChannelHandlerContext ctx)
+        {
+            this.ctx = ctx;
+        }
+
+        public abstract void Run();
+
+        internal abstract void Execute();
+    }
+
+    private sealed class PendingHandlerAddedTask : PendingHandlerCallback
+    {
+        // CLR: the source's inner class reaches the pipeline through DefaultChannelPipeline.this.
+        private readonly DefaultChannelPipeline _pipeline;
+
+        internal PendingHandlerAddedTask(DefaultChannelPipeline pipeline, AbstractChannelHandlerContext ctx) : base(ctx)
+        {
+            _pipeline = pipeline;
+        }
+
+        public override void Run()
+        {
+            _pipeline.CallHandlerAdded0(ctx);
+        }
+
+        internal override void Execute()
+        {
+            IEventExecutor executor = ctx.Executor;
+            if (executor.InEventLoop())
+            {
+                _pipeline.CallHandlerAdded0(ctx);
+            }
+            else
+            {
+                try
+                {
+                    executor.Execute(Run);
+                }
+                catch (RejectedExecutionException e)
+                {
+                    if (logger.IsWarnEnabled())
+                    {
+                        logger.Warn(
+                                "Can't invoke handlerAdded() as the EventExecutor {} rejected it, removing handler {}.",
+                                executor, ctx.Name, e);
+                    }
+                    _pipeline.AtomicRemoveFromHandlerList(ctx);
+                    ctx.SetRemoved();
+                }
+            }
+        }
+    }
+
+    private sealed class PendingHandlerRemovedTask : PendingHandlerCallback
+    {
+        // CLR: the source's inner class reaches the pipeline through DefaultChannelPipeline.this.
+        private readonly DefaultChannelPipeline _pipeline;
+
+        internal PendingHandlerRemovedTask(DefaultChannelPipeline pipeline, AbstractChannelHandlerContext ctx) : base(ctx)
+        {
+            _pipeline = pipeline;
+        }
+
+        public override void Run()
+        {
+            _pipeline.CallHandlerRemoved0(ctx);
+        }
+
+        internal override void Execute()
+        {
+            IEventExecutor executor = ctx.Executor;
+            if (executor.InEventLoop())
+            {
+                _pipeline.CallHandlerRemoved0(ctx);
+            }
+            else
+            {
+                try
+                {
+                    executor.Execute(Run);
+                }
+                catch (RejectedExecutionException e)
+                {
+                    if (logger.IsWarnEnabled())
+                    {
+                        logger.Warn(
+                                "Can't invoke handlerRemoved() as the EventExecutor {} rejected it," +
+                                        " removing handler {}.", executor, ctx.Name, e);
+                    }
+                    // remove0(...) was call before so just call AbstractChannelHandlerContext.setRemoved().
+                    ctx.SetRemoved();
+                }
+            }
+        }
     }
 }

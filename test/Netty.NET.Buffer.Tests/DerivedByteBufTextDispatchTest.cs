@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -35,13 +36,16 @@ public class DerivedByteBufTextDispatchTest
             return $"parent:{index}:{length}";
         }
     }
+    // The parent observes getCharSequence, the member AbstractUnpooledSlicedByteBuf delegates to.
     private sealed class Heap(Observation o) : UnpooledHeapByteBuf(64, 128)
     {
-        public override string GetString(int index, int length, Encoding encoding) => o.Read(index, length, encoding);
+        public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
+            => new StringCharSequence(o.Read(index, length, charset));
     }
     private sealed class Direct(Observation o, NativeMemoryAllocator native) : UnpooledDirectByteBuf(64, 128, native)
     {
-        public override string GetString(int index, int length, Encoding encoding) => o.Read(index, length, encoding);
+        public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
+            => new StringCharSequence(o.Read(index, length, charset));
     }
     private sealed class Context : IDisposable
     {
@@ -77,8 +81,8 @@ public class DerivedByteBufTextDispatchTest
         private ByteBuf Own(ByteBuf b) { _owners.Add(b); return b; }
         public void Dispose()
         {
-            for (int i = _owners.Count - 1; i >= 0; --i) if (_owners[i].ReferenceCount > 0) _owners[i].Release();
-            if (Root.ReferenceCount > 0) Root.Release();
+            for (int i = _owners.Count - 1; i >= 0; --i) if (_owners[i].RefCnt > 0) _owners[i].Release();
+            if (Root.RefCnt > 0) Root.Release();
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -86,7 +90,7 @@ public class DerivedByteBufTextDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 16; ++form)
-        for (int operation = 0; operation < 3; ++operation)
+        for (int operation = 0; operation < 5; ++operation)
         for (int encoding = 0; encoding < 3; ++encoding)
         foreach (bool fail in new[] { false, true })
         foreach (bool empty in new[] { false, true }) yield return [direct, form, operation, encoding, fail, empty];
@@ -99,27 +103,36 @@ public class DerivedByteBufTextDispatchTest
         Encoding codec = encoding == 0 ? Encoding.UTF8 : encoding == 1 ? Encoding.ASCII : Encoding.Latin1;
         c.Observation.Fail = fail;
         if (empty && operation != 0) c.View.SetIndex(9, 9).MarkReaderIndex().MarkWriterIndex();
-        int reader = c.View.ReaderIndex, writer = c.View.WriterIndex, claims = c.Root.ReferenceCount;
-        int index = operation == 0 ? empty ? c.View.Capacity : 2 : reader;
+        int reader = c.View.ReaderIndex, writer = c.View.WriterIndex, claims = c.Root.RefCnt;
+        int index = operation is 0 or 3 ? empty ? c.View.Capacity : 2 : reader;
         int length = empty ? 0 : operation == 1 ? writer - reader : 5;
-        string Request() => operation == 0 ? c.View.GetString(index, length, codec)
-            : operation == 1 ? c.View.GetString(codec) : c.View.ReadString(length, codec);
-        if (c.Forward && fail) Assert.Same(c.Observation.Failure, Assert.Throws<TextFailure>(() => Request()));
+        // Operations 0 and 2 are getCharSequence/readCharSequence, which a non-retained slice delegates to its parent;
+        // 1, 3 and 4 are toString(Charset), toString(int, int, Charset) and readString, which always decode locally.
+        string Request() => operation switch
+        {
+            0 => c.View.GetCharSequence(index, length, codec).ToString(),
+            1 => c.View.ToString(codec),
+            2 => c.View.ReadCharSequence(length, codec).ToString(),
+            3 => c.View.ToString(index, length, codec),
+            _ => c.View.ReadString(length, codec),
+        };
+        bool forward = c.Forward && operation is 0 or 2;
+        if (forward && fail) Assert.Same(c.Observation.Failure, Assert.Throws<TextFailure>(() => Request()));
         else
         {
             string actual = Request();
-            string expected = c.Forward ? $"parent:{c.Offset + index}:{length}" :
+            string expected = forward ? $"parent:{c.Offset + index}:{length}" :
                 new string(Array.ConvertAll(ByteBufUtil.GetBytes(c.Root, c.Offset + index, length), b => (char)b));
             Assert.Equal(expected, actual);
         }
-        if (c.Forward)
+        if (forward)
         {
             var call = Assert.Single(c.Observation.Calls);
             Assert.Equal((c.Offset + index, length), (call.Index, call.Length)); Assert.Same(codec, call.Encoding);
         }
         else Assert.Empty(c.Observation.Calls);
-        Assert.Equal(reader + (operation == 2 && !(c.Forward && fail) ? length : 0), c.View.ReaderIndex);
-        Assert.Equal(writer, c.View.WriterIndex); Assert.Equal((3, 40, claims), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.ReferenceCount));
+        Assert.Equal(reader + (operation is 2 or 4 && !(forward && fail) ? length : 0), c.View.ReaderIndex);
+        Assert.Equal(writer, c.View.WriterIndex); Assert.Equal((3, 40, claims), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.RefCnt));
         c.View.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((reader, writer), (c.View.ReaderIndex, c.View.WriterIndex));
     }
     public static IEnumerable<object[]> BoundsCases()
@@ -135,7 +148,7 @@ public class DerivedByteBufTextDispatchTest
         using var c = new Context(direct, form);
         int index = range == 0 ? -1 : range == 1 ? c.View.Capacity : range == 2 ? 0 : int.MaxValue;
         int length = range == 2 ? -1 : 1;
-        Assert.Throws<ArgumentOutOfRangeException>(() => c.View.GetString(index, length, Encoding.UTF8));
+        Assert.Throws<ArgumentOutOfRangeException>(() => c.View.GetCharSequence(index, length, Encoding.UTF8));
         Assert.Empty(c.Observation.Calls); Assert.Equal((1, 9), (c.View.ReaderIndex, c.View.WriterIndex));
     }
     [Theory]
@@ -143,7 +156,7 @@ public class DerivedByteBufTextDispatchTest
     public void NullEncodingDoesNotReachTheCustomParent(bool direct, int form)
     {
         using var c = new Context(direct, form);
-        Assert.Throws<ArgumentNullException>(() => c.View.GetString(2, 5, null));
+        Assert.Throws<ArgumentNullException>(() => c.View.GetCharSequence(2, 5, null));
         Assert.Empty(c.Observation.Calls); Assert.Equal((1, 9), (c.View.ReaderIndex, c.View.WriterIndex));
     }
     public static IEnumerable<object[]> Forms()
@@ -158,10 +171,10 @@ public class DerivedByteBufTextDispatchTest
         ByteBuf view = sliced ? owner.Slice(4, 16) : owner.Duplicate();
         try
         {
-            Assert.True(owner.Release()); Assert.Equal(1, root.ReferenceCount); Assert.Equal(0, view.ReferenceCount);
-            Assert.Throws<IllegalReferenceCountException>(() => view.GetString(0, 5, Encoding.UTF8));
+            Assert.True(owner.Release()); Assert.Equal(1, root.RefCnt); Assert.Equal(0, view.RefCnt);
+            Assert.Throws<IllegalReferenceCountException>(() => view.GetCharSequence(0, 5, Encoding.UTF8));
             Assert.Empty(observation.Calls);
         }
-        finally { if (owner.ReferenceCount > 0) owner.Release(); root.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally { if (owner.RefCnt > 0) owner.Release(); root.Release(); Assert.Equal(0, native.ReservedBytes); }
     }
 }

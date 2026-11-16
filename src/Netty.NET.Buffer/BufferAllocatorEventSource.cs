@@ -93,7 +93,8 @@ public sealed class BufferAllocatorEventSource : EventSource
     }
 
     [NonEvent]
-    internal unsafe Snapshot? CaptureAdaptive(AdaptiveByteBuf buffer, AdaptiveChunkAllocation allocation, EventKeywords keyword)
+    internal unsafe Snapshot? CaptureAdaptive(AdaptivePoolingAllocator.AdaptiveByteBuf buffer,
+        AdaptivePoolingAllocator.AdaptiveChunkAllocation allocation, EventKeywords keyword)
     {
         if (!Enabled(keyword)) return null;
         bool direct = allocation.IsDirect;

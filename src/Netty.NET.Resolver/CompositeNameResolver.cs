@@ -16,10 +16,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Resolver;
 
@@ -39,37 +41,69 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
      */
     public CompositeNameResolver(IEventExecutor executor, params INameResolver<T>[] resolvers) : base(executor)
     {
-        ArgumentNullException.ThrowIfNull(resolvers);
-        foreach (var resolver in resolvers)
-            ArgumentNullException.ThrowIfNull(resolver);
+        ObjectUtil.CheckNotNull(resolvers, "resolvers");
+        for (int i = 0; i < resolvers.Length; i++)
+        {
+            ObjectUtil.CheckNotNull(resolvers[i], "resolvers[" + i.ToString(CultureInfo.InvariantCulture) + ']');
+        }
         if (resolvers.Length < 2)
-            throw new ArgumentException("Expected at least 2 resolvers.", nameof(resolvers));
+        {
+            // CLR: Arrays.asList(resolvers).toString() formats as "[a, b]".
+            throw new ArgumentException("resolvers: [" + string.Join(", ", (object[])resolvers) +
+                    "] (expected: at least 2 resolvers)");
+        }
         _resolvers = (INameResolver<T>[])resolvers.Clone();
     }
 
     protected override Task<T> DoResolveAsync(string inetHost, CancellationToken cancellationToken)
-        => ResolveSequentiallyAsync(resolver => resolver.ResolveAsync(inetHost, cancellationToken), cancellationToken);
+        => DoResolveRecAsync(inetHost, 0, null, cancellationToken);
 
-    protected override Task<IReadOnlyList<T>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
-        => ResolveSequentiallyAsync(resolver => resolver.ResolveAllAsync(inetHost, cancellationToken), cancellationToken);
-
-    private async Task<TResult> ResolveSequentiallyAsync<TResult>(Func<INameResolver<T>, Task<TResult>> resolve,
+    // CLR: a Task continuation replaces the promise listener; the recursion over resolverIndex is unchanged.
+    private async Task<T> DoResolveRecAsync(string inetHost, int resolverIndex, Exception lastFailure,
         CancellationToken cancellationToken)
     {
-        Exception lastFailure = null;
-        foreach (var resolver in _resolvers)
+        if (resolverIndex >= _resolvers.Length)
+        {
+            ExceptionDispatchInfo.Throw(lastFailure);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        INameResolver<T> resolver = _resolvers[resolverIndex];
+        Exception cause;
+        try
+        {
+            return await resolver.ResolveAsync(inetHost, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception e)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            try
-            { return await resolve(resolver).ConfigureAwait(false); }
-            catch (Exception error)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                lastFailure = error;
-            }
+            cause = e;
         }
-        ExceptionDispatchInfo.Capture(lastFailure).Throw();
-        throw new InvalidOperationException();
+        return await DoResolveRecAsync(inetHost, resolverIndex + 1, cause, cancellationToken).ConfigureAwait(false);
+    }
+
+    protected override Task<IReadOnlyList<T>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
+        => DoResolveAllRecAsync(inetHost, 0, null, cancellationToken);
+
+    private async Task<IReadOnlyList<T>> DoResolveAllRecAsync(string inetHost, int resolverIndex, Exception lastFailure,
+        CancellationToken cancellationToken)
+    {
+        if (resolverIndex >= _resolvers.Length)
+        {
+            ExceptionDispatchInfo.Throw(lastFailure);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        INameResolver<T> resolver = _resolvers[resolverIndex];
+        Exception cause;
+        try
+        {
+            return await resolver.ResolveAllAsync(inetHost, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            cause = e;
+        }
+        return await DoResolveAllRecAsync(inetHost, resolverIndex + 1, cause, cancellationToken).ConfigureAwait(false);
     }
     // Like the original, this composite does not own or close its component resolvers.
 }

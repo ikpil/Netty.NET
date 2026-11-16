@@ -1,5 +1,10 @@
 # Ordered multi-map contracts for the CLR chunk cache
 
+**Superseded (2026-11-16).** ConcurrentOrderedMultiMap was replaced by a faithful port of
+ConcurrentSkipListIntObjMultimap under its Java name; see
+[common-clr-design.md](common-clr-design.md#common-closure-review-decisions-2026-11-16).
+The text below is the historical record of the replaced design.
+
 Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in the local netty repository.
 Native implementation: ConcurrentOrderedMultiMap<T>. Original source inventory
 entry remains **in progress**, while its original test scenarios are translated.

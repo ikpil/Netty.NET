@@ -15,63 +15,61 @@
  */
 
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Local;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
 public class IoEventLoopGroupSourceTest
 {
-    private const int Threads = 4;
+    private const int THREADS = 4;
 
     [Fact]
-    public Task TestIsIoTypeDoesNotAdvanceTheChooser() =>
+    public void TestIsIoTypeDoesNotAdvanceTheChooser()
+    {
         AssertChooserNotAdvancedBy(group =>
         {
-            Assert.True(group.IsIoType(typeof(LocalCompletionHandler)));
-            Assert.False(group.IsIoType(typeof(CompletionIoHandler)));
+            Assert.True(group.IsIoType(typeof(LocalIoHandler)));
+            Assert.False(group.IsIoType(typeof(NioIoHandler)));
         });
+    }
 
     [Fact]
-    public Task TestIsCompatibleDoesNotAdvanceTheChooser() =>
+    public void TestIsCompatibleDoesNotAdvanceTheChooser()
+    {
         AssertChooserNotAdvancedBy(group =>
         {
-            Assert.True(group.IsCompatible(typeof(LocalHandle)));
-            Assert.False(group.IsCompatible(typeof(SocketHandle)));
+            Assert.True(group.IsCompatible(typeof(ILocalIoHandle)));
+            Assert.False(group.IsCompatible(typeof(INioIoHandle)));
         });
+    }
 
     /**
      * Asserts that the given action does not change which {@link IoEventLoop} is returned by the next
      * {@link IoEventLoopGroup#next()} call.
      */
-    private static async Task AssertChooserNotAdvancedBy(Action<IIoEventLoopGroup> action)
+    private static void AssertChooserNotAdvancedBy(Action<IIoEventLoopGroup> action)
     {
-        var group = new DefaultEventLoopGroup(() => new LocalCompletionHandler(), Threads);
+        IIoEventLoopGroup group = new MultiThreadIoEventLoopGroup(THREADS, LocalIoHandler.NewFactory());
         try
         {
             // Record the round-robin order of the group first, so we know what next() must return afterwards.
-            var roundRobin = Enumerable.Range(0, Threads).Select(_ => group.Next()).ToArray();
-            Assert.Equal(Threads, roundRobin.Distinct().Count());
-            for (int i = 0; i < Threads; i++)
+            IIoEventLoop[] roundRobin = new IIoEventLoop[THREADS];
+            for (int i = 0; i < THREADS; i++)
+            {
+                roundRobin[i] = group.Next();
+            }
+            for (int i = 0; i < THREADS; i++)
             {
                 action(group);
-                Assert.Same(roundRobin[i], group.Next());
+                Assert.True(ReferenceEquals(roundRobin[i], group.Next()),
+                        "querying the IO type of the group must not advance the chooser used by next()");
             }
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            group.ShutdownGracefullyAsync();
+        }
     }
-
-    private sealed class LocalCompletionHandler : CompletionIoHandler
-    {
-        public override bool IsCompatible(Type handleType) => handleType == typeof(LocalHandle);
-    }
-
-    private class LocalHandle : IIoHandle
-    {
-        public void HandleCompletion(IoRegistration registration, object completion) { }
-        public void Dispose() { }
-    }
-
-    private sealed class SocketHandle : LocalHandle { }
 }

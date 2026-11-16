@@ -185,7 +185,7 @@ public class PlatformDependentTest
     }
 
     [Fact]
-    void ClrNativeAllocationSupportsDeterministicCleanup()
+    void Java25MustHaveCleanerImplAvailable()
     {
         // CLR adaptation: validate the actual native owner instead of a JDK
         // cleaner provider. Exact original scenario/comment mapping is recorded

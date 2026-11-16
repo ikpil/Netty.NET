@@ -40,17 +40,37 @@ namespace Netty.NET.Transport.Channels;
  */
 public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdapter
 {
+    // CLR: the reified type argument and Type.IsInstanceOfType replace TypeParameterMatcher.find/get
+    // (https://learn.microsoft.com/dotnet/api/system.type.isinstanceoftype).
+    private readonly Type matcher;
     private readonly bool _autoRelease;
-    // CLR: reified generic matching replaces TypeParameterMatcher and explicit Java Class overloads.
+
+    /**
+     * see {@link #SimpleChannelInboundHandler(boolean)} with {@code true} as boolean parameter.
+     */
+    protected SimpleChannelInboundHandler() : this(true)
+    {
+    }
+
     /**
      * Create a new instance which will try to detect the types to match out of the type parameter of the class.
      *
      * @param autoRelease   {@code true} if handled messages should be released automatically by passing them to
      *                      {@link ReferenceCountUtil#release(Object)}.
      */
+    protected SimpleChannelInboundHandler(bool autoRelease)
+    {
+        matcher = typeof(T);
+        _autoRelease = autoRelease;
+    }
+
     /**
      * see {@link #SimpleChannelInboundHandler(Class, boolean)} with {@code true} as boolean value.
      */
+    protected SimpleChannelInboundHandler(Type inboundMessageType) : this(inboundMessageType, true)
+    {
+    }
+
     /**
      * Create a new instance
      *
@@ -58,23 +78,32 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
      * @param autoRelease           {@code true} if handled messages should be released automatically by passing them to
      *                              {@link ReferenceCountUtil#release(Object)}.
      */
-    protected SimpleChannelInboundHandler(bool autoRelease = true) { _autoRelease = autoRelease; }
+    protected SimpleChannelInboundHandler(Type inboundMessageType, bool autoRelease)
+    {
+        ArgumentNullException.ThrowIfNull(inboundMessageType);
+        // CLR: Class<? extends I> is checked at run time.
+        if (!typeof(T).IsAssignableFrom(inboundMessageType))
+            throw new ArgumentException($"{inboundMessageType} is not assignable to {typeof(T)}", nameof(inboundMessageType));
+        matcher = inboundMessageType;
+        _autoRelease = autoRelease;
+    }
+
     /**
      * Returns {@code true} if the given message should be handled. If {@code false} it will be passed to the next
      * {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
      */
-    public virtual bool AcceptInboundMessage(object message) => message is T;
-    public override void ChannelRead(ChannelHandlerContext context, object message)
+    public virtual bool AcceptInboundMessage(object msg) => matcher.IsInstanceOfType(msg);
+    public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         bool release = true;
         try
         {
-            if (AcceptInboundMessage(message))
-                ChannelRead0(context, (T)message);
+            if (AcceptInboundMessage(msg))
+                ChannelRead0(ctx, (T)msg);
             else
-            { release = false; context.FireChannelRead(message); }
+            { release = false; ctx.FireChannelRead(msg); }
         }
-        finally { if (_autoRelease && release) ReferenceCountUtil.Release(message); }
+        finally { if (_autoRelease && release) ReferenceCountUtil.Release(msg); }
     }
     /**
      * Is called for each message of type {@link I}.
@@ -84,5 +113,5 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
      * @param msg           the message to handle
      * @throws Exception    is thrown if an error occurred
      */
-    protected abstract void ChannelRead0(ChannelHandlerContext context, T message);
+    protected abstract void ChannelRead0(IChannelHandlerContext ctx, T msg);
 }

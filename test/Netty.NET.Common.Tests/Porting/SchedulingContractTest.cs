@@ -135,7 +135,7 @@ public class SchedulingContractTest
             task();
         }
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override bool IsShuttingDown() => false;
         public override bool IsShutdown() => false;
         public override bool IsTerminated() => false;

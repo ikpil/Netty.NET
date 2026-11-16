@@ -35,8 +35,8 @@ public class LocalTransportThreadModel2SourceTest
     public async Task TestSocketReuse()
     {
         var token = TestContext.Current.CancellationToken;
-        var servers = new DefaultEventLoopGroup(4);
-        var clients = new DefaultEventLoopGroup(4);
+        var servers = new MultiThreadIoEventLoopGroup(4, LocalIoHandler.NewFactory());
+        var clients = new MultiThreadIoEventLoopGroup(4, LocalIoHandler.NewFactory());
         var address = new LocalAddress(typeof(LocalTransportThreadModel2SourceTest).FullName!);
         var serverHandler = new LocalHandler("SERVER");
         var clientHandler = new LocalHandler("CLIENT");
@@ -71,7 +71,7 @@ public class LocalTransportThreadModel2SourceTest
             await channel.CloseAsync(token);
         }, token);
         // Wait until the connection is closed or the connection attempt fails.
-        await channel.CloseCompletion.WaitAsync(token);
+        await channel.CloseFuture.WaitAsync(token);
     }
 
     [Theory(Timeout = 5000)]
@@ -80,7 +80,7 @@ public class LocalTransportThreadModel2SourceTest
     public async Task FailedConnectClosesRegisteredChannelAndReleasesItsAddress(bool alreadyBound)
     {
         var token = TestContext.Current.CancellationToken;
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var local = new LocalAddress(Guid.NewGuid().ToString());
         var remote = new LocalAddress(Guid.NewGuid().ToString());
         try
@@ -100,7 +100,7 @@ public class LocalTransportThreadModel2SourceTest
                 Assert.Equal(SocketError.ConnectionRefused, error.SocketErrorCode);
             }
 
-            await channel.CloseCompletion.WaitAsync(token);
+            await channel.CloseFuture.WaitAsync(token);
             Assert.False(channel.IsOpen);
             Assert.False(channel.IsRegistered);
             var replacement = new LocalChannel();
@@ -119,17 +119,17 @@ public class LocalTransportThreadModel2SourceTest
         internal Task LastWrite => _lastWrite;
         internal int Count => Volatile.Read(ref _count);
 
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
             for (int i = 0; i < MessagesPerConnection; i++)
-                _lastWrite = context.Channel.WriteAsync($"{name} {i}");
-            context.Channel.Flush();
+                _lastWrite = ctx.Channel.WriteAsync($"{name} {i}");
+            ctx.Channel.Flush();
         }
 
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Interlocked.Increment(ref _count);
-            ReferenceCountUtil.Release(message);
+            ReferenceCountUtil.Release(msg);
         }
     }
 }

@@ -95,7 +95,7 @@ public class ByteBufDiscardDispatchTest
             Assert.Equal(compact ? reader == 8 ? 0 : 1 : reader + 1, buffer.ReaderIndex);
             buffer.ResetWriterIndex();
             Assert.Equal(compact ? Math.Max(reader, 7) - reader : 7, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { Assert.True(buffer.Release()); }
         Assert.Equal(0, native.ReservedBytes);

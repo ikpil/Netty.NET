@@ -154,7 +154,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestNioBufferExposeOnlyRegion()
+    public virtual void TestNioBufferExposeOnlyRegion()
     {
         ByteBuf buffer = NewBuffer(8);
         try
@@ -178,7 +178,7 @@ public abstract partial class AbstractByteBufTest
         try
         {
             buffer.Clear();
-            Assert.False(buffer.IsReadable);
+            Assert.False(buffer.IsReadable());
             ReadOnlySequence<byte> sequence = buffer.ReadableSequence;
             // CLR: an empty sequence is one logical empty range, without a Java array or cursor object.
             Assert.True(sequence.IsSingleSegment);
@@ -188,7 +188,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestReadBytes()
+    public virtual void TestReadBytes()
     {
         ByteBuf buffer = NewBuffer(8);
         ByteBuf buffer2 = null;
@@ -197,22 +197,22 @@ public abstract partial class AbstractByteBufTest
             byte[] bytes = new byte[8];
             buffer.WriteBytes(bytes);
             buffer2 = buffer.ReadBytes(4);
-            Assert.Same(buffer.Allocator, buffer2.Allocator);
+            Assert.Same(buffer.Alloc(), buffer2.Alloc());
             Assert.Equal(4, buffer.ReaderIndex);
             Assert.True(buffer.Release());
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
             Assert.True(buffer2.Release());
-            Assert.Equal(0, buffer2.ReferenceCount);
+            Assert.Equal(0, buffer2.RefCnt);
         }
         finally
         {
-            if (buffer.ReferenceCount > 0) buffer.Release();
-            if (buffer2?.ReferenceCount > 0) buffer2.Release();
+            if (buffer.RefCnt > 0) buffer.Release();
+            if (buffer2?.RefCnt > 0) buffer2.Release();
         }
     }
 
     [Fact]
-    public void TestGetBytesByteBuffer()
+    public virtual void TestGetBytesByteBuffer()
     {
         byte[] bytes = { (byte)'a', (byte)'b', (byte)'c', (byte)'d', (byte)'e', (byte)'f', (byte)'g' };
         // Ensure destination buffer is bigger then what is in the ByteBuf.

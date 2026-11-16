@@ -55,7 +55,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
     public bool IsResolved(EndPoint address)
     {
         if (!IsSupported(address))
-            throw new NotSupportedException("Address type not supported by the resolver.");
+            throw new UnsupportedAddressTypeException();
         return DoIsResolved(address);
     }
 
@@ -72,7 +72,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
         if (!IsSupported(address))
         {
             // Address type not supported by the resolver
-            return Task.FromException<T>(new NotSupportedException("Address type not supported by the resolver."));
+            return Task.FromException<T>(new UnsupportedAddressTypeException());
         }
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<T>(cancellationToken);
@@ -85,7 +85,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
         { return DoResolveAsync(address, cancellationToken); }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
         { return Task.FromCanceled<T>(cancellationToken); }
-        catch (Exception error) { return Task.FromException<T>(error); }
+        catch (Exception e) { return Task.FromException<T>(e); }
     }
 
     public Task<IReadOnlyList<T>> ResolveAllAsync(EndPoint address, CancellationToken cancellationToken = default)
@@ -94,7 +94,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
         if (!IsSupported(address))
         {
             // Address type not supported by the resolver
-            return Task.FromException<IReadOnlyList<T>>(new NotSupportedException("Address type not supported by the resolver."));
+            return Task.FromException<IReadOnlyList<T>>(new UnsupportedAddressTypeException());
         }
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken);
@@ -107,7 +107,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
         { return DoResolveAllAsync(address, cancellationToken); }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
         { return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken); }
-        catch (Exception error) { return Task.FromException<IReadOnlyList<T>>(error); }
+        catch (Exception e) { return Task.FromException<IReadOnlyList<T>>(e); }
     }
 
     /**

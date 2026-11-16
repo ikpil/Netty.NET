@@ -88,8 +88,8 @@ public abstract partial class ByteBuf
     /// stream is borrowed; this method does not retain the buffer or change indices.</remarks>
     public virtual int SetBytes(int index, Stream source, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         if (length == 0) return 0;
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
@@ -154,8 +154,8 @@ public abstract partial class ByteBuf
     /// The writer advances only after a successful read and buffer transfer.</remarks>
     public virtual int WriteBytes(Stream source, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureWritable(length);
+        ArgumentNullException.ThrowIfNull(source);
         int count = SetBytes(_writerIndex, source, length);
         _writerIndex += count;
         return count;
@@ -193,8 +193,8 @@ public abstract partial class ByteBuf
     public virtual async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
         if (length == 0) return 0;
@@ -236,8 +236,8 @@ public abstract partial class ByteBuf
     public virtual async ValueTask<int> WriteBytesAsync(Stream source, int length,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         if (length > MaxWritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
         cancellationToken.ThrowIfCancellationRequested();

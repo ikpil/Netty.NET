@@ -46,8 +46,8 @@ public class ByteBufMutationIterationSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -90,7 +90,7 @@ public class ByteBufMutationIterationSourceTest
         }
         if (scenario == ZeroCase.Write) Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
         buffer.Clear();
-        while (buffer.IsWritable) buffer.WriteByte(0xFF);
+        while (buffer.IsWritable()) buffer.WriteByte(0xFF);
         if (scenario == ZeroCase.Write) buffer.Clear();
         var random = new Random(12345);
         for (int i = 0; i < buffer.Capacity;)
@@ -102,7 +102,7 @@ public class ByteBufMutationIterationSourceTest
         }
         Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(capacity, buffer.WriterIndex);
         Assert.Equal(new byte[capacity], ByteBufUtil.GetBytes(buffer, 0, capacity));
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
     }
 
     // Supplemental state/ownership checks; named original bodies execute on the actual seven roots.
@@ -187,7 +187,7 @@ public class ByteBufMutationIterationSourceTest
             Assert.Equal(scenario == IterationCase.AbortAtMiddle ? capacity / 2 - capacity / 3 + 1 : capacity / 2, calls);
             Assert.Equal(reader, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
         }
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
     }
 
     private static readonly Action<ByteBuf>[] ReleasedWrites =
@@ -227,7 +227,7 @@ public class ByteBufMutationIterationSourceTest
         using var s = new Storage(provider, 8);
         ReleaseBuffer(s.Root);
         Assert.Throws<IllegalReferenceCountException>(() => ReleasedWrites[(int)operation](s.Root));
-        Assert.Equal(0, s.Root.ReferenceCount);
+        Assert.Equal(0, s.Root.RefCnt);
         Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
     }
 }

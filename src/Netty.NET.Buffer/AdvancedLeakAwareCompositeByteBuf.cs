@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 using Netty.NET.Common;
 using static Netty.NET.Buffer.AdvancedLeakAwareByteBuf;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -456,20 +457,26 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     { RecordLeakNonRefCountingOperation(Leak); return Wrapped.WriteBytesAsync(source, length, cancellationToken); }
 
-    public override string GetString(Encoding encoding)
-    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.GetString(encoding); }
+    public override string ToString(Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ToString(charset); }
 
-    public override string GetString(int index, int length, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.GetString(index, length, encoding); }
+    public override string ToString(int index, int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ToString(index, length, charset); }
 
-    public override string ReadString(int length, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ReadString(length, encoding); }
+    public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.GetCharSequence(index, length, charset); }
 
-    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.SetString(index, text, encoding); }
+    public override ICharSequence ReadCharSequence(int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ReadCharSequence(length, charset); }
 
-    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.WriteString(text, encoding); }
+    public override string ReadString(int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ReadString(length, charset); }
+
+    public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.SetCharSequence(index, sequence, charset); }
+
+    public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.WriteCharSequence(sequence, charset); }
 
     public override int IndexOf(int fromIndex, int toIndex, byte value)
     { RecordLeakNonRefCountingOperation(Leak); return Wrapped.IndexOf(fromIndex, toIndex, value); }

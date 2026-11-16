@@ -13,13 +13,13 @@ namespace Netty.NET.Common.Tests.Porting;
 public class NetworkDefaultsContractTest
 {
     [Fact]
-    public void DefaultsAreGetOnlyNativePropertiesWithoutFieldAliases()
+    public void DefaultsAreGetOnlyPropertiesWithTheSourceNames()
     {
         foreach ((string name, Type type) in new[]
         {
-            ("LoopbackInterface", typeof(NetworkInterface)),
-            ("NetworkInterfaces", typeof(IReadOnlyList<NetworkInterface>)),
-            ("DefaultListenBacklog", typeof(int))
+            ("LOOPBACK_IF", typeof(NetworkInterface)),
+            ("NETWORK_INTERFACES", typeof(IReadOnlyList<NetworkInterface>)),
+            ("SOMAXCONN", typeof(int))
         })
         {
             PropertyInfo property = typeof(NetUtil).GetProperty(name);
@@ -32,6 +32,9 @@ public class NetworkDefaultsContractTest
         foreach (string name in new[] { "LOOPBACK_IF", "NETWORK_INTERFACES", "SOMAXCONN" })
         {
             Assert.Null(typeof(NetUtil).GetField(name));
+        }
+        foreach (string name in new[] { "LoopbackInterface", "NetworkInterfaces", "DefaultListenBacklog" })
+        {
             Assert.Null(typeof(NetUtil).GetProperty(name));
         }
     }
@@ -41,13 +44,13 @@ public class NetworkDefaultsContractTest
     {
         WithFreshNetUtil(type =>
         {
-            var interfaces = (IReadOnlyList<NetworkInterface>)Read(type, "NetworkInterfaces");
+            var interfaces = (IReadOnlyList<NetworkInterface>)Read(type, "NETWORK_INTERFACES");
             var mutable = Assert.IsAssignableFrom<IList<NetworkInterface>>(interfaces);
             Assert.True(mutable.IsReadOnly);
             Assert.Throws<NotSupportedException>(() => mutable.Clear());
-            Assert.Same(interfaces, Read(type, "NetworkInterfaces"));
+            Assert.Same(interfaces, Read(type, "NETWORK_INTERFACES"));
             for (int i = 0; i < interfaces.Count; i++)
-                Assert.Same(interfaces[i], ((IReadOnlyList<NetworkInterface>)Read(type, "NetworkInterfaces"))[i]);
+                Assert.Same(interfaces[i], ((IReadOnlyList<NetworkInterface>)Read(type, "NETWORK_INTERFACES"))[i]);
         });
     }
 
@@ -56,22 +59,22 @@ public class NetworkDefaultsContractTest
     {
         WithFreshNetUtil(type =>
         {
-            object interfaces = Read(type, "NetworkInterfaces");
-            object loopback = Read(type, "LoopbackInterface");
-            int backlog = (int)Read(type, "DefaultListenBacklog");
+            object interfaces = Read(type, "NETWORK_INTERFACES");
+            object loopback = Read(type, "LOOPBACK_IF");
+            int backlog = (int)Read(type, "SOMAXCONN");
             Parallel.For(0, 64, new ParallelOptions { MaxDegreeOfParallelism = 4 }, _ =>
             {
-                Assert.Same(interfaces, Read(type, "NetworkInterfaces"));
-                Assert.Same(loopback, Read(type, "LoopbackInterface"));
-                Assert.Equal(backlog, (int)Read(type, "DefaultListenBacklog"));
+                Assert.Same(interfaces, Read(type, "NETWORK_INTERFACES"));
+                Assert.Same(loopback, Read(type, "LOOPBACK_IF"));
+                Assert.Equal(backlog, (int)Read(type, "SOMAXCONN"));
             });
         });
     }
 
     [Theory]
-    [InlineData("LoopbackInterface")]
-    [InlineData("NetworkInterfaces")]
-    [InlineData("DefaultListenBacklog")]
+    [InlineData("LOOPBACK_IF")]
+    [InlineData("NETWORK_INTERFACES")]
+    [InlineData("SOMAXCONN")]
     public void FirstDefaultAccessCapturesBothPreferences(string member)
     {
         const string ipv4Key = "java.net.preferIPv4Stack";
@@ -87,8 +90,8 @@ public class NetworkDefaultsContractTest
                 Read(type, member);
                 Environment.SetEnvironmentVariable(ipv4Key, "false");
                 Environment.SetEnvironmentVariable(ipv6Key, "true");
-                Assert.True((bool)Read(type, "PreferIPv4Stack"));
-                Assert.False((bool)Read(type, "PreferIPv6Addresses"));
+                Assert.True((bool)Read(type, "IsIpV4StackPreferred"));
+                Assert.False((bool)Read(type, "IsIpV6AddressesPreferred"));
             });
         }
         finally
@@ -128,11 +131,11 @@ public class NetworkDefaultsContractTest
             InternalLoggerFactory.SetDefaultFactory(new ReadingFactory(original, () =>
             {
                 Type type = typeof(NetUtil);
-                observations.Add($"callback|{Read(type, "LoopbackAddress") ?? "null"}|{Read(type, "LoopbackInterface") ?? "null"}|{Read(type, "NetworkInterfaces") ?? "null"}|{Read(type, "DefaultListenBacklog")}");
+                observations.Add($"callback|{Read(type, "LOCALHOST") ?? "null"}|{Read(type, "LOOPBACK_IF") ?? "null"}|{Read(type, "NETWORK_INTERFACES") ?? "null"}|{Read(type, "SOMAXCONN")}");
             }));
-            IPAddress address = NetUtil.LoopbackAddress;
-            observations.Add($"initialized|{address != null}|{Read(typeof(NetUtil), "NetworkInterfaces") != null}|{observations.Count == 1}");
-            observations.Add($"later|{address.Equals(NetUtil.LoopbackAddress)}");
+            IPAddress address = NetUtil.LOCALHOST;
+            observations.Add($"initialized|{address != null}|{Read(typeof(NetUtil), "NETWORK_INTERFACES") != null}|{observations.Count == 1}");
+            observations.Add($"later|{address.Equals(NetUtil.LOCALHOST)}");
             return observations.ToArray();
         }
         finally
@@ -150,19 +153,9 @@ public class NetworkDefaultsContractTest
         }
     }
 
-    // The field bridge is only for running these identical contracts against the old compiled API.
     private static object Read(Type type, string name)
     {
-        PropertyInfo property = type.GetProperty(name);
-        if (property != null) return property.GetValue(null);
-        string field = name switch
-        {
-            "LoopbackInterface" => "LOOPBACK_IF",
-            "NetworkInterfaces" => "NETWORK_INTERFACES",
-            "DefaultListenBacklog" => "SOMAXCONN",
-            _ => name
-        };
-        return type.GetField(field).GetValue(null);
+        return type.GetProperty(name).GetValue(null);
     }
 
     private static void WithFreshNetUtil(Action<Type> assertion)

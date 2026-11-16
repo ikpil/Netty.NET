@@ -18,6 +18,7 @@ using System;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using static Netty.NET.Transport.Tests.ManualIoEventLoopSourceTest;
 
 namespace Netty.NET.Transport.Tests;
@@ -35,7 +36,7 @@ public class IoHandlerEventCountSourceTest
     public void TestTimerExpirationDoesNotCountAsIoEvent()
     {
         TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         try
         {
             Assert.Equal(0, loop.Run(100_000_000, -1));
@@ -47,7 +48,7 @@ public class IoHandlerEventCountSourceTest
     public void TestWakeupDoesNotCountAsIoEvent()
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         using var watchdog = cancellation.Register(() => _ = loop.StopAsync());
         using var aboutToBlock = new ManualResetEventSlim();
         var waker = new Thread(() =>
@@ -71,7 +72,7 @@ public class IoHandlerEventCountSourceTest
     public void TestScheduledTaskDoesNotInflateIoCount()
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         using var watchdog = cancellation.Register(() => _ = loop.StopAsync());
         try
         {

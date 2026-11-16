@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -45,7 +46,7 @@ public class CompositeByteBufConstructionTest
         CompositeByteBuf composite = Construct(allocator, direct, limit, [first, empty, second], enumerable);
         try
         {
-            Assert.Same(allocator, composite.Allocator);
+            Assert.Same(allocator, composite.Alloc());
             Assert.Equal(limit, composite.MaxNumComponents);
             Assert.Equal(limit == 1 ? 1 : 3, composite.NumComponents);
             Assert.Equal(4, composite.Capacity);
@@ -54,9 +55,9 @@ public class CompositeByteBufConstructionTest
             Assert.Equal("01020304", ByteBufUtil.HexDump(composite));
             Assert.Equal(1, first.ReaderIndex); Assert.Equal(3, first.WriterIndex);
             Assert.Equal(2, second.ReaderIndex); Assert.Equal(4, second.WriterIndex);
-            Assert.Equal(limit == 1 ? 0 : 1, first.ReferenceCount);
-            Assert.Equal(limit == 1 ? 0 : 1, empty.ReferenceCount);
-            Assert.Equal(limit == 1 ? 0 : 1, second.ReferenceCount);
+            Assert.Equal(limit == 1 ? 0 : 1, first.RefCnt);
+            Assert.Equal(limit == 1 ? 0 : 1, empty.RefCnt);
+            Assert.Equal(limit == 1 ? 0 : 1, second.RefCnt);
             Assert.Equal(limit == 1 && direct, composite.IsDirect);
             external[1] = 99;
             Assert.Equal(limit == 1 ? 1 : 99, composite.GetByte(0));
@@ -78,7 +79,7 @@ public class CompositeByteBufConstructionTest
             }
         }
         finally { composite.Release(); }
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, empty.ReferenceCount); Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, empty.RefCnt); Assert.Equal(0, second.RefCnt);
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(0, allocator.Metric.UsedHeapMemory); Assert.Equal(0, allocator.Metric.UsedDirectMemory);
     }
@@ -90,15 +91,15 @@ public class CompositeByteBufConstructionTest
         var allocator = new UnpooledByteBufAllocator();
         CompositeByteBuf empty = Construct(allocator, true, 1, [], enumerable);
         Assert.Equal(0, empty.NumComponents); Assert.Equal(0, empty.ReadableBytes);
-        Assert.Equal(1, empty.ReferenceCount); Assert.False(empty.IsDirect);
+        Assert.Equal(1, empty.RefCnt); Assert.False(empty.IsDirect);
         Assert.True(empty.Release());
 
         ByteBuf first = allocator.HeapBuffer(0, 1), second = allocator.HeapBuffer(0, 1);
         CompositeByteBuf owned = Construct(allocator, false, 8, [first, second], enumerable);
         Assert.Equal(2, owned.NumComponents); Assert.Equal(0, owned.WriterIndex);
-        Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+        Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
         Assert.True(owned.Release());
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
     }
 
     [Theory]
@@ -114,10 +115,10 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Equal(1, composite.NumComponents);
             Assert.Equal("0102", ByteBufUtil.HexDump(composite));
-            Assert.Equal(1, prefix.ReferenceCount); Assert.Equal(0, tail.ReferenceCount);
+            Assert.Equal(1, prefix.RefCnt); Assert.Equal(0, tail.RefCnt);
         }
         finally { composite.Release(); }
-        Assert.Equal(0, prefix.ReferenceCount);
+        Assert.Equal(0, prefix.RefCnt);
     }
 
     [Theory]
@@ -130,7 +131,7 @@ public class CompositeByteBufConstructionTest
             Assert.Throws<ArgumentNullException>(() => Construct(null, false, 8, [input], enumerable));
             Assert.Throws<ArgumentOutOfRangeException>(() => Construct(UnpooledByteBufAllocator.Default, false, 0, [input], enumerable));
             Assert.Throws<ArgumentOutOfRangeException>(() => Construct(UnpooledByteBufAllocator.Default, false, -1, [input], enumerable));
-            Assert.Equal(1, input.ReferenceCount);
+            Assert.Equal(1, input.RefCnt);
             Assert.Throws<ArgumentNullException>(() => Construct(UnpooledByteBufAllocator.Default, false, 8, null, enumerable));
         }
         finally { input.Release(); }
@@ -147,10 +148,10 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Equal(2, inner.NumComponents); Assert.Equal(1, outer.NumComponents);
             Assert.Equal("0102", ByteBufUtil.HexDump(outer));
-            Assert.Equal(1, inner.ReferenceCount); Assert.Equal(1, a.ReferenceCount); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(1, inner.RefCnt); Assert.Equal(1, a.RefCnt); Assert.Equal(1, b.RefCnt);
         }
         finally { outer.Release(); }
-        Assert.Equal(0, inner.ReferenceCount); Assert.Equal(0, a.ReferenceCount); Assert.Equal(0, b.ReferenceCount);
+        Assert.Equal(0, inner.RefCnt); Assert.Equal(0, a.RefCnt); Assert.Equal(0, b.RefCnt);
         Assert.Equal(0, allocator.Metric.UsedHeapMemory);
     }
 
@@ -165,7 +166,7 @@ public class CompositeByteBufConstructionTest
         ByteBuf tail = allocator.DirectBuffer(2, 2).WriteShort(3);
         dead.Release();
         Assert.Throws<IllegalReferenceCountException>(() => Construct(allocator, true, 8, [prefix, dead, tail], enumerable));
-        Assert.Equal(0, prefix.ReferenceCount); Assert.Equal(0, tail.ReferenceCount);
+        Assert.Equal(0, prefix.RefCnt); Assert.Equal(0, tail.RefCnt);
         Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, allocator.Metric.UsedDirectMemory);
     }
 
@@ -177,8 +178,8 @@ public class CompositeByteBufConstructionTest
         var allocator = new UnpooledByteBufAllocator(true, native);
         ByteBuf[] inputs = [allocator.DirectBuffer(1, 1).WriteByte(1), allocator.DirectBuffer(1, 1).WriteByte(2),
             allocator.DirectBuffer(1, 1).WriteByte(3)];
-        Assert.Throws<OutOfMemoryException>(() => Construct(allocator, true, 1, inputs, enumerable));
-        foreach (ByteBuf input in inputs) Assert.Equal(0, input.ReferenceCount);
+        Assert.Throws<OutOfDirectMemoryError>(() => Construct(allocator, true, 1, inputs, enumerable));
+        foreach (ByteBuf input in inputs) Assert.Equal(0, input.RefCnt);
         Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, allocator.Metric.UsedDirectMemory);
         ByteBuf[] retryInputs = [allocator.DirectBuffer(1, 1).WriteByte(1), allocator.DirectBuffer(1, 1).WriteByte(2),
             allocator.DirectBuffer(1, 1).WriteByte(3)];
@@ -207,7 +208,7 @@ public class CompositeByteBufConstructionTest
             if (enumerable) _ = new CompositeByteBuf(allocator, true, 1, stream);
             else _ = new CompositeByteBuf(allocator, true, 1, first, second);
         });
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
         Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, allocator.Metric.UsedDirectMemory);
     }
 
@@ -220,13 +221,13 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Construct(UnpooledByteBufAllocator.Default, false,
                 int.MaxValue, [first, second], enumerable));
-            Assert.Equal(enumerable ? 0 : 1, first.ReferenceCount);
-            Assert.Equal(enumerable ? 0 : 1, second.ReferenceCount);
+            Assert.Equal(enumerable ? 0 : 1, first.RefCnt);
+            Assert.Equal(enumerable ? 0 : 1, second.RefCnt);
         }
         finally
         {
-            if (first.ReferenceCount > 0) first.Release();
-            if (second.ReferenceCount > 0) second.Release();
+            if (first.RefCnt > 0) first.Release();
+            if (second.RefCnt > 0) second.Release();
         }
     }
 
@@ -240,7 +241,7 @@ public class CompositeByteBufConstructionTest
         var stream = new FailingEnumerable(first, tail, failure, false);
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => new CompositeByteBuf(allocator, true, 8, stream)));
         Assert.Equal(1, stream.Disposals);
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, tail.ReferenceCount);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, tail.RefCnt);
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -255,7 +256,7 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => new CompositeByteBuf(allocator, false, 8, stream)));
             Assert.Equal(1, stream.Disposals);
-            Assert.Equal(0, first.ReferenceCount); Assert.Equal(1, tail.ReferenceCount);
+            Assert.Equal(0, first.RefCnt); Assert.Equal(1, tail.RefCnt);
         }
         finally { tail.Release(); }
         Assert.Equal(0, allocator.Metric.UsedHeapMemory);
@@ -268,7 +269,7 @@ public class CompositeByteBufConstructionTest
         ByteBuf first = allocator.HeapBuffer(1, 1).WriteByte(1), dead = allocator.HeapBuffer(1, 1).WriteByte(2);
         dead.Release();
         Assert.Throws<IllegalReferenceCountException>(() => new DerivedComposite(allocator, [first, dead]));
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, allocator.Metric.UsedHeapMemory);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, allocator.Metric.UsedHeapMemory);
     }
 
     private sealed class DerivedComposite(IByteBufAllocator allocator, ByteBuf[] buffers)
@@ -300,7 +301,7 @@ public class CompositeByteBufConstructionTest
         }
         public override int Capacity { get => _source.Capacity; set => _source.Capacity = value; }
         public override bool IsDirect => _source.IsDirect;
-        public override int ReferenceCount => _source.ReferenceCount;
+        public override int RefCnt => _source.RefCnt;
         public override ByteBuf Retain(int increment = 1) { _source.Retain(increment); return this; }
         public override bool Release(int decrement = 1) => _source.Release(decrement);
         protected override Memory<byte> GetMemoryCore(int index, int length)

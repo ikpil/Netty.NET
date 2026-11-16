@@ -19,30 +19,136 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Transport.Channels.Local;
 
 /**
  * A {@link ServerChannel} for the local transport which allows in VM communication.
  */
-public class LocalServerChannel : AbstractChannel, IServerChannel
+public class LocalServerChannel : AbstractServerChannel
 {
     private readonly Queue<LocalChannel> _inbound = new();
-    private LocalAddress _local;
+    private volatile int state; // 0 - open, 1 - active, 2 - closed
+    private volatile LocalAddress _local;
     private bool _acceptPending;
-    public LocalServerChannel() : base(null, new ChannelMetadata(false, 16)) { }
+    private IIoRegistration _registration;
+    private readonly LocalServerUnsafe _unsafe;
+    public LocalServerChannel() { _unsafe = new LocalServerUnsafe(this); }
+
+    protected override bool IsCompatible(IEventLoop loop)
+    {
+        return loop is SingleThreadEventLoop ||
+                (loop is IIoEventLoop ioEventLoop && ioEventLoop.IsCompatible(typeof(LocalServerUnsafe)));
+    }
+
+    // CLR: doRegister(ChannelPromise) runs on the event loop, where IoEventLoop.register(IoHandle) completes
+    // synchronously; the completed Task replaces the future listener.
+    protected override void DoRegister()
+    {
+        IEventLoop loop = EventLoop;
+        if (loop is IIoEventLoop ioEventLoop)
+        {
+            System.Diagnostics.Debug.Assert(_registration == null);
+            _registration = ioEventLoop.RegisterAsync(_unsafe).GetAwaiter().GetResult();
+        }
+        else
+        {
+            _unsafe.Registered();
+        }
+    }
+
+    protected override void DoDeregister()
+    {
+        IEventLoop loop = EventLoop;
+        if (loop is IIoEventLoop)
+        {
+            IIoRegistration registration = _registration;
+            if (registration != null)
+            {
+                _registration = null;
+                registration.Cancel();
+            }
+        }
+        else
+        {
+            _unsafe.Unregistered();
+        }
+    }
+
+    // CLR: AbstractUnsafe is folded into AbstractChannel; LocalServerUnsafe is the registered LocalIoHandle.
+    private sealed class LocalServerUnsafe : ILocalIoHandle
+    {
+        private readonly LocalServerChannel _channel;
+        private readonly Action _shutdownHook;
+
+        internal LocalServerUnsafe(LocalServerChannel channel)
+        {
+            _channel = channel;
+            _shutdownHook = CloseNow;
+        }
+
+        public void Close()
+        {
+            _ = _channel.Close();
+        }
+
+        public void Handle(IIoRegistration registration, IIoEvent @event)
+        {
+            // NOOP
+        }
+
+        public void Registered()
+        {
+            IEventLoop loop = _channel.EventLoop;
+            if (!(loop is IIoEventLoop) && loop is SingleThreadEventExecutor executor)
+            {
+                executor.AddShutdownHook(_shutdownHook);
+            }
+        }
+
+        public void Unregistered()
+        {
+            IEventLoop loop = _channel.EventLoop;
+            if (!(loop is IIoEventLoop) && loop is SingleThreadEventExecutor executor)
+            {
+                executor.RemoveShutdownHook(_shutdownHook);
+            }
+        }
+
+        public void CloseNow()
+        {
+            _ = _channel.Close();
+        }
+    }
     protected override IChannelConfig NewConfig() => new ServerConfig(this);
-    public override EndPoint LocalAddress => _local;
-    public override EndPoint RemoteAddress => null;
+
+    // CLR: AbstractChannel keeps its own lifecycle flags for the shared close/registration paths; the source state
+    // field is combined with them.
+    public override bool IsOpen => state < 2 && base.IsOpen;
+
+    public override bool IsActive => state == 1 && base.IsActive;
+    protected override EndPoint LocalAddress0() => _local;
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
-    { cancellationToken.ThrowIfCancellationRequested(); _local = LocalChannelRegistry.Register(this, _local, address); SetActive(true); return Task.CompletedTask; }
-    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.FromException(new NotSupportedException("Server channels cannot connect."));
-    protected override Task DoWrite(object message) => Task.FromException(new NotSupportedException("Server channels cannot write."));
-    protected override object FilterOutboundMessage(object message) => throw new NotSupportedException("Server channels cannot write.");
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _local = LocalChannelRegistry.Register(this, _local, address);
+        state = 1;
+        SetActive(true);
+        return Task.CompletedTask;
+    }
     protected override void DoClose()
     {
-        LocalChannelRegistry.Unregister(_local);
-        _local = null;
+        if (state <= 1)
+        {
+            // Update all internal state before the closeFuture is notified.
+            if (_local != null)
+            {
+                LocalChannelRegistry.Unregister(_local);
+                _local = null;
+            }
+            state = 2;
+        }
         // Close connections that were queued but never accepted, so their connect attempt fails instead of
         // never completing.
         while (_inbound.TryDequeue(out var child))
@@ -55,35 +161,68 @@ public class LocalServerChannel : AbstractChannel, IServerChannel
     protected virtual LocalChannel NewLocalChannel(LocalChannel peer) => new(this, peer);
     internal LocalChannel Serve(LocalChannel peer)
     {
-        var child = NewLocalChannel(peer);
-        EventLoop.Execute(() =>
+        LocalChannel child = NewLocalChannel(peer);
+        if (EventLoop.InEventLoop())
         {
-            if (!IsOpen)
-            { child.CloseForcibly(); return; }
-            _inbound.Enqueue(child);
-            if (_acceptPending)
-                DoBeginRead();
-        });
+            Serve0(child);
+        }
+        else
+        {
+            EventLoop.Execute(() => Serve0(child));
+        }
         return child;
     }
+
     protected override void DoBeginRead()
     {
-        if (_inbound.Count == 0)
-        { _acceptPending = true; return; }
-        _acceptPending = false;
-        ReceiveHandle.Reset(Config);
-        while (_inbound.TryDequeue(out var child))
+        if (_acceptPending)
         {
-            ReceiveHandle.IncMessagesRead(1);
-            Pipeline.FireChannelRead(child);
-            if (!ReceiveHandle.ContinueReading())
-                break;
+            return;
         }
-        ReceiveHandle.ReadComplete();
-        Pipeline.FireChannelReadComplete();
-        if (IsOpen && Config.IsAutoRead())
-        { if (_inbound.Count != 0) EventLoop.Execute(DoBeginRead); else _acceptPending = true; }
+
+        Queue<LocalChannel> inboundBuffer = _inbound;
+        if (inboundBuffer.Count == 0)
+        {
+            _acceptPending = true;
+            return;
+        }
+
+        ReadInbound();
     }
+
+    private void ReadInbound()
+    {
+        IRecvByteBufAllocator.IHandle handle = RecvBufAllocHandle();
+        handle.Reset(Config);
+        IChannelPipeline pipeline = Pipeline;
+        do
+        {
+            if (!_inbound.TryDequeue(out LocalChannel m))
+            {
+                break;
+            }
+            handle.IncMessagesRead(1);
+            pipeline.FireChannelRead(m);
+        } while (handle.ContinueReading());
+        handle.ReadComplete();
+        pipeline.FireChannelReadComplete();
+    }
+
+    private void Serve0(LocalChannel child)
+    {
+        if (!IsOpen)
+        {
+            child.CloseForcibly();
+            return;
+        }
+        _inbound.Enqueue(child);
+        if (_acceptPending)
+        {
+            _acceptPending = false;
+            ReadInbound();
+        }
+    }
+
     private sealed class ServerConfig : DefaultChannelConfig
     {
         internal ServerConfig(IChannel channel) : base(channel, new ServerChannelRecvByteBufAllocator())

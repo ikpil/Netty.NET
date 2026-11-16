@@ -15,113 +15,220 @@
  */
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using static Netty.NET.Transport.Tests.TestsuitePermutation;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // Source read windows and independently owned cleanup.
-#pragma warning disable CS0612 // Preserve the original custom receive allocator contract.
-public class SocketReadPendingSourceTest
+#pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body; the source's latch windows stay fixed.
+#pragma warning disable xUnit1051 // The source's bind/connect/write/close calls and latch waits do not observe the test cancellation.
+public class SocketReadPendingSourceTest : AbstractSocketTest
 {
-    [Theory(Timeout = 60000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestReadPendingIsResetAfterEachRead(bool adaptive)
+    [Fact(Timeout = 60000)]
+    public async Task TestReadPendingIsResetAfterEachRead()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var serverHandler = new PendingReadHandler();
-        var clientHandler = new PendingReadHandler();
-        var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var server = await fixture.Server.Option(ChannelOption.SO_BACKLOG, 1024).Option(ChannelOption.AUTO_READ, true)
-            .ChildOption(ChannelOption.AUTO_READ, false)
-            // We intend to do 2 reads per read loop wakeup
-            .ChildOption(ChannelOption.RECVBUF_ALLOCATOR, new ReadStateAllocator(2))
-            .ChildHandler(new ActionChannelInitializer<IChannel>(channel => { channel.Pipeline.AddLast(serverHandler); accepted.SetResult(channel); }))
-            .BindAsync(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
-        IChannel client = null;
+        await Run(TestContext.Current, TestReadPendingIsResetAfterEachRead0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestReadPendingIsResetAfterEachRead test name.
+    private async Task TestReadPendingIsResetAfterEachRead0(ServerBootstrap sb, Bootstrap cb)
+    {
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
         try
         {
-            client = await fixture.Client.Option(ChannelOption.AUTO_READ, false)
-                // We intend to do 2 reads per read loop wakeup
-                .Option(ChannelOption.RECVBUF_ALLOCATOR, new ReadStateAllocator(2)).Handler(clientHandler).ConnectAsync(server.LocalAddress);
+            ReadPendingInitializer serverInitializer = new ReadPendingInitializer();
+            ReadPendingInitializer clientInitializer = new ReadPendingInitializer();
+            sb.Option(ChannelOption.SO_BACKLOG, 1024)
+              .Option(ChannelOption.AUTO_READ, true)
+              .ChildOption(ChannelOption.AUTO_READ, false)
+              // We intend to do 2 reads per read loop wakeup
+              .ChildOption(ChannelOption.RECVBUF_ALLOCATOR, new TestNumReadsRecvByteBufAllocator(2))
+              .ChildHandler(serverInitializer);
+
+            serverChannel = await sb.BindAsync();
+
+            cb.Option(ChannelOption.AUTO_READ, false)
+              // We intend to do 2 reads per read loop wakeup
+              .Option(ChannelOption.RECVBUF_ALLOCATOR, new TestNumReadsRecvByteBufAllocator(2))
+              .Handler(clientInitializer);
+            clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+
             // 4 bytes means 2 read loops for TestNumReadsRecvByteBufAllocator
-            await client.WriteAndFlushAsync(ReadStateAllocator.RandomBuffer(client.Allocator, 4));
+            // CLR: the source does not wait for this write; its returned Task is not observed either.
+            _ = clientChannel.WriteAndFlushAsync(RandomBufferType(clientChannel.Alloc(), new byte[4], 0, 4));
+
             // 4 bytes means 2 read loops for TestNumReadsRecvByteBufAllocator
-            IChannel child = await accepted.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await child.WriteAndFlushAsync(ReadStateAllocator.RandomBuffer(child.Allocator, 4));
-            child.Read();
-            await serverHandler.AssertAllRead();
-            client.Read();
-            await clientHandler.AssertAllRead();
+            Assert.True(await Await(serverInitializer.channelInitLatch, TimeSpan.FromSeconds(5)));
+            _ = serverInitializer.channel.WriteAndFlushAsync(
+                    RandomBufferType(serverInitializer.channel.Alloc(), new byte[4], 0 , 4));
+
+            serverInitializer.channel.Read();
+            await serverInitializer.readPendingHandler.AssertAllRead();
+
+            clientChannel.Read();
+            await clientInitializer.readPendingHandler.AssertAllRead();
         }
-        finally { if (client != null) await client.CloseAsync(); await server.CloseAsync(); }
-    }
-    private sealed class PendingReadHandler : ChannelInboundHandlerAdapter
-    {
-        private int _count, _cycles;
-        private readonly TaskCompletionSource _first = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private readonly TaskCompletionSource _second = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        finally
         {
-            ReferenceCountUtil.Release(message);
-            if (Interlocked.Increment(ref _count) == 1)
+            if (serverChannel != null)
             {
-                // Call read the first time, to ensure it is not reset the second time.
-                context.Read();
+                await serverChannel.CloseAsync();
+            }
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
             }
         }
-        public override void ChannelReadComplete(ChannelHandlerContext context)
-        { _first.TrySetResult(); if (++_cycles == 2) _second.TrySetResult(); }
-        internal async Task AssertAllRead()
+    }
+
+    // CLR: a CountDownLatch is a TaskCompletionSource here. countDown() is TrySetResult(), which returns false
+    // instead of failing once the Task is complete, as countDown() does nothing at a zero count
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetresult,
+    // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/CountDownLatch.html); a latch
+    // with a larger count keeps its remaining count in an AtomicInteger and completes the Task when it reaches zero.
+    // await(timeout, unit) "Returns: true if the count reached zero and false if the waiting time elapsed", so the
+    // latch Task races Task.Delay; Task.WhenAny's "Result is the task that completed first"
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany).
+    private static async Task<bool> Await(TaskCompletionSource latch, TimeSpan timeout)
+    {
+        return await Task.WhenAny(latch.Task, Task.Delay(timeout)) == latch.Task;
+    }
+
+    private class ReadPendingInitializer : ChannelInitializer<IChannel>
+    {
+        internal readonly ReadPendingReadHandler readPendingHandler = new ReadPendingReadHandler();
+        internal readonly TaskCompletionSource channelInitLatch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal volatile IChannel channel;
+
+        protected override void InitChannel(IChannel ch)
         {
-            await _first.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            // We should only do 1 read loop, because we only called read() on the first channelRead.
-            Assert.NotSame(_second.Task, await Task.WhenAny(_second.Task, Task.Delay(1000)));
-            Assert.Equal(2, Volatile.Read(ref _count));
+            channel = ch;
+            ch.Pipeline.AddLast(readPendingHandler);
+            channelInitLatch.TrySetResult();
         }
     }
-}
 
-/**
- * Designed to read a single byte at a time to control the number of reads done at a fine granularity.
- */
-/**
- * Designed to keep reading as long as autoread is enabled.
- */
-internal sealed class ReadStateAllocator(int? numReads = null) : IRecvByteBufAllocator
-{
-    public IRecvByteBufAllocator.IHandle NewHandle() => new Handle(numReads);
-    internal static ByteBuf RandomBuffer(IByteBufAllocator allocator, int length) =>
-        (Random.Shared.Next(2) == 0 ? allocator.DirectBuffer(length) : allocator.HeapBuffer(length)).WriteZero(length);
-    private sealed class Handle(int? numReads) : IRecvByteBufAllocator.IExtendedHandle
+    private sealed class ReadPendingReadHandler : ChannelInboundHandlerAdapter
     {
-        private int _attempted, _last, _messages;
-        private IChannelConfig _config;
-        public ByteBuf Allocate(IByteBufAllocator allocator) => allocator.IoBuffer(Guess(), Guess());
-        public int Guess() => 1; // only ever allocate buffers of size 1 to ensure the number of reads is controlled.
-        public void Reset(IChannelConfig config) { _config = config; _messages = 0; }
-        public void IncMessagesRead(int count)
+        private readonly AtomicInteger count = new AtomicInteger();
+        private readonly TaskCompletionSource latch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource latch2 = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly AtomicInteger latch2Count = new AtomicInteger(2);
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            if (numReads.HasValue) _messages += count;
-            // No need to track the number of messages read because it is not used.
-            // CLR: the auto-read mode intentionally ignores message counts, as in TestRecvByteBufAllocator.
+            ReferenceCountUtil.Release(msg);
+            if (count.IncrementAndGet() == 1)
+            {
+                // Call read the first time, to ensure it is not reset the second time.
+                ctx.Read();
+            }
         }
-        public void LastBytesRead(int bytes) => _last = bytes;
-        public int LastBytesRead() => _last;
-        public void AttemptedBytesRead(int bytes) => _attempted = bytes;
-        public int AttemptedBytesRead() => _attempted;
-        public bool ContinueReading() => numReads.HasValue ? _messages < numReads.Value : _config.IsAutoRead();
-        public bool ContinueReading(Func<bool> maybeMoreDataSupplier) => ContinueReading();
-        public void ReadComplete()
+
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
-            // Nothing needs to be done or adjusted after each read cycle is completed.
+            latch.TrySetResult();
+            if (latch2Count.DecrementAndGet() == 0)
+            {
+                latch2.TrySetResult();
+            }
+        }
+
+        internal async Task AssertAllRead()
+        {
+            Assert.True(await Await(latch, TimeSpan.FromSeconds(5)));
+            // We should only do 1 read loop, because we only called read() on the first channelRead.
+            Assert.False(await Await(latch2, TimeSpan.FromSeconds(1)));
+            Assert.Equal(2, count.Get());
+        }
+    }
+
+    /**
+     * Designed to read a single byte at a time to control the number of reads done at a fine granularity.
+     */
+    private sealed class TestNumReadsRecvByteBufAllocator : IRecvByteBufAllocator
+    {
+        private readonly int numReads;
+        internal TestNumReadsRecvByteBufAllocator(int numReads)
+        {
+            this.numReads = numReads;
+        }
+
+        // CLR: the source's covariant ExtendedHandle newHandle() returns IRecvByteBufAllocator.IHandle here, and its
+        // anonymous ExtendedHandle is the nested ExtendedHandle class, which reads numReads from its allocator.
+        public IRecvByteBufAllocator.IHandle NewHandle()
+        {
+            return new ExtendedHandle(this);
+        }
+
+        private sealed class ExtendedHandle(TestNumReadsRecvByteBufAllocator allocator) : IRecvByteBufAllocator.IExtendedHandle
+        {
+            private int attemptedBytesRead;
+            private int lastBytesRead;
+            private int numMessagesRead;
+
+            public ByteBuf Allocate(IByteBufAllocator alloc)
+            {
+                return alloc.IoBuffer(Guess(), Guess());
+            }
+
+            public int Guess()
+            {
+                return 1; // only ever allocate buffers of size 1 to ensure the number of reads is controlled.
+            }
+
+            public void Reset(IChannelConfig config)
+            {
+                numMessagesRead = 0;
+            }
+
+            public void IncMessagesRead(int numMessages)
+            {
+                numMessagesRead += numMessages;
+            }
+
+            public void LastBytesRead(int bytes)
+            {
+                lastBytesRead = bytes;
+            }
+
+            public int LastBytesRead()
+            {
+                return lastBytesRead;
+            }
+
+            public void AttemptedBytesRead(int bytes)
+            {
+                attemptedBytesRead = bytes;
+            }
+
+            public int AttemptedBytesRead()
+            {
+                return attemptedBytesRead;
+            }
+
+            public bool ContinueReading()
+            {
+                return numMessagesRead < allocator.numReads;
+            }
+
+            public bool ContinueReading(Func<bool> maybeMoreDataSupplier)
+            {
+                return ContinueReading();
+            }
+
+            public void ReadComplete()
+            {
+                // Nothing needs to be done or adjusted after each read cycle is completed.
+            }
         }
     }
 }
 #pragma warning restore xUnit1051
-#pragma warning restore CS0612
+#pragma warning restore xUnit1069

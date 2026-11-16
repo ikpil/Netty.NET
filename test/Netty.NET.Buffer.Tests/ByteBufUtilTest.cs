@@ -49,7 +49,7 @@ public class ByteBufUtilTest
             {
                 0 => new UnpooledByteBufAllocator(false, true, _native),
                 1 => new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: _native),
-                _ => new AdaptiveByteBufAllocator(false, false, _native)
+                _ => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: _native)
             };
         }
         public ByteBuf Buffer(int capacity) => _direct ? _allocator.DirectBuffer(capacity) : _allocator.HeapBuffer(capacity);
@@ -268,7 +268,7 @@ public class ByteBufUtilTest
             byte[] bytes = NettyUtf8.GetBytes("1234");
             buffer.AddComponent(owner.Buffer(bytes.Length).WriteBytes(bytes));
             buffer.AddComponent(owner.Buffer(bytes.Length).WriteBytes(bytes));
-            Assert.Equal("1234", buffer.GetString(bytes.Length, bytes.Length, NettyUtf8));
+            Assert.Equal("1234", buffer.ToString(bytes.Length, bytes.Length, NettyUtf8));
         }
         finally
         {
@@ -450,7 +450,7 @@ public class ByteBufUtilTest
             }, timeout.Token)).ToArray();
             await Task.WhenAll(workers);
             Assert.Equal(59999, completed);
-            Assert.Equal((0, 13, 1), (b.ReaderIndex, b.WriterIndex, b.ReferenceCount));
+            Assert.Equal((0, 13, 1), (b.ReaderIndex, b.WriterIndex, b.RefCnt));
         }
         finally { b.Release(); }
     }
@@ -548,7 +548,7 @@ public class ByteBufUtilTest
             needle.Release();
 
         }
-        finally { foreach (ByteBuf copy in copies) if (copy.ReferenceCount > 0) copy.Release(); }
+        finally { foreach (ByteBuf copy in copies) if (copy.RefCnt > 0) copy.Release(); }
     }
 
     [Fact]
@@ -750,7 +750,7 @@ public class ByteBufUtilTest
     private static void TestDecodeString(string text, Encoding charset)
     {
         ByteBuf buffer = Unpooled.CopiedBuffer(text, charset);
-        Assert.Equal(text, buffer.GetString(0, buffer.ReadableBytes, charset));
+        Assert.Equal(text, buffer.ToString(0, buffer.ReadableBytes, charset));
         buffer.Release();
     }
 
@@ -765,7 +765,7 @@ public class ByteBufUtilTest
             }
             finally
             {
-                Assert.False(buf.IsReadable);
+                Assert.False(buf.IsReadable());
                 buf.Release();
             }
         }

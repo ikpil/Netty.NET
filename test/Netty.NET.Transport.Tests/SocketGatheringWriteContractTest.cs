@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,207 +7,132 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
-using static Netty.NET.Transport.Tests.ManualIoEventLoopSourceTest;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1031 // Run and inspect the I/O pump on its owning thread.
+// Supplemental tests of the gathering NioSocketChannel.doWrite(ChannelOutboundBuffer) over a non-blocking Socket.
+#pragma warning disable xUnit1031 // Drive the manual event loop on its owning thread.
+#pragma warning disable xUnit1051 // Native sockets and the loop have independent lifetimes.
 public class SocketGatheringWriteContractTest
 {
     [Fact]
     public void APartialVectorAdvancesOnlySentBytesAndDoesNotAdmitNewWrites()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var (peer, socket) = ConnectPair(AddressFamily.InterNetwork);
-        using var rawPeer = peer;
-        using var rawSocket = socket;
-        var channel = new VectorProbe(socket);
-        channel.Config.SetWriteSpinCount(1).SetAutoRead(false);
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        try
-        {
-            loop.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();
-            channel.SendVector = segments =>
-            {
-                channel.SendVector = null;
-                Assert.Equal(new[] { 2, 2, 2 }, segments.Select(segment => segment.Count));
-                var partial = new[] { segments[0], segments[1].Slice(0, 1) };
-                return Task.FromResult(socket.Send(partial, SocketFlags.None));
-            };
-            var a = Unpooled.WrappedBuffer(new byte[] { 1, 2 });
-            var b = Unpooled.WrappedBuffer(new byte[] { 3, 4 });
-            var c = Unpooled.WrappedBuffer(new byte[] { 5, 6 });
-            var first = channel.WriteAsync(a, cancellation);
-            var second = channel.WriteAsync(b, cancellation);
-            var third = channel.WriteAsync(c, cancellation);
-            channel.Flush();
-
-            Assert.True(first.IsCompletedSuccessfully);
-            Assert.Equal(0, a.ReferenceCount);
-            Assert.Equal(1, b.ReaderIndex);
-            Assert.False(second.IsCompleted);
-            Assert.False(third.IsCompleted);
-            var later = channel.WriteAsync(Unpooled.WrappedBuffer(new byte[] { 7 }), cancellation);
-
-            PumpUntil(loop, () => second.IsCompleted && third.IsCompleted);
-            Assert.True(second.IsCompletedSuccessfully);
-            Assert.True(third.IsCompletedSuccessfully);
-            Assert.False(later.IsCompleted);
-            Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, ReadExactly(peer, 6, cancellation));
-            channel.Flush();
-            PumpUntil(loop, () => later.IsCompleted);
-            Assert.Equal(new byte[] { 7 }, ReadExactly(peer, 1, cancellation));
-            Assert.True(channel.VectorCalls >= 2);
-        }
-        finally { Terminate(loop); }
+        using var fixture = new StreamFixture<VectorProbe>(socket => new VectorProbe(socket));
+        fixture.Channel.Budget = 3;
+        var first = Unpooled.WrappedBuffer(new byte[] { 1, 2 });
+        var second = Unpooled.WrappedBuffer(new byte[] { 3, 4 });
+        Task f1 = fixture.Channel.WriteAsync(first);
+        Task f2 = fixture.Channel.WriteAndFlushAsync(second);
+        // in.removeBytes(3) completes the first buffer and advances the second one by a single byte.
+        Assert.Equal(1, fixture.Channel.Vectors);
+        Assert.True(f1.IsCompletedSuccessfully);
+        Assert.False(f2.IsCompleted);
+        Assert.Equal(1, second.ReaderIndex);
+        Task late = fixture.Channel.WriteAsync(Unpooled.WrappedBuffer(new byte[] { 5 }));
+        fixture.Channel.Budget = int.MaxValue;
+        fixture.PumpUntil(() => f2.IsCompleted);
+        Assert.True(f2.IsCompletedSuccessfully);
+        Assert.False(late.IsCompleted);
+        Assert.Equal(new byte[] { 1, 2, 3, 4 }, fixture.Receive(4));
+        fixture.Channel.Flush();
+        fixture.PumpUntil(() => late.IsCompleted);
+        Assert.Equal(new byte[] { 5 }, fixture.Receive(1));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void AllGatheredBuffersStayBorrowedUntilTheNativeOperationReturns(bool stop)
+    [Fact]
+    public void GatheringPreservesBufferAndFileRegionOrder()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var (peer, socket) = ConnectPair(AddressFamily.InterNetwork);
-        using var rawPeer = peer;
-        using var rawSocket = socket;
-        var channel = new VectorProbe(socket);
-        channel.Config.SetAutoRead(false);
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        var pending = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        string path = Path.GetTempFileName();
         try
         {
-            loop.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();
-            channel.SendVector = _ => pending.Task;
-            var a = Unpooled.WrappedBuffer(new byte[] { 1 });
-            var b = Unpooled.WrappedBuffer(new byte[] { 2 });
-            var first = channel.WriteAsync(a, cancellation);
-            var second = channel.WriteAndFlushAsync(b, cancellation);
-            Assert.Equal(2, a.ReferenceCount);
-            Assert.Equal(2, b.ReferenceCount);
-
-            if (stop)
-            {
-                Terminate(loop);
-                Assert.Throws<IOException>(() => first.WaitAsync(TimeSpan.FromSeconds(2), cancellation).GetAwaiter().GetResult());
-                Assert.Throws<IOException>(() => second.WaitAsync(TimeSpan.FromSeconds(2), cancellation).GetAwaiter().GetResult());
-                Assert.Equal(1, a.ReferenceCount);
-                Assert.Equal(1, b.ReferenceCount);
-                pending.SetException(new IOException("Socket closed during gathering."));
-                Assert.True(SpinWait.SpinUntil(() => a.ReferenceCount == 0 && b.ReferenceCount == 0, TimeSpan.FromSeconds(2)));
-                Assert.Equal(0, loop.RunNow(-1));
-            }
-            else
-            {
-                var error = new IOException("Gathered write failed.");
-                pending.SetException(error);
-                PumpUntil(loop, () => first.IsCompleted && second.IsCompleted);
-                Assert.Same(error, Assert.Throws<IOException>(() => first.GetAwaiter().GetResult()));
-                Assert.Same(error, Assert.Throws<IOException>(() => second.GetAwaiter().GetResult()));
-                Assert.Equal(0, a.ReferenceCount);
-                Assert.Equal(0, b.ReferenceCount);
-            }
+            File.WriteAllBytes(path, new byte[] { 10, 11, 12, 13 });
+            using var fixture = new StreamFixture<VectorProbe>(socket => new VectorProbe(socket));
+            Task a = fixture.Channel.WriteAsync(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            Task b = fixture.Channel.WriteAsync(new DefaultFileRegion(new FileInfo(path), 1, 2));
+            Task c = fixture.Channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(new byte[] { 3 }));
+            fixture.PumpUntil(() => a.IsCompleted && b.IsCompleted && c.IsCompleted);
+            Assert.All(new[] { a, b, c }, task => Assert.True(task.IsCompletedSuccessfully));
+            Assert.Equal(new byte[] { 1, 2, 11, 12, 3 }, fixture.Receive(5));
         }
-        finally
-        {
-            pending.TrySetException(new IOException("Test ended."));
-            Terminate(loop);
-        }
+        finally { File.Delete(path); }
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void GatheringPreservesDirectBuffersAndFileRegionOrder(bool domain)
+    // Accepts at most Budget bytes in total, as a socket whose send buffer fills up would.
+    internal sealed class VectorProbe(Socket socket) : NioSocketChannel(socket)
     {
-        if (domain) DomainSocketSourceTest.RequireDomainSockets();
-        var cancellation = TestContext.Current.CancellationToken;
-        var (peer, socket) = ConnectPair(domain ? AddressFamily.Unix : AddressFamily.InterNetwork);
-        using var rawPeer = peer;
-        using var rawSocket = socket;
-        SocketStreamChannel channel = domain ? new DomainSocketChannel(socket) : new VectorProbe(socket);
-        channel.Config.SetAutoRead(false);
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        string file = Path.GetTempFileName();
-        try
+        internal int Budget = int.MaxValue;
+        internal int Vectors;
+
+        internal override int WriteSocket(ReadOnlyMemory<byte> buffer)
         {
-            File.WriteAllBytes(file, new byte[] { 4, 5 });
-            loop.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();
-            var region = new DefaultFileRegion(new FileInfo(file), 0, 2);
-            Task[] writes =
-            [
-                channel.WriteAsync(Unpooled.WrappedBuffer(new byte[] { 1 }), cancellation),
-                channel.WriteAsync(Unpooled.WrappedBuffer(new byte[] { 2 }), cancellation),
-                channel.WriteAsync(Unpooled.DirectBuffer(1).WriteByte(3), cancellation),
-                channel.WriteAsync(region, cancellation),
-                channel.WriteAsync(Unpooled.WrappedBuffer(new byte[] { 6 }), cancellation),
-                channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(new byte[] { 7 }), cancellation)
-            ];
-            var sent = Task.WhenAll(writes);
-            PumpUntil(loop, () => sent.IsCompleted);
-            sent.GetAwaiter().GetResult();
-            Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7 }, ReadExactly(peer, 7, cancellation));
-            Assert.Equal(0, region.ReferenceCount);
-            if (channel is VectorProbe probe) Assert.Equal(2, probe.VectorCalls);
+            var part = buffer[..Math.Min(Budget, buffer.Length)];
+            Budget -= part.Length;
+            return part.IsEmpty ? 0 : base.WriteSocket(part);
         }
-        finally
+
+        internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length)
         {
-            Terminate(loop);
-            File.Delete(file);
+            Vectors++;
+            var prefix = buffers.Skip(offset).Take(length).Select(buffer =>
+            {
+                var part = buffer[..Math.Min(Budget, buffer.Length)];
+                Budget -= part.Length;
+                return part;
+            }).Where(part => !part.IsEmpty).ToArray();
+            return prefix.Length == 0 ? 0 : base.WriteSocket(prefix, 0, prefix.Length);
         }
     }
+}
 
-    private static (Socket Peer, Socket Accepted) ConnectPair(AddressFamily family)
+// A connected NioSocketChannel driven by a ManualIoEventLoop with NioIoHandler and its raw peer socket.
+internal sealed class StreamFixture<T> : IDisposable where T : NioSocketChannel
+{
+    internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread, NioIoHandler.NewFactory());
+    internal readonly T Channel;
+    private readonly Socket _peer;
+
+    internal StreamFixture(Func<Socket, T> factory)
     {
-        var protocol = family == AddressFamily.Unix ? ProtocolType.Unspecified : ProtocolType.Tcp;
-        using var listener = new Socket(family, SocketType.Stream, protocol);
-        listener.Bind(family == AddressFamily.Unix ? DomainSocketSourceTest.NewAddress()
-            : new IPEndPoint(IPAddress.Loopback, 0));
+        using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         listener.Listen(1);
-        var peer = new Socket(family, SocketType.Stream, protocol);
-        try
-        {
-            peer.Connect(listener.LocalEndPoint);
-            return (peer, listener.Accept());
-        }
-        catch { peer.Dispose(); throw; }
+        _peer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _peer.Connect(listener.LocalEndPoint);
+        Channel = factory(listener.Accept());
+        Channel.Config.SetAutoRead(false);
+        Loop.RegisterAsync(Channel).GetAwaiter().GetResult();
     }
 
-    private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition)
+    internal void PumpUntil(Func<bool> condition)
     {
-        var watch = Stopwatch.StartNew();
-        while (!condition() && watch.Elapsed < TimeSpan.FromSeconds(3))
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!condition())
         {
-            loop.Run(10_000_000, -1);
-            Thread.Yield();
+            Assert.True(DateTime.UtcNow < deadline, "The write did not complete on its owner.");
+            Loop.Run(1_000_000);
         }
-        Assert.True(condition(), "The gathered write did not settle during the I/O phase.");
     }
 
-    private static byte[] ReadExactly(Socket socket, int length, CancellationToken cancellation)
+    internal byte[] Receive(int length)
     {
-        var data = new byte[length];
-        for (int offset = 0; offset < data.Length;)
+        var bytes = new byte[length];
+        int offset = 0;
+        while (offset < length)
         {
-            int read = socket.ReceiveAsync(data.AsMemory(offset), SocketFlags.None, cancellation).AsTask()
-                .WaitAsync(TimeSpan.FromSeconds(2), cancellation).GetAwaiter().GetResult();
+            Assert.True(_peer.Poll(2_000_000, SelectMode.SelectRead));
+            int read = _peer.Receive(bytes.AsSpan(offset));
             Assert.True(read > 0);
             offset += read;
         }
-        return data;
+        return bytes;
     }
 
-    private sealed class VectorProbe(Socket socket) : TcpSocketChannel(socket)
+    public void Dispose()
     {
-        internal override bool SupportsGatheringWrites => true;
-        internal Func<IList<ArraySegment<byte>>, Task<int>> SendVector;
-        internal int VectorCalls;
-
-        internal override Task<int> SendGatheredAsync(IList<ArraySegment<byte>> segments)
-        {
-            VectorCalls++;
-            return SendVector?.Invoke(segments) ?? base.SendGatheredAsync(segments);
-        }
+        ManualIoEventLoopSourceTest.Terminate(Loop);
+        _peer.Dispose();
     }
 }

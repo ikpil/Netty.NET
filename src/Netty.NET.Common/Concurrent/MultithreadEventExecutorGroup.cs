@@ -128,7 +128,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
         foreach (IEventExecutor e in children)
         {
-            Task termination = e.Termination;
+            Task termination = e.TerminationFuture;
             // CLR adaptation: completion counting owns no executor-local state.
             // Do not capture the constructor's SynchronizationContext or
             // ExecutionContext. A failed child still counts as terminated, as
@@ -207,10 +207,10 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
             l.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
 
-        return Termination;
+        return TerminationFuture;
     }
 
-    public override Task Termination => _terminationSource.Task;
+    public override Task TerminationFuture => _terminationSource.Task;
 
     /// <exception cref="AggregateException">A child stop request threw; every other child was still requested.</exception>
     public override Task StopAsync()
@@ -224,7 +224,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         // Request failures are distinct from the existing all-child completion
         // signal. Do not strand later children or invent a second termination Task.
         if (failures != null) throw new AggregateException("Executor stop requests failed.", failures);
-        return Termination;
+        return TerminationFuture;
     }
 
     [Obsolete]

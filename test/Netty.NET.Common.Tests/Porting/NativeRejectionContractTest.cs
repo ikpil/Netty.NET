@@ -12,7 +12,7 @@ public class NativeRejectionContractTest
     {
         internal int WakeCalls;
         internal Action OnWake;
-        public override void Wakeup(bool inEventLoop)
+        protected internal override void Wakeup(bool inEventLoop)
         {
             base.Wakeup(inEventLoop);
             if (!inEventLoop && OnWake != null) { WakeCalls++; OnWake(); }

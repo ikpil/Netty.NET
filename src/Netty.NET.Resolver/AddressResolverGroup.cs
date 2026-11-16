@@ -28,7 +28,7 @@ namespace Netty.NET.Resolver;
  */
 public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
 {
-    private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(AddressResolverGroup<T>));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(AddressResolverGroup<T>));
 
     /**
      * Note that we do not use a {@link ConcurrentMap} here because it is usually expensive to instantiate a resolver.
@@ -47,21 +47,26 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
         lock (_resolvers)
         {
             if (executor.IsShuttingDown())
-                throw new InvalidOperationException("Executor not accepting a task.");
-            if (_resolvers.TryGetValue(executor, out var current))
-                return current.Resolver;
-            IAddressResolver<T> resolver;
+                throw new InvalidOperationException("executor not accepting a task");
+            if (_resolvers.TryGetValue(executor, out var r))
+                return r.Resolver;
+            IAddressResolver<T> newResolver;
             try
-            { resolver = NewResolver(executor); }
-            catch (Exception error) { throw new InvalidOperationException("Failed to create a new resolver.", error); }
-            var entry = new Entry(this, executor, resolver);
+            {
+                newResolver = NewResolver(executor);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException("failed to create a new resolver", e);
+            }
+            var entry = new Entry(this, executor, newResolver);
             _resolvers.Add(executor, entry);
             // CLR lifecycle cleanup does not submit work to an executor that has already terminated.
             // Clearing Entry detaches ownership; the Task then retains only an empty continuation state.
             // Do not retain the registering caller's ExecutionContext/SynchronizationContext
             // for the executor's lifetime. Entry is cleared when the group closes.
-            executor.Termination.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(entry.OnTermination);
-            return resolver;
+            executor.TerminationFuture.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(entry.OnTermination);
+            return newResolver;
         }
     }
 
@@ -75,15 +80,15 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
      */
     public void Dispose()
     {
-        var resolvers = new List<IAddressResolver<T>>();
+        var rArray = new List<IAddressResolver<T>>();
         lock (_resolvers)
         {
             foreach (var entry in _resolvers.Values)
-                resolvers.Add(entry.Detach());
+                rArray.Add(entry.Detach());
             _resolvers.Clear();
         }
-        foreach (var resolver in resolvers)
-            CloseResolver(resolver);
+        foreach (IAddressResolver<T> r in rArray)
+            CloseResolver(r);
     }
 
     private void OnTermination(Entry entry)
@@ -102,8 +107,13 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
     private static void CloseResolver(IAddressResolver<T> resolver)
     {
         try
-        { resolver.Dispose(); }
-        catch (Exception error) { Logger.Warn("Failed to close a resolver:", error); }
+        {
+            resolver.Dispose();
+        }
+        catch (Exception t)
+        {
+            logger.Warn("Failed to close a resolver:", t);
+        }
     }
 
     private sealed class Entry(AddressResolverGroup<T> owner, IEventExecutor executor, IAddressResolver<T> resolver)

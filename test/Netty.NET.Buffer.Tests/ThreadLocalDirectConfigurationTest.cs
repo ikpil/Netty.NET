@@ -35,7 +35,7 @@ public partial class DefaultByteBufAllocatorTest
         if (b != null)
         {
             Assert.True(Property<bool>(b, "IsDirect")); Assert.Equal(256, Property<int>(b, "Capacity"));
-            Assert.Equal(1, Property<int>(b, "ReferenceCount")); Call(b, "Release", 1);
+            Assert.Equal(1, Property<int>(b, "RefCnt")); Call(b, "Release", 1);
             Assert.Equal(0, scope.NativeBytes); // Ordinary threads do not retain idle storage.
         }
         scope.Set("io.netty.threadLocalDirectBufferSize", enabled ? "0" : "1024");

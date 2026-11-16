@@ -37,7 +37,7 @@ public class UnpooledMemoryWrappingTest
             var composite = Assert.IsType<CompositeByteBuf>(result);
             Assert.Equal(2, composite.NumComponents); Assert.Equal(5, composite.MaxNumComponents);
             Assert.Equal(7, result.Capacity); Assert.Equal(int.MaxValue, result.MaxCapacity);
-            Assert.Equal(0, result.ReaderIndex); Assert.Equal(7, result.WriterIndex); Assert.Equal(1, result.ReferenceCount);
+            Assert.Equal(0, result.ReaderIndex); Assert.Equal(7, result.WriterIndex); Assert.Equal(1, result.RefCnt);
             Assert.False(result.IsReadOnly); Assert.Equal(kind == 1, result.IsDirect);
             Assert.Equal(new byte[] { 2, 3, 4, 8, 9, 10, 11 }, ByteBufUtil.GetBytes(result));
             storage.Memory.Span[2] = 99; Assert.Equal(99, result.GetByte(0));
@@ -126,11 +126,11 @@ public class UnpooledMemoryWrappingTest
         ByteBuf result = Wrap(new[] { storage.Memory, storage.Memory }, readOnly);
         var composite = Assert.IsType<CompositeByteBuf>(result);
         ByteBuf first = composite.Component(0), second = composite.Component(1);
-        Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+        Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
         storage.Memory.Span[0] = 99; Assert.Equal(99, result.GetByte(0)); Assert.Equal(99, result.GetByte(4));
         ByteBuf retained = result.RetainedSlice(1, 6); Assert.False(result.Release());
-        Assert.Equal(1, retained.ReferenceCount); Assert.Equal(99, retained.GetByte(3)); retained.Release();
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, second.ReferenceCount); Assert.Equal(99, storage.Memory.Span[0]);
+        Assert.Equal(1, retained.RefCnt); Assert.Equal(99, retained.GetByte(3)); retained.Release();
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt); Assert.Equal(99, storage.Memory.Span[0]);
     }
 
     [Theory]

@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace Netty.NET.Common.Internal.Logging
 {
@@ -39,7 +40,7 @@ namespace Netty.NET.Common.Internal.Logging
 
         public override string ToString()
         {
-            return Name ?? Id.ToString();
+            return Name ?? Id.ToString(CultureInfo.InvariantCulture);
         }
 
         public static implicit operator EventId(int i)

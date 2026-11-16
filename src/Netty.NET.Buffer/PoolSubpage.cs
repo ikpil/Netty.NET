@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 
 namespace Netty.NET.Buffer;
@@ -107,8 +108,8 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
         if (bitmapIdx < 0)
         {
             RemoveFromPool(); // Subpage appear to be in an invalid state. Remove to prevent repeated errors.
-            throw new InvalidOperationException($"No next available bitmap index found (bitmapIdx = {bitmapIdx}), " +
-                $"even though there are supposed to be (numAvail = {_numAvail}) out of (maxNumElems = {_maxNumElems}) available indexes.");
+            throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"No next available bitmap index found (bitmapIdx = {bitmapIdx}), ") +
+                string.Create(CultureInfo.InvariantCulture, $"even though there are supposed to be (numAvail = {_numAvail}) out of (maxNumElems = {_maxNumElems}) available indexes."));
         }
         int q = bitmapIdx >> 6;
         int r = bitmapIdx & 63;

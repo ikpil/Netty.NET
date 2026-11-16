@@ -71,8 +71,8 @@ public class NativeLazySchedulingContractTest
             }
             finally { _inLoop = false; }
         }
-        public override Task Termination => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Termination;
+        public override Task TerminationFuture => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => TerminationFuture;
         [Obsolete]
         public override void Shutdown() => CancelScheduledTasks();
         public override bool IsShuttingDown() => false;

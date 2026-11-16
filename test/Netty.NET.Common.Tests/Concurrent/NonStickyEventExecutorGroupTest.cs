@@ -156,7 +156,7 @@ public class NonStickyEventExecutorGroupTest
         public override bool IsShutdown() => underlying.IsShutdown();
         public override bool IsTerminated() => underlying.IsTerminated();
         public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
-        public override Task Termination => underlying.Termination;
+        public override Task TerminationFuture => underlying.TerminationFuture;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
             underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
     }
@@ -173,7 +173,7 @@ public class NonStickyEventExecutorGroupTest
         public override bool IsShutdown() => underlying.IsShutdown();
         public override bool IsTerminated() => underlying.IsTerminated();
         public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
-        public override Task Termination => underlying.Termination;
+        public override Task TerminationFuture => underlying.TerminationFuture;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
             underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
         public override void Execute(Action command)

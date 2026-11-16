@@ -32,7 +32,7 @@ public class UnpooledPrimitiveCopyingTest
             Assert.Equal(int.MaxValue, buffer.MaxCapacity);
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(expected.Length, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(expected, buffer.ReadableMemory.ToArray());
             buffer.WriteByte(0x7f);
             Assert.Equal(expected.Length + 1, buffer.WriterIndex);
@@ -40,71 +40,20 @@ public class UnpooledPrimitiveCopyingTest
             Assert.Equal(0x7f, buffer.GetByte(expected.Length));
         }
         finally { Assert.True(buffer.Release()); }
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    [InlineData(5)]
-    [InlineData(6)]
-    public void OriginalSingleValueFactoriesRoundtripAndExhaustTheReadableRange(int kind)
+    // The original single-value and sequence factory tests are UnpooledTest.TestWrapSingleInt ... TestWrapBoolean.
+    // CLR supplement: the single-value boolean factory, which the source fixture does not test.
+    [Fact]
+    public void SingleBooleanFactoryRoundtripsAndExhaustsTheReadableRange()
     {
-        ByteBuf copy = kind switch
-        {
-            0 => Unpooled.CopyInt(42), 1 => Unpooled.CopyShort(42), 2 => Unpooled.CopyMedium(42),
-            3 => Unpooled.CopyLong(42), 4 => Unpooled.CopyBoolean(true),
-            5 => Unpooled.CopyFloat(42), _ => Unpooled.CopyDouble(42)
-        };
+        ByteBuf copy = Unpooled.CopyBoolean(true);
         try
         {
-            Assert.Equal(kind switch { 1 => 2, 2 => 3, 3 or 6 => 8, 4 => 1, _ => 4 }, copy.Capacity);
-            double actual = kind switch
-            {
-                0 => copy.ReadInt(), 1 => copy.ReadShort(), 2 => copy.ReadMedium(), 3 => copy.ReadLong(),
-                4 => copy.ReadBoolean() ? 1 : 0, 5 => copy.ReadFloat(), _ => copy.ReadDouble()
-            };
-            Assert.Equal(kind == 4 ? 1 : 42, actual);
-            Assert.False(copy.IsReadable);
-        }
-        finally { copy.Release(); }
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    [InlineData(5)]
-    [InlineData(6)]
-    [InlineData(7)]
-    public void OriginalSequenceFactoriesRoundtripInOrder(int kind)
-    {
-        ByteBuf copy = kind switch
-        {
-            0 => Unpooled.CopyInt(1, 4), 1 => Unpooled.CopyShort(new short[] { 1, 4 }),
-            2 => Unpooled.CopyShort(1, 4), 3 => Unpooled.CopyMedium(1, 4),
-            4 => Unpooled.CopyLong(1, 4), 5 => Unpooled.CopyBoolean(true, false),
-            6 => Unpooled.CopyFloat(1, 4), _ => Unpooled.CopyDouble(1, 4)
-        };
-        try
-        {
-            Assert.Equal(kind switch { 1 or 2 => 4, 3 => 6, 4 or 7 => 16, 5 => 2, _ => 8 }, copy.Capacity);
-            for (int i = 0; i < 2; ++i)
-            {
-                double actual = kind switch
-                {
-                    0 => copy.ReadInt(), 1 or 2 => copy.ReadShort(), 3 => copy.ReadMedium(),
-                    4 => copy.ReadLong(), 5 => copy.ReadBoolean() ? 1 : 0,
-                    6 => copy.ReadFloat(), _ => copy.ReadDouble()
-                };
-                Assert.Equal(kind == 5 ? (i == 0 ? 1 : 0) : (i == 0 ? 1 : 4), actual);
-            }
-            Assert.False(copy.IsReadable);
+            Assert.Equal(1, copy.Capacity);
+            Assert.True(copy.ReadBoolean());
+            Assert.False(copy.IsReadable());
         }
         finally { copy.Release(); }
     }
@@ -153,7 +102,7 @@ public class UnpooledPrimitiveCopyingTest
             Assert.Equal(0, result.Capacity);
             Assert.Equal(0, result.MaxCapacity);
             Assert.False(result.Release());
-            Assert.Equal(1, result.ReferenceCount);
+            Assert.Equal(1, result.RefCnt);
         }
     }
 

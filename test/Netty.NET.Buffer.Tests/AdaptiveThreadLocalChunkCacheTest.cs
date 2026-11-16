@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -26,18 +27,18 @@ public class AdaptiveThreadLocalChunkCacheTest
 {
     private sealed class Fixture(int maxChunks = 64, int floor = 2, long polls = 16, int threshold = 3) : IDisposable
     {
-        internal readonly AdaptiveThreadLocalChunkCache Cache = new(131072, polls, threshold, maxChunks * 131072, floor * 131072);
-        internal readonly AdaptiveChunkRegistry Registry = new();
-        internal readonly List<AdaptiveSizeClassedChunk> Chunks = new();
+        internal readonly ThreadLocalSizeClassedChunkCache Cache = new(131072, polls, threshold, maxChunks * 131072, floor * 131072);
+        internal readonly ChunkRegistry Registry = new();
+        internal readonly List<SizeClassedChunk> Chunks = new();
         internal readonly List<AdaptiveChunkAllocation> Claims = new();
-        internal AdaptiveSizeClassedChunk Chunk(int allocated = 1)
+        internal SizeClassedChunk Chunk(int allocated = 1)
         {
-            var chunk = new AdaptiveSizeClassedChunk(new UnpooledHeapByteBuf(131072, 131072), Registry, 4096, true);
+            var chunk = new SizeClassedChunk(new UnpooledHeapByteBuf(131072, 131072), Registry, 4096, true);
             Chunks.Add(chunk);
             for (int i = 0; i < allocated; i++) Claims.Add(chunk.TryAllocate(4096));
             return chunk;
         }
-        internal AdaptiveSizeClassedChunk[] Slots => (AdaptiveSizeClassedChunk[])typeof(AdaptiveThreadLocalChunkCache)
+        internal SizeClassedChunk[] Slots => (SizeClassedChunk[])typeof(ThreadLocalSizeClassedChunkCache)
             .GetField("_chunks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Cache);
         public void Dispose()
         {
@@ -132,7 +133,7 @@ public class AdaptiveThreadLocalChunkCacheTest
         Assert.Equal(16, f.Cache.RingLength);
         // Purge selects one, 8 remain — all should be retrievable
         Assert.NotNull(f.Cache.ForcePurge());
-        var selected = new HashSet<AdaptiveChunk>();
+        var selected = new HashSet<Chunk>();
         for (int i = 0; i < 8; i++) Assert.True(selected.Add(f.Cache.PollChunk(0)));
         Assert.Null(f.Cache.PollChunk(0)); Assert.Equal(0, f.Cache.Count);
     }

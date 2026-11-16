@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -283,7 +284,7 @@ public sealed class ByteBufInputStream : Stream
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fieldSize);
         int available = Available;
-        if (fieldSize > available) throw new EndOfStreamException($"Needs {fieldSize} bytes, but only {available} remain.");
+        if (fieldSize > available) throw new EndOfStreamException(string.Create(CultureInfo.InvariantCulture, $"Needs {fieldSize} bytes, but only {available} remain."));
     }
 
     private void ThrowIfClosed() => ObjectDisposedException.ThrowIf(_closed, this);

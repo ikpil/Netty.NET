@@ -24,6 +24,7 @@ using Netty.NET.Common.Concurrent;
 using Netty.NET.Resolver;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Local;
 using Netty.NET.Transport.Channels.Sockets;
 
@@ -35,19 +36,19 @@ public class BootstrapResolutionSourceTest
     [Fact(Timeout = 10000)]
     public async Task TestCancelDuringAddressResolutionClosesChannel()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var resolver = new PendingResolverGroup();
         using var cancellation = new CancellationTokenSource();
-        TcpSocketChannel channel = null;
+        NioSocketChannel channel = null;
         Task<IChannel> connecting = null;
         try
         {
-            var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => channel = new TcpSocketChannel())
+            var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => channel = new NioSocketChannel())
                 .Resolver(resolver).Handler(new ChannelInboundHandlerAdapter());
             connecting = bootstrap.ConnectAsync(new DnsEndPoint("netty.io", 443), cancellationToken: cancellation.Token);
             await resolver.Started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             cancellation.Cancel();
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
             Assert.NotNull(resolver.Producer);
             Assert.False(resolver.Producer.Task.IsCompleted);
@@ -67,7 +68,7 @@ public class BootstrapResolutionSourceTest
     [Fact(Timeout = 10000)]
     public async Task TestCancelBeforeRegistrationDoesNotResolveAddress()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         using var resolver = new PendingResolverGroup();
         using var cancellation = new CancellationTokenSource();
         using var release = new ManualResetEventSlim();
@@ -82,7 +83,7 @@ public class BootstrapResolutionSourceTest
             var connecting = bootstrap.ConnectAsync(LocalAddress.ANY, cancellationToken: cancellation.Token);
             cancellation.Cancel();
             release.Set();
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
             Assert.Equal(0, resolver.Count);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connecting);
@@ -93,8 +94,8 @@ public class BootstrapResolutionSourceTest
     [Fact]
     public async Task TestGetResolverFailed()
     {
-        var groupA = new DefaultEventLoopGroup(1);
-        var groupB = new DefaultEventLoopGroup(1);
+        var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+        var groupB = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         using var resolver = new FailingResolverGroup();
         IChannel server = null;
         LocalChannel channel = null;
@@ -109,7 +110,7 @@ public class BootstrapResolutionSourceTest
             // Should fail with the IllegalStateException.
             var error = await Assert.ThrowsAsync<InvalidOperationException>(() => connecting.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             Assert.IsType<TestException>(error.InnerException);
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
         }
         finally

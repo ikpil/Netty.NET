@@ -130,7 +130,7 @@ public partial class DefaultByteBufAllocatorTest
         Assert.Equal(16384, Property<int>(Property<object>(allocator, "Metric"), "ChunkSize"));
         Assert.Equal(256, DefaultSetting<int>(scope, "DefaultSmallCacheSize"));
         object explicitAllocator = scope.Track(Activator.CreateInstance(scope.Type("PooledByteBufAllocator"),
-            false, true, true, 8192, 9, 0, null, 0, 0, 32768, 8192, TimeSpan.Zero));
+            false, true, true, 8192, 9, 0, 0, null, 0, null, 32768, 8192, TimeSpan.Zero));
         Assert.Equal(4194304, Property<int>(Property<object>(explicitAllocator, "Metric"), "ChunkSize"));
         Assert.Equal(0, Property<int>(Property<object>(explicitAllocator, "Metric"), "SmallCacheSize"));
     }

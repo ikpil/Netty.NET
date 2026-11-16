@@ -17,6 +17,7 @@
 using System;
 using System.Net;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels;
 
@@ -38,9 +39,14 @@ public class DefaultAddressedEnvelope<T, TAddress> : IAddressedEnvelope<T, TAddr
      */
     public DefaultAddressedEnvelope(T message, TAddress recipient, TAddress sender = null)
     {
-        ArgumentNullException.ThrowIfNull(message);
+        if (message == null)
+        {
+            throw new ArgumentNullException("message");
+        }
         if (recipient == null && sender == null)
-            throw new ArgumentNullException(nameof(recipient));
+        {
+            throw new ArgumentNullException("recipient and sender");
+        }
         Content = message;
         Recipient = recipient;
         Sender = sender;
@@ -48,12 +54,26 @@ public class DefaultAddressedEnvelope<T, TAddress> : IAddressedEnvelope<T, TAddr
     public T Content { get; }
     public TAddress Sender { get; }
     public TAddress Recipient { get; }
-    public int ReferenceCount => Content is IReferenceCounted counted ? counted.ReferenceCount : 1;
+    public int RefCnt => Content is IReferenceCounted counted ? counted.RefCnt : 1;
     public IReferenceCounted Retain() { ReferenceCountUtil.Retain(Content); return this; }
     public IReferenceCounted Retain(int increment) { ReferenceCountUtil.Retain(Content, increment); return this; }
     public bool Release() => ReferenceCountUtil.Release(Content);
     public bool Release(int decrement) => ReferenceCountUtil.Release(Content, decrement);
     public IReferenceCounted Touch() { ReferenceCountUtil.Touch(Content); return this; }
     public IReferenceCounted Touch(object hint) { ReferenceCountUtil.Touch(Content, hint); return this; }
-    public override string ToString() => Sender == null ? $"{GetType().Name}(=> {Recipient}, {Content})" : $"{GetType().Name}({Sender} => {Recipient}, {Content})";
+    // CLR: Java concatenation renders a null recipient as "null".
+    public override string ToString()
+    {
+        string recipient = Recipient?.ToString() ?? "null";
+        if (Sender != null)
+        {
+            return StringUtil.SimpleClassName(this) +
+                    '(' + Sender + " => " + recipient + ", " + Content + ')';
+        }
+        else
+        {
+            return StringUtil.SimpleClassName(this) +
+                    "(=> " + recipient + ", " + Content + ')';
+        }
+    }
 }

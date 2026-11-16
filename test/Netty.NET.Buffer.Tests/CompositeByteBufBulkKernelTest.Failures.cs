@@ -62,15 +62,15 @@ public partial class CompositeByteBufBulkKernelTest
             }
             else if (operation == 1) { a[19] = peerBytes[2]; a[20] = peerBytes[3]; }
             else if (!fixedComposite)
-                Assert.All(observation.Visits, visit => Assert.Equal(0, visit.Other.ReferenceCount));
+                Assert.All(observation.Visits, visit => Assert.Equal(0, visit.Other.RefCnt));
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray()); Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(peerBytes, peer.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(1, owner.ReferenceCount); Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
         }
         finally
         {
-            if (owner?.ReferenceCount > 0) owner.Release();
-            if (first.ReferenceCount > 0) first.Release(); if (second.ReferenceCount > 0) second.Release(); peer.Release();
+            if (owner?.RefCnt > 0) owner.Release();
+            if (first.RefCnt > 0) first.Release(); if (second.RefCnt > 0) second.Release(); peer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -100,14 +100,14 @@ public partial class CompositeByteBufBulkKernelTest
             int destination = fixedComposite ? 13 : 18;
             Assert.Throws<ProbeFailure>(() => { if (relative) owner.ReadBytes(first, destination, 4); else owner.GetBytes(14, first, destination, 4); });
             Assert.Equal(2, observation.Visits.Count);
-            Assert.All(observation.Visits, visit => { Assert.NotSame(first, visit.Other); Assert.Equal(0, visit.Other.ReferenceCount); });
+            Assert.All(observation.Visits, visit => { Assert.NotSame(first, visit.Other); Assert.Equal(0, visit.Other.RefCnt); });
             Assert.Equal(relative ? 14 : 1, owner.ReaderIndex); Assert.Equal(relative ? 18 : 2, owner.WriterIndex);
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray()); Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
         }
         finally
         {
-            if (owner?.ReferenceCount > 0) owner.Release();
-            if (first.ReferenceCount > 0) first.Release(); if (second.ReferenceCount > 0) second.Release();
+            if (owner?.RefCnt > 0) owner.Release();
+            if (first.RefCnt > 0) first.Release(); if (second.RefCnt > 0) second.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }

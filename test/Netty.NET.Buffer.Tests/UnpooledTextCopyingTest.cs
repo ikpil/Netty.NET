@@ -71,7 +71,7 @@ public class UnpooledTextCopyingTest
             Assert.Equal(int.MaxValue, copy.MaxCapacity);
             Assert.Equal(0, copy.ReaderIndex);
             Assert.Equal(expected.Length, copy.WriterIndex);
-            Assert.Equal(1, copy.ReferenceCount);
+            Assert.Equal(1, copy.RefCnt);
             Assert.Equal(expected, copy.ReadableMemory.ToArray());
             copy.WriteByte(0x7f);
             Assert.Equal(expected.Length + 1, copy.WriterIndex);
@@ -79,18 +79,7 @@ public class UnpooledTextCopyingTest
             Assert.Equal(0x7f, copy.GetByte(expected.Length));
         }
         finally { Assert.True(copy.Release()); }
-        Assert.Equal(0, copy.ReferenceCount);
-    }
-
-    [Theory]
-    [InlineData("Some UTF_8 like äÄ∏ŒŒ", 0)]
-    [InlineData("Some US_ASCII", 6)]
-    [InlineData("Some ISO_8859_1", 5)]
-    public void OriginalCopiedBufferCharSequenceScenarios(string text, int kind)
-    {
-        ByteBuf copy = Unpooled.CopiedBuffer(text, Encoder(kind));
-        try { Assert.Equal(text, copy.GetString(Encoder(kind))); }
-        finally { copy.Release(); }
+        Assert.Equal(0, copy.RefCnt);
     }
 
     [Fact]
@@ -107,17 +96,17 @@ public class UnpooledTextCopyingTest
                 owner.AsSpan(0, owner.Capacity));
             input.CopyTo(borrowed);
             nativeCopy = Unpooled.CopiedBuffer(borrowed.Slice(1, 4), Encoding.UTF8);
-            Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt);
             Assert.Equal(0, owner.ReaderIndex);
             Assert.Equal(0, owner.WriterIndex);
             Array.Fill(input, 'X');
             borrowed.Fill('Y');
             Assert.True(owner.Release());
             owner = null;
-            Assert.Equal("Aé😀", arrayCopy.GetString(Encoding.UTF8));
-            Assert.Equal("Aé😀", nativeCopy.GetString(Encoding.UTF8));
+            Assert.Equal("Aé😀", arrayCopy.ToString(Encoding.UTF8));
+            Assert.Equal("Aé😀", nativeCopy.ToString(Encoding.UTF8));
             arrayCopy.SetByte(0, 'Z');
-            Assert.Equal("Aé😀", nativeCopy.GetString(Encoding.UTF8));
+            Assert.Equal("Aé😀", nativeCopy.ToString(Encoding.UTF8));
             Assert.All(input, c => Assert.Equal('X', c));
         }
         finally { owner?.Release(); nativeCopy?.Release(); arrayCopy.Release(); }

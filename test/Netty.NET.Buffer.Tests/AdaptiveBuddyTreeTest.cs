@@ -16,17 +16,47 @@
 
 using System;
 using System.Collections.Generic;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
+// The buddy tree lives in BuddyChunk, as in the source. These cases drive it through real
+// reservations: a return goes through releaseSegment's packing, the free list and accept().
 public class AdaptiveBuddyTreeTest
 {
+    private sealed class Tree : IDisposable
+    {
+        private readonly Dictionary<int, AdaptiveChunkAllocation> _live = new();
+        internal readonly ChunkRegistry Registry = new();
+        internal readonly BuddyChunk Owner;
+        internal Tree(int capacity) => Owner = new BuddyChunk(new UnpooledHeapByteBuf(capacity, capacity), Registry);
+        internal int RemainingCapacity => Owner.RemainingCapacity;
+        internal int TryAllocate(int size)
+        {
+            AdaptiveChunkAllocation allocation = Owner.TryAllocate(size);
+            if (allocation == null) return -1;
+            Assert.Equal(size, allocation.Length); _live.Add(allocation.Offset, allocation);
+            return allocation.Offset;
+        }
+        internal void Free(int offset, int size)
+        {
+            Assert.True(_live.Remove(offset, out var allocation)); Assert.Equal(size, allocation.Length);
+            allocation.Release(); Assert.True(Owner.HasUnprocessedFreelistEntries);
+            Owner.ProcessFreelistEntries(); Assert.False(Owner.HasUnprocessedFreelistEntries);
+        }
+        public void Dispose()
+        {
+            foreach (var allocation in _live.Values) allocation.Release();
+            Owner.Dispose(); Assert.True(Owner.IsDeallocated); Assert.Equal(0, Registry.TotalCapacity);
+        }
+    }
+
     [Theory]
     [InlineData(32768)] [InlineData(65536)] [InlineData(131072)]
     [InlineData(262144)] [InlineData(1048576)] [InlineData(8388608)]
     public void ExhaustionFragmentationAndWholeChunkCoalescence(int capacity)
     {
-        var tree = new AdaptiveBuddyTree(capacity); int unit = AdaptiveBuddyTree.MinBuddySize;
+        using var tree = new Tree(capacity); int unit = BuddyChunk.MIN_BUDDY_SIZE;
         for (int offset = 0; offset < capacity; offset += unit) Assert.Equal(offset, tree.TryAllocate(unit));
         Assert.Equal(-1, tree.TryAllocate(unit)); Assert.Equal(0, tree.RemainingCapacity);
         for (int offset = 0; offset < capacity; offset += 2 * unit) tree.Free(offset, unit);
@@ -38,7 +68,7 @@ public class AdaptiveBuddyTreeTest
     [Fact]
     public void MixedSizeClaimsKeepUnrelatedSiblingsReserved()
     {
-        var t = new AdaptiveBuddyTree(262144);
+        using var t = new Tree(262144);
         Assert.Equal(0, t.TryAllocate(131072)); Assert.Equal(131072, t.TryAllocate(65536)); Assert.Equal(196608, t.TryAllocate(65536));
         t.Free(0, 131072); Assert.Equal(-1, t.TryAllocate(262144));
         Assert.Equal(0, t.TryAllocate(65536)); Assert.Equal(65536, t.TryAllocate(65536));
@@ -52,8 +82,8 @@ public class AdaptiveBuddyTreeTest
     [InlineData(8388608, 0)] [InlineData(8388608, 941)]
     public void SeededAllocationsMatchAnIndependentAlignedIntervalModel(int capacity, int seed)
     {
-        var t = new AdaptiveBuddyTree(capacity); var random = new Random(seed);
-        bool[] occupied = new bool[capacity / AdaptiveBuddyTree.MinBuddySize]; var live = new List<(int Offset, int Size)>();
+        using var t = new Tree(capacity); var random = new Random(seed);
+        bool[] occupied = new bool[capacity / BuddyChunk.MIN_BUDDY_SIZE]; var live = new List<(int Offset, int Size)>();
         for (int step = 0; step < 4096; step++)
         {
             if (live.Count > 0 && random.Next(3) == 0)
@@ -83,36 +113,53 @@ public class AdaptiveBuddyTreeTest
     [InlineData(1048576)] [InlineData(2097152)] [InlineData(4194304)] [InlineData(8388608)]
     public void PackedFreeSegmentsRoundTripAtEverySupportedTreeLevel(int size)
     {
+        // releaseSegment packs every offset of this level; remainingCapacity unpacks the sizes and
+        // accept() unpacks the offsets before the whole 8 MiB chunk can be claimed again.
+        using var t = new Tree(8388608); var live = new List<AdaptiveChunkAllocation>();
         for (int offset = 0; offset <= 8388608 - size; offset += size)
         {
-            int packed = AdaptiveBuddyTree.PackFreeSegment(offset, size);
-            Assert.Equal(size, AdaptiveBuddyTree.UnpackSize(packed)); Assert.Equal(offset, AdaptiveBuddyTree.UnpackOffset(packed));
+            AdaptiveChunkAllocation allocation = t.Owner.TryAllocate(size);
+            Assert.Equal(offset, allocation.Offset); live.Add(allocation);
         }
+        Assert.Equal(0, t.RemainingCapacity);
+        foreach (var allocation in live) allocation.Release();
+        Assert.True(t.Owner.HasUnprocessedFreelistEntries); Assert.Equal(8388608, t.RemainingCapacity);
+        Assert.Contains("free list: " + live.Count, t.Owner.ToString());
+        t.Owner.ProcessFreelistEntries(); Assert.False(t.Owner.HasUnprocessedFreelistEntries);
+        Assert.Equal(8388608, t.RemainingCapacity); Assert.Equal(0, t.TryAllocate(8388608)); t.Free(0, 8388608);
     }
     [Fact]
     public void InvalidAndDuplicateReturnsPreserveLiveReservations()
     {
-        var t = new AdaptiveBuddyTree(131072); Assert.Equal(0, t.TryAllocate(65536));
-        Assert.Throws<InvalidOperationException>(() => t.Free(0, 131072));
-        Assert.Throws<InvalidOperationException>(() => t.Free(0, 32768));
-        Assert.Throws<ArgumentOutOfRangeException>(() => t.Free(1, 65536));
-        Assert.Throws<ArgumentOutOfRangeException>(() => t.Free(131072, 65536));
+        // Real returns always describe a live reservation, so mismatched returns go straight to
+        // unreserveMatchingBuddy; it rejects them before clearing any claim.
+        using var t = new Tree(131072); Assert.Equal(0, t.TryAllocate(65536));
+        Assert.Throws<InvalidOperationException>(() => t.Owner.UnreserveMatchingBuddy(1, 131072, 0, 0));
+        Assert.Throws<InvalidOperationException>(() => t.Owner.UnreserveMatchingBuddy(1, 32768, 0, 0));
+        Assert.Throws<InvalidOperationException>(() => t.Owner.UnreserveMatchingBuddy(1, 65536, 1, 0));
+        Assert.Throws<InvalidOperationException>(() => t.Owner.UnreserveMatchingBuddy(1, 65536, 131072, 0));
         Assert.Equal(65536, t.RemainingCapacity); Assert.Equal(65536, t.TryAllocate(65536));
-        t.Free(0, 65536); Assert.Throws<InvalidOperationException>(() => t.Free(0, 65536));
+        t.Free(0, 65536); Assert.Throws<InvalidOperationException>(() => t.Owner.UnreserveMatchingBuddy(1, 65536, 0, 0));
         Assert.Equal(65536, t.RemainingCapacity); t.Free(65536, 65536); Assert.Equal(0, t.TryAllocate(131072));
         t.Free(0, 131072);
     }
     [Fact]
-    public void ShapeAndPackingValidationKeepTheByteFlagRepresentationBounded()
+    public void ShapeValidationKeepsTheByteFlagRepresentationBounded()
     {
-        foreach (int size in new[] { -1, 0, 32767, 32769, int.MaxValue })
+        foreach (int capacity in new[] { 0, 32767, 32769, 131073, 16777216 })
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new AdaptiveBuddyTree(size));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new AdaptiveBuddyTree(131072).TryAllocate(size));
+            var storage = new UnpooledHeapByteBuf(capacity, capacity); var registry = new ChunkRegistry();
+            try
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => new BuddyChunk(storage, registry));
+                Assert.Equal(1, storage.RefCnt); Assert.Equal(0, registry.TotalCapacity);
+            }
+            finally { storage.Release(); }
         }
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AdaptiveBuddyTree(16777216));
-        Assert.Throws<ArgumentOutOfRangeException>(() => AdaptiveBuddyTree.PackFreeSegment(1, 32768));
-        Assert.Throws<ArgumentOutOfRangeException>(() => AdaptiveBuddyTree.PackFreeSegment(8388608, 32768));
-        Assert.Throws<ArgumentOutOfRangeException>(() => AdaptiveBuddyTree.PackFreeSegment(0, 16777216));
+        using var t = new Tree(131072);
+        // Sizes that are not a claimable power of two find no buddy, as the source's search does.
+        foreach (int size in new[] { -1, 0, 32767, 32769, 98304, int.MaxValue })
+            Assert.Equal(-1, t.TryAllocate(size));
+        Assert.Equal(131072, t.RemainingCapacity); Assert.Equal(0, t.TryAllocate(131072)); t.Free(0, 131072);
     }
 }

@@ -67,7 +67,7 @@ public class ByteBufAsciiCopyTest
             int start = mode == 2 ? 8 : 4;
             Assert.Equal(data, ByteBufUtil.GetBytes(b, start, 256));
             Assert.Equal(1, b.ReaderIndex); Assert.Equal(mode == 2 ? 4 : 260, b.WriterIndex);
-            Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt);
             b.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, b.ReaderIndex); Assert.Equal(4, b.WriterIndex);
             if (kind == 5) Assert.Equal(4, owner.WriterIndex);

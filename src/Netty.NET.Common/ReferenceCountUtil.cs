@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Globalization;
 using System.Threading;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -124,7 +125,7 @@ public static class ReferenceCountUtil
      * Returns reference count of a {@link ReferenceCounted} object. If object is not type of
      * {@link ReferenceCounted}, {@code -1} is returned.
      */
-    public static int GetReferenceCount(object msg) => msg is IReferenceCounted reference ? reference.ReferenceCount : -1;
+    public static int GetReferenceCount(object msg) => msg is IReferenceCounted reference ? reference.RefCnt : -1;
     /**
      * Releases the objects when the thread that called {@link #releaseLater(Object)} has been terminated.
      */
@@ -139,6 +140,6 @@ public static class ReferenceCountUtil
             }
             catch (Exception failure) { logger.Warn("Failed to release an object: {}", obj, failure); }
         }
-        public override string ToString() => StringUtil.SimpleClassName(obj) + ".release(" + decrement + ") refCnt: " + obj.ReferenceCount;
+        public override string ToString() => StringUtil.SimpleClassName(obj) + ".release(" + decrement.ToString(CultureInfo.InvariantCulture) + ") refCnt: " + obj.RefCnt.ToString(CultureInfo.InvariantCulture);
     }
 }

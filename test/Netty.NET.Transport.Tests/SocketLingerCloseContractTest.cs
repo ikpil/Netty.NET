@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -31,27 +32,29 @@ public class SocketLingerCloseContractTest
         Task repeat = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
         Assert.False(promise.IsCompleted);
         Assert.False(repeat.IsCompleted);
-        Assert.False(fixture.Channel.CloseCompletion.IsCompleted);
+        Assert.False(fixture.Channel.CloseFuture.IsCompleted);
         Assert.False(write.IsCompleted);
-        Assert.Equal(1, buf.ReferenceCount);
+        Assert.Equal(1, buf.RefCnt);
         Assert.Empty(fixture.Events);
         Assert.NotSame(Thread.CurrentThread, fixture.Channel.CloseThread);
         var rejected = Unpooled.Buffer(1).WriteByte(2);
-        Assert.Throws<IOException>(() => fixture.Channel.WriteAndFlushAsync(rejected, TestContext.Current.CancellationToken).GetAwaiter().GetResult());
-        Assert.Equal(0, rejected.ReferenceCount);
+        Assert.ThrowsAny<ClosedChannelException>(() => fixture.Channel.WriteAndFlushAsync(rejected, TestContext.Current.CancellationToken).GetAwaiter().GetResult());
+        Assert.Equal(0, rejected.RefCnt);
         bool ran = false;
         fixture.Loop.Execute(() => ran = true);
         fixture.Loop.RunNow();
         Assert.True(ran);
 
         fixture.Channel.AllowClose.Set();
-        fixture.PumpUntil(() => promise.IsCompleted && repeat.IsCompleted);
+        // doClose0 completes the Tasks on the close executor; the owner then fails queued writes and runs the
+        // deferred deregistration (AbstractUnsafe.close/deregister).
+        fixture.PumpUntil(() => promise.IsCompleted && repeat.IsCompleted && write.IsCompleted && fixture.Events.Contains("removed"));
         if (fail) Assert.Same(cause, Assert.Throws<IOException>(() => promise.GetAwaiter().GetResult()));
         else Assert.True(promise.IsCompletedSuccessfully);
         Assert.True(repeat.IsCompletedSuccessfully);
-        Assert.True(fixture.Channel.CloseCompletion.IsCompletedSuccessfully);
-        Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.True(fixture.Channel.CloseFuture.IsCompletedSuccessfully);
+        Assert.ThrowsAny<ClosedChannelException>(() => write.GetAwaiter().GetResult());
+        Assert.Equal(0, buf.RefCnt);
         Assert.Equal(1, fixture.Channel.CloseCalls);
         Assert.Equal(new[] { "inactive", "unregistered", "removed" }, fixture.Events);
     }
@@ -67,13 +70,13 @@ public class SocketLingerCloseContractTest
         fixture.Loop.RunNow();
         fixture.WaitForClose();
         Assert.False(termination.IsCompleted);
-        Assert.False(fixture.Channel.CloseCompletion.IsCompleted);
+        Assert.False(fixture.Channel.CloseFuture.IsCompleted);
         Assert.Empty(fixture.Events);
         if (immediate) Assert.Throws<Netty.NET.Common.Concurrent.RejectedExecutionException>(() => fixture.Loop.Execute(() => { }));
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => termination.IsCompleted);
         Assert.True(termination.IsCompletedSuccessfully);
-        Assert.True(fixture.Channel.CloseCompletion.IsCompletedSuccessfully);
+        Assert.True(fixture.Channel.CloseFuture.IsCompletedSuccessfully);
         Assert.Equal(new[] { "inactive", "unregistered", "removed" }, fixture.Events);
         Assert.Equal(1, fixture.Channel.CloseCalls);
     }
@@ -84,16 +87,27 @@ public class SocketLingerCloseContractTest
     public void ExplicitDeregistrationDefersRemovalUntilNativeCloseCompletes(bool beforeClose)
     {
         using var fixture = new Fixture();
-        if (beforeClose) fixture.Channel.DeregisterAsync(TestContext.Current.CancellationToken).GetAwaiter().GetResult();
+        // AbstractUnsafe.deregister runs later on the owner (#4435), so pump until its Task completes.
+        if (beforeClose) Deregister(fixture);
         Task promise = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
         fixture.WaitForClose();
-        if (!beforeClose) fixture.Channel.DeregisterAsync(TestContext.Current.CancellationToken).GetAwaiter().GetResult();
+        if (!beforeClose) Deregister(fixture);
         Assert.Equal(new[] { "unregistered" }, fixture.Events);
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => promise.IsCompleted);
         Assert.True(promise.IsCompletedSuccessfully);
-        Assert.Equal(new[] { "unregistered", "inactive", "removed" }, fixture.Events);
+        // fireChannelInactiveAndDeregister only reaches channelInactive through a registered channel's deregister,
+        // so an already deregistered channel fires no inactive event. CLR: its pipeline is still removed.
+        fixture.PumpUntil(() => fixture.Events.Contains("removed"));
+        Assert.Equal(new[] { "unregistered", "removed" }, fixture.Events);
         Assert.Equal(1, fixture.Channel.CloseCalls);
+    }
+
+    private static void Deregister(Fixture fixture)
+    {
+        Task deregister = fixture.Channel.DeregisterAsync(TestContext.Current.CancellationToken);
+        fixture.PumpUntil(() => deregister.IsCompleted);
+        deregister.GetAwaiter().GetResult();
     }
 
     [Fact]
@@ -105,7 +119,7 @@ public class SocketLingerCloseContractTest
         fixture.Channel.CloseForcibly();
         Assert.Equal(1, fixture.Channel.CloseCalls);
         Assert.False(promise.IsCompleted);
-        Assert.False(fixture.Channel.CloseCompletion.IsCompleted);
+        Assert.False(fixture.Channel.CloseFuture.IsCompleted);
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => promise.IsCompleted);
         Assert.True(promise.IsCompletedSuccessfully);
@@ -142,9 +156,9 @@ public class SocketLingerCloseContractTest
         await peer.ConnectAsync(listener.LocalEndPoint, cancellation);
         var channel = new Probe(await listener.AcceptAsync(cancellation));
         channel.Config.SetAutoRead(false).SetOption(ChannelOption.SO_LINGER, 1);
-        var loop = deregister
-            ? new DefaultEventLoop(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventLoop))).Execute, true)
-            : new DefaultEventLoop();
+        // NioIoHandler supports changing threads, so the loop supports suspension.
+        var loop = new SingleThreadIoEventLoop(null, new DefaultThreadFactory(typeof(SingleThreadIoEventLoop)),
+            NioIoHandler.NewFactory());
         var removed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         channel.Pipeline.AddLast(new Observe(loop, new List<string>(), removed));
         Task Shutdown() => shutdownMode == 2 ? loop.StopAsync()
@@ -154,7 +168,7 @@ public class SocketLingerCloseContractTest
             await channel.RegisterAsync(loop, cancellation);
             Thread owner = await loop.SubmitAsync(() => Thread.CurrentThread, cancellation);
             if (deregister) await channel.DeregisterAsync(cancellation);
-            Task promise = closeFirst ? channel.CloseAsync(cancellation) : channel.CloseCompletion;
+            Task promise = closeFirst ? channel.CloseAsync(cancellation) : channel.CloseFuture;
             Task termination = shutdownMode == 0 ? Task.CompletedTask : !closeFirst ? Shutdown() : null;
             Assert.True(channel.CloseEntered.Wait(TimeSpan.FromSeconds(3), cancellation));
             Assert.False(promise.IsCompleted);
@@ -174,7 +188,8 @@ public class SocketLingerCloseContractTest
             channel.AllowClose.Set();
             await promise.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
             await termination.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
-            Assert.True(removed.Task.IsCompletedSuccessfully);
+            // The close Task completes in doClose0; handler removal follows the deferred deregistration.
+            await removed.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
             Assert.Equal(1, channel.CloseCalls);
         }
         finally
@@ -184,35 +199,6 @@ public class SocketLingerCloseContractTest
         }
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void AProducerBorrowOutlivesOffloadedCloseAndOptionalLoopTermination(bool stop)
-    {
-        using var fixture = new Fixture();
-        var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Channel.PendingWrite = completion.Task;
-        var buf = Unpooled.Buffer(1).WriteByte(1);
-        Task write = fixture.Channel.WriteAndFlushAsync(buf, TestContext.Current.CancellationToken);
-        Assert.Equal(2, buf.ReferenceCount);
-        Task promise = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
-        fixture.WaitForClose();
-        Assert.Equal(2, buf.ReferenceCount);
-        fixture.Channel.AllowClose.Set();
-        fixture.PumpUntil(() => promise.IsCompleted);
-        Assert.True(promise.IsCompletedSuccessfully);
-        Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
-        Assert.Equal(1, buf.ReferenceCount);
-        if (stop)
-        {
-            Task termination = fixture.Loop.StopAsync();
-            fixture.PumpUntil(() => termination.IsCompleted);
-        }
-        completion.SetResult(1);
-        Assert.True(SpinWait.SpinUntil(() => buf.ReferenceCount == 0, TimeSpan.FromSeconds(3)));
-        Assert.Equal(1, fixture.Channel.CloseCalls);
-    }
-
     [Fact]
     public void ARejectedCloseSchedulerStillClosesAndReleasesTheOwnerReservation()
     {
@@ -220,10 +206,10 @@ public class SocketLingerCloseContractTest
         fixture.Channel.CloseExecutor = new RejectScheduler();
         fixture.Channel.AllowClose.Set();
         Task promise = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
-        fixture.PumpUntil(() => promise.IsCompleted);
+        fixture.PumpUntil(() => promise.IsCompleted && fixture.Events.Contains("removed"));
         Assert.Throws<TaskSchedulerException>(() => promise.GetAwaiter().GetResult());
         Assert.Same(Thread.CurrentThread, fixture.Channel.CloseThread);
-        Assert.True(fixture.Channel.CloseCompletion.IsCompletedSuccessfully);
+        Assert.True(fixture.Channel.CloseFuture.IsCompletedSuccessfully);
         Assert.Equal(1, fixture.Channel.CloseCalls);
         Assert.Equal(new[] { "inactive", "unregistered", "removed" }, fixture.Events);
     }
@@ -245,7 +231,7 @@ public class SocketLingerCloseContractTest
     {
         private readonly Socket _peer;
         internal readonly Probe Channel;
-        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread);
+        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread, NioIoHandler.NewFactory());
         internal readonly List<string> Events = new();
         internal Fixture(int soLinger = 1)
         {
@@ -278,7 +264,7 @@ public class SocketLingerCloseContractTest
         }
     }
 
-    private sealed class Probe(Socket socket) : Netty.NET.Transport.Channels.Sockets.TcpSocketChannel(socket)
+    private sealed class Probe(Socket socket) : Netty.NET.Transport.Channels.Sockets.NioSocketChannel(socket)
     {
         internal readonly ManualResetEventSlim CloseEntered = new();
         internal readonly ManualResetEventSlim AllowClose = new();
@@ -286,11 +272,8 @@ public class SocketLingerCloseContractTest
         internal int CloseCalls;
         internal Exception Failure;
         internal TaskScheduler CloseExecutor;
-        internal Task<int> PendingWrite;
-        internal override bool SupportsGatheringWrites => true;
-        internal void DisposeSocket() => Socket.Dispose();
+        internal void DisposeSocket() => JavaChannel().Dispose();
         protected override TaskScheduler PrepareToClose() => CloseExecutor ?? base.PrepareToClose();
-        protected override Task<int> DoWriteBytes(ByteBuf buf) => PendingWrite ?? base.DoWriteBytes(buf);
         protected override void DoClose()
         {
             Interlocked.Increment(ref CloseCalls);
@@ -314,11 +297,11 @@ public class SocketLingerCloseContractTest
 
     private sealed class Observe(IEventLoop loop, List<string> events, TaskCompletionSource removed = null) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelInactive(ChannelHandlerContext ctx)
+        public override void ChannelInactive(IChannelHandlerContext ctx)
         { Assert.True(loop.InEventLoop()); events.Add("inactive"); ctx.FireChannelInactive(); }
-        public override void ChannelUnregistered(ChannelHandlerContext ctx)
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
         { Assert.True(loop.InEventLoop()); events.Add("unregistered"); ctx.FireChannelUnregistered(); }
-        public override void HandlerRemoved(ChannelHandlerContext ctx)
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
         { Assert.True(loop.InEventLoop()); events.Add("removed"); removed?.SetResult(); }
     }
 }

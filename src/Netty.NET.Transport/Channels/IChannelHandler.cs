@@ -174,20 +174,37 @@ public interface IChannelHandler
     /**
      * Gets called after the {@link ChannelHandler} was added to the actual context and it's ready to handle events.
      */
-    void HandlerAdded(ChannelHandlerContext context);
+    void HandlerAdded(IChannelHandlerContext ctx);
     /**
      * Gets called after the {@link ChannelHandler} was removed from the actual context and it doesn't handle events
      * anymore.
      */
-    void HandlerRemoved(ChannelHandlerContext context);
+    void HandlerRemoved(IChannelHandlerContext ctx);
     /**
      * Gets called if a {@link Throwable} was thrown.
      *
      * @deprecated if you want to handle this event you should implement {@link ChannelInboundHandler} and
      * implement the method there.
      */
-    void ExceptionCaught(ChannelHandlerContext context, Exception cause);
+    void ExceptionCaught(IChannelHandlerContext ctx, Exception cause);
 }
 
+/**
+ * Indicates that the same instance of the annotated {@link ChannelHandler}
+ * can be added to one or more {@link ChannelPipeline}s multiple times
+ * without a race condition.
+ * <p>
+ * If this annotation is not specified, you have to create a new handler
+ * instance every time you add it to a pipeline because it has unshared
+ * state such as member variables.
+ * <p>
+ * This annotation is provided for documentation purpose, just like
+ * <a href="http://www.javaconcurrencyinpractice.com/annotations/doc/">the JCIP annotations</a>.
+ */
+// CLR: the nested Java annotation ChannelHandler.Sharable is the top-level attribute [Sharable]; Inherited = true
+// matches @Inherited (https://learn.microsoft.com/dotnet/api/system.attributeusageattribute.inherited).
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
-public sealed class SharableAttribute : Attribute { }
+public sealed class SharableAttribute : Attribute
+{
+    // no value
+}

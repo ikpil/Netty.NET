@@ -44,18 +44,16 @@ public class CompositeByteBufOwnershipTest
     {
         byte[] result = new byte[length]; buffer.GetBytes(index, result); return result;
     }
-    public static IEnumerable<object[]> Ranges()
+    public static IEnumerable<object[]> ReleaseOrders()
     {
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true })
-        foreach (int range in new[] { 0, 1, 2 })
-        foreach (bool rootFirst in new[] { false, true }) yield return [pooled, direct, range, rootFirst];
+        foreach (bool rootFirst in new[] { false, true }) yield return [pooled, direct, rootFirst];
     }
-    public static IEnumerable<object[]> ComponentCounts()
+    public static IEnumerable<object[]> Factories()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true })
-        foreach (int count in new[] { 1, 2 }) yield return [pooled, direct, count];
+        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
     public static IEnumerable<object[]> Removals()
     {
@@ -64,9 +62,31 @@ public class CompositeByteBufOwnershipTest
         foreach (int shape in new[] { 0, 1, 2 }) yield return [pooled, direct, shape];
     }
 
+    // CLR: heap/native pooled/unpooled factories and both root/composite release orders.
     [Theory]
-    [MemberData(nameof(Ranges))]
-    public void DecomposeMatchesTheOriginalWindowWithoutAcquiringReferences(bool pooled, bool direct, int range, bool rootFirst)
+    [MemberData(nameof(ReleaseOrders))]
+    public void TestDecomposeMultipleAcrossProviders(bool pooled, bool direct, bool rootFirst)
+    {
+        TestDecompose(pooled, direct, rootFirst, 150, 500, 3);
+    }
+
+    [Theory]
+    [MemberData(nameof(ReleaseOrders))]
+    public void TestDecomposeOneAcrossProviders(bool pooled, bool direct, bool rootFirst)
+    {
+        TestDecompose(pooled, direct, rootFirst, 310, 50, 1);
+    }
+
+    [Theory]
+    [MemberData(nameof(ReleaseOrders))]
+    public void TestDecomposeNoneAcrossProviders(bool pooled, bool direct, bool rootFirst)
+    {
+        TestDecompose(pooled, direct, rootFirst, 310, 0, 0);
+    }
+
+    // CLR: the root is an allocator buffer instead of wrappedBuffer(bytes); concatenated borrowed contents
+    // replace the temporary wrapping composite, and the decomposition acquires no references.
+    private static void TestDecompose(bool pooled, bool direct, bool rootFirst, int offset, int length, int expectedListSize)
     {
         using var s = new Storage(pooled, direct);
         ByteBuf root = s.Allocator.Buffer(1024, 1024);
@@ -78,19 +98,16 @@ public class CompositeByteBufOwnershipTest
             byte[] bytes = new byte[1024];
             Random.Shared.NextBytes(bytes);
             root.WriteBytes(bytes);
-            foreach ((int offset, int length) in new[] { (100, 200), (300, 400), (700, 100) })
+            foreach ((int sliceIndex, int sliceLength) in new[] { (100, 200), (300, 400), (700, 100) })
             {
-                ByteBuf component = root.RetainedSlice(offset, length);
+                ByteBuf component = root.RetainedSlice(sliceIndex, sliceLength);
                 components.Add(component); composite.AddComponent(component, true);
             }
-            (int start, int count, int expectedParts) = range switch
-            {
-                0 => (150, 500, 3), 1 => (310, 50, 1), _ => (310, 0, 0)
-            };
+            (int start, int count, int expectedParts) = (offset, length, expectedListSize);
             parts = composite.Decompose(start, count);
             Assert.Equal(expectedParts, parts.Count);
-            Assert.Equal(4, root.ReferenceCount);
-            Assert.All(components, component => Assert.Equal(pooled ? 1 : 4, component.ReferenceCount));
+            Assert.Equal(4, root.RefCnt);
+            Assert.All(components, component => Assert.Equal(pooled ? 1 : 4, component.RefCnt));
             var actual = new List<byte>();
             foreach (ByteBuf part in parts)
             {
@@ -122,25 +139,41 @@ public class CompositeByteBufOwnershipTest
             else
             {
                 Assert.True(composite.Release());
-                Assert.Equal(1, root.ReferenceCount);
-                if (pooled) Assert.All(parts, part => Assert.Equal(0, part.ReferenceCount));
-                else Assert.All(parts, part => Assert.Equal(1, part.ReferenceCount));
+                Assert.Equal(1, root.RefCnt);
+                if (pooled) Assert.All(parts, part => Assert.Equal(0, part.RefCnt));
+                else Assert.All(parts, part => Assert.Equal(1, part.RefCnt));
                 Assert.True(root.Release());
             }
-            Assert.Equal(0, root.ReferenceCount);
-            Assert.All(components, component => Assert.Equal(0, component.ReferenceCount));
-            Assert.All(parts, part => Assert.Equal(0, part.ReferenceCount));
+            Assert.Equal(0, root.RefCnt);
+            Assert.All(components, component => Assert.Equal(0, component.RefCnt));
+            Assert.All(parts, part => Assert.Equal(0, part.RefCnt));
         }
         finally
         {
-            if (composite.ReferenceCount > 0) composite.Release();
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+            if (composite.RefCnt > 0) composite.Release();
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
         }
     }
 
+    // CLR: the original pooled root plus heap/native unpooled shared-counter variants.
     [Theory]
-    [MemberData(nameof(ComponentCounts))]
-    public void DecomposeDelegatesReferenceOperationsToTheOriginalRetainedComponents(bool pooled, bool direct, int count)
+    [MemberData(nameof(Factories))]
+    public void TestDecomposeReturnNonUnwrappedBufferAcrossProviders(bool pooled, bool direct)
+    {
+        TestDecomposeReturnNonUnwrapped(pooled, direct, 1);
+    }
+
+    [Theory]
+    [MemberData(nameof(Factories))]
+    public void TestDecomposeReturnNonUnwrappedBuffers(bool pooled, bool direct)
+    {
+        TestDecomposeReturnNonUnwrapped(pooled, direct, 2);
+    }
+
+    // CLR: shared body of the two originals, which differ only in the number of retained slices
+    // (sliced = retainedSlice(100, 200) with decompose(0, 100), or also sliced2 = retainedSlice(400, 100)
+    // with decompose(100, 150)).
+    private static void TestDecomposeReturnNonUnwrapped(bool pooled, bool direct, int count)
     {
         using var s = new Storage(pooled, direct);
         ByteBuf root = s.Allocator.Buffer(1024).WriteZero(1024);
@@ -156,33 +189,33 @@ public class CompositeByteBufOwnershipTest
             }
             IReadOnlyList<ByteBuf> parts = composite.Decompose(count == 1 ? 0 : 100, count == 1 ? 100 : 150);
             Assert.Equal(count, parts.Count);
-            Assert.Equal(pooled ? 1 + count : 1 + 2 * count, root.ReferenceCount);
+            Assert.Equal(pooled ? 1 + count : 1 + 2 * count, root.RefCnt);
             for (int i = 0; i < count; ++i)
             {
-                Assert.Equal(components[i].ReferenceCount, parts[i].ReferenceCount);
-                Assert.Equal(pooled ? 2 : 1 + 2 * count, parts[i].ReferenceCount);
+                Assert.Equal(components[i].RefCnt, parts[i].RefCnt);
+                Assert.Equal(pooled ? 2 : 1 + 2 * count, parts[i].RefCnt);
             }
             // Consume the explicit Retain claim, not the composite's transferred claim.
             foreach (ByteBuf part in parts) part.Release();
             for (int i = 0; i < count; ++i)
-                Assert.Equal(components[i].ReferenceCount, parts[i].ReferenceCount);
-            Assert.All(components, component => Assert.Equal(pooled ? 1 : 1 + count, component.ReferenceCount));
+                Assert.Equal(components[i].RefCnt, parts[i].RefCnt);
+            Assert.All(components, component => Assert.Equal(pooled ? 1 : 1 + count, component.RefCnt));
             Assert.True(composite.Release());
-            Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(1, root.RefCnt);
             if (pooled)
                 foreach (ByteBuf part in parts)
                     Assert.Throws<IllegalReferenceCountException>(() => part.GetByte(0));
             else Assert.All(parts, part => Assert.Equal(0, part.GetByte(0)));
             Assert.True(root.Release());
-            Assert.All(parts, part => Assert.Equal(0, part.ReferenceCount));
-            Assert.All(components, component => Assert.Equal(0, component.ReferenceCount));
+            Assert.All(parts, part => Assert.Equal(0, part.RefCnt));
+            Assert.All(components, component => Assert.Equal(0, component.RefCnt));
         }
         finally
         {
-            if (composite.ReferenceCount > 0) composite.Release();
+            if (composite.RefCnt > 0) composite.Release();
             foreach (ByteBuf component in components)
-                if (pooled && component.ReferenceCount > 0) component.Release(component.ReferenceCount);
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+                if (pooled && component.RefCnt > 0) component.Release(component.RefCnt);
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
         }
     }
 
@@ -218,7 +251,7 @@ public class CompositeByteBufOwnershipTest
             for (int i = 0; i < count; ++i)
             {
                 bool removed = i >= removeAt && i < removeAt + removeCount;
-                Assert.Equal(removed ? 0 : 1, sources[i].ReferenceCount);
+                Assert.Equal(removed ? 0 : 1, sources[i].RefCnt);
                 if (removed) continue;
                 Assert.Equal(remainingIndex * 2, composite.ToByteIndex(remainingIndex));
                 Assert.Equal(remainingIndex, composite.ToComponentIndex(remainingIndex * 2));
@@ -231,7 +264,7 @@ public class CompositeByteBufOwnershipTest
             Assert.Same(composite, composite.RemoveComponents(composite.NumComponents, 0));
         }
         finally { composite.Release(); }
-        Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+        Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
     [Fact]

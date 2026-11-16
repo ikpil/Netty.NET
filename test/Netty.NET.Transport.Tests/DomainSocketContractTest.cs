@@ -6,6 +6,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -18,19 +19,19 @@ public class DomainSocketContractTest
     {
         DomainSocketSourceTest.RequireDomainSockets();
         var endpoint = DomainSocketSourceTest.NewAddress();
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var child = new ExchangeHandler();
         var clientHandler = new ExchangeHandler();
         var cancellation = TestContext.Current.CancellationToken;
         try
         {
-            var server = await new ServerBootstrap().Group(group).Channel<DomainServerSocketChannel>()
+            var server = await new ServerBootstrap().Group(group).Channel<NioServerDomainSocketChannel>()
                 .ChildOption(ChannelOption.ALLOW_HALF_CLOSURE, true).ChildHandler(child)
                 .BindAsync(endpoint, cancellation);
             Assert.True(File.Exists(endpoint.ToString()));
-            var client = (DomainSocketChannel)await new Bootstrap().Group(group).Channel<DomainSocketChannel>()
+            var client = (NioDomainSocketChannel)await new Bootstrap().Group(group).Channel<NioDomainSocketChannel>()
                 .Handler(clientHandler).ConnectAsync(endpoint, cancellationToken: cancellation);
-            var accepted = Assert.IsType<DomainSocketChannel>(await child.Active.Task.WaitAsync(cancellation));
+            var accepted = Assert.IsType<NioDomainSocketChannel>(await child.Active.Task.WaitAsync(cancellation));
             Assert.Same(server, accepted.Parent);
             Assert.Equal(endpoint.ToString(), client.RemoteAddress.ToString());
             Assert.Equal(endpoint.ToString(), accepted.LocalAddress.ToString());
@@ -52,15 +53,15 @@ public class DomainSocketContractTest
     {
         DomainSocketSourceTest.RequireDomainSockets();
         var endpoint = DomainSocketSourceTest.NewAddress();
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new ExchangeHandler();
         var cancellation = TestContext.Current.CancellationToken;
         try
         {
-            await new ServerBootstrap().Group(group).Channel<DomainServerSocketChannel>()
+            await new ServerBootstrap().Group(group).Channel<NioServerDomainSocketChannel>()
                 .ChildHandler(accepted).BindAsync(endpoint, cancellation);
             await Assert.ThrowsAsync<SocketException>(() => new ServerBootstrap().Group(group)
-                .Channel<DomainServerSocketChannel>().ChildHandler(new ChannelInboundHandlerAdapter())
+                .Channel<NioServerDomainSocketChannel>().ChildHandler(new ChannelInboundHandlerAdapter())
                 .BindAsync(endpoint, cancellation));
             Assert.True(File.Exists(endpoint.ToString()));
             using var peer = DomainSocketSourceTest.NewSocket();
@@ -74,9 +75,9 @@ public class DomainSocketContractTest
     public async Task DomainOptionsDoNotApplyTcpOrIpControlsToTheSocket()
     {
         DomainSocketSourceTest.RequireDomainSockets();
-        var group = new DefaultEventLoopGroup(1);
-        var client = new DomainSocketChannel();
-        var server = new DomainServerSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var client = new NioDomainSocketChannel();
+        var server = new NioServerDomainSocketChannel();
         try
         {
             await group.RegisterAsync(client);
@@ -85,7 +86,7 @@ public class DomainSocketContractTest
             Assert.False(client.Config.TryGetOption(ChannelOption.IP_TOS, out _));
             Assert.False(server.Config.TryGetOption(ChannelOption.ALLOW_HALF_CLOSURE, out _));
             Assert.True(server.Config.TryGetOption(ChannelOption.SO_BACKLOG, out int defaultBacklog));
-            Assert.Equal(NetUtil.DefaultListenBacklog, defaultBacklog);
+            Assert.Equal(NetUtil.SOMAXCONN, defaultBacklog);
             Assert.True(server.Config.SetOption(ChannelOption.SO_BACKLOG, 32));
             Assert.True(server.Config.TryGetOption(ChannelOption.SO_BACKLOG, out int backlog));
             Assert.Equal(32, backlog);
@@ -100,9 +101,9 @@ public class DomainSocketContractTest
         internal readonly TaskCompletionSource<int> ByteRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource InputClosed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public override void ChannelActive(ChannelHandlerContext ctx) => Active.TrySetResult(ctx.Channel);
-        protected override void ChannelRead0(ChannelHandlerContext ctx, ByteBuf message) => ByteRead.TrySetResult(message.ReadByte());
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
+        public override void ChannelActive(IChannelHandlerContext ctx) => Active.TrySetResult(ctx.Channel);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) => ByteRead.TrySetResult(msg.ReadByte());
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             if (evt is ChannelInputShutdownEvent) InputClosed.TrySetResult();
         }

@@ -94,8 +94,8 @@ public class BootstrapCompletionSourceTest
     [Fact]
     public async Task TestAsyncResolutionSuccess()
     {
-        var groupA = new DefaultEventLoopGroup(1);
-        var groupB = new DefaultEventLoopGroup(1);
+        var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+        var groupB = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         using var resolver = new TestAddressResolverGroup(true);
         try
         {
@@ -112,8 +112,8 @@ public class BootstrapCompletionSourceTest
     [Fact]
     public async Task TestAsyncResolutionFailure()
     {
-        var groupA = new DefaultEventLoopGroup(1);
-        var groupB = new DefaultEventLoopGroup(1);
+        var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+        var groupB = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         using var resolver = new TestAddressResolverGroup(false);
         LocalChannel channel = null;
         try
@@ -126,21 +126,21 @@ public class BootstrapCompletionSourceTest
             // Should fail with the UnknownHostException.
             var failure = await Assert.ThrowsAsync<SocketException>(() => future.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             Assert.Equal(SocketError.HostNotFound, failure.SocketErrorCode);
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
         }
         finally { await groupA.StopAsync(); await groupB.StopAsync(); }
     }
-    private sealed class HeldRegistrationGroup : DefaultEventLoopGroup
+    private sealed class HeldRegistrationGroup : MultiThreadIoEventLoopGroup
     {
         internal readonly TaskCompletionSource Producer = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal HeldRegistrationGroup() : base(1) { }
+        internal HeldRegistrationGroup() : base(1, LocalIoHandler.NewFactory()) { }
         public override Task RegisterAsync(IChannel channel, CancellationToken token = default)
         { base.RegisterAsync(channel, token).GetAwaiter().GetResult(); return Producer.Task; }
     }
-    private sealed class QueuedRegistrationGroup : DefaultEventLoopGroup
+    private sealed class QueuedRegistrationGroup : MultiThreadIoEventLoopGroup
     {
-        internal QueuedRegistrationGroup() : base(1) { }
+        internal QueuedRegistrationGroup() : base(1, LocalIoHandler.NewFactory()) { }
         public override Task RegisterAsync(IChannel channel, CancellationToken token = default)
         {
             var producer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

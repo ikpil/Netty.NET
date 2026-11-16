@@ -17,12 +17,10 @@ namespace Netty.NET.Buffer.Tests;
 
 public class AdaptiveBigEndianHeapByteBufTest : AbstractAdaptiveByteBufTest
 {
-    public AdaptiveBigEndianHeapByteBufTest() => Init(new AdaptiveByteBufAllocator(false, false, Native));
-
     protected override ByteBuf Alloc(AdaptiveByteBufAllocator allocator, int length, int maxCapacity)
     {
-        ByteBuf result = allocator.HeapBuffer(length, maxCapacity);
-        Assert.False(result.IsDirect);
-        return result;
+        ByteBuf buffer = allocator.HeapBuffer(length, maxCapacity);
+        Assert.False(buffer.IsDirect);
+        return buffer;
     }
 }

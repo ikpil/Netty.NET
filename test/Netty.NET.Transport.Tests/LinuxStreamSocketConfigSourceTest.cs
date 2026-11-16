@@ -19,6 +19,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 using static Netty.NET.Transport.Tests.LinuxServerSocketConfigSourceTest;
 
@@ -65,7 +66,7 @@ public class LinuxStreamSocketConfigSourceTest
     });
 
     [Fact]
-    public Task TestTcpQuickAck() => WithChannel(channel =>
+    public Task TestTcpQickAck() => WithChannel(channel =>
     {
         Assert.True(channel.Config.SetOption(ChannelOption.TCP_QUICKACK, false));
         Assert.False(Get(channel.Config, ChannelOption.TCP_QUICKACK));
@@ -102,10 +103,10 @@ public class LinuxStreamSocketConfigSourceTest
     private static async Task WithChannel(Func<IChannel, Task> assert)
     {
         if (!OperatingSystem.IsLinux()) Assert.Skip("Linux socket options require Linux.");
-        var loop = new DefaultEventLoopGroup(1);
+        var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
-            var channel = await new Bootstrap().Group(loop).ChannelFactory(static () => new TcpSocketChannel())
+            var channel = await new Bootstrap().Group(loop).ChannelFactory(static () => new NioSocketChannel())
                 .Handler(new ChannelInboundHandlerAdapter()).BindAsync(new IPEndPoint(Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any, 0),
                     TestContext.Current.CancellationToken);
             await assert(channel);

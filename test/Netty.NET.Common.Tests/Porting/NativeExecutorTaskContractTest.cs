@@ -45,7 +45,7 @@ public class NativeExecutorTaskContractTest
         public override void Shutdown() => throw new NotSupportedException("Test harness has no worker lifecycle");
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
-        public override Task Termination =>
+        public override Task TerminationFuture =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
         public override bool AwaitTermination(TimeSpan timeout) =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
@@ -64,7 +64,7 @@ public class NativeExecutorTaskContractTest
             return _children[selection % _children.Length];
         }
         public override IEnumerable<IEventExecutor> Iterator() => _children;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override void Shutdown() { }
         public override bool IsShuttingDown() => false;
@@ -232,8 +232,8 @@ public class NativeExecutorTaskContractTest
             int calls = 0;
             Task queued = executor.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            Assert.Same(executor.Termination, executor.StopAsync());
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.True(queued.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await queued);
             Assert.Equal(0, calls);
@@ -313,7 +313,7 @@ public class NativeExecutorTaskContractTest
         public override bool IsShutdown() => underlying.IsShutdown();
         public override bool IsTerminated() => underlying.IsTerminated();
         public override void Shutdown() => underlying.Shutdown();
-        public override Task Termination => underlying.Termination;
+        public override Task TerminationFuture => underlying.TerminationFuture;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
             underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
         public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
@@ -342,8 +342,8 @@ public class NativeExecutorTaskContractTest
             Task first = child.SubmitAsync(() => { ++calls; });
             Task second = child.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            Assert.Same(executor.Termination, executor.StopAsync());
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.True(first.IsCanceled);
             Assert.True(second.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);

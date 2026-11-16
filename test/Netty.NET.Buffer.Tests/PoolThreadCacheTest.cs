@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
 using static Netty.NET.Buffer.Tests.AllocatorLeakDetectionTest;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -29,7 +30,9 @@ public class PoolThreadCacheTest
     private static PooledByteBufAllocator NewAllocator(int size = 4, int max = 32768, int trim = 8192,
         int arenas = 1, NativeMemoryAllocator native = null, int alignment = 0)
         => new(false, arenas, arenas, maxOrder: 4, directMemoryCacheAlignment: alignment, nativeAllocator: native,
-            smallCacheSize: size, normalCacheSize: size, maxCachedBufferCapacity: max, cacheTrimInterval: trim);
+            smallCacheSize: size, normalCacheSize: size, maxCachedBufferCapacity: max, cacheTrimInterval: trim,
+            // Like the source cache fixtures, which pass useCacheForAllThreads=true for ordinary test threads.
+            useCacheForAllThreads: true);
     private static ByteBuf Allocate(PooledByteBufAllocator a, bool direct, int size)
         => direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
     private static IPoolArenaMetric Arena(PooledByteBufAllocator a, bool direct)
@@ -246,8 +249,8 @@ public class PoolThreadCacheTest
         var native = new NativeMemoryAllocator(chunk); using var a = NewAllocator(native: native);
         var cached = Allocate(a, true, 32768); var cachedAllocation = PooledStorage(cached).Allocation; cached.Release();
         var live = Allocate(a, true, 48); var original = PooledStorage(live).Allocation; live.WriteInt(42);
-        Assert.Throws<OutOfMemoryException>(() => a.DirectBuffer(chunk + 1));
-        Assert.Throws<OutOfMemoryException>(() => live.Capacity = chunk + 1);
+        Assert.Throws<OutOfDirectMemoryError>(() => a.DirectBuffer(chunk + 1));
+        Assert.Throws<OutOfDirectMemoryError>(() => live.Capacity = chunk + 1);
         Assert.Same(original, PooledStorage(live).Allocation); Assert.Equal(48, live.Capacity); Assert.Equal(42, live.GetInt(0));
         var reused = Allocate(a, true, 32768);
         Assert.Same(cachedAllocation.Storage, PooledStorage(reused).Allocation.Storage); Assert.Equal(cachedAllocation.Handle, PooledStorage(reused).Allocation.Handle);
@@ -289,8 +292,12 @@ public class PoolThreadCacheTest
     public void InvalidCacheConfigurationFailsBeforeNativeReservation()
     {
         var native = new NativeMemoryAllocator();
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, smallCacheSize: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, normalCacheSize: -1));
+        // The source passes cache sizes to PoolThreadCache unchecked; a nonpositive size disables that cache.
+        using (var disabled = new PooledByteBufAllocator(nativeAllocator: native, smallCacheSize: -1, normalCacheSize: -1))
+        {
+            Assert.Equal(-1, disabled.Metric.SmallCacheSize); Assert.Equal(-1, disabled.Metric.NormalCacheSize);
+        }
+        // CLR: explicit overrides of the process-wide capacity/trim defaults are validated eagerly.
         Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, maxCachedBufferCapacity: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, cacheTrimInterval: 0));
         Assert.Equal(0, native.ReservedBytes);

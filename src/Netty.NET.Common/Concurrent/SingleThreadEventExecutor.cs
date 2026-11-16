@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
@@ -33,7 +34,8 @@ namespace Netty.NET.Common.Concurrent;
 // The entry runs for the worker lifetime; queued submissions use the event executor APIs.
 public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
 {
-    public static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
+    // CLR: package-private in Java; internal keeps it to this assembly and its friend tests.
+    internal static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
         SystemPropertyUtil.GetInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SingleThreadEventExecutor));
@@ -440,7 +442,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     /// <summary>Offers a callback without starting or waking the worker. False means the queue is full.</summary>
     /// <remarks>Used by synchronous rejection policies. A closed executor throws; retries must reuse the supplied callback.</remarks>
-    public bool OfferTask(Action task)
+    // CLR: package-private in Java (used by RejectedExecutionHandlers.backoff); internal here.
+    internal bool OfferTask(Action task)
     {
         ArgumentNullException.ThrowIfNull(task);
         if (IsShutdown())
@@ -766,7 +769,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         // NOOP
     }
 
-    public virtual void Wakeup(bool inEventLoop)
+    // CLR: protected in Java; protected internal also admits RejectedExecutionHandlers.backoff,
+    // which Java reaches through package access.
+    protected internal virtual void Wakeup(bool inEventLoop)
     {
         if (!inEventLoop)
         {
@@ -776,6 +781,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
+    // CLR: Java offers WAKEUP_TASK unconditionally. Wakeup and the terminal state change share one
+    // lock so that no wakeup marker is queued after the final drain observed ST_TERMINATED.
     private void EnqueueWakeup()
     {
         using (UninterruptibleMonitor.Enter(_wakeupLock))
@@ -957,13 +964,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             throw new ArgumentException(
                 "timeout: " + timeout + " (expected >= quietPeriod (" + quietPeriod + "))");
         }
-        //ObjectUtil.checkNotNull(timeout, "timeout");
+        // CLR: Java checks the TimeUnit here; a TimeSpan is a value type and cannot be null.
 
         Shutdown0(ToNanos(quietPeriod), ToNanos(timeout), ST_SHUTTING_DOWN);
-        return Termination;
+        return TerminationFuture;
     }
 
-    public override Task Termination => _terminationSource.Task;
+    public override Task TerminationFuture => _terminationSource.Task;
 
     public override Task StopAsync()
     {
@@ -971,7 +978,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         // period. Preserve ordered accepted-work drain and scheduled cancellation;
         // legacy shutdown entry points retain their pinned non-escalating behavior.
         Shutdown0(-1, -1, ST_SHUTDOWN, true);
-        return Termination;
+        return TerminationFuture;
     }
 
     [Obsolete]
@@ -1311,6 +1318,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     // ScheduledExecutorService implementation
     private static readonly long SCHEDULE_PURGE_INTERVAL = (long)TimeSpan.FromSeconds(1).TotalNanoseconds;
 
+    // CLR: private in Java. Transport's DefaultEventLoop and SingleThreadEventLoop start the worker
+    // for their CLR-only I/O submission paths, so the member is protected.
     protected void StartThread()
     {
         int currentState = _state.Get();
@@ -1520,7 +1529,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                                 if (numUserTasks > 0 && logger.IsWarnEnabled())
                                 {
                                     logger.Warn("An event executor terminated with " +
-                                                "non-empty task queue (" + numUserTasks + ')');
+                                                "non-empty task queue (" + numUserTasks.ToString(CultureInfo.InvariantCulture) + ')');
                                 }
 
                                 if (unexpectedException == null)
@@ -1546,7 +1555,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     {
                         _thread = null;
                         // Let the next thread take over if needed.
-                        //processingLock.unlock();
+                        // CLR: processingLock.unlock() is the end of the UninterruptibleMonitor using scope.
                     }
                 }
             }
@@ -1573,5 +1582,77 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
 
         return numTasks;
+    }
+
+    // CLR: Java's private static nested class; internal so friend tests can construct it.
+    internal sealed class DefaultThreadProperties : IThreadProperties
+    {
+        private readonly Thread t;
+        // CLR: a terminated CLR thread no longer reports its priority/background flag, so the last
+        // observed values answer postmortem queries; live queries still read the thread.
+        private volatile ThreadPriority lastPriority;
+        private volatile bool lastDaemon;
+
+        internal DefaultThreadProperties(Thread t)
+        {
+            this.t = t;
+            // CLR: the worker may already be terminating when its properties are first published.
+            try { lastPriority = t.Priority; }
+            catch (ThreadStateException) { lastPriority = ThreadPriority.Normal; }
+            try { lastDaemon = t.IsBackground; }
+            catch (ThreadStateException) { }
+        }
+
+        // CLR: Thread.State maps to the ThreadState flags.
+        public System.Threading.ThreadState State()
+        {
+            return t.ThreadState;
+        }
+
+        public ThreadPriority Priority()
+        {
+            try { lastPriority = t.Priority; }
+            catch (ThreadStateException) { }
+            return lastPriority;
+        }
+
+        public bool IsInterrupted()
+        {
+            // CLR: Thread.Interrupt() has no non-destructive pending-interrupt query.
+            throw new NotSupportedException("The CLR does not expose a non-destructive pending interrupt flag.");
+        }
+
+        // CLR: Thread.isDaemon() maps to Thread.IsBackground.
+        public bool IsDaemon()
+        {
+            try { lastDaemon = t.IsBackground; }
+            catch (ThreadStateException) { }
+            return lastDaemon;
+        }
+
+        public string Name()
+        {
+            return t.Name;
+        }
+
+        // CLR: Thread.getId() maps to Thread.ManagedThreadId.
+        public long Id()
+        {
+            return t.ManagedThreadId;
+        }
+
+        public System.Diagnostics.StackFrame[] StackTrace()
+        {
+            // CLR has no supported remote managed-thread stack API. Never substitute
+            // the caller's stack for the requested thread; its owner can query itself.
+            if (t != Thread.CurrentThread)
+                throw new NotSupportedException("Capturing another managed thread's stack is not supported by the CLR.");
+            return new System.Diagnostics.StackTrace(1, true).GetFrames();
+        }
+
+        public bool IsAlive()
+        {
+            return t.IsAlive;
+        }
     }
 }

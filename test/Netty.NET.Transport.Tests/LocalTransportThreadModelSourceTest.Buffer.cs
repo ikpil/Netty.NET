@@ -33,8 +33,8 @@ public partial class LocalTransportThreadModelSourceTest
     public async Task TestConcurrentMessageBufferAccess()
     {
         var token = TestContext.Current.CancellationToken;
-        var servers = new DefaultEventLoopGroup(4);
-        var clients = new DefaultEventLoopGroup(4, new DefaultThreadFactory("l"));
+        var servers = new MultiThreadIoEventLoopGroup(4, LocalIoHandler.NewFactory());
+        var clients = new MultiThreadIoEventLoopGroup(4, new DefaultThreadFactory("l"), LocalIoHandler.NewFactory());
         var executors = Enumerable.Range(1, 5)
             .Select(i => new DefaultEventExecutorGroup(4, new DefaultThreadFactory($"e{i}"))).ToArray();
         try
@@ -129,13 +129,13 @@ public partial class LocalTransportThreadModelSourceTest
         internal int OutboundCount => Volatile.Read(ref _outboundCount);
         internal Exception Error => Volatile.Read(ref _error);
 
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             _thread ??= Thread.CurrentThread;
             Assert.Same(_thread, Thread.CurrentThread);
             if (conversion == Conversion.Decode)
             {
-                var input = (ByteBuf)message;
+                var input = (ByteBuf)msg;
                 try
                 {
                     int count = input.ReadableBytes / 4;
@@ -143,27 +143,27 @@ public partial class LocalTransportThreadModelSourceTest
                     {
                         int value = input.ReadInt();
                         Assert.Equal(_inboundCount++, value);
-                        context.FireChannelRead(value);
+                        ctx.FireChannelRead(value);
                     }
                 }
                 finally { input.Release(); }
                 return;
             }
 
-            int number = (int)message;
+            int number = (int)msg;
             Assert.Equal(_inboundCount++, number);
-            if (conversion == Conversion.Encode) context.FireChannelRead(context.Allocator.Buffer(4).WriteInt(number));
-            else if (conversion == Conversion.Forward) context.FireChannelRead(message);
+            if (conversion == Conversion.Encode) ctx.FireChannelRead(ctx.Alloc().Buffer(4).WriteInt(number));
+            else if (conversion == Conversion.Forward) ctx.FireChannelRead(msg);
         }
 
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             Assert.Same(_thread, Thread.CurrentThread);
             if (conversion == Conversion.Encode)
             {
                 // Don't let the write request go to the server-side channel - just swallow.
-                bool swallow = ReferenceEquals(this, context.Pipeline.First);
-                var input = (ByteBuf)message;
+                bool swallow = ReferenceEquals(this, ctx.Pipeline.First);
+                var input = (ByteBuf)msg;
                 try
                 {
                     int count = input.ReadableBytes / 4;
@@ -171,25 +171,25 @@ public partial class LocalTransportThreadModelSourceTest
                     {
                         int value = input.ReadInt();
                         Assert.Equal(_outboundCount++, value);
-                        if (!swallow) _ = context.WriteAsync(value, token);
+                        if (!swallow) _ = ctx.WriteAsync(value, token);
                     }
-                    return context.WriteAndFlushAsync(Unpooled.EmptyBuffer, token);
+                    return ctx.WriteAndFlushAsync(Unpooled.EmptyBuffer, token);
                 }
                 finally { input.Release(); }
             }
 
-            int number = (int)message;
+            int number = (int)msg;
             Assert.Equal(_outboundCount++, number);
-            return context.WriteAsync(conversion == Conversion.Decode ? context.Allocator.Buffer(4).WriteInt(number) : message, token);
+            return ctx.WriteAsync(conversion == Conversion.Decode ? ctx.Alloc().Buffer(4).WriteInt(number) : msg, token);
         }
 
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
-            Interlocked.CompareExchange(ref _error, error, null);
+            Interlocked.CompareExchange(ref _error, cause, null);
             //System.err.print("[" + Thread.currentThread().getName() + "] ");
             //cause.printStackTrace();
-            if (conversion == Conversion.Forward) Console.Error.WriteLine($"[{Thread.CurrentThread.Name}] {error}");
-            context.FireExceptionCaught(error);
+            if (conversion == Conversion.Forward) Console.Error.WriteLine($"[{Thread.CurrentThread.Name}] {cause}");
+            ctx.FireExceptionCaught(cause);
         }
     }
 }

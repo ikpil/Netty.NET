@@ -15,17 +15,62 @@
  */
 
 using System;
+using System.Diagnostics;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Transport.Channels;
 /**
  * A {@link RuntimeException} which is thrown when an I/O operation fails.
  */
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart.
 public class ChannelException : Exception
 {
     /**
      * Creates a new exception.
      */
-    public ChannelException() { }
-    public ChannelException(string message) : base(message) { }
-    public ChannelException(string message, Exception innerException) : base(message, innerException) { }
-    public ChannelException(Exception cause) : base(cause.Message, cause) { }
+    public ChannelException()
+    {
+    }
+
+    /**
+     * Creates a new exception.
+     */
+    public ChannelException(string message, Exception cause) : base(message, cause)
+    {
+    }
+
+    /**
+     * Creates a new exception.
+     */
+    public ChannelException(string message) : base(message)
+    {
+    }
+
+    /**
+     * Creates a new exception.
+     */
+    // CLR: RuntimeException(Throwable) accepts a null cause; the message is the cause's message.
+    public ChannelException(Exception cause) : base(cause?.Message, cause)
+    {
+    }
+
+    protected ChannelException(string message, Exception cause, bool shared) : base(message, cause)
+    {
+        // CLR: Exception has no suppression/writableStackTrace constructor flags; the stack trace is recorded only when
+        // an instance is thrown (https://learn.microsoft.com/dotnet/api/system.exception.stacktrace).
+        Debug.Assert(shared);
+    }
+
+    internal static ChannelException NewStatic(string message, Type clazz, string method)
+    {
+        ChannelException exception = new StacklessChannelException(message, null, true);
+        return ThrowableUtil.UnknownStackTrace(exception, clazz, method);
+    }
+
+    private sealed class StacklessChannelException : ChannelException
+    {
+        internal StacklessChannelException(string message, Exception cause, bool shared) : base(message, cause, shared)
+        {
+        }
+    }
 }

@@ -140,7 +140,7 @@ public class ByteBufAbsoluteTransferDispatchTest
             source.ResetReaderIndex().ResetWriterIndex(); destination.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex);
             Assert.Equal(1, destination.ReaderIndex); Assert.Equal(3, destination.WriterIndex);
-            Assert.Equal(1, source.ReferenceCount); Assert.Equal(1, destination.ReferenceCount);
+            Assert.Equal(1, source.RefCnt); Assert.Equal(1, destination.RefCnt);
         }
         finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
         Assert.Equal(0, native.ReservedBytes);
@@ -167,7 +167,7 @@ public class ByteBufAbsoluteTransferDispatchTest
             Assert.Equal(2, calls.Index); Assert.Equal(-1, calls.PeerIndex); Assert.Equal(set ? 2 : 5, calls.Length);
             Assert.Equal(2, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
             Assert.Equal(1, peer.ReaderIndex); Assert.Equal(3, peer.WriterIndex);
-            Assert.Equal(1, owner.ReferenceCount); Assert.Equal(1, peer.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, peer.RefCnt);
         }
         finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
         Assert.Equal(0, native.ReservedBytes);
@@ -186,7 +186,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             Assert.Throws<IllegalReferenceCountException>(() => owner.SetBytes(1, source, 2));
             Assert.Equal(0, calls.Count); Assert.Equal(2, source.ReaderIndex);
-            Assert.Equal(7, source.WriterIndex); Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(7, source.WriterIndex); Assert.Equal(1, source.RefCnt);
         }
         finally { Assert.True(source.Release()); }
         Assert.Equal(0, native.ReservedBytes);

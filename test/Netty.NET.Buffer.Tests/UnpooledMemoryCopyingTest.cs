@@ -37,13 +37,13 @@ public class UnpooledMemoryCopyingTest
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy); Assert.False(copy.IsDirect); Assert.False(copy.IsReadOnly);
             Assert.Equal(8, copy.Capacity); Assert.Equal(8, copy.MaxCapacity);
-            Assert.Equal(0, copy.ReaderIndex); Assert.Equal(8, copy.WriterIndex); Assert.Equal(1, copy.ReferenceCount);
-            Assert.Same(UnpooledByteBufAllocator.Default, copy.Allocator);
+            Assert.Equal(0, copy.ReaderIndex); Assert.Equal(8, copy.WriterIndex); Assert.Equal(1, copy.RefCnt);
+            Assert.Same(UnpooledByteBufAllocator.Default, copy.Alloc());
             Assert.Equal(new byte[] { 2, 3, 4, 5, 6, 7, 8, 9 }, ByteBufUtil.GetBytes(copy));
             Assert.Equal(8, range.Length); Assert.Equal(2, range.Span[0]);
             storage.Memory.Span[2] = 99; Assert.Equal(2, copy.GetByte(0));
             copy.SetByte(1, 42); Assert.Equal(3, storage.Memory.Span[3]);
-            Assert.Equal(1, source.ReaderIndex); Assert.Equal(15, source.WriterIndex); Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.ReaderIndex); Assert.Equal(15, source.WriterIndex); Assert.Equal(1, source.RefCnt);
             source.SetIndex(2, 14).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, source.ReaderIndex); Assert.Equal(15, source.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 9);
@@ -169,11 +169,11 @@ public class UnpooledMemoryCopyingTest
         ByteBuf copy = Unpooled.CopiedBuffer(memory, memory);
         try
         {
-            Assert.Equal(1, source.ReferenceCount); source.Release();
+            Assert.Equal(1, source.RefCnt); source.Release();
             Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, allocator.Metric.UsedDirectMemory); Assert.Equal(0, allocator.Metric.UsedHeapMemory);
             Assert.Equal(0x0102030405060708L, copy.ReadLong()); Assert.Equal(0x0102030405060708L, copy.ReadLong());
         }
-        finally { if (source.ReferenceCount > 0) source.Release(); copy.Release(); }
+        finally { if (source.RefCnt > 0) source.Release(); copy.Release(); }
     }
 
     [Theory]

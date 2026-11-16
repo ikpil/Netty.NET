@@ -14,19 +14,27 @@
  * under the License.
  */
 
-using System;
-using System.Net.Sockets;
 using System.Threading.Tasks;
+using Netty.NET.Common.Internal;
+using Netty.NET.Transport.Bootstrapping;
+using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-public partial class DatagramMulticastSourceTest
+public class DatagramMulticastIPv6SourceTest : DatagramMulticastSourceTest
 {
-    private static Task RunIPv6MulticastAsync(bool adaptive)
+    protected override async Task TestMulticast0(Bootstrap sb, Bootstrap cb)
     {
         // Not works on windows atm.
         // See https://github.com/netty/netty/issues/11285
-        if (OperatingSystem.IsWindows()) Assert.Skip("The original IPv6 multicast fixture excludes Windows.");
-        return RunMulticastAsync(adaptive, AddressFamily.InterNetworkV6);
+        // CLR: assumeFalse is xUnit v3's Assert.SkipWhen, which "will skip the test if condition is true"
+        // (https://xunit.net/docs/getting-started/v3/whats-new).
+        Assert.SkipWhen(PlatformDependent.IsWindows(), "assumeFalse(PlatformDependent.isWindows())");
+        await base.TestMulticast0(sb, cb);
+    }
+
+    protected override SocketProtocolFamily SocketProtocolFamily()
+    {
+        return Channels.Sockets.SocketProtocolFamily.Inet6;
     }
 }

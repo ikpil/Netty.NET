@@ -68,7 +68,7 @@ public class UnorderedWorkerFailureContractTest
             if (mode == "throw") Assert.Same(expected, failure);
             else if (mode == "started") Assert.IsType<ThreadStateException>(failure);
             else Assert.IsType<InvalidOperationException>(failure);
-            foreach (Task result in new Task[] { deadline, repeating, forwarded, notification.NotificationCompleted, executor.Termination })
+            foreach (Task result in new Task[] { deadline, repeating, forwarded, notification.NotificationCompleted, executor.TerminationFuture })
                 Assert.Same(failure, await Assert.ThrowsAnyAsync<Exception>(() => result.WaitAsync(TimeSpan.FromSeconds(5))));
             Assert.True(executor.IsShutdown());
             Assert.True(executor.IsTerminated());
@@ -77,8 +77,8 @@ public class UnorderedWorkerFailureContractTest
             Assert.Equal(0, rawCalls);
             Assert.Equal(2, creations);
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
-            Assert.Same(executor.Termination, executor.ShutdownGracefullyAsync());
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.ShutdownGracefullyAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.SubmitAsync(() => 10));
         }
         finally
@@ -119,14 +119,14 @@ public class UnorderedWorkerFailureContractTest
             escapedRelease.Set();
             Assert.Same(expected, await Assert.ThrowsAsync<InvalidOperationException>(
                 () => queued.WaitAsync(TimeSpan.FromSeconds(5))));
-            Assert.False(executor.Termination.IsCompleted);
+            Assert.False(executor.TerminationFuture.IsCompleted);
             Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
             Assert.False(survivor.IsCompleted);
             survivorRelease.Set();
             Assert.Equal(7, await survivor.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.False(interrupted);
             Assert.Same(expected, await Assert.ThrowsAsync<InvalidOperationException>(
-                () => executor.Termination.WaitAsync(TimeSpan.FromSeconds(5))));
+                () => executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5))));
             Assert.Same(escaping.Error, await Assert.ThrowsAsync<InvalidOperationException>(() => escaping.Result));
             Assert.Equal(0, executor.WorkerCount);
         }
@@ -187,7 +187,7 @@ public class UnorderedWorkerFailureContractTest
             release.Set();
             Assert.Same(escaping.Error, await Assert.ThrowsAsync<InvalidOperationException>(
                 () => escaping.Result.WaitAsync(TimeSpan.FromSeconds(5))));
-            await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, creations);
         }
         finally
@@ -211,7 +211,7 @@ public class UnorderedWorkerFailureContractTest
         {
             if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Invoke) { IsBackground = true };
             _ = executor.StopAsync();
-            pendingInsideFactory = !executor.Termination.IsCompleted;
+            pendingInsideFactory = !executor.TerminationFuture.IsCompleted;
             if (throwAfterClosing) throw expected;
             return null;
         });
@@ -227,8 +227,8 @@ public class UnorderedWorkerFailureContractTest
             release.Set();
             if (throwAfterClosing)
                 Assert.Same(expected, await Assert.ThrowsAsync<InvalidOperationException>(
-                    () => executor.Termination.WaitAsync(TimeSpan.FromSeconds(5))));
-            else await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+                    () => executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5))));
+            else await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(pendingInsideFactory);
             Assert.Equal(2, creations);
             Assert.True(queued.IsCanceled);
@@ -267,9 +267,9 @@ public class UnorderedWorkerFailureContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             release.Set();
             Assert.Same(backend, await Assert.ThrowsAsync<InvalidOperationException>(
-                () => executor.Termination.WaitAsync(TimeSpan.FromSeconds(5))));
-            Assert.Contains(backend, executor.Termination.Exception.Flatten().InnerExceptions);
-            Assert.Contains(callback, executor.Termination.Exception.Flatten().InnerExceptions);
+                () => executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5))));
+            Assert.Contains(backend, executor.TerminationFuture.Exception.Flatten().InnerExceptions);
+            Assert.Contains(callback, executor.TerminationFuture.Exception.Flatten().InnerExceptions);
             Assert.Same(escaping.Error, await Assert.ThrowsAsync<InvalidOperationException>(() => escaping.Result));
             Assert.True(executor.IsTerminated());
         }

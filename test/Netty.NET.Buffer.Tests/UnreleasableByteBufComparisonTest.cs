@@ -64,8 +64,8 @@ public class UnreleasableByteBufComparisonTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Assert.True(_tracked.Release());
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Assert.True(_tracked.Release());
+            Assert.Equal(0, Root.RefCnt);
             Assert.Equal(_expectedCloses, Tracker.Closes);
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -106,7 +106,7 @@ public class UnreleasableByteBufComparisonTest
             set.Clear(); dictionary.Clear();
             Assert.Equal(0, storage.Tracker.Records);
             Assert.Equal(0, storage.Tracker.Closes);
-            Assert.Equal(1, storage.Root.ReferenceCount);
+            Assert.Equal(1, storage.Root.RefCnt);
             Assert.False(facade.Release());
             Assert.Equal(1, storage.Root.ReaderIndex);
             Assert.Equal(9, storage.Root.WriterIndex);
@@ -139,7 +139,7 @@ public class UnreleasableByteBufComparisonTest
             Assert.Throws<IllegalReferenceCountException>(() => facade.GetHashCode());
             Assert.Throws<IllegalReferenceCountException>(() => facade.Equals(peer));
             Assert.Throws<IllegalReferenceCountException>(() => facade.CompareTo(peer));
-            Assert.Equal(0, facade.ReferenceCount);
+            Assert.Equal(0, facade.RefCnt);
             Assert.False(facade.Release());
         }
         finally { peer.Release(); }

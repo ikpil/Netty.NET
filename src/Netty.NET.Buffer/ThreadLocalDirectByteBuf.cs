@@ -24,7 +24,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     private readonly NativeMemoryAllocator _native;
     private ThreadLocalDirectAllocation _allocation;
     private int _capacity;
-    public override IByteBufAllocator Allocator => UnpooledByteBufAllocator.Default;
+    public override IByteBufAllocator Alloc() => UnpooledByteBufAllocator.Default;
     public override bool IsDirect => true;
     public override bool IsContiguous => true;
 
@@ -73,7 +73,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
-        ByteBuf result = Allocator.DirectBuffer(length, MaxCapacity);
+        ByteBuf result = Alloc().DirectBuffer(length, MaxCapacity);
         try { return result.WriteBytes(this, index, length); }
         catch { result.Release(); throw; }
     }

@@ -14,254 +14,727 @@
  * under the License.
  */
 using System;
-using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
+using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051, xUnit1031 // Preserve original owner-blocking leader and independent cleanup.
-public partial class SocketHalfClosedSourceTest
+#pragma warning disable xUnit1069 // The Runner bodies observe TestContext.Current.CancellationToken in their waits.
+#pragma warning disable xUnit1051 // Channel operations and closes run independently of the test cancellation, as in the source.
+// CLR: the first half of SocketHalfClosedTest (up to AutoCloseFalseLeader); SocketHalfClosedSourceTest.cs holds the
+// rest of the class and the CLR conventions it shares.
+public partial class SocketHalfClosedSourceTest : AbstractSocketTest
 {
-    private static int MaxReadCompleteWithNoDataAfterInputShutdown()
-        => 2; // nio needs read flag to detect full closure.
-
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestHalfClosureReceiveDataOnFinalWait2StateWhenSoLingerSet(bool adaptive)
+    protected virtual int MaxReadCompleteWithNoDataAfterInputShutdown()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Server.ChildOption(ChannelOption.SO_LINGER, 1).ChildHandler(new FinWaitReader(done));
-        fixture.Client.Option(ChannelOption.ALLOW_HALF_CLOSURE, true).Handler(new FinWaitWriter());
-        var server = await fixture.Server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        var client = await fixture.Client.ConnectAsync(server.LocalAddress);
-        await done.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await client.CloseAsync(); await server.CloseAsync();
-    }
-    private sealed class FinWaitReader(TaskCompletionSource done) : ChannelInboundHandlerAdapter
-    {
-        public override void ChannelActive(ChannelHandlerContext ctx) => _ = ((TcpSocketChannel)ctx.Channel).ShutdownOutputAsync();
-        public override void ChannelRead(ChannelHandlerContext ctx, object message)
-        { ((ByteBuf)message).Release(); done.TrySetResult(); }
-    }
-    private sealed class FinWaitWriter : ChannelInboundHandlerAdapter
-    {
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
-        {
-            if (ReferenceEquals(evt, ChannelInputShutdownEvent.INSTANCE)) _ = ctx.WriteAndFlushAsync(ctx.Allocator.Buffer().WriteZero(16));
-            if (ReferenceEquals(evt, ChannelInputShutdownReadComplete.INSTANCE)) _ = ctx.CloseAsync();
-        }
+        return 2; // nio needs read flag to detect full closure.
     }
 
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public Task TestHalfClosureOnlyOneEventWhenAutoRead(bool adaptive)
-        => SingleEvent(adaptive, false).WaitAsync(TestContext.Current.CancellationToken);
-
-    internal static async Task SingleEvent(bool adaptive, bool actualHalfClose)
+    [Fact(Timeout = 20000)]
+    public async Task TestAllDataReadEventTriggeredAfterHalfClosure()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var handler = new SingleEventReader();
-        // The original casts ctx, rather than ctx.channel(), to DuplexChannel. Its exceptionCaught
-        // closes the peer. Preserve that observable FIN path here; a separate native test uses a real half-close.
-        fixture.Server.ChildHandler(new SingleEventPeer(actualHalfClose));
-        fixture.Client.Option(ChannelOption.ALLOW_HALF_CLOSURE, true).Option(ChannelOption.AUTO_READ, true).Handler(handler);
-        var server = await fixture.Server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        var client = await fixture.Client.ConnectAsync(server.LocalAddress);
-        await client.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(1, handler.ShutdownEvents); Assert.Equal(1, handler.FinalEvents);
-        await server.CloseAsync();
-    }
-    private sealed class SingleEventPeer(bool half) : ChannelInboundHandlerAdapter
-    {
-        public override void ChannelActive(ChannelHandlerContext ctx)
+        await Run(TestContext.Current, async (serverBootstrap, bootstrap) =>
         {
-            if (half) _ = ((TcpSocketChannel)ctx.Channel).ShutdownOutputAsync();
-            else _ = ctx.CloseAsync();
-        }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
-    }
-    private sealed class SingleEventReader : ChannelInboundHandlerAdapter
-    {
-        internal int ShutdownEvents, FinalEvents;
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
-        {
-            if (ReferenceEquals(evt, ChannelInputShutdownEvent.INSTANCE)) Interlocked.Increment(ref ShutdownEvents);
-            else if (ReferenceEquals(evt, ChannelInputShutdownReadComplete.INSTANCE))
+            // CLR: the source first returns for an OioEventLoopGroup ("Ignoring test for incompatible OIO event
+            // system"); OioEventLoopGroup is deprecated-not-ported, so no harness group takes that branch.
+            if (bootstrap.Config.Group is IIoEventLoopGroup)
             {
-                Interlocked.Increment(ref FinalEvents);
-                _ = ctx.Executor.ScheduleAsync(() => { _ = ctx.CloseAsync(); }, TimeSpan.FromMilliseconds(100));
+                IIoEventLoopGroup group = (IIoEventLoopGroup) bootstrap.Config.Group;
+                if (group.IsIoType(typeof(NioIoHandler)))
+                {
+                    logger.Debug("Ignoring test for incompatible NioHandler");
+                    return;
+                }
+            }
+            await AllDataReadEventTriggeredAfterHalfClosure(serverBootstrap, bootstrap);
+        });
+    }
+
+    private static async Task AllDataReadEventTriggeredAfterHalfClosure(ServerBootstrap sb, Bootstrap cb)
+    {
+        var cancellation = TestContext.Current.CancellationToken;
+        const int totalServerBytesWritten = 1;
+        CountDownLatch clientReadAllDataLatch = new CountDownLatch(1);
+        CountDownLatch clientHalfClosedLatch = new CountDownLatch(1);
+        CountDownLatch clientHalfClosedAllBytesRead = new CountDownLatch(1);
+        StrongBox<int> clientReadCompletes = new StrongBox<int>();
+        StrongBox<int> clientZeroDataReadCompletes = new StrongBox<int>();
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
+        StrongBox<IChannel> serverChildChannel = new StrongBox<IChannel>();
+        try
+        {
+            cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
+                    .Option(ChannelOption.AUTO_CLOSE, false)
+                    .Option(ChannelOption.AUTO_READ, false);
+
+            sb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
+                    .Option(ChannelOption.AUTO_CLOSE, false)
+                    .ChildOption(ChannelOption.TCP_NODELAY, true);
+
+            sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                Volatile.Write(ref serverChildChannel.Value, ch);
+                ch.Pipeline.AddLast(new AllDataReadEventTriggeredServerHandler(totalServerBytesWritten));
+            }));
+
+            // client.
+            cb.Handler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(new AllDataReadEventTriggeredClientHandler(ch, totalServerBytesWritten,
+                        clientReadAllDataLatch, clientHalfClosedLatch, clientHalfClosedAllBytesRead,
+                        clientReadCompletes, clientZeroDataReadCompletes));
+                ch.Read();
+            }));
+
+            serverChannel = await sb.BindAsync();
+            clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+            clientChannel.Read();
+
+            await clientReadAllDataLatch.AwaitAsync(cancellation);
+
+            // Now we need to trigger server half-close
+            _ = ((IDuplexChannel) Volatile.Read(ref serverChildChannel.Value)).ShutdownOutputAsync();
+
+            await clientHalfClosedLatch.AwaitAsync(cancellation);
+            await clientHalfClosedAllBytesRead.AwaitAsync(cancellation);
+        }
+        finally
+        {
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
+            }
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
             }
         }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
     }
 
-    [Theory(Timeout = 30000)]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task TestAllDataReadAfterHalfClosure(bool adaptive, bool autoRead)
+    private sealed class AllDataReadEventTriggeredServerHandler(int totalServerBytesWritten)
+            : ChannelInboundHandlerAdapter
     {
-        const int totalServerBytesWritten = 1024 * 16, numReadsPerReadLoop = 2;
-        await using var fixture = new ShutdownFixture(adaptive);
-        var writer = new HalfClosingWriter(totalServerBytesWritten);
-        var reader = new HalfDataReader(totalServerBytesWritten, autoRead);
-        fixture.Server.ChildHandler(writer);
-        fixture.Client.Option(ChannelOption.ALLOW_HALF_CLOSURE, true).Option(ChannelOption.AUTO_READ, autoRead)
-            .Option(ChannelOption.RECVBUF_ALLOCATOR, new TestNumReadsRecvByteBufAllocator(numReadsPerReadLoop)).Handler(reader);
-        var server = await fixture.Server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        var client = await fixture.Client.ConnectAsync(server.LocalAddress);
-        client.Read();
-        await writer.Initialized.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await reader.AllData.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await reader.HalfClosed.Task.WaitAsync(TestContext.Current.CancellationToken);
-        // In practice this should be much less, as we allow numReadsPerReadLoop per wakeup, but we limit the
-        // number of bytes to 1 per read so in theory we may need more. We check below that readComplete is called
-        // when data is actually read.
-        Assert.True(totalServerBytesWritten > reader.ReadCompletes, "too many read complete events: " + reader.ReadCompletes);
-        Assert.True(reader.EmptyReadCompletes <= MaxReadCompleteWithNoDataAfterInputShutdown(),
-            "too many readComplete with no data: " + reader.EmptyReadCompletes + " readComplete: " + reader.ReadCompletes);
-        await client.CloseAsync(); await server.CloseAsync();
-    }
-    private sealed class HalfClosingWriter(int count) : ChannelInboundHandlerAdapter
-    {
-        internal readonly TaskCompletionSource Initialized = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelActive(ChannelHandlerContext ctx)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            var buffer = ctx.Allocator.Buffer(count); buffer.WriterIndex = buffer.Capacity;
-            _ = WriteAndHalfClose(ctx, buffer); Initialized.TrySetResult();
+            ByteBuf buf = ctx.Alloc().Buffer(totalServerBytesWritten);
+            buf.WriterIndex = buf.Capacity;
+            _ = ctx.WriteAndFlushAsync(buf);
         }
-        private static async Task WriteAndHalfClose(ChannelHandlerContext ctx, ByteBuf buffer)
-        { try { await ctx.WriteAndFlushAsync(buffer); } finally { await ((TcpSocketChannel)ctx.Channel).ShutdownOutputAsync(); } }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
-    }
-    private sealed class HalfDataReader(int total, bool autoRead) : ChannelInboundHandlerAdapter
-    {
-        private int _bytesRead, _sinceComplete;
-        internal int ReadCompletes, EmptyReadCompletes;
-        internal readonly TaskCompletionSource AllData = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal readonly TaskCompletionSource HalfClosed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelRead(ChannelHandlerContext ctx, object message)
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
-            var buffer = (ByteBuf)message; _bytesRead += buffer.ReadableBytes; _sinceComplete += buffer.ReadableBytes; buffer.Release();
+            _ = ctx.CloseAsync();
         }
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
-        {
-            if (ReferenceEquals(evt, ChannelInputShutdownEvent.INSTANCE)) HalfClosed.TrySetResult();
-            else if (ReferenceEquals(evt, ChannelInputShutdownReadComplete.INSTANCE)) _ = ctx.CloseAsync();
-        }
-        public override void ChannelReadComplete(ChannelHandlerContext ctx)
-        {
-            if (_sinceComplete == 0) Interlocked.Increment(ref EmptyReadCompletes); else _sinceComplete = 0;
-            Interlocked.Increment(ref ReadCompletes);
-            if (_bytesRead == total) AllData.TrySetResult();
-            if (!autoRead) ctx.Read();
-        }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
     }
 
-    [Theory(Timeout = 30000)]
-    [InlineData(false, false, false)]
-    [InlineData(false, false, true)]
-    [InlineData(false, true, false)]
-    [InlineData(false, true, true)]
-    [InlineData(true, false, false)]
-    [InlineData(true, false, true)]
-    [InlineData(true, true, false)]
-    [InlineData(true, true, true)]
-    public async Task TestAutoCloseFalseDoesShutdownOutput(bool adaptive, bool allowHalfClosed, bool clientIsLeader)
+    private sealed class AllDataReadEventTriggeredClientHandler(
+            IChannel ch, int totalServerBytesWritten, CountDownLatch clientReadAllDataLatch,
+            CountDownLatch clientHalfClosedLatch, CountDownLatch clientHalfClosedAllBytesRead,
+            StrongBox<int> clientReadCompletes, StrongBox<int> clientZeroDataReadCompletes)
+            : ChannelInboundHandlerAdapter
+    {
+        private int bytesRead;
+        private int bytesSinceReadComplete;
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ByteBuf buf = (ByteBuf) msg;
+            bytesRead += buf.ReadableBytes;
+            bytesSinceReadComplete += buf.ReadableBytes;
+            buf.Release();
+        }
+
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            if (evt == ChannelInputShutdownEvent.INSTANCE)
+            {
+                clientHalfClosedLatch.CountDown();
+            }
+            else if (evt == ChannelInputShutdownReadComplete.INSTANCE)
+            {
+                clientHalfClosedAllBytesRead.CountDown();
+                _ = ctx.CloseAsync();
+            }
+        }
+
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            if (bytesSinceReadComplete == 0)
+            {
+                Interlocked.Increment(ref clientZeroDataReadCompletes.Value);
+            }
+            else
+            {
+                bytesSinceReadComplete = 0;
+            }
+            Interlocked.Increment(ref clientReadCompletes.Value);
+            if (bytesRead == totalServerBytesWritten)
+            {
+                // Bounce this through the event loop to make sure it happens after we're done
+                // with the read operation.
+                ch.EventLoop.Execute(() =>
+                {
+                    clientReadAllDataLatch.CountDown();
+                });
+            }
+            else
+            {
+                ctx.Read();
+            }
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            ctx.FireExceptionCaught(cause);
+            _ = ctx.CloseAsync();
+        }
+    }
+
+    [Fact(Timeout = 20000)]
+    public async Task TestHalfClosureReceiveDataOnFinalWait2StateWhenSoLingerSet()
+    {
+        await Run(TestContext.Current, TestHalfClosureReceiveDataOnFinalWait2StateWhenSoLingerSet0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestHalfClosureReceiveDataOnFinalWait2StateWhenSoLingerSet test name.
+    private static async Task TestHalfClosureReceiveDataOnFinalWait2StateWhenSoLingerSet0(ServerBootstrap sb, Bootstrap cb)
+    {
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
+
+        CountDownLatch waitHalfClosureDone = new CountDownLatch(1);
+        try
+        {
+            sb.ChildOption(ChannelOption.SO_LINGER, 1)
+              .ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
+              {
+                  ch.Pipeline.AddLast(new FinalWait2ServerHandler(waitHalfClosureDone));
+              }));
+
+            cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
+              .Handler(new ActionChannelInitializer<IChannel>(ch =>
+              {
+                  ch.Pipeline.AddLast(new FinalWait2ClientHandler());
+              }));
+
+            serverChannel = await sb.BindAsync();
+            clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+            await waitHalfClosureDone.AwaitAsync(TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
+            }
+
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
+            }
+        }
+    }
+
+    private sealed class FinalWait2ServerHandler(CountDownLatch waitHalfClosureDone) : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            ISocketChannel channel = (ISocketChannel) ctx.Channel;
+            _ = channel.ShutdownOutputAsync();
+        }
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ReferenceCountUtil.Release(msg);
+            waitHalfClosureDone.CountDown();
+        }
+    }
+
+    private sealed class FinalWait2ClientHandler : ChannelInboundHandlerAdapter
+    {
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            if (ChannelInputShutdownEvent.INSTANCE == evt)
+            {
+                _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer().WriteZero(16));
+            }
+
+            if (ChannelInputShutdownReadComplete.INSTANCE == evt)
+            {
+                _ = ctx.CloseAsync();
+            }
+        }
+    }
+
+    [Fact(Timeout = 20000)]
+    public async Task TestHalfClosureOnlyOneEventWhenAutoRead()
+    {
+        await Run(TestContext.Current, TestHalfClosureOnlyOneEventWhenAutoRead0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestHalfClosureOnlyOneEventWhenAutoRead test name.
+    private static async Task TestHalfClosureOnlyOneEventWhenAutoRead0(ServerBootstrap sb, Bootstrap cb)
+    {
+        IChannel serverChannel = null;
+        try
+        {
+            cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
+                    .Option(ChannelOption.AUTO_READ, true);
+            sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(new HalfClosureOnlyOneEventServerHandler());
+            }));
+
+            StrongBox<int> shutdownEventReceivedCounter = new StrongBox<int>();
+            StrongBox<int> shutdownReadCompleteEventReceivedCounter = new StrongBox<int>();
+
+            cb.Handler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(new HalfClosureOnlyOneEventClientHandler(
+                        shutdownEventReceivedCounter, shutdownReadCompleteEventReceivedCounter));
+            }));
+
+            serverChannel = await sb.BindAsync();
+            IChannel clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+            await clientChannel.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(1, Volatile.Read(ref shutdownEventReceivedCounter.Value));
+            Assert.Equal(1, Volatile.Read(ref shutdownReadCompleteEventReceivedCounter.Value));
+        }
+        finally
+        {
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
+            }
+        }
+    }
+
+    private sealed class HalfClosureOnlyOneEventServerHandler : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            // CLR: as in the source, the context itself rather than ctx.Channel is cast. The cast fails with
+            // InvalidCastException, "thrown for invalid casting or explicit conversion"
+            // (https://learn.microsoft.com/en-us/dotnet/api/system.invalidcastexception), where the JVM throws
+            // ClassCastException; the pipeline passes it to exceptionCaught, which closes the accepted channel.
+            _ = ((IDuplexChannel) ctx).ShutdownOutputAsync();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
+    }
+
+    private sealed class HalfClosureOnlyOneEventClientHandler(
+            StrongBox<int> shutdownEventReceivedCounter, StrongBox<int> shutdownReadCompleteEventReceivedCounter)
+            : ChannelInboundHandlerAdapter
+    {
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            if (evt == ChannelInputShutdownEvent.INSTANCE)
+            {
+                Interlocked.Increment(ref shutdownEventReceivedCounter.Value);
+            }
+            else if (evt == ChannelInputShutdownReadComplete.INSTANCE)
+            {
+                Interlocked.Increment(ref shutdownReadCompleteEventReceivedCounter.Value);
+                _ = ctx.Executor.ScheduleAsync(() =>
+                {
+                    _ = ctx.CloseAsync();
+                }, TimeSpan.FromMilliseconds(100));
+            }
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
+    }
+
+    [Fact(Timeout = 20000)]
+    public async Task TestAllDataReadAfterHalfClosure()
+    {
+        await Run(TestContext.Current, TestAllDataReadAfterHalfClosure0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestAllDataReadAfterHalfClosure test name; both source overloads keep the
+    // 0 suffix.
+    private async Task TestAllDataReadAfterHalfClosure0(ServerBootstrap sb, Bootstrap cb)
+    {
+        await TestAllDataReadAfterHalfClosure0(true, sb, cb);
+        await TestAllDataReadAfterHalfClosure0(false, sb, cb);
+    }
+
+    private async Task TestAllDataReadAfterHalfClosure0(bool autoRead,
+                                                 ServerBootstrap sb, Bootstrap cb)
+    {
+        var cancellation = TestContext.Current.CancellationToken;
+        const int totalServerBytesWritten = 1024 * 16;
+        const int numReadsPerReadLoop = 2;
+        CountDownLatch serverInitializedLatch = new CountDownLatch(1);
+        CountDownLatch clientReadAllDataLatch = new CountDownLatch(1);
+        CountDownLatch clientHalfClosedLatch = new CountDownLatch(1);
+        StrongBox<int> clientReadCompletes = new StrongBox<int>();
+        StrongBox<int> clientZeroDataReadCompletes = new StrongBox<int>();
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
+        try
+        {
+            cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
+              .Option(ChannelOption.AUTO_READ, autoRead)
+              .Option(ChannelOption.RECVBUF_ALLOCATOR, new TestNumReadsRecvByteBufAllocator(numReadsPerReadLoop));
+
+            sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(new AllDataReadAfterHalfClosureServerHandler(
+                        totalServerBytesWritten, serverInitializedLatch));
+            }));
+
+            cb.Handler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(new AllDataReadAfterHalfClosureClientHandler(autoRead, totalServerBytesWritten,
+                        clientReadAllDataLatch, clientHalfClosedLatch, clientReadCompletes,
+                        clientZeroDataReadCompletes));
+            }));
+
+            serverChannel = await sb.BindAsync();
+            clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+            clientChannel.Read();
+
+            await serverInitializedLatch.AwaitAsync(cancellation);
+            await clientReadAllDataLatch.AwaitAsync(cancellation);
+            await clientHalfClosedLatch.AwaitAsync(cancellation);
+            // In practice this should be much less, as we allow numReadsPerReadLoop per wakeup, but we limit the
+            // number of bytes to 1 per read so in theory we may need more. We check below that readComplete is called
+            // when data is actually read.
+            Assert.True(totalServerBytesWritten > Volatile.Read(ref clientReadCompletes.Value),
+                    "too many read complete events: " + Volatile.Read(ref clientReadCompletes.Value));
+            Assert.True(Volatile.Read(ref clientZeroDataReadCompletes.Value) <=
+                            MaxReadCompleteWithNoDataAfterInputShutdown(),
+                    "too many readComplete with no data: " + Volatile.Read(ref clientZeroDataReadCompletes.Value) +
+                            " readComplete: " + Volatile.Read(ref clientReadCompletes.Value));
+        }
+        finally
+        {
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
+            }
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
+            }
+        }
+    }
+
+    private sealed class AllDataReadAfterHalfClosureServerHandler(
+            int totalServerBytesWritten, CountDownLatch serverInitializedLatch) : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            ByteBuf buf = ctx.Alloc().Buffer(totalServerBytesWritten);
+            buf.WriterIndex = buf.Capacity;
+            // CLR: future.channel() of the write is ctx.Channel.
+            _ = ctx.WriteAndFlushAsync(buf).ContinueWith(future =>
+                    ((IDuplexChannel) ctx.Channel).ShutdownOutputAsync(), TaskScheduler.Default);
+
+            serverInitializedLatch.CountDown();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
+    }
+
+    private sealed class AllDataReadAfterHalfClosureClientHandler(
+            bool autoRead, int totalServerBytesWritten, CountDownLatch clientReadAllDataLatch,
+            CountDownLatch clientHalfClosedLatch, StrongBox<int> clientReadCompletes,
+            StrongBox<int> clientZeroDataReadCompletes) : ChannelInboundHandlerAdapter
+    {
+        private int bytesRead;
+        private int bytesSinceReadComplete;
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ByteBuf buf = (ByteBuf) msg;
+            bytesRead += buf.ReadableBytes;
+            bytesSinceReadComplete += buf.ReadableBytes;
+            buf.Release();
+        }
+
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            if (evt == ChannelInputShutdownEvent.INSTANCE)
+            {
+                clientHalfClosedLatch.CountDown();
+            }
+            else if (evt == ChannelInputShutdownReadComplete.INSTANCE)
+            {
+                _ = ctx.CloseAsync();
+            }
+        }
+
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            if (bytesSinceReadComplete == 0)
+            {
+                Interlocked.Increment(ref clientZeroDataReadCompletes.Value);
+            }
+            else
+            {
+                bytesSinceReadComplete = 0;
+            }
+            Interlocked.Increment(ref clientReadCompletes.Value);
+            if (bytesRead == totalServerBytesWritten)
+            {
+                clientReadAllDataLatch.CountDown();
+            }
+            if (!autoRead)
+            {
+                ctx.Read();
+            }
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
+    }
+
+    [Fact(Timeout = 20000)]
+    public async Task TestAutoCloseFalseDoesShutdownOutput()
     {
         // This test only works on Linux / BSD / MacOS as we assume some semantics that are not true for Windows.
-        if (OperatingSystem.IsWindows()) Assert.Skip("Original SO_LINGER=0 reset/read ordering requires Linux / BSD / MacOS.");
+        // CLR: assumeFalse(condition) aborts the test as skipped when the condition holds; xUnit v3 Assert.SkipWhen
+        // "skips when it is true" (https://xunit.net/docs/getting-started/v3/whats-new).
+        Assert.SkipWhen(PlatformDependent.IsWindows(), "assumeFalse(PlatformDependent.isWindows())");
+        await Run(TestContext.Current, TestAutoCloseFalseDoesShutdownOutput0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestAutoCloseFalseDoesShutdownOutput test name; both source overloads
+    // keep the 0 suffix.
+    private async Task TestAutoCloseFalseDoesShutdownOutput0(ServerBootstrap sb, Bootstrap cb)
+    {
+        await TestAutoCloseFalseDoesShutdownOutput0(false, false, sb, cb);
+        await TestAutoCloseFalseDoesShutdownOutput0(false, true, sb, cb);
+        await TestAutoCloseFalseDoesShutdownOutput0(true, false, sb, cb);
+        await TestAutoCloseFalseDoesShutdownOutput0(true, true, sb, cb);
+    }
+
+    private static async Task TestAutoCloseFalseDoesShutdownOutput0(bool allowHalfClosed,
+                                                             bool clientIsLeader,
+                                                             ServerBootstrap sb,
+                                                             Bootstrap cb)
+    {
+        var cancellation = TestContext.Current.CancellationToken;
         const int expectedBytes = 100;
-        await using var fixture = new ShutdownFixture(adaptive);
-        using var followerClosed = new ManualResetEventSlim();
-        var state = new ResetState();
-        var leader = new AutoCloseFalseLeader(expectedBytes, followerClosed, state, TestContext.Current.CancellationToken);
-        var follower = new AutoCloseFalseFollower(expectedBytes, followerClosed, state);
-        fixture.Client.Option(ChannelOption.ALLOW_HALF_CLOSURE, allowHalfClosed).Option(ChannelOption.AUTO_CLOSE, false)
-            .Option(ChannelOption.SO_LINGER, 0).Handler(clientIsLeader ? leader : follower);
-        fixture.Server.ChildOption(ChannelOption.ALLOW_HALF_CLOSURE, allowHalfClosed).ChildOption(ChannelOption.AUTO_CLOSE, false)
-            .ChildOption(ChannelOption.SO_LINGER, 0).ChildHandler(clientIsLeader ? follower : leader);
-        var server = await fixture.Server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        var client = await fixture.Client.ConnectAsync(server.LocalAddress);
-        await state.Done.Task.WaitAsync(TestContext.Current.CancellationToken);
-        Assert.Null(state.Cause); Assert.True(leader.SeenOutputShutdown);
-        await client.CloseAsync(); await server.CloseAsync();
-    }
-    private sealed class ResetState
-    {
-        internal Exception Cause;
-        private int _remaining = 2;
-        internal readonly TaskCompletionSource Done = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal void Signal() { if (Interlocked.Decrement(ref _remaining) == 0) Done.TrySetResult(); }
-        internal void Fail(Exception cause) { Interlocked.Exchange(ref Cause, cause); Signal(); }
-    }
-    private sealed class AutoCloseFalseFollower(int expected, ManualResetEventSlim followerClosed, ResetState state) : SimpleChannelInboundHandler<ByteBuf>
-    {
-        private int _bytesRead;
-        public override void ChannelInactive(ChannelHandlerContext ctx) => CheckPrematureClose();
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) { _ = ctx.CloseAsync(); CheckPrematureClose(); }
-        protected override void ChannelRead0(ChannelHandlerContext ctx, ByteBuf message)
+        CountDownLatch serverReadExpectedLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(2);
+        StrongBox<Exception> causeRef = new StrongBox<Exception>();
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
+        try
         {
-            _bytesRead += message.ReadableBytes;
-            if (_bytesRead >= expected)
+            cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, allowHalfClosed)
+                    .Option(ChannelOption.AUTO_CLOSE, false)
+                    .Option(ChannelOption.SO_LINGER, 0);
+            sb.ChildOption(ChannelOption.ALLOW_HALF_CLOSURE, allowHalfClosed)
+                    .ChildOption(ChannelOption.AUTO_CLOSE, false)
+                    .ChildOption(ChannelOption.SO_LINGER, 0);
+
+            AutoCloseFalseLeader leaderHandler = new AutoCloseFalseLeader(expectedBytes,
+                    serverReadExpectedLatch, doneLatch, causeRef, cancellation);
+            AutoCloseFalseFollower followerHandler = new AutoCloseFalseFollower(expectedBytes,
+                    serverReadExpectedLatch, doneLatch, causeRef);
+            sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
             {
-                // We write a reply and immediately close our end of the socket.
-                var buffer = ctx.Allocator.Buffer(expected); buffer.WriterIndex += expected;
-                _ = ReplyAndClose(ctx, buffer);
+                ch.Pipeline.AddLast(clientIsLeader ? followerHandler : (IChannelHandler) leaderHandler);
+            }));
+
+            cb.Handler(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(clientIsLeader ? leaderHandler : (IChannelHandler) followerHandler);
+            }));
+
+            serverChannel = await sb.BindAsync();
+            clientChannel = await cb.ConnectAsync(serverChannel.LocalAddress);
+
+            await doneLatch.AwaitAsync(cancellation);
+            Assert.Null(Volatile.Read(ref causeRef.Value));
+            Assert.True(leaderHandler.seenOutputShutdown);
+        }
+        finally
+        {
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
+            }
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
             }
         }
-        private async Task ReplyAndClose(ChannelHandlerContext ctx, ByteBuf buffer)
-        {
-            try { await ctx.WriteAndFlushAsync(buffer); } catch { }
-            try { await ctx.CloseAsync(); } catch { }
-            // This is a bit racy but there is no better way how to handle this in Java11.
-            // The problem is that on close() the underlying FD will not actually be closed directly
-            // but the close will be done after the Selector did process all events. Because of
-            // this we will need to give it a bit time to ensure the FD is actual closed before we
-            // count down the latch and try to write.
-            // CLR Socket.Dispose closes directly; retain the original 200 ms sequencing barrier.
-            await ctx.Executor.ScheduleAsync(followerClosed.Set, TimeSpan.FromMilliseconds(200));
-        }
-        private void CheckPrematureClose()
-        { if (_bytesRead < expected) state.Fail(new InvalidOperationException("follower premature close")); }
     }
-    private sealed class AutoCloseFalseLeader(int expected, ManualResetEventSlim followerClosed, ResetState state, CancellationToken token) : SimpleChannelInboundHandler<ByteBuf>
+
+    private sealed class AutoCloseFalseFollower : SimpleChannelInboundHandler<ByteBuf>
     {
-        private int _bytesRead;
-        internal bool SeenOutputShutdown;
-        public override void ChannelActive(ChannelHandlerContext ctx)
+        private readonly int expectedBytes;
+        private readonly CountDownLatch followerCloseLatch;
+        private readonly CountDownLatch doneLatch;
+        private readonly StrongBox<Exception> causeRef;
+        private int bytesRead;
+
+        internal AutoCloseFalseFollower(int expectedBytes, CountDownLatch followerCloseLatch, CountDownLatch doneLatch,
+                               StrongBox<Exception> causeRef)
         {
-            var buffer = ctx.Allocator.Buffer(expected); buffer.WriterIndex += expected;
-            _ = ctx.WriteAndFlushAsync(buffer.RetainedDuplicate());
+            this.expectedBytes = expectedBytes;
+            this.followerCloseLatch = followerCloseLatch;
+            this.doneLatch = doneLatch;
+            this.causeRef = causeRef;
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            CheckPrematureClose();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+            CheckPrematureClose();
+        }
+
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
+        {
+            bytesRead += msg.ReadableBytes;
+            if (bytesRead >= expectedBytes)
+            {
+                // We write a reply and immediately close our end of the socket.
+                ByteBuf buf = ctx.Alloc().Buffer(expectedBytes);
+                buf.WriterIndex = buf.WriterIndex + expectedBytes;
+                _ = ctx.WriteAndFlushAsync(buf).ContinueWith(future =>
+                        ctx.CloseAsync().ContinueWith(f =>
+                        {
+                            // This is a bit racy but there is no better way how to handle this in Java11.
+                            // The problem is that on close() the underlying FD will not actually be closed directly
+                            // but the close will be done after the Selector did process all events. Because of
+                            // this we will need to give it a bit time to ensure the FD is actual closed before we
+                            // count down the latch and try to write.
+                            _ = ctx.Executor.ScheduleAsync(() =>
+                            {
+                                followerCloseLatch.CountDown();
+                            }, TimeSpan.FromMilliseconds(200));
+                        }, TaskScheduler.Default), TaskScheduler.Default);
+            }
+        }
+
+        private void CheckPrematureClose()
+        {
+            if (bytesRead < expectedBytes)
+            {
+                // CLR: IllegalStateException is InvalidOperationException, "thrown when a method call is invalid for
+                // the object's current state" (https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception).
+                Volatile.Write(ref causeRef.Value, new InvalidOperationException("follower premature close"));
+                doneLatch.CountDown();
+            }
+        }
+    }
+
+    private sealed class AutoCloseFalseLeader : SimpleChannelInboundHandler<ByteBuf>
+    {
+        private readonly int expectedBytes;
+        private readonly CountDownLatch followerCloseLatch;
+        private readonly CountDownLatch doneLatch;
+        private readonly StrongBox<Exception> causeRef;
+        private readonly CancellationToken cancellation;
+        private int bytesRead;
+        internal bool seenOutputShutdown;
+
+        // CLR: the extra cancellation argument lets the blocking followerCloseLatch wait on the event loop end when
+        // xUnit signals the Timeout, so a timed-out run does not keep a thread of the shared group blocked.
+        internal AutoCloseFalseLeader(int expectedBytes, CountDownLatch followerCloseLatch, CountDownLatch doneLatch,
+                             StrongBox<Exception> causeRef, CancellationToken cancellation)
+        {
+            this.expectedBytes = expectedBytes;
+            this.followerCloseLatch = followerCloseLatch;
+            this.doneLatch = doneLatch;
+            this.causeRef = causeRef;
+            this.cancellation = cancellation;
+        }
+
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            ByteBuf buf = ctx.Alloc().Buffer(expectedBytes);
+            buf.WriterIndex = buf.WriterIndex + expectedBytes;
+            _ = ctx.WriteAndFlushAsync(buf.RetainedDuplicate());
+
             // We wait here to ensure that we write before we have a chance to process the outbound
             // shutdown event.
-            try { followerClosed.Wait(token); }
-            catch { buffer.Release(); throw; }
+            followerCloseLatch.Await(cancellation);
+
             // This write should fail, but we should still be allowed to read the peer's data
-            _ = CheckWrite(ctx.WriteAndFlushAsync(buffer));
+            _ = ctx.WriteAndFlushAsync(buf).ContinueWith(future =>
+            {
+                // CLR: future.cause() == null on a completed future is Task.IsCompletedSuccessfully.
+                if (future.IsCompletedSuccessfully)
+                {
+                    Volatile.Write(ref causeRef.Value,
+                            new InvalidOperationException("second write should have failed!"));
+                    doneLatch.CountDown();
+                }
+            }, TaskScheduler.Default);
         }
-        private async Task CheckWrite(Task write)
+
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
         {
-            try { await write; state.Fail(new InvalidOperationException("second write should have failed!")); }
-            catch { }
+            bytesRead += msg.ReadableBytes;
+            if (bytesRead >= expectedBytes)
+            {
+                doneLatch.CountDown();
+            }
         }
-        protected override void ChannelRead0(ChannelHandlerContext ctx, ByteBuf message)
-        { _bytesRead += message.ReadableBytes; if (_bytesRead >= expected) state.Signal(); }
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
-        { if (evt is ChannelOutputShutdownEvent) { SeenOutputShutdown = true; state.Signal(); } }
-        public override void ChannelInactive(ChannelHandlerContext ctx) => CheckPrematureClose();
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause) { _ = ctx.CloseAsync(); CheckPrematureClose(); }
+
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            if (evt is ChannelOutputShutdownEvent)
+            {
+                seenOutputShutdown = true;
+                doneLatch.CountDown();
+            }
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            CheckPrematureClose();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+            CheckPrematureClose();
+        }
+
         private void CheckPrematureClose()
-        { if (_bytesRead < expected || !SeenOutputShutdown) state.Fail(new InvalidOperationException("leader premature close")); }
+        {
+            if (bytesRead < expectedBytes || !seenOutputShutdown)
+            {
+                Volatile.Write(ref causeRef.Value, new InvalidOperationException("leader premature close"));
+                doneLatch.CountDown();
+            }
+        }
     }
 }
+#pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

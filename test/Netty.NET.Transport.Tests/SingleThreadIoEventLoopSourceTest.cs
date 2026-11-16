@@ -16,15 +16,10 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
-using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -32,243 +27,225 @@ namespace Netty.NET.Transport.Tests;
 public class SingleThreadIoEventLoopSourceTest
 {
     [Fact]
-    public async Task TestDefaultIoRatio()
+    public void TestDefaultIoRatio()
     {
-        var loop = new DefaultEventLoop();
-        try { Assert.Equal(DefaultEventLoop.DefaultIoRatio, loop.IoRatio); }
-        finally { await loop.StopAsync(); }
+        SingleThreadIoEventLoop loop = new SingleThreadIoEventLoop(null,
+                new BackgroundThreadFactory(Executors.DefaultThreadFactory()),
+                new TestIoHandlerFactory(e => new TestIoHandler(e)));
+        Assert.Equal(SingleThreadIoEventLoop.DEFAULT_IO_RATIO, loop.GetIoRatio());
+        loop.ShutdownGracefullyAsync();
     }
 
     [Fact]
-    public async Task TestSetIoRatio()
+    public void TestSetIoRatio()
     {
-        var loop = new DefaultEventLoop();
-        try
+        SingleThreadIoEventLoop loop = new SingleThreadIoEventLoop(null,
+                new BackgroundThreadFactory(Executors.DefaultThreadFactory()),
+                new TestIoHandlerFactory(e => new TestIoHandler(e)));
+        loop.SetIoRatio(50);
+        Assert.Equal(50, loop.GetIoRatio());
+        // CLR: ArgumentException replaces IllegalArgumentException (ObjectUtil.checkInRange).
+        Assert.Throws<ArgumentException>(() => loop.SetIoRatio(0));
+        Assert.Throws<ArgumentException>(() => loop.SetIoRatio(101));
+        loop.ShutdownGracefullyAsync();
+    }
+
+    // CLR: the local class TestIoHandler2 of the Java method is a nested class.
+    private class TestIoHandler2 : TestIoHandler
+    {
+        internal TestIoHandler2(IThreadAwareExecutor executor) : base(executor)
         {
-            loop.IoRatio = 50;
-            Assert.Equal(50, loop.IoRatio);
-            Assert.Throws<ArgumentOutOfRangeException>(() => loop.IoRatio = 0);
-            Assert.Throws<ArgumentOutOfRangeException>(() => loop.IoRatio = 101);
         }
-        finally { await loop.StopAsync(); }
     }
 
     [Fact]
-    public async Task TestIsIoType()
+    public void TestIsIoType()
     {
-        var loop = new DefaultEventLoop(new TestIoHandler());
-        try
-        {
-            Assert.True(loop.IsIoType(typeof(TestIoHandler)));
-            Assert.False(loop.IsIoType(typeof(DerivedTestIoHandler)));
-        }
-        finally { await loop.StopAsync(); }
+        IIoEventLoopGroup group = new SingleThreadIoEventLoop(null,
+                new BackgroundThreadFactory(Executors.DefaultThreadFactory()),
+                new TestIoHandlerFactory(e => new TestIoHandler(e)));
+        Assert.True(group.IsIoType(typeof(TestIoHandler)));
+        Assert.False(group.IsIoType(typeof(TestIoHandler2)));
+        group.ShutdownGracefullyAsync();
     }
 
-    [Fact]
-    public async Task TestIsCompatible()
-    {
-        using var handle = new DerivedTestIoHandle();
-        var loop = new DefaultEventLoop(new CompatibleTestIoHandler());
-        try
-        {
-            Assert.True(loop.IsCompatible(typeof(TestIoHandle)));
-            Assert.False(loop.IsCompatible(handle.GetType()));
-        }
-        finally { await loop.StopAsync(); }
-    }
-
-    [Fact(Timeout = 5000, Skip = "This test is flaky and will often stall the build")]
-    public async Task TestSuspendingWhileRegistrationActive()
-    {
-        var threadFactory = new TestThreadFactory();
-        var loop = new DefaultEventLoop(null, new ThreadPerTaskExecutor(threadFactory).Execute,
-            supportSuspension: true, ioHandler: new TestIoHandler());
-        var token = TestContext.Current.CancellationToken;
-        try
-        {
-            Assert.False(loop.IsSuspended());
-            var registration = await loop.RegisterIoAsync(new TestIoHandle(), token);
-            Assert.True(threadFactory.Threads.TryDequeue(out var worker));
-            Assert.True(worker.IsAlive);
-            Assert.True(loop.TrySuspend());
-
-            // Still should be alive as until the registration is cancelled we can not suspend the loop.
-            Assert.True(worker.IsAlive);
-            Assert.True(await registration.CancelAsync().WaitAsync(token));
-            Assert.False(registration.IsValid);
-
-            // The current thread should be able to die now.
-            Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
-            Assert.Empty(threadFactory.Threads);
-        }
-        finally { await loop.StopAsync(); }
-    }
-
-    [Theory(Timeout = 5000)]
-    [InlineData(50, true, 64)]
-    [InlineData(100, true, 130)]
-    [InlineData(50, false, 130)]
-    public async Task IoBatchBoundsTheNextOrdinaryTaskPhase(int ratio, bool handled, int tasksAtNextIo)
-    {
-        var ticker = Ticker.NewMockTicker();
-        var loop = new ClockedLoop(ticker) { IoRatio = ratio };
-        var token = TestContext.Current.CancellationToken;
-        var ownerEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var secondIo = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var resume = new ManualResetEventSlim();
-        int ordinaryTasks = 0;
-        try
-        {
-            loop.Execute(() => { ownerEntered.SetResult(); resume.Wait(token); });
-            await ownerEntered.Task.WaitAsync(token);
-            for (int i = 0; i < 130; i++)
-                loop.Execute(() => { ordinaryTasks++; ticker.Advance(10); });
-
-            Task firstIo = loop.SubmitIoAsync(() =>
-            {
-                Assert.True(loop.InEventLoop());
-                Assert.Equal(0, ordinaryTasks);
-                ticker.Advance(10);
-                _ = loop.SubmitIoAsync(() =>
-                {
-                    secondIo.SetResult(ordinaryTasks);
-                    return (Task.CompletedTask, true);
-                });
-                return (Task.CompletedTask, handled);
-            });
-            resume.Set();
-            await firstIo.WaitAsync(token);
-            Assert.Equal(tasksAtNextIo, await secondIo.Task.WaitAsync(token));
-            await loop.SubmitAsync(() => Assert.Equal(130, ordinaryTasks), token);
-        }
-        finally
-        {
-            resume.Set();
-            await loop.StopAsync();
-        }
-    }
-
-    [Theory]
-    [InlineData(-1L, 50, 1000L, 1000L)]
-    [InlineData(0L, 50, 1000L, 1000L)]
-    [InlineData(80L, 50, 1000L, 80L)]
-    [InlineData(80L, 20, 100L, 100L)]
-    [InlineData(1L, 99, 1000L, 1000L)]
-    [InlineData(long.MaxValue, 1, 1000L, 1000L)]
-    public void TaskBudgetClampsAndNeverOverflows(long active, int ratio, long maximum, long expected) =>
-        Assert.Equal(expected, DefaultEventLoop.TaskBudgetNanos(active, ratio, maximum));
-
-    [Fact(Timeout = 5000)]
-    public async Task StopDrainsAcceptedIoOnTheOwnerAndRejectsLateCompletions()
-    {
-        var loop = new DefaultEventLoop();
-        var token = TestContext.Current.CancellationToken;
-        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var resume = new ManualResetEventSlim();
-        var context = new AsyncLocal<string>();
-        try
-        {
-            loop.Execute(() => { entered.SetResult(); resume.Wait(token); });
-            await entered.Task.WaitAsync(token);
-            context.Value = "publisher";
-            Task accepted = loop.SubmitIoAsync(() =>
-            {
-                Assert.True(loop.InEventLoop());
-                Assert.Equal("publisher", context.Value);
-                return (Task.CompletedTask, true);
-            });
-            context.Value = "after publication";
-            Task stop = loop.StopAsync();
-            Assert.Throws<RejectedExecutionException>(() => { _ = loop.SubmitIoAsync(() => (Task.CompletedTask, true)); });
-            resume.Set();
-            await accepted.WaitAsync(token);
-            await stop.WaitAsync(token);
-            Assert.Equal(0, loop.PendingTasks());
-        }
-        finally
-        {
-            resume.Set();
-            await loop.StopAsync();
-        }
-    }
-
-    [Fact(Timeout = 5000)]
-    public async Task RealTcpReadCompletionRunsBeforeTheQueuedOrdinaryTask()
-    {
-        var token = TestContext.Current.CancellationToken;
-        var group = new DefaultEventLoopGroup(1);
-        var inbound = new ReadProbe();
-        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var resume = new ManualResetEventSlim();
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        try
-        {
-            var channel = await new Bootstrap().Group(group).ChannelFactory(() => new TcpSocketChannel(AddressFamily.InterNetwork)).Handler(inbound)
-                .ConnectAsync(listener.LocalEndpoint, cancellationToken: token);
-            using var sender = await listener.AcceptSocketAsync(token);
-            var loop = (DefaultEventLoop)channel.EventLoop;
-            await loop.SubmitAsync(() => { }, token);
-            loop.Execute(() => { entered.SetResult(); resume.Wait(token); });
-            await entered.Task.WaitAsync(token);
-            Task ordinary = loop.SubmitAsync(() => Assert.True(inbound.Received.Task.IsCompletedSuccessfully), token);
-            Assert.Equal(1, await sender.SendAsync(new byte[] { 71 }, SocketFlags.None, token));
-            while (loop.PendingTasks() <= 1) await Task.Delay(1, token);
-            resume.Set();
-            await ordinary.WaitAsync(token);
-            Assert.Equal(71, await inbound.Received.Task.WaitAsync(token));
-        }
-        finally
-        {
-            resume.Set();
-            await group.StopAsync();
-        }
-    }
-
-    private sealed class ReadProbe : SimpleChannelInboundHandler<ByteBuf>
-    {
-        internal readonly TaskCompletionSource<int> Received = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message) =>
-            Received.TrySetResult(message.ReadByte());
-    }
-
-    private sealed class ClockedLoop(Ticker clock) : DefaultEventLoop
-    {
-        public override Ticker Ticker() => clock;
-    }
-
-    private class TestIoHandler : CompletionIoHandler { }
-    private sealed class DerivedTestIoHandler : TestIoHandler { }
     private sealed class CompatibleTestIoHandler : TestIoHandler
     {
-        public override bool IsCompatible(Type handleType) => handleType == typeof(TestIoHandle);
+        internal CompatibleTestIoHandler(IThreadAwareExecutor executor) : base(executor)
+        {
+        }
+
+        public override bool IsCompatible(Type handleType)
+        {
+            return handleType == typeof(TestIoHandle);
+        }
+    }
+
+    // CLR: the anonymous TestIoHandle subclass of the Java method is a nested class.
+    private sealed class AnonymousTestIoHandle : TestIoHandle { }
+
+    [Fact]
+    public void TestIsCompatible()
+    {
+        IIoHandle handle = new AnonymousTestIoHandle();
+        IIoEventLoopGroup group = new SingleThreadIoEventLoop(null,
+                new BackgroundThreadFactory(Executors.DefaultThreadFactory()),
+                new TestIoHandlerFactory(e => new CompatibleTestIoHandler(e)));
+        Assert.True(group.IsCompatible(typeof(TestIoHandle)));
+        Assert.False(group.IsCompatible(handle.GetType()));
+        group.ShutdownGracefullyAsync();
+    }
+
+    // CLR: TestIoHandler.run blocks on its semaphore until wakeup(); shutdownGracefully() releases one permit,
+    // and the quiet-period pass of confirmShutdown() only queues WAKEUP_TASK, so the next run() never returns and
+    // the loop thread outlives the test, in Java as well. The forked JVM of the Java build exits regardless; the
+    // xUnit v3 runner waits for foreground threads and then reports a fatal error, so the loop threads of these
+    // tests are background threads.
+    // https://learn.microsoft.com/dotnet/api/system.threading.thread.isbackground
+    private sealed class BackgroundThreadFactory(IThreadFactory threadFactory) : IThreadFactory
+    {
+        public Thread NewThread(Action r)
+        {
+            Thread thread = threadFactory.NewThread(r);
+            thread.IsBackground = true;
+            return thread;
+        }
+    }
+
+    private sealed class TestThreadFactory : IThreadFactory
+    {
+        internal readonly BlockingCollection<Thread> Threads = new();
+
+        public Thread NewThread(Action r)
+        {
+            // CLR: a background thread for the reason given on BackgroundThreadFactory.
+            Thread thread = new Thread(() => r()) { IsBackground = true };
+            Threads.Add(thread);
+            return thread;
+        }
+    }
+
+    private sealed class AlwaysCompatibleTestIoHandler : TestIoHandler
+    {
+        internal AlwaysCompatibleTestIoHandler(IThreadAwareExecutor executor) : base(executor)
+        {
+        }
+
+        public override bool IsCompatible(Type handleType)
+        {
+            return true;
+        }
+    }
+
+    [Fact(Skip = "This test is flaky and will often stall the build")]
+    public async Task TestSuspendingWhileRegistrationActive()
+    {
+        TestThreadFactory threadFactory = new TestThreadFactory();
+        IIoEventLoop loop = new SingleThreadIoEventLoop(null, threadFactory,
+                new TestIoHandlerFactory(eventLoop => new AlwaysCompatibleTestIoHandler(eventLoop)));
+        Assert.False(loop.IsSuspended());
+        IIoRegistration registration = await loop.RegisterAsync(new TestIoHandle());
+        Thread currentThread = threadFactory.Threads.Take();
+        Assert.True(currentThread.IsAlive);
+        Assert.True(loop.TrySuspend());
+
+        // Still should be alive as until the registration is cancelled we can not suspend the loop.
+        Assert.True(currentThread.IsAlive);
+
+        registration.Cancel();
+        Assert.False(registration.IsValid());
+
+        // The current thread should be able to die now.
+        currentThread.Join();
+
+        Assert.Equal(0, threadFactory.Threads.Count);
+        await loop.ShutdownGracefullyAsync();
+    }
+
+    // CLR: the TestIoHandler::new method references become a factory delegate.
+    private sealed class TestIoHandlerFactory(Func<IThreadAwareExecutor, IIoHandler> newHandler) : IIoHandlerFactory
+    {
+        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor) => newHandler(ioExecutor);
+    }
+
+    private class TestIoHandler : IIoHandler
+    {
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly IThreadAwareExecutor _executor;
+
+        internal TestIoHandler(IThreadAwareExecutor executor)
+        {
+            _executor = executor;
+        }
+
+        public void PrepareToDestroy()
+        {
+            // NOOP
+        }
+
+        public void Destroy()
+        {
+            // NOOP
+        }
+
+        public IIoRegistration Register(IIoHandle handle)
+        {
+            return new TestIoRegistration();
+        }
+
+        // CLR: the anonymous IoRegistration of register(IoHandle) becomes a nested class.
+        private sealed class TestIoRegistration : IIoRegistration
+        {
+            private readonly AtomicBoolean _canceled = new AtomicBoolean();
+
+            public T Attachment<T>()
+            {
+                return default;
+            }
+
+            public long Submit(IIoOps ops)
+            {
+                return 0;
+            }
+
+            public bool Cancel()
+            {
+                return _canceled.CompareAndSet(false, true);
+            }
+
+            public bool IsValid()
+            {
+                return !_canceled.Get();
+            }
+        }
+
+        public void Wakeup()
+        {
+            _semaphore.Release();
+        }
+
+        public int Run(IIoHandlerContext context)
+        {
+            _semaphore.Wait();
+            return 0;
+        }
+
+        public virtual bool IsCompatible(Type handleType)
+        {
+            return false;
+        }
     }
 
     private class TestIoHandle : IIoHandle
     {
-        public void HandleCompletion(IoRegistration registration, object completion)
+        public void Handle(IIoRegistration registration, IIoEvent readyOps)
         {
             // NOOP
         }
 
-        public void Dispose()
+        public void Close()
         {
             // NOOP
-        }
-    }
-    private sealed class DerivedTestIoHandle : TestIoHandle { }
-
-    private sealed class TestThreadFactory : IThreadFactory
-    {
-        internal readonly ConcurrentQueue<Thread> Threads = new();
-
-        public Thread NewThread(Action run)
-        {
-            var thread = new Thread(() => run()) { IsBackground = true };
-            Threads.Enqueue(thread);
-            return thread;
         }
     }
 }

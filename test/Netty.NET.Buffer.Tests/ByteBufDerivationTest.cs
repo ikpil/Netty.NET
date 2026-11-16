@@ -117,7 +117,7 @@ public class ByteBufDerivationTest
         Assert.Equal(0x04030201, root.GetIntLE(root.ReaderIndex)); Assert.Equal(0x01020304, root.GetInt(root.ReaderIndex));
         root.SetIndex(2, 6);
         Assert.Equal(0x05040302, root.GetIntLE(root.ReaderIndex)); Assert.Equal(0x02030405, root.GetInt(root.ReaderIndex));
-        Assert.Equal(2, root.ReaderIndex); Assert.Equal(6, root.WriterIndex); Assert.Equal(1, root.ReferenceCount);
+        Assert.Equal(2, root.ReaderIndex); Assert.Equal(6, root.WriterIndex); Assert.Equal(1, root.RefCnt);
     });
 
     [Theory] [InlineData(false)] [InlineData(true)]
@@ -137,7 +137,7 @@ public class ByteBufDerivationTest
             byte[] bytes = Enumerable.Range(offset, 4).Select(value => unchecked((byte)value)).ToArray();
             long expected = 0; foreach (byte value in little ? bytes.Reverse() : bytes) expected = (expected << 8) | value;
             Assert.Equal(unchecked((int)expected), little ? derived.GetIntLE(0) : derived.GetInt(0));
-            Assert.InRange(Depth(derived), 0, 2); Assert.Equal(1, derived.ReferenceCount);
+            Assert.InRange(Depth(derived), 0, 2); Assert.Equal(1, derived.RefCnt);
         }
     }, 10000);
 
@@ -153,7 +153,7 @@ public class ByteBufDerivationTest
                 0 => NextSlice(), 1 => derived.Duplicate(), _ => new ReadOnlyByteBuf(derived)
             };
             ByteBuf NextSlice() { offset++; return derived.Slice(1, derived.Capacity - 1); }
-            Assert.InRange(Depth(derived), 1, 2); Assert.Equal(unchecked((byte)offset), derived.GetByte(0)); Assert.Equal(1, derived.ReferenceCount);
+            Assert.InRange(Depth(derived), 1, 2); Assert.Equal(unchecked((byte)offset), derived.GetByte(0)); Assert.Equal(1, derived.RefCnt);
         }
     }, 10000);
 
@@ -174,7 +174,7 @@ public class ByteBufDerivationTest
         ByteBuf root = direct ? new UnpooledDirectByteBuf(8, 32, native) : new UnpooledHeapByteBuf(8, 32);
         root.WriteLong(0x0102030405060708);
         ByteBuf retained = root.Slice(1, 7).Duplicate().RetainedSlice(1, 5);
-        Assert.Equal(2, root.ReferenceCount); Assert.Same(root, retained.Unwrap());
+        Assert.Equal(2, root.RefCnt); Assert.Same(root, retained.Unwrap());
         root.Capacity = 4; Assert.Equal(3, retained.GetByte(0)); Assert.Throws<ArgumentOutOfRangeException>(() => retained.GetByte(4));
         root.Capacity = 16; retained.SetByte(4, 99); Assert.Equal(99, root.GetByte(6));
         Assert.False(root.Release()); Assert.Equal(3, retained.GetByte(0)); Assert.True(retained.Release());
@@ -193,12 +193,12 @@ public class ByteBufDerivationTest
         try
         {
             ByteBuf borrowed = (readOnly ? owner.AsReadOnly() : owner).Duplicate().Slice(1, 4).Duplicate();
-            Assert.Equal(1, borrowed.ReferenceCount); Assert.Equal(2, root.ReferenceCount); Assert.Equal(3, borrowed.GetByte(readOnly ? 0 : 2));
-            borrowed.Retain(); Assert.Equal(2, owner.ReferenceCount); Assert.Equal(2, root.ReferenceCount);
-            Assert.False(owner.Release()); Assert.True(borrowed.Release()); Assert.Equal(0, owner.ReferenceCount); Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(1, borrowed.RefCnt); Assert.Equal(2, root.RefCnt); Assert.Equal(3, borrowed.GetByte(readOnly ? 0 : 2));
+            borrowed.Retain(); Assert.Equal(2, owner.RefCnt); Assert.Equal(2, root.RefCnt);
+            Assert.False(owner.Release()); Assert.True(borrowed.Release()); Assert.Equal(0, owner.RefCnt); Assert.Equal(1, root.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => borrowed.GetByte(0)); Assert.Equal(1, root.GetByte(0));
         }
-        finally { if (owner.ReferenceCount > 0) owner.Release(owner.ReferenceCount); root.Release(); allocator.Dispose(); }
+        finally { if (owner.RefCnt > 0) owner.Release(owner.RefCnt); root.Release(); allocator.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -214,11 +214,11 @@ public class ByteBufDerivationTest
         {
             ByteBuf derived = facade.Slice(1, 7).Duplicate().Slice(1, 5).Duplicate().AsReadOnly().Duplicate();
             Assert.IsType(advanced ? typeof(AdvancedLeakAwareByteBuf) : typeof(SimpleLeakAwareByteBuf), derived);
-            Assert.Equal(3, derived.GetByte(0)); derived.Retain(); Assert.Equal(2, root.ReferenceCount);
+            Assert.Equal(3, derived.GetByte(0)); derived.Retain(); Assert.Equal(2, root.RefCnt);
             Assert.False(facade.Release()); Assert.Equal(0, tracker.Closes); Assert.True(derived.Release()); Assert.Equal(1, tracker.Closes);
-            Assert.Equal(0, root.ReferenceCount); Assert.Throws<IllegalReferenceCountException>(() => derived.GetByte(0));
+            Assert.Equal(0, root.RefCnt); Assert.Throws<IllegalReferenceCountException>(() => derived.GetByte(0));
         }
-        finally { if (root.ReferenceCount > 0) root.Release(root.ReferenceCount); }
+        finally { if (root.RefCnt > 0) root.Release(root.RefCnt); }
         Assert.Equal(0, native.ReservedBytes);
     }
 

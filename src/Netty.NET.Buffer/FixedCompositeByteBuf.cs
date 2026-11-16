@@ -58,7 +58,7 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         for (int i = 0; i < buffers.Length; ++i)
         {
             ByteBuf source = buffers[i] ?? throw new ArgumentException("A component is null.", nameof(buffers));
-            if (source.ReferenceCount <= 0) throw new IllegalReferenceCountException(source.ReferenceCount);
+            if (source.RefCnt <= 0) throw new IllegalReferenceCountException(source.RefCnt);
             int length = source.ReadableBytes;
             if (length > int.MaxValue - offset)
                 throw new ArgumentException("The combined capacity exceeds Int32.MaxValue.", nameof(buffers));
@@ -79,7 +79,7 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
     }
     public override bool IsReadOnly => true;
     public override bool IsDirect => _direct;
-    public override bool CanWrite(int byteCount) => false;
+    public override bool IsWritable(int size) => false;
     public override ByteBuf DiscardReadBytes() { EnsureCanWrite(); return this; }
 
     protected override Memory<byte> GetMemoryCore(int index, int length)

@@ -46,8 +46,8 @@ public class ByteBufComparisonSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -77,7 +77,7 @@ public class ByteBufComparisonSourceTest
         Assert.True(buffer.CompareTo(buffer2) < 0); Assert.True(buffer2.CompareTo(buffer) > 0);
         Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(8, buffer.WriterIndex);
         Assert.Equal(0, buffer2.ReaderIndex); Assert.Equal(8, buffer2.WriterIndex);
-        Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(1, buffer2.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, buffer2.RefCnt);
     }
 
     [Theory]
@@ -101,7 +101,7 @@ public class ByteBufComparisonSourceTest
             Assert.False(buffer.Equals((object)expected));
             Assert.False(((IEquatable<ByteBuf>)buffer).Equals(expected.Duplicate()));
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(1, expected.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, expected.RefCnt);
         }
         finally { Assert.True(expected.Release()); }
     }
@@ -142,30 +142,37 @@ public class ByteBufComparisonSourceTest
             }
             Assert.Equal(value, ByteBufUtil.GetBytes(buffer, 0, 32));
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(1, expected.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, expected.RefCnt);
         }
         finally { Assert.True(expected.Release()); }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ComparisonUsesFixedWireContent(int provider)
+    public void TestCompareTo2AcrossProviders(int provider)
     {
-        byte[] bytes = [1, 2, 3, 4], bytesReversed = [4, 3, 2, 1];
+        byte[] bytes = [1, 2, 3, 4];
+        byte[] bytesReversed = [4, 3, 2, 1];
+
+        // CLR: Storage.Dispose replaces the finally block that releases the four buffers.
         using var first = new Storage(provider, 4);
         using var second = new Storage(provider, 4);
         using var third = new Storage(provider, 4);
         using var fourth = new Storage(provider, 4);
-        ByteBuf buf1 = first.Root.Clear().WriteBytes(bytes), buf2 = second.Root.Clear().WriteBytes(bytesReversed);
-        ByteBuf buf3 = third.Root.Clear().WriteBytes(bytes), buf4 = fourth.Root.Clear().WriteBytes(bytesReversed);
-        // Fixed byte content is compared; explicit BE/LE reads replace Java's order facades.
+        // CLR: there is no order(LITTLE_ENDIAN/BIG_ENDIAN) facade; buf1/buf2 are read through explicit LE
+        // accessors and buf3/buf4 through BE accessors, while comparison uses the fixed byte content.
+        ByteBuf buf1 = first.Root.Clear().WriteBytes(bytes);
+        ByteBuf buf2 = second.Root.Clear().WriteBytes(bytesReversed);
+        ByteBuf buf3 = third.Root.Clear().WriteBytes(bytes);
+        ByteBuf buf4 = fourth.Root.Clear().WriteBytes(bytesReversed);
         Assert.Equal(0x04030201, buf1.GetIntLE(0)); Assert.Equal(0x01020304, buf3.GetInt(0));
         Assert.Equal(0x01020304, buf2.GetIntLE(0)); Assert.Equal(0x04030201, buf4.GetInt(0));
         Assert.Equal(buf1.CompareTo(buf2), buf3.CompareTo(buf4));
         Assert.Equal(buf2.CompareTo(buf1), buf4.CompareTo(buf3));
         Assert.Equal(buf1.CompareTo(buf3), buf2.CompareTo(buf4));
         Assert.Equal(buf3.CompareTo(buf1), buf4.CompareTo(buf2));
+        // CLR: comparison does not consume or release.
         foreach (ByteBuf buffer in new[] { buf1, buf2, buf3, buf4 })
-        { Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex); Assert.Equal(1, buffer.ReferenceCount); }
+        { Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex); Assert.Equal(1, buffer.RefCnt); }
     }
 }

@@ -74,7 +74,7 @@ public class HostsFileEntriesProviderTest
         Assert.Equal(1, inet4Entries["host6"].Count);
         Assert.Equal("192.168.0.3", inet4Entries["host6"][0].ToString());
 
-        Assert.NotNull(inet4Entries["host7"], "Uppercase host doesn't resolve");
+        Assert.NotNull(inet4Entries.GetValueOrDefault("host7"), "Uppercase host doesn't resolve");
         Assert.Equal(2, inet4Entries["host7"].Count);
         Assert.Equal("192.168.0.5", inet4Entries["host7"][0].ToString());
         Assert.Equal("192.168.0.6", inet4Entries["host7"][1].ToString());

@@ -46,8 +46,8 @@ public class ByteBufDiscardSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -145,7 +145,7 @@ public class ByteBufDiscardSourceTest
                 Assert.Equal(copy[(capacity / 2 - 1 + i)..(capacity - 1)],
                     ByteBufUtil.GetBytes(buffer, i, capacity / 2 - i));
         }
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
     }
 
     public static IEnumerable<object[]> MarkCases()
@@ -183,7 +183,7 @@ public class ByteBufDiscardSourceTest
         Assert.Equal(provider == 2 ? 16 - removed : 16, buffer.Capacity);
         Assert.Equal(expected, ByteBufUtil.GetBytes(buffer, 0, buffer.Capacity));
         Assert.Equal(unread, ByteBufUtil.GetBytes(buffer, buffer.ReaderIndex, buffer.ReadableBytes));
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         buffer.ResetReaderIndex(); Assert.Equal(Math.Max(0, markedReader - removed), buffer.ReaderIndex);
         buffer.ResetWriterIndex(); Assert.Equal(Math.Max(0, markedWriter - removed), buffer.WriterIndex);
     }
@@ -234,7 +234,7 @@ public class ByteBufDiscardSourceTest
                 ByteBufUtil.GetBytes(buffer, 0, 8));
             buffer.ResetReaderIndex(); Assert.Equal(fail ? 5 : 1, buffer.ReaderIndex);
             buffer.ResetWriterIndex(); Assert.Equal(fail ? 7 : 3, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { Assert.True(buffer.Release()); }
         Assert.Equal(0, native.ReservedBytes);

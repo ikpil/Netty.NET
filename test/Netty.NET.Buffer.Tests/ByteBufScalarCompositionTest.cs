@@ -224,7 +224,7 @@ public class ByteBufScalarCompositionTest
             Assert.Equal(new byte[64], ByteBufUtil.GetBytes(buffer, 0, 64));
             buffer.SetIndex(0, 64).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(3, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(1, Unpooled.EmptyBuffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
         }
         finally { Assert.True(buffer.Release()); }
         Assert.Equal(0, native.ReservedBytes);

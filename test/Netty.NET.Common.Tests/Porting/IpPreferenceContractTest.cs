@@ -15,7 +15,7 @@ public class IpPreferenceContractTest
     public void PreferencesAreReadOnlyNativePropertiesWithoutGetterAliases()
     {
         Type type = typeof(NetUtil);
-        foreach (string name in new[] { "PreferIPv4Stack", "PreferIPv6Addresses" })
+        foreach (string name in new[] { "IsIpV4StackPreferred", "IsIpV6AddressesPreferred" })
         {
             PropertyInfo property = type.GetProperty(name);
             Assert.NotNull(property);
@@ -24,8 +24,8 @@ public class IpPreferenceContractTest
             Assert.True(property.GetMethod.IsPublic);
             Assert.Null(property.SetMethod);
         }
-        Assert.Null(type.GetMethod("IsIpV4StackPreferred"));
-        Assert.Null(type.GetMethod("IsIpV6AddressesPreferred"));
+        Assert.Null(type.GetProperty("PreferIPv4Stack"));
+        Assert.Null(type.GetProperty("PreferIPv6Addresses"));
     }
 
     [Theory]
@@ -47,14 +47,14 @@ public class IpPreferenceContractTest
     {
         WithFreshNetUtil(ipv4, ipv6, type =>
         {
-            Assert.Equal(expected4, Read(type, "PreferIPv4Stack"));
-            Assert.Equal(expected6, Read(type, "PreferIPv6Addresses"));
+            Assert.Equal(expected4, Read(type, "IsIpV4StackPreferred"));
+            Assert.Equal(expected6, Read(type, "IsIpV6AddressesPreferred"));
         });
     }
 
     [Theory]
-    [InlineData("PreferIPv4Stack")]
-    [InlineData("PreferIPv6Addresses")]
+    [InlineData("IsIpV4StackPreferred")]
+    [InlineData("IsIpV6AddressesPreferred")]
     [InlineData("LOCALHOST4")]
     public void FirstAccessCapturesBothSettingsWithoutChangingRuntimeCapability(string firstMember)
     {
@@ -62,14 +62,14 @@ public class IpPreferenceContractTest
         WithFreshNetUtil("true", "false", type =>
         {
             if (firstMember == "LOCALHOST4")
-                Assert.NotNull(type.GetProperty(nameof(NetUtil.LoopbackAddress)).GetValue(null));
+                Assert.NotNull(type.GetProperty(nameof(NetUtil.LOCALHOST)).GetValue(null));
             else
                 Assert.NotNull(type.GetProperty(firstMember).GetValue(null));
 
             Environment.SetEnvironmentVariable(IPv4Key, "false");
             Environment.SetEnvironmentVariable(IPv6Key, "true");
-            Assert.True(Read(type, "PreferIPv4Stack"));
-            Assert.False(Read(type, "PreferIPv6Addresses"));
+            Assert.True(Read(type, "IsIpV4StackPreferred"));
+            Assert.False(Read(type, "IsIpV6AddressesPreferred"));
             Assert.Equal(nativeIPv6, Socket.OSSupportsIPv6);
         });
     }

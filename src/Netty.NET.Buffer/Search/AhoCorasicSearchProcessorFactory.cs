@@ -124,7 +124,7 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
             return true;
         }
 
-        public int FoundNeedleId => _matchForNeedleId[_currentPosition >> BitsPerSymbol];
+        public int GetFoundNeedleId() => _matchForNeedleId[_currentPosition >> BitsPerSymbol];
         public void Reset() => _currentPosition = 0;
     }
 }

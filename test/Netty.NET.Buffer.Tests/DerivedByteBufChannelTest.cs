@@ -195,8 +195,8 @@ public class DerivedByteBufChannelTest
         }
         public void Dispose()
         {
-            if (Owner?.ReferenceCount > 0) Assert.True(Owner.Release());
-            if (Root.ReferenceCount > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
+            if (Root.RefCnt > 0) Assert.True(Root.Release());
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -296,7 +296,7 @@ public class DerivedByteBufChannelTest
             await Assert.ThrowsAsync<NotSupportedException>(() => Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken));
             Assert.Equal(0, s.Observation.Calls); return;
         }
-        int refs = s.Root.ReferenceCount;
+        int refs = s.Root.RefCnt;
         Assert.Equal(2, await Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken));
         Observed(s, t, s.Offset + 2, asynchronous);
         byte[] expected = Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
@@ -306,7 +306,7 @@ public class DerivedByteBufChannelTest
         Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(4, s.View.WriterIndex);
         s.View.SetIndex(0, s.View.Capacity).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(4, s.View.WriterIndex);
-        Assert.Equal(refs, s.Root.ReferenceCount);
+        Assert.Equal(refs, s.Root.RefCnt);
 
         s.View.SetIndex(1, input ? 3 : 4); s.Observation.Calls = 0;
         Assert.Equal(2, await Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken, relative: true));
@@ -360,11 +360,11 @@ public class DerivedByteBufChannelTest
         if (input) { expected[s.Offset + 3] = 91; expected[s.Offset + 4] = 92; }
         else Assert.Equal(expected.Skip(s.Offset + 1).Take(3), t.ReadOutput(3));
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
-        Assert.Equal(refs, s.Root.ReferenceCount);
+        Assert.Equal(refs, s.Root.RefCnt);
         if (s.Owner != null)
         {
             s.Observation.Calls = 0;
-            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
             await Assert.ThrowsAsync<IllegalReferenceCountException>(() => Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken));
             Assert.Equal(0, s.Observation.Calls);
         }

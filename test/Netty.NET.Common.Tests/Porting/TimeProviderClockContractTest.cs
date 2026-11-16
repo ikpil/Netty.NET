@@ -41,11 +41,11 @@ public class TimeProviderClockContractTest
         public override bool IsShuttingDown() => stopped;
         public override bool IsTerminated() => stopped;
         public override bool AwaitTermination(TimeSpan timeout) => stopped;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             Shutdown();
-            return Termination;
+            return TerminationFuture;
         }
         public override void Shutdown() { stopped = true; CancelScheduledTasks(); }
         public void Dispose() => Shutdown();

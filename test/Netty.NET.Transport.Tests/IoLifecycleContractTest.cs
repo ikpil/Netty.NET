@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Local;
 using Netty.NET.Transport.Channels.Sockets;
 
@@ -33,27 +34,19 @@ namespace Netty.NET.Transport.Tests;
 public class IoLifecycleContractTest
 {
     [Fact(Timeout = 10000)]
-    public async Task RegistrationSnapshotsFollowMigrationClosureAndSuspensionAdmission()
+    public async Task RegisteredChannelQueriesFollowTheJavaSingleThreadEventLoop()
     {
-        var group1 = new DefaultEventLoopGroup(1); var group2 = new DefaultEventLoopGroup(1);
-        var a = (DefaultEventLoop)group1.Next(); var b = (DefaultEventLoop)group2.Next();
+        var group = new DefaultEventLoopGroup(1); var loop = (DefaultEventLoop)group.Next();
         var channel = new LocalChannel();
         try
         {
-            await a.RegisterAsync(channel, TestContext.Current.CancellationToken);
+            await loop.RegisterAsync(channel, TestContext.Current.CancellationToken);
+            // SingleThreadEventLoop.registeredChannels() returns -1 and registeredChannelsIterator() is unsupported.
+            Assert.Equal(-1, loop.RegisteredChannels());
             // Submit to the EventLoop so we are sure its really executed in a non-async manner.
-            var snapshot = await a.SubmitAsync(() => a.RegisteredChannelsIterator().ToArray());
-            Assert.Single(snapshot); Assert.Same(channel, snapshot[0]); Assert.False(a.TrySuspend());
-            Assert.Throws<InvalidOperationException>(() => a.RegisteredChannelsIterator());
-            await channel.DeregisterAsync(); await b.RegisterAsync(channel);
-            Assert.Equal(0, a.RegisteredChannels()); Assert.Equal(1, b.RegisteredChannels());
-            Assert.Single(snapshot); Assert.Same(channel, snapshot[0]);
-            var readOnly = await b.SubmitAsync(() => b.RegisteredChannelsIterator());
-            Assert.Throws<NotSupportedException>(() => ((IList<IChannel>)readOnly).Clear());
-            await channel.CloseAsync();
-            Assert.Equal(0, b.RegisteredChannels());
+            await Assert.ThrowsAsync<NotSupportedException>(() => loop.SubmitAsync(() => loop.RegisteredChannelsIterator()));
         }
-        finally { await channel.CloseAsync(); await group1.StopAsync(); await group2.StopAsync(); }
+        finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
     [Fact(Timeout = 10000)]
     public async Task FailedRegistrationDoesNotLeaveAPhantomChannel()
@@ -64,7 +57,6 @@ public class IoLifecycleContractTest
         {
             await Assert.ThrowsAsync<IOException>(() => loop.RegisterAsync(channel));
             Assert.False(channel.IsOpen); Assert.False(channel.IsRegistered);
-            Assert.Equal(0, await loop.SubmitAsync(loop.RegisteredChannels).WaitAsync(TestContext.Current.CancellationToken));
         }
         finally { await group.StopAsync(); }
     }
@@ -78,8 +70,8 @@ public class IoLifecycleContractTest
     {
         var raw = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         if (bound) { raw.Bind(new IPEndPoint(IPAddress.Loopback, 0)); raw.Listen(128); }
-        var server = new TcpServerSocketChannel(raw);
-        var group = new DefaultEventLoopGroup(1);
+        var server = new NioServerSocketChannel(raw);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var collector = new CollectChildren(); server.Pipeline.AddLast(collector);
         Assert.Equal(bound, server.IsActive);
         try
@@ -102,7 +94,7 @@ public class IoLifecycleContractTest
     [InlineData(true, true)]
     public async Task RecoverableAcceptFailuresCompleteTheReadAndRetainItsPermission(bool autoRead, bool socketError)
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         Exception error = socketError ? new SocketException((int)SocketError.ConnectionAborted) : new IOException("accept failure");
         var observer = new ObserveParent(); var child = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var server = new FaultingAccept(error); IChannel listener = null;
@@ -112,10 +104,11 @@ public class IoLifecycleContractTest
                 .Option(ChannelOption.AUTO_READ, autoRead).ChildHandler(new ActionChannelInitializer<IChannel>(_ => child.TrySetResult()))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
             if (!autoRead) listener.Read();
-            Assert.Same(error, await observer.Error.Task.WaitAsync(TestContext.Current.CancellationToken));
-            Assert.True(listener.IsOpen); Assert.True(listener.IsActive);
+            // OP_ACCEPT readiness needs a pending connection; the first accept attempt then fails.
             using var peer = new TcpClient();
             await peer.ConnectAsync((IPEndPoint)listener.LocalAddress, TestContext.Current.CancellationToken);
+            Assert.Same(error, await observer.Error.Task.WaitAsync(TestContext.Current.CancellationToken));
+            Assert.True(listener.IsOpen); Assert.True(listener.IsActive);
             await child.Task.WaitAsync(TestContext.Current.CancellationToken);
             var events = await listener.EventLoop.SubmitAsync(() => observer.Events.ToArray());
             Assert.Equal(new[] { "complete", "error", "read", "complete" }, events);
@@ -125,41 +118,48 @@ public class IoLifecycleContractTest
     [Fact(Timeout = 10000)]
     public async Task FatalAcceptFailureClosesAfterReadCompleteAndException()
     {
-        var group = new DefaultEventLoopGroup(1); var error = new ArgumentException("invalid accept state");
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory()); var error = new ArgumentException("invalid accept state");
         var observer = new ObserveParent(); var server = new FaultingAccept(error);
         Assert.True(server.ShouldClose(new IOException("inactive listener")));
         try
         {
-            await new ServerBootstrap().Group(group).ChannelFactory(() => server).Handler(observer)
+            var listener = await new ServerBootstrap().Group(group).ChannelFactory(() => server).Handler(observer)
                 .ChildHandler(new ChannelInboundHandlerAdapter()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-            await server.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
+            // OP_ACCEPT readiness needs a pending connection; the first accept attempt then fails.
+            using var peer = new TcpClient();
+            await peer.ConnectAsync((IPEndPoint)listener.LocalAddress, TestContext.Current.CancellationToken);
+            await server.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
+            // CLR: AbstractUnsafe.close completes closeFuture before fireChannelInactiveAndDeregister runs as a
+            // later loop task (invokeLater), so wait for channelInactive before reading the loop-owned list.
+            await observer.Inactive.Task.WaitAsync(TestContext.Current.CancellationToken);
             Assert.Equal(new[] { "complete", "error", "inactive" }, observer.Events);
             Assert.Equal(1, server.Attempts); Assert.False(server.IsOpen);
         }
         finally { await group.StopAsync(); }
     }
-    private sealed class FaultingAccept(Exception error) : TcpServerSocketChannel
+    private sealed class FaultingAccept(Exception error) : NioServerSocketChannel
     {
         internal int Attempts;
         internal bool ShouldClose(Exception failure) => CloseOnReadError(failure);
-        protected override Task<Socket> AcceptSocketAsync()
-            => Interlocked.Increment(ref Attempts) == 1 ? Task.FromException<Socket>(error) : base.AcceptSocketAsync();
+        protected override int DoReadMessages(List<object> buf)
+            => Interlocked.Increment(ref Attempts) == 1 ? throw error : base.DoReadMessages(buf);
     }
     private sealed class ObserveParent : ChannelInboundHandlerAdapter
     {
         internal readonly TaskCompletionSource<Exception> Error = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource Inactive = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly List<string> Events = new();
-        public override void ChannelRead(ChannelHandlerContext ctx, object message) { Events.Add("read"); ctx.FireChannelRead(message); }
-        public override void ChannelReadComplete(ChannelHandlerContext ctx) { Events.Add("complete"); ctx.FireChannelReadComplete(); }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception error) { Events.Add("error"); Error.TrySetResult(error); }
-        public override void ChannelInactive(ChannelHandlerContext ctx) { Events.Add("inactive"); ctx.FireChannelInactive(); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { Events.Add("read"); ctx.FireChannelRead(msg); }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx) { Events.Add("complete"); ctx.FireChannelReadComplete(); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { Events.Add("error"); Error.TrySetResult(cause); }
+        public override void ChannelInactive(IChannelHandlerContext ctx) { Events.Add("inactive"); Inactive.TrySetResult(); ctx.FireChannelInactive(); }
     }
     [Fact(Timeout = 10000)]
     public async Task TheServerAllocatorBatchesQueuedAcceptsByMessagesRatherThanBytes()
     {
         var raw = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         raw.Bind(new IPEndPoint(IPAddress.Loopback, 0)); raw.Listen(128);
-        var server = new TcpServerSocketChannel(raw); var group = new DefaultEventLoopGroup(1);
+        var server = new NioServerSocketChannel(raw); var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var collector = new CollectChildren(3); server.Pipeline.AddLast(collector);
         server.Config.SetAutoRead(false);
         var allocator = Assert.IsType<ServerChannelRecvByteBufAllocator>(server.Config.GetRecvByteBufAllocator());
@@ -182,14 +182,14 @@ public class IoLifecycleContractTest
         internal readonly TaskCompletionSource First = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Done = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly List<int> Batches = new();
-        public override void ChannelRead(ChannelHandlerContext ctx, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            var child = (IChannel)message; _total++; _batch++;
+            var child = (IChannel)msg; _total++; _batch++;
             _ = RegisterAndClose(child, ctx.Channel.EventLoop); First.TrySetResult();
             if (_total == expected) ctx.Channel.Config.SetAutoRead(false);
         }
         private static async Task RegisterAndClose(IChannel child, IEventLoop owner) { await owner.RegisterAsync(child); await child.CloseAsync(); }
-        public override void ChannelReadComplete(ChannelHandlerContext ctx)
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         { Batches.Add(_batch); _batch = 0; if (_total == expected) Done.TrySetResult(); }
     }
 
@@ -198,7 +198,7 @@ public class IoLifecycleContractTest
     {
         var raw = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         raw.Bind(new IPEndPoint(IPAddress.Loopback, 0)); raw.Listen(128);
-        var server = new SecondAcceptFails(raw); var group = new DefaultEventLoopGroup(1);
+        var server = new SecondAcceptFails(raw); var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var collector = new PartialCollector(); server.Pipeline.AddLast(collector); server.Config.SetAutoRead(false);
         using var first = new TcpClient(); using var second = new TcpClient();
         try
@@ -217,11 +217,11 @@ public class IoLifecycleContractTest
         }
         finally { await server.CloseAsync(); await group.StopAsync(); }
     }
-    private sealed class SecondAcceptFails(Socket socket) : TcpServerSocketChannel(socket)
+    private sealed class SecondAcceptFails(Socket socket) : NioServerSocketChannel(socket)
     {
         internal int Attempts;
-        protected override Task<Socket> AcceptSocketAsync() => Interlocked.Increment(ref Attempts) == 2
-            ? Task.FromException<Socket>(new IOException("second accept failure")) : base.AcceptSocketAsync();
+        protected override int DoReadMessages(List<object> buf) => Interlocked.Increment(ref Attempts) == 2
+            ? throw new IOException("second accept failure") : base.DoReadMessages(buf);
     }
     private sealed class PartialCollector : ChannelInboundHandlerAdapter
     {
@@ -229,14 +229,14 @@ public class IoLifecycleContractTest
         internal readonly List<string> Events = new();
         internal readonly TaskCompletionSource Error = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Done = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelRead(ChannelHandlerContext ctx, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Events.Add("read"); _read++; ctx.Channel.Config.SetAutoRead(false);
-            _ = RegisterAndClose((IChannel)message, ctx.Channel.EventLoop);
+            _ = RegisterAndClose((IChannel)msg, ctx.Channel.EventLoop);
         }
         private static async Task RegisterAndClose(IChannel child, IEventLoop owner) { await owner.RegisterAsync(child); await child.CloseAsync(); }
-        public override void ChannelReadComplete(ChannelHandlerContext ctx) { Events.Add("complete"); if (_read == 2) Done.TrySetResult(); }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception error) { Events.Add("error"); Error.TrySetResult(); }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx) { Events.Add("complete"); if (_read == 2) Done.TrySetResult(); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { Events.Add("error"); Error.TrySetResult(); }
     }
 
     [Fact(Timeout = 10000)]
@@ -262,7 +262,7 @@ public class IoLifecycleContractTest
     [Fact(Timeout = 3000)]
     public async Task RawSocketConnectionCompletionCanDispatchToTheOwnerWithoutASelectorFacade()
     {
-        var group = new DefaultEventLoopGroup(1); var server = new TcpServerSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory()); var server = new NioServerSocketChannel();
         server.Pipeline.AddLast(new CollectChildren());
         try
         {
@@ -276,7 +276,7 @@ public class IoLifecycleContractTest
     [Fact]
     public async Task UnsupportedTypedOptionsKeepClrValidationAndDoNotFabricateAJdkOption()
     {
-        var group = new DefaultEventLoopGroup(1); var server = new TcpServerSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory()); var server = new NioServerSocketChannel();
         try
         {
             Assert.False(server.Config.TryGetOption(ChannelOption.IP_MULTICAST_IF, out var value)); Assert.Null(value);

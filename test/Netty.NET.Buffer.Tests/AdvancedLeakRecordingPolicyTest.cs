@@ -117,7 +117,7 @@ public class AdvancedLeakRecordingPolicyTest
                 case 3: Assert.Equal(3, b.ReadByte()); break;
                 case 4: Assert.Same(b, b.WriteByte(17)); break;
                 case 5: Assert.Equal(4, b.AsReadOnlyMemory(3, 4).Length); break;
-                case 6: Assert.Equal(4, b.GetString(3, 4, Encoding.ASCII).Length); break;
+                case 6: Assert.Equal(4, b.ToString(3, 4, Encoding.ASCII).Length); break;
                 case 7: ByteBuf copy = b.Copy(3, 4); try { Assert.Equal(4, copy.ReadableBytes); } finally { copy.Release(); } break;
                 case 8: Assert.Equal(4, b.Slice(3, 4).Capacity); break;
                 case 9: Assert.Same(b, b.Retain()); break;
@@ -142,9 +142,9 @@ public class AdvancedLeakRecordingPolicyTest
                 if (operation == 13 && i == depth - 1) Assert.Same(hint, trackers[i].Hint);
             }
             Assert.Equal((operation == 3 ? 3 : 2, operation == 4 ? 33 : 32, operation == 9 ? 2 : 1),
-                (root.ReaderIndex, root.WriterIndex, root.ReferenceCount));
+                (root.ReaderIndex, root.WriterIndex, root.RefCnt));
         }
-        finally { if (root.ReferenceCount > 0) b.Release(root.ReferenceCount); Assert.Equal(0, native.ReservedBytes); }
+        finally { if (root.RefCnt > 0) b.Release(root.RefCnt); Assert.Equal(0, native.ReservedBytes); }
         Assert.All(trackers, t => Assert.Equal(1, t.Closes));
     }
 }

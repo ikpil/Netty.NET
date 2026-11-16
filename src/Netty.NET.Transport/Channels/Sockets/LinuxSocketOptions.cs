@@ -39,6 +39,33 @@ internal static class LinuxSocketOptions
     internal static void SetFlag(Socket socket, int level, int option, bool enabled) =>
         SetInt(socket, level, option, enabled ? 1 : 0);
 
+    // Reads a native int option as the value type of its ChannelOption: bool flags,
+    // unsigned 32-bit thresholds exposed as long, and plain int values.
+    internal static object GetOptionValue(Socket socket, ChannelOption option, int level, int name)
+    {
+        int raw = GetInt(socket, level, name);
+        return option switch
+        {
+            ChannelOption<bool> => raw != 0,
+            ChannelOption<long> => (long)unchecked((uint)raw),
+            _ => raw
+        };
+    }
+
+    internal static void SetOptionValue(Socket socket, int level, int name, object value)
+    {
+        int raw;
+        if (value is long threshold)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(threshold);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(threshold, (long)uint.MaxValue);
+            raw = unchecked((int)threshold);
+        }
+        else
+            raw = value is bool enabled ? enabled ? 1 : 0 : (int)value;
+        SetInt(socket, level, name, raw);
+    }
+
     internal static unsafe IPEndPoint GetLocalEndpoint(Socket socket)
     {
         var template = new IPEndPoint(socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);

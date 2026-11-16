@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Threading;
 
 namespace Netty.NET.Common.Concurrent;
@@ -18,12 +19,12 @@ public static class Executors
         private static int poolNumber;
         private int threadNumber;
         private readonly ThreadGroup group = ThreadGroup.CurrentThreadGroup();
-        private readonly string prefix = "pool-" + Interlocked.Increment(ref poolNumber) + "-thread-";
+        private readonly string prefix = "pool-" + Interlocked.Increment(ref poolNumber).ToString(CultureInfo.InvariantCulture) + "-thread-";
 
         public Thread NewThread(Action runnable)
         {
             Thread thread = group.NewThread(runnable);
-            thread.Name = prefix + Interlocked.Increment(ref threadNumber);
+            thread.Name = prefix + Interlocked.Increment(ref threadNumber).ToString(CultureInfo.InvariantCulture);
             thread.IsBackground = false;
             thread.Priority = ThreadPriority.Normal;
             return thread;

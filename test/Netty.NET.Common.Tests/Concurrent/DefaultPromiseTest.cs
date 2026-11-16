@@ -37,7 +37,7 @@ public class DefaultPromiseTest
         public int submissions;
         public override bool IsShuttingDown() => false;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override void Shutdown() { }
         public override bool IsShutdown() => false;
         public override bool IsTerminated() => false;

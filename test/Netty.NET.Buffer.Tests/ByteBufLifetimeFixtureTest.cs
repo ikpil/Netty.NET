@@ -35,7 +35,7 @@ public class ByteBufLifetimeFixtureTest
             Allocator = (provider / 2) switch
             {
                 1 => new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: _native),
-                2 => new AdaptiveByteBufAllocator(false, false, _native),
+                2 => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: _native),
                 _ => new UnpooledByteBufAllocator(false, true, _native)
             };
         }
@@ -765,19 +765,19 @@ public class ByteBufLifetimeFixtureTest
         slice2.Release();
         dup2.Release();
 
-        Assert.Equal(slice2.ReferenceCount, dup2.ReferenceCount);
-        Assert.Equal(dup2.ReferenceCount, dup1.ReferenceCount);
+        Assert.Equal(slice2.RefCnt, dup2.RefCnt);
+        Assert.Equal(dup2.RefCnt, dup1.RefCnt);
 
         // The handler is now done with the original slice
         Assert.True(slice1.Release());
 
         // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
         // be deallocated and have a reference count of 0.
-        Assert.Equal(0, buf.ReferenceCount);
-        Assert.Equal(0, slice1.ReferenceCount);
-        Assert.Equal(0, slice2.ReferenceCount);
-        Assert.Equal(0, dup1.ReferenceCount);
-        Assert.Equal(0, dup2.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
+        Assert.Equal(0, slice1.RefCnt);
+        Assert.Equal(0, slice2.RefCnt);
+        Assert.Equal(0, dup1.RefCnt);
+        Assert.Equal(0, dup2.RefCnt);
     }
 
     [Theory]
@@ -829,19 +829,19 @@ public class ByteBufLifetimeFixtureTest
         slice2.Release();
         slice1.Release();
 
-        Assert.Equal(slice2.ReferenceCount, dup2.ReferenceCount);
-        Assert.Equal(dup2.ReferenceCount, slice1.ReferenceCount);
+        Assert.Equal(slice2.RefCnt, dup2.RefCnt);
+        Assert.Equal(dup2.RefCnt, slice1.RefCnt);
 
         // The handler is now done with the original slice
         Assert.True(dup1.Release());
 
         // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
         // be deallocated and have a reference count of 0.
-        Assert.Equal(0, buf.ReferenceCount);
-        Assert.Equal(0, slice1.ReferenceCount);
-        Assert.Equal(0, slice2.ReferenceCount);
-        Assert.Equal(0, dup1.ReferenceCount);
-        Assert.Equal(0, dup2.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
+        Assert.Equal(0, slice1.RefCnt);
+        Assert.Equal(0, slice2.RefCnt);
+        Assert.Equal(0, dup1.RefCnt);
+        Assert.Equal(0, dup2.RefCnt);
     }
 
     [Theory]
@@ -994,7 +994,7 @@ public class ByteBufLifetimeFixtureTest
     {
         foreach (ByteBuf buf in bufs)
         {
-            if (buf.ReferenceCount > 0)
+            if (buf.RefCnt > 0)
             {
                 buf.Release();
             }
@@ -1003,7 +1003,7 @@ public class ByteBufLifetimeFixtureTest
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
-                Assert.Equal(0, buf.ReferenceCount);
+                Assert.Equal(0, buf.RefCnt);
                 buf.Slice();
             });
         }
@@ -1013,7 +1013,7 @@ public class ByteBufLifetimeFixtureTest
     {
         foreach (ByteBuf buf in bufs)
         {
-            if (buf.ReferenceCount > 0)
+            if (buf.RefCnt > 0)
             {
                 buf.Release();
             }
@@ -1022,7 +1022,7 @@ public class ByteBufLifetimeFixtureTest
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
-                Assert.Equal(0, buf.ReferenceCount);
+                Assert.Equal(0, buf.RefCnt);
                 buf.RetainedSlice();
             });
         }
@@ -1032,7 +1032,7 @@ public class ByteBufLifetimeFixtureTest
     {
         foreach (ByteBuf buf in bufs)
         {
-            if (buf.ReferenceCount > 0)
+            if (buf.RefCnt > 0)
             {
                 buf.Release();
             }
@@ -1041,7 +1041,7 @@ public class ByteBufLifetimeFixtureTest
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
-                Assert.Equal(0, buf.ReferenceCount);
+                Assert.Equal(0, buf.RefCnt);
                 buf.Duplicate();
             });
         }
@@ -1051,7 +1051,7 @@ public class ByteBufLifetimeFixtureTest
     {
         foreach (ByteBuf buf in bufs)
         {
-            if (buf.ReferenceCount > 0)
+            if (buf.RefCnt > 0)
             {
                 buf.Release();
             }
@@ -1060,7 +1060,7 @@ public class ByteBufLifetimeFixtureTest
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
-                Assert.Equal(0, buf.ReferenceCount);
+                Assert.Equal(0, buf.RefCnt);
                 buf.RetainedDuplicate();
             });
         }
@@ -1077,8 +1077,8 @@ public class ByteBufLifetimeFixtureTest
         Assert.False(buf2.Release());
         buf1.Release();
         Assert.True(buf.Release());
-        Assert.Equal(0, buf1.ReferenceCount);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf1.RefCnt);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     private static void TestReadRetainedSliceUnreleasable(Scope scope, int form, bool initRetainedSlice, bool finalRetainedSlice)
@@ -1093,8 +1093,8 @@ public class ByteBufLifetimeFixtureTest
         Assert.False(buf2.Release());
         buf1.Release();
         Assert.True(buf.Release());
-        Assert.Equal(0, buf1.ReferenceCount);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf1.RefCnt);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     private static void TestRetainedDuplicateUnreleasable(Scope scope, int form, bool initRetainedDuplicate, bool finalRetainedDuplicate)
@@ -1108,8 +1108,8 @@ public class ByteBufLifetimeFixtureTest
         Assert.False(buf2.Release());
         buf1.Release();
         Assert.True(buf.Release());
-        Assert.Equal(0, buf1.ReferenceCount);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf1.RefCnt);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     private static void TestMultipleLevelRetainedSliceWithNonRetained(Scope scope, int form, bool doSlice1, bool doSlice2)
@@ -1178,18 +1178,18 @@ public class ByteBufLifetimeFixtureTest
 
         // Slice 4, 3, and 2 should effectively "share" a reference count.
         slice4.Release();
-        Assert.Equal(slice3.ReferenceCount, slice2.ReferenceCount);
-        Assert.Equal(slice3.ReferenceCount, slice4.ReferenceCount);
+        Assert.Equal(slice3.RefCnt, slice2.RefCnt);
+        Assert.Equal(slice3.RefCnt, slice4.RefCnt);
 
         // Slice 1 should also release the original underlying buffer without throwing exceptions
         Assert.True(slice1.Release());
 
         // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
         // be deallocated and have a reference count of 0.
-        Assert.Equal(0, buf.ReferenceCount);
-        Assert.Equal(0, slice1.ReferenceCount);
-        Assert.Equal(0, slice2.ReferenceCount);
-        Assert.Equal(0, slice3.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
+        Assert.Equal(0, slice1.RefCnt);
+        Assert.Equal(0, slice2.RefCnt);
+        Assert.Equal(0, slice3.RefCnt);
     }
 
     private static ByteBuf ReleasedBuffer(Scope scope, int form)
@@ -1209,7 +1209,7 @@ public class ByteBufLifetimeFixtureTest
             using var latch = new ManualResetEventSlim();
             using var innerLatch = new ManualResetEventSlim();
             ByteBuf buffer = Entry(scope.Buffer(4), form);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             Exception innerThrowable = null;
             int count = int.MaxValue;
             Thread reader = null;
@@ -1217,10 +1217,10 @@ public class ByteBufLifetimeFixtureTest
             {
                 try
                 {
-                    Assert.True(parameter ? buffer.Release(buffer.ReferenceCount) : buffer.Release());
+                    Assert.True(parameter ? buffer.Release(buffer.RefCnt) : buffer.Release());
                     reader = new Thread(() =>
                     {
-                        count = buffer.ReferenceCount;
+                        count = buffer.RefCnt;
                         latch.Set();
                     });
                     reader.Start();
@@ -1245,7 +1245,7 @@ public class ByteBufLifetimeFixtureTest
                 innerLatch.Set();
                 releaser.Join();
                 reader?.Join();
-                if (buffer.ReferenceCount > 0)
+                if (buffer.RefCnt > 0)
                     buffer.Release();
             }
         }

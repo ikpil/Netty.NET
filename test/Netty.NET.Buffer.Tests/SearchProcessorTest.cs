@@ -59,7 +59,7 @@ public class SearchProcessorTest
 
     [Theory]
     [MemberData(nameof(Layouts))]
-    public void OriginalSearchReturnsLastByteIndex(int algorithm, int layout)
+    public void TestSearch(int algorithm, int layout)
     {
         var (buffer, owner) = Buffer(Encoding.UTF8.GetBytes("abc☺"), layout);
         try
@@ -72,40 +72,44 @@ public class SearchProcessorTest
                 ISearchProcessor processor = Factory(algorithm, Encoding.UTF8.GetBytes(patterns[i])).NewSearchProcessor();
                 Assert.Equal(expected[i], buffer.ForEachByte(processor.Process));
             }
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(6, buffer.WriterIndex); Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(6, buffer.WriterIndex); Assert.Equal(1, owner.RefCnt);
         }
         finally { owner.Release(); }
     }
 
     [Theory]
     [MemberData(nameof(Layouts))]
-    public void OriginalRepeatingAndOverlappingMatchesContinueAfterTheLastByte(int algorithm, int layout)
+    public void TestRepeating(int algorithm, int layout)
+        => AssertMatchesContinueAfterTheLastByte("abcababc", "ab", new[] { 1, 4, 6 }, algorithm, layout);
+
+    [Theory]
+    [MemberData(nameof(Layouts))]
+    public void TestOverlapping(int algorithm, int layout)
+        => AssertMatchesContinueAfterTheLastByte("ababab", "bab", new[] { 3, 5 }, algorithm, layout);
+
+    // Shared body of testRepeating and testOverlapping: each match ends at the reported index and the next search
+    // starts after it, until -1. CLR: every buffer layout runs, and the haystack keeps its indices.
+    private static void AssertMatchesContinueAfterTheLastByte(string haystack, string needle, int[] expected, int algorithm, int layout)
     {
-        foreach (var (haystack, needle, expected) in new[]
+        var (buffer, owner) = Buffer(Encoding.UTF8.GetBytes(haystack), layout);
+        try
         {
-            ("abcababc", "ab", new[] { 1, 4, 6 }), ("ababab", "bab", new[] { 3, 5 })
-        })
-        {
-            var (buffer, owner) = Buffer(Encoding.UTF8.GetBytes(haystack), layout);
-            try
+            ISearchProcessor processor = Factory(algorithm, Encoding.UTF8.GetBytes(needle)).NewSearchProcessor();
+            int start = 0;
+            foreach (int end in expected)
             {
-                ISearchProcessor processor = Factory(algorithm, Encoding.UTF8.GetBytes(needle)).NewSearchProcessor();
-                int start = 0;
-                foreach (int end in expected)
-                {
-                    Assert.Equal(end, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
-                    start = end + 1;
-                }
-                Assert.Equal(-1, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
-                Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(haystack.Length, buffer.WriterIndex);
+                Assert.Equal(end, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
+                start = end + 1;
             }
-            finally { owner.Release(); }
+            Assert.Equal(-1, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
+            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(haystack.Length, buffer.WriterIndex);
         }
+        finally { owner.Release(); }
     }
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
-    public void OriginalLongInputs(int algorithm)
+    public void TestLongInputs(int algorithm)
     {
         byte[] haystackBytes = new byte[1024]; haystackBytes[^1] = 1;
         ByteBuf haystack = Unpooled.CopiedBuffer(haystackBytes); // 00000...00001
@@ -125,7 +129,7 @@ public class SearchProcessorTest
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
-    public void OriginalUniqueLength64Substrings(int algorithm)
+    public void TestUniqueLen64Substrings(int algorithm)
     {
         byte[] haystackBytes = new byte[32 * 65]; // 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, ...
         int pos = 0;
@@ -160,7 +164,7 @@ public class SearchProcessorTest
                     { matches.Add(consumed + found); start = found + 1; }
                     buffer.ResetReaderIndex().ResetWriterIndex();
                     Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(chunk.Length, buffer.WriterIndex);
-                    Assert.Equal(1, owner.ReferenceCount);
+                    Assert.Equal(1, owner.RefCnt);
                 }
                 finally { owner.Release(); }
                 consumed += chunk.Length;

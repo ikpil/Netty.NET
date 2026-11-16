@@ -18,6 +18,7 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -32,7 +33,7 @@ public class ThreadLocalDirectBufferTest
         using var cache = new ThreadLocalDirectBufferCache(limit, native);
         ByteBuf first = cache.Rent(); first.Capacity = capacity;
         Assert.True(first.IsDirect); Assert.True(first.IsContiguous);
-        Assert.Same(UnpooledByteBufAllocator.Default, first.Allocator);
+        Assert.Same(UnpooledByteBufAllocator.Default, first.Alloc());
         Assert.Equal(int.MaxValue, first.MaxCapacity);
         first.SetByte(0, 73).SetIndex(2, 5).MarkReaderIndex().MarkWriterIndex();
         ByteBuf view = first.Slice(0, 8);
@@ -42,7 +43,7 @@ public class ThreadLocalDirectBufferTest
         ByteBuf next = cache.Rent();
         try
         {
-            Assert.NotSame(first, next); Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, view.ReferenceCount);
+            Assert.NotSame(first, next); Assert.Equal(0, first.RefCnt); Assert.Equal(0, view.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => first.Retain());
             Assert.Throws<IllegalReferenceCountException>(() => view.GetByte(0));
             Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
@@ -108,7 +109,7 @@ public class ThreadLocalDirectBufferTest
     {
         var native = new NativeMemoryAllocator(512); using var cache = new ThreadLocalDirectBufferCache(512, native);
         ByteBuf b = cache.Rent().WriteByte(72).MarkWriterIndex();
-        Assert.Throws<OutOfMemoryException>(() => b.Capacity = 512);
+        Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 512);
         Assert.Equal(256, b.Capacity); Assert.Equal(72, b.GetByte(0)); Assert.Equal(1, b.WriterIndex);
         b.ResetWriterIndex(); Assert.Equal(1, b.WriterIndex);
         b.Release(); ByteBuf next = cache.Rent(); Assert.Equal(72, next.GetByte(0)); next.Release();
@@ -147,12 +148,12 @@ public class ThreadLocalDirectBufferTest
         ByteBuf b = cache.Rent().WriteInt(1234), retained = b.RetainedSlice(0, 4), copy = b.Copy(0, 4);
         try
         {
-            Assert.Same(b.Allocator, copy.Allocator); Assert.True(copy.IsDirect); Assert.Equal(1234, copy.GetInt(0));
+            Assert.Same(b.Alloc(), copy.Alloc()); Assert.True(copy.IsDirect); Assert.Equal(1234, copy.GetInt(0));
             Assert.False(b.Release()); Assert.Equal(1234, retained.GetInt(0));
             ByteBuf other = cache.Rent(); Assert.Equal(512, native.ReservedBytes); other.Release();
             retained.Release(); Assert.Equal(256, native.ReservedBytes);
         }
-        finally { if (b.ReferenceCount != 0) b.Release(b.ReferenceCount); copy.Release(); cache.Dispose(); }
+        finally { if (b.RefCnt != 0) b.Release(b.RefCnt); copy.Release(); cache.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -188,7 +189,7 @@ public class ThreadLocalDirectBufferTest
         var native = new NativeMemoryAllocator(512); using var cache = new ThreadLocalDirectBufferCache(512, native);
         using var blocker = native.Allocate(256);
         ByteBuf live = cache.Rent().WriteByte(77);
-        Assert.Throws<OutOfMemoryException>(() => cache.Rent());
+        Assert.Throws<OutOfDirectMemoryError>(() => cache.Rent());
         Assert.Equal(512, native.ReservedBytes); Assert.Equal(77, live.GetByte(0));
         blocker.Dispose(); ByteBuf retry = cache.Rent();
         Assert.Equal(0, retry.GetByte(0)); Assert.Equal(512, native.ReservedBytes);

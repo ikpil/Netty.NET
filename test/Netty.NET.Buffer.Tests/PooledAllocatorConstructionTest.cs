@@ -45,11 +45,12 @@ public class PooledAllocatorConstructionTest
                 pageSize: 4096, maxOrder: 4, directMemoryCacheAlignment: alignment, nativeAllocator: native)
             : new PooledByteBufAllocator(preferDirect, heap, direct,
                 pageSize: 4096, maxOrder: 4, directMemoryCacheAlignment: alignment, nativeAllocator: native);
-        Assert.Equal(heap, allocator.Metric.NumHeapArenas);
-        Assert.Equal(direct, allocator.Metric.NumDirectArenas);
+        // The pool flags select the DEFAULT_NUM_*_ARENA counts; omitted cache sizes are the DEFAULT_* sizes.
+        Assert.Equal(convenience && heap != 0 ? PooledByteBufAllocator.DefaultNumHeapArena() : heap, allocator.Metric.NumHeapArenas);
+        Assert.Equal(convenience && direct != 0 ? PooledByteBufAllocator.DefaultNumDirectArena() : direct, allocator.Metric.NumDirectArenas);
         Assert.Equal(Math.Max(4096, alignment) * 16, allocator.Metric.ChunkSize);
-        Assert.Equal(0, allocator.Metric.SmallCacheSize);
-        Assert.Equal(0, allocator.Metric.NormalCacheSize);
+        Assert.Equal(PooledByteBufAllocator.DefaultSmallCacheSize(), allocator.Metric.SmallCacheSize);
+        Assert.Equal(PooledByteBufAllocator.DefaultNormalCacheSize(), allocator.Metric.NormalCacheSize);
         Assert.Equal(0, allocator.Metric.NumThreadLocalCaches);
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(direct != 0, allocator.IsDirectBufferPooled);
@@ -60,7 +61,7 @@ public class PooledAllocatorConstructionTest
             Assert.False(h.IsDirect); Assert.True(d.IsDirect);
             foreach (ByteBuf buffer in new[] { selected, h, d })
             {
-                Assert.Same(allocator, buffer.Allocator);
+                Assert.Same(allocator, buffer.Alloc());
                 Assert.Equal(17, buffer.Capacity);
                 Assert.Equal(64, buffer.MaxCapacity);
                 buffer.WriteLongLE(0x0102030405060708L);

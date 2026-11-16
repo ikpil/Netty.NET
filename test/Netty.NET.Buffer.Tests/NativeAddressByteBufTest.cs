@@ -21,6 +21,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -47,7 +48,7 @@ public unsafe class NativeAddressByteBufTest
             Assert.True(owner.IsDirect); Assert.True(owner.IsContiguous); Assert.False(owner.IsReadOnly);
             Assert.Equal(16, owner.Capacity); Assert.Equal(16, owner.MaxCapacity);
             Assert.Equal(0, owner.ReaderIndex); Assert.Equal(16, owner.WriterIndex);
-            Assert.Same(UnpooledByteBufAllocator.Default, owner.Allocator);
+            Assert.Same(UnpooledByteBufAllocator.Default, owner.Alloc());
             owner.SetIndex(2, 14);
             ByteBuf view = viewKind switch
             {
@@ -60,9 +61,9 @@ public unsafe class NativeAddressByteBufTest
             address[offset] = 0xAB; Assert.Equal(0xAB, view.GetByte(0));
             if (!view.IsReadOnly) { view.SetByte(1, 0xCD); Assert.Equal(0xCD, address[offset + 1]); }
             bool retained = viewKind is 3 or 4 or 6;
-            Assert.Equal(retained ? 2 : 1, owner.ReferenceCount);
+            Assert.Equal(retained ? 2 : 1, owner.RefCnt);
             if (retained) { Assert.False(owner.Release()); Assert.Equal(0xAB, view.GetByte(0)); }
-            Assert.True(view.Release()); Assert.Equal(0, owner.ReferenceCount);
+            Assert.True(view.Release()); Assert.Equal(0, owner.RefCnt);
             Assert.True(manager.IsHandleReleased);
             Assert.Throws<IllegalReferenceCountException>(() => view.GetByte(0));
             Assert.Throws<ObjectDisposedException>(() => { _ = memory.Span; });
@@ -70,7 +71,7 @@ public unsafe class NativeAddressByteBufTest
         }
         finally
         {
-            if (owner?.ReferenceCount > 0) owner.Release(owner.ReferenceCount);
+            if (owner?.RefCnt > 0) owner.Release(owner.RefCnt);
             if (!transferred) NativeMemory.Free(address);
         }
     }
@@ -98,7 +99,7 @@ public unsafe class NativeAddressByteBufTest
         finally
         {
             first.Dispose(); copied.Dispose(); second.Dispose();
-            if (b?.ReferenceCount > 0) b.Release();
+            if (b?.RefCnt > 0) b.Release();
             if (!transferred) NativeMemory.Free(address);
         }
     }
@@ -144,7 +145,7 @@ public unsafe class NativeAddressByteBufTest
         try
         {
             b.SetIndex(3, 14).MarkReaderIndex().MarkWriterIndex();
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = 8);
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 8);
             Assert.False(manager.IsHandleReleased); Assert.Equal(16, b.Capacity);
             Assert.Equal(55, b.GetByte(4)); Assert.Equal(3, b.ReaderIndex); Assert.Equal(14, b.WriterIndex);
             b.SetIndex(1, 2).ResetWriterIndex().ResetReaderIndex();
@@ -170,7 +171,7 @@ public unsafe class NativeAddressByteBufTest
             address[4] = 99; Assert.Equal(4, copy.GetByte(0));
             b.Release(); Assert.Equal(11, copy.GetByte(7));
         }
-        finally { if (b.ReferenceCount > 0) b.Release(); copy?.Release(); if (!owned) NativeMemory.Free(address); }
+        finally { if (b.RefCnt > 0) b.Release(); copy?.Release(); if (!owned) NativeMemory.Free(address); }
     }
 
     [Theory]
@@ -187,11 +188,11 @@ public unsafe class NativeAddressByteBufTest
             using var output = new MemoryStream(); b.GetBytes(0, output, 12);
             Assert.Equal(b.AsReadOnlyMemory(0, 12).ToArray(), output.ToArray());
             composite.AddComponents([b, Unpooled.WrappedBuffer(new byte[] { 0xEE })], true);
-            composite.Consolidate(); Assert.Equal(0, b.ReferenceCount);
+            composite.Consolidate(); Assert.Equal(0, b.RefCnt);
             Assert.Equal(0x01020304, composite.GetInt(0)); Assert.Equal(0xEE, composite.GetByte(16));
             if (!owned) Assert.Equal(1, address[0]);
         }
-        finally { composite.Release(); if (b.ReferenceCount > 0) b.Release(); if (!owned) NativeMemory.Free(address); }
+        finally { composite.Release(); if (b.RefCnt > 0) b.Release(); if (!owned) NativeMemory.Free(address); }
     }
 
     [Theory]
@@ -208,7 +209,7 @@ public unsafe class NativeAddressByteBufTest
             composite.WriteBytes(b.AsReadOnlySpan(0, 8));
             Assert.Equal(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7 },
                 composite.AsReadOnlyMemory(0, 16).ToArray());
-            Assert.Equal(0, b.ReferenceCount); Assert.True(manager.IsHandleReleased);
+            Assert.Equal(0, b.RefCnt); Assert.True(manager.IsHandleReleased);
             if (!owned) Assert.Equal(7, address[7]);
         }
         finally { composite.Release(); if (!owned) NativeMemory.Free(address); }
@@ -223,13 +224,13 @@ public unsafe class NativeAddressByteBufTest
         var memory = b.AsMemory(0, 0); var manager = Manager(memory);
         try
         {
-            Assert.NotSame(Unpooled.EmptyBuffer, b); Assert.Equal(1, b.ReferenceCount);
+            Assert.NotSame(Unpooled.EmptyBuffer, b); Assert.Equal(1, b.RefCnt);
             Assert.Equal(0, b.Capacity); Assert.Equal(0, b.MaxCapacity);
-            Assert.True(b.CanRead(0)); Assert.True(b.CanWrite(0));
+            Assert.True(b.IsReadable(0)); Assert.True(b.IsWritable(0));
             using (MemoryHandle pin = memory.Pin()) Assert.Equal((nint)address, (nint)pin.Pointer);
             Assert.True(b.Release()); Assert.True(manager.IsHandleReleased);
         }
-        finally { if (b.ReferenceCount > 0) b.Release(); if (!owned) NativeMemory.Free(address); }
+        finally { if (b.RefCnt > 0) b.Release(); if (!owned) NativeMemory.Free(address); }
     }
 
     [Fact]
@@ -287,7 +288,7 @@ public unsafe class NativeAddressByteBufTest
             Parallel.For(0, pins.Length, i => { Assert.Equal(73, *(byte*)pins[i].Pointer); pins[i].Dispose(); });
             Assert.True(manager.IsHandleReleased);
         }
-        finally { foreach (MemoryHandle pin in pins) pin.Dispose(); if (b.ReferenceCount > 0) b.Release(); }
+        finally { foreach (MemoryHandle pin in pins) pin.Dispose(); if (b.RefCnt > 0) b.Release(); }
     }
 
     private static NativeAddressMemoryManager Manager(Memory<byte> memory)

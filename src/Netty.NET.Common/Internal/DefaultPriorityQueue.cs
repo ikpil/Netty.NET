@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Netty.NET.Common.Internal;
 
@@ -29,17 +30,17 @@ namespace Netty.NET.Common.Internal;
 // BCL PriorityQueue<TElement, TPriority> for ordinary value/immutable entries.
 public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 {
-    private readonly IComparer<T> _comparer;
-    private int _count;
-    private T[] _items;
+    private readonly IComparer<T> _comparator;
+    private T[] _queue;
+    private int _size;
 
-    public int Count => _count;
+    public int Count => _size;
 
-    public DefaultPriorityQueue(IComparer<T> comparer, int initialSize)
+    public DefaultPriorityQueue(IComparer<T> comparator, int initialSize)
     {
-        _comparer = ObjectUtil.CheckNotNull(comparer, "comparer");
+        _comparator = ObjectUtil.CheckNotNull(comparator, "comparator");
         if (initialSize < 0) throw new ArgumentOutOfRangeException(nameof(initialSize));
-        _items = initialSize != 0
+        _queue = initialSize != 0
             ? new T[initialSize]
             : Array.Empty<T>();
     }
@@ -50,13 +51,13 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public int Size()
     {
-        return _count;
+        return _size;
     }
 
 
     public bool IsEmpty()
     {
-        return _count == 0;
+        return _size == 0;
     }
 
     public bool TryRemove(T item)
@@ -71,7 +72,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public bool TryDequeue(out T item)
     {
-        if (_count == 0) { item = default; return false; }
+        if (_size == 0) { item = default; return false; }
         item = Poll();
         return true;
     }
@@ -79,7 +80,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
     public bool TryPeek(out T item)
     {
         item = Peek();
-        return _count != 0;
+        return _size != 0;
     }
 
     public bool Contains(T o)
@@ -87,7 +88,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         int index = IndexOf(o);
         // An index identifies ownership of this reference, not a value-equal
         // node whose stored index happens to point at a current member.
-        return index >= 0 && index < _count && ReferenceEquals(o, _items[index]);
+        return index >= 0 && index < _size && ReferenceEquals(o, _queue[index]);
     }
 
     public bool ContainsTyped(T node) => Contains(node);
@@ -95,14 +96,14 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public void Clear()
     {
-        for (int i = 0; i < _count; i++) SetIndex(_items[i], -1);
-        Array.Clear(_items, 0, _count);
-        _count = 0;
+        for (int i = 0; i < _size; i++) SetIndex(_queue[i], -1);
+        Array.Clear(_queue, 0, _size);
+        _size = 0;
     }
 
     public void ClearIgnoringIndexes()
     {
-        _count = 0;
+        _size = 0;
     }
 
     public bool Offer(T e)
@@ -111,36 +112,32 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         if (e is not IPriorityQueueNode<T> node)
             throw new ArgumentException("Element must provide indexed queue membership.", nameof(e));
         if (node.PriorityQueueIndex(this) != -1)
-            throw new ArgumentException("Element already belongs to a priority queue.", nameof(e));
-        int oldCount = _count;
+            throw new ArgumentException("e.priorityQueueIndex(): " + node.PriorityQueueIndex(this).ToString(CultureInfo.InvariantCulture) +
+                    " (expected: " + (-1).ToString(CultureInfo.InvariantCulture) + ") + e: " + e);
         // Check that the array capacity is enough to hold values by doubling capacity.
-        if (oldCount == _items.Length)
+        if (_size >= _queue.Length)
         {
             GrowHeap();
         }
 
-        _count = oldCount + 1;
-        BubbleUp(oldCount, e);
-
+        BubbleUp(_size++, e);
         return true;
     }
 
     public T Poll()
     {
-        if (_count == 0)
+        if (_size == 0)
         {
             return default;
         }
 
-        T result = _items[0];
+        T result = _queue[0];
         SetIndex(result, -1);
-        int newCount = --_count;
-        T lastItem = _items[newCount];
-        _items[newCount] = default;
-        // Make sure we don't add the last element back.
-        if (newCount > 0)
-        {
-            TrickleDown(0, lastItem);
+        T last = _queue[--_size];
+        _queue[_size] = default;
+        if (_size != 0)
+        { // Make sure we don't add the last element back.
+            BubbleDown(0, last);
         }
 
         return result;
@@ -148,141 +145,145 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public T Peek()
     {
-        return IsEmpty() ? default : _items[0];
+        return IsEmpty() ? default : _queue[0];
     }
 
-    public bool Remove(T item)
+    public bool Remove(T node)
     {
-        int index = IndexOf(item);
-        if (!Contains(item))
+        int i = IndexOf(node);
+        if (!Contains(node))
         {
             return false;
         }
 
-        SetIndex(item, -1);
-        _count--;
-        // If there are no node left, or this is the last node in the array just remove and return.
-        if (index == _count)
+        SetIndex(node, -1);
+        if (--_size == 0 || _size == i)
         {
-            _items[index] = default;
+            // If there are no node left, or this is the last node in the array just remove and return.
+            _queue[i] = default;
+            return true;
+        }
+
+        // Move the last element where node currently lives in the array.
+        T moved = _queue[i] = _queue[_size];
+        _queue[_size] = default;
+        // priorityQueueIndex will be updated below in bubbleUp or bubbleDown
+
+        // Make sure the moved node still preserves the min-heap properties.
+        if (_comparator.Compare(node, moved) < 0)
+        {
+            BubbleDown(i, moved);
         }
         else
         {
-            // Move the last element where node currently lives in the array.
-            T last = _items[_count];
-            _items[_count] = default;
-            // priorityQueueIndex will be updated below in bubbleUp or bubbleDown
-            // Make sure the moved node still preserves the min-heap properties.
-            if (_comparer.Compare(item, last) < 0)
-            {
-                TrickleDown(index, last);
-            }
-            else BubbleUp(index, last);
+            BubbleUp(i, moved);
         }
 
         return true;
     }
 
-    public void PriorityChanged(T item)
+    public void PriorityChanged(T node)
     {
-        int index = IndexOf(item);
-        if (!Contains(item))
+        int i = IndexOf(node);
+        if (!Contains(node))
         {
             return;
         }
 
         // Preserve the min-heap property by comparing the new priority with parents/children in the heap.
-        if (index == 0)
+        if (i == 0)
         {
-            TrickleDown(index, item);
+            BubbleDown(i, node);
         }
         else
         {
             // Get the parent to see if min-heap properties are violated.
-            int iParent = (index - 1) >>> 1;
-            T parent = _items[iParent];
-            if (_comparer.Compare(item, parent) < 0)
+            int iParent = (i - 1) >>> 1;
+            T parent = _queue[iParent];
+            if (_comparator.Compare(node, parent) < 0)
             {
-                BubbleUp(index, item);
+                BubbleUp(i, node);
             }
             else
             {
-                TrickleDown(index, item);
+                BubbleDown(i, node);
             }
         }
     }
 
     private void GrowHeap()
     {
-        int oldCapacity = _items.Length;
+        int oldCapacity = _queue.Length;
         // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
         // "small", then grow by 50% when "large".
         if (oldCapacity == Array.MaxLength) throw new OutOfMemoryException();
         long newCapacity = (long)oldCapacity + (oldCapacity < 64 ? oldCapacity + 2 : (oldCapacity >> 1));
         // Keep capacity owned by the array, so failed allocation cannot leave
         // a second capacity field inconsistent with the actual storage.
-        Array.Resize(ref _items, (int)Math.Min(Array.MaxLength, newCapacity));
+        Array.Resize(ref _queue, (int)Math.Min(Array.MaxLength, newCapacity));
     }
 
-    private void TrickleDown(int index, T item)
+    private void BubbleDown(int k, T node)
     {
-        int middleIndex = _count >> 1;
-        while (index < middleIndex)
+        int half = _size >>> 1;
+        while (k < half)
         {
             // Compare node to the children of index k.
-            int childIndex = (index << 1) + 1;
-            T childItem = _items[childIndex];
-            int rightChildIndex = childIndex + 1;
+            int iChild = (k << 1) + 1;
+            T child = _queue[iChild];
+
             // Make sure we get the smallest child to compare against.
-            if (rightChildIndex < _count
-                && _comparer.Compare(childItem, _items[rightChildIndex]) > 0)
+            int rightChild = iChild + 1;
+            if (rightChild < _size && _comparator.Compare(child, _queue[rightChild]) > 0)
             {
-                childIndex = rightChildIndex;
-                childItem = _items[rightChildIndex];
+                child = _queue[iChild = rightChild];
             }
 
             // If the bubbleDown node is less than or equal to the smallest child then we will preserve the min-heap
             // property by inserting the bubbleDown node here.
-            if (_comparer.Compare(item, childItem) <= 0)
+            if (_comparator.Compare(node, child) <= 0)
             {
                 break;
             }
 
             // Bubble the child up.
-            _items[index] = childItem;
-            SetIndex(childItem, index);
+            _queue[k] = child;
+            SetIndex(child, k);
+
             // Move down k down the tree for the next iteration.
-            index = childIndex;
+            k = iChild;
         }
 
         // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
-        _items[index] = item;
-        SetIndex(item, index);
+        _queue[k] = node;
+        SetIndex(node, k);
     }
 
-    private void BubbleUp(int index, T item)
+    private void BubbleUp(int k, T node)
     {
-        while (index > 0)
+        while (k > 0)
         {
-            int parentIndex = (index - 1) >> 1;
-            T parentItem = _items[parentIndex];
+            int iParent = (k - 1) >>> 1;
+            T parent = _queue[iParent];
+
             // If the bubbleUp node is less than the parent, then we have found a spot to insert and still maintain
             // min-heap properties.
-            if (_comparer.Compare(item, parentItem) >= 0)
+            if (_comparator.Compare(node, parent) >= 0)
             {
                 break;
             }
 
             // Bubble the parent down.
-            _items[index] = parentItem;
-            SetIndex(parentItem, index);
+            _queue[k] = parent;
+            SetIndex(parent, k);
+
             // Move k up the tree for the next iteration.
-            index = parentIndex;
+            k = iParent;
         }
 
         // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
-        _items[index] = item;
-        SetIndex(item, index);
+        _queue[k] = node;
+        SetIndex(node, k);
     }
 
     private int IndexOf(T item) => item is IPriorityQueueNode<T> node
@@ -298,9 +299,9 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
      */
     public IEnumerator<T> GetEnumerator()
     {
-        for (int i = 0; i < _count; i++)
+        for (int i = 0; i < _size; i++)
         {
-            yield return _items[i];
+            yield return _queue[i];
         }
     }
 
@@ -311,6 +312,6 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public T[] ToArray()
     {
-        return Arrays.CopyOf(_items, _count);
+        return Arrays.CopyOf(_queue, _size);
     }
 }

@@ -30,7 +30,7 @@ public class DynamicProgressContractTest
                 throw Rejection;
             _queue.Enqueue(task);
         }
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override void Shutdown() { }
         public override bool IsShuttingDown() => false;

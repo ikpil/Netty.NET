@@ -66,11 +66,11 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
 
     public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return Termination;
+        return TerminationFuture;
     }
 
-    public override Task Termination => _terminationTask;
-    public override Task StopAsync() => Termination;
+    public override Task TerminationFuture => _terminationTask;
+    public override Task StopAsync() => TerminationFuture;
 
     [Obsolete]
     public override void Shutdown()

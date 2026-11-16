@@ -29,7 +29,7 @@ internal sealed class PooledDirectByteBuf : PooledByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
-        ByteBuf copy = Allocator.DirectBuffer(length, MaxCapacity);
+        ByteBuf copy = Alloc().DirectBuffer(length, MaxCapacity);
         try { copy.WriteBytes(this, index, length); return copy; }
         catch { copy.Release(); throw; }
     }

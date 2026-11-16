@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -71,8 +72,8 @@ public partial class AdaptiveByteBufKernelTest
             b.ResetWriterIndex().ResetReaderIndex();
             Assert.Equal((2, 7), (b.ReaderIndex, b.WriterIndex));
             Assert.Equal(guard, s.Guard.AsSpan(0, s.Guard.Capacity).ToArray());
-            Assert.Equal(1, b.ReferenceCount);
-            Assert.Equal(1, s.Guard.ReferenceCount);
+            Assert.Equal(1, b.RefCnt);
+            Assert.Equal(1, s.Guard.RefCnt);
             if (mode == 0)
             {
                 // The failed destination has been returned. Retrying must still read the old prefix.

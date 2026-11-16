@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
@@ -24,43 +23,56 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // The original does not require the racing connection attempt to succeed.
-public class SocketCloseForciblySourceTest
+#pragma warning disable xUnit1051 // The source waits for the close future without a deadline (no @Timeout).
+public class SocketCloseForciblySourceTest : AbstractSocketTest
 {
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestCloseForcibly(bool adaptive)
+    [Fact]
+    public async Task TestCloseForcibly()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var intercepted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        IChannel server = await fixture.Server.Handler(new ForceClose(intercepted)).ChildHandler(new ChannelInboundHandlerAdapter())
-            .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
-        var client = new TcpSocketChannel();
-        try
-        {
-            Task<IChannel> connect = new Bootstrap().Group(fixture.Client.Config.Group).ChannelFactory(() => client)
-                .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator)fixture.Client.Config.Options[ChannelOption.ALLOCATOR])
-                .Handler(new CloseOnException()).ConnectAsync(server.LocalAddress);
-            // The source observes connect(...).channel().closeFuture(), including an early reset.
-            // Keep channel identity available independently of the native Task<IChannel> connect result.
-            await client.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
-            await intercepted.Task.WaitAsync(TestContext.Current.CancellationToken);
-            await Record.ExceptionAsync(() => connect);
-        }
-        finally { if (client.IsRegistered) await client.CloseAsync(); else client.CloseForcibly(); await server.CloseAsync(); }
+        await Run(TestContext.Current, TestCloseForcibly0);
     }
-    private sealed class ForceClose(TaskCompletionSource intercepted) : ChannelInboundHandlerAdapter
+
+    // CLR: xUnit1024 forbids overloading the TestCloseForcibly test name.
+    private async Task TestCloseForcibly0(ServerBootstrap sb, Bootstrap cb)
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        sb.Handler(new CloseForciblyHandler()).ChildHandler(new ChannelInboundHandlerAdapter());
+
+        cb.Handler(new ChannelInboundHandlerAdapter());
+
+        IChannel sc = await sb.BindAsync();
+
+        // CLR: connect(...).channel() returns the channel of the pending ChannelFuture, whose closeFuture() is then
+        // awaited even when the forcibly closed peer makes the connect fail. Bootstrap.ConnectAsync yields the channel
+        // only from a successful Task<IChannel>, but it calls the channel factory synchronously before its first await
+        // (src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs). cb's factory cannot be replaced ("channelFactory set
+        // already", as in AbstractBootstrap.channelFactory), so the connect runs on a Bootstrap with cb's group,
+        // handler and allocator (the only option the harness sets) whose factory wraps cb's factory and captures the
+        // channel. The source ignores the connect outcome; it is only observed after the close.
+        Func<IChannel> channelFactory = cb.Config.ChannelFactory;
+        IChannel channel = null;
+        Bootstrap connectBootstrap = new Bootstrap().Group(cb.Config.Group)
+                .ChannelFactory(() => channel = channelFactory())
+                .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator) cb.Config.Options[ChannelOption.ALLOCATOR])
+                .Handler(cb.Config.Handler);
+        Task<IChannel> connectFuture = connectBootstrap.ConnectAsync(sc.LocalAddress);
+        await channel.CloseFuture;
+        await Record.ExceptionAsync(() => connectFuture);
+        await sc.CloseAsync();
+    }
+
+    // CLR: a named class carries the body of the source's anonymous handler; C# anonymous types "can't add methods,
+    // events, or custom operators"
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/anonymous-types).
+    private sealed class CloseForciblyHandler : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            var child = Assert.IsType<TcpSocketChannel>(message);
-            child.Config.SetOptions(new[] { new System.Collections.Generic.KeyValuePair<ChannelOption, object>(ChannelOption.SO_LINGER, 0) });
-            child.CloseForcibly();
-            intercepted.TrySetResult();
+            ISocketChannel childChannel = (ISocketChannel) msg;
+            ((ISocketChannelConfig) childChannel.Config).SetSoLinger(0);
+            // CLR: this port folds AbstractUnsafe into AbstractChannel, so unsafe().closeForcibly() is
+            // AbstractChannel.CloseForcibly() (src/Netty.NET.Transport/Channels/AbstractChannel.cs).
+            ((AbstractChannel) childChannel).CloseForcibly();
         }
     }
-    private sealed class CloseOnException : ChannelInboundHandlerAdapter
-    { public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => _ = context.CloseAsync(); }
 }
 #pragma warning restore xUnit1051

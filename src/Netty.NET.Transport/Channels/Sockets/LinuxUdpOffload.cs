@@ -83,25 +83,19 @@ internal static class LinuxUdpOffload
 
     internal readonly record struct ReadResult(Received Single, Received[] Batch = null, int BytesRead = 0);
 
-    internal static async Task<ReadResult> ReceiveAsync(Socket socket, Memory<byte> payload, IPEndPoint template, int slotSize = 0)
+    // Non-blocking recvmmsg/recvmsg on OP_READ readiness; null when the socket would block.
+    internal static ReadResult? TryReceive(Socket socket, Memory<byte> payload, IPEndPoint template, int slotSize)
     {
-        byte[] readiness = null;
         int slots = slotSize == 0 ? 0 : Math.Min(payload.Length / slotSize, 64);
-        while (true)
+        if (slots > 1)
         {
-            if (slots > 1)
-            {
-                if (TryReceiveBatch(socket, payload, template, slotSize, slots, out bool unsupported) is { } batch)
-                    return batch;
-                if (unsupported) slots = 0;
-            }
-            if (slots <= 1 && TryReceive(socket, payload, template) is { } received)
-                return new ReadResult(received, BytesRead: received.Length);
-            // The CLR's async socket poller owns the wait. Peek leaves the aggregate and its
-            // control messages in the socket until recvmsg or recvmmsg can consume them.
-            readiness ??= new byte[1];
-            await socket.ReceiveAsync(readiness.AsMemory(), SocketFlags.Peek).ConfigureAwait(false);
+            if (TryReceiveBatch(socket, payload, template, slotSize, slots, out bool unsupported) is { } batch)
+                return batch;
+            if (!unsupported) return null;
         }
+        if (TryReceive(socket, payload, template) is { } received)
+            return new ReadResult(received, BytesRead: received.Length);
+        return null;
     }
 
     private static unsafe Received? TryReceive(Socket socket, Memory<byte> payload, IPEndPoint template)

@@ -47,8 +47,8 @@ public class ByteBufScalarRoundTripSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -197,7 +197,7 @@ public class ByteBufScalarRoundTripSourceTest
         for (int i = 0; i < end; i += step)
         {
             long bits = NextBits(random, kind, sequential);
-            if (sequential) { Assert.Equal(i, buffer.WriterIndex); Assert.True(buffer.IsWritable); }
+            if (sequential) { Assert.Equal(i, buffer.WriterIndex); Assert.True(buffer.IsWritable()); }
             Store(buffer, i, bits, kind, little, sequential);
             Model(expectedWire.AsSpan(i, width), bits, kind, little);
         }
@@ -206,14 +206,14 @@ public class ByteBufScalarRoundTripSourceTest
         if (sequential)
         {
             Assert.Equal(capacity - end, buffer.WritableBytes);
-            if (width != 3) Assert.False(buffer.IsWritable);
+            if (width != 3) Assert.False(buffer.IsWritable());
         }
         // Each runtime independently reseeds its own PRNG; full signed integer domains use random bytes.
         random = new Random(seed);
         for (int i = 0; i < end; i += step)
         {
             long expected = LogicalValue(NextBits(random, kind, sequential), kind);
-            if (sequential) { Assert.Equal(i, buffer.ReaderIndex); Assert.True(buffer.IsReadable); }
+            if (sequential) { Assert.Equal(i, buffer.ReaderIndex); Assert.True(buffer.IsReadable()); }
             long actual = Load(buffer, i, kind, little, sequential);
             if (kind == 9)
                 Assert.InRange(Math.Abs(BitConverter.Int32BitsToSingle((int)expected) - BitConverter.Int32BitsToSingle((int)actual)), 0, 0.01);
@@ -222,8 +222,8 @@ public class ByteBufScalarRoundTripSourceTest
             Assert.Equal(expected, actual);
         }
         Assert.Equal(sequential ? end : 0, buffer.ReaderIndex); Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
-        if (sequential) { Assert.False(buffer.IsReadable); Assert.Equal(0, buffer.ReadableBytes); Assert.Equal(capacity - end, buffer.WritableBytes); }
-        Assert.Equal(1, buffer.ReferenceCount);
+        if (sequential) { Assert.False(buffer.IsReadable()); Assert.Equal(0, buffer.ReadableBytes); Assert.Equal(capacity - end, buffer.WritableBytes); }
+        Assert.Equal(1, buffer.RefCnt);
     }
 
     [Theory]
@@ -248,6 +248,6 @@ public class ByteBufScalarRoundTripSourceTest
         for (int i = 0; i < values.Length; ++i)
         { Assert.Equal(i * 2, s.Root.ReaderIndex); Assert.Equal(values[i], s.Root.ReadUnsignedShortLE()); }
         Assert.Equal(18, s.Root.ReaderIndex); Assert.Equal(18, s.Root.WriterIndex);
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 }

@@ -16,7 +16,10 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Net;
+using System.Text;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels.Local;
 
@@ -26,34 +29,72 @@ namespace Netty.NET.Transport.Channels.Local;
  */
 public sealed class LocalAddress : EndPoint, IComparable<LocalAddress>
 {
-    public static readonly LocalAddress ANY = new("ANY");
-    private readonly string _id;
-    /**
-     * Creates a new instance with the specified ID.
-     */
-    /**
-     * Creates a new instance with a random ID based on the given class.
-     */
-    public LocalAddress(string id)
-    {
-        ArgumentNullException.ThrowIfNull(id);
-        _id = id.Trim().ToLowerInvariant();
-        if (_id.Length == 0)
-            throw new ArgumentException("Empty local address.", nameof(id));
-    }
-    public LocalAddress(Type type) : this((type ?? throw new ArgumentNullException(nameof(type))).Name + '/' + Guid.NewGuid()) { }
+    public static readonly LocalAddress ANY = new LocalAddress("ANY");
+
+    private readonly string id;
+    private readonly string strVal;
+
     /**
      * Creates a new ephemeral port based on the ID of the specified channel.
      * Note that we prepend an upper-case character so that it never conflicts with
      * the addresses created by a user, which are always lower-cased on construction time.
      */
-    internal LocalAddress(IChannel channel) { _id = "E:" + channel.Id.AsLongText(); }
+    internal LocalAddress(IChannel channel)
+    {
+        StringBuilder buf = new StringBuilder(16);
+        buf.Append("local:E");
+        buf.Append(((channel.GetHashCode() & 0xFFFFFFFFL) | 0x100000000L).ToString("x", CultureInfo.InvariantCulture));
+        buf[7] = ':';
+        id = buf.ToString(6, buf.Length - 6);
+        strVal = buf.ToString();
+    }
+
+    /**
+     * Creates a new instance with the specified ID.
+     */
+    // CLR: toLowerCase() uses the invariant culture (culture-independent text, docs/common-clr-design.md).
+    public LocalAddress(string id)
+    {
+        this.id = ObjectUtil.CheckNonEmptyAfterTrim(id, "id").ToLowerInvariant();
+        strVal = "local:" + this.id;
+    }
+
+    /**
+     * Creates a new instance with a random ID based on the given class.
+     */
+    // CLR: getSimpleName() is Type.Name and UUID.randomUUID() is Guid.NewGuid() in its "D" format.
+    public LocalAddress(Type cls) : this(ObjectUtil.CheckNotNull(cls, "cls").Name + '/' + Guid.NewGuid())
+    {
+    }
+
     /**
      * Returns the ID of this address.
      */
-    public string Id => _id;
-    public int CompareTo(LocalAddress other) => other == null ? 1 : string.CompareOrdinal(_id, other._id);
-    public override bool Equals(object obj) => obj is LocalAddress address && _id == address._id;
-    public override int GetHashCode() => StringComparer.Ordinal.GetHashCode(_id);
-    public override string ToString() => "local:" + _id;
+    public string Id => id;
+
+    public override int GetHashCode()
+    {
+        return StringComparer.Ordinal.GetHashCode(id);
+    }
+
+    public override bool Equals(object o)
+    {
+        if (!(o is LocalAddress))
+        {
+            return false;
+        }
+
+        return id.Equals(((LocalAddress)o).id, StringComparison.Ordinal);
+    }
+
+    public int CompareTo(LocalAddress o)
+    {
+        // CLR: String.compareTo is ordinal; a null argument throws as the Java dereference does.
+        return string.CompareOrdinal(id, ObjectUtil.CheckNotNull(o, "o").id);
+    }
+
+    public override string ToString()
+    {
+        return strVal;
+    }
 }

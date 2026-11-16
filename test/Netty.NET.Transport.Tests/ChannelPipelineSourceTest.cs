@@ -164,15 +164,16 @@ public class ChannelPipelineSourceTest
         while (Volatile.Read(ref ready) < 2)
             Thread.Yield();
     }
-    private static void AssertPipelineLinked(DefaultChannelPipeline pipeline, params string[] expectedNames)
+    private static void AssertPipelineLinked(IChannelPipeline channelPipeline, params string[] expectedNames)
     {
+        var pipeline = (DefaultChannelPipeline)channelPipeline;
         var names = new List<string>();
-        var context = pipeline.Head;
+        AbstractChannelHandlerContext context = pipeline.Head;
         while (context != pipeline.Tail)
         {
             var next = context.Next;
             Assert.NotSame(context, next);
-            Assert.Same(context, next.Previous);
+            Assert.Same(context, next.Prev);
             if (next != pipeline.Tail)
             {
                 names.Add(next.Name);
@@ -186,30 +187,30 @@ public class ChannelPipelineSourceTest
     private sealed class LifecycleCountingHandler : ChannelInboundHandlerAdapter
     {
         internal int Added, Removed, Read;
-        public override void HandlerAdded(ChannelHandlerContext context) => Interlocked.Increment(ref Added);
-        public override void HandlerRemoved(ChannelHandlerContext context) => Interlocked.Increment(ref Removed);
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { Interlocked.Increment(ref Read); context.FireChannelRead(message); }
+        public override void HandlerAdded(IChannelHandlerContext ctx) => Interlocked.Increment(ref Added);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { Interlocked.Increment(ref Read); ctx.FireChannelRead(msg); }
     }
     private sealed class SelfReplacingHandler(IChannelHandler replacement, Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
-        public override void HandlerAdded(ChannelHandlerContext context)
-        { context.Pipeline.Replace(this, "real", replacement); throw error; }
-        public override void HandlerRemoved(ChannelHandlerContext context) => Interlocked.Increment(ref Removed);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        { ctx.Pipeline.Replace(this, "real", replacement); throw error; }
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
     }
     private sealed class SelfRemovingHandler(Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
-        public override void HandlerAdded(ChannelHandlerContext context) { context.Pipeline.Remove(this); throw error; }
-        public override void HandlerRemoved(ChannelHandlerContext context) => Interlocked.Increment(ref Removed);
+        public override void HandlerAdded(IChannelHandlerContext ctx) { ctx.Pipeline.Remove(this); throw error; }
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
     }
     private sealed class DeferredThrowingHandler(Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
-        public override void HandlerAdded(ChannelHandlerContext context) => throw error;
-        public override void HandlerRemoved(ChannelHandlerContext context) => Interlocked.Increment(ref Removed);
+        public override void HandlerAdded(IChannelHandlerContext ctx) => throw error;
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
     }
     private sealed class ReplaceOnRemoval(IChannelHandler replacement) : ChannelInboundHandlerAdapter
-    { public override void HandlerRemoved(ChannelHandlerContext context) => context.Pipeline.Replace("handler", "replacement", replacement); }
+    { public override void HandlerRemoved(IChannelHandlerContext ctx) => ctx.Pipeline.Replace("handler", "replacement", replacement); }
 }

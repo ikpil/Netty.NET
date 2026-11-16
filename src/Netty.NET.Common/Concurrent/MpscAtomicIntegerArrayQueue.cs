@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Globalization;
 using System.Threading;
 using Netty.NET.Common.Internal;
 
@@ -55,7 +56,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
     {
         if (value == emptyValue)
         {
-            throw new ArgumentException("Cannot offer the \"empty\" value: " + emptyValue);
+            throw new ArgumentException("Cannot offer the \"empty\" value: " + emptyValue.ToString(CultureInfo.InvariantCulture));
         }
         // use a cached view on consumer index (potentially updated in loop)
         int mask = this.mask;

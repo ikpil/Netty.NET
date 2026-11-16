@@ -45,84 +45,143 @@ public class CompositeByteBufReferenceTest
         foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
 
-    public static IEnumerable<object[]> Ownerships()
+    // CLR: heap/native pooled/unpooled factories; a final cleanup releases whatever a failed assertion left.
+    private static void ReleaseAll(params ByteBuf[] buffers)
     {
-        foreach (object[] provider in Providers())
-        foreach (int mode in new[] { 0, 1, 2 }) yield return [provider[0], provider[1], mode];
-    }
-
-    public static IEnumerable<object[]> Alternatives()
-    {
-        foreach (object[] provider in Providers())
-        foreach (bool alternative in new[] { false, true }) yield return [provider[0], provider[1], alternative];
+        foreach (ByteBuf buffer in buffers)
+            if (buffer?.RefCnt > 0) buffer.Release(buffer.RefCnt);
     }
 
     [Theory]
-    [MemberData(nameof(Ownerships))]
-    public void ArrayEnumerableAndNestedTransfersPreserveOriginalClaimsUntilTheirReleaseOrder(
-        bool pooled, bool direct, int mode)
+    [MemberData(nameof(Providers))]
+    public void TestReferenceCounts1(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         ByteBuf c1 = storage.Allocator.Buffer().WriteByte(1);
         ByteBuf c2 = storage.Allocator.Buffer().WriteByte(2).Retain();
         ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
-        ByteBuf[] sources = [c1, c2, c3];
-        CompositeByteBuf inner = storage.Allocator.CompositeBuffer(), outer = null;
+
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
         try
         {
-            Assert.Equal(1, inner.ReferenceCount);
-            if (mode == 1) inner.AddComponents((IEnumerable<ByteBuf>)new List<ByteBuf>(sources));
-            else inner.AddComponents(sources);
-            Assert.Equal(1, inner.ReferenceCount);
-            Assert.Equal(0, inner.WriterIndex);
-            if (mode == 2)
-            {
-                inner.WriterIndex = 3;
-                outer = storage.Allocator.CompositeBuffer().AddComponents(inner);
-                // Ensure that bufA.refCnt() did not change.
-                Assert.Equal(1, inner.ReferenceCount);
-                // Ensure that c[123]'s refCnt did not change.
-                Assert.Equal(new[] { 1, 2, 3 }, new[] { c1.ReferenceCount, c2.ReferenceCount, c3.ReferenceCount });
-            }
+            Assert.Equal(1, buf.RefCnt);
+            buf.AddComponents(c1, c2, c3);
+
+            Assert.Equal(1, buf.RefCnt);
+            // CLR: AddComponents without increaseWriterIndex leaves the writer at zero.
+            Assert.Equal(0, buf.WriterIndex);
+
             // Ensure that c[123]'s refCount did not change.
-            for (int i = 0; i < sources.Length; ++i)
-            {
-                Assert.Equal(i + 1, sources[i].ReferenceCount);
-                Assert.Equal(i + 1, inner.Component(i).ReferenceCount);
-            }
-            if (mode == 2)
-            {
-                // This should decrease bufA.refCnt().
-                Assert.True(outer.Release());
-                Assert.Equal(0, outer.ReferenceCount);
-                // Ensure bufA.refCnt() changed.
-                Assert.Equal(0, inner.ReferenceCount);
-                // Ensure that c[123]'s refCnt also changed due to the deallocation of bufA.
-                Assert.Equal(new[] { 0, 1, 2 }, new[] { c1.ReferenceCount, c2.ReferenceCount, c3.ReferenceCount });
-                Assert.True(c3.Release(2));
-                Assert.True(c2.Release());
-            }
-            else
-            {
-                Assert.False(c3.Release(2));
-                Assert.False(c2.Release());
-                Assert.All(sources, source => Assert.Equal(1, source.ReferenceCount));
-                Assert.True(inner.Release());
-            }
-            Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+            Assert.Equal(1, c1.RefCnt);
+            Assert.Equal(2, c2.RefCnt);
+            Assert.Equal(3, c3.RefCnt);
+
+            Assert.Equal(1, buf.Component(0).RefCnt);
+            Assert.Equal(2, buf.Component(1).RefCnt);
+            Assert.Equal(3, buf.Component(2).RefCnt);
+
+            // CLR: the caller claims are released first, leaving only the transferred claims.
+            Assert.False(c3.Release(2));
+            Assert.False(c2.Release());
+            Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(1, c.RefCnt));
+            Assert.True(buf.Release());
+            Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(0, c.RefCnt));
         }
-        finally
-        {
-            if (outer?.ReferenceCount > 0) outer.Release();
-            if (inner.ReferenceCount > 0) inner.Release();
-            foreach (ByteBuf source in sources)
-                if (source.ReferenceCount > 0) source.Release(source.ReferenceCount);
-        }
+        finally { ReleaseAll(buf, c1, c2, c3); }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ComponentDuplicatePreservesSourceCapacityLimitsAndIndependentIndices(bool pooled, bool direct)
+    public void TestReferenceCounts2(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        ByteBuf c1 = storage.Allocator.Buffer().WriteByte(1);
+        ByteBuf c2 = storage.Allocator.Buffer().WriteByte(2).Retain();
+        ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
+
+        CompositeByteBuf bufA = storage.Allocator.CompositeBuffer(), bufB = null;
+        try
+        {
+            bufA.AddComponents(c1, c2, c3).WriterIndex = 3;
+
+            bufB = storage.Allocator.CompositeBuffer();
+            bufB.AddComponents(bufA);
+
+            // Ensure that bufA.refCnt() did not change.
+            Assert.Equal(1, bufA.RefCnt);
+
+            // Ensure that c[123]'s refCnt did not change.
+            Assert.Equal(1, c1.RefCnt);
+            Assert.Equal(2, c2.RefCnt);
+            Assert.Equal(3, c3.RefCnt);
+            // CLR: the borrowed components report the same claims.
+            Assert.Equal(1, bufA.Component(0).RefCnt);
+            Assert.Equal(2, bufA.Component(1).RefCnt);
+            Assert.Equal(3, bufA.Component(2).RefCnt);
+
+            // This should decrease bufA.refCnt().
+            Assert.True(bufB.Release());
+            Assert.Equal(0, bufB.RefCnt);
+
+            // Ensure bufA.refCnt() changed.
+            Assert.Equal(0, bufA.RefCnt);
+
+            // Ensure that c[123]'s refCnt also changed due to the deallocation of bufA.
+            Assert.Equal(0, c1.RefCnt);
+            Assert.Equal(1, c2.RefCnt);
+            Assert.Equal(2, c3.RefCnt);
+
+            Assert.True(c3.Release(2));
+            Assert.True(c2.Release());
+            // CLR: every claim is gone.
+            Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(0, c.RefCnt));
+        }
+        finally { ReleaseAll(bufB, bufA, c1, c2, c3); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestReferenceCounts3(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        ByteBuf c1 = storage.Allocator.Buffer().WriteByte(1);
+        ByteBuf c2 = storage.Allocator.Buffer().WriteByte(2).Retain();
+        ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
+
+        CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+        try
+        {
+            Assert.Equal(1, buf.RefCnt);
+
+            // CLR: List<ByteBuf> through the IEnumerable overload replaces ArrayList/Iterable.
+            var components = new List<ByteBuf> { c1, c2, c3 };
+            buf.AddComponents(components);
+            // CLR: the composite claim and writer are unchanged.
+            Assert.Equal(1, buf.RefCnt);
+            Assert.Equal(0, buf.WriterIndex);
+
+            // Ensure that c[123]'s refCount did not change.
+            Assert.Equal(1, c1.RefCnt);
+            Assert.Equal(2, c2.RefCnt);
+            Assert.Equal(3, c3.RefCnt);
+
+            Assert.Equal(1, buf.Component(0).RefCnt);
+            Assert.Equal(2, buf.Component(1).RefCnt);
+            Assert.Equal(3, buf.Component(2).RefCnt);
+
+            // CLR: the caller claims are released first, leaving only the transferred claims.
+            Assert.False(c3.Release(2));
+            Assert.False(c2.Release());
+            Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(1, c.RefCnt));
+            Assert.True(buf.Release());
+            Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(0, c.RefCnt));
+        }
+        finally { ReleaseAll(buf, c1, c2, c3); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestComponentMustBeDuplicate(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         ByteBuf source = storage.Allocator.Buffer(4, 6).SetIndex(1, 3);
@@ -142,73 +201,147 @@ public class CompositeByteBufReferenceTest
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(1, composite.Component(0).ReaderIndex);
             Assert.Equal(0, composite.ReaderIndex);
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             view.Retain();
-            Assert.Equal(2, source.ReferenceCount);
+            Assert.Equal(2, source.RefCnt);
             Assert.False(view.Release());
         }
         finally { composite.Release(); }
-        Assert.Equal(0, source.ReferenceCount);
-        Assert.Equal(0, view.ReferenceCount);
+        Assert.Equal(0, source.RefCnt);
+        Assert.Equal(0, view.RefCnt);
     }
 
     [Theory]
-    [MemberData(nameof(Alternatives))]
-    public void OwnedEmptySourcesAreTransferredAndReleasedEvenWithoutReadableBytes(bool pooled, bool direct, bool multiple)
+    [MemberData(nameof(Providers))]
+    public void TestAddEmptyBufferRelease(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
-        ByteBuf empty = storage.Allocator.Buffer();
-        ByteBuf[] sources = multiple
-            ? [empty, storage.Allocator.Buffer().WriteInt(1), storage.Allocator.Buffer()]
-            : [empty];
-        CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+        CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
+        ByteBuf buf = storage.Allocator.Buffer();
         try
         {
-            Assert.All(sources, source => Assert.Equal(1, source.ReferenceCount));
-            if (multiple) composite.AddComponents(sources);
-            else composite.AddComponent(empty);
-            Assert.Equal(multiple ? 3 : 1, composite.NumComponents);
-            Assert.Equal(multiple ? 4 : 0, composite.Capacity);
-            Assert.Equal(0, composite.WriterIndex);
-            Assert.All(sources, source => Assert.Equal(1, source.ReferenceCount));
-            if (multiple) Assert.Equal(1, composite.GetInt(0));
+            Assert.Equal(1, buf.RefCnt);
+            cbuf.AddComponent(buf);
+            Assert.Equal(1, buf.RefCnt);
+            // CLR: the empty source still takes a component slot without contributing bytes.
+            Assert.Equal(1, cbuf.NumComponents);
+            Assert.Equal(0, cbuf.Capacity);
+            Assert.Equal(0, cbuf.WriterIndex);
+
+            cbuf.Release();
+            Assert.Equal(0, buf.RefCnt);
         }
-        finally { composite.Release(); }
-        Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+        finally { ReleaseAll(cbuf, buf); }
     }
 
     [Theory]
-    [MemberData(nameof(Alternatives))]
-    public void AppendedAndInsertedEmptySingletonsKeepSlotsButConsumeNoByteOffsets(bool pooled, bool direct, bool insert)
+    [MemberData(nameof(Providers))]
+    public void TestAddEmptyBuffersRelease(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
-        ByteBuf first = storage.Allocator.Buffer().WriteByte(1);
-        ByteBuf second = storage.Allocator.Buffer().WriteByte(2);
-        CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponent(first, true);
+        CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
+        ByteBuf buf = storage.Allocator.Buffer();
+        ByteBuf buf2 = storage.Allocator.Buffer().WriteInt(1);
+        ByteBuf buf3 = storage.Allocator.Buffer();
         try
         {
-            if (insert)
-            {
-                composite.AddComponent(second, true);
-                // insert empty one between the first two
-                composite.AddComponent(1, Unpooled.EmptyBuffer, true);
-            }
-            else composite.AddComponent(Unpooled.EmptyBuffer, true).AddComponent(second, true);
-            Assert.Equal(2, composite.ReadableBytes);
-            Assert.Equal(1, composite.ReadByte());
-            Assert.Equal(2, composite.ReadByte());
-            Assert.Same(Unpooled.EmptyBuffer, composite.InternalComponent(1));
-            Assert.NotSame(Unpooled.EmptyBuffer, composite.InternalComponentAtOffset(1));
-            Assert.Equal(2, composite.Capacity);
-            Assert.Equal(3, composite.NumComponents);
-            var destination = new byte[2];
+            Assert.Equal(1, buf.RefCnt);
+            Assert.Equal(1, buf2.RefCnt);
+            Assert.Equal(1, buf3.RefCnt);
+
+            cbuf.AddComponents(buf, buf2, buf3);
+            Assert.Equal(1, buf.RefCnt);
+            Assert.Equal(1, buf2.RefCnt);
+            Assert.Equal(1, buf3.RefCnt);
+            // CLR: empty sources keep their slots; only the four written bytes count.
+            Assert.Equal(3, cbuf.NumComponents);
+            Assert.Equal(4, cbuf.Capacity);
+            Assert.Equal(0, cbuf.WriterIndex);
+            Assert.Equal(1, cbuf.GetInt(0));
+
+            cbuf.Release();
+            Assert.Equal(0, buf.RefCnt);
+            Assert.Equal(0, buf2.RefCnt);
+            Assert.Equal(0, buf3.RefCnt);
+        }
+        finally { ReleaseAll(cbuf, buf, buf2, buf3); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestAddEmptyBufferInMiddle(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
+        ByteBuf buf1 = storage.Allocator.Buffer().WriteByte((byte)1);
+        ByteBuf buf3 = null;
+        try
+        {
+            cbuf.AddComponent(buf1, true);
+            cbuf.AddComponent(Unpooled.EmptyBuffer, true);
+            buf3 = storage.Allocator.Buffer().WriteByte((byte)2);
+            cbuf.AddComponent(buf3, true);
+
+            Assert.Equal(2, cbuf.ReadableBytes);
+            Assert.Equal((byte)1, cbuf.ReadByte());
+            Assert.Equal((byte)2, cbuf.ReadByte());
+
+            Assert.Same(Unpooled.EmptyBuffer, cbuf.InternalComponent(1));
+            Assert.NotSame(Unpooled.EmptyBuffer, cbuf.InternalComponentAtOffset(1));
+            // CLR: the empty slot consumes no byte offset, as testInsertEmptyBufferInMiddle checks.
+            Assert.Equal(2, cbuf.Capacity);
+            Assert.Equal(3, cbuf.NumComponents);
+            var dest = new byte[2];
+            cbuf.GetBytes(0, dest);
+            Assert.Equal(new byte[] { 1, 2 }, dest);
+            cbuf.Release();
+            // CLR: the sources are released while the immutable empty singleton stays live.
+            Assert.Equal(0, buf1.RefCnt);
+            Assert.Equal(0, buf3.RefCnt);
+            Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
+        }
+        finally { ReleaseAll(cbuf, buf1, buf3); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestInsertEmptyBufferInMiddle(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
+        ByteBuf buf1 = storage.Allocator.Buffer().WriteByte((byte)1);
+        ByteBuf buf2 = null;
+        try
+        {
+            cbuf.AddComponent(buf1, true);
+            buf2 = storage.Allocator.Buffer().WriteByte((byte)2);
+            cbuf.AddComponent(buf2, true);
+
+            // insert empty one between the first two
+            cbuf.AddComponent(1, Unpooled.EmptyBuffer, true);
+
+            Assert.Equal(2, cbuf.ReadableBytes);
+            Assert.Equal((byte)1, cbuf.ReadByte());
+            Assert.Equal((byte)2, cbuf.ReadByte());
+
+            Assert.Equal(2, cbuf.Capacity);
+            Assert.Equal(3, cbuf.NumComponents);
+
+            byte[] dest = new byte[2];
             // should skip over the empty one, not throw a java.lang.Error :)
-            composite.GetBytes(0, destination);
-            Assert.Equal(new byte[] { 1, 2 }, destination);
+            cbuf.GetBytes(0, dest);
+
+            Assert.Equal(new byte[] { 1, 2 }, dest);
+            // CLR: the inserted slot keeps the empty singleton, as testAddEmptyBufferInMiddle checks.
+            Assert.Same(Unpooled.EmptyBuffer, cbuf.InternalComponent(1));
+            Assert.NotSame(Unpooled.EmptyBuffer, cbuf.InternalComponentAtOffset(1));
+
+            cbuf.Release();
+            // CLR: the sources are released while the immutable empty singleton stays live.
+            Assert.Equal(0, buf1.RefCnt);
+            Assert.Equal(0, buf2.RefCnt);
+            Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
         }
-        finally { composite.Release(); }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
-        Assert.Equal(1, Unpooled.EmptyBuffer.ReferenceCount);
+        finally { ReleaseAll(cbuf, buf1, buf2); }
     }
 }

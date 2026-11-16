@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Diagnostics;
 
 namespace Netty.NET.Common.Internal;
 
@@ -30,7 +31,11 @@ namespace Netty.NET.Common.Internal;
  *         broken in a non-major release!</li>
  * </ol>
  */
-//@Retention(RetentionPolicy.SOURCE) // TODO Retention policy needs to be CLASS in Netty 5.
+// CLR: RetentionPolicy.SOURCE maps to [Conditional]: a conditional attribute class is not
+// emitted to metadata unless its symbol is defined (Microsoft Learn, ConditionalAttribute
+// remarks), so like the Java annotation it is visible in source only. @Documented has no CLR
+// counterpart because attributes do not appear in XML documentation output.
+[Conditional("NETTY_NET_UNSTABLE_API_METADATA")] // TODO Retention policy needs to be CLASS in Netty 5.
 [AttributeUsage(
     AttributeTargets.Class |
     AttributeTargets.Struct |

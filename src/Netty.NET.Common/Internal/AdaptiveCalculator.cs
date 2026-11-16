@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Internal;
 
@@ -32,12 +34,6 @@ public sealed class AdaptiveCalculator
     static AdaptiveCalculator()
     {
         List<int> sizeTable = new List<int>();
-        // CLR: cover every positive Int32 bound, including values below the
-        // original first bucket. Keep the original 16-byte/power-of-two buckets.
-        for (int i = 1; i < 16; i++)
-        {
-            sizeTable.Add(i);
-        }
         for (int i = 16; i < 512; i += 16)
         {
             sizeTable.Add(i);
@@ -49,14 +45,46 @@ public sealed class AdaptiveCalculator
             sizeTable.Add(i);
         }
 
-        sizeTable.Add(int.MaxValue);
-        SIZE_TABLE = sizeTable.ToArray();
+        SIZE_TABLE = new int[sizeTable.Count];
+        for (int i = 0; i < SIZE_TABLE.Length; i ++)
+        {
+            SIZE_TABLE[i] = sizeTable[i];
+        }
     }
 
-    private static int GetFloorIndex(int size)
+    private static int GetSizeTableIndex(int size)
     {
-        int found = Array.BinarySearch(SIZE_TABLE, size);
-        return found >= 0 ? found : ~found - 1;
+        for (int low = 0, high = SIZE_TABLE.Length - 1;;)
+        {
+            if (high < low)
+            {
+                return low;
+            }
+            if (high == low)
+            {
+                return high;
+            }
+
+            int mid = low + high >>> 1;
+            int a = SIZE_TABLE[mid];
+            int b = SIZE_TABLE[mid + 1];
+            if (size > b)
+            {
+                low = mid + 1;
+            }
+            else if (size < a)
+            {
+                high = mid - 1;
+            }
+            else if (size == a)
+            {
+                return mid;
+            }
+            else
+            {
+                return mid + 1;
+            }
+        }
     }
 
     private readonly int minIndex;
@@ -67,41 +95,63 @@ public sealed class AdaptiveCalculator
     private int _nextSize;
     private bool decreaseNow;
 
+    // CLR: as in the source, a minimum, initial or maximum below the first 16-byte bucket leaves index -1 and
+    // fails with IndexOutOfRangeException (ArrayIndexOutOfBoundsException), and bounds that do not straddle a
+    // bucket may yield sizes outside [minimum, maximum].
     public AdaptiveCalculator(int minimum, int initial, int maximum)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minimum);
+        CheckPositive(minimum, "minimum");
         if (initial < minimum)
         {
-            throw new ArgumentOutOfRangeException(nameof(initial), initial, "Initial size must not be less than minimum.");
+            throw new ArgumentException("initial: " + initial.ToString(CultureInfo.InvariantCulture));
         }
-
         if (maximum < initial)
         {
-            throw new ArgumentOutOfRangeException(nameof(maximum), maximum, "Maximum size must not be less than initial.");
+            throw new ArgumentException("maximum: " + maximum.ToString(CultureInfo.InvariantCulture));
         }
 
-        // Keep an ordered index interval even when no original bucket fits the
-        // requested range; clamp the selected size rather than raising its floor.
-        minIndex = GetFloorIndex(minimum);
-        maxIndex = GetFloorIndex(maximum);
-        index = GetFloorIndex(initial);
+        int minIndex = GetSizeTableIndex(minimum);
+        if (SIZE_TABLE[minIndex] < minimum)
+        {
+            this.minIndex = minIndex + 1;
+        }
+        else
+        {
+            this.minIndex = minIndex;
+        }
 
+        int maxIndex = GetSizeTableIndex(maximum);
+        if (SIZE_TABLE[maxIndex] > maximum)
+        {
+            this.maxIndex = maxIndex - 1;
+        }
+        else
+        {
+            this.maxIndex = maxIndex;
+        }
+
+        int initialIndex = GetSizeTableIndex(initial);
+        if (SIZE_TABLE[initialIndex] > initial)
+        {
+            this.index = initialIndex - 1;
+        }
+        else
+        {
+            this.index = initialIndex;
+        }
         this.minCapacity = minimum;
         this.maxCapacity = maximum;
-        _nextSize = Math.Clamp(SIZE_TABLE[index], minCapacity, maxCapacity);
+        _nextSize = Math.Max(SIZE_TABLE[index], minCapacity);
     }
 
     public void Record(int size)
     {
-        // The first positive bucket has a zero-size predecessor: a full one-byte
-        // read must grow when the configured maximum leaves room.
-        int previousSize = index == 0 ? 0 : SIZE_TABLE[index - INDEX_DECREMENT];
-        if (size <= previousSize)
+        if (size <= SIZE_TABLE[Math.Max(0, index - INDEX_DECREMENT)])
         {
             if (decreaseNow)
             {
                 index = Math.Max(index - INDEX_DECREMENT, minIndex);
-                _nextSize = Math.Clamp(SIZE_TABLE[index], minCapacity, maxCapacity);
+                _nextSize = Math.Max(SIZE_TABLE[index], minCapacity);
                 decreaseNow = false;
             }
             else
@@ -112,11 +162,11 @@ public sealed class AdaptiveCalculator
         else if (size >= _nextSize)
         {
             index = Math.Min(index + INDEX_INCREMENT, maxIndex);
-            _nextSize = Math.Clamp(SIZE_TABLE[index], minCapacity, maxCapacity);
+            _nextSize = Math.Min(SIZE_TABLE[index], maxCapacity);
             decreaseNow = false;
         }
     }
 
-    // Observes this owner's current guess; Record and queries require serial ownership.
+    // CLR: a read-only property replaces the nextSize() getter.
     public int NextSize => _nextSize;
 }

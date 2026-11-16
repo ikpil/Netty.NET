@@ -35,8 +35,8 @@ public class EmptyByteBufTest
     public void TestIsWritable()
     {
         var empty = new EmptyByteBuf(UnpooledByteBufAllocator.Default);
-        Assert.False(empty.IsWritable);
-        Assert.False(empty.CanWrite(1));
+        Assert.False(empty.IsWritable());
+        Assert.False(empty.IsWritable(1));
     }
 
     [Fact]
@@ -59,8 +59,8 @@ public class EmptyByteBufTest
     public void TestIsReadable()
     {
         var empty = new EmptyByteBuf(UnpooledByteBufAllocator.Default);
-        Assert.False(empty.IsReadable);
-        Assert.False(empty.CanRead(1));
+        Assert.False(empty.IsReadable());
+        Assert.False(empty.IsReadable(1));
     }
 
     [Fact]
@@ -111,12 +111,12 @@ public class EmptyByteBufTest
         {
             0 => new UnpooledByteBufAllocator(preferDirect, native),
             1 => new PooledByteBufAllocator(preferDirect, maxOrder: 1, nativeAllocator: native),
-            _ => new AdaptiveByteBufAllocator(preferDirect, false, native)
+            _ => new AdaptiveByteBufAllocator(preferDirect, lowMemory: false, nativeAllocator: native)
         };
         ByteBuf empty = allocator.IoBuffer(0, 0);
         try
         {
-            Assert.Same(allocator, empty.Allocator);
+            Assert.Same(allocator, empty.Alloc());
             Assert.Same(empty, allocator.Buffer(0, 0));
             Assert.Same(empty, allocator.HeapBuffer(0, 0));
             Assert.Same(empty, allocator.DirectBuffer(0, 0));
@@ -140,11 +140,11 @@ public class EmptyByteBufTest
             Assert.True(writable.Pointer == null);
             Assert.True(readable.Pointer == writable.Pointer);
             Assert.False(empty.Release());
-            Assert.Equal(1, empty.ReferenceCount);
+            Assert.Equal(1, empty.RefCnt);
             Assert.True(empty.ReadableMemory.IsEmpty);
         }
         Assert.True(empty.AsMemory(0, 0).IsEmpty);
-        Assert.Equal(1, empty.ReferenceCount);
+        Assert.Equal(1, empty.RefCnt);
     }
 
     [Fact]
@@ -167,13 +167,29 @@ public class EmptyByteBufTest
     [InlineData("us-ascii")]
     [InlineData("utf-8")]
     [InlineData("utf-16")]
-    public void TestReadStringAndCharSequence(string encodingName)
+    public void TestGetCharSequence(string encodingName)
     {
         var empty = new EmptyByteBuf(UnpooledByteBufAllocator.Default);
-        // CLR: both original readCharSequence and readString use the same string/Encoding API.
+        // CLR: the source reads US-ASCII only; UTF-8 and UTF-16 rows are CLR additions. The ICharSequence content is
+        // compared through ToString().
+        Encoding encoding = Encoding.GetEncoding(encodingName);
+        Assert.Equal(string.Empty, empty.ReadCharSequence(0, encoding).ToString());
+        Assert.Equal(0, empty.ReaderIndex);
+        Assert.Equal(0, empty.WriterIndex);
+    }
+
+    [Theory]
+    [InlineData("us-ascii")]
+    [InlineData("utf-8")]
+    [InlineData("utf-16")]
+    public void TestReadString(string encodingName)
+    {
+        var empty = new EmptyByteBuf(UnpooledByteBufAllocator.Default);
+        // CLR: the source reads US-ASCII only; UTF-8 and UTF-16 rows are CLR additions.
         Encoding encoding = Encoding.GetEncoding(encodingName);
         Assert.Equal(string.Empty, empty.ReadString(0, encoding));
-        Assert.Equal(string.Empty, empty.GetString(0, 0, encoding));
+        // CLR: the empty range also decodes to the empty string without moving the indices.
+        Assert.Equal(string.Empty, empty.ToString(0, 0, encoding));
         Assert.Equal(0, empty.ReaderIndex);
         Assert.Equal(0, empty.WriterIndex);
     }
@@ -211,7 +227,7 @@ public class EmptyByteBufTest
     public void EmptyOwnershipIsPermanentlyAccessible()
     {
         ByteBuf empty = Unpooled.EmptyBuffer;
-        Assert.Equal(1, empty.ReferenceCount);
+        Assert.Equal(1, empty.RefCnt);
         Assert.Same(empty, empty.Retain());
         Assert.Same(empty, empty.Retain(int.MaxValue));
         Assert.Same(empty, empty.Retain(0));
@@ -220,7 +236,7 @@ public class EmptyByteBufTest
         Assert.False(empty.Release(int.MaxValue));
         Assert.False(empty.Release(0));
         Assert.False(empty.Release(-1));
-        Assert.Equal(1, empty.ReferenceCount);
+        Assert.Equal(1, empty.RefCnt);
         Assert.Equal(0, empty.AsMemory(0, 0).Length);
     }
 
@@ -230,8 +246,8 @@ public class EmptyByteBufTest
         ByteBuf empty = Unpooled.EmptyBuffer;
         Assert.Equal(0, empty.Capacity);
         Assert.Equal(0, empty.MaxCapacity);
-        Assert.False(empty.IsReadable);
-        Assert.False(empty.IsWritable);
+        Assert.False(empty.IsReadable());
+        Assert.False(empty.IsWritable());
         Assert.True(empty.IsDirect);
         Assert.Equal(0, empty.EnsureWritable(0, false));
         Assert.Equal(1, empty.EnsureWritable(1, true));
@@ -249,7 +265,7 @@ public class EmptyByteBufTest
         try
         {
             Assert.Same(Unpooled.EmptyBuffer, buffer.ReadBytes(0));
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.False(Unpooled.EmptyBuffer.Release());
         }
@@ -268,13 +284,13 @@ public class EmptyByteBufTest
         // Java's empty getCharSequence returns null and its text writes always throw.
         // CLR unifies string reads and lets Encoding decide whether a write produces bytes.
         string text = policy == 2 ? "\u00e9" : string.Empty;
-        Assert.Equal(string.Empty, empty.GetString(0, 0, encoding));
+        Assert.Equal(string.Empty, empty.ToString(0, 0, encoding));
         Assert.Equal(string.Empty, empty.ReadString(0, encoding));
-        Assert.Equal(0, empty.SetString(0, text, encoding));
-        Assert.Equal(0, empty.WriteString(text, encoding));
-        Assert.Throws<ArgumentOutOfRangeException>(() => empty.SetString(1, text, encoding));
-        Assert.Throws<ArgumentOutOfRangeException>(() => empty.WriteString("a", encoding));
-        Assert.Equal((0, 0, 1), (empty.ReaderIndex, empty.WriterIndex, empty.ReferenceCount));
+        Assert.Equal(0, empty.SetCharSequence(0, text, encoding));
+        Assert.Equal(0, empty.WriteCharSequence(text, encoding));
+        Assert.Throws<ArgumentOutOfRangeException>(() => empty.SetCharSequence(1, text, encoding));
+        Assert.Throws<ArgumentOutOfRangeException>(() => empty.WriteCharSequence("a", encoding));
+        Assert.Equal((0, 0, 1), (empty.ReaderIndex, empty.WriterIndex, empty.RefCnt));
         Assert.False(empty.Release());
     }
 
@@ -284,11 +300,11 @@ public class EmptyByteBufTest
     {
         using var allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4) : null;
         ByteBuf empty = (allocator as IByteBufAllocator ?? new UnpooledByteBufAllocator(false, true)).Buffer(0, 0);
-        Assert.Throws<ArgumentNullException>(() => empty.GetString(0, 0, null));
+        Assert.Throws<ArgumentNullException>(() => empty.ToString(0, 0, null));
         Assert.Throws<ArgumentNullException>(() => empty.ReadString(0, null));
-        Assert.Throws<ArgumentNullException>(() => empty.SetString(0, string.Empty, null));
-        Assert.Throws<ArgumentNullException>(() => empty.WriteString(string.Empty, null));
-        Assert.Equal((0, 0, 1), (empty.ReaderIndex, empty.WriterIndex, empty.ReferenceCount));
+        Assert.Throws<ArgumentNullException>(() => empty.SetCharSequence(0, string.Empty, null));
+        Assert.Throws<ArgumentNullException>(() => empty.WriteCharSequence(string.Empty, null));
+        Assert.Equal((0, 0, 1), (empty.ReaderIndex, empty.WriterIndex, empty.RefCnt));
         Assert.False(empty.Release());
     }
 

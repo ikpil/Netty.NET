@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -36,7 +37,7 @@ public class WritableMemoryByteBufTest
         {
             Assert.False(b.IsReadOnly); Assert.Equal(kind == 1, b.IsDirect);
             Assert.Equal(8, b.Capacity); Assert.Equal(8, b.MaxCapacity);
-            Assert.Equal(0, b.ReaderIndex); Assert.Equal(8, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(0, b.ReaderIndex); Assert.Equal(8, b.WriterIndex); Assert.Equal(1, b.RefCnt);
             b.SetLong(0, 0x0102030405060708L);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, storage.Memory.Slice(4, 8).ToArray());
             storage.Memory.Span[4] = 9; Assert.Equal(9, b.GetByte(0));
@@ -91,7 +92,7 @@ public class WritableMemoryByteBufTest
             ByteBuf copy = retained.Copy();
             try
             {
-                Assert.Same(b.Allocator, copy.Allocator); Assert.Equal(kind == 1, copy.IsDirect);
+                Assert.Same(b.Alloc(), copy.Alloc()); Assert.Equal(kind == 1, copy.IsDirect);
                 Assert.Equal(kind == 0 ? 16 : 8, copy.MaxCapacity);
                 Assert.Equal(new byte[] { 4, 5, 6, 7 }, ByteBufUtil.GetBytes(copy));
                 copy.SetByte(0, 42); Assert.Equal(4, retained.GetByte(1));
@@ -99,7 +100,7 @@ public class WritableMemoryByteBufTest
             finally { copy.Release(); }
             Assert.False(b.Release()); Assert.Equal(3, retained.GetByte(0));
         }
-        finally { if (b.ReferenceCount == 2) b.Release(); retained.Release(); }
+        finally { if (b.RefCnt == 2) b.Release(); retained.Release(); }
         Assert.Throws<IllegalReferenceCountException>(() => b.GetByte(0));
         Assert.Equal(99, storage.Memory.Span[2]);
     }
@@ -124,7 +125,7 @@ public class WritableMemoryByteBufTest
                 composite.SetInt(2, 0x12345678);
                 Assert.Equal(0x12345678, b.GetInt(2)); Assert.Equal(0x12, storage.Memory.Span[4]);
                 composite.Consolidate(); composite.SetByte(0, 99); Assert.Equal(1, b.GetByte(0));
-                Assert.Equal(1, b.ReferenceCount);
+                Assert.Equal(1, b.RefCnt);
             }
             finally { composite.Release(); }
         }
@@ -188,7 +189,7 @@ public class WritableMemoryByteBufTest
             ByteBuf copy = b.Copy(0, 4);
             try
             {
-                Assert.Same(a, copy.Allocator); Assert.Equal(16, copy.MaxCapacity); Assert.Equal(4, a.Metric.UsedDirectMemory);
+                Assert.Same(a, copy.Alloc()); Assert.Equal(16, copy.MaxCapacity); Assert.Equal(4, a.Metric.UsedDirectMemory);
                 Assert.Equal(16, native.ReservedBytes); Assert.Equal(42, copy.GetByte(0));
             }
             finally { copy.Release(); }
@@ -208,7 +209,7 @@ public class WritableMemoryByteBufTest
         try
         {
             b.SetIndex(6, 8); b.MarkReaderIndex().MarkWriterIndex();
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = shrink ? 4 : 12);
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = shrink ? 4 : 12);
             Assert.Equal(8, b.Capacity); Assert.Equal(6, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
             b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(7, b.GetByte(0));
             Assert.Equal(0, native.ReservedBytes); Assert.Equal(8, external.ReservedBytes);
@@ -247,7 +248,7 @@ public class WritableMemoryByteBufTest
             b.Release(); owner.Dispose(); Assert.Equal(8, external.ReservedBytes); Assert.Equal(12, native.ReservedBytes);
             Assert.Equal(7, *(byte*)original.Pointer); Assert.Equal(99, *(byte*)replacement.Pointer);
         }
-        finally { if (b.ReferenceCount > 0) b.Release(); owner.Dispose(); original.Dispose(); replacement.Dispose(); }
+        finally { if (b.RefCnt > 0) b.Release(); owner.Dispose(); original.Dispose(); replacement.Dispose(); }
         Assert.Equal(0, external.ReservedBytes); Assert.Equal(0, native.ReservedBytes);
     }
 

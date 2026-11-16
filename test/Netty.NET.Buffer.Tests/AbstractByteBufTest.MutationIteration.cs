@@ -24,7 +24,7 @@ public abstract partial class AbstractByteBufTest
     public void TestSetZero()
     {
         buffer.Clear();
-        while (buffer.IsWritable)
+        while (buffer.IsWritable())
         {
             buffer.WriteByte((byte)0xFF);
         }
@@ -48,7 +48,7 @@ public abstract partial class AbstractByteBufTest
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
 
         buffer.Clear();
-        while (buffer.IsWritable)
+        while (buffer.IsWritable())
         {
             buffer.WriteByte((byte)0xFF);
         }
@@ -158,7 +158,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestForEachByteDesc2()
+    public virtual void TestForEachByteDesc2()
     {
         byte[] expected = new byte[] { 1, 2, 3, 4 };
         ByteBuf buf = NewBuffer(expected.Length);
@@ -182,7 +182,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestForEachByte2()
+    public virtual void TestForEachByte2()
     {
         byte[] expected = new byte[] { 1, 2, 3, 4 };
         ByteBuf buf = NewBuffer(expected.Length);

@@ -18,11 +18,13 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Channels.Groups;
@@ -74,7 +76,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         {
             var group = new WeakReference<DefaultChannelGroup>(this);
             var member = new WeakReference<IChannel>(channel);
-            channel.CloseCompletion.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+            channel.CloseFuture.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
             {
                 if (group.TryGetTarget(out var owner) && member.TryGetTarget(out var value))
                     owner.Remove(value);
@@ -108,6 +110,19 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     public IEnumerator<IChannel> GetEnumerator() => _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     /**
+     * Closes all {@link Channel}s in this group.  If the {@link Channel} is
+     * connected to a remote peer or bound to a local address, it is
+     * automatically disconnected and unbound.
+     *
+     * @return the {@link ChannelGroupFuture} instance that notifies when
+     *         the operation is done for all channels
+     */
+    public Task CloseAsync()
+    {
+        return CloseAsync(ChannelMatchers.All());
+    }
+
+    /**
      * Closes all {@link Channel}s in this group that are matched by the given {@link ChannelMatcher}.
      * If the {@link Channel} is  connected to a remote peer or bound to a local address, it is
      * automatically disconnected and unbound.
@@ -115,7 +130,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task CloseAsync(Func<IChannel, bool> matcher = null) => CloseAsync(out _, matcher);
+    public Task CloseAsync(Func<IChannel, bool> matcher) => CloseAsync(out _, matcher);
     public Task CloseAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         if (_stayClosed)
@@ -131,15 +146,41 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         return OperateAsync(async channel => { await channel.CloseAsync().ConfigureAwait(false); Remove(channel); }, matcher, true, out operations);
     }
     /**
+     * Disconnects all {@link Channel}s in this group from their remote peers.
+     *
+     * @return the {@link ChannelGroupFuture} instance that notifies when
+     *         the operation is done for all channels
+     */
+    public Task DisconnectAsync()
+    {
+        return DisconnectAsync(ChannelMatchers.All());
+    }
+
+    /**
      * Disconnects all {@link Channel}s in this group from their remote peers,
      * that are matched by the given {@link ChannelMatcher}.
      *
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task DisconnectAsync(Func<IChannel, bool> matcher = null) => DisconnectAsync(out _, matcher);
+    public Task DisconnectAsync(Func<IChannel, bool> matcher) => DisconnectAsync(out _, matcher);
     public Task DisconnectAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
         OperateAsync(channel => channel.DisconnectAsync(), matcher, true, out operations);
+    /**
+     * @deprecated This method will be removed in the next major feature release.
+     *
+     * Deregister all {@link Channel}s in this group from their {@link EventLoop}.
+     * Please note that this operation is asynchronous as {@link Channel#deregister()} is.
+     *
+     * @return the {@link ChannelGroupFuture} instance that notifies when
+     *         the operation is done for all channels
+     */
+    // CLR: ported although @Deprecated because its @deprecated text names no replacement.
+    public Task DeregisterAsync()
+    {
+        return DeregisterAsync(ChannelMatchers.All());
+    }
+
     /**
      * @deprecated This method will be removed in the next major feature release.
      *
@@ -149,7 +190,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task DeregisterAsync(Func<IChannel, bool> matcher = null) => DeregisterAsync(out _, matcher);
+    public Task DeregisterAsync(Func<IChannel, bool> matcher) => DeregisterAsync(out _, matcher);
     public Task DeregisterAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
         OperateAsync(channel => channel.DeregisterAsync(), matcher, true, out operations);
     /**
@@ -229,6 +270,21 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         return CompleteAsync(tasks);
     }
     /**
+     * Flush all {@link Channel}s in this group. If the specified {@code messages} are an instance of
+     * {@link ByteBuf}, it is automatically
+     * {@linkplain ByteBuf#duplicate() duplicated} to avoid a race
+     * condition. Please note that this operation is asynchronous as
+     * {@link Channel#write(Object)} is.
+     *
+     * @return the {@link ChannelGroupFuture} instance that notifies when
+     *         the operation is done for all channels
+     */
+    public DefaultChannelGroup Flush()
+    {
+        return Flush(ChannelMatchers.All());
+    }
+
+    /**
      * Flush all {@link Channel}s in this group that are matched by the given {@link ChannelMatcher}.
      * If the specified {@code messages} are an instance of
      * {@link ByteBuf}, it is automatically
@@ -239,7 +295,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public DefaultChannelGroup Flush(Func<IChannel, bool> matcher = null)
+    public DefaultChannelGroup Flush(Func<IChannel, bool> matcher)
     { foreach (var channel in _channels.Values) if (channel is not IServerChannel && (matcher == null || matcher(channel))) channel.Flush(); return this; }
     private Task OperateAsync(Func<IChannel, Task> operation, Func<IChannel, bool> matcher, bool includeServers, out IReadOnlyDictionary<IChannel, Task> operations)
     {
@@ -263,9 +319,9 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     public Task NewCloseFuture(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         var tasks = _channels.Values.Where(channel => matcher == null || matcher(channel))
-            .Select(channel => new KeyValuePair<IChannel, Task>(channel, channel.CloseCompletion)).ToList();
+            .Select(channel => new KeyValuePair<IChannel, Task>(channel, channel.CloseFuture)).ToList();
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
-    public override string ToString() => $"DefaultChannelGroup(name: {Name}, size: {Count})";
+    public override string ToString() => string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(name: {Name}, size: {Count})");
 }

@@ -80,7 +80,7 @@ public class CompositeByteBufIoEmptyComponentTest
         }
         public void Dispose()
         {
-            if (_lifetimeOwner.ReferenceCount > 0) _lifetimeOwner.Release();
+            if (_lifetimeOwner.RefCnt > 0) _lifetimeOwner.Release();
             (Allocator as IDisposable)?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -124,7 +124,7 @@ public class CompositeByteBufIoEmptyComponentTest
             }
             Assert.Equal(new byte[] { 1, 2, 91, 92, 93, 94, 95, 96, 97, 98, 11, 12 }, ByteBufUtil.GetBytes(s.Root, 0, 12));
             Assert.Equal(0, s.FirstEmpty.Writes); Assert.Equal(0, s.SecondEmpty.Writes);
-            Assert.Equal(1, s.FirstEmpty.ReferenceCount); Assert.Equal(1, s.SecondEmpty.ReferenceCount);
+            Assert.Equal(1, s.FirstEmpty.RefCnt); Assert.Equal(1, s.SecondEmpty.RefCnt);
             Assert.Equal(1, file.Position); if (input == 0) Assert.Equal(8, stream.Position);
             s.Owner.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((s.Index, s.Index), (s.Owner.ReaderIndex, s.Owner.WriterIndex));
         }

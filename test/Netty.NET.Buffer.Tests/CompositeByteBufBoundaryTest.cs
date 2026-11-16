@@ -75,7 +75,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         {
             compositeByteBuf.Release();
             // CLR preflight leaves a rejected array input caller-owned; single insertion can consume it.
-            if (buffer.ReferenceCount > 0)
+            if (buffer.RefCnt > 0)
                 buffer.Release();
         }
 
@@ -104,7 +104,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         {
             compositeByteBuf.Release();
             // CLR preflight leaves a rejected array input caller-owned; single insertion can consume it.
-            if (buffer.ReferenceCount > 0)
+            if (buffer.RefCnt > 0)
                 buffer.Release();
         }
 
@@ -133,7 +133,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         {
             compositeByteBuf.Release();
             // CLR preflight leaves a rejected array input caller-owned; single insertion can consume it.
-            if (buffer.ReferenceCount > 0)
+            if (buffer.RefCnt > 0)
                 buffer.Release();
         }
 

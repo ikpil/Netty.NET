@@ -177,9 +177,12 @@ public class DefaultHostsFileEntriesResolverTest
         Dictionary<string, IReadOnlyList<IPAddress>> inet4Entries,
         Dictionary<string, IReadOnlyList<IPAddress>> inet6Entries)
     {
-        var parser = new Mock<HostsFileEntriesProvider.IParser>();
-        parser.Setup(p => p.ParseSilently()).Returns(() => new HostsFileEntriesProvider(inet4Entries, inet6Entries));
-        parser.Setup(p => p.ParseSilently(It.IsAny<Encoding[]>())).Returns(() => new HostsFileEntriesProvider(inet4Entries, inet6Entries));
-        return parser.Object;
+        var mockParser = new Mock<HostsFileEntriesProvider.IParser>();
+
+        Func<HostsFileEntriesProvider> mockedAnswer = () => new HostsFileEntriesProvider(inet4Entries, inet6Entries);
+
+        mockParser.Setup(p => p.ParseSilently()).Returns(mockedAnswer);
+        mockParser.Setup(p => p.ParseSilently(It.IsAny<Encoding[]>())).Returns(mockedAnswer);
+        return mockParser.Object;
     }
 }

@@ -108,7 +108,7 @@ public class ByteBufIterationKernelTest
             if (scenario is 3 or 4) expected = [expected[0], 99];
             Assert.Equal(expected, visited); Assert.Equal(indexed ? 1 : 0, calls.Indexed); Assert.Equal(0, calls.Gets);
             Assert.Equal(scenario == 5 ? 0 : 1, owner.ReaderIndex); Assert.Equal(scenario == 5 ? 8 : 7, owner.WriterIndex);
-            Assert.Equal(scenario == 4 ? 16 : 8, owner.Capacity); Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(scenario == 4 ? 16 : 8, owner.Capacity); Assert.Equal(1, owner.RefCnt);
             byte[] bytes = [128, 129, 130, 131, 132, 133, 134, 135];
             if (scenario is 3 or 4) bytes[next] = 99;
             Assert.Equal(bytes, ByteBufUtil.GetBytes(owner, 0, 8));
@@ -155,7 +155,7 @@ public class ByteBufIterationKernelTest
             Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
             view.SetIndex(0, view.Capacity).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
-            Assert.Equal(retained == null ? 1 : 2, root.ReferenceCount);
+            Assert.Equal(retained == null ? 1 : 2, root.RefCnt);
         }
         finally { if (retained != null) Assert.True(retained.Release()); Assert.True(root.Release()); }
         Assert.Equal(0, native.ReservedBytes);
@@ -185,7 +185,7 @@ public class ByteBufIterationKernelTest
             Assert.Throws<IllegalReferenceCountException>(() => Scan(root, descending, 0, 0, _ => throw calls.Error));
             Assert.Equal(1, calls.Indexed); Assert.Equal(0, calls.Gets);
         }
-        finally { if (root.ReferenceCount != 0) root.Release(); }
+        finally { if (root.RefCnt != 0) root.Release(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -210,9 +210,9 @@ public class ByteBufIterationKernelTest
             if (stop) Assert.Equal(descending ? indexed ? 5 : 6 : indexed ? 2 : 1, Invoke());
             else Assert.Throws<IllegalReferenceCountException>(() => Invoke());
             Assert.Equal(1, visits); Assert.Equal(indexed ? 1 : 0, calls.Indexed); Assert.Equal(0, calls.Gets);
-            Assert.Equal(0, root.ReferenceCount);
+            Assert.Equal(0, root.RefCnt);
         }
-        finally { if (root.ReferenceCount != 0) root.Release(); }
+        finally { if (root.RefCnt != 0) root.Release(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

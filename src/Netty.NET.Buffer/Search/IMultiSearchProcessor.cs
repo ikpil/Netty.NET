@@ -26,5 +26,5 @@ public interface IMultiSearchProcessor : ISearchProcessor
     /**
      * @return the index of found search string (if any, or -1 if none) at current position of this MultiSearchProcessor
      */
-    int FoundNeedleId { get; }
+    int GetFoundNeedleId();
 }

@@ -158,7 +158,7 @@ public class QueuedActionContractTest
         public override bool IsTerminated() => owner.IsTerminated();
         [Obsolete]
         public override void Shutdown() => owner.Shutdown();
-        public override Task Termination => owner.Termination;
+        public override Task TerminationFuture => owner.TerminationFuture;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => owner.ShutdownGracefullyAsync(quietPeriod, timeout);
         public override bool AwaitTermination(TimeSpan timeout) => owner.AwaitTermination(timeout);
     }

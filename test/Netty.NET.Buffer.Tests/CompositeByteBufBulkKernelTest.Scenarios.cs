@@ -67,12 +67,12 @@ public partial class CompositeByteBufBulkKernelTest
             else
             { aggregate.SetIndex(0, destination); aggregate.WriteBytes(peer, source, length); Assert.Equal(destination + length, aggregate.WriterIndex); }
             Assert.Equal(expected, backing.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(1, owner.ReferenceCount); Assert.Equal(3, backing.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt); Assert.Equal(3, backing.RefCnt);
         }
         finally
         {
-            if (owner?.ReferenceCount > 0) owner.Release();
-            if (backing.ReferenceCount > 0) backing.Release();
+            if (owner?.RefCnt > 0) owner.Release();
+            if (backing.RefCnt > 0) backing.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -139,12 +139,12 @@ public partial class CompositeByteBufBulkKernelTest
             owner.SetIndex(0, owner.Capacity).ResetWriterIndex().ResetReaderIndex();
             Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray()); Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
         }
         finally
         {
-            if (owner?.ReferenceCount > 0) owner.Release();
-            if (first.ReferenceCount > 0) first.Release(); if (second.ReferenceCount > 0) second.Release();
+            if (owner?.RefCnt > 0) owner.Release();
+            if (first.RefCnt > 0) first.Release(); if (second.RefCnt > 0) second.Release();
             if (path != null) File.Delete(path);
             Assert.Equal(0, native.ReservedBytes);
         }

@@ -84,13 +84,13 @@ public class ByteBufRelativeTransferTest
                 Assert.Equal(9, source.WriterIndex); Assert.Equal(1, destination.ReaderIndex);
                 Assert.Equal(operation is 0 or 1 or 4 or 6 or 7 ? writer + length : writer, destination.WriterIndex);
                 Assert.Equal(24, source.Capacity); Assert.Equal(24, destination.Capacity);
-                Assert.Equal(1, source.ReferenceCount); Assert.Equal(1, destination.ReferenceCount);
+                Assert.Equal(1, source.RefCnt); Assert.Equal(1, destination.RefCnt);
                 source.ResetReaderIndex().ResetWriterIndex(); destination.ResetReaderIndex().ResetWriterIndex();
                 Assert.Equal(2, source.ReaderIndex); Assert.Equal(9, source.WriterIndex);
                 Assert.Equal(1, destination.ReaderIndex); Assert.Equal(writer, destination.WriterIndex);
             }
             finally { source.Release(); destination.Release(); }
-            Assert.Equal(0, sourceOwner.ReferenceCount); Assert.Equal(0, destinationOwner.ReferenceCount);
+            Assert.Equal(0, sourceOwner.RefCnt); Assert.Equal(0, destinationOwner.RefCnt);
         }
     }
 
@@ -172,7 +172,7 @@ public class ByteBufRelativeTransferTest
             Assert.Throws<IllegalReferenceCountException>(() => Invoke(operation, source, destination, 0));
             Assert.Equal(24, destination.WriterIndex);
         }
-        finally { if (source.ReferenceCount > 0) source.Release(); destination.Release(); }
+        finally { if (source.RefCnt > 0) source.Release(); destination.Release(); }
     }
 
     public static IEnumerable<object[]> SelfPairs()
@@ -202,7 +202,7 @@ public class ByteBufRelativeTransferTest
             Assert.Equal(operation is 0 or 1 or 4 or 6 or 7 ? writer + length : writer, buffer.WriterIndex);
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, owner.ReferenceCount);
+        Assert.Equal(0, owner.RefCnt);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class ByteBufRelativeTransferTest
             Assert.Throws<IllegalReferenceCountException>(() => destination.WriteBytes(source, 0, 0));
             Assert.Equal(1, destination.WriterIndex);
         }
-        finally { if (source.ReferenceCount > 0) source.Release(); destination.Release(); }
+        finally { if (source.RefCnt > 0) source.Release(); destination.Release(); }
     }
 
     [Theory]
@@ -247,7 +247,7 @@ public class ByteBufRelativeTransferTest
             Assert.Throws<IllegalReferenceCountException>(() => Invoke(operation, source, destination, 0));
             Assert.Equal(2, source.ReaderIndex);
         }
-        finally { source.Release(); if (destination.ReferenceCount > 0) destination.Release(); }
+        finally { source.Release(); if (destination.RefCnt > 0) destination.Release(); }
     }
 
     [Theory]
@@ -277,7 +277,7 @@ public class ByteBufRelativeTransferTest
             Assert.Equal(source.GetByte(from), destination.GetByte(copied));
         }
         finally { source.Release(); destination.Release(); }
-        Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, last.ReferenceCount);
+        Assert.Equal(0, first.RefCnt); Assert.Equal(0, last.RefCnt);
     }
 
     [Fact]
@@ -294,7 +294,7 @@ public class ByteBufRelativeTransferTest
             source.SetIndex(2, 4); owner.WriteBytes(source);
             Assert.Equal(4, source.ReaderIndex); Assert.Equal(14, owner.WriterIndex);
             Assert.Equal(new byte[] { 3, 4 }, ByteBufUtil.GetBytes(owner, 12, 2));
-            Assert.Equal(owner.Capacity, allocator.ReservedBytes); Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(owner.Capacity, allocator.ReservedBytes); Assert.Equal(1, owner.RefCnt);
         }
         finally { owner.Release(); }
         Assert.Equal(0, allocator.ReservedBytes);

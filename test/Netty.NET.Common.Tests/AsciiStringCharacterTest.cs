@@ -357,40 +357,32 @@ public class AsciiStringCharacterTest
     [Fact]
     public void TestIndexOfCharSequence()
     {
-        // Select a bounded native byte window; original assertions use logical indexes.
-        static int FindFirst(AsciiString value, ReadOnlySpan<byte> pattern, int start)
-        {
-            int offset = Math.Clamp(start, 0, value.Count);
-            int index = value.AsSpan().Slice(offset).IndexOf(pattern);
-            return index < 0 ? -1 : offset + index;
-        }
-
-        Assert.Equal(0, FindFirst(new AsciiString("abcd"), "abcd"u8, 0));
-        Assert.Equal(0, FindFirst(new AsciiString("abcd"), "abc"u8, 0));
-        Assert.Equal(1, FindFirst(new AsciiString("abcd"), "bcd"u8, 0));
-        Assert.Equal(1, FindFirst(new AsciiString("abcd"), "bc"u8, 0));
-        Assert.Equal(1, FindFirst(new AsciiString("abcdabcd"), "bcd"u8, 0));
-        Assert.Equal(0, FindFirst(new AsciiString("abcd", 1, 2), "bc"u8, 0));
-        Assert.Equal(0, FindFirst(new AsciiString("abcd", 1, 3), "bcd"u8, 0));
-        Assert.Equal(1, FindFirst(new AsciiString("abcdabcd", 4, 4), "bcd"u8, 0));
-        Assert.Equal(3, FindFirst(new AsciiString("012345"), "345"u8, 3));
-        Assert.Equal(3, FindFirst(new AsciiString("012345"), "345"u8, 0));
+        Assert.Equal(0, new AsciiString("abcd").IndexOf(Seq("abcd"), 0));
+        Assert.Equal(0, new AsciiString("abcd").IndexOf(Seq("abc"), 0));
+        Assert.Equal(1, new AsciiString("abcd").IndexOf(Seq("bcd"), 0));
+        Assert.Equal(1, new AsciiString("abcd").IndexOf(Seq("bc"), 0));
+        Assert.Equal(1, new AsciiString("abcdabcd").IndexOf(Seq("bcd"), 0));
+        Assert.Equal(0, new AsciiString("abcd", 1, 2).IndexOf(Seq("bc"), 0));
+        Assert.Equal(0, new AsciiString("abcd", 1, 3).IndexOf(Seq("bcd"), 0));
+        Assert.Equal(1, new AsciiString("abcdabcd", 4, 4).IndexOf(Seq("bcd"), 0));
+        Assert.Equal(3, new AsciiString("012345").IndexOf(Seq("345"), 3));
+        Assert.Equal(3, new AsciiString("012345").IndexOf(Seq("345"), 0));
 
         // Test with empty string
-        Assert.Equal(0, FindFirst(new AsciiString("abcd"), ""u8, 0));
-        Assert.Equal(1, FindFirst(new AsciiString("abcd"), ""u8, 1));
-        Assert.Equal(3, FindFirst(new AsciiString("abcd", 1, 3), ""u8, 4));
+        Assert.Equal(0, new AsciiString("abcd").IndexOf(Seq(""), 0));
+        Assert.Equal(1, new AsciiString("abcd").IndexOf(Seq(""), 1));
+        Assert.Equal(3, new AsciiString("abcd", 1, 3).IndexOf(Seq(""), 4));
 
         // Test not found
-        Assert.Equal(-1, FindFirst(new AsciiString("abcd"), "abcde"u8, 0));
-        Assert.Equal(-1, FindFirst(new AsciiString("abcdbc"), "bce"u8, 0));
-        Assert.Equal(-1, FindFirst(new AsciiString("abcd", 1, 3), "abc"u8, 0));
-        Assert.Equal(-1, FindFirst(new AsciiString("abcd", 1, 2), "bd"u8, 0));
-        Assert.Equal(-1, FindFirst(new AsciiString("012345"), "345"u8, 4));
-        Assert.Equal(-1, FindFirst(new AsciiString("012345"), "abc"u8, 3));
-        Assert.Equal(-1, FindFirst(new AsciiString("012345"), "abc"u8, 0));
-        Assert.Equal(-1, FindFirst(new AsciiString("012345"), "abcdefghi"u8, 0));
-        Assert.Equal(-1, FindFirst(new AsciiString("012345"), "abcdefghi"u8, 4));
+        Assert.Equal(-1, new AsciiString("abcd").IndexOf(Seq("abcde"), 0));
+        Assert.Equal(-1, new AsciiString("abcdbc").IndexOf(Seq("bce"), 0));
+        Assert.Equal(-1, new AsciiString("abcd", 1, 3).IndexOf(Seq("abc"), 0));
+        Assert.Equal(-1, new AsciiString("abcd", 1, 2).IndexOf(Seq("bd"), 0));
+        Assert.Equal(-1, new AsciiString("012345").IndexOf(Seq("345"), 4));
+        Assert.Equal(-1, new AsciiString("012345").IndexOf(Seq("abc"), 3));
+        Assert.Equal(-1, new AsciiString("012345").IndexOf(Seq("abc"), 0));
+        Assert.Equal(-1, new AsciiString("012345").IndexOf(Seq("abcdefghi"), 0));
+        Assert.Equal(-1, new AsciiString("012345").IndexOf(Seq("abcdefghi"), 4));
     }
 
     [Fact]
@@ -409,48 +401,41 @@ public class AsciiStringCharacterTest
     [Fact]
     public void TestLastIndexOfCharSequence()
     {
-        // Java's start limits candidate starts; include the full pattern in the native window.
-        static int FindLast(AsciiString value, ReadOnlySpan<byte> pattern, int start)
-        {
-            int lastStart = Math.Min(start, value.Count - pattern.Length);
-            return lastStart < 0 ? -1 : value.AsSpan().Slice(0, lastStart + pattern.Length).LastIndexOf(pattern);
-        }
-
         byte[] bytes = { (byte)'a', (byte)'b', (byte)'c', (byte)'d', (byte)'e' };
         AsciiString ascii = new AsciiString(bytes, 2, 3, false);
 
-        Assert.Equal(0, FindLast(new AsciiString("abcd"), "abcd"u8, 0));
-        Assert.Equal(0, FindLast(new AsciiString("abcd"), "abc"u8, 4));
-        Assert.Equal(1, FindLast(new AsciiString("abcd"), "bcd"u8, 4));
-        Assert.Equal(1, FindLast(new AsciiString("abcd"), "bc"u8, 4));
-        Assert.Equal(5, FindLast(new AsciiString("abcdabcd"), "bcd"u8, 10));
-        Assert.Equal(0, FindLast(new AsciiString("abcd", 1, 2), "bc"u8, 2));
-        Assert.Equal(0, FindLast(new AsciiString("abcd", 1, 3), "bcd"u8, 3));
-        Assert.Equal(1, FindLast(new AsciiString("abcdabcd", 4, 4), "bcd"u8, 4));
-        Assert.Equal(3, FindLast(new AsciiString("012345"), "345"u8, 3));
-        Assert.Equal(3, FindLast(new AsciiString("012345"), "345"u8, 6));
-        Assert.Equal(1, FindLast(ascii, "de"u8, 3));
-        Assert.Equal(0, FindLast(ascii, "cde"u8, 3));
+        Assert.Equal(0, new AsciiString("abcd").LastIndexOf(Seq("abcd"), 0));
+        Assert.Equal(0, new AsciiString("abcd").LastIndexOf(Seq("abc"), 4));
+        Assert.Equal(1, new AsciiString("abcd").LastIndexOf(Seq("bcd"), 4));
+        Assert.Equal(1, new AsciiString("abcd").LastIndexOf(Seq("bc"), 4));
+        Assert.Equal(5, new AsciiString("abcdabcd").LastIndexOf(Seq("bcd"), 10));
+        Assert.Equal(0, new AsciiString("abcd", 1, 2).LastIndexOf(Seq("bc"), 2));
+        Assert.Equal(0, new AsciiString("abcd", 1, 3).LastIndexOf(Seq("bcd"), 3));
+        Assert.Equal(1, new AsciiString("abcdabcd", 4, 4).LastIndexOf(Seq("bcd"), 4));
+        Assert.Equal(3, new AsciiString("012345").LastIndexOf(Seq("345"), 3));
+        Assert.Equal(3, new AsciiString("012345").LastIndexOf(Seq("345"), 6));
+        Assert.Equal(1, ascii.LastIndexOf(Seq("de"), 3));
+        Assert.Equal(0, ascii.LastIndexOf(Seq("cde"), 3));
 
         // Test with empty string
-        Assert.Equal(0, FindLast(new AsciiString("abcd"), ""u8, 0));
-        Assert.Equal(1, FindLast(new AsciiString("abcd"), ""u8, 1));
-        Assert.Equal(3, FindLast(new AsciiString("abcd", 1, 3), ""u8, 4));
-        Assert.Equal(3, FindLast(ascii, ""u8, 3));
+        Assert.Equal(0, new AsciiString("abcd").LastIndexOf(Seq(""), 0));
+        Assert.Equal(1, new AsciiString("abcd").LastIndexOf(Seq(""), 1));
+        Assert.Equal(3, new AsciiString("abcd", 1, 3).LastIndexOf(Seq(""), 4));
+        Assert.Equal(3, ascii.LastIndexOf(Seq(""), 3));
 
         // Test not found
-        Assert.Equal(-1, FindLast(new AsciiString("abcd"), "abcde"u8, 0));
-        Assert.Equal(-1, FindLast(new AsciiString("abcdbc"), "bce"u8, 0));
-        Assert.Equal(-1, FindLast(new AsciiString("abcd", 1, 3), "abc"u8, 0));
-        Assert.Equal(-1, FindLast(new AsciiString("abcd", 1, 2), "bd"u8, 0));
-        Assert.Equal(-1, FindLast(new AsciiString("012345"), "345"u8, 2));
-        Assert.Equal(-1, FindLast(new AsciiString("012345"), "abc"u8, 3));
-        Assert.Equal(-1, FindLast(new AsciiString("012345"), "abc"u8, 0));
-        Assert.Equal(-1, FindLast(new AsciiString("012345"), "abcdefghi"u8, 0));
-        Assert.Equal(-1, FindLast(new AsciiString("012345"), "abcdefghi"u8, 4));
-        Assert.Equal(-1, FindLast(ascii, "a"u8, 3));
-        Assert.Equal(-1, FindLast(ascii, "abc"u8, 3));
-        Assert.Equal(-1, FindLast(ascii, "ce"u8, 3));
+        Assert.Equal(-1, new AsciiString("abcd").LastIndexOf(Seq("abcde"), 0));
+        Assert.Equal(-1, new AsciiString("abcdbc").LastIndexOf(Seq("bce"), 0));
+        Assert.Equal(-1, new AsciiString("abcd", 1, 3).LastIndexOf(Seq("abc"), 0));
+        Assert.Equal(-1, new AsciiString("abcd", 1, 2).LastIndexOf(Seq("bd"), 0));
+        Assert.Equal(-1, new AsciiString("012345").LastIndexOf(Seq("345"), 2));
+        Assert.Equal(-1, new AsciiString("012345").LastIndexOf(Seq("abc"), 3));
+        Assert.Equal(-1, new AsciiString("012345").LastIndexOf(Seq("abc"), 0));
+        Assert.Equal(-1, new AsciiString("012345").LastIndexOf(Seq("abcdefghi"), 0));
+        Assert.Equal(-1, new AsciiString("012345").LastIndexOf(Seq("abcdefghi"), 4));
+        Assert.Equal(-1, ascii.LastIndexOf(Seq("a"), 3));
+        Assert.Equal(-1, ascii.LastIndexOf(Seq("abc"), 3));
+        Assert.Equal(-1, ascii.LastIndexOf(Seq("ce"), 3));
     }
 
     [Fact]

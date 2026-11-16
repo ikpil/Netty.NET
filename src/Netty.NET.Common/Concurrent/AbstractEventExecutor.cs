@@ -74,7 +74,7 @@ public abstract class AbstractEventExecutor : IEventExecutor
     public abstract bool IsShutdown();
     public abstract bool IsTerminated();
     public abstract bool AwaitTermination(TimeSpan timeout);
-    public abstract Task Termination { get; }
+    public abstract Task TerminationFuture { get; }
 
     public virtual IEventExecutor Next()
     {
@@ -98,7 +98,7 @@ public abstract class AbstractEventExecutor : IEventExecutor
     public virtual Task StopAsync()
     {
         Shutdown();
-        return Termination;
+        return TerminationFuture;
     }
 
     /**

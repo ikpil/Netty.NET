@@ -149,17 +149,20 @@ public class GlobalEventExecutorTest
         // loaded it. It holds on to the failure of its terminationFuture forever, so that failure must not
         // populate a (native) backtrace: doing so would pin the Classloader of whatever thread happened to
         // trigger the lazy initialization of INSTANCE (see https://github.com/netty/netty/issues/17128).
-        Exception cause = e.Termination.Exception.InnerException;
+        Exception cause = e.TerminationFuture.Exception.InnerException;
         Assert.NotNull(cause);
         Assert.IsAssignableFrom<NotSupportedException>(cause);
 
         string before = cause.StackTrace;
-        Assert.Single(before.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
-        Assert.Contains(nameof(GlobalEventExecutor), before);
-        Assert.Contains("terminationFuture", before);
+        // CLR: a StackTraceElement maps to one "   at " frame line of Exception.StackTrace; the CLR
+        // may append its "--- End of stack trace from previous location ---" separator line.
+        string[] frames = Array.FindAll(before.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries),
+            line => line.TrimStart().StartsWith("at ", StringComparison.Ordinal));
+        Assert.Single(frames);
+        Assert.Equal("at " + typeof(GlobalEventExecutor).FullName + ".terminationFuture(Unknown Source)", frames[0].Trim());
 
         // fillInStackTrace() must be a no-op; otherwise it would repopulate the backtrace with native frames.
-        // CLR has no fillInStackTrace. Throwing the same failure tests its synthetic trace override.
+        // CLR has no fillInStackTrace. Throwing the same failure is the CLR operation that captures frames.
         Assert.Same(cause, Assert.ThrowsAny<NotSupportedException>(() => throw cause));
         Assert.Equal(before, cause.StackTrace);
     }

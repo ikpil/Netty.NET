@@ -42,8 +42,8 @@ public partial class LocalTransportThreadModelSourceTest
 
     private static async Task RunStagedExecutionAsync(CancellationToken token)
     {
-        var servers = new DefaultEventLoopGroup(4);
-        var clients = new DefaultEventLoopGroup(4, new DefaultThreadFactory("l"));
+        var servers = new MultiThreadIoEventLoopGroup(4, LocalIoHandler.NewFactory());
+        var clients = new MultiThreadIoEventLoopGroup(4, new DefaultThreadFactory("l"), LocalIoHandler.NewFactory());
         var first = new DefaultEventExecutorGroup(4, new DefaultThreadFactory("e1"));
         var second = new DefaultEventExecutorGroup(4, new DefaultThreadFactory("e2"));
         try
@@ -113,10 +113,10 @@ public partial class LocalTransportThreadModelSourceTest
     [Sharable]
     private sealed class DiscardInput : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             // Discard
-            ReferenceCountUtil.Release(message);
+            ReferenceCountUtil.Release(msg);
         }
     }
 
@@ -128,24 +128,24 @@ public partial class LocalTransportThreadModelSourceTest
         private Exception _error;
         internal Exception Error => Volatile.Read(ref _error);
 
-        public override void HandlerRemoved(ChannelHandlerContext context) => Removed.Enqueue(Thread.CurrentThread);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => Removed.Enqueue(Thread.CurrentThread);
 
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Inbound.Enqueue(Thread.CurrentThread);
-            if (!discard) context.FireChannelRead(message);
+            if (!discard) ctx.FireChannelRead(msg);
         }
 
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             Outbound.Enqueue(Thread.CurrentThread);
-            return context.WriteAsync(message, token);
+            return ctx.WriteAsync(msg, token);
         }
 
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
-            Interlocked.CompareExchange(ref _error, error, null);
-            context.FireExceptionCaught(error);
+            Interlocked.CompareExchange(ref _error, cause, null);
+            ctx.FireExceptionCaught(cause);
         }
     }
 }

@@ -13,6 +13,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -39,8 +40,8 @@ public class DatagramSourceAndReadErrorContractTest
         var unscopedSource = new IPAddress(source.GetAddressBytes());
         var multicast = IPAddress.Parse("ff02::114");
         var scopedGroup = new IPAddress(multicast.GetAddressBytes(), index);
-        var group = new DefaultEventLoopGroup(1);
-        var channel = new DatagramChannel(AddressFamily.InterNetworkV6);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var channel = new NioDatagramChannel(AddressFamily.InterNetworkV6);
         try
         {
             await group.RegisterAsync(channel, cancellation);
@@ -86,7 +87,7 @@ public class DatagramSourceAndReadErrorContractTest
         var source = iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address;
         var multicastAddress = IPAddress.Parse(!ipv6 ? "230.0.0.2" : sourceSpecific ? "ff32::a187:613c" : "ff12::a187:613d");
         var messages = Channel.CreateUnbounded<int>();
-        DatagramChannel channel = null;
+        NioDatagramChannel channel = null;
         using var sender = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
         sender.Bind(new IPEndPoint(source, 0));
         if (ipv6)
@@ -96,10 +97,10 @@ public class DatagramSourceAndReadErrorContractTest
             sender.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, index);
         }
         else sender.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, source.GetAddressBytes());
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
-            channel = (DatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(family)).Handler(new Capture(messages.Writer))
+            channel = (NioDatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new NioDatagramChannel(family)).Handler(new Capture(messages.Writer))
                 .Option(ChannelOption.IP_MULTICAST_IF, iface).BindAsync(new IPEndPoint(ipv6 ? IPAddress.IPv6Any : IPAddress.Any, 0));
             var multicast = new IPEndPoint(multicastAddress, ((IPEndPoint)channel.LocalAddress).Port);
             if (sourceSpecific)
@@ -150,7 +151,7 @@ public class DatagramSourceAndReadErrorContractTest
     {
         var family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
         var loopback = ipv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var received = Channel.CreateUnbounded<int>();
         var events = new ConcurrentQueue<string>();
         var error = new SocketException((int)SocketError.ConnectionReset);
@@ -164,8 +165,9 @@ public class DatagramSourceAndReadErrorContractTest
             await channel.RegisterAsync(group.Next());
             await channel.BindAsync(new IPEndPoint(loopback, 0));
             if (!autoRead) channel.Read();
-            Assert.Same(error, await failed.Task.WaitAsync(TestContext.Current.CancellationToken));
+            // OP_READ readiness needs a queued datagram; the first receive attempt then fails and leaves it queued.
             await sender.SendToAsync(new byte[] { 1 }, SocketFlags.None, channel.LocalAddress, TestContext.Current.CancellationToken);
+            Assert.Same(error, await failed.Task.WaitAsync(TestContext.Current.CancellationToken));
             Assert.Equal(1, await received.Reader.ReadAsync(TestContext.Current.CancellationToken));
             await channel.EventLoop.SubmitAsync(() => { });
             Assert.Equal(new[] { "complete", "error", "read", "complete" }, events.ToArray());
@@ -184,7 +186,7 @@ public class DatagramSourceAndReadErrorContractTest
     [Fact(Timeout = 5000)]
     public async Task NonSocketReadErrorCompletesBatchAndClosesTheChannel()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var events = new ConcurrentQueue<string>();
         var error = new IOException("fatal receive");
         var failed = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -194,25 +196,28 @@ public class DatagramSourceAndReadErrorContractTest
         {
             await channel.RegisterAsync(group.Next());
             await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            // OP_READ readiness needs a queued datagram; the first receive attempt then fails.
+            using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            await sender.SendToAsync(new byte[] { 1 }, SocketFlags.None, channel.LocalAddress, TestContext.Current.CancellationToken);
             Assert.Same(error, await failed.Task.WaitAsync(TestContext.Current.CancellationToken));
-            await channel.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
+            await channel.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
             Assert.Equal(new[] { "complete", "error" }, events.ToArray());
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
-    private sealed class FailFirstReceive(AddressFamily family, Exception error) : DatagramChannel(family)
+    private sealed class FailFirstReceive(AddressFamily family, Exception error) : NioDatagramChannel(family)
     {
         private int _attempts;
-        protected override Task<SocketReceiveFromResult> ReceiveDatagramAsync(Memory<byte> memory, EndPoint remote)
-            => Interlocked.Increment(ref _attempts) == 1 ? Task.FromException<SocketReceiveFromResult>(error) : base.ReceiveDatagramAsync(memory, remote);
+        protected override SocketReceiveFromResult ReceiveDatagram(Memory<byte> memory, EndPoint remote)
+            => Interlocked.Increment(ref _attempts) == 1 ? throw error : base.ReceiveDatagram(memory, remote);
     }
     private sealed class Capture(ChannelWriter<int> writer, ConcurrentQueue<string> events = null, TaskCompletionSource<Exception> failure = null) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket message)
-        { events?.Enqueue("read"); writer.TryWrite(message.Content.ReadByte()); }
-        public override void ChannelReadComplete(ChannelHandlerContext context) => events?.Enqueue("complete");
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause)
-        { events?.Enqueue("error"); if (failure != null) failure.TrySetResult(cause); else context.FireExceptionCaught(cause); }
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
+        { events?.Enqueue("read"); writer.TryWrite(msg.Content.ReadByte()); }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx) => events?.Enqueue("complete");
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        { events?.Enqueue("error"); if (failure != null) failure.TrySetResult(cause); else ctx.FireExceptionCaught(cause); }
     }
 }

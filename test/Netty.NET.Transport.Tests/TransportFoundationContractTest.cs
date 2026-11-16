@@ -149,11 +149,11 @@ public class TransportFoundationContractTest
         IReferenceCounted counted = region;
         Assert.Same(region, region.Retain());
         Assert.Same(region, counted.Retain(2));
-        Assert.Equal(4, region.ReferenceCount);
+        Assert.Equal(4, region.RefCnt);
         Assert.Same(region, region.Touch());
         Assert.Same(region, region.Touch("hint"));
         Assert.Same(region, counted.Touch());
-        Assert.Equal(4, region.ReferenceCount);
+        Assert.Equal(4, region.RefCnt);
         Assert.False(region.Release(3));
         Assert.True(region.Release());
         Assert.Throws<IllegalReferenceCountException>(() => region.Retain());

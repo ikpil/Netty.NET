@@ -16,6 +16,7 @@
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -27,8 +28,8 @@ public class AbstractNioChannelSourceTest
     [Fact(Timeout = 5000)]
     public async Task TestRemoveReadOpDoesNotThrowAfterDeregister()
     {
-        var group = new DefaultEventLoopGroup(1);
-        var channel = new TcpSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var channel = new NioSocketChannel();
         try
         {
             await group.RegisterAsync(channel, TestContext.Current.CancellationToken);

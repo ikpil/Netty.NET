@@ -21,4 +21,7 @@ namespace Netty.NET.Transport.Channels;
  * its child {@link Channel}s by accepting them.  {@link ServerSocketChannel} is
  * a good example.
  */
-public interface IServerChannel : IChannel { }
+public interface IServerChannel : IChannel
+{
+    // This is a tag interface.
+}

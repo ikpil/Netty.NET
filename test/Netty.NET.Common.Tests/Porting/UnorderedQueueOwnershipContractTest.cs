@@ -82,7 +82,7 @@ public class UnorderedQueueOwnershipContractTest
             executor.Execute(() => ++calls);
             Assert.Equal(2, executor.PendingTaskCount);
             Task stopped = executor.StopAsync();
-            Assert.Same(executor.Termination, stopped);
+            Assert.Same(executor.TerminationFuture, stopped);
             Assert.Same(stopped, executor.StopAsync());
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);
@@ -123,7 +123,7 @@ public class UnorderedQueueOwnershipContractTest
         finally
         {
             _ = executor.StopAsync();
-            await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }
 

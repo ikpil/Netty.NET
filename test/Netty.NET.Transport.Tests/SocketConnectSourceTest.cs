@@ -13,209 +13,396 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
-using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-public class SocketConnectSourceTest
+#pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, which has no other cancellable wait.
+#pragma warning disable xUnit1051 // The source waits for and closes its channels independently of the test cancellation.
+public class SocketConnectSourceTest : AbstractSocketTest
 {
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestCloseTwice(bool adaptive)
+    [Fact(Timeout = 30000)]
+    public async Task TestCloseTwice()
     {
-        await using var fixture = new Fixture(adaptive, TestContext.Current.CancellationToken);
-        var future = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var server = await fixture.Server(new ChannelInboundHandlerAdapter()).BindAsync(fixture.Address, fixture.Token);
-        var client = await fixture.Client(new CloseOnEvent(future)).ConnectAsync(server.LocalAddress, cancellationToken: fixture.Token);
-        client.Pipeline.FireUserEventTriggered("test");
-        await client.CloseAsync(fixture.Token);
-        await await future.Task.WaitAsync(fixture.Token);
-        await server.CloseAsync(fixture.Token);
-        await server.CloseAsync(fixture.Token);
+        await Run(TestContext.Current, TestCloseTwice0);
     }
 
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestLocalAddressAfterConnect(bool adaptive)
+    // CLR: xUnit1024 forbids overloading the TestCloseTwice test name.
+    private async Task TestCloseTwice0(ServerBootstrap sb, Bootstrap cb)
     {
-        await using var fixture = new Fixture(adaptive, TestContext.Current.CancellationToken);
-        var local = new TaskCompletionSource<EndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var server = await fixture.Server(new ChildAddress(local)).BindAsync(fixture.Address, fixture.Token);
-        var client = await fixture.Client(new ChannelInboundHandlerAdapter()).RegisterAsync(fixture.Token);
-        Assert.Null(client.LocalAddress);
-        Assert.Null(client.RemoteAddress);
-        await client.ConnectAsync(server.LocalAddress, cancellationToken: fixture.Token);
-        AssertLocalAddress(client.LocalAddress);
-        Assert.NotNull(client.RemoteAddress);
-        AssertLocalAddress(await local.Task.WaitAsync(fixture.Token));
-    }
-
-    [Theory(Timeout = 3000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestChannelEventsFiredWhenClosedDirectly(bool adaptive)
-    {
-        await using var fixture = new Fixture(adaptive, TestContext.Current.CancellationToken);
-        var events = System.Threading.Channels.Channel.CreateUnbounded<int>();
-        var server = await fixture.Server(new ChannelInboundHandlerAdapter()).BindAsync(fixture.Address, fixture.Token);
-        var client = fixture.Client(new ActiveEvents(events.Writer));
-        // Connect and directly close again.
-        Task<IChannel> connecting = client.ConnectAsync(server.LocalAddress, cancellationToken: fixture.Token);
-        var close = connecting.ContinueWith(async completed =>
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
+        try
         {
-            await (await completed).CloseAsync(fixture.Token);
-        }, fixture.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
-        await connecting;
-        Assert.Equal(0, await events.Reader.ReadAsync(fixture.Token));
-        Assert.Equal(1, await events.Reader.ReadAsync(fixture.Token));
-        await close;
-    }
+            serverChannel = await sb.ChildHandler(new ChannelInboundHandlerAdapter()).BindAsync();
+            // CLR: the LinkedBlockingQueue is an unbounded System.Threading.Channels channel, a "synchronization data
+            // structure for passing data between producers and consumers asynchronously"
+            // (https://learn.microsoft.com/en-us/dotnet/core/extensions/channels); ReadAsync is take().
+            System.Threading.Channels.Channel<Task> futures = System.Threading.Channels.Channel.CreateUnbounded<Task>();
+            clientChannel = await cb.Handler(new CloseOnUserEventHandler(futures.Writer))
+                    .ConnectAsync(serverChannel.LocalAddress);
+            clientChannel.Pipeline.FireUserEventTriggered("test");
+            await clientChannel.CloseAsync();
+            await await futures.Reader.ReadAsync();
+            clientChannel = null;
 
-    [Theory(Timeout = 3000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public Task TestWriteWithFastOpenBeforeConnect(bool adaptive) =>
-        FastOpen(adaptive, 0, "[fastopen]", TestContext.Current.CancellationToken);
-
-    [Theory(Timeout = 3000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public Task TestWriteWithFastOpenBeforeConnectDirectBufferReaderIndex(bool adaptive) =>
-        FastOpen(adaptive, 1, "[fastopen-reader-index]", TestContext.Current.CancellationToken);
-
-    [Theory(Timeout = 3000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public Task TestWriteWithFastOpenBeforeConnectCompositeBuffer(bool adaptive) =>
-        FastOpen(adaptive, 2, "[fastopen-composite-data]", TestContext.Current.CancellationToken);
-
-    [Theory(Timeout = 3000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public Task TestWriteWithFastOpenBeforeConnectCompositeBufferReaderIndex(bool adaptive) =>
-        FastOpen(adaptive, 3, "[fastopen-composite-reader-index]", TestContext.Current.CancellationToken);
-
-    private static async Task FastOpen(bool adaptive, int layout, string initialData, System.Threading.CancellationToken token)
-    {
-        await using var fixture = new Fixture(adaptive, token);
-        // TFO is an almost-pure optimisation and should not change any observable behaviour in our tests.
-        var server = await fixture.Server(new ActionChannelInitializer<IChannel>(child =>
-            child.Pipeline.AddLast(new Echo()))).Option(ChannelOption.TCP_FASTOPEN, 5)
-            .ChildOption(ChannelOption.AUTO_READ, true).BindAsync(fixture.Address, fixture.Token);
-        for (int connection = 0; connection < 2; connection++)
+            await serverChannel.CloseAsync();
+            await serverChannel.CloseAsync();
+            serverChannel = null;
+        }
+        finally
         {
-            var capture = new Capture(initialData.Length + "[normal data]".Length);
-            var channel = await fixture.Client(capture).Option(ChannelOption.TCP_FASTOPEN_CONNECT, true)
-                .Option(ChannelOption.AUTO_READ, true).RegisterAsync(fixture.Token);
-            var initial = InitialBuffer(channel.Allocator, layout, initialData);
-            var write = channel.WriteAsync(initial, fixture.Token);
-            await channel.ConnectAsync(server.LocalAddress, cancellationToken: fixture.Token);
-            await channel.WriteAndFlushAsync(Unpooled.CopiedBuffer("[normal data]", Encoding.ASCII), fixture.Token);
-            await write;
-            string result = await capture.Completed.Task.WaitAsync(fixture.Token);
-            await channel.DisconnectAsync(fixture.Token);
-            Assert.Equal(initialData + "[normal data]", result);
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
+            }
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
+            }
         }
     }
 
-    private static ByteBuf InitialBuffer(IByteBufAllocator allocator, int layout, string data)
+    [Fact(Timeout = 30000)]
+    public async Task TestLocalAddressAfterConnect()
     {
-        string prefix = layout is 1 or 3 ? "BAD-PREFIX-" : "";
-        if (layout < 2)
+        await Run(TestContext.Current, TestLocalAddressAfterConnect0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestLocalAddressAfterConnect test name.
+    private async Task TestLocalAddressAfterConnect0(ServerBootstrap sb, Bootstrap cb)
+    {
+        IChannel serverChannel = null;
+        IChannel clientChannel = null;
+        try
         {
-            var buffer = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes(prefix + data));
-            buffer.ReaderIndex = prefix.Length;
-            return buffer;
+            // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource; this port completes Tasks
+            // instead of exposing promises (IChannel.cs: "Tasks replace ChannelFuture/Promise"). IPEndPoint is the
+            // java.net.InetSocketAddress counterpart.
+            TaskCompletionSource<IPEndPoint> localAddressPromise =
+                    new TaskCompletionSource<IPEndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
+            serverChannel = await sb.ChildHandler(new LocalAddressHandler(localAddressPromise)).BindAsync();
+
+            clientChannel = await cb.Handler(new ChannelInboundHandlerAdapter()).RegisterAsync();
+
+            Assert.Null(clientChannel.LocalAddress);
+            Assert.Null(clientChannel.RemoteAddress);
+
+            await clientChannel.ConnectAsync(serverChannel.LocalAddress);
+            AssertLocalAddress((IPEndPoint) clientChannel.LocalAddress);
+            Assert.NotNull(clientChannel.RemoteAddress);
+
+            AssertLocalAddress(await localAddressPromise.Task);
         }
-        var composite = allocator.CompositeBuffer(4);
-        if (prefix.Length != 0)
-            composite.AddComponent(Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes(prefix)), true);
-        string[] parts = layout == 2 ? ["[fastopen-", "composite-", "data]"] :
-            ["[fastopen-", "composite-reader-", "index]"];
+        finally
+        {
+            if (clientChannel != null)
+            {
+                await clientChannel.CloseAsync();
+            }
+            if (serverChannel != null)
+            {
+                await serverChannel.CloseAsync();
+            }
+        }
+    }
+
+    [Fact(Timeout = 3000)]
+    public async Task TestChannelEventsFiredWhenClosedDirectly()
+    {
+        await Run(TestContext.Current, TestChannelEventsFiredWhenClosedDirectly0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestChannelEventsFiredWhenClosedDirectly test name.
+    private async Task TestChannelEventsFiredWhenClosedDirectly0(ServerBootstrap sb, Bootstrap cb)
+    {
+        // CLR: the LinkedBlockingQueue<Integer> is an unbounded channel, as in testCloseTwice.
+        System.Threading.Channels.Channel<int> events = System.Threading.Channels.Channel.CreateUnbounded<int>();
+
+        IChannel sc = null;
+        IChannel cc = null;
+        try
+        {
+            sb.ChildHandler(new ChannelInboundHandlerAdapter());
+            sc = await sb.BindAsync();
+
+            cb.Handler(new ActiveInactiveEventsHandler(events.Writer));
+            // Connect and directly close again.
+            // CLR: ChannelFutureListener.CLOSE closes the future's channel once the connect completes; a synchronous
+            // continuation of the connect Task does the same. A failed Bootstrap connect Task carries no channel, and
+            // Bootstrap already closes the channel of a failed connect (Bootstrap.cs).
+            Task<IChannel> connectFuture = cb.ConnectAsync(sc.LocalAddress);
+            _ = connectFuture.ContinueWith(future =>
+            {
+                if (future.IsCompletedSuccessfully)
+                {
+                    _ = future.Result.CloseAsync();
+                }
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            cc = await connectFuture;
+            Assert.Equal(0, await events.Reader.ReadAsync());
+            Assert.Equal(1, await events.Reader.ReadAsync());
+        }
+        finally
+        {
+            if (cc != null)
+            {
+                _ = cc.CloseAsync();
+            }
+            if (sc != null)
+            {
+                _ = sc.CloseAsync();
+            }
+        }
+    }
+
+    [Fact(Timeout = 3000)]
+    public async Task TestWriteWithFastOpenBeforeConnect()
+    {
+        await Run(TestContext.Current, TestWriteWithFastOpenBeforeConnect0);
+    }
+
+    [Fact(Timeout = 3000)]
+    public async Task TestWriteWithFastOpenBeforeConnectDirectBufferReaderIndex()
+    {
+        await Run(TestContext.Current, (serverBootstrap, bootstrap) =>
+                TestWriteWithFastOpenBeforeConnect0(serverBootstrap, bootstrap,
+                        channel => DirectBufferWithReaderIndex(
+                                channel, "BAD-PREFIX-", "[fastopen-reader-index]"),
+                        "[fastopen-reader-index]"));
+    }
+
+    [Fact(Timeout = 3000)]
+    public async Task TestWriteWithFastOpenBeforeConnectCompositeBuffer()
+    {
+        await Run(TestContext.Current, (serverBootstrap, bootstrap) =>
+                TestWriteWithFastOpenBeforeConnect0(serverBootstrap, bootstrap,
+                        channel => CompositeBuffer(channel, "[fastopen-", "composite-", "data]"),
+                        "[fastopen-composite-data]"));
+    }
+
+    [Fact(Timeout = 3000)]
+    public async Task TestWriteWithFastOpenBeforeConnectCompositeBufferReaderIndex()
+    {
+        await Run(TestContext.Current, (serverBootstrap, bootstrap) =>
+                TestWriteWithFastOpenBeforeConnect0(serverBootstrap, bootstrap,
+                        channel => CompositeBufferWithReaderIndex(
+                                channel, "BAD-PREFIX-", "[fastopen-", "composite-reader-", "index]"),
+                        "[fastopen-composite-reader-index]"));
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestWriteWithFastOpenBeforeConnect test name, so both the body and the
+    // protected overload that takes the initial data factory are named TestWriteWithFastOpenBeforeConnect0.
+    private async Task TestWriteWithFastOpenBeforeConnect0(ServerBootstrap sb, Bootstrap cb)
+    {
+        await TestWriteWithFastOpenBeforeConnect0(sb, cb,
+                channel => ByteBufUtil.WriteAscii(UnpooledByteBufAllocator.Default, "[fastopen]"), "[fastopen]");
+    }
+
+    // CLR: java.util.function.Function<Channel, ByteBuf> is Func<IChannel, ByteBuf>.
+    protected virtual async Task TestWriteWithFastOpenBeforeConnect0(ServerBootstrap sb, Bootstrap cb,
+                                                                    Func<IChannel, ByteBuf> initialDataFactory,
+                                                                    string expectedInitialData)
+    {
+        EnableTcpFastOpen(sb, cb);
+        sb.ChildOption(ChannelOption.AUTO_READ, true);
+        cb.Option(ChannelOption.AUTO_READ, true);
+
+        // CLR: ActionChannelInitializer carries the initChannel body of the source's anonymous
+        // ChannelInitializer<SocketChannel>.
+        sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
+                ch.Pipeline.AddLast(new EchoServerHandler())));
+
+        IChannel sc = await sb.BindAsync();
+        await ConnectAndVerifyDataTransfer(cb, sc, initialDataFactory, expectedInitialData);
+        await ConnectAndVerifyDataTransfer(cb, sc, initialDataFactory, expectedInitialData);
+    }
+
+    private static async Task ConnectAndVerifyDataTransfer(Bootstrap cb, IChannel sc,
+                                                           Func<IChannel, ByteBuf> initialDataFactory,
+                                                           string expectedInitialData)
+    {
+        BufferingClientHandler handler = new BufferingClientHandler();
+        cb.Handler(handler);
+        Task<IChannel> register = cb.RegisterAsync();
+        IChannel channel = await register;
+        Task write = channel.WriteAsync(initialDataFactory(channel));
+        EndPoint remoteAddress = sc.LocalAddress;
+        // CLR: Channel.connect(...) returns a Task without the channel, so connectFuture.sync().channel() is the
+        // registered channel itself.
+        Task connectFuture = channel.ConnectAsync(remoteAddress);
+        await connectFuture;
+        IChannel cc = channel;
+        await cc.WriteAndFlushAsync(ByteBufUtil.WriteAscii(UnpooledByteBufAllocator.Default, "[normal data]"));
+        await write;
+        string expectedString = expectedInitialData + "[normal data]";
+        string result = await handler.CollectBuffer(Encoding.ASCII.GetBytes(expectedString).Length);
+        await cc.DisconnectAsync();
+        Assert.Equal(expectedString, result);
+    }
+
+    private static ByteBuf DirectBufferWithReaderIndex(IChannel channel, string prefix, string data)
+    {
+        ByteBuf buffer = DirectBuffer(channel, prefix + data);
+        buffer.ReaderIndex = Encoding.ASCII.GetBytes(prefix).Length;
+        return buffer;
+    }
+
+    private static ByteBuf CompositeBufferWithReaderIndex(IChannel channel, string prefix, params string[] parts)
+    {
+        CompositeByteBuf buffer = channel.Alloc().CompositeDirectBuffer(parts.Length + 1);
+        buffer.AddComponent(DirectBuffer(channel, prefix), true);
         foreach (string part in parts)
-            composite.AddComponent(Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes(part)), true);
-        composite.ReaderIndex = prefix.Length;
-        return composite;
-    }
-
-    private static void AssertLocalAddress(EndPoint address)
-    {
-        var local = Assert.IsType<IPEndPoint>(address);
-        Assert.True(local.Port > 0);
-        Assert.False(local.Address.Equals(IPAddress.Any) || local.Address.Equals(IPAddress.IPv6Any));
-    }
-
-    private sealed class Fixture : IAsyncDisposable
-    {
-        internal readonly DefaultEventLoopGroup Group = new(2);
-        internal readonly System.Threading.CancellationToken Token;
-        internal readonly IPEndPoint Address = new(IPAddress.Loopback, 0);
-        private readonly IByteBufAllocator _allocator;
-        internal Fixture(bool adaptive, System.Threading.CancellationToken token)
         {
-            Token = token;
-            _allocator = adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default;
+            buffer.AddComponent(DirectBuffer(channel, part), true);
         }
-        internal ServerBootstrap Server(IChannelHandler handler) => new ServerBootstrap().Group(Group)
-            .ChannelFactory(static () => new TcpServerSocketChannel()).ChildHandler(handler)
-            .ChildOption(ChannelOption.ALLOCATOR, _allocator);
-        internal Bootstrap Client(IChannelHandler handler) => new Bootstrap().Group(Group)
-            .ChannelFactory(static () => new TcpSocketChannel()).Handler(handler).Option(ChannelOption.ALLOCATOR, _allocator);
-        public async ValueTask DisposeAsync()
+        buffer.ReaderIndex = Encoding.ASCII.GetBytes(prefix).Length;
+        return buffer;
+    }
+
+    private static ByteBuf CompositeBuffer(IChannel channel, params string[] parts)
+    {
+        CompositeByteBuf buffer = channel.Alloc().CompositeDirectBuffer(parts.Length);
+        foreach (string part in parts)
         {
-            await Group.StopAsync();
-            if (_allocator is AdaptiveByteBufAllocator adaptive) adaptive.Dispose();
+            buffer.AddComponent(DirectBuffer(channel, part), true);
+        }
+        return buffer;
+    }
+
+    private static ByteBuf DirectBuffer(IChannel channel, string data)
+    {
+        byte[] bytes = Encoding.ASCII.GetBytes(data);
+        ByteBuf buffer = channel.Alloc().DirectBuffer(bytes.Length);
+        buffer.WriteBytes(bytes);
+        return buffer;
+    }
+
+    protected virtual void EnableTcpFastOpen(ServerBootstrap sb, Bootstrap cb)
+    {
+        // TFO is an almost-pure optimisation and should not change any observable behaviour in our tests.
+        sb.Option(ChannelOption.TCP_FASTOPEN, 5);
+        cb.Option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
+    }
+
+    // CLR: InetAddress.isAnyLocalAddress() is a comparison with the IPv4 and IPv6 wildcard addresses.
+    private static void AssertLocalAddress(IPEndPoint address)
+    {
+        Assert.True(address.Port > 0);
+        Assert.False(address.Address.Equals(IPAddress.Any) || address.Address.Equals(IPAddress.IPv6Any));
+    }
+
+    // CLR: the anonymous ChannelInboundHandlerAdapter of testCloseTwice.
+    private sealed class CloseOnUserEventHandler(System.Threading.Channels.ChannelWriter<Task> futures)
+            : ChannelInboundHandlerAdapter
+    {
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            futures.TryWrite(ctx.CloseAsync());
         }
     }
 
-    private sealed class CloseOnEvent(TaskCompletionSource<Task> close) : ChannelInboundHandlerAdapter
+    // CLR: the anonymous ChannelInboundHandlerAdapter of testLocalAddressAfterConnect.
+    private sealed class LocalAddressHandler(TaskCompletionSource<IPEndPoint> localAddressPromise)
+            : ChannelInboundHandlerAdapter
     {
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt) => close.TrySetResult(context.CloseAsync());
-    }
-
-    private sealed class ChildAddress(TaskCompletionSource<EndPoint> local) : ChannelInboundHandlerAdapter
-    {
-        public override void ChannelActive(ChannelHandlerContext context) => local.TrySetResult(context.Channel.LocalAddress);
-    }
-
-    private sealed class ActiveEvents(System.Threading.Channels.ChannelWriter<int> events) : ChannelInboundHandlerAdapter
-    {
-        public override void ChannelActive(ChannelHandlerContext context) => events.TryWrite(0);
-        public override void ChannelInactive(ChannelHandlerContext context) => events.TryWrite(1);
-    }
-
-    private sealed class Capture(int expected) : SimpleChannelInboundHandler<ByteBuf>
-    {
-        private readonly List<byte> _data = new();
-        internal readonly TaskCompletionSource<string> Completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            var bytes = new byte[message.ReadableBytes];
-            message.ReadBytes(bytes);
-            _data.AddRange(bytes);
-            if (_data.Count >= expected)
-                Completed.TrySetResult(Encoding.ASCII.GetString(_data.ToArray()));
+            localAddressPromise.SetResult((IPEndPoint) ctx.Channel.LocalAddress);
         }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => Completed.TrySetException(cause);
     }
 
-    private sealed class Echo : SimpleChannelInboundHandler<ByteBuf>
+    // CLR: the anonymous ChannelInboundHandlerAdapter of testChannelEventsFiredWhenClosedDirectly.
+    private sealed class ActiveInactiveEventsHandler(System.Threading.Channels.ChannelWriter<int> events)
+            : ChannelInboundHandlerAdapter
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            var response = context.Allocator.Buffer().WriteBytes(message, message.ReadableBytes);
-            _ = context.WriteAndFlushAsync(response);
+            events.TryWrite(0);
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            events.TryWrite(1);
+        }
+    }
+
+    private class BufferingClientHandler : ChannelInboundHandlerAdapter
+    {
+        // CLR: SemaphoreSlim "limits the number of threads that can access a resource or pool of resources
+        // concurrently" (https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim) and replaces
+        // java.util.concurrent.Semaphore; Release(int) is release(int).
+        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        // CLR: ByteArrayOutputStream's write/reset/toByteArray are synchronized methods (OpenJDK
+        // https://github.com/openjdk/jdk21u/blob/master/src/java.base/share/classes/java/io/ByteArrayOutputStream.java);
+        // MemoryStream is not, so a lock on it takes their place.
+        private readonly MemoryStream streamBuffer = new MemoryStream();
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            if (msg is ByteBuf)
+            {
+                ByteBuf buf = (ByteBuf) msg;
+                int readableBytes = buf.ReadableBytes;
+                lock (streamBuffer)
+                {
+                    buf.ReadBytes(streamBuffer, readableBytes);
+                }
+                semaphore.Release(readableBytes);
+                buf.Release();
+            }
+            else
+            {
+                // CLR: ArgumentException is the IllegalArgumentException counterpart.
+                throw new ArgumentException("Unexpected message type: " + msg);
+            }
+        }
+
+        // CLR: SemaphoreSlim has no multi-count acquire, so acquire(expectedBytes) waits expectedBytes times; with this
+        // single consumer it takes the same permits. The method is asynchronous so the wait does not block a thread.
+        internal async Task<string> CollectBuffer(int expectedBytes)
+        {
+            for (int i = 0; i < expectedBytes; i++)
+            {
+                await semaphore.WaitAsync();
+            }
+            byte[] bytes;
+            lock (streamBuffer)
+            {
+                bytes = streamBuffer.ToArray();
+                streamBuffer.SetLength(0);
+            }
+            return Encoding.ASCII.GetString(bytes);
+        }
+    }
+
+    private sealed class EchoServerHandler : ChannelInboundHandlerAdapter
+    {
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            if (msg is ByteBuf)
+            {
+                ByteBuf buffer = ctx.Alloc().Buffer();
+                ByteBuf buf = (ByteBuf) msg;
+                buffer.WriteBytes(buf);
+                buf.Release();
+                _ = ctx.Channel.WriteAndFlushAsync(buffer);
+            }
+            else
+            {
+                throw new ArgumentException("Unexpected message type: " + msg);
+            }
         }
     }
 }
+#pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

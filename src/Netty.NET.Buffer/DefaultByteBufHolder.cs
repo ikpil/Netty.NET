@@ -16,6 +16,7 @@
 
 using System;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -65,7 +66,7 @@ public class DefaultByteBufHolder : IByteBufHolder
      */
     public virtual IByteBufHolder Replace(ByteBuf content) => new DefaultByteBufHolder(content);
 
-    public virtual int ReferenceCount => _data.ReferenceCount;
+    public virtual int RefCnt => _data.RefCnt;
 
     public virtual IByteBufHolder Retain()
     {
@@ -105,7 +106,7 @@ public class DefaultByteBufHolder : IByteBufHolder
      */
     protected string ContentToString() => _data.ToString();
 
-    public override string ToString() => GetType().Name + '(' + ContentToString() + ')';
+    public override string ToString() => StringUtil.SimpleClassName(this) + '(' + ContentToString() + ')';
 
     /**
      * This implementation of the {@code equals} operation is restricted to

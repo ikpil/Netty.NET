@@ -77,29 +77,28 @@ public class FastThreadLocalThread
 
     public virtual void Run() => _target?.Invoke();
 
-    internal InternalThreadLocalMap ThreadLocalMap
+    /**
+     * Returns the internal data structure that keeps the thread-local variables bound to this thread.
+     * Note that this method is for internal use only, and thus is subject to change at any time.
+     */
+    // CLR: _current stands for "this == Thread.currentThread()"; InvalidOperationException replaces the RuntimeException
+    // that only carries the warning's stack.
+    public InternalThreadLocalMap ThreadLocalMap()
     {
-        /**
-         * Returns the internal data structure that keeps the thread-local variables bound to this thread.
-         * Note that this method is for internal use only, and thus is subject to change at any time.
-         */
-        get
-        {
-            if (_current != this && logger.IsWarnEnabled())
-                logger.Warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
-            return _threadLocalMap;
-        }
+        if (_current != this && logger.IsWarnEnabled())
+            logger.Warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
+        return _threadLocalMap;
+    }
 
-        /**
-         * Sets the internal data structure that keeps the thread-local variables bound to this thread.
-         * Note that this method is for internal use only, and thus is subject to change at any time.
-         */
-        set
-        {
-            if (_current != this && logger.IsWarnEnabled())
-                logger.Warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
-            _threadLocalMap = value;
-        }
+    /**
+     * Sets the internal data structure that keeps the thread-local variables bound to this thread.
+     * Note that this method is for internal use only, and thus is subject to change at any time.
+     */
+    public void SetThreadLocalMap(InternalThreadLocalMap threadLocalMap)
+    {
+        if (_current != this && logger.IsWarnEnabled())
+            logger.Warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
+        _threadLocalMap = threadLocalMap;
     }
 
     /**

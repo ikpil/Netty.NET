@@ -47,33 +47,33 @@ public class PooledDerivedByteBufTest
         try
         {
             first = firstSlice ? root.RetainedSlice(2, 12) : root.RetainedDuplicate();
-            Assert.Equal(2, root.ReferenceCount); Assert.Equal(1, first.ReferenceCount);
+            Assert.Equal(2, root.RefCnt); Assert.Equal(1, first.RefCnt);
             second = secondSlice ? first.RetainedSlice(1, 8) : first.RetainedDuplicate();
-            Assert.Equal(2, root.ReferenceCount); Assert.Equal(2, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(2, root.RefCnt); Assert.Equal(2, first.RefCnt); Assert.Equal(1, second.RefCnt);
             Assert.Same(root, first.Unwrap()); Assert.Same(root, second.Unwrap());
             int offset = (firstSlice ? 2 : 0) + (secondSlice ? 1 : 0);
             Assert.Equal(offset, second.GetByte(0)); second.SetByte(0, 99); Assert.Equal(99, root.GetByte(offset));
             Assert.False(root.Release());
             if (childFirst)
             {
-                Assert.True(second.Release()); Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, root.ReferenceCount);
+                Assert.True(second.Release()); Assert.Equal(1, first.RefCnt); Assert.Equal(1, root.RefCnt);
                 Assert.Throws<IllegalReferenceCountException>(() => second.GetByte(0));
                 Assert.True(first.Release());
             }
             else
             {
-                Assert.False(first.Release()); Assert.Equal(1, first.ReferenceCount);
+                Assert.False(first.Release()); Assert.Equal(1, first.RefCnt);
                 Assert.Equal(99, second.GetByte(0)); Assert.True(second.Release());
             }
-            Assert.Equal(0, root.ReferenceCount); Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, second.ReferenceCount);
+            Assert.Equal(0, root.RefCnt); Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => first.Unwrap());
             Assert.Throws<IllegalReferenceCountException>(() => first.Retain());
         }
         finally
         {
-            if (second?.ReferenceCount > 0) second.Release(second.ReferenceCount);
-            if (first?.ReferenceCount > 0) first.Release(first.ReferenceCount);
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+            if (second?.RefCnt > 0) second.Release(second.RefCnt);
+            if (first?.RefCnt > 0) first.Release(first.RefCnt);
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
             a.Dispose();
         }
         Assert.Equal(0, native.ReservedBytes);
@@ -88,21 +88,21 @@ public class PooledDerivedByteBufTest
         ByteBuf borrowed = owner.Slice(1, 4), alias = borrowed.Duplicate();
         try
         {
-            Assert.Equal(1, borrowed.ReferenceCount); Assert.Equal(1, alias.ReferenceCount);
+            Assert.Equal(1, borrowed.RefCnt); Assert.Equal(1, alias.RefCnt);
             Assert.Same(root, borrowed.Unwrap()); Assert.Same(root, alias.Unwrap());
             // A duplicate of a borrowed pooled slice uses the root's coordinates/capacity.
             Assert.Equal(16, alias.Capacity); Assert.Equal(64, alias.MaxCapacity);
             Assert.Equal((sliced ? 2 : 0) + 1, alias.ReaderIndex);
             Assert.Equal((sliced ? 2 : 0) + 5, alias.WriterIndex);
             Assert.Equal(0, alias.GetByte(0));
-            alias.Retain(3); Assert.Equal(4, owner.ReferenceCount); Assert.Equal(2, root.ReferenceCount);
+            alias.Retain(3); Assert.Equal(4, owner.RefCnt); Assert.Equal(2, root.RefCnt);
             Assert.False(borrowed.Release(3)); Assert.True(alias.Release());
-            Assert.Equal(0, owner.ReferenceCount); Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(0, owner.RefCnt); Assert.Equal(1, root.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => borrowed.GetByte(0));
             Assert.Throws<IllegalReferenceCountException>(() => alias.GetByte(0));
             Assert.Equal(0, root.GetByte(0)); // Root still has its independent caller reference.
         }
-        finally { if (owner.ReferenceCount > 0) owner.Release(owner.ReferenceCount); root.Release(); }
+        finally { if (owner.RefCnt > 0) owner.Release(owner.RefCnt); root.Release(); }
     }
 
     [Theory]
@@ -114,19 +114,19 @@ public class PooledDerivedByteBufTest
         ByteBuf child = duplicate ? borrowed.RetainedDuplicate() : borrowed.RetainedSlice(1, 2);
         try
         {
-            Assert.Equal(2, root.ReferenceCount); Assert.Equal(2, first.ReferenceCount); Assert.Equal(1, child.ReferenceCount);
+            Assert.Equal(2, root.RefCnt); Assert.Equal(2, first.RefCnt); Assert.Equal(1, child.RefCnt);
             Assert.Equal(duplicate ? 16 : 2, child.Capacity);
             Assert.Equal(duplicate ? 3 : 0, child.ReaderIndex);
             Assert.Equal(duplicate ? 7 : 2, child.WriterIndex);
             Assert.Equal(duplicate ? 0 : 4, child.GetByte(0));
             Assert.False(first.Release()); Assert.False(root.Release());
-            Assert.True(child.Release()); Assert.Equal(0, first.ReferenceCount); Assert.Equal(0, root.ReferenceCount);
+            Assert.True(child.Release()); Assert.Equal(0, first.RefCnt); Assert.Equal(0, root.RefCnt);
         }
         finally
         {
-            if (child.ReferenceCount > 0) child.Release();
-            if (first.ReferenceCount > 0) first.Release(first.ReferenceCount);
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+            if (child.RefCnt > 0) child.Release();
+            if (first.RefCnt > 0) first.Release(first.RefCnt);
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
         }
     }
 
@@ -138,18 +138,18 @@ public class PooledDerivedByteBufTest
         ByteBuf root = Root(a, direct), slice = root.RetainedSlice(2, 8), duplicate = root.RetainedDuplicate();
         try
         {
-            slice.Retain(2); Assert.Equal(3, slice.ReferenceCount); Assert.Equal(1, duplicate.ReferenceCount); Assert.Equal(3, root.ReferenceCount);
-            root.Release(); Assert.Equal(2, root.ReferenceCount);
+            slice.Retain(2); Assert.Equal(3, slice.RefCnt); Assert.Equal(1, duplicate.RefCnt); Assert.Equal(3, root.RefCnt);
+            root.Release(); Assert.Equal(2, root.RefCnt);
             ByteBuf first = reverse ? slice : duplicate, last = reverse ? duplicate : slice;
-            Assert.True(first.Release(first.ReferenceCount)); Assert.Equal(1, root.ReferenceCount);
-            Assert.Equal(reverse ? 0 : 2, last.GetByte(0)); Assert.True(last.Release(last.ReferenceCount));
-            Assert.Equal(0, root.ReferenceCount);
+            Assert.True(first.Release(first.RefCnt)); Assert.Equal(1, root.RefCnt);
+            Assert.Equal(reverse ? 0 : 2, last.GetByte(0)); Assert.True(last.Release(last.RefCnt));
+            Assert.Equal(0, root.RefCnt);
         }
         finally
         {
-            if (slice.ReferenceCount > 0) slice.Release(slice.ReferenceCount);
-            if (duplicate.ReferenceCount > 0) duplicate.Release(duplicate.ReferenceCount);
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+            if (slice.RefCnt > 0) slice.Release(slice.RefCnt);
+            if (duplicate.RefCnt > 0) duplicate.Release(duplicate.RefCnt);
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
         }
     }
 
@@ -186,12 +186,12 @@ public class PooledDerivedByteBufTest
             Assert.Throws<ArgumentOutOfRangeException>(() => owner.RetainedSlice(7, 2));
             ByteBuf borrowed = owner.Slice(1, 4);
             Assert.Throws<ArgumentOutOfRangeException>(() => borrowed.RetainedSlice(int.MaxValue, 1));
-            Assert.Equal(2, root.ReferenceCount); Assert.Equal(1, owner.ReferenceCount);
-            owner.Retain(int.MaxValue - 1); Assert.Equal(int.MaxValue, owner.ReferenceCount); Assert.Equal(2, root.ReferenceCount);
+            Assert.Equal(2, root.RefCnt); Assert.Equal(1, owner.RefCnt);
+            owner.Retain(int.MaxValue - 1); Assert.Equal(int.MaxValue, owner.RefCnt); Assert.Equal(2, root.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => owner.Retain());
-            Assert.True(owner.Release(int.MaxValue)); Assert.Equal(1, root.ReferenceCount);
+            Assert.True(owner.Release(int.MaxValue)); Assert.Equal(1, root.RefCnt);
         }
-        finally { if (owner.ReferenceCount > 0) owner.Release(owner.ReferenceCount); root.Release(); }
+        finally { if (owner.RefCnt > 0) owner.Release(owner.RefCnt); root.Release(); }
     }
 
     [Theory]
@@ -212,10 +212,10 @@ public class PooledDerivedByteBufTest
         try
         {
             Assert.False(root.Release()); a.Dispose(); Assert.True(child.Release());
-            Assert.Equal(0, root.ReferenceCount); Assert.Equal(0, a.PinnedDirectMemory); Assert.True(native.ReservedBytes > 0);
+            Assert.Equal(0, root.RefCnt); Assert.Equal(0, a.PinnedDirectMemory); Assert.True(native.ReservedBytes > 0);
             Assert.Equal(3, ((byte*)pin.Pointer)[0]);
         }
-        finally { pin.Dispose(); if (child.ReferenceCount > 0) child.Release(); if (root.ReferenceCount > 0) root.Release(root.ReferenceCount); }
+        finally { pin.Dispose(); if (child.RefCnt > 0) child.Release(); if (root.RefCnt > 0) root.Release(root.RefCnt); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -226,7 +226,7 @@ public class PooledDerivedByteBufTest
         using var a = new PooledByteBufAllocator(maxOrder: 1); ByteBuf root = Root(a, direct), child = root.RetainedDuplicate();
         child.Retain(63); int final = 0;
         Parallel.For(0, 64, _ => { if (child.Release()) System.Threading.Interlocked.Increment(ref final); });
-        Assert.Equal(1, final); Assert.Equal(0, child.ReferenceCount); Assert.Equal(1, root.ReferenceCount); Assert.True(root.Release());
+        Assert.Equal(1, final); Assert.Equal(0, child.RefCnt); Assert.Equal(1, root.RefCnt); Assert.True(root.Release());
     }
 
     [Theory]
@@ -245,13 +245,13 @@ public class PooledDerivedByteBufTest
             Assert.False(wrapper.Release()); Assert.False(first.Release()); Assert.Equal(0, spy.Closes);
             Assert.True(child.Release()); Assert.Equal(1, spy.Closes); Assert.Same(root, spy.Closed);
             Assert.False(firstTracker.Close(firstReferent)); Assert.False(childTracker.Close(childReferent));
-            Assert.Equal(0, root.ReferenceCount);
+            Assert.Equal(0, root.RefCnt);
         }
         finally
         {
-            if (child.ReferenceCount > 0) child.Release();
-            if (first.ReferenceCount > 0) first.Release(first.ReferenceCount);
-            if (root.ReferenceCount > 0) wrapper.Release(root.ReferenceCount);
+            if (child.RefCnt > 0) child.Release();
+            if (first.RefCnt > 0) first.Release(first.RefCnt);
+            if (root.RefCnt > 0) wrapper.Release(root.RefCnt);
         }
     }
 
@@ -264,7 +264,7 @@ public class PooledDerivedByteBufTest
         try
         {
             Assert.Same(failure, Assert.Throws<Exception>(() => wrapper.RetainedDuplicate()));
-            Assert.Equal(1, root.ReferenceCount); Assert.Equal(0, spy.Closes); Assert.Equal(0, wrapper.Derived.ReferenceCount);
+            Assert.Equal(1, root.RefCnt); Assert.Equal(0, spy.Closes); Assert.Equal(0, wrapper.Derived.RefCnt);
             Assert.False(wrapper.Tracker.Close(wrapper.Derived));
         }
         finally { wrapper.Release(); }
@@ -299,19 +299,19 @@ public class PooledDerivedByteBufTest
             // Cleanup the expected buffers used for testing.
             // CLR expectations are managed byte arrays, so there are no expected ByteBuf references to release.
             // Slice 4, 3, and 2 should effectively "share" a reference count.
-            fourth.Release(); Assert.Equal(third.ReferenceCount, second.ReferenceCount); Assert.Equal(third.ReferenceCount, fourth.ReferenceCount);
+            fourth.Release(); Assert.Equal(third.RefCnt, second.RefCnt); Assert.Equal(third.RefCnt, fourth.RefCnt);
             // Slice 1 should also release the original underlying buffer without throwing exceptions
             Assert.True(first.Release());
             // Reference counting may be shared, or may be independently tracked, but at this point all buffers should
             // be deallocated and have a reference count of 0.
-            Assert.Equal(0, root.ReferenceCount); Assert.Equal(0, first.ReferenceCount);
-            Assert.Equal(0, second.ReferenceCount); Assert.Equal(0, third.ReferenceCount);
+            Assert.Equal(0, root.RefCnt); Assert.Equal(0, first.RefCnt);
+            Assert.Equal(0, second.RefCnt); Assert.Equal(0, third.RefCnt);
         }
         finally
         {
-            if (second?.ReferenceCount > 0) second.Release(second.ReferenceCount);
-            if (first.ReferenceCount > 0) first.Release(first.ReferenceCount);
-            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+            if (second?.RefCnt > 0) second.Release(second.RefCnt);
+            if (first.RefCnt > 0) first.Release(first.RefCnt);
+            if (root.RefCnt > 0) root.Release(root.RefCnt);
         }
     }
 
@@ -323,17 +323,17 @@ public class PooledDerivedByteBufTest
         try
         {
             Assert.NotSame(Unpooled.EmptyBuffer, empty); Assert.Equal(0, empty.Capacity); Assert.Equal(0, empty.MaxCapacity);
-            Assert.Equal(2, root.ReferenceCount); Assert.Equal(1, empty.ReferenceCount); Assert.True(empty.CanRead(0));
-            Assert.False(root.Release()); Assert.True(empty.Release()); Assert.Equal(0, root.ReferenceCount);
+            Assert.Equal(2, root.RefCnt); Assert.Equal(1, empty.RefCnt); Assert.True(empty.IsReadable(0));
+            Assert.False(root.Release()); Assert.True(empty.Release()); Assert.Equal(0, root.RefCnt);
         }
-        finally { if (empty.ReferenceCount > 0) empty.Release(); if (root.ReferenceCount > 0) root.Release(root.ReferenceCount); }
+        finally { if (empty.RefCnt > 0) empty.Release(); if (root.RefCnt > 0) root.Release(root.RefCnt); }
     }
 
     private sealed class Tracker(ByteBuf expected) : IResourceLeakTracker<ByteBuf>
     {
         internal int Closes; internal ByteBuf Closed;
         public void Record() { } public void Record(object hint) { }
-        public bool Close(ByteBuf b) { Assert.Same(expected, b); Assert.Equal(0, b.ReferenceCount); Closed = b; return ++Closes == 1; }
+        public bool Close(ByteBuf b) { Assert.Same(expected, b); Assert.Equal(0, b.RefCnt); Closed = b; return ++Closes == 1; }
         public Exception GetCloseStackTraceIfAny() => null;
     }
     private sealed class FailingWrapper(ByteBuf root, IResourceLeakTracker<ByteBuf> leak, Exception failure) : SimpleLeakAwareByteBuf(root, leak)

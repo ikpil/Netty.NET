@@ -62,17 +62,17 @@ public class PipelineHandlerAdmissionContractTest
     private sealed class RemoveThenThrow(Exception failure) : ChannelInboundHandlerAdapter
     {
         internal int Errors;
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { context.Pipeline.Remove(this); throw failure; }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => Errors++;
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { ctx.Pipeline.Remove(this); throw failure; }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Errors++;
     }
     private sealed class CaptureFailure : ChannelInboundHandlerAdapter
-    { internal Exception Cause; public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => Cause = cause; }
-    private sealed class AdmissionHandler(TaskCompletionSource added, TaskCompletionSource received) : ChannelInboundHandlerAdapter
+    { internal Exception Cause; public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Cause = cause; }
+    private sealed class AdmissionHandler(TaskCompletionSource handlerAdded, TaskCompletionSource received) : ChannelInboundHandlerAdapter
     {
         internal int Events;
-        public override void HandlerAdded(ChannelHandlerContext context) => added.TrySetResult();
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt)
+        public override void HandlerAdded(IChannelHandlerContext ctx) => handlerAdded.TrySetResult();
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         { Interlocked.Increment(ref Events); received.TrySetResult(); }
     }
     private sealed class HeldAdditionExecutor : AbstractEventExecutor
@@ -88,7 +88,7 @@ public class PipelineHandlerAdmissionContractTest
         public override bool IsShuttingDown() => _pool.IsShuttingDown();
         public override bool IsShutdown() => _pool.IsShutdown();
         public override bool IsTerminated() => _pool.IsTerminated();
-        public override Task Termination => _pool.Termination;
+        public override Task TerminationFuture => _pool.TerminationFuture;
         public override bool AwaitTermination(TimeSpan timeout) => _pool.AwaitTermination(timeout);
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => _pool.ShutdownGracefullyAsync(quietPeriod, timeout);
         [Obsolete]

@@ -25,7 +25,7 @@ public class NativeSubmissionConsumerContractTest
             _queue.Enqueue(task);
         }
         public override bool InEventLoop(Thread thread) => _running && thread == Thread.CurrentThread;
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override void Shutdown() { }
         public override bool IsShutdown() => false;

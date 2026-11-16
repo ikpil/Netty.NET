@@ -14,10 +14,40 @@
  * under the License.
  */
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Netty.NET.Transport.Channels;
 
 /**
  * {@link EventLoop} that allows to register / deregister {@link IoHandle} instances.
  */
-/// <summary>An event loop that also accepts standalone I/O handles.</summary>
-public interface IIoEventLoop : IEventLoop, IIoEventLoopGroup { }
+public interface IIoEventLoop : IEventLoop, IIoEventLoopGroup
+{
+    IIoEventLoop IIoEventLoopGroup.Next()
+    {
+        return this;
+    }
+
+    IEventLoop IEventLoopGroup.Next() => this;
+
+    // CLR: IEventLoop and IEventLoopGroup both declare register(Channel); redeclaring it removes the ambiguity for
+    // callers that hold an IIoEventLoop.
+    new Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default);
+
+    /**
+     * Register the {@link IoHandle} to the {@link EventLoop} for I/O processing.
+     *
+     * @param handle        the {@link IoHandle} to register.
+     * @return              the {@link Future} that is notified once the operations completes.
+     */
+    // CLR: Task<IIoRegistration> replaces Future<IoRegistration>.
+    new Task<IIoRegistration> RegisterAsync(IIoHandle handle);
+
+    // Force sub-classes to implement.
+    new bool IsCompatible(Type handleType);
+
+    // Force sub-classes to implement.
+    new bool IsIoType(Type handlerType);
+}

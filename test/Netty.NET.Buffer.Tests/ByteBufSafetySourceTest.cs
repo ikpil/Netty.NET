@@ -52,7 +52,7 @@ public class ByteBufSafetySourceTest
                 case 4: b.GetBytes(-1, Span<byte>.Empty); break; case 5: b.SetIndex(9, 8); break;
                 case 6: b.ReadLong(); break; case 7: b.ReadBytes(int.MaxValue); break;
                 case 8: b.SkipBytes(-1); break; case 9: b.SkipBytes(int.MaxValue); break;
-                case 10: b.GetString(1, int.MaxValue, Encoding.UTF8); break;
+                case 10: b.ToString(1, int.MaxValue, Encoding.UTF8); break;
                 case 11: b.ForEachByte(0, int.MaxValue, _ => true); break;
                 case 12: b.GetByte(0); break; case 13: b.AsReadOnlyMemory(0, 0); break;
                 case 14: b.ReadBytes(0); break;
@@ -63,7 +63,7 @@ public class ByteBufSafetySourceTest
         else if (operation == 15) Assert.Throws<NotSupportedException>(Access);
         else Assert.Throws<ArgumentOutOfRangeException>(Access);
         Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex));
-        if (root.ReferenceCount > 0) { b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex)); }
+        if (root.RefCnt > 0) { b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex)); }
     }
     [Theory]
     [InlineData(false)] [InlineData(true)]

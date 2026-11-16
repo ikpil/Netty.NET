@@ -27,8 +27,8 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Buffer.Tests;
 
-// Declared original fixture contracts. JVM raw capabilities are represented by
-// bounded Memory/Sequence and scoped pins; loopback sockets replace NIO channels.
+// Declared original fixture contracts, one CLR test per original test method. JVM raw capabilities are
+// represented by bounded Memory/Sequence and scoped pins; loopback sockets replace NIO channels.
 public class FixedCompositeByteBufOriginalTest
 {
     private sealed class Storage(bool pooled = false) : IDisposable
@@ -46,49 +46,132 @@ public class FixedCompositeByteBufOriginalTest
         public void Dispose()
         {
             // Composite/fixed owners were registered last and consume input claims.
-            for (int i = _buffers.Count - 1; i >= 0; --i) if (_buffers[i].ReferenceCount > 0) _buffers[i].Release();
+            for (int i = _buffers.Count - 1; i >= 0; --i) if (_buffers[i].RefCnt > 0) _buffers[i].Release();
             (_allocator as IDisposable)?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
         }
     }
-    [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)]
-    [InlineData(6)] [InlineData(7)] [InlineData(8)] [InlineData(9)] [InlineData(10)] [InlineData(11)]
-    public void OriginalReadOnlySettersRejectBeforeInputConsumption(int operation)
+
+    [Fact]
+    public void TestSetBoolean() => AssertReadOnlySetter((buf, _, _, _) => buf.SetBoolean(0, true));
+
+    [Fact]
+    public void TestSetByte() => AssertReadOnlySetter((buf, _, _, _) => buf.SetByte(0, 1));
+
+    [Fact]
+    public void TestSetBytesWithByteBuf() => AssertReadOnlySetter((buf, src, _, _) => buf.SetBytes(0, src));
+
+    [Fact]
+    public void TestSetBytesWithByteBuffer() => AssertReadOnlySetter((buf, _, _, _) => buf.SetBytes(0, new byte[4].AsSpan()));
+
+    [Fact]
+    public void TestSetBytesWithInputStream() => AssertReadOnlySetter((buf, _, stream, _) => buf.SetBytes(0, stream, 4));
+
+    [Fact]
+    public void TestSetBytesWithChannel() => AssertReadOnlySetter((buf, _, _, channel) => buf.SetBytes(0, channel, 4));
+
+    [Fact]
+    public void TestSetChar() => AssertReadOnlySetter((buf, _, _, _) => buf.SetChar(0, 'b'));
+
+    [Fact]
+    public void TestSetDouble() => AssertReadOnlySetter((buf, _, _, _) => buf.SetDouble(0, 1));
+
+    [Fact]
+    public void TestSetFloat() => AssertReadOnlySetter((buf, _, _, _) => buf.SetFloat(0, 1));
+
+    [Fact]
+    public void TestSetInt() => AssertReadOnlySetter((buf, _, _, _) => buf.SetInt(0, 1));
+
+    [Fact]
+    public void TestSetLong() => AssertReadOnlySetter((buf, _, _, _) => buf.SetLong(0, 1));
+
+    [Fact]
+    public void TestSetMedium() => AssertReadOnlySetter((buf, _, _, _) => buf.SetMedium(0, 1));
+
+    // Every original setter test: one heap input, assertThrows(ReadOnlyBufferException). CLR NotSupportedException
+    // replaces ReadOnlyBufferException, Span replaces ByteBuffer and Socket replaces ScatteringByteChannel; the CLR
+    // test also checks that the rejected call consumed no input and moved no cursor.
+    private static void AssertReadOnlySetter(Action<ByteBuf, ByteBuf, MemoryStream, Socket> write)
     {
-        using var s = new Storage(); ByteBuf b = s.Fixed(s.Data(false, new byte[8]));
-        ByteBuf source = s.Data(false, new byte[4]); using var stream = new MemoryStream(new byte[4]);
-        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        void Write()
-        {
-            switch (operation)
-            {
-                case 0: b.SetBoolean(0, true); break; case 1: b.SetByte(0, 1); break;
-                case 2: b.SetBytes(0, source); break; case 3: b.SetBytes(0, new byte[4].AsSpan()); break;
-                case 4: b.SetBytes(0, stream, 4); break; case 5: b.SetBytes(0, socket, 4); break;
-                case 6: b.SetChar(0, 'b'); break; case 7: b.SetDouble(0, 1); break;
-                case 8: b.SetFloat(0, 1); break; case 9: b.SetInt(0, 1); break;
-                case 10: b.SetLong(0, 1); break; default: b.SetMedium(0, 1); break;
-            }
-        }
-        Assert.Throws<NotSupportedException>(() => Write());
-        Assert.Equal((0, 8), (b.ReaderIndex, b.WriterIndex));
-        Assert.Equal((0, 4), (source.ReaderIndex, source.WriterIndex)); Assert.Equal(0, stream.Position);
-        Assert.Equal(new byte[8], b.ReadableSequence.ToArray());
+        using var s = new Storage(); ByteBuf buf = s.Fixed(s.Data(false, new byte[8]));
+        ByteBuf src = s.Data(false, new byte[4]); using var stream = new MemoryStream(new byte[4]);
+        using var channel = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        Assert.Throws<NotSupportedException>(() => write(buf, src, stream, channel));
+        Assert.Equal((0, 8), (buf.ReaderIndex, buf.WriterIndex));
+        Assert.Equal((0, 4), (src.ReaderIndex, src.WriterIndex)); Assert.Equal(0, stream.Position);
+        Assert.Equal(new byte[8], buf.ReadableSequence.ToArray());
     }
-    public static IEnumerable<object[]> GatheringCases()
-    {
-        for (int scenario = 0; scenario < 3; ++scenario)
-        foreach (bool pooled in new[] { false, true })
-        for (int kind = 0; kind < 3; ++kind)
-        foreach (bool asynchronous in new[] { false, true })
-            if (scenario != 2 || !pooled && kind < 2) yield return [scenario, pooled, kind, asynchronous];
-    }
+
+    // CLR: each gathering test runs the synchronous and the asynchronous Socket transfer.
     [Theory]
-    [MemberData(nameof(GatheringCases))]
-    public async Task OriginalGatheringWritesPreserveDataAndActualProgress(int scenario, bool pooled, int kind, bool asynchronous)
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesHeap(bool asynchronous) => TestGatheringWrites(false, false, false, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesDirect(bool asynchronous) => TestGatheringWrites(false, true, true, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesMixes(bool asynchronous) => TestGatheringWrites(false, false, true, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesHeapPooled(bool asynchronous) => TestGatheringWrites(true, false, false, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesDirectPooled(bool asynchronous) => TestGatheringWrites(true, true, true, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesMixesPooled(bool asynchronous) => TestGatheringWrites(true, false, true, asynchronous);
+
+    // Original testGatheringWrites(buf1, buf2): the scenario builds a mutable CompositeByteBuf, as the source does.
+    private static Task TestGatheringWrites(bool pooled, bool direct1, bool direct2, bool asynchronous)
+        => GatheringWrites(0, pooled, direct1, direct2, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesPartialHeap(bool asynchronous) => TestGatheringWritesPartial(false, false, false, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesPartialDirect(bool asynchronous) => TestGatheringWritesPartial(false, true, true, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesPartialMixes(bool asynchronous) => TestGatheringWritesPartial(false, false, true, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesPartialHeapPooled(bool asynchronous) => TestGatheringWritesPartial(true, false, false, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesPartialDirectPooled(bool asynchronous) => TestGatheringWritesPartial(true, true, true, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesPartialMixesPooled(bool asynchronous) => TestGatheringWritesPartial(true, false, true, asynchronous);
+
+    private static Task TestGatheringWritesPartial(bool pooled, bool direct1, bool direct2, bool asynchronous)
+        => GatheringWrites(1, pooled, direct1, direct2, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesSingleHeap(bool asynchronous) => TestGatheringWritesSingleBuf(false, asynchronous);
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public Task TestGatheringWritesSingleDirect(bool asynchronous) => TestGatheringWritesSingleBuf(true, asynchronous);
+
+    private static Task TestGatheringWritesSingleBuf(bool direct1, bool asynchronous)
+        => GatheringWrites(2, false, direct1, false, asynchronous);
+
+    // Scenario 0 = testGatheringWrites, 1 = testGatheringWritesPartial, 2 = testGatheringWritesSingleBuf.
+    private static async Task GatheringWrites(int scenario, bool pooled, bool firstDirect, bool secondDirect, bool asynchronous)
     {
         using var s = new Storage(pooled);
-        bool firstDirect = kind == 1, secondDirect = kind != 0;
         ByteBuf first = s.Data(firstDirect, scenario == 0 ? new byte[] { 1, 2 } : new byte[] { 1, 2, 3, 4 });
         ByteBuf second = scenario == 2 ? null : s.Data(secondDirect, scenario == 0 ? new byte[] { 1, 2 } : new byte[] { 1, 2, 3, 4 });
         ByteBuf b;
@@ -116,48 +199,110 @@ public class FixedCompositeByteBufOriginalTest
         b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal((reader, writer), (b.ReaderIndex, b.WriterIndex));
     }
 
-    [Theory]
-    [InlineData(false)] [InlineData(true)]
-    public void OriginalCopiesIntoHeapAndNativeBuffersAndOutputStreams(bool stream)
-    {
-        using var s = new Storage(); ByteBuf a = s.Data(true, 97), b = s.Data(false, 98), c = s.Data(true, 99);
-        ByteBuf composite = s.Fixed(a, b, c), direct = s.Own(s.Allocator.DirectBuffer(3)), heap = s.Own(s.Allocator.HeapBuffer(3));
-        if (stream)
-        {
-            using var directOutput = new ByteBufOutputStream(direct); using var heapOutput = new ByteBufOutputStream(heap);
-            composite.GetBytes(0, directOutput, 3); composite.GetBytes(0, heapOutput, 3);
-        }
-        else { direct.SetBytes(0, composite, 0, 3); heap.SetBytes(0, composite, 0, 3); direct.WriterIndex = heap.WriterIndex = 3; }
-        Assert.Equal(0, ByteBufUtil.Compare(direct, composite)); Assert.Equal(0, ByteBufUtil.Compare(heap, composite));
-        Assert.Equal(0, ByteBufUtil.Compare(direct, heap)); Assert.Equal(new byte[] { 97, 98, 99 }, direct.ReadableSequence.ToArray());
-        Assert.Equal((0, 3), (composite.ReaderIndex, composite.WriterIndex));
-        Assert.All(new[] { a, b, c }, component => Assert.Equal((0, 1), (component.ReaderIndex, component.WriterIndex)));
-    }
     [Fact]
-    public void OriginalExtractedSegmentsAreThreeSingleByteBorrows()
+    public void TestCopyingToOtherBuffer()
     {
+        using var s = new Storage(); ByteBuf buf1 = s.Data(true, 97), buf2 = s.Data(false, 98), buf3 = s.Data(true, 99);
+        ByteBuf composite = s.Fixed(buf1, buf2, buf3);
+        ByteBuf copy = s.Own(s.Allocator.DirectBuffer(3)), copy2 = s.Own(s.Allocator.HeapBuffer(3));
+        copy.SetBytes(0, composite, 0, 3);
+        copy2.SetBytes(0, composite, 0, 3);
+        copy.WriterIndex = 3;
+        copy2.WriterIndex = 3;
+        Assert.Equal(0, ByteBufUtil.Compare(copy, composite));
+        Assert.Equal(0, ByteBufUtil.Compare(copy2, composite));
+        Assert.Equal(0, ByteBufUtil.Compare(copy, copy2));
+        AssertCopiedWithoutConsumingInputs(copy, composite, buf1, buf2, buf3);
+    }
+
+    [Fact]
+    public void TestCopyingToOutputStream()
+    {
+        using var s = new Storage(); ByteBuf buf1 = s.Data(true, 97), buf2 = s.Data(false, 98), buf3 = s.Data(true, 99);
+        ByteBuf composite = s.Fixed(buf1, buf2, buf3);
+        ByteBuf copy = s.Own(s.Allocator.DirectBuffer(3)), copy2 = s.Own(s.Allocator.HeapBuffer(3));
+        using (var copyStream = new ByteBufOutputStream(copy))
+        using (var copy2Stream = new ByteBufOutputStream(copy2))
+        {
+            composite.GetBytes(0, copyStream, 3);
+            composite.GetBytes(0, copy2Stream, 3);
+            Assert.Equal(0, ByteBufUtil.Compare(copy, composite));
+            Assert.Equal(0, ByteBufUtil.Compare(copy2, composite));
+            Assert.Equal(0, ByteBufUtil.Compare(copy, copy2));
+        }
+        AssertCopiedWithoutConsumingInputs(copy, composite, buf1, buf2, buf3);
+    }
+
+    // CLR: the copy tests also check the copied bytes and that neither the composite nor its inputs moved.
+    private static void AssertCopiedWithoutConsumingInputs(ByteBuf copy, ByteBuf composite, params ByteBuf[] inputs)
+    {
+        Assert.Equal(new byte[] { 97, 98, 99 }, copy.ReadableSequence.ToArray());
+        Assert.Equal((0, 3), (composite.ReaderIndex, composite.WriterIndex));
+        Assert.All(inputs, component => Assert.Equal((0, 1), (component.ReaderIndex, component.WriterIndex)));
+    }
+
+    [Fact]
+    public void TestExtractNioBuffers()
+    {
+        // CLR: ReadOnlySequence segments replace the NIO ByteBuffer array.
         using var s = new Storage(); ByteBuf b = s.Fixed(s.Data(true, 97), s.Data(false, 98), s.Data(true, 99));
         ReadOnlySequence<byte> sequence = b.AsReadOnlySequence(0, 3);
         Assert.Equal(3, sequence.ToArray().Length); int segments = 0;
         foreach (ReadOnlyMemory<byte> memory in sequence) { Assert.Equal(1, memory.Length); ++segments; }
         Assert.Equal(3, segments); Assert.Equal(new byte[] { 97, 98, 99 }, sequence.ToArray());
     }
+
     [Fact]
-    public unsafe void OriginalEmptyConstructorHasZeroLengthDirectStorageAndBalancedPins()
+    public void TestEmptyArray()
     {
-        using var s = new Storage(); ByteBuf b = s.Fixed();
-        Assert.Equal((0, 0, 0, 0), (b.Capacity, b.MaxCapacity, b.ReaderIndex, b.WriterIndex));
-        Assert.True(b.IsDirect); Assert.True(b.IsReadOnly); Assert.True(b.ReadableSequence.IsEmpty);
-        // CLR reports actual inputs, without Java's synthetic empty component.
-        Assert.Contains("components=0)", b.ToString());
-        ReadOnlyMemory<byte> memory = b.AsReadOnlyMemory(0, 0);
-        Assert.True(MemoryMarshal.TryGetArray(memory, out var array)); Assert.Equal(0, array.Count);
-        using var pin = memory.Pin(); Assert.Equal(nint.Zero, (nint)pin.Pointer);
-        // CLR has no permanent raw zero-length address capability or JVM assumption gate.
+        using var s = new Storage(); ByteBuf buf = s.Fixed();
+        // CLR: the empty fixed buffer also reports zero capacity and indices, and the CLR reports the actual
+        // inputs without Java's synthetic empty component.
+        Assert.Equal((0, 0, 0, 0), (buf.Capacity, buf.MaxCapacity, buf.ReaderIndex, buf.WriterIndex));
+        Assert.True(buf.IsReadOnly); Assert.True(buf.ReadableSequence.IsEmpty);
+        Assert.Contains("components=0)", buf.ToString());
     }
+
     [Theory]
-    [InlineData(false, 0)] [InlineData(false, 10)] [InlineData(true, 0)] [InlineData(true, 10)]
-    public unsafe void OriginalSingleInputCapabilitiesUseBoundedArraysAndScopedNativePins(bool direct, int written)
+    [InlineData(0)] [InlineData(10)]
+    public void TestHasMemoryAddressWithSingleBuffer(int written) => SingleInputCapabilities(true, written);
+
+    [Fact]
+    public unsafe void TestHasMemoryAddressWhenEmpty()
+    {
+        // CLR has no permanent raw zero-length address capability or JVM assumption gate: a scoped pin of the
+        // empty range has the same (null) address as the empty buffer's.
+        using var s = new Storage(); ByteBuf buf = s.Fixed();
+        using var pin = buf.AsReadOnlyMemory(0, 0).Pin();
+        using var emptyPin = Unpooled.EmptyBuffer.AsReadOnlyMemory(0, 0).Pin();
+        Assert.Equal((nint)emptyPin.Pointer, (nint)pin.Pointer);
+        Assert.Equal(nint.Zero, (nint)pin.Pointer);
+    }
+
+    [Theory]
+    [InlineData(0)] [InlineData(2)]
+    public void TestHasNoMemoryAddressWhenMultipleBuffers(int written) => MultipleInputCapabilities(true, written);
+
+    [Theory]
+    [InlineData(0)] [InlineData(10)]
+    public void TestHasArrayWithSingleBuffer(int written) => SingleInputCapabilities(false, written);
+
+    [Fact]
+    public void TestHasArrayWhenEmptyAndIsDirect()
+    {
+        using var s = new Storage(); ByteBuf buf = s.Fixed();
+        Assert.True(MemoryMarshal.TryGetArray(buf.AsReadOnlyMemory(0, 0), out var array)); Assert.Equal(0, array.Count);
+        Assert.Equal(Unpooled.EmptyBuffer.IsDirect, buf.IsDirect);
+        Assert.True(buf.IsDirect);
+    }
+
+    [Theory]
+    [InlineData(0)] [InlineData(2)]
+    public void TestHasNoArrayWhenMultipleBuffers(int written) => MultipleInputCapabilities(false, written);
+
+    // CLR: the original single-buffer capability tests use an unwritten 10-byte buffer; the CLR test checks the
+    // empty and the 10-byte readable range through bounded arrays (heap) and scoped pins (native).
+    private static unsafe void SingleInputCapabilities(bool direct, int written)
     {
         using var s = new Storage(); ByteBuf source = s.Data(direct, new byte[written]); ByteBuf b = s.Fixed(source);
         ReadOnlyMemory<byte> memory = b.AsReadOnlyMemory(0, written);
@@ -175,9 +320,10 @@ public class FixedCompositeByteBufOriginalTest
             Assert.Equal((nint)original.Pointer, (nint)pin.Pointer); Assert.NotEqual(nint.Zero, (nint)pin.Pointer);
         }
     }
-    [Theory]
-    [InlineData(false, 0)] [InlineData(false, 2)] [InlineData(true, 0)] [InlineData(true, 2)]
-    public void OriginalMultipleInputCapabilitiesRequireSegmentsForNonemptyRanges(bool direct, int written)
+
+    // CLR: two inputs have no single array or address; a nonempty range is rejected as one Memory and is read as
+    // two segments instead. The empty range stays available.
+    private static void MultipleInputCapabilities(bool direct, int written)
     {
         using var s = new Storage(); ByteBuf b = s.Fixed(s.Data(direct, new byte[written]), s.Data(direct, new byte[written]));
         if (written == 0) { Assert.True(b.AsReadOnlyMemory(0, 0).IsEmpty); return; }
@@ -191,6 +337,7 @@ public class FixedCompositeByteBufOriginalTest
         }
         Assert.Equal(2, segments);
     }
+
     private sealed class Pair : IDisposable
     {
         internal readonly Socket Local, Peer;

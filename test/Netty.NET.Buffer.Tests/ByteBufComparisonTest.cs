@@ -90,12 +90,12 @@ public class ByteBufComparisonTest
                     Assert.Equal(0, ByteBufUtil.Compare(b, a));
                     Assert.False(a == b); // C# reference identity remains available separately from content equality.
                     b.SetIndex(4, 34).ResetReaderIndex().ResetWriterIndex();
-                    Assert.Equal(3, b.ReaderIndex); Assert.Equal(35, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+                    Assert.Equal(3, b.ReaderIndex); Assert.Equal(35, b.WriterIndex); Assert.Equal(1, b.RefCnt);
                 }
                 finally { b.Release(); }
             }
             a.SetIndex(2, 34).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, a.ReaderIndex); Assert.Equal(33, a.WriterIndex); Assert.Equal(1, a.ReferenceCount);
+            Assert.Equal(1, a.ReaderIndex); Assert.Equal(33, a.WriterIndex); Assert.Equal(1, a.RefCnt);
             Assert.False(a.Equals((object)null)); Assert.False(a.Equals(new object())); Assert.False(a.Equals((ByteBuf)null));
         }
         finally { a.Release(); }

@@ -53,7 +53,7 @@ public static partial class Unpooled
     public static ByteBuf WrappedBuffer(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-        if (buffer.IsReadable) return buffer.Slice();
+        if (buffer.IsReadable()) return buffer.Slice();
         buffer.Release();
         return EmptyBuffer;
     }
@@ -137,7 +137,7 @@ public static partial class Unpooled
         {
             ByteBuf buffer = buffers[i];
             ArgumentNullException.ThrowIfNull(buffer);
-            if (!buffer.IsReadable) { buffer.Release(); continue; }
+            if (!buffer.IsReadable()) { buffer.Release(); continue; }
             var composite = new CompositeByteBuf(maxNumComponents);
             try { return composite.AddWrappedComponents(buffers, i); }
             catch

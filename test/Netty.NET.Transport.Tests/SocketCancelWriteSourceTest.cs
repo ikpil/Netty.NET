@@ -15,65 +15,81 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
-using Netty.NET.Transport.Channels.Sockets;
-using static Netty.NET.Transport.Tests.SocketMultipleConnectSourceTest;
 
 namespace Netty.NET.Transport.Tests;
 
+#pragma warning disable xUnit1069 // The Runner body observes TestContext.Current.CancellationToken.
 #pragma warning disable xUnit1051 // Always close independently of the test cancellation.
-public class SocketCancelWriteSourceTest
+public class SocketCancelWriteSourceTest : AbstractSocketTest
 {
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestCancelWrite(bool adaptive)
+    [Fact(Timeout = 30000)]
+    public async Task TestCancelWrite()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var group = new DefaultEventLoopGroup(2);
-        var sender = new TestHandler();
-        var receiver = new TestHandler();
-        var allocator = SelectAllocator(adaptive);
-        try
-        {
-            var listener = await new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
-                .Option(ChannelOption.ALLOCATOR, allocator).ChildOption(ChannelOption.ALLOCATOR, allocator)
-                .ChildHandler(receiver).BindAsync(new IPEndPoint(Loopback(), 0), cancellation);
-            var client = await new Bootstrap().Group(group).Channel<TcpSocketChannel>()
-                .Option(ChannelOption.ALLOCATOR, allocator).Handler(sender)
-                .ConnectAsync(listener.LocalAddress, cancellationToken: cancellation);
-            var a = Byte('a');
-            var d = Byte('d');
-
-            await CancelQueuedWrite(client, a, cancellation);
-            await client.WriteAndFlushAsync(Byte('b'), cancellation);
-            Task c = client.WriteAsync(Byte('c'), cancellation);
-            await CancelQueuedWrite(client, d, cancellation);
-            await client.WriteAndFlushAsync(Byte('e'), cancellation);
-            await c.WaitAsync(cancellation);
-
-            await receiver.Received.Task.WaitAsync(cancellation);
-            await receiver.Channel.CloseAsync();
-            await client.CloseAsync();
-            await listener.CloseAsync();
-            Assert.Null(receiver.Failure);
-            Assert.Null(sender.Failure);
-            Assert.Empty(sender.Bytes);
-            Assert.Equal(new byte[] { (byte)'b', (byte)'c', (byte)'e' }, receiver.Bytes);
-            Assert.Equal(0, a.ReferenceCount);
-            Assert.Equal(0, d.ReferenceCount);
-        }
-        finally { await group.StopAsync(); }
+        await Run(TestContext.Current, TestCancelWrite0);
     }
 
-    private static ByteBuf Byte(char value) => Unpooled.Buffer().WriteByte((byte)value);
+    // CLR: xUnit1024 forbids overloading the TestCancelWrite test name.
+    private async Task TestCancelWrite0(ServerBootstrap sb, Bootstrap cb)
+    {
+        var cancellation = TestContext.Current.CancellationToken;
+        TestHandler sh = new TestHandler();
+        TestHandler ch = new TestHandler();
+        ByteBuf a = Unpooled.Buffer().WriteByte('a');
+        ByteBuf b = Unpooled.Buffer().WriteByte('b');
+        ByteBuf c = Unpooled.Buffer().WriteByte('c');
+        ByteBuf d = Unpooled.Buffer().WriteByte('d');
+        ByteBuf e = Unpooled.Buffer().WriteByte('e');
+
+        cb.Handler(ch);
+        sb.ChildHandler(sh);
+
+        IChannel sc = await sb.BindAsync(cancellation);
+        IChannel cc = await cb.ConnectAsync(sc.LocalAddress, cancellation);
+
+        // CLR: ChannelFuture.cancel(false) becomes cancelling the token of a still-queued write Task; the event-loop
+        // barrier makes sure the write is queued, and an OperationCanceledException is its cancelled outcome.
+        await CancelQueuedWrite(cc, a, cancellation);
+        Task fb = cc.WriteAndFlushAsync(b, cancellation);
+        Task fc = cc.WriteAsync(c, cancellation);
+        await CancelQueuedWrite(cc, d, cancellation);
+        Task fe = cc.WriteAndFlushAsync(e, cancellation);
+        await Task.WhenAll(fb, fc, fe).WaitAsync(cancellation);
+
+        // CLR: the source polls counter/exception every 50 ms; the handler completes this Task at three bytes or on
+        // the first exception instead.
+        await Task.WhenAny(sh.Done.Task, ch.Done.Task).WaitAsync(cancellation);
+        await sh.channel.CloseAsync();
+        await ch.channel.CloseAsync();
+        await sc.CloseAsync();
+
+        if (sh.exception != null && !(sh.exception is System.IO.IOException))
+        {
+            throw sh.exception;
+        }
+        if (sh.exception != null)
+        {
+            throw sh.exception;
+        }
+        if (ch.exception != null && !(ch.exception is System.IO.IOException))
+        {
+            throw ch.exception;
+        }
+        if (ch.exception != null)
+        {
+            throw ch.exception;
+        }
+        Assert.Equal(0, ch.counter);
+        Assert.Equal(Unpooled.WrappedBuffer(new byte[] { (byte)'b', (byte)'c', (byte)'e' }), sh.received);
+        // CLR: supplemental check that both cancelled writes released their buffers.
+        Assert.Equal(0, a.RefCnt);
+        Assert.Equal(0, d.RefCnt);
+    }
 
     private static async Task CancelQueuedWrite(IChannel channel, ByteBuf message, CancellationToken cancellation)
     {
@@ -87,24 +103,38 @@ public class SocketCancelWriteSourceTest
 
     private sealed class TestHandler : SimpleChannelInboundHandler<ByteBuf>
     {
-        internal readonly List<byte> Bytes = new();
-        internal readonly TaskCompletionSource Received = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal IChannel Channel;
-        internal Exception Failure;
+        internal volatile IChannel channel;
+        // CLR: AtomicReference<Throwable>.compareAndSet(null, cause) is Interlocked.CompareExchange on this field.
+        internal Exception exception;
+        internal volatile int counter;
+        internal readonly ByteBuf received = Unpooled.Buffer();
+        internal readonly TaskCompletionSource Done = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public override void ChannelActive(ChannelHandlerContext context) => Channel = context.Channel;
-
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            while (message.IsReadable) Bytes.Add(message.ReadByte());
-            if (Bytes.Count >= 3) Received.TrySetResult();
+            channel = ctx.Channel;
         }
 
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf @in)
         {
-            Failure ??= cause;
-            Received.TrySetException(cause);
-            _ = context.CloseAsync();
+            counter += @in.ReadableBytes;
+            received.WriteBytes(@in);
+            if (counter >= 3)
+            {
+                Done.TrySetResult();
+            }
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx,
+                Exception cause)
+        {
+            if (Interlocked.CompareExchange(ref exception, cause, null) == null)
+            {
+                Done.TrySetResult();
+                _ = ctx.CloseAsync();
+            }
         }
     }
 }
+#pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

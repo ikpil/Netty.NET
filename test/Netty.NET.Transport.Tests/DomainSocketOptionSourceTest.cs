@@ -16,6 +16,7 @@
 
 using System.Threading.Tasks;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 using static Netty.NET.Transport.Tests.DomainSocketSourceTest;
 
@@ -29,8 +30,8 @@ public class DomainSocketOptionSourceTest
     {
         RequireDomainSockets();
         using var socket = NewSocket();
-        var server = new DomainServerSocketChannel(socket);
-        var group = new DefaultEventLoopGroup(1);
+        var server = new NioServerDomainSocketChannel(socket);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             int before = socket.ReceiveBufferSize;
@@ -52,8 +53,8 @@ public class DomainSocketOptionSourceTest
     public async Task TestGetOptions()
     {
         RequireDomainSockets();
-        var server = new DomainServerSocketChannel();
-        var group = new DefaultEventLoopGroup(1);
+        var server = new NioServerDomainSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try { server.Config.GetOptions(); }
         finally
         {

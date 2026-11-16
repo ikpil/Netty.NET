@@ -127,7 +127,7 @@ public class AbstractScheduledEventExecutorTest
             // NOOP
         }
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
-        public override Task Termination => throw new NotSupportedException();
+        public override Task TerminationFuture => throw new NotSupportedException();
         public override bool IsShutdown() => false;
         public override bool IsTerminated() => false;
         public override bool AwaitTermination(TimeSpan timeout) => false;

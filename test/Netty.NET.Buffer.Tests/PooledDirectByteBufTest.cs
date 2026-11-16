@@ -34,13 +34,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
 /**
  * Tests big-endian direct channel buffers
  */
-public class PooledDirectByteBufTest : AbstractPooledByteBufTest
+public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
 {
     protected override bool Direct => true;
 
@@ -87,7 +88,7 @@ public class PooledDirectByteBufTest : AbstractPooledByteBufTest
             try
             {
                 Assert.IsType<PooledDirectByteBuf>(copy); Assert.True(copy.IsDirect);
-                Assert.Same(allocator, copy.Allocator); Assert.Equal(requested, copy.MaxCapacity);
+                Assert.Same(allocator, copy.Alloc()); Assert.Equal(requested, copy.MaxCapacity);
                 Assert.Equal(new byte[] { 2, 3, 4, 5, 6, 7 }, ByteBufUtil.GetBytes(copy));
                 copy.SetByte(0, 99); Assert.Equal(2, b.GetByte(1));
             }
@@ -108,14 +109,14 @@ public class PooledDirectByteBufTest : AbstractPooledByteBufTest
         var before = b.Allocation;
         try
         {
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = chunkSize + 1);
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = chunkSize + 1);
             Assert.Same(before, b.Allocation); Assert.Equal(chunkSize, b.Capacity);
             Assert.Equal(10, b.ReaderIndex); Assert.Equal(100, b.WriterIndex);
             Assert.Equal(chunkSize + alignment, allocator.Native.ReservedBytes);
             Assert.Equal(-1, b.AsSpan(0, chunkSize).IndexOfAnyExcept((byte)0xA5));
             b.SetIndex(20, 90).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(10, b.ReaderIndex); Assert.Equal(100, b.WriterIndex);
-            Assert.Throws<OutOfMemoryException>(() => allocator.DirectBuffer(48));
+            Assert.Throws<OutOfDirectMemoryError>(() => allocator.DirectBuffer(48));
         }
         finally { b.Release(); }
         Assert.Equal(0, allocator.Native.ReservedBytes);
@@ -131,7 +132,7 @@ public class PooledDirectByteBufTest : AbstractPooledByteBufTest
         using var allocator = NewAllocator(maximumBytes: 0);
         for (int i = 0; i < 16; ++i)
         {
-            Assert.Throws<OutOfMemoryException>(() => allocator.DirectBuffer(size));
+            Assert.Throws<OutOfDirectMemoryError>(() => allocator.DirectBuffer(size));
             Assert.Equal(0, allocator.Native.ReservedBytes);
         }
     }
@@ -155,7 +156,7 @@ public class PooledDirectByteBufTest : AbstractPooledByteBufTest
         using (var lease = b.AcquireReadLease())
         {
             allocator.Arena.Dispose();
-            Assert.True(b.Release()); Assert.Equal(0, b.ReferenceCount);
+            Assert.True(b.Release()); Assert.Equal(0, b.RefCnt);
             Assert.True(allocator.Native.ReservedBytes > 0);
             Assert.Equal(-1, oldMemory.Span.IndexOfAnyExcept((byte)0x12));
             Assert.Throws<ObjectDisposedException>(() => allocator.DirectBuffer(1));

@@ -56,14 +56,14 @@ public abstract partial class AbstractByteBufTest : IDisposable
     private ByteBuf DirectBuffer(int capacity) => Own(_peerAllocator.DirectBuffer(capacity));
     private ByteBuf Own(ByteBuf value) { _peers.Add(value); return value; }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         try
         {
             if (buffer != null)
             {
                 Assert.True(buffer.Release());
-                Assert.Equal(0, buffer.ReferenceCount);
+                Assert.Equal(0, buffer.RefCnt);
                 try
                 { buffer.Release(); }
                 catch (Exception)
@@ -77,7 +77,7 @@ public abstract partial class AbstractByteBufTest : IDisposable
         {
             // Heap peers omitted by the Java GC-owned fixture also have CLR reference-counted facades.
             foreach (ByteBuf peer in _peers)
-                if (peer.ReferenceCount > 0)
+                if (peer.RefCnt > 0)
                     peer.Release();
             (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -539,7 +539,7 @@ public abstract partial class AbstractByteBufTest : IDisposable
     // - https://github.com/netty/netty/issues/2587
     // - https://github.com/netty/netty/issues/2580
     [Fact]
-    public void TestLittleEndianWithExpand()
+    public virtual void TestLittleEndianWithExpand()
     {
         ByteBuf buffer = NewBuffer(0);
         buffer.WriteIntLE(0x12345678);

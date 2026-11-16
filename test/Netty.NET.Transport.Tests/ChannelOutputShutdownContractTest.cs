@@ -57,7 +57,7 @@ public class ChannelOutputShutdownContractTest
             if (autoClosed)
             {
                 Assert.Same(cause, firstCause); Assert.Same(cause, secondCause);
-                Assert.Same(cause, Assert.IsType<IOException>(thirdCause).InnerException);
+                Assert.Same(cause, Assert.IsAssignableFrom<ClosedChannelException>(thirdCause).InnerException);
                 Assert.Equal(0, channel.OutputAttempts);
                 Assert.Equal(0, events.Count);
             }
@@ -72,7 +72,7 @@ public class ChannelOutputShutdownContractTest
             Assert.Equal(!autoClosed && halfClose, channel.IsActive);
             Assert.False(channel.IsWritable);
             Assert.True(channel.AllOnOwner);
-            foreach (var buffer in buffers) Assert.Equal(0, buffer.ReferenceCount);
+            foreach (var buffer in buffers) Assert.Equal(0, buffer.RefCnt);
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             Assert.Equal(autoClosed || !halfClose ? 1 : 0, channel.NativeCloses);
         }
@@ -91,8 +91,8 @@ public class ChannelOutputShutdownContractTest
         {
             await channel.RegisterAsync(loop);
             await channel.ShutdownAsync();
-            await Assert.ThrowsAsync<IOException>(() => reentrant);
-            Assert.Equal(0, message.ReferenceCount);
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => reentrant);
+            Assert.Equal(0, message.RefCnt);
             Assert.True(channel.IsActive);
             Assert.False(channel.IsWritable);
         }
@@ -114,7 +114,7 @@ public class ChannelOutputShutdownContractTest
             Task write = channel.WriteAsync(buffer);
             Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => channel.ShutdownAsync()));
             await Assert.ThrowsAsync<ChannelOutputShutdownException>(() => write);
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
             Assert.Equal(1, events.Count);
             Assert.True(channel.IsOpen);
             Assert.False(channel.IsWritable);
@@ -138,13 +138,13 @@ public class ChannelOutputShutdownContractTest
         internal Exception ShutdownFailure;
         internal ProbeChannel(bool halfClose) : base(null, new ChannelMetadata(false)) { _halfClose = halfClose; SetActive(true); }
         internal Task ShutdownAsync() => OnLoopAsync(() => ShutdownOutput(null));
-        public override EndPoint LocalAddress => null;
-        public override EndPoint RemoteAddress => null;
+        protected override EndPoint LocalAddress0() => null;
+        protected override EndPoint RemoteAddress0() => null;
         protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
         protected override void DoClose() { AllOnOwner &= EventLoop.InEventLoop(); NativeCloses++; }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object message) => Write.Task;
+        protected override Task DoWrite(object msg) => Write.Task;
         protected override void DoShutdownOutput()
         {
             AllOnOwner &= EventLoop.InEventLoop();
@@ -157,7 +157,7 @@ public class ChannelOutputShutdownContractTest
     private sealed class OutputEvents : ChannelInboundHandlerAdapter
     {
         internal int Count;
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt)
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         { if (evt is ChannelOutputShutdownEvent) Count++; }
     }
 }

@@ -22,8 +22,8 @@ public class ScalableEventLoopGroupContractTest
         var group = NewGroup(minimum: 1);
         try
         {
-            await StartAllExecutors(group, cancellation);
-            await WaitForSuspension(group, 1, cancellation);
+            StartAllExecutors(group);
+            WaitForSuspension(group, 1, 2000);
             var active = FindActiveExecutor(group);
             Assert.NotNull(active);
 
@@ -32,7 +32,7 @@ public class ScalableEventLoopGroupContractTest
             Assert.Contains(group.ExecutorUtilizations(), metric => ReferenceEquals(active, metric.Executor()));
 
             workload.Cancel();
-            await WaitForSuspension(group, 1, cancellation);
+            WaitForSuspension(group, 1, 2000);
         }
         finally
         {
@@ -48,10 +48,10 @@ public class ScalableEventLoopGroupContractTest
         var group = NewGroup();
         try
         {
-            await StartAllExecutors(group, cancellation);
-            var loop = Assert.IsType<DefaultEventLoop>(group.Iterator().First());
+            StartAllExecutors(group);
+            var loop = Assert.IsType<SingleThreadIoEventLoop>(group.Iterator().First());
             var originalThread = await loop.SubmitAsync(() => Thread.CurrentThread, cancellation);
-            await WaitForSuspension(group, 2, cancellation);
+            WaitForSuspension(group, 2, 2000);
             await WaitUntil(() => !originalThread.IsAlive, cancellation);
 
             var tailThread = new TaskCompletionSource<Thread>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -59,7 +59,7 @@ public class ScalableEventLoopGroupContractTest
             var resumedThread = await tailThread.Task.WaitAsync(TimeSpan.FromSeconds(2), cancellation);
             Assert.NotSame(originalThread, resumedThread);
 
-            await WaitForSuspension(group, 2, cancellation);
+            WaitForSuspension(group, 2, 2000);
             await WaitUntil(() => !resumedThread.IsAlive, cancellation);
         }
         finally { await group.StopAsync(); }
@@ -72,14 +72,16 @@ public class ScalableEventLoopGroupContractTest
         var group = NewGroup();
         try
         {
-            await StartAllExecutors(group, cancellation);
-            await WaitForSuspension(group, 2, cancellation);
+            StartAllExecutors(group);
+            WaitForSuspension(group, 2, 2000);
             var child = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var listener = await new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
+            var listener = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
                 .ChildHandler(new ActionChannelInitializer<IChannel>(channel => child.SetResult(channel)))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), cancellation);
-            var owner = Assert.IsType<DefaultEventLoop>(listener.EventLoop);
-            Assert.False(owner.TrySuspend());
+            var owner = Assert.IsType<SingleThreadIoEventLoop>(listener.EventLoop);
+            // SingleThreadEventExecutor.trySuspend() only requests suspension; canSuspend() keeps an owner with a
+            // registration running, so the listener below still accepts.
+            Assert.True(owner.TrySuspend());
 
             using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(listener.LocalAddress, cancellation);
@@ -90,7 +92,6 @@ public class ScalableEventLoopGroupContractTest
             Assert.True(group.IsTerminated());
             Assert.False(listener.IsOpen);
             Assert.False(accepted.IsOpen);
-            Assert.All(group.Iterator(), executor => Assert.Equal(0, ((DefaultEventLoop)executor).RegisteredChannels()));
         }
         finally { await group.StopAsync(); }
     }

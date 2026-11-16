@@ -51,7 +51,7 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void OriginalShouldReuseChunksStaysWithinThreadAllocationBudget(bool adaptive)
+    public void ShouldReuseChunks(bool adaptive)
     {
         var native = new NativeMemoryAllocator();
         IByteBufAllocator allocator = adaptive

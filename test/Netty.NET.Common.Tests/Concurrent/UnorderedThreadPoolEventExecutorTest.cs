@@ -80,8 +80,8 @@ public class UnorderedThreadPoolEventExecutorTest
         try
         {
             const string expected = "expected";
-            var future = executor.SubmitAsync<string>(() => expected);
-            Assert.Equal(expected, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            var f = executor.SubmitAsync<string>(() => expected);
+            Assert.Equal(expected, f.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { Stop(executor); }
     }
@@ -93,9 +93,9 @@ public class UnorderedThreadPoolEventExecutorTest
         try
         {
             var cause = new InvalidOperationException();
-            var future = executor.SubmitAsync(string () => throw cause);
+            var f = executor.SubmitAsync(string () => throw cause);
             Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
-                future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
+                f.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
         }
         finally { Stop(executor); }
     }

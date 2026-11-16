@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
@@ -166,12 +167,12 @@ internal sealed class HashedWheelTimeout : ITimeout
             .Append("deadline: ");
         if (remaining > 0)
         {
-            buf.Append(remaining)
+            buf.Append(remaining.ToString(CultureInfo.InvariantCulture))
                 .Append(" ns later");
         }
         else if (remaining < 0)
         {
-            buf.Append(-remaining)
+            buf.Append((-remaining).ToString(CultureInfo.InvariantCulture))
                 .Append(" ns ago");
         }
         else

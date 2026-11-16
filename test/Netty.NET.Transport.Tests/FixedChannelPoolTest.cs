@@ -145,7 +145,7 @@ public class FixedChannelPoolTest
             handler.ContinueAcquire();
             await closeFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(closeFuture.IsCompletedSuccessfully);
-            await handler.Channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            await handler.Channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(handler.Channel.IsOpen);
             Assert.Equal(0, pool.AcquiredChannelCount);
         }
@@ -231,7 +231,7 @@ public class FixedChannelPoolTest
         await channel.CloseAsync();
         await pool.CloseAsync();
         // CLR: observe the queued request's expected close failure instead of leaving an unobserved Task.
-        await Assert.ThrowsAsync<InvalidOperationException>(() => future);
+        await Assert.ThrowsAsync<ClosedChannelException>(() => future);
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public class FixedChannelPoolTest
         await t.Group.Next().SubmitAsync(() => { /* NOOP */ });
         await Assert.ThrowsAsync<InvalidOperationException>(() => pool.ReleaseAsync(channel));
         // Since the pool is closed, the Channel should have been closed as well.
-        await channel.CloseCompletion;
+        await channel.CloseFuture;
         Assert.False(channel.IsOpen);
         await t.Server.CloseAsync();
     }
@@ -415,14 +415,14 @@ public class FixedChannelPoolTest
     // owns its group instead of a shared BeforeAll group, and shutdown is explicitly awaited.
     internal sealed class BootstrapTuple : IAsyncDisposable
     {
-        internal readonly DefaultEventLoopGroup Group;
+        internal readonly MultiThreadIoEventLoopGroup Group;
         internal readonly LocalAddress Address = new(ChannelPoolTestUtils.GetLocalAddrId());
         internal readonly Bootstrap Client;
         internal readonly ServerBootstrap ServerBootstrap;
         internal IChannel Server;
         internal BootstrapTuple(int threads = 2)
         {
-            Group = new DefaultEventLoopGroup(threads);
+            Group = new MultiThreadIoEventLoopGroup(threads, LocalIoHandler.NewFactory());
             Client = new Bootstrap().RemoteAddress(Address).Group(Group).Channel<LocalChannel>();
             ServerBootstrap = new ServerBootstrap().Group(Group).Channel<LocalServerChannel>()
                 .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new ChannelInboundHandlerAdapter())));

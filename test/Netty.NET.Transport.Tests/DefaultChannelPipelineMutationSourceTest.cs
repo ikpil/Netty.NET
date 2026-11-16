@@ -118,8 +118,8 @@ public class DefaultChannelPipelineMutationSourceTest
         Assert.Same(handler, pipeline.Get("handler1"));
         var replacement = NewHandler();
         pipeline.Replace("handler1", null, replacement);
-        // CLR nested type names do not use the JVM's Outer$Inner spelling.
-        Assert.Same(replacement, pipeline.Get("TestHandler#0"));
+        // CLR: StringUtil.SimpleClassName spells the nested type Outer+Inner where the JVM uses Outer$Inner.
+        Assert.Same(replacement, pipeline.Get("DefaultChannelPipelineMutationSourceTest+TestHandler#0"));
         Assert.Null(pipeline.Get("handler1"));
     }
     [Fact]
@@ -183,7 +183,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.AddBefore("10", "5", NewHandler()).AddAfter("1", "3", NewHandler());
         pipeline.AddBefore("5", "4", NewHandler()).AddAfter("5", "6", NewHandler());
         pipeline.AddBefore("1", "0", NewHandler()).AddAfter("10", "11", NewHandler());
-        var context = pipeline.FirstContext;
+        var context = (AbstractChannelHandlerContext)pipeline.FirstContext;
         Assert.NotNull(context);
         while (context != null)
         {
@@ -219,7 +219,7 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact]
     public async Task TestPinExecutor()
     {
-        var group = new DefaultEventLoopGroup();
+        var group = new MultiThreadIoEventLoopGroup(LocalIoHandler.NewFactory());
         try
         {
             var pipeline = new LocalChannel().Pipeline;
@@ -240,7 +240,7 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact]
     public async Task TestNotPinExecutor()
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
         try
         {
             var pipeline = new LocalChannel().Pipeline;
@@ -379,7 +379,7 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact(Timeout = 3000)]
     public async Task TestAddHandlerBeforeRegisteredThenRemove()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
         try
         {
@@ -397,7 +397,7 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact(Timeout = 3000)]
     public async Task TestAddHandlerBeforeRegisteredThenReplace()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
         try
         {
@@ -439,7 +439,7 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact(Timeout = 3000)]
     public async Task TestAddRemoveHandlerCalledOnceRegistered()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
         try
         {
@@ -459,7 +459,7 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact(Timeout = 3000)]
     public async Task TestAddReplaceHandlerCalledOnceRegistered()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
         try
         {
@@ -487,9 +487,9 @@ public class DefaultChannelPipelineMutationSourceTest
     [Fact(Timeout = 3000)]
     public async Task TestHandlerAddedAndRemovedCalledInCorrectOrder()
     {
-        var group = new DefaultEventLoopGroup(1);
-        var group1 = new DefaultEventLoopGroup(1);
-        var group2 = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+        var group1 = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+        var group2 = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
         try
         {
@@ -524,7 +524,7 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         var channel1 = new LocalChannel();
         var channel2 = new LocalChannel();
-        var defaultGroup = new DefaultEventLoopGroup(2);
+        var defaultGroup = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
         try
         {
             var loop1 = defaultGroup.Next();
@@ -541,15 +541,15 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel1.CloseAsync(); await channel2.CloseAsync(); await defaultGroup.StopAsync(); }
     }
-    private static void VerifyContextNumber(DefaultChannelPipeline pipeline, int expectedNumber)
+    private static void VerifyContextNumber(IChannelPipeline pipeline, int expectedNumber)
     {
-        var context = pipeline.FirstContext;
+        var context = (AbstractChannelHandlerContext)pipeline.FirstContext;
         int number = 0;
-        while (context != pipeline.Tail)
+        while (context != ((DefaultChannelPipeline)pipeline).Tail)
         { number++; context = context.Next; }
         Assert.Equal(expectedNumber, number);
     }
-    private static int Next(ChannelHandlerContext context) => context.Next == null ? int.MaxValue : ToInt(context.Next.Name);
+    private static int Next(AbstractChannelHandlerContext ctx) => ctx.Next == null ? int.MaxValue : ToInt(ctx.Next.Name);
     private static int ToInt(string name) => int.TryParse(name, out int value) ? value : -1;
     private static IChannelHandler[] NewHandlers(int number)
     { Assert.True(number > 0); return Enumerable.Range(0, number).Select(_ => (IChannelHandler)NewHandler()).ToArray(); }
@@ -561,15 +561,15 @@ public class DefaultChannelPipelineMutationSourceTest
         internal readonly Queue<object> InboundBuffer = new();
         internal readonly Queue<object> OutboundBuffer = new();
         // The original buffered write stores only the message and deliberately leaves its completion pending.
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
-        { OutboundBuffer.Enqueue(message); return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task; }
-        public override void ChannelRead(ChannelHandlerContext context, object message) => InboundBuffer.Enqueue(message);
-        public override void HandlerRemoved(ChannelHandlerContext context)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        { OutboundBuffer.Enqueue(msg); return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task; }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => InboundBuffer.Enqueue(msg);
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             if (InboundBuffer.Count != 0)
-            { foreach (var value in InboundBuffer) context.FireChannelRead(value); context.FireChannelReadComplete(); }
+            { foreach (var value in InboundBuffer) ctx.FireChannelRead(value); ctx.FireChannelReadComplete(); }
             if (OutboundBuffer.Count != 0)
-            { foreach (var value in OutboundBuffer) _ = context.WriteAsync(value); context.Flush(); }
+            { foreach (var value in OutboundBuffer) _ = ctx.WriteAsync(value); ctx.Flush(); }
         }
     }
     /** Test handler to validate life-cycle aware behavior. */
@@ -585,60 +585,60 @@ public class DefaultChannelPipelineMutationSourceTest
         internal LifeCycleAwareTestHandler(string name) => Name = name;
         internal void Validate(bool afterAdd, bool afterRemove)
         { Assert.True(afterAdd == _afterAdd, Name); Assert.True(afterRemove == _afterRemove, Name); }
-        public override void HandlerAdded(ChannelHandlerContext context) { Validate(false, false); _afterAdd = true; }
-        public override void HandlerRemoved(ChannelHandlerContext context) { Validate(true, false); _afterRemove = true; }
+        public override void HandlerAdded(IChannelHandlerContext ctx) { Validate(false, false); _afterAdd = true; }
+        public override void HandlerRemoved(IChannelHandlerContext ctx) { Validate(true, false); _afterRemove = true; }
     }
     private sealed class CheckEventExecutorHandler(IEventExecutor executor) : ChannelHandlerAdapter
     {
         internal readonly TaskCompletionSource Added = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void HandlerAdded(ChannelHandlerContext context) => AssertExecutor(context, Added);
-        public override void HandlerRemoved(ChannelHandlerContext context) => AssertExecutor(context, Removed);
-        private void AssertExecutor(ChannelHandlerContext context, TaskCompletionSource promise)
-        { if (ReferenceEquals(executor, context.Executor)) promise.SetResult(); else promise.SetException(new InvalidOperationException("EventExecutor not the same")); }
+        public override void HandlerAdded(IChannelHandlerContext ctx) => AssertExecutor(ctx, Added);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => AssertExecutor(ctx, Removed);
+        private void AssertExecutor(IChannelHandlerContext ctx, TaskCompletionSource promise)
+        { if (ReferenceEquals(executor, ctx.Executor)) promise.SetResult(); else promise.SetException(new InvalidOperationException("EventExecutor not the same")); }
     }
     private sealed class AddedSignal(TaskCompletionSource signal) : ChannelHandlerAdapter
-    { public override void HandlerAdded(ChannelHandlerContext context) => signal.SetResult(); }
+    { public override void HandlerAdded(IChannelHandlerContext ctx) => signal.SetResult(); }
     private sealed class ErrorChannelHandler(Action<Exception> error) : ChannelHandlerAdapter
     {
-        public override void HandlerAdded(ChannelHandlerContext context) => error(new InvalidOperationException());
-        public override void HandlerRemoved(ChannelHandlerContext context) => error(new InvalidOperationException());
+        public override void HandlerAdded(IChannelHandlerContext ctx) => error(new InvalidOperationException());
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => error(new InvalidOperationException());
     }
     private sealed class CallbackCheckHandler : ChannelHandlerAdapter
     {
         internal readonly TaskCompletionSource<bool> Added = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource<bool> Removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private Exception _error;
-        public override void HandlerAdded(ChannelHandlerContext context)
+        public override void HandlerAdded(IChannelHandlerContext ctx)
         {
             if (!Added.TrySetResult(true))
-                _error = new InvalidOperationException("handlerAdded(...) called multiple times: " + context.Name);
+                _error = new InvalidOperationException("handlerAdded(...) called multiple times: " + ctx.Name);
             else if (Removed.Task.IsCompletedSuccessfully && Removed.Task.Result)
-                _error = new InvalidOperationException("handlerRemoved(...) called before handlerAdded(...): " + context.Name);
+                _error = new InvalidOperationException("handlerRemoved(...) called before handlerAdded(...): " + ctx.Name);
         }
-        public override void HandlerRemoved(ChannelHandlerContext context)
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             if (!Removed.TrySetResult(true))
-                _error = new InvalidOperationException("handlerRemoved(...) called multiple times: " + context.Name);
+                _error = new InvalidOperationException("handlerRemoved(...) called multiple times: " + ctx.Name);
             else if (Added.Task.IsCompletedSuccessfully && !Added.Task.Result)
-                _error = new InvalidOperationException("handlerRemoved(...) called before handlerAdded(...): " + context.Name);
+                _error = new InvalidOperationException("handlerRemoved(...) called before handlerAdded(...): " + ctx.Name);
         }
         internal void CheckError() { if (_error != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw(); }
     }
-    private sealed class CheckOrderHandler(Channel<CheckOrderHandler> added, Channel<CheckOrderHandler> removed) : ChannelHandlerAdapter
+    private sealed class CheckOrderHandler(Channel<CheckOrderHandler> addedQueue, Channel<CheckOrderHandler> removedQueue) : ChannelHandlerAdapter
     {
         private Exception _error;
-        public override void HandlerAdded(ChannelHandlerContext context) { added.Writer.TryWrite(this); CheckExecutor(context); }
-        public override void HandlerRemoved(ChannelHandlerContext context) { removed.Writer.TryWrite(this); CheckExecutor(context); }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => _error = cause;
-        private void CheckExecutor(ChannelHandlerContext context) { if (!context.Executor.InEventLoop()) _error = new InvalidOperationException(); }
+        public override void HandlerAdded(IChannelHandlerContext ctx) { addedQueue.Writer.TryWrite(this); CheckExecutor(ctx); }
+        public override void HandlerRemoved(IChannelHandlerContext ctx) { removedQueue.Writer.TryWrite(this); CheckExecutor(ctx); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _error = cause;
+        private void CheckExecutor(IChannelHandlerContext ctx) { if (!ctx.Executor.InEventLoop()) _error = new InvalidOperationException(); }
         internal void CheckError() { if (_error != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw(); }
     }
     private static void AssertHandler(CheckOrderHandler actual, params CheckOrderHandler[] handlers)
     { Assert.Contains(actual, handlers); actual.CheckError(); }
     private sealed class Connection : IAsyncDisposable
     {
-        private readonly DefaultEventLoopGroup _group = new(1);
+        private readonly MultiThreadIoEventLoopGroup _group = new(1, LocalIoHandler.NewFactory());
         private IChannel _server;
         internal IChannel Self, Peer;
         internal static async Task<Connection> SetUp(params IChannelHandler[] handlers)
@@ -670,7 +670,7 @@ public class DefaultChannelPipelineMutationSourceTest
     }
     private sealed class PeerRecorder(TaskCompletionSource<IChannel> peer) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRegistered(ChannelHandlerContext context) => peer.TrySetResult(context.Channel);
-        public override void ChannelRead(ChannelHandlerContext context, object message) => ReferenceCountUtil.Release(message);
+        public override void ChannelRegistered(IChannelHandlerContext ctx) => peer.TrySetResult(ctx.Channel);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReferenceCountUtil.Release(msg);
     }
 }

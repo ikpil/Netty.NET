@@ -45,18 +45,12 @@ public class CompositeByteBufLookupTest
         foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
 
-    public static IEnumerable<object[]> Limits()
-    {
-        foreach (object[] provider in Providers())
-        foreach (int limit in new[] { 0, 1, 5 }) yield return [provider[0], provider[1], limit];
-    }
-
     /**
      * Tests the "getBufferFor" method
      */
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ComponentAtEveryOffsetReturnsTheOriginalSourceDuplicate(bool pooled, bool direct)
+    public void TestComponentAtOffset(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         ByteBuf first = storage.Allocator.Buffer(5, 5).WriteBytes(new byte[] { 1, 2, 3, 4, 5 });
@@ -81,51 +75,85 @@ public class CompositeByteBufLookupTest
                 Assert.NotSame(source, view);
                 view.ReaderIndex = 1;
                 Assert.Equal(0, source.ReaderIndex);
-                Assert.Equal(1, source.ReferenceCount);
+                Assert.Equal(1, source.RefCnt);
             }
             Assert.Equal(0, composite.ReaderIndex);
             Assert.Equal(12, composite.WriterIndex);
         }
         finally { composite.Release(); }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
+    }
+
+    private static readonly byte[][] IndexBytes =
+        [new byte[] { 1, 2, 3, 4, 5 }, new byte[] { 4, 5, 6, 7, 8, 9, 26 }, new byte[] { 10, 9, 8, 7, 6, 5, 33 }];
+
+    // CLR: allocator-owned components over heap/native pooled/unpooled factories replace wrappedBuffer(byte[]...).
+    private static CompositeByteBuf NewIndexBuffer(Storage storage)
+    {
+        CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+        try
+        {
+            foreach (byte[] data in IndexBytes)
+                composite.AddComponent(storage.Allocator.Buffer(data.Length, data.Length).WriteBytes(data), true);
+            return composite;
+        }
+        catch { composite.Release(); throw; }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ByteAndComponentIndicesMatchEveryOriginalBoundary(bool pooled, bool direct)
+    public void TestToComponentIndex(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
-        byte[][] bytes = [new byte[] { 1, 2, 3, 4, 5 }, new byte[] { 4, 5, 6, 7, 8, 9, 26 },
-            new byte[] { 10, 9, 8, 7, 6, 5, 33 }];
-        CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+        CompositeByteBuf buf = NewIndexBuffer(storage);
         try
         {
-            foreach (byte[] data in bytes)
-                composite.AddComponent(storage.Allocator.Buffer(data.Length, data.Length).WriteBytes(data), true);
             // spot checks
-            Assert.Equal(0, composite.ToComponentIndex(4));
-            Assert.Equal(1, composite.ToComponentIndex(5));
-            Assert.Equal(2, composite.ToComponentIndex(15));
+            Assert.Equal(0, buf.ToComponentIndex(4));
+            Assert.Equal(1, buf.ToComponentIndex(5));
+            Assert.Equal(2, buf.ToComponentIndex(15));
+
             //Loop through each byte
-            for (int offset = 0; offset < composite.Capacity; ++offset)
+
+            byte index = 0;
+
+            while (index < buf.Capacity)
             {
-                int componentIndex = composite.ToComponentIndex(offset);
-                Assert.Equal(offset < 5 ? 0 : offset < 12 ? 1 : 2, componentIndex);
-                int start = composite.ToByteIndex(componentIndex);
-                Assert.Equal(bytes[componentIndex][offset - start], composite.GetByte(offset));
+                int offset = index;
+                int cindex = buf.ToComponentIndex(index++);
+                Assert.True(cindex >= 0 && cindex < buf.NumComponents);
+                // CLR: the exact component of every offset, and its byte through the component start.
+                Assert.Equal(offset < 5 ? 0 : offset < 12 ? 1 : 2, cindex);
+                Assert.Equal(IndexBytes[cindex][offset - buf.ToByteIndex(cindex)], buf.GetByte(offset));
             }
-            // spot checks
-            Assert.Equal(0, composite.ToByteIndex(0));
-            Assert.Equal(5, composite.ToByteIndex(1));
-            Assert.Equal(12, composite.ToByteIndex(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => composite.ToComponentIndex(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => composite.ToComponentIndex(19));
-            Assert.Throws<ArgumentOutOfRangeException>(() => composite.ToByteIndex(-1));
-            // CLR rejects the missing component explicitly; pinned Java dereferences a null slot here.
-            Assert.Throws<ArgumentOutOfRangeException>(() => composite.ToByteIndex(3));
+            // CLR: negative and end offsets are rejected with ArgumentOutOfRangeException.
+            Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToComponentIndex(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToComponentIndex(19));
         }
-        finally { composite.Release(); }
+        finally { buf.Release(); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestToByteIndex(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        CompositeByteBuf buf = NewIndexBuffer(storage);
+        try
+        {
+            // spot checks
+            Assert.Equal(0, buf.ToByteIndex(0));
+            Assert.Equal(5, buf.ToByteIndex(1));
+            Assert.Equal(12, buf.ToByteIndex(2));
+            // CLR: every component start maps back to its component.
+            for (int cindex = 0; cindex < buf.NumComponents; ++cindex)
+                Assert.Equal(cindex, buf.ToComponentIndex(buf.ToByteIndex(cindex)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToByteIndex(-1));
+            // CLR rejects the missing component explicitly; pinned Java dereferences a null slot here.
+            Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToByteIndex(3));
+        }
+        finally { buf.Release(); }
     }
 
     private static CompositeByteBuf NewFragmentedBuffer(IByteBufAllocator allocator, int length)
@@ -147,7 +175,7 @@ public class CompositeByteBufLookupTest
             composite.Capacity = length;
             Assert.Equal(length, composite.Capacity);
             Assert.Equal(length, composite.ReadableBytes);
-            Assert.False(composite.IsWritable);
+            Assert.False(composite.IsWritable());
             composite.WriterIndex = 0;
             return composite;
         }
@@ -156,7 +184,7 @@ public class CompositeByteBufLookupTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void FragmentedFactoryDoesNotClaimContiguousStorage(bool pooled, bool direct)
+    public void TestIsContiguousAcrossProviders(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = NewFragmentedBuffer(storage.Allocator, 4);
@@ -166,7 +194,7 @@ public class CompositeByteBufLookupTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void RelativeReadsFindNestedComponentsAcrossSkippedBytes(bool pooled, bool direct)
+    public void TestFindComponentAcrossProviders(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
@@ -188,28 +216,45 @@ public class CompositeByteBufLookupTest
             Assert.Equal(3, composite.Capacity);
         }
         finally { composite.Release(); }
-        Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+        Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
+    }
+
+    // CLR: the original explicit allocator/direct constructor values over heap/native pooled/unpooled factories.
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestComponentsLessThanLowerBound(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        // CLR uses its standard parameter exception rather than Java's message format.
+        var e = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new CompositeByteBuf(storage.Allocator, direct, 0));
+        Assert.Equal("maxNumComponents", e.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestComponentsEqualToLowerBound(bool pooled, bool direct)
+    {
+        AssertCompositeBufCreated(pooled, direct, 1);
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestComponentsGreaterThanLowerBound(bool pooled, bool direct)
+    {
+        AssertCompositeBufCreated(pooled, direct, 5);
     }
 
     /**
      * Assert that a new {@linkplain CompositeByteBuf} was created successfully with the desired number of max
      * components.
      */
-    [Theory]
-    [MemberData(nameof(Limits))]
-    public void ComponentLimitRejectsZeroAndPreservesPositiveValues(bool pooled, bool direct, int limit)
+    private static void AssertCompositeBufCreated(bool pooled, bool direct, int expectedMaxComponents)
     {
         using var storage = new Storage(pooled, direct);
-        if (limit == 0)
-        {
-            // CLR uses its standard parameter exception rather than Java's message format.
-            var error = Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new CompositeByteBuf(storage.Allocator, direct, limit));
-            Assert.Equal("maxNumComponents", error.ParamName);
-            return;
-        }
-        CompositeByteBuf composite = new(storage.Allocator, direct, limit);
-        try { Assert.Equal(limit, composite.MaxNumComponents); }
-        finally { Assert.True(composite.Release()); }
+        CompositeByteBuf buf = new(storage.Allocator, direct, expectedMaxComponents);
+
+        try { Assert.Equal(expectedMaxComponents, buf.MaxNumComponents); }
+        finally { Assert.True(buf.Release()); }
     }
 }

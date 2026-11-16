@@ -106,13 +106,14 @@ namespace Netty.NET.Common.Internal.Logging;
  * larger context of the complete logging processing chain.
  * <p/>
  * <p/>
- * See also {@link #format(string, object)},
- * {@link #format(string, object, object)} and
- * {@link #arrayFormat(string, object[])} methods for more details.
+ * See also {@link #format(String, Object)},
+ * {@link #format(String, Object, Object)} and
+ * {@link #arrayFormat(String, Object[])} methods for more details.
  */
 public static class MessageFormatter
 {
-    private static readonly char DELIM_START = '{';
+    // CLR: const (as Java's static final char); it is unused in the source as well.
+    private const char DELIM_START = '{';
     private static readonly string DELIM_STR = "{}";
     private static readonly char ESCAPE_CHAR = '\\';
 
@@ -164,8 +165,8 @@ public static class MessageFormatter
     }
 
     /**
-     * Same principle as the {@link #format(string, object)} and
-     * {@link #format(string, object, object)} methods except that any number of
+     * Same principle as the {@link #format(String, Object)} and
+     * {@link #format(String, Object, Object)} methods except that any number of
      * arguments can be passed in an array.
      *
      * @param messagePattern The message pattern which will be parsed and formatted
@@ -189,7 +190,9 @@ public static class MessageFormatter
             return new FormattingTuple(null, throwable);
         }
 
-        int j = messagePattern.IndexOf(DELIM_STR, StringComparison.InvariantCulture);
+        // CLR: String.indexOf is an ordinal UTF-16 search; String.IndexOf(string) defaults to a
+        // culture-sensitive comparison, so Ordinal is explicit here and below.
+        int j = messagePattern.IndexOf(DELIM_STR, StringComparison.Ordinal);
         if (j == -1)
         {
             // this is a simple string
@@ -229,7 +232,7 @@ public static class MessageFormatter
                 sbuf.Append(DELIM_STR);
             }
 
-            j = messagePattern.IndexOf(DELIM_STR, i);
+            j = messagePattern.IndexOf(DELIM_STR, i, StringComparison.Ordinal);
         } while (j != -1);
 
         // append the characters following the last {} pair.
@@ -246,7 +249,8 @@ public static class MessageFormatter
             return;
         }
 
-        if (!o.GetType().IsArray)
+        Type objClass = o.GetType();
+        if (!objClass.IsArray)
         {
             // Prevent String instantiation for some number types
             // CLR adaptation: formatting is culture-independent, but boxes are handled by the shared formatter.
@@ -255,7 +259,7 @@ public static class MessageFormatter
         else
         {
             // check for primitive array types because they
-            // unfortunately cannot be cast to object[]
+            // unfortunately cannot be cast to Object[]
             sbuf.Append('[');
             if (o is bool[] boolArray)
             {
@@ -305,8 +309,8 @@ public static class MessageFormatter
             string oAsString = o switch
             {
                 bool value => value ? "true" : "false",
-                float value => FloatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
-                double value => FloatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
+                float value => JdkDecimal.FloatToString(value),
+                double value => JdkDecimal.DoubleToString(value),
                 IFormattable value => value.ToString(null, CultureInfo.InvariantCulture),
                 _ => o.ToString()
             };
@@ -315,11 +319,10 @@ public static class MessageFormatter
         catch (Exception t)
         {
             Console.Error.WriteLine("SLF4J: Failed ToString() invocation on an object of type ["
-                                    + o.GetType().Name + ']');
-            if (null != t.StackTrace)
-            {
-                Console.Error.WriteLine(t.StackTrace);
-            }
+                                    + o.GetType().FullName + ']');
+            // CLR: Throwable.printStackTrace() prints the throwable text and its frames, which is
+            // Exception.ToString().
+            Console.Error.WriteLine(t.ToString());
 
             sbuf.Append("[FAILED ToString()]");
         }
@@ -377,11 +380,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(unchecked((sbyte)a[0]));
+        sbuf.Append(unchecked(((sbyte)a[0]).ToString(CultureInfo.InvariantCulture)));
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(unchecked((sbyte)a[i]));
+            sbuf.Append(unchecked(((sbyte)a[i]).ToString(CultureInfo.InvariantCulture)));
         }
     }
 
@@ -407,11 +410,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        sbuf.Append(a[0].ToString(CultureInfo.InvariantCulture));
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            sbuf.Append(a[i].ToString(CultureInfo.InvariantCulture));
         }
     }
 
@@ -422,11 +425,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        sbuf.Append(a[0].ToString(CultureInfo.InvariantCulture));
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            sbuf.Append(a[i].ToString(CultureInfo.InvariantCulture));
         }
     }
 
@@ -437,21 +440,14 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        sbuf.Append(a[0].ToString(CultureInfo.InvariantCulture));
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            sbuf.Append(a[i].ToString(CultureInfo.InvariantCulture));
         }
     }
 
-    // CLR adaptation: retain Java's decimal marker for integral floating-point values.
-    private static string FloatingPointString(string value)
-    {
-        return value.IndexOfAny(new[] { '.', 'E', 'e' }) >= 0 ||
-               value == "NaN" || value.EndsWith("Infinity", StringComparison.Ordinal)
-            ? value : value + ".0";
-    }
     private static void FloatArrayAppend(StringBuilder sbuf, float[] a)
     {
         if (a.Length == 0)

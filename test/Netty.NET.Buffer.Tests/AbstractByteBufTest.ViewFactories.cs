@@ -168,9 +168,9 @@ public abstract partial class AbstractByteBufTest
     public void TestSliceRelease()
     {
         ByteBuf buf = NewBuffer(8);
-        Assert.Equal(1, buf.ReferenceCount);
+        Assert.Equal(1, buf.RefCnt);
         Assert.True(buf.Slice().Release());
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public abstract partial class AbstractByteBufTest
                     retainedSlice.Release();
                 }
             }
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
         }
     }
 

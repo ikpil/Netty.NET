@@ -44,9 +44,9 @@ public class AbstractCoalescingBufferQueueTest
         if (write)
             await queue.WriteAndRemoveAllAsync(channel.Pipeline.LastContext);
         else
-            queue.ReleaseAndFailAll(new IOException("Channel is closed."));
-        var buffer = queue.Remove(channel.Allocator, 128, new TaskCompletionSource());
-        Assert.False(buffer.IsReadable);
+            queue.ReleaseAndFailAll(new ClosedChannelException());
+        var buffer = queue.Remove(channel.Alloc(), 128, new TaskCompletionSource());
+        Assert.False(buffer.IsReadable());
         buffer.Release();
         Assert.True(queue.IsEmpty);
         Assert.Equal(0, queue.ReadableBytes);
@@ -68,21 +68,21 @@ public class AbstractCoalescingBufferQueueTest
         Assert.Equal(4, queue.Size);
         Assert.Equal(16, queue.ReadableBytes);
         // JUnit assertThrows accepts the original IllegalReferenceCountException subtype of IllegalStateException.
-        Assert.ThrowsAny<InvalidOperationException>(() => queue.Remove(channel.Allocator, 128, new TaskCompletionSource()));
+        Assert.ThrowsAny<InvalidOperationException>(() => queue.Remove(channel.Alloc(), 128, new TaskCompletionSource()));
         // This should result in have the first buf and first listener removed from the queue.
         Assert.Equal(2, queue.Size);
         Assert.Equal(8, queue.ReadableBytes);
         Assert.Same(error, first.Task.Exception.InnerException);
-        Assert.Equal(0, buffer.ReferenceCount);
+        Assert.Equal(0, buffer.RefCnt);
         Assert.False(second.Task.IsCompleted);
-        Assert.Equal(1, buffer2.ReferenceCount);
-        var removed = queue.Remove(channel.Allocator, 128, new TaskCompletionSource());
+        Assert.Equal(1, buffer2.RefCnt);
+        var removed = queue.Remove(channel.Alloc(), 128, new TaskCompletionSource());
         Assert.Equal(8, removed.ReadableBytes);
         removed.Release();
         Assert.True(queue.IsEmpty);
         Assert.Equal(0, queue.Size);
         Assert.Equal(0, queue.ReadableBytes);
-        removed = queue.Remove(channel.Allocator, 128, new TaskCompletionSource());
+        removed = queue.Remove(channel.Alloc(), 128, new TaskCompletionSource());
         Assert.Equal(0, removed.ReadableBytes);
         removed.Release();
     }
@@ -111,7 +111,7 @@ public class AbstractCoalescingBufferQueueTest
     private sealed class EmptyHandler : ChannelHandlerAdapter { }
     private sealed class ReleasingWriter : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
-        { ReferenceCountUtil.Release(message); return Task.CompletedTask; }
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        { ReferenceCountUtil.Release(msg); return Task.CompletedTask; }
     }
 }

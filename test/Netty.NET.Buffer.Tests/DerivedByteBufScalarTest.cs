@@ -248,8 +248,8 @@ public class DerivedByteBufScalarTest
         }
         public void Dispose()
         {
-            if (Owner?.ReferenceCount > 0) Assert.True(Owner.Release());
-            if (Root.ReferenceCount > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
+            if (Root.RefCnt > 0) Assert.True(Root.Release());
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -341,7 +341,7 @@ public class DerivedByteBufScalarTest
     public void AbsolutePoliciesAndRelativeKernelsFollowOriginalViewRules(bool direct, int kind, int type, bool write)
     {
         using var s = new Storage(direct, kind);
-        byte[] expected = Snapshot(s); int refs = s.Root.ReferenceCount, width = Widths[type];
+        byte[] expected = Snapshot(s); int refs = s.Root.RefCnt, width = Widths[type];
         s.Observation.Alter = true;
         bool forwards = kind is 0 or 2 or 6 or 8;
         if (write && s.View.IsReadOnly)
@@ -367,7 +367,7 @@ public class DerivedByteBufScalarTest
         Assert.Equal(expected, Snapshot(s)); Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(10, s.View.WriterIndex);
         s.View.SetIndex(0, s.View.Capacity).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(10, s.View.WriterIndex);
-        Assert.Equal(refs, s.Root.ReferenceCount);
+        Assert.Equal(refs, s.Root.RefCnt);
 
         bool relativeForwards = kind == 6 && write && type is 8 or 20;
         s.View.SetIndex(1, write ? 2 : 10); s.Observation.Visits.Clear(); s.Observation.Fail = !relativeForwards;
@@ -406,7 +406,7 @@ public class DerivedByteBufScalarTest
         Assert.Empty(s.Observation.Visits); Assert.Equal(4, s.Root.ReaderIndex); Assert.Equal(60, s.Root.WriterIndex);
         if (s.Owner != null)
         {
-            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
             if (write) Assert.Throws<IllegalReferenceCountException>(() => Write(s.View, type, 3, false));
             else Assert.Throws<IllegalReferenceCountException>(() => Read(s.View, type, 3, false));
             Assert.Empty(s.Observation.Visits);

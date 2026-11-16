@@ -47,7 +47,7 @@ public class ByteBufAsyncStreamTransferTest
             Task<int> pending = b.WriteBytesAsync(input, 10, TestContext.Current.CancellationToken).AsTask();
             Assert.False(pending.IsCompleted); Assert.True(b.Capacity >= 12);
             Assert.Equal(2, b.WriterIndex); Assert.Equal(1, b.ReaderIndex);
-            Assert.Equal(new byte[6], Bytes(b, 2, 6)); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(new byte[6], Bytes(b, 2, 6)); Assert.Equal(1, b.RefCnt);
             input.Complete(); await Finish(pending);
             Assert.Equal(4, (await pending)); Assert.Equal(6, b.WriterIndex); Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(b, 2, 4));

@@ -382,7 +382,7 @@ public class StringUtilTest
         EscapeCsv(value, expected, false);
     }
 
-    private static void EscapeCsvWithTrimming(string value, string expected)
+    private static void EscapeCsvWithTrimming0(string value, string expected)
     {
         EscapeCsv(value, expected, true);
     }
@@ -397,27 +397,29 @@ public class StringUtilTest
         }
     }
 
+    // CLR: xUnit1024 rejects a test overloading the escapeCsvWithTrimming(value, expected) helper, so the
+    // helper carries a 0 suffix and the test keeps the source name.
     [Fact]
-    public void TestEscapeCsvWithTrimming()
+    public void EscapeCsvWithTrimming()
     {
         Assert.Same("", StringUtil.EscapeCsv("", true));
         Assert.Same("ab", StringUtil.EscapeCsv("ab", true));
 
-        EscapeCsvWithTrimming("", "");
-        EscapeCsvWithTrimming(" \t ", "");
-        EscapeCsvWithTrimming("ab", "ab");
-        EscapeCsvWithTrimming("a b", "a b");
-        EscapeCsvWithTrimming(" \ta \tb", "a \tb");
-        EscapeCsvWithTrimming("a \tb \t", "a \tb");
-        EscapeCsvWithTrimming("\t a \tb \t", "a \tb");
-        EscapeCsvWithTrimming("\"\t a b \"", "\"\t a b \"");
-        EscapeCsvWithTrimming(" \"\t a b \"\t", "\"\t a b \"");
-        EscapeCsvWithTrimming(" testing\t\n ", "\"testing\t\n\"");
-        EscapeCsvWithTrimming("\ttest,ing ", "\"test,ing\"");
+        EscapeCsvWithTrimming0("", "");
+        EscapeCsvWithTrimming0(" \t ", "");
+        EscapeCsvWithTrimming0("ab", "ab");
+        EscapeCsvWithTrimming0("a b", "a b");
+        EscapeCsvWithTrimming0(" \ta \tb", "a \tb");
+        EscapeCsvWithTrimming0("a \tb \t", "a \tb");
+        EscapeCsvWithTrimming0("\t a \tb \t", "a \tb");
+        EscapeCsvWithTrimming0("\"\t a b \"", "\"\t a b \"");
+        EscapeCsvWithTrimming0(" \"\t a b \"\t", "\"\t a b \"");
+        EscapeCsvWithTrimming0(" testing\t\n ", "\"testing\t\n\"");
+        EscapeCsvWithTrimming0("\ttest,ing ", "\"test,ing\"");
     }
 
     [Fact]
-    public void TestEscapeCsvGarbageFree()
+    public void EscapeCsvGarbageFree()
     {
         // 'StringUtil#escapeCsv()' should return same string object if string didn't changing.
         Assert.Same("1", StringUtil.EscapeCsv("1", true));

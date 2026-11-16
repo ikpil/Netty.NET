@@ -82,10 +82,10 @@ public partial class WrappedByteBufDispatchTest
         }
         public void Dispose()
         {
-            if (LifetimeOwner.ReferenceCount > 0) LifetimeOwner.Release();
-            foreach (ByteBuf b in _components) if (b.ReferenceCount > 0) b.Release();
-            if (Peer.ReferenceCount > 0) Peer.Release();
-            foreach (ByteBuf b in Batch) if (b.ReferenceCount > 0) b.Release();
+            if (LifetimeOwner.RefCnt > 0) LifetimeOwner.Release();
+            foreach (ByteBuf b in _components) if (b.RefCnt > 0) b.Release();
+            if (Peer.RefCnt > 0) Peer.Release();
+            foreach (ByteBuf b in Batch) if (b.RefCnt > 0) b.Release();
             Stream.Dispose(); Socket.Dispose(); File.Dispose(); Cancellation.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -909,7 +909,7 @@ public partial class WrappedByteBufDispatchTest
         Assert.Same(c.Root.Failure, Assert.Throws<DispatchFailure>(() => Request(c, operation)));
         string method = Assert.Single(c.Root.Calls);
         Assert.Equal(Signatures[operation], method);
-        Assert.Equal((3, 40, 1), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.ReferenceCount));
+        Assert.Equal((3, 40, 1), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.RefCnt));
         c.Root.SetIndex(4, 41).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal((3, 40), (c.Root.ReaderIndex, c.Root.WriterIndex));
         Assert.Equal(form is 4 or 7 or 8 ? 1 : 0, c.Tracker.Records); Assert.Equal(0, c.Tracker.Closes);

@@ -59,7 +59,7 @@ public class HostsFileParserTest
         Assert.Equal("192.168.0.3", inet4Entries["host4"].ToString());
         Assert.Equal("192.168.0.3", inet4Entries["host5"].ToString());
         Assert.Equal("192.168.0.3", inet4Entries["host6"].ToString());
-        Assert.NotNull(inet4Entries["host7"], "uppercase host doesn't resolve");
+        Assert.NotNull(inet4Entries.GetValueOrDefault("host7"), "uppercase host doesn't resolve");
         Assert.Equal("192.168.0.5", inet4Entries["host7"].ToString());
         Assert.Equal("::1" /* CLR uses compressed IPv6 formatting. */, inet6Entries["host1"].ToString());
     }

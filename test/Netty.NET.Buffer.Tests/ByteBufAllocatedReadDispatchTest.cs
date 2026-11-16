@@ -70,7 +70,7 @@ public class ByteBufAllocatedReadDispatchTest
         {
             0 => new UnpooledByteBufAllocator(preferDirect, native),
             1 => new PooledByteBufAllocator(preferDirect, maxOrder: 1, nativeAllocator: native),
-            _ => new AdaptiveByteBufAllocator(preferDirect, false, native)
+            _ => new AdaptiveByteBufAllocator(preferDirect, lowMemory: false, nativeAllocator: native)
         };
         try
         {
@@ -83,12 +83,12 @@ public class ByteBufAllocatedReadDispatchTest
                 foreach (ByteBuf source in new[] { empty, facade })
                 {
                     Assert.Same(empty, source.ReadBytes(0));
-                    Assert.Same(allocator, source.ReadBytes(0).Allocator);
+                    Assert.Same(allocator, source.ReadBytes(0).Alloc());
                     Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(-1));
                     Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(1));
                     Assert.Equal(0, source.ReaderIndex);
                     Assert.Equal(0, source.WriterIndex);
-                    Assert.Equal(1, source.ReferenceCount);
+                    Assert.Equal(1, source.RefCnt);
                     Assert.False(source.Release());
                 }
                 Assert.Equal(0, tracker.Closes);
@@ -147,12 +147,12 @@ public class ByteBufAllocatedReadDispatchTest
             Assert.Equal(1 + (length == 2 ? 2 : 0), owner.ReaderIndex);
             Assert.Equal(owner.ReaderIndex, facade.ReaderIndex);
             Assert.Equal(4, owner.WriterIndex);
-            Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt);
             Assert.Equal(kind is 2 or 7 ? 1 : 0, tracker.Records);
             if (length == 0) Assert.Same(Unpooled.EmptyBuffer, result);
             if (length == 2)
             {
-                Assert.Same(allocator, result.Allocator);
+                Assert.Same(allocator, result.Alloc());
                 Assert.Equal(preferDirect, result.IsDirect);
                 Assert.Equal(2, result.Capacity);
                 Assert.Equal(composite ? int.MaxValue : 16, result.MaxCapacity);
@@ -161,7 +161,7 @@ public class ByteBufAllocatedReadDispatchTest
                 Assert.Equal(34, owner.GetByte(1));
             }
             Assert.True(kind is 3 or 4 ? owner.Release() : facade.Release());
-            Assert.Equal(0, owner.ReferenceCount);
+            Assert.Equal(0, owner.RefCnt);
             Assert.Equal(kind is 1 or 2 or 6 or 7 ? 1 : 0, tracker.Closes);
             if (length == 2)
             {
@@ -176,7 +176,7 @@ public class ByteBufAllocatedReadDispatchTest
         finally
         {
             if (result != null) result.Release();
-            if (owner.ReferenceCount > 0) owner.Release();
+            if (owner.RefCnt > 0) owner.Release();
         }
     }
 }

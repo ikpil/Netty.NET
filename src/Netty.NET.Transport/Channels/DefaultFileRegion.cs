@@ -16,7 +16,9 @@
 
 using System;
 using System.Buffers;
+using System.Globalization;
 using System.IO;
+using System.Net.Sockets;
 using Netty.NET.Common;
 using Netty.NET.Common.Internal.Logging;
 
@@ -78,7 +80,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
      */
     public void Open()
     {
-        if (!IsOpen() && ReferenceCount > 0)
+        if (!IsOpen() && RefCnt > 0)
         {
             // Only open if this DefaultFileRegion was not released yet.
             _file = new FileStream(_path.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete,
@@ -95,7 +97,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         long count = _count - position;
         if (count == 0)
             return 0;
-        if (ReferenceCount == 0)
+        if (RefCnt == 0)
             throw new IllegalReferenceCountException(0);
         // Call open to make sure fc is initialized. This is a no-oop if we called it before.
         Open();
@@ -147,15 +149,56 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
     public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
     public new IFileRegion Touch() => this;
     public override IFileRegion Touch(object hint) => this;
-    // Native socket sends must borrow the same opened file, including after rename/unlink. Never
-    // reopen a supplied FileStream by path or take ownership away from this reference-counted region.
-    internal FileStream OpenForSocketTransfer()
+    // CLR: the counterpart of transferTo(WritableByteChannel, long) for a non-blocking socket, where
+    // FileChannel.transferTo writes what the channel accepts. One positional chunk is read and offered to the
+    // socket; only the accepted bytes count as transferred and WouldBlock transfers zero bytes.
+    // https://learn.microsoft.com/dotnet/api/system.io.randomaccess.read
+    internal long TransferTo(Socket target, long position)
     {
-        if (ReferenceCount == 0) throw new IllegalReferenceCountException(0);
+        if (position < 0 || position > _count)
+            throw new ArgumentOutOfRangeException(nameof(position));
+        long count = _count - position;
+        if (count == 0)
+            return 0;
+        if (RefCnt == 0)
+            throw new IllegalReferenceCountException(0);
+        // Call open to make sure fc is initialized. This is a no-oop if we called it before.
         Open();
-        return _file;
+        ArgumentNullException.ThrowIfNull(target);
+        if (position > long.MaxValue - _position)
+            throw new IOException("File region offset exceeds Int64 range.");
+        int length = (int)Math.Min(count, SocketTransferChunkSize);
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(length);
+        long written = 0;
+        try
+        {
+            int read = RandomAccess.Read(_file.SafeFileHandle, buffer.AsSpan(0, length), _position + position);
+            if (read > 0)
+            {
+                int sent = target.Send(buffer, 0, read, SocketFlags.None, out SocketError error);
+                if (error == SocketError.WouldBlock)
+                    sent = 0;
+                else if (error != SocketError.Success)
+                    throw new SocketException((int)error);
+                written = sent;
+            }
+        }
+        finally { ArrayPool<byte>.Shared.Return(buffer); }
+        if (written > 0)
+        {
+            _transferred = unchecked(_transferred + written);
+        }
+        else if (written == 0)
+        {
+            // If the amount of written data is 0 we need to check if the requested count is bigger then the
+            // actual file itself as it may have been truncated on disk.
+            //
+            // See https://github.com/netty/netty/issues/8868
+            Validate(this, position);
+        }
+        return written;
     }
-    internal void RecordSocketTransfer(int bytes) => _transferred = unchecked(_transferred + bytes);
+    private const int SocketTransferChunkSize = 64 * 1024;
     internal static void Validate(DefaultFileRegion region, long position)
     {
         // If the amount of written data is 0 we need to check if the requested count is bigger then the
@@ -165,6 +208,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         long size = RandomAccess.GetLength(region._file.SafeFileHandle);
         // The requested end is independent of the relative transfer position. Compare without overflowing Int64.
         if (region._position > size || region._count > size - region._position)
-            throw new IOException($"Underlying file size {size} smaller then requested count {region._count}");
+            throw new IOException("Underlying file size " + size.ToString(CultureInfo.InvariantCulture) + " smaller then requested count "
+                + region._count.ToString(CultureInfo.InvariantCulture));
     }
 }

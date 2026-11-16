@@ -3,8 +3,14 @@ param(
     [string]$Name,
     [switch]$Details,
     [switch]$AsJson,
-    [switch]$UpdateManifest
+    [switch]$UpdateManifest,
+    # Gate: every entry must have a finished, evidence-backed disposition (see the end of this script).
+    [switch]$Check
 )
+# Finished dispositions. 'deprecated-not-ported' records an upstream @Deprecated type that the owner
+# decided (2026-11-16) not to port; it needs a 'deprecation' object with 'javadoc' and 'replacement'.
+$finishedStatuses = @('verified', 'clr-replacement', 'not-applicable', 'deprecated-not-ported')
+$commentOptionalStatuses = @('clr-replacement', 'not-applicable', 'deprecated-not-ported')
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -58,7 +64,7 @@ $results = foreach ($entry in $manifest.entries) {
     )
     [pscustomobject]@{
         upstream = $entry.upstream
-        required = $entry.status -notin @('clr-replacement', 'not-applicable')
+        required = $entry.status -notin $commentOptionalStatuses
         total = $comments.Count
         missing = $missing.Count
         local = $paths -join ', '
@@ -76,6 +82,40 @@ if ($UpdateManifest) {
         })
     }
     $manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $repositoryRoot 'docs/common-porting-manifest.json') -Encoding utf8
+}
+if ($Check) {
+    # Reject unfinished or incomplete entries. 'pending'/'in-progress' and unknown statuses fail;
+    # every entry needs evidence; verified needs an implementation and every original comment;
+    # replacements/exclusions need their reason (adaptation); deprecated-not-ported needs the
+    # @Deprecated text and the replacement. The scoped -Name filter applies here too.
+    $problems = @(foreach ($result in $results) {
+        $entry = $manifest.entries | Where-Object upstream -eq $result.upstream
+        $id = $entry.upstream
+        if ($entry.status -notin $finishedStatuses) { "${id}: status '$($entry.status)' is not a finished disposition"; continue }
+        if (-not @(@($entry.evidence) | Where-Object { "$_".Trim() }).Count) { "${id}: evidence is empty" }
+        switch ($entry.status) {
+            'verified' {
+                if (-not @($entry.implementation).Count) { "${id}: verified entry lists no implementation" }
+                if ($result.missing -gt 0) { "${id}: verified entry misses $($result.missing) original comment(s)" }
+            }
+            'deprecated-not-ported' {
+                $d = $entry.deprecation
+                if (-not $d -or -not "$($d.javadoc)".Trim() -or -not "$($d.replacement)".Trim()) {
+                    "${id}: deprecated-not-ported needs deprecation.javadoc and deprecation.replacement"
+                }
+            }
+            default {
+                if (-not "$($entry.adaptation)".Trim()) { "${id}: $($entry.status) needs its reason in adaptation" }
+            }
+        }
+    })
+    if ($problems.Count) {
+        $problems | Write-Output
+        Write-Output "$($problems.Count) problem(s) in $(@($results).Count) checked entries."
+        exit 1
+    }
+    Write-Output "All $(@($results).Count) checked entries have a finished, evidence-backed disposition."
+    exit 0
 }
 if ($Details -or $AsJson) { $results | ConvertTo-Json -Depth 6 }
 else { $results | Select-Object upstream, total, missing, local | Format-Table -AutoSize }

@@ -145,7 +145,7 @@ public class AddressResolverGroupContractTest
     private static Mock<IEventExecutor> NewExecutor(Task termination = null)
     {
         var executor = new Mock<IEventExecutor>();
-        executor.Setup(e => e.Termination).Returns(termination ?? new TaskCompletionSource().Task);
+        executor.Setup(e => e.TerminationFuture).Returns(termination ?? new TaskCompletionSource().Task);
         return executor;
     }
 

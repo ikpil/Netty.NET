@@ -30,7 +30,7 @@ public static class ConstantTimeUtils
      *     int l2 = 1;
      *     int l3 = 1;
      *     int l4 = 500;
-     *     bool equals = (equalsConstantTime(l1, l2) & equalsConstantTime(l3, l4)) != 0;
+     *     boolean equals = (equalsConstantTime(l1, l2) & equalsConstantTime(l3, l4)) != 0;
      * </pre>
      * @param x the first value.
      * @param y the second value.
@@ -56,7 +56,7 @@ public static class ConstantTimeUtils
      *     long l2 = 1;
      *     long l3 = 1;
      *     long l4 = 500;
-     *     bool equals = (equalsConstantTime(l1, l2) & equalsConstantTime(l3, l4)) != 0;
+     *     boolean equals = (equalsConstantTime(l1, l2) & equalsConstantTime(l3, l4)) != 0;
      * </pre>
      * @param x the first value.
      * @param y the second value.
@@ -84,7 +84,7 @@ public static class ConstantTimeUtils
      *     byte[] s2 = new {1, 2, 3};
      *     byte[] s3 = new {1, 2, 3};
      *     byte[] s4 = new {4, 5, 6};
-     *     bool equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
+     *     boolean equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
      *                       equalsConstantTime(s3, 0, s4, 0, s3.length)) != 0;
      * </pre>
      * @param bytes1 the first byte array.
@@ -108,15 +108,15 @@ public static class ConstantTimeUtils
     }
 
     /**
-     * Compare two {@link ICharSequence} objects without leaking timing information.
+     * Compare two {@link CharSequence} objects without leaking timing information.
      * <p>
      * The {@code int} return type is intentional and is designed to allow cascading of constant time operations:
      * <pre>
-     *     string s1 = "foo";
-     *     string s2 = "foo";
-     *     string s3 = "foo";
-     *     string s4 = "goo";
-     *     bool equals = (equalsConstantTime(s1, s2) & equalsConstantTime(s3, s4)) != 0;
+     *     String s1 = "foo";
+     *     String s2 = "foo";
+     *     String s3 = "foo";
+     *     String s4 = "goo";
+     *     boolean equals = (equalsConstantTime(s1, s2) & equalsConstantTime(s3, s4)) != 0;
      * </pre>
      * @param s1 the first value.
      * @param s2 the second value.

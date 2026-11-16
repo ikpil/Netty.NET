@@ -50,8 +50,8 @@ public class ByteBufViewFactorySourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -89,7 +89,7 @@ public class ByteBufViewFactorySourceTest
         {
             Assert.Equal(2, slice.Capacity); Assert.Equal(2, slice.MaxCapacity);
             int index = invalidIndex ? 3 : 0, length = invalidIndex ? 0 : 3;
-            int rootCount = s.Root.ReferenceCount, sliceCount = slice.ReferenceCount;
+            int rootCount = s.Root.RefCnt, sliceCount = slice.RefCnt;
             long reserved = s.Native.ReservedBytes;
             slice.MarkReaderIndex().MarkWriterIndex();
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -98,7 +98,7 @@ public class ByteBufViewFactorySourceTest
                 // CLR: keep a cleanup path if a regression unexpectedly returns an owned child.
                 unexpected = finalRetained ? slice.RetainedSlice(index, length) : slice.Slice(index, length);
             });
-            Assert.Equal(rootCount, s.Root.ReferenceCount); Assert.Equal(sliceCount, slice.ReferenceCount);
+            Assert.Equal(rootCount, s.Root.RefCnt); Assert.Equal(sliceCount, slice.RefCnt);
             Assert.Equal(reserved, s.Native.ReservedBytes);
             Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
             Assert.Equal(0, slice.ReaderIndex); Assert.Equal(2, slice.WriterIndex);
@@ -110,7 +110,7 @@ public class ByteBufViewFactorySourceTest
             if (finalRetained && unexpected != null) unexpected.Release();
             if (initialRetained) slice.Release();
         }
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     [Theory]
@@ -121,7 +121,7 @@ public class ByteBufViewFactorySourceTest
         s.Root.WriteZero(50).MarkReaderIndex().MarkWriterIndex();
         Assert.Throws<ArgumentOutOfRangeException>(() => retained ? s.Root.ReadRetainedSlice(51) : s.Root.ReadSlice(51));
         Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(50, s.Root.WriterIndex);
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
         s.Root.SetIndex(1, 51).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(50, s.Root.WriterIndex);
         Assert.Equal(new byte[50], ByteBufUtil.GetBytes(s.Root));
@@ -154,7 +154,7 @@ public class ByteBufViewFactorySourceTest
             ReleasedFactory.Duplicate => s.Root.Duplicate(),
             _ => s.Root.RetainedDuplicate()
         });
-        Assert.Equal(0, s.Root.ReferenceCount);
+        Assert.Equal(0, s.Root.RefCnt);
     }
 
     [Theory]
@@ -162,9 +162,9 @@ public class ByteBufViewFactorySourceTest
     public void SliceReleaseReleasesItsSharedOriginalClaim(int provider)
     {
         using var s = new Storage(provider, 8);
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
         Assert.True(s.Root.Slice().Release());
-        Assert.Equal(0, s.Root.ReferenceCount);
+        Assert.Equal(0, s.Root.RefCnt);
     }
 
     [Theory]
@@ -185,7 +185,7 @@ public class ByteBufViewFactorySourceTest
             finally { if (retained) slice.Release(); }
         }
         Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     [Theory]
@@ -213,7 +213,7 @@ public class ByteBufViewFactorySourceTest
                 if (retainedDuplicate) duplicate?.Release();
             }
         }
-        Assert.Equal(1, s.Root.ReferenceCount);
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     [Theory]
@@ -238,7 +238,7 @@ public class ByteBufViewFactorySourceTest
                 }
             }
             finally { duplicate.Release(); slice.Release(); }
-            Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.Equal(1, s.Root.RefCnt);
         }
     }
 
@@ -287,7 +287,7 @@ public class ByteBufViewFactorySourceTest
             // Make sure if it is a sliced buffer.
             actual.SetByte(0, unchecked((byte)(actual.GetByte(0) + 1)));
             Assert.Equal(s.Root.GetByte(i), actual.GetByte(0));
-            Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.Equal(1, s.Root.RefCnt);
         }
         Assert.Equal(Capacity, s.Root.ReaderIndex);
     }

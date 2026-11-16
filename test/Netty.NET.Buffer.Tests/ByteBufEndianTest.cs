@@ -95,7 +95,7 @@ public class ByteBufEndianTest
         internal Storage(int kind)
         {
             if (kind is 2 or 3) _pooled = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
-            if (kind is 4 or 5) _adaptive = new AdaptiveByteBufAllocator(false, false, Native);
+            if (kind is 4 or 5) _adaptive = new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native);
             Buffer = kind switch
             {
                 0 => new UnpooledHeapByteBuf(64, 512),
@@ -111,7 +111,7 @@ public class ByteBufEndianTest
         }
         public void Dispose()
         {
-            if (Buffer.ReferenceCount > 0) Buffer.Release();
+            if (Buffer.RefCnt > 0) Buffer.Release();
             _pooled?.Dispose(); _adaptive?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -170,7 +170,7 @@ public class ByteBufEndianTest
                 b.Clear().WriteByte(90); Write(b, width, value, little); b.WriteByte(107);
                 Assert.Equal(new byte[] { 90 }.Concat(expected).Append((byte)107), ByteBufUtil.GetBytes(b));
                 b.ReaderIndex = 1; Assert.Equal(Signed(expected, little), Read(b, width, little));
-                Assert.Equal(width + 1, b.ReaderIndex); Assert.Equal(width + 2, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+                Assert.Equal(width + 1, b.ReaderIndex); Assert.Equal(width + 2, b.WriterIndex); Assert.Equal(1, b.RefCnt);
             }
     }
 
@@ -223,7 +223,7 @@ public class ByteBufEndianTest
             try { Assert.Equal(Get(root, 1, 4, little), Get(allocated, 0, 4, little)); Assert.Equal(5, root.ReaderIndex); }
             finally { allocated.Release(); }
             root.SetIndex(1, 15); ByteBuf borrowed = root.ReadSlice(4);
-            Assert.Equal(Get(root, 1, 4, little), Get(borrowed, 0, 4, little)); Assert.Equal(5, root.ReaderIndex); Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(Get(root, 1, 4, little), Get(borrowed, 0, 4, little)); Assert.Equal(5, root.ReaderIndex); Assert.Equal(1, root.RefCnt);
             root.SetIndex(1, 15); duplicate.SetIndex(1, 15);
             Assert.True(ByteBufUtil.Equals(root, duplicate)); Assert.Equal(0, ByteBufUtil.Compare(root, duplicate));
             Assert.Equal(ByteBufUtil.HashCode(root), ByteBufUtil.HashCode(duplicate));
@@ -242,7 +242,7 @@ public class ByteBufEndianTest
             b.Capacity = 256;
             b.SetLongLE(193, 0x0123456789abcdef); Assert.Equal(0x0123456789abcdef, b.GetLongLE(193));
             b.SetLong(201, 0x0123456789abcdef); Assert.Equal(0x0123456789abcdef, b.GetLong(201));
-            Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(b, 0, 3)); Assert.Equal(3, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(b, 0, 3)); Assert.Equal(3, b.WriterIndex); Assert.Equal(1, b.RefCnt);
         }
     }
 }

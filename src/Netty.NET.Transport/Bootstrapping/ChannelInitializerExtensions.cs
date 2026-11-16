@@ -69,16 +69,6 @@ internal static class ChannelInitializerExtensions
         return compare != 0 ? compare : BitConverter.DoubleToInt64Bits(left).CompareTo(BitConverter.DoubleToInt64Bits(right));
     }
 
-    internal static void Notify(IReadOnlyList<ChannelInitializerExtension> extensions, IChannel channel, Action<ChannelInitializerExtension, IChannel> callback)
-    {
-        foreach (var extension in extensions)
-        {
-            try { callback(extension, channel); }
-            catch (Exception error) when (error is not OutOfMemoryException)
-            { Logger.Warn("Exception thrown from channel initializer extension " + extension.GetType().FullName, error); }
-        }
-    }
-
     private sealed class Registration(Entry entry) : IDisposable
     {
         private Entry _entry = entry;

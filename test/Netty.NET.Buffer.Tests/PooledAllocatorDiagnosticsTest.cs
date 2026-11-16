@@ -88,7 +88,7 @@ public class PooledAllocatorDiagnosticsTest
             }
             string before = Model(allocator);
             Assert.Equal(before, Normalize(allocator.DumpStats())); Assert.Equal(before, Normalize(allocator.DumpStats()));
-            foreach (ByteBuf b in live) { Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex); Assert.Equal(1, b.ReferenceCount); }
+            foreach (ByteBuf b in live) { Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex); Assert.Equal(1, b.RefCnt); }
             foreach (ByteBuf b in live) b.Release(); live.Clear();
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             allocator.Dispose(); Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
@@ -112,7 +112,7 @@ public class PooledAllocatorDiagnosticsTest
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             Assert.Contains("0: ", allocator.DumpStats());
         }
-        finally { foreach (ByteBuf b in live) if (b.ReferenceCount != 0) b.Release(); allocator.Dispose(); }
+        finally { foreach (ByteBuf b in live) if (b.RefCnt != 0) b.Release(); allocator.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -134,7 +134,7 @@ public class PooledAllocatorDiagnosticsTest
             { live[i].Release(); Assert.Equal(Model(allocator), Normalize(allocator.DumpStats())); }
             live.Clear();
         }
-        finally { foreach (ByteBuf b in live) if (b.ReferenceCount != 0) b.Release(); allocator.Dispose(); }
+        finally { foreach (ByteBuf b in live) if (b.RefCnt != 0) b.Release(); allocator.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -143,7 +143,7 @@ public class PooledAllocatorDiagnosticsTest
     {
         var native = new NativeMemoryAllocator();
         using var allocator = new PooledByteBufAllocator(nativeAllocator: native, pageSize: 4096, maxOrder: 2,
-            smallCacheSize: 4, normalCacheSize: 4);
+            smallCacheSize: 4, normalCacheSize: 4, useCacheForAllThreads: true);
         ByteBuf b = allocator.DirectBuffer(16, 16); string held = allocator.DumpStats();
         b.Release(); Assert.Equal(held, allocator.DumpStats());
         ByteBuf reused = allocator.DirectBuffer(16, 16); Assert.Equal(held, allocator.DumpStats()); reused.Release();
@@ -191,7 +191,7 @@ public class PooledAllocatorDiagnosticsTest
     public void ConcurrentAllocationsReturnsAndShutdownKeepDiagnosticsTraversable()
     {
         var native = new NativeMemoryAllocator();
-        using var allocator = new PooledByteBufAllocator(nativeAllocator: native, pageSize: 4096, maxOrder: 2);
+        using var allocator = new PooledByteBufAllocator(false, 1, 1, pageSize: 4096, maxOrder: 2, nativeAllocator: native);
         Exception failure = null; using var start = new ManualResetEventSlim();
         var worker = new Thread(() =>
         {

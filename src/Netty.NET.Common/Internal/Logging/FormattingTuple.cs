@@ -45,6 +45,7 @@ namespace Netty.NET.Common.Internal.Logging;
 /**
  * Holds the results of formatting done by {@link MessageFormatter}.
  */
+// CLR: an immutable readonly struct carries the two values; Java uses a final class.
 public readonly struct FormattingTuple
 {
     private readonly string message;

@@ -64,7 +64,7 @@ public class EmbeddedChannelTest
     public async Task PromiseDoesNotInfiniteLoop()
     {
         var channel = new EmbeddedChannel();
-        Task listener = channel.CloseCompletion.ContinueWith(_ => channel.CloseAsync(),
+        Task listener = channel.CloseFuture.ContinueWith(_ => channel.CloseAsync(),
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
         await channel.CloseAsync();
         await listener;
@@ -215,12 +215,12 @@ public class EmbeddedChannelTest
         {
             var channel = new EmbeddedChannel();
             Assert.True(channel.WriteInbound(input));
-            Assert.Equal(1, input.ReferenceCount);
+            Assert.Equal(1, input.RefCnt);
             Assert.True(channel.WriteOutbound(output));
-            Assert.Equal(1, output.ReferenceCount);
+            Assert.Equal(1, output.RefCnt);
             Assert.True(channel.FinishAndReleaseAll());
-            Assert.Equal(0, input.ReferenceCount);
-            Assert.Equal(0, output.ReferenceCount);
+            Assert.Equal(0, input.RefCnt);
+            Assert.Equal(0, output.RefCnt);
             Assert.Null(channel.ReadInbound());
             Assert.Null(channel.ReadOutbound());
         }
@@ -235,12 +235,12 @@ public class EmbeddedChannelTest
         {
             var channel = new EmbeddedChannel();
             Assert.True(channel.WriteInbound(input));
-            Assert.Equal(1, input.ReferenceCount);
+            Assert.Equal(1, input.RefCnt);
             Assert.True(channel.WriteOutbound(output));
-            Assert.Equal(1, output.ReferenceCount);
+            Assert.Equal(1, output.RefCnt);
             Assert.True(channel.ReleaseInbound());
-            Assert.Equal(0, input.ReferenceCount);
-            Assert.Equal(1, output.ReferenceCount);
+            Assert.Equal(0, input.RefCnt);
+            Assert.Equal(1, output.RefCnt);
             Assert.True(channel.Finish());
             Assert.Null(channel.ReadInbound());
             var buffer = channel.ReadOutbound<ByteBuf>();
@@ -259,12 +259,12 @@ public class EmbeddedChannelTest
         {
             var channel = new EmbeddedChannel();
             Assert.True(channel.WriteInbound(input));
-            Assert.Equal(1, input.ReferenceCount);
+            Assert.Equal(1, input.RefCnt);
             Assert.True(channel.WriteOutbound(output));
-            Assert.Equal(1, output.ReferenceCount);
+            Assert.Equal(1, output.RefCnt);
             Assert.True(channel.ReleaseOutbound());
-            Assert.Equal(1, input.ReferenceCount);
-            Assert.Equal(0, output.ReferenceCount);
+            Assert.Equal(1, input.RefCnt);
+            Assert.Equal(0, output.RefCnt);
             Assert.True(channel.Finish());
             Assert.Null(channel.ReadOutbound());
             var buffer = channel.ReadInbound<ByteBuf>();
@@ -311,7 +311,7 @@ public class EmbeddedChannelTest
         int flushCount = 0;
         var channel = new EmbeddedChannel(new InboundActions
         {
-            ReadAction = (_, message) => { ReferenceCountUtil.Release(message); latch.Signal(); },
+            ReadAction = (_, msg) => { ReferenceCountUtil.Release(msg); latch.Signal(); },
             ReadComplete = _ => Interlocked.Increment(ref flushCount)
         });
         await channel.WriteOneInboundAsync("Hello, Netty!");
@@ -336,7 +336,7 @@ public class EmbeddedChannelTest
         int flushCount = 0;
         var channel = new EmbeddedChannel(new OutboundActions
         {
-            WriteAction = (ctx, message, token) => { Task task = ctx.WriteAsync(message, token); latch.Signal(); return task; },
+            WriteAction = (ctx, msg, token) => { Task task = ctx.WriteAsync(msg, token); latch.Signal(); return task; },
             FlushAction = _ => Interlocked.Increment(ref flushCount)
         });
         // This shouldn't trigger a #flush()
@@ -346,15 +346,15 @@ public class EmbeddedChannelTest
         // There was no #flushOutbound() call so nobody should have called #flush()
         Assert.Equal(0, flushCount);
         // Observe the native Task representing the unflushed write failed by close.
-        await Assert.ThrowsAsync<IOException>(() => write);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
     }
     [Fact]
     public async Task TestEnsureOpen()
     {
         var channel = new EmbeddedChannel();
         await channel.CloseAsync();
-        Assert.Throws<IOException>(() => channel.WriteOutbound("Hello, Netty!"));
-        Assert.Throws<IOException>(() => channel.WriteInbound("Hello, Netty!"));
+        Assert.ThrowsAny<ClosedChannelException>(() => channel.WriteOutbound("Hello, Netty!"));
+        Assert.ThrowsAny<ClosedChannelException>(() => channel.WriteInbound("Hello, Netty!"));
     }
     [Fact]
     public async Task TestHandleInboundMessage()
@@ -454,7 +454,7 @@ public class EmbeddedChannelTest
     public void TestCustomTicker()
     {
         MockTicker ticker = Ticker.NewMockTicker();
-        var channel = new EmbeddedChannel(ticker);
+        var channel = new EmbeddedChannel.Builder().Ticker(ticker).Build();
         // this future will complete after 10min
         Task future10 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(10));
         // this future will complete after 10min + 1ns
@@ -488,20 +488,20 @@ public class EmbeddedChannelTest
         var channel = new EmbeddedChannel();
         channel.FreezeTime();
         // simple execute
-        Assert.False(channel.HasPendingTasks);
+        Assert.False(channel.HasPendingTasks());
         channel.EventLoop.Execute(() => { });
-        Assert.True(channel.HasPendingTasks);
+        Assert.True(channel.HasPendingTasks());
         channel.RunPendingTasks();
-        Assert.False(channel.HasPendingTasks);
+        Assert.False(channel.HasPendingTasks());
         // schedule in the future (note: time is frozen above)
         channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromSeconds(1));
-        Assert.False(channel.HasPendingTasks);
+        Assert.False(channel.HasPendingTasks());
         channel.RunPendingTasks();
-        Assert.False(channel.HasPendingTasks);
+        Assert.False(channel.HasPendingTasks());
         channel.AdvanceTimeBy(TimeSpan.FromSeconds(1));
-        Assert.True(channel.HasPendingTasks);
+        Assert.True(channel.HasPendingTasks());
         channel.RunPendingTasks();
-        Assert.False(channel.HasPendingTasks);
+        Assert.False(channel.HasPendingTasks());
     }
     [Fact]
     public void TestReentrantClose()
@@ -511,37 +511,37 @@ public class EmbeddedChannelTest
         channel.CheckException();
     }
     private static void Release(params ByteBuf[] buffers)
-    { foreach (var buffer in buffers) if (buffer.ReferenceCount > 0) buffer.Release(); }
+    { foreach (var buffer in buffers) if (buffer.RefCnt > 0) buffer.Release(); }
     private sealed class InboundActions : ChannelInboundHandlerAdapter
     {
-        internal Action<ChannelHandlerContext, object> ReadAction;
-        internal Action<ChannelHandlerContext> ReadComplete, Inactive, Registered, Unregistered;
-        internal Action<ChannelHandlerContext, Exception> ExceptionAction;
-        public override void ChannelRead(ChannelHandlerContext ctx, object message) => ReadAction(ctx, message);
-        public override void ChannelReadComplete(ChannelHandlerContext ctx) { if (ReadComplete == null) base.ChannelReadComplete(ctx); else ReadComplete(ctx); }
-        public override void ChannelInactive(ChannelHandlerContext ctx) { if (Inactive == null) base.ChannelInactive(ctx); else Inactive(ctx); }
-        public override void ChannelRegistered(ChannelHandlerContext ctx) { if (Registered == null) base.ChannelRegistered(ctx); else Registered(ctx); }
-        public override void ChannelUnregistered(ChannelHandlerContext ctx) { if (Unregistered == null) base.ChannelUnregistered(ctx); else Unregistered(ctx); }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception error) { if (ExceptionAction == null) base.ExceptionCaught(ctx, error); else ExceptionAction(ctx, error); }
+        internal Action<IChannelHandlerContext, object> ReadAction;
+        internal Action<IChannelHandlerContext> ReadComplete, Inactive, Registered, Unregistered;
+        internal Action<IChannelHandlerContext, Exception> ExceptionAction;
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReadAction(ctx, msg);
+        public override void ChannelReadComplete(IChannelHandlerContext ctx) { if (ReadComplete == null) base.ChannelReadComplete(ctx); else ReadComplete(ctx); }
+        public override void ChannelInactive(IChannelHandlerContext ctx) { if (Inactive == null) base.ChannelInactive(ctx); else Inactive(ctx); }
+        public override void ChannelRegistered(IChannelHandlerContext ctx) { if (Registered == null) base.ChannelRegistered(ctx); else Registered(ctx); }
+        public override void ChannelUnregistered(IChannelHandlerContext ctx) { if (Unregistered == null) base.ChannelUnregistered(ctx); else Unregistered(ctx); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { if (ExceptionAction == null) base.ExceptionCaught(ctx, cause); else ExceptionAction(ctx, cause); }
     }
-    private sealed class AddedHandler(Action<ChannelHandlerContext> callback) : ChannelHandlerAdapter
-    { public override void HandlerAdded(ChannelHandlerContext ctx) => callback(ctx); }
+    private sealed class AddedHandler(Action<IChannelHandlerContext> callback) : ChannelHandlerAdapter
+    { public override void HandlerAdded(IChannelHandlerContext ctx) => callback(ctx); }
     private sealed class OutboundActions : ChannelOutboundHandlerAdapter
     {
-        internal Func<ChannelHandlerContext, object, CancellationToken, Task> WriteAction;
-        internal Action<ChannelHandlerContext> FlushAction;
-        public override Task WriteAsync(ChannelHandlerContext ctx, object message, CancellationToken token) => WriteAction(ctx, message, token);
-        public override void Flush(ChannelHandlerContext ctx) => FlushAction(ctx);
+        internal Func<IChannelHandlerContext, object, CancellationToken, Task> WriteAction;
+        internal Action<IChannelHandlerContext> FlushAction;
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) => WriteAction(ctx, msg, token);
+        public override void Flush(IChannelHandlerContext ctx) => FlushAction(ctx);
     }
     private sealed class DeferredWriteHandler(int delayMillis = 0) : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext ctx, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             async Task WriteLater()
             {
                 try
-                { if (delayMillis == 0) await ctx.WriteAsync(message, token); else await ctx.WriteAndFlushAsync(message, token); completion.TrySetResult(); }
+                { if (delayMillis == 0) await ctx.WriteAsync(msg, token); else await ctx.WriteAndFlushAsync(msg, token); completion.TrySetResult(); }
                 catch (Exception error) { completion.TrySetException(error); }
             }
             if (delayMillis == 0)
@@ -555,23 +555,23 @@ public class EmbeddedChannelTest
     {
         internal const int DISCONNECT = 0, CLOSE = 1;
         private readonly Queue<int> _queue = new();
-        public override Task DisconnectAsync(ChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(DISCONNECT); return Task.CompletedTask; }
-        public override Task CloseAsync(ChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(CLOSE); return Task.CompletedTask; }
+        public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(DISCONNECT); return Task.CompletedTask; }
+        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(CLOSE); return Task.CompletedTask; }
         internal int? PollEvent() => _queue.TryDequeue(out var result) ? result : null;
     }
     private sealed class FailingCloseHandler : ChannelOutboundHandlerAdapter
-    { public override Task CloseAsync(ChannelHandlerContext ctx, CancellationToken token) => Task.FromException(new Exception()); }
+    { public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) => Task.FromException(new Exception()); }
     private sealed class MessageHandlingChannel(bool inbound, CountdownEvent latch) : EmbeddedChannel
     {
-        protected override void HandleInboundMessage(object message) { if (inbound) latch.Signal(); else base.HandleInboundMessage(message); }
-        protected override void HandleOutboundMessage(object message) { if (!inbound) latch.Signal(); else base.HandleOutboundMessage(message); }
+        protected override void HandleInboundMessage(object msg) { if (inbound) latch.Signal(); else base.HandleInboundMessage(msg); }
+        protected override void HandleOutboundMessage(object msg) { if (!inbound) latch.Signal(); else base.HandleOutboundMessage(msg); }
     }
     private sealed class ReentrantCloseHandler : ChannelInboundHandlerAdapter
     {
         private bool _runningRead;
-        public override void ChannelRead(ChannelHandlerContext ctx, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { _runningRead = true; try { _ = ctx.Channel.CloseAsync(); } finally { _runningRead = false; } }
-        public override void HandlerRemoved(ChannelHandlerContext ctx)
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
         { if (_runningRead) throw new InvalidOperationException("Reentrant handlerRemoved"); }
     }
 }

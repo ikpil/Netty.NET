@@ -50,7 +50,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(ChannelInitializer<>));
     // We use a Set as a ChannelInitializer is usually shared between all Channels in a Bootstrap /
     // ServerBootstrap. This way we can reduce the memory usage compared to use Attributes.
-    private readonly HashSet<ChannelHandlerContext> _initializing = new();
+    private readonly HashSet<IChannelHandlerContext> _initializing = new();
     /**
      * This method will be called once the {@link Channel} was registered. After the method returns this instance
      * will be removed from the {@link ChannelPipeline} of the {@link Channel}.
@@ -64,81 +64,81 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
     /**
      * {@inheritDoc} If override this method ensure you call super!
      */
-    public override void HandlerAdded(ChannelHandlerContext context)
+    public override void HandlerAdded(IChannelHandlerContext ctx)
     {
-        if (context.Channel.IsRegistered)
+        if (ctx.Channel.IsRegistered)
         {
             // This should always be true with our current DefaultChannelPipeline implementation.
             // The good thing about calling initChannel(...) in handlerAdded(...) is that there will be no ordering
             // surprises if a ChannelInitializer will add another ChannelInitializer. This is as all handlers
             // will be added in the expected order.
-            if (Initialize(context))
+            if (Initialize(ctx))
             {
                 // We are done with init the Channel, removing the initializer now.
-                RemoveState(context);
+                RemoveState(ctx);
             }
         }
     }
-    public sealed override void ChannelRegistered(ChannelHandlerContext context)
+    public sealed override void ChannelRegistered(IChannelHandlerContext ctx)
     {
         // Normally this method will never be called as handlerAdded(...) should call initChannel(...) and remove
         // the handler.
-        if (Initialize(context))
+        if (Initialize(ctx))
         {
             // we called initChannel(...) so we need to call now pipeline.fireChannelRegistered() to ensure we not
             // miss an event.
-            context.Pipeline.FireChannelRegistered();
+            ctx.Pipeline.FireChannelRegistered();
             // We are done with init the Channel, removing all the state for the Channel now.
-            RemoveState(context);
+            RemoveState(ctx);
         }
         else
         {
             // Called initChannel(...) before which is the expected behavior, so just forward the event.
-            context.FireChannelRegistered();
+            ctx.FireChannelRegistered();
         }
     }
-    private bool Initialize(ChannelHandlerContext context)
+    private bool Initialize(IChannelHandlerContext ctx)
     {
         lock (_initializing)
             // Guard against re-entrance.
-            if (!_initializing.Add(context))
+            if (!_initializing.Add(ctx))
                 return false;
         try
-        { InitChannel((T)context.Channel); }
+        { InitChannel((T)ctx.Channel); }
         catch (Exception error)
         {
             // Explicitly route the failure into the pipeline. Re-entrance is guarded by
             // the initMap.add(ctx) check above; the finally block below removes the handler.
-            ExceptionCaught(context, error);
+            ExceptionCaught(ctx, error);
         }
         finally
         {
-            if (!context.IsRemoved)
-                context.Pipeline.Remove(this);
+            if (!ctx.IsRemoved)
+                ctx.Pipeline.Remove(this);
         }
         return true;
     }
-    public override void HandlerRemoved(ChannelHandlerContext context)
-    { lock (_initializing) _initializing.Remove(context); }
-    private void RemoveState(ChannelHandlerContext context)
+    public override void HandlerRemoved(IChannelHandlerContext ctx)
+    { lock (_initializing) _initializing.Remove(ctx); }
+    private void RemoveState(IChannelHandlerContext ctx)
     {
         // The removal may happen in an async fashion if the EventExecutor we use does something funky.
-        if (context.IsRemoved)
-        { lock (_initializing) _initializing.Remove(context); }
+        if (ctx.IsRemoved)
+        { lock (_initializing) _initializing.Remove(ctx); }
         else
         {
             // The context is not removed yet which is most likely the case because a custom EventExecutor is used.
             // Let's schedule it on the EventExecutor to give it some more time to be completed in case it is offloaded.
-            context.Executor.Execute(() => { lock (_initializing) _initializing.Remove(context); });
+            ctx.Executor.Execute(() => { lock (_initializing) _initializing.Remove(ctx); });
         }
     }
     /**
      * Handle the {@link Throwable} by logging and closing the {@link Channel}. Sub-classes may override this.
      */
-    public override void ExceptionCaught(ChannelHandlerContext context, Exception cause)
+    public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
     {
         if (Logger.IsWarnEnabled())
-            Logger.Warn("Failed to initialize a channel. Closing: " + context.Channel, cause);
-        _ = context.CloseAsync();
+            Logger.Warn("Failed to initialize a channel. Closing: " + ctx.Channel, cause);
+        _ = ctx.CloseAsync();
     }
 }

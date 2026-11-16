@@ -30,7 +30,7 @@ public class ChannelInitializerTest : IAsyncLifetime
 {
     private const int TIMEOUT_MILLIS = 1000;
     private static readonly LocalAddress SERVER_ADDRESS = new(typeof(ChannelInitializerTest));
-    private readonly DefaultEventLoopGroup _group = new(1);
+    private readonly MultiThreadIoEventLoopGroup _group = new(1, LocalIoHandler.NewFactory());
     private readonly ServerBootstrap _server;
     private readonly Bootstrap _client;
     private readonly InspectableHandler _testHandler = new();
@@ -56,7 +56,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         if (!registerFirst)
             await _group.RegisterAsync(pipeline.Channel);
         await pipeline.Channel.CloseAsync();
-        await pipeline.Channel.CloseCompletion;
+        await pipeline.Channel.CloseFuture;
         Assert.Same(error, cause);
     }
     [Fact]
@@ -173,8 +173,8 @@ public class ChannelInitializerTest : IAsyncLifetime
             await client.WriteAndFlushAsync("Hello World");
             await client.CloseAsync();
             await server.CloseAsync();
-            await client.CloseCompletion;
-            await server.CloseCompletion;
+            await client.CloseFuture;
+            await server.CloseFuture;
             // Wait until the handler is removed from the pipeline and so no more events are handled by it.
             Assert.True(latch.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             Assert.Equal(1, invokeCount);
@@ -194,15 +194,15 @@ public class ChannelInitializerTest : IAsyncLifetime
     private sealed class ThrowingInitializer(Exception error, Action<Exception> capture) : ChannelInitializer<IChannel>
     {
         protected override void InitChannel(IChannel channel) => throw error;
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) { capture(cause); base.ExceptionCaught(context, cause); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { capture(cause); base.ExceptionCaught(ctx, cause); }
     }
     private sealed class RegisteredHandler(Action callback) : ChannelInboundHandlerAdapter
-    { public override void ChannelRegistered(ChannelHandlerContext context) => callback(); }
+    { public override void ChannelRegistered(IChannelHandlerContext ctx) => callback(); }
     private sealed class InspectableHandler : ChannelDuplexHandler
     {
         internal int ChannelRegisteredCount;
-        public override void ChannelRegistered(ChannelHandlerContext context)
-        { Interlocked.Increment(ref ChannelRegisteredCount); context.FireChannelRegistered(); }
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        { Interlocked.Increment(ref ChannelRegisteredCount); ctx.FireChannelRegistered(); }
     }
     private sealed class ExecutorInitializer(Action invoked, Action complete,
         Action<Exception> capture, CountdownEvent latch) : ChannelInitializer<IChannel>
@@ -215,15 +215,15 @@ public class ChannelInitializerTest : IAsyncLifetime
             channel.Pipeline.AddAfter(context.Executor, context.Name, null, new RemovedHandler(latch));
             complete();
         }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => capture(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => capture(cause);
     }
     private sealed class RemovedHandler(CountdownEvent latch) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             // just drop on the floor.
         }
-        public override void HandlerRemoved(ChannelHandlerContext context) => latch.Signal();
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => latch.Signal();
     }
     private sealed class AlternatingExecutor : AbstractEventExecutor, IOrderedEventExecutor
     {
@@ -241,7 +241,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         public override bool IsShuttingDown() => false;
         public override bool IsShutdown() => _worker.IsShutdown();
         public override bool IsTerminated() => _worker.IsTerminated();
-        public override Task Termination => _worker.Termination;
+        public override Task TerminationFuture => _worker.TerminationFuture;
         public override bool AwaitTermination(TimeSpan timeout) => _worker.AwaitTermination(timeout);
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => _worker.ShutdownGracefullyAsync(quietPeriod, timeout);
         [Obsolete]

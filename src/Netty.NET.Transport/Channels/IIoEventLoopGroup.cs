@@ -23,16 +23,31 @@ namespace Netty.NET.Transport.Channels;
 /**
  * {@link EventLoopGroup} for {@link IoEventLoop}s.
  */
-/// <summary>A group that registers standalone I/O handles and exposes its backend capabilities.</summary>
 public interface IIoEventLoopGroup : IEventLoopGroup
 {
+    new IIoEventLoop Next();
+
+    /**
+     * @deprecated Use {@link #register(IoHandle)}
+     */
+    // CLR: the Task-returning RegisterAsync(IChannel) replaces both deprecated ChannelFuture overloads
+    // (register(Channel) and register(ChannelPromise)).
+    Task IEventLoopGroup.RegisterAsync(IChannel channel, CancellationToken cancellationToken)
+    {
+        return Next().RegisterAsync(channel, cancellationToken);
+    }
+
     /**
      * Register the {@link IoHandle} to the {@link EventLoop} for I/O processing.
      *
      * @param handle        the {@link IoHandle} to register.
      * @return              the {@link Future} that is notified once the operations completes.
      */
-    Task<IoRegistration> RegisterIoAsync(IIoHandle handle, CancellationToken cancellationToken = default);
+    // CLR: Task<IIoRegistration> replaces Future<IoRegistration>.
+    Task<IIoRegistration> RegisterAsync(IIoHandle handle)
+    {
+        return Next().RegisterAsync(handle);
+    }
 
     /**
      * Returns {@code true} if the given type is compatible with this {@link IoEventLoopGroup} and so can be registered
@@ -41,8 +56,11 @@ public interface IIoEventLoopGroup : IEventLoopGroup
      * @param handleType    the type of the {@link IoHandle}.
      * @return              if compatible of not.
      */
-    // Force sub-classes to implement.
-    bool IsCompatible(Type handleType);
+    bool IsCompatible(Type handleType)
+    {
+        using var executors = Iterator().GetEnumerator();
+        return executors.MoveNext() && ((IIoEventLoop)executors.Current).IsCompatible(handleType);
+    }
 
     /**
      * Returns {@code true} if the given {@link IoHandler} type is used by this {@link IoEventLoopGroup},
@@ -51,5 +69,9 @@ public interface IIoEventLoopGroup : IEventLoopGroup
      * @param handlerType the type of the {@link IoHandler}.
      * @return            if used or not.
      */
-    bool IsIoType(Type handlerType);
+    bool IsIoType(Type handlerType)
+    {
+        using var executors = Iterator().GetEnumerator();
+        return executors.MoveNext() && ((IIoEventLoop)executors.Current).IsIoType(handlerType);
+    }
 }

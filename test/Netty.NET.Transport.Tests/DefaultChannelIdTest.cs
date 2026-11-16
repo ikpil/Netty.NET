@@ -28,6 +28,31 @@ public class DefaultChannelIdTest
         string text = DefaultChannelId.NewInstance().AsShortText();
         Assert.Matches("^[0-9a-f]{8}$", text);
     }
+
+    [Fact]
+    public void TestLongText()
+    {
+        string text = DefaultChannelId.NewInstance().AsLongText();
+        Assert.Matches("^[0-9a-f]{16}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{16}-[0-9a-f]{8}$", text);
+    }
+
+    [Fact]
+    public void TestIdempotentMachineId()
+    {
+        string a = DefaultChannelId.NewInstance().AsLongText().Substring(0, 16);
+        string b = DefaultChannelId.NewInstance().AsLongText().Substring(0, 16);
+        Assert.Equal(a, b);
+    }
+
+    [Fact]
+    public void TestIdempotentProcessId()
+    {
+        // CLR: String.substring(17, 21) is Substring(17, 4).
+        string a = DefaultChannelId.NewInstance().AsLongText().Substring(17, 4);
+        string b = DefaultChannelId.NewInstance().AsLongText().Substring(17, 4);
+        Assert.Equal(a, b);
+    }
+
     [Fact]
     public void TestSerialization()
     {
@@ -41,5 +66,35 @@ public class DefaultChannelIdTest
         Assert.Equal(a, b);
         Assert.NotSame(a, b);
         Assert.Equal(a.AsLongText(), b.AsLongText());
+    }
+
+    [Fact]
+    public void TestDeserialization()
+    {
+        // DefaultChannelId with 8 byte machineId
+        DefaultChannelId c8 = new DefaultChannelId(
+                new byte[] {
+                        (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67,
+                        (byte) 0x89, (byte) 0xab, (byte) 0xcd, (byte) 0xef
+                },
+                0x000052af,
+                0x00000000,
+                0x06504f638eb4c386L,
+                unchecked((int)0xd964df5e));
+
+        // DefaultChannelId with 6 byte machineId
+        DefaultChannelId c6 =
+                new DefaultChannelId(
+                        new byte[] {
+                                (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67,
+                                (byte) 0x89, (byte) 0xab,
+                        },
+                        unchecked((int)0xce005283),
+                        0x00000001,
+                        0x069e6dce9eb4516fL,
+                        0x721757b7);
+
+        Assert.Equal("0123456789abcdef-000052af-00000000-06504f638eb4c386-d964df5e", c8.AsLongText());
+        Assert.Equal("0123456789ab-ce005283-00000001-069e6dce9eb4516f-721757b7", c6.AsLongText());
     }
 }

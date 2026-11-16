@@ -18,21 +18,21 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * Tests big-endian direct channel buffers
  */
-public class PooledBigEndianDirectByteBufTest : AbstractPooledByteBufTransferTest
+public class PooledBigEndianDirectByteBufTest : AbstractPooledByteBufTest
 {
-    public PooledBigEndianDirectByteBufTest() => Init(new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: Native));
+    // CLR: a scoped allocator over the fixture's NativeMemoryAllocator replaces the JVM-global
+    // PooledByteBufAllocator.DEFAULT, so AbstractByteBufTest.Dispose can release it and prove zero reservations.
+    public PooledBigEndianDirectByteBufTest() => Init(NewAllocator());
+
+    // CLR: PooledAlignedBigEndianDirectByteBufTest substitutes its aligned allocator here, before Init allocates.
+    protected virtual IByteBufAllocator NewAllocator()
+        => new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: Native);
 
     protected override ByteBuf Alloc(int length, int maxCapacity)
     {
-        ByteBuf result = Allocator.DirectBuffer(length, maxCapacity);
-        // CLR default multibyte access is always big-endian; no mutable order facade exists.
-        return result;
+        ByteBuf buffer = Allocator.DirectBuffer(length, maxCapacity);
+        // CLR: assertSame(ByteOrder.BIG_ENDIAN, buffer.order()) has no counterpart: ByteBuf.order() is @Deprecated
+        // ("use the Little Endian accessors") and not ported; unsuffixed multibyte accessors are always big-endian.
+        return buffer;
     }
-
-    [Fact]
-    public void TestMaxFastWritableBytes() => AssertOriginalPooledMaxFastWritableBytes();
-
-    [Fact]
-    public void TestEnsureWritableDoesntGrowTooMuch() => AssertOriginalPooledEnsureWritableDoesntGrowTooMuch();
-
 }

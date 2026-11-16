@@ -42,12 +42,6 @@ public class CompositeByteBufDiscardTest
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
-    public static IEnumerable<object[]> Discards()
-    {
-        foreach (object[] p in Providers())
-        foreach (bool some in new[] { false, true }) yield return [p[0], p[1], some];
-    }
-
     public static IEnumerable<object[]> TailGrowths()
     {
         foreach (object[] provider in Providers())
@@ -56,7 +50,7 @@ public class CompositeByteBufDiscardTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void BorrowedSliceChainReleasesAllFourTransferredClaims(bool pooled, bool direct)
+    public void TestReleasesItsComponents(bool pooled, bool direct)
     {
         using var s = new Storage(pooled, direct);
         ByteBuf buffer = s.Allocator.Buffer(); // 1
@@ -68,32 +62,32 @@ public class CompositeByteBufDiscardTest
         CompositeByteBuf composite = s.Allocator.CompositeBuffer().AddComponent(s1).AddComponents(s2, s3, s4);
         try
         {
-            Assert.Equal(1, composite.ReferenceCount);
-            Assert.Equal(5, buffer.ReferenceCount);
+            Assert.Equal(1, composite.RefCnt);
+            Assert.Equal(5, buffer.RefCnt);
             Assert.Equal(4, composite.NumComponents);
             Assert.Equal(2, composite.Capacity);
             Assert.Equal(0, composite.WriterIndex);
             // releasing composite should release the 4 components
             Assert.True(composite.Release());
-            Assert.Equal(0, composite.ReferenceCount);
-            Assert.Equal(1, buffer.ReferenceCount);
-            Assert.Equal(1, s4.ReferenceCount);
+            Assert.Equal(0, composite.RefCnt);
+            Assert.Equal(1, buffer.RefCnt);
+            Assert.Equal(1, s4.RefCnt);
             Assert.Equal(2, buffer.ReaderIndex);
             // last remaining ref to buffer
             Assert.True(buffer.Release());
-            Assert.Equal(0, buffer.ReferenceCount);
-            Assert.All(new[] { s1, s2, s3, s4 }, view => Assert.Equal(0, view.ReferenceCount));
+            Assert.Equal(0, buffer.RefCnt);
+            Assert.All(new[] { s1, s2, s3, s4 }, view => Assert.Equal(0, view.RefCnt));
         }
         finally
         {
-            if (composite.ReferenceCount > 0) composite.Release();
-            if (buffer.ReferenceCount > 0) buffer.Release(buffer.ReferenceCount);
+            if (composite.RefCnt > 0) composite.Release();
+            if (buffer.RefCnt > 0) buffer.Release(buffer.RefCnt);
         }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void RetainedSliceChainDeallocationFollowsEachImmediateParent(bool pooled, bool direct)
+    public void TestReleasesItsComponents2AcrossProviders(bool pooled, bool direct)
     {
         using var s = new Storage(pooled, direct);
         // It is important to use a pooled allocator here to ensure
@@ -112,32 +106,32 @@ public class CompositeByteBufDiscardTest
             .AddComponent(s1).AddComponents(s2, s3, s4);
         try
         {
-            Assert.Equal(1, composite.ReferenceCount);
-            Assert.Equal(pooled ? 2 : 5, buffer.ReferenceCount);
-            Assert.All(new[] { s1, s2, s3 }, view => Assert.Equal(pooled ? 2 : 5, view.ReferenceCount));
-            Assert.Equal(pooled ? 1 : 5, s4.ReferenceCount);
+            Assert.Equal(1, composite.RefCnt);
+            Assert.Equal(pooled ? 2 : 5, buffer.RefCnt);
+            Assert.All(new[] { s1, s2, s3 }, view => Assert.Equal(pooled ? 2 : 5, view.RefCnt));
+            Assert.Equal(pooled ? 1 : 5, s4.RefCnt);
             Assert.Equal(4, composite.NumComponents);
             Assert.Equal(2, composite.Capacity);
             // releasing composite should release the 4 components
             Assert.True(composite.Release());
-            Assert.Equal(0, composite.ReferenceCount);
-            Assert.Equal(1, buffer.ReferenceCount);
-            Assert.All(new[] { s1, s2, s3, s4 }, view => Assert.Equal(pooled ? 0 : 1, view.ReferenceCount));
+            Assert.Equal(0, composite.RefCnt);
+            Assert.Equal(1, buffer.RefCnt);
+            Assert.All(new[] { s1, s2, s3, s4 }, view => Assert.Equal(pooled ? 0 : 1, view.RefCnt));
             // last remaining ref to buffer
             Assert.True(buffer.Release());
-            Assert.Equal(0, buffer.ReferenceCount);
-            Assert.All(new[] { s1, s2, s3, s4 }, view => Assert.Equal(0, view.ReferenceCount));
+            Assert.Equal(0, buffer.RefCnt);
+            Assert.All(new[] { s1, s2, s3, s4 }, view => Assert.Equal(0, view.RefCnt));
         }
         finally
         {
-            if (composite.ReferenceCount > 0) composite.Release();
-            if (buffer.ReferenceCount > 0) buffer.Release(buffer.ReferenceCount);
+            if (composite.RefCnt > 0) composite.Release();
+            if (buffer.RefCnt > 0) buffer.Release(buffer.RefCnt);
         }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ShrinkingReleasesTheRemovedTailAndKeepsTheRemainingClaim(bool pooled, bool direct)
+    public void TestReleasesOnShrinkAcrossProviders(bool pooled, bool direct)
     {
         using var s = new Storage(pooled, direct);
         ByteBuf b1 = s.Allocator.Buffer(2).WriteShort(1);
@@ -151,21 +145,21 @@ public class CompositeByteBufDiscardTest
             composite.Capacity = 2;
             Assert.Equal(2, composite.Capacity);
             Assert.Equal(1, composite.NumComponents);
-            Assert.Equal(1, b1.ReferenceCount);
-            Assert.Equal(0, b2.ReferenceCount);
+            Assert.Equal(1, b1.RefCnt);
+            Assert.Equal(0, b2.RefCnt);
             Assert.Equal(1, composite.GetShort(0));
             // releasing composite should release the components
             Assert.True(composite.Release());
-            Assert.Equal(0, composite.ReferenceCount);
-            Assert.Equal(0, b1.ReferenceCount);
-            Assert.Equal(0, b2.ReferenceCount);
+            Assert.Equal(0, composite.RefCnt);
+            Assert.Equal(0, b1.RefCnt);
+            Assert.Equal(0, b2.RefCnt);
         }
-        finally { if (composite.ReferenceCount > 0) composite.Release(); }
+        finally { if (composite.RefCnt > 0) composite.Release(); }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ShrinkingNestedRetainedComponentsReleasesOnlyTheRemovedChild(bool pooled, bool direct)
+    public void TestReleasesOnShrink2AcrossProviders(bool pooled, bool direct)
     {
         using var s = new Storage(pooled, direct);
         // It is important to use a pooled allocator here to ensure
@@ -180,36 +174,51 @@ public class CompositeByteBufDiscardTest
         try
         {
             Assert.Equal(4, composite.Capacity);
-            Assert.Equal(pooled ? 2 : 3, buffer.ReferenceCount);
-            Assert.Equal(pooled ? 2 : 3, b1.ReferenceCount);
+            Assert.Equal(pooled ? 2 : 3, buffer.RefCnt);
+            Assert.Equal(pooled ? 2 : 3, b1.RefCnt);
             // reduce capacity down to two, will drop the second component
             composite.Capacity = 2;
             Assert.Equal(2, composite.Capacity);
             Assert.Equal(1, b1.GetShort(0));
-            Assert.Equal(pooled ? 1 : 2, b1.ReferenceCount);
-            Assert.Equal(pooled ? 0 : 2, b2.ReferenceCount);
+            Assert.Equal(pooled ? 1 : 2, b1.RefCnt);
+            Assert.Equal(pooled ? 0 : 2, b2.RefCnt);
             // releasing composite should release the components
             Assert.True(composite.Release());
-            Assert.Equal(0, composite.ReferenceCount);
-            Assert.Equal(pooled ? 0 : 1, b1.ReferenceCount);
-            Assert.Equal(pooled ? 0 : 1, b2.ReferenceCount);
+            Assert.Equal(0, composite.RefCnt);
+            Assert.Equal(pooled ? 0 : 1, b1.RefCnt);
+            Assert.Equal(pooled ? 0 : 1, b2.RefCnt);
             // release last remaining ref to buffer
             Assert.True(buffer.Release());
-            Assert.Equal(0, buffer.ReferenceCount);
-            Assert.Equal(0, b1.ReferenceCount);
-            Assert.Equal(0, b2.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
+            Assert.Equal(0, b1.RefCnt);
+            Assert.Equal(0, b2.RefCnt);
         }
         finally
         {
-            if (composite.ReferenceCount > 0) composite.Release();
-            if (buffer.ReferenceCount > 0) buffer.Release(buffer.ReferenceCount);
+            if (composite.RefCnt > 0) composite.Release();
+            if (buffer.RefCnt > 0) buffer.Release(buffer.RefCnt);
         }
     }
 
     [Theory]
-    [MemberData(nameof(Discards))]
-    public void RepeatedDiscardKeepsSubsequentComponentReadsAndReleasesCorrect(bool pooled, bool direct, bool some)
+    [MemberData(nameof(Providers))]
+    public void TestDiscardSomeReadBytesCorrectlyUpdatesLastAccessedAcrossProviders(bool pooled, bool direct)
     {
+        TestDiscardCorrectlyUpdatesLastAccessed(pooled, direct, true);
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestDiscardReadBytesCorrectlyUpdatesLastAccessedAcrossProviders(bool pooled, bool direct)
+    {
+        TestDiscardCorrectlyUpdatesLastAccessed(pooled, direct, false);
+    }
+
+    // CLR: bounded binary search replaces the JVM last-access cache; the original sequence still checks
+    // the component reads and releases after each discard.
+    private static void TestDiscardCorrectlyUpdatesLastAccessed(bool pooled, bool direct, bool discardSome)
+    {
+        bool some = discardSome;
         using var s = new Storage(pooled, direct);
         CompositeByteBuf composite = s.Allocator.CompositeBuffer();
         var sources = new List<ByteBuf>();
@@ -231,7 +240,7 @@ public class CompositeByteBufDiscardTest
             // call.
             composite.SkipBytes(3); Discard();
             Assert.Equal(3, composite.NumComponents);
-            Assert.Equal(0, sources[0].ReferenceCount);
+            Assert.Equal(0, sources[0].RefCnt);
             // Now skip again 3 bytes which should bring our readerIndex == start of the 3 component.
             composite.SkipBytes(3);
             // Read one int (4 bytes) which should bring our readerIndex == start of the 4 component.
@@ -244,15 +253,15 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(0, composite.ReaderIndex);
             Assert.Equal(0, composite.WriterIndex);
             // These should have been released already.
-            Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+            Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
             Assert.True(composite.Release());
         }
-        finally { if (composite.ReferenceCount > 0) composite.Release(); }
+        finally { if (composite.RefCnt > 0) composite.Release(); }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void DiscardReadBytesAdjustsBothMarksLikeTheContiguousReference(bool pooled, bool direct)
+    public void TestDiscardReadBytes3(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         byte[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -279,8 +288,8 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
             Assert.True(ByteBufUtil.Equals(contiguous, composite));
             Assert.Equal(new byte[] { 6, 7, 8, 9, 10 }, composite.ReadableSequence.ToArray());
-            Assert.Equal(0, first.ReferenceCount);
-            Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(0, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
             Assert.Equal(10, contiguous.Capacity);
             Assert.Equal(5, composite.Capacity);
             contiguous.ResetReaderIndex(); composite.ResetReaderIndex();
@@ -293,14 +302,14 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(new byte[] { 7, 8, 9 }, composite.ReadableSequence.ToArray());
         }
         finally { contiguous.Release(); composite.Release(); }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
     }
 
     // See https://github.com/netty/netty/issues/1976
     [Theory]
     [MemberData(nameof(TailGrowths))]
-    public void DiscardingConsumedWordsKeepsTheUnreadCapacityOfTheGrownTail(bool pooled, bool direct, bool littleEndian)
+    public void TestDiscardSomeReadBytes(bool pooled, bool direct, bool littleEndian)
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
@@ -333,14 +342,14 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(1, composite.ReaderIndex);
             Assert.Equal(1, composite.WriterIndex);
             Assert.Equal(0, composite.ReadableBytes);
-            Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+            Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
         }
         finally { composite.Release(); }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ZeroLengthReadAtTheEndLeavesIndicesAndComponentClaimsUnchanged(bool pooled, bool direct)
+    public void TestEmptyBuffer(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         ByteBuf first = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 1, 2 });
@@ -355,18 +364,18 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(4, composite.ReaderIndex);
             Assert.Equal(4, composite.WriterIndex);
             Assert.Equal(4, composite.Capacity);
-            Assert.Equal(1, first.ReferenceCount);
-            Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
         }
         finally { composite.Release(); }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
     }
 
     // Test for https://github.com/netty/netty/issues/1060
     [Theory]
     [MemberData(nameof(Providers))]
-    public void InitiallyEmptyCompositeSupportsSixtyFiveInterleavedWritesAndReads(bool pooled, bool direct)
+    public void TestReadWithEmptyCompositeBuffer(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();

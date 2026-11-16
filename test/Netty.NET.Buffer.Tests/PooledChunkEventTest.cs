@@ -21,6 +21,7 @@ using System.Threading;
 using Netty.NET.Common;
 using static Netty.NET.Buffer.Tests.PooledBufferEventTest;
 using Record = Netty.NET.Buffer.Tests.PooledBufferEventTest.Record;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -28,7 +29,8 @@ namespace Netty.NET.Buffer.Tests;
 public class PooledChunkEventTest
 {
     private static PooledByteBufAllocator NewAllocator(NativeMemoryAllocator native, int order = 1, int cache = 0, int alignment = 0)
-        => new(maxOrder: order, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache, directMemoryCacheAlignment: alignment);
+        => new(maxOrder: order, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache, directMemoryCacheAlignment: alignment,
+            useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
     private static ByteBuf Allocate(PooledByteBufAllocator allocator, bool direct, int size)
         => direct ? allocator.DirectBuffer(size, 40000) : allocator.HeapBuffer(size, 40000);
     private static Listener Listen(EventKeywords keywords = (EventKeywords)31) => new(keywords);
@@ -177,8 +179,8 @@ public class PooledChunkEventTest
     {
         var native = new NativeMemoryAllocator(16384); using var allocator = NewAllocator(native);
         using var listener = Listen(); ByteBuf buffer = Allocate(allocator, true, 16).WriteInt(0x12345678);
-        Assert.Throws<OutOfMemoryException>(() => buffer.Capacity = 20000);
-        Assert.Throws<OutOfMemoryException>(() => Allocate(allocator, true, 20000));
+        Assert.Throws<OutOfDirectMemoryError>(() => buffer.Capacity = 20000);
+        Assert.Throws<OutOfDirectMemoryError>(() => Allocate(allocator, true, 20000));
         Assert.Equal(new[] { 4, 1, 3 }, listener.Events.Select(e => e.Id));
         Assert.Equal(16, buffer.Capacity); Assert.Equal(0x12345678, buffer.GetInt(0));
         buffer.Release(); allocator.Dispose(); Assert.Equal(new[] { 4, 1, 3, 2, 5 }, listener.Events.Select(e => e.Id));
@@ -239,11 +241,10 @@ public class PooledChunkEventTest
         try
         {
             worker.Start();
-            Assert.True(SpinWait.SpinUntil(() =>
-            {
-                if (!Monitor.TryEnter(allocatorLock)) return true;
-                Monitor.Exit(allocatorLock); return false;
-            }, TimeSpan.FromSeconds(5)));
+            // The source takes no allocator-wide lock, so the worker waits on the arena lock alone.
+            Assert.True(SpinWait.SpinUntil(() => (worker.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
+                TimeSpan.FromSeconds(5)));
+            Assert.True(Monitor.TryEnter(allocatorLock)); Monitor.Exit(allocatorLock);
             listener = Listen();
             listener.Callback = _ => held |= Monitor.IsEntered(allocatorLock) || Monitor.IsEntered(arena.SyncRoot);
         }

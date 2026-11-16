@@ -16,6 +16,7 @@
 
 using System;
 using System.Numerics;
+using Netty.NET.Common;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -23,11 +24,10 @@ namespace Netty.NET.Buffer;
 
 public partial class PooledByteBufAllocator
 {
-    private readonly RuntimeDefaults _runtimeDefaults;
     private readonly ThreadCleanup _threadCleanup;
 
-    // CLR: only the shared default consumes these process settings. Explicit constructors
-    // keep their existing geometry/cache semantics. Snapshotting alone allocates no arenas.
+    // CLR: the process settings are snapshotted once, like the source's static DEFAULT_* fields; the shared Default
+    // and the omitted constructor arguments use them. Snapshotting alone allocates no arenas.
     private static class Configuration
     {
         internal static readonly RuntimeDefaults Value = new();
@@ -35,34 +35,18 @@ public partial class PooledByteBufAllocator
     }
     private static class DefaultInstance
     {
-        internal static readonly PooledByteBufAllocator Value = new(Configuration.Value);
+        internal static readonly PooledByteBufAllocator Value = new(ByteBufUtil.PreferDirect);
         static DefaultInstance() { }
-    }
-
-    private PooledByteBufAllocator(RuntimeDefaults settings)
-        : this(ByteBufUtil.PreferDirect, settings.HeapArenaCount, settings.DirectArenaCount,
-            settings.PageSize, settings.MaxOrder, settings.Alignment, null,
-            Math.Max(0, settings.SmallCacheSize), Math.Max(0, settings.NormalCacheSize),
-            Math.Max(0, settings.MaxCachedCapacity), Math.Max(1, settings.TrimInterval), settings.TrimPeriod)
-    {
-        _runtimeDefaults = settings;
-        // Java treats nonpositive cache sizes as disabled and only rejects
-        // a nonpositive trim interval when an eligible binding actually creates caches.
-        SmallCacheSize = settings.SmallCacheSize; NormalCacheSize = settings.NormalCacheSize;
-        _maxCachedBufferCapacity = settings.MaxCachedCapacity; _cacheTrimInterval = settings.TrimInterval;
-        _threadCleanup = new ThreadCleanup(this);
     }
 
     /**
      * Default number of heap arenas - System Property: io.netty.allocator.numHeapArenas - default 2 * cores
      */
-    /// <remarks>CLR defaults to one arena, without a JVM heap-budget heuristic.</remarks>
     public static int DefaultNumHeapArena() => Configuration.Value.HeapArenaCount;
 
     /**
      * Default number of direct arenas - System Property: io.netty.allocator.numDirectArenas - default 2 * cores
      */
-    /// <remarks>CLR defaults to one arena, without inferring a native budget from GC limits.</remarks>
     public static int DefaultNumDirectArena() => Configuration.Value.DirectArenaCount;
 
     /**
@@ -131,10 +115,34 @@ public partial class PooledByteBufAllocator
                 order = 9;
             }
             MaxOrder = order;
-            // CLR: no JVM heap/native-memory ceiling is available. Keep one arena per
-            // storage kind unless explicitly configured; do not infer native budgets from GC.
-            HeapArenaCount = Math.Max(0, SystemPropertyUtil.GetInt("io.netty.allocator.numHeapArenas", 1));
-            DirectArenaCount = Math.Max(0, SystemPropertyUtil.GetInt("io.netty.allocator.numDirectArenas", 1));
+
+            // Determine reasonable default for nHeapArena and nDirectArena.
+            // Assuming each arena has 3 chunks, the pool should not consume more than 50% of max memory.
+            // CLR: GCMemoryInfo.TotalAvailableMemoryBytes (GCHeapHardLimit, a container limit or physical memory) is
+            // the counterpart of Runtime.maxMemory().
+            long maxMemory = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
+
+            /*
+             * We use 2 * available processors by default to reduce contention as we use 2 * available processors for the
+             * number of EventLoops in NIO and EPOLL as well. If we choose a smaller number we will run into hot spots as
+             * allocation and de-allocation needs to be synchronized on the PoolArena.
+             *
+             * See https://github.com/netty/netty/issues/3888.
+             */
+            int defaultMinNumArena = NettyRuntime.AvailableProcessors() * 2;
+            int defaultChunkSize = PageSize << MaxOrder;
+            HeapArenaCount = Math.Max(0,
+                    SystemPropertyUtil.GetInt(
+                            "io.netty.allocator.numHeapArenas",
+                            (int)Math.Min(
+                                    defaultMinNumArena,
+                                    maxMemory / defaultChunkSize / 2 / 3)));
+            DirectArenaCount = Math.Max(0,
+                    SystemPropertyUtil.GetInt(
+                            "io.netty.allocator.numDirectArenas",
+                            (int)Math.Min(
+                                    defaultMinNumArena,
+                                    MaxDirectMemory(maxMemory) / defaultChunkSize / 2 / 3)));
             // cache sizes
             SmallCacheSize = SystemPropertyUtil.GetInt("io.netty.allocator.smallCacheSize", 256);
             NormalCacheSize = SystemPropertyUtil.GetInt("io.netty.allocator.normalCacheSize", 64);
@@ -159,6 +167,15 @@ public partial class PooledByteBufAllocator
             TrimPeriod = milliseconds <= 0 ? TimeSpan.Zero : TimeSpan.FromTicks(
                 Math.Min(milliseconds, long.MaxValue / TimeSpan.TicksPerMillisecond) * TimeSpan.TicksPerMillisecond);
             UseCacheForAllThreads = SystemPropertyUtil.GetBoolean("io.netty.allocator.useCacheForAllThreads", false);
+        }
+
+        // PlatformDependent.maxDirectMemory(): a positive io.netty.maxDirectMemory, otherwise estimateMaxDirectMemory(),
+        // which falls back to Runtime.maxMemory() without -XX:MaxDirectMemorySize. CLR: there is no JVM
+        // direct-memory flag, so the GC memory budget is that fallback.
+        private static long MaxDirectMemory(long maxMemory)
+        {
+            long maxDirectMemory = SystemPropertyUtil.GetLong("io.netty.maxDirectMemory", -1);
+            return maxDirectMemory >= 1 ? maxDirectMemory : maxMemory;
         }
     }
 }

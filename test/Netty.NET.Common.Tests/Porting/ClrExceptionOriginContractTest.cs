@@ -52,7 +52,7 @@ public class ClrExceptionOriginContractTest
         Assert.Same(original, observed);
         Assert.Contains(nameof(ThrowAtOrigin), observed.StackTrace);
         Assert.True(executor.IsTerminated());
-        Exception termination = await Record.ExceptionAsync(async () => await executor.Termination);
+        Exception termination = await Record.ExceptionAsync(async () => await executor.TerminationFuture);
         Assert.Same(original, termination);
         Assert.Contains(nameof(ThrowAtOrigin), termination.StackTrace);
     }

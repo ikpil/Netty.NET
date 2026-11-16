@@ -26,20 +26,35 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class TaskAggregationOwnershipPortTest
 {
     [Fact]
-    public async Task AggregatingNoPendingWorkSucceeds()
+    public async Task TestNullAggregatePromise()
+    {
+        // CLR: no required aggregate-producer argument exists. An optional owner uses
+        // TrySetFromTask and cannot overwrite its result.
+        Task result = Task.WhenAll(Task.CompletedTask);
+        var owner = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(owner.TrySetFromTask(result));
+        await owner.Task;
+        Assert.False(owner.TrySetFromTask(result));
+    }
+
+    [Fact]
+    public void TestAddNullFuture() =>
+        Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+
+    [Fact]
+    public async Task TestSuccessfulNoPending()
     {
         await Task.WhenAll(Array.Empty<Task>());
     }
 
     [Fact]
-    public void ARequiredTaskCollectionCannotBeNull() =>
-        Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
-
-    [Fact]
-    public async Task SuccessfulPendingWorkIsAggregatedWithoutWriters()
+    public async Task TestSuccessfulPending()
     {
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        // CLR: the source add(p1, null, p2) silently skips the null entry; the native
+        // aggregation rejects it instead (docs/common-task-composition.md).
+        Assert.Throws<ArgumentException>(() => Task.WhenAll(first.Task, null, second.Task));
         Task result = Task.WhenAll(first.Task, second.Task);
         first.SetResult();
         Assert.False(result.IsCompleted);
@@ -48,8 +63,10 @@ public class TaskAggregationOwnershipPortTest
     }
 
     [Fact]
-    public async Task AFailedSiblingNeverForcesCompletionOfAnotherProducer()
+    public async Task TestFailedFutureFailPending()
     {
+        // CLR: a failure cannot manufacture sibling producer outcomes; WhenAll waits for
+        // their real completion and explicit cancellation remains the owner's choice.
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var error = new InvalidOperationException("original");
@@ -63,8 +80,10 @@ public class TaskAggregationOwnershipPortTest
     }
 
     [Fact]
-    public async Task FailFastObservationDoesNotRewritePendingSiblingResults()
+    public async Task TestFailedFutureNoFailPending()
     {
+        // CLR: siblings remain unaffected; WhenAny supplies early observation and WhenAll
+        // retains the eventual aggregate failure.
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
@@ -76,15 +95,5 @@ public class TaskAggregationOwnershipPortTest
         second.SetResult(23);
         Assert.Equal(23, await second.Task);
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await all);
-    }
-
-    [Fact]
-    public async Task ProducerOwnershipReplacesANullAggregatePromiseArgument()
-    {
-        Task result = Task.WhenAll(Task.CompletedTask);
-        var owner = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Assert.True(owner.TrySetFromTask(result));
-        await owner.Task;
-        Assert.False(owner.TrySetFromTask(result));
     }
 }

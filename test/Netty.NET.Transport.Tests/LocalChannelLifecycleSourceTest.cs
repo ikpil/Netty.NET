@@ -46,10 +46,15 @@ public partial class LocalChannelSourceTest
             await cb.ConnectAsync(server.LocalAddress);
             // Close the channel and write something.
             await client.CloseAsync();
-            await Assert.ThrowsAsync<IOException>(() => client.WriteAndFlushAsync(new object()));
+            var e = await Assert.ThrowsAnyAsync<ClosedChannelException>(() => client.WriteAndFlushAsync(new object()));
             // Ensure that the actual write attempt on a closed channel was never made by asserting that
             // the ClosedChannelException has been created by AbstractUnsafe rather than transport implementations.
-            // CLR: a returned IOException has no JVM synthetic stack. Observe the transport override itself.
+            // CLR: AbstractUnsafe is folded into AbstractChannel; its origin is the first, remote stack frame.
+            if (!string.IsNullOrEmpty(e.StackTrace))
+            {
+                Assert.StartsWith("   at " + typeof(AbstractChannel).FullName + ".", e.StackTrace);
+            }
+            // CLR: also observe the transport override itself.
             Assert.Equal(0, client.WriteAttempts);
         }
         finally { await CloseChannel(client); await CloseChannel(server); }
@@ -169,7 +174,7 @@ public partial class LocalChannelSourceTest
             Assert.Equal(SocketError.ConnectionRefused, error.SocketErrorCode);
             // The connect promise is failed before the channel is closed (as for any refused connection), and
             // await() may return before the close, so wait for it.
-            await client.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            await client.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(client.IsOpen);
             Task close = client.CloseAsync();
             await close;
@@ -194,7 +199,7 @@ public partial class LocalChannelSourceTest
             // close, and so the notification, before the client's close is submitted.
             await server.EventLoop.SubmitAsync(() => { _ = server.CloseAsync(); return client.CloseAsync(); }).WaitAsync(TimeSpan.FromSeconds(5));
             // CLR: await the native bootstrap's asynchronous result propagation after the source close order.
-            await Assert.ThrowsAsync<IOException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(connection.IsCompleted);
         }
         finally { await CloseChannel(client); await CloseChannel(server); await ObserveCompletion(connection, TimeSpan.FromSeconds(5)); }
@@ -214,11 +219,11 @@ public partial class LocalChannelSourceTest
             Task close = client.CloseAsync();
             await close;
             Assert.True(close.IsCompletedSuccessfully);
-            await Assert.ThrowsAsync<IOException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
             // Accepting the queued connection now must not reopen or activate the client, and the accepted
             // channel must be closed.
             server.Config.SetAutoRead(true);
-            await child.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            await child.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(child.IsActive);
             Assert.False(client.IsOpen);
             Assert.False(client.IsActive);
@@ -271,7 +276,7 @@ public partial class LocalChannelSourceTest
         // The child group is terminated, so registering the accepted channel fails. This logs a WARN
         // ("Force-closing a channel whose registration task was not accepted by an event loop") and an ERROR
         // (a listener notification that cannot be submitted to the terminated event loop). Both are expected.
-        var children = new DefaultEventLoopGroup(1);
+        var children = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         await children.StopAsync();
         var server = await new ServerBootstrap().Group(groups.Shared, children).Channel<LocalServerChannel>()
             .ChildHandler(new TestHandler()).BindAsync(TestAddress);
@@ -280,7 +285,7 @@ public partial class LocalChannelSourceTest
         {
             var error = await Assert.ThrowsAsync<SocketException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(SocketError.ConnectionRefused, error.SocketErrorCode);
-            await client.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            await client.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(client.IsOpen);
             Task close = client.CloseAsync();
             await close;
@@ -310,11 +315,11 @@ public partial class LocalChannelSourceTest
     private sealed class CountingWriteLocalChannel : LocalChannel
     {
         internal int WriteAttempts;
-        protected override Task DoWrite(object message) { WriteAttempts++; return base.DoWrite(message); }
+        protected override void DoWrite(ChannelOutboundBuffer @in) { WriteAttempts++; base.DoWrite(@in); }
     }
     private sealed class CheckConnectCompletion(Func<Task> connect, TaskCompletionSource asserted) : TestHandler
     {
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
             // Ensure the promise was done before the handler method is triggered.
             if (connect()?.IsCompleted == true)
@@ -325,12 +330,12 @@ public partial class LocalChannelSourceTest
     }
     private sealed class CloseOnRead(TaskCompletionSource closed) : SimpleChannelInboundHandler<object>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, object message)
-        { _ = context.CloseAsync(); closed.TrySetResult(); }
+        protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
+        { _ = ctx.CloseAsync(); closed.TrySetResult(); }
     }
     private sealed class DiscardHandler : SimpleChannelInboundHandler<object>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, object message)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
         {
             // discard
         }
@@ -350,7 +355,7 @@ public partial class LocalChannelSourceTest
         private readonly ManualResetEventSlim _closeLatch = closeLatch;
         protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) => new LocalTaskGatedLoop(this, executor, _closeLatch);
     }
-    private sealed class LocalTaskGatedLoop(IEventExecutorGroup parent, Action<Action> executor, ManualResetEventSlim closeLatch)
+    private sealed class LocalTaskGatedLoop(IEventLoopGroup parent, Action<Action> executor, ManualResetEventSlim closeLatch)
         : DefaultEventLoop(parent, executor)
     {
         public override void Execute(Action task)

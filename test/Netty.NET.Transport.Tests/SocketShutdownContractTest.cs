@@ -30,7 +30,7 @@ public class SocketShutdownContractTest
         Assert.True(channel.AllOnOwner);
         Assert.True(channel.IsOpen);
     }
-    private sealed class FailingShutdownChannel(Exception output, Exception input) : TcpSocketChannel
+    private sealed class FailingShutdownChannel(Exception output, Exception input) : NioSocketChannel
     {
         internal readonly List<string> Calls = new();
         internal bool AllOnOwner = true;
@@ -44,19 +44,19 @@ public class SocketShutdownContractTest
         await using var fixture = new ShutdownFixture(false);
         using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();
         var handler = new ShutdownTestHandler();
-        var channel = (TcpSocketChannel)await fixture.Client.Handler(handler).ConnectAsync(listener.LocalEndpoint);
+        var channel = (NioSocketChannel)await fixture.Client.Handler(handler).ConnectAsync(listener.LocalEndpoint);
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
-        var queued = channel.Allocator.Buffer(1).WriteByte(1);
+        var queued = channel.Alloc().Buffer(1).WriteByte(1);
         Task write = null;
         await channel.EventLoop.SubmitAsync(() => { write = channel.WriteAsync(queued); });
         Assert.False(write.IsCompleted);
         await channel.ShutdownOutputAsync();
         await Assert.ThrowsAsync<ChannelOutputShutdownException>(() => write);
-        Assert.Equal(0, queued.ReferenceCount);
-        var rejected = channel.Allocator.Buffer(1).WriteByte(2);
-        await Assert.ThrowsAsync<IOException>(() => channel.WriteAndFlushAsync(rejected));
-        Assert.Equal(0, rejected.ReferenceCount);
-        await Assert.ThrowsAsync<IOException>(() => channel.ShutdownOutputAsync());
+        Assert.Equal(0, queued.RefCnt);
+        var rejected = channel.Alloc().Buffer(1).WriteByte(2);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => channel.WriteAndFlushAsync(rejected));
+        Assert.Equal(0, rejected.RefCnt);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => channel.ShutdownOutputAsync());
         Assert.True(channel.IsOpen); Assert.True(channel.IsActive); Assert.False(channel.IsInputShutdown);
         var bytes = new byte[1];
         Assert.Equal(0, await peer.GetStream().ReadAsync(bytes, TestContext.Current.CancellationToken));
@@ -85,7 +85,7 @@ public class SocketShutdownContractTest
         await channel.EventLoop.SubmitAsync(() => { });
         Assert.Equal(new[] { "readComplete", "half", "readComplete", "final" }, handler.Events);
         Assert.True(handler.AllOnOwner);
-        Assert.True(channel.IsOpen); Assert.True(channel.IsActive); Assert.True(((TcpSocketChannel)channel).IsInputShutdown);
+        Assert.True(channel.IsOpen); Assert.True(channel.IsActive); Assert.True(((NioSocketChannel)channel).IsInputShutdown);
     }
     private sealed class FinalReadHandler : ChannelInboundHandlerAdapter
     {
@@ -94,10 +94,10 @@ public class SocketShutdownContractTest
         internal readonly TaskCompletionSource Final = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly List<string> Events = new();
         internal bool AllOnOwner = true;
-        public override void ChannelActive(ChannelHandlerContext ctx) => Active.TrySetResult(ctx.Channel);
-        public override void ChannelReadComplete(ChannelHandlerContext ctx)
+        public override void ChannelActive(IChannelHandlerContext ctx) => Active.TrySetResult(ctx.Channel);
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         { AllOnOwner &= ctx.Executor.InEventLoop(); Events.Add("readComplete"); }
-        public override void UserEventTriggered(ChannelHandlerContext ctx, object evt)
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             AllOnOwner &= ctx.Executor.InEventLoop();
             if (evt is ChannelInputShutdownEvent) { Events.Add("half"); Half.TrySetResult(); }

@@ -15,93 +15,137 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using Netty.NET.Common.Concurrent;
+using IntEntry = Netty.NET.Common.Concurrent.ConcurrentSkipListIntObjMultimap<string>.IntEntry;
+using Iterator = Netty.NET.Common.Concurrent.ConcurrentSkipListIntObjMultimap<string>.Iter<
+    Netty.NET.Common.Concurrent.ConcurrentSkipListIntObjMultimap<string>.IntEntry>;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
-// The original file name records provenance. Assertions use native Try APIs and
-// snapshot + successful removal instead of a mutable Java Iterator facade.
 public class ConcurrentSkipListIntObjMultimapTest
 {
-    private readonly ConcurrentOrderedMultiMap<string> _map = new();
-    private static KeyValuePair<int, string> Entry(int key, string value) => new(key, value);
+    private ConcurrentSkipListIntObjMultimap<string> _map;
+    private int _noKey;
+
+    // CLR: xUnit creates a new test class instance for every test case, so the @BeforeEach method runs from the
+    // constructor. A @RepeatedTest(100) method is a [Theory] over 100 repetition rows: each repetition is its own case
+    // with a fresh map, as in JUnit. ThreadLocalRandom.current().nextInt(bound) is Random.Shared.Next(bound).
+    public ConcurrentSkipListIntObjMultimapTest()
+    {
+        SetUp();
+    }
+
+    public static IEnumerable<object[]> Repetitions()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            yield return new object[] { i };
+        }
+    }
+
+    private void SetUp()
+    {
+        _noKey = -1;
+        _map = new ConcurrentSkipListIntObjMultimap<string>(_noKey);
+    }
 
     [Fact]
     public void AddIterateAndRemoveEntries()
     {
-        Assert.Empty(_map.Snapshot());
-        _map.Add(1, "a");
-        _map.Add(2, "b");
-        Assert.False(_map.IsEmpty);
-        Assert.Equal(2, _map.Count);
-        var entries = _map.Snapshot();
-        Assert.Equal(new[] { Entry(1, "a"), Entry(2, "b") }, entries);
-        foreach (var entry in entries)
-            Assert.True(_map.TryRemove(entry.Key, entry.Value));
-        Assert.True(_map.IsEmpty);
-        Assert.Equal(0, _map.Count);
+        Assert.False(_map.Iterator().HasNext());
+        _map.Put(1, "a");
+        _map.Put(2, "b");
+        Assert.False(_map.IsEmpty());
+        Assert.Equal(2, _map.Size());
+        IntEntry entry;
+        Iterator itr = _map.Iterator();
+        Assert.True(itr.HasNext());
+        entry = itr.Next();
+        itr.Remove();
+        Assert.Equal(new IntEntry(1, "a"), entry);
+        Assert.True(itr.HasNext());
+        entry = itr.Next();
+        itr.Remove();
+        Assert.Equal(new IntEntry(2, "b"), entry);
+        Assert.False(itr.HasNext());
+        Assert.True(_map.IsEmpty());
+        Assert.Equal(0, _map.Size());
     }
 
     [Fact]
     public void ClearMustRemoveAllEntries()
     {
-        _map.Add(2, "b");
-        _map.Add(1, "a");
-        _map.Add(3, "c");
-        Assert.Equal(3, _map.Count);
+        _map.Put(2, "b");
+        _map.Put(1, "a");
+        _map.Put(3, "c");
+        Assert.Equal(3, _map.Size());
         _map.Clear();
-        Assert.Equal(0, _map.Count);
-        Assert.Empty(_map.Snapshot());
-        Assert.True(_map.IsEmpty);
+        Assert.Equal(0, _map.Size());
+        Assert.False(_map.Iterator().HasNext());
+        Assert.True(_map.IsEmpty());
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    [InlineData(true, true)]
-    public void PollingFirstOrLastEntryOfUniqueOrMultiMappedKeys(bool last, bool duplicate)
+    [Fact]
+    public void PollingFirstEntryOfUniqueKeys()
     {
-        // Maps pollingFirstEntryOfUniqueKeys, pollingLastEntryOfUniqueKeys,
-        // pollingFirstEntryOfMultiMappedKeys and pollingLastEntryOfMultiMappedKeys.
-        _map.Add(2, "b");
-        _map.Add(1, "a");
-        if (duplicate)
-            _map.Add(2, "b");
-        _map.Add(3, "c");
-        var expected = duplicate ? new[] { 1, 2, 2, 3 } : new[] { 1, 2, 3 };
-        if (last)
-            Array.Reverse(expected);
-        foreach (int key in expected)
-        {
-            bool found = last ? _map.TryTakeLast(out var entry) : _map.TryTakeFirst(out entry);
-            Assert.True(found);
-            Assert.Equal(Entry(key, key == 1 ? "a" : key == 2 ? "b" : "c"), entry);
-        }
-        Assert.True(_map.IsEmpty);
-        Assert.Equal(0, _map.Count);
-        Assert.Empty(_map.Snapshot());
+        _map.Put(2, "b");
+        _map.Put(1, "a");
+        _map.Put(3, "c");
+        Assert.Equal(new IntEntry(1, "a"), _map.PollFirstEntry());
+        Assert.Equal(new IntEntry(2, "b"), _map.PollFirstEntry());
+        Assert.Equal(new IntEntry(3, "c"), _map.PollFirstEntry());
+        Assert.True(_map.IsEmpty());
+        Assert.Equal(0, _map.Size());
+        Assert.False(_map.Iterator().HasNext());
+    }
+
+    [Fact]
+    public void PollingLastEntryOfUniqueKeys()
+    {
+        _map.Put(2, "b");
+        _map.Put(1, "a");
+        _map.Put(3, "c");
+        Assert.Equal(new IntEntry(3, "c"), _map.PollLastEntry());
+        Assert.Equal(new IntEntry(2, "b"), _map.PollLastEntry());
+        Assert.Equal(new IntEntry(1, "a"), _map.PollLastEntry());
+        Assert.True(_map.IsEmpty());
+        Assert.Equal(0, _map.Size());
+        Assert.False(_map.Iterator().HasNext());
     }
 
     [Fact]
     public void AddMultipleEntriesForSameKey()
     {
-        _map.Add(2, "b1");
-        _map.Add(1, "a");
-        _map.Add(2, "b2"); // second entry for the 2 key
-        _map.Add(3, "c");
-        Assert.Equal(4, _map.Count);
-        var entries = _map.Snapshot();
-        Assert.Equal(Entry(1, "a"), entries[0]);
-        Assert.Equal(Entry(3, "c"), entries[3]);
-        Assert.Contains(entries[1], new[] { Entry(2, "b1"), Entry(2, "b2") });
-        Assert.Contains(entries[2], new[] { Entry(2, "b1"), Entry(2, "b2") });
-        Assert.NotEqual(entries[1], entries[2]);
-        foreach (var entry in entries)
-            Assert.True(_map.TryRemove(entry.Key, entry.Value));
-        Assert.True(_map.IsEmpty);
-        Assert.Equal(0, _map.Count);
+        _map.Put(2, "b1");
+        _map.Put(1, "a");
+        _map.Put(2, "b2"); // second entry for the 2 key
+        _map.Put(3, "c");
+        Assert.Equal(4, _map.Size());
+
+        IntEntry entry;
+        Iterator itr = _map.Iterator();
+        Assert.True(itr.HasNext());
+        entry = itr.Next();
+        itr.Remove();
+        Assert.Equal(new IntEntry(1, "a"), entry);
+        Assert.True(itr.HasNext());
+        entry = itr.Next();
+        IntEntry otherB = entry;
+        itr.Remove();
+        Assert.Contains(entry, new[] { new IntEntry(2, "b1"), new IntEntry(2, "b2") });
+        Assert.True(itr.HasNext());
+        entry = itr.Next();
+        itr.Remove();
+        Assert.Contains(entry, new[] { new IntEntry(2, "b1"), new IntEntry(2, "b2") });
+        Assert.NotEqual(otherB, entry);
+        Assert.True(itr.HasNext());
+        entry = itr.Next();
+        itr.Remove();
+        Assert.Equal(new IntEntry(3, "c"), entry);
+        Assert.False(itr.HasNext());
+        Assert.True(_map.IsEmpty());
+        Assert.Equal(0, _map.Size());
     }
 
     [Theory]
@@ -109,148 +153,355 @@ public class ConcurrentSkipListIntObjMultimapTest
     [InlineData(false)]
     public void IteratorRemoveSecondOfMultiMappedEntry(bool withPriorRemoval)
     {
-        _map.Add(1, "a");
-        _map.Add(1, "b");
-        var second = _map.Snapshot()[1];
-        if (withPriorRemoval)
-            Assert.True(_map.TryRemove(second.Key, second.Value));
-        Assert.Equal(!withPriorRemoval, _map.TryRemove(second.Key, second.Value));
-        Assert.Equal(1, _map.Count);
-        Assert.True(_map.TryTakeFirst(out var remaining));
-        Assert.Equal(Entry(1, second.Value == "a" ? "b" : "a"), remaining);
-    }
+        _map.Put(1, "a");
+        _map.Put(1, "b");
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void FirstOrLastKeyOrEntry(bool last)
-    {
-        // Both original firstKeyOrEntry / lastKeyOrEntry incremental scenarios.
-        bool found = last ? _map.TryPeekLast(out var entry) : _map.TryPeekFirst(out entry);
-        Assert.False(found);
-        _map.Add(2, "b");
-        Assert.True(last ? _map.TryPeekLast(out entry) : _map.TryPeekFirst(out entry));
-        Assert.Equal(Entry(2, "b"), entry);
-        _map.Add(last ? 1 : 3, last ? "a" : "c");
-        _map.Add(2, "b2");
-        Assert.True(last ? _map.TryPeekLast(out entry) : _map.TryPeekFirst(out entry));
-        Assert.Contains(entry, new[] { Entry(2, "b"), Entry(2, "b2") });
-        _map.Add(last ? 3 : 1, last ? "c" : "a");
-        _map.Add(2, "b3");
-        Assert.True(last ? _map.TryPeekLast(out entry) : _map.TryPeekFirst(out entry));
-        Assert.Equal(last ? Entry(3, "c") : Entry(1, "a"), entry);
-        Assert.True(last ? _map.TryTakeLast(out _) : _map.TryTakeFirst(out _));
-        Assert.True(last ? _map.TryPeekLast(out entry) : _map.TryPeekFirst(out entry));
-        Assert.Contains(entry, new[] { Entry(2, "b"), Entry(2, "b2"), Entry(2, "b3") });
+        Iterator itr = _map.Iterator();
+        itr.Next();
+        IntEntry entry = itr.Next();
+        if (withPriorRemoval)
+        {
+            _map.Remove(entry.GetKey(), entry.GetValue());
+        }
+        itr.Remove();
+        Assert.Equal(1, _map.Size());
+        if (entry.Equals(new IntEntry(1, "a")))
+        {
+            Assert.Equal(new IntEntry(1, "b"), _map.PollFirstEntry());
+        }
+        else
+        {
+            Assert.Equal(new IntEntry(1, "a"), _map.PollFirstEntry());
+        }
     }
 
     [Fact]
-    public void FirstLastKeyOrEntry()
+    public void FirstKeyOrEntry()
     {
-        var random = new Random(4201);
-        for (int repetition = 0; repetition < 100; repetition++)
-        {
-            _map.Clear();
-            var keys = new int[50];
-            for (int i = 0; i < keys.Length; i++)
-            { keys[i] = random.Next(50); _map.Add(keys[i], "a"); }
-            Array.Sort(keys);
-            Assert.True(_map.TryPeekFirst(out var first));
-            Assert.Equal(Entry(keys[0], "a"), first);
-            Assert.True(_map.TryPeekLast(out var last));
-            Assert.Equal(Entry(keys[^1], "a"), last);
-        }
+        Assert.Equal(_noKey, _map.FirstKey());
+        Assert.Null(_map.FirstEntry());
+        _map.Put(2, "b");
+        Assert.Equal(2, _map.FirstKey());
+        Assert.Equal(new IntEntry(2, "b"), _map.FirstEntry());
+        _map.Put(3, "c");
+        Assert.Equal(2, _map.FirstKey());
+        Assert.Equal(new IntEntry(2, "b"), _map.FirstEntry());
+        _map.Put(2, "b2");
+        Assert.Equal(2, _map.FirstKey());
+        Assert.Contains(_map.FirstEntry(), new[] { new IntEntry(2, "b"), new IntEntry(2, "b2") });
+        _map.Put(1, "a");
+        Assert.Equal(1, _map.FirstKey());
+        Assert.Equal(new IntEntry(1, "a"), _map.FirstEntry());
+        _map.Put(2, "b3");
+        Assert.Equal(1, _map.FirstKey());
+        Assert.Equal(new IntEntry(1, "a"), _map.FirstEntry());
+        _map.PollFirstEntry();
+        Assert.Equal(2, _map.FirstKey());
+        Assert.Contains(_map.FirstEntry(), new[] { new IntEntry(2, "b"), new IntEntry(2, "b2"), new IntEntry(2, "b3") });
+    }
+
+    [Fact]
+    public void LastKeyOrEntry()
+    {
+        Assert.Equal(_noKey, _map.LastKey());
+        Assert.Null(_map.LastEntry());
+        _map.Put(2, "b");
+        Assert.Equal(2, _map.LastKey());
+        Assert.Equal(new IntEntry(2, "b"), _map.LastEntry());
+        _map.Put(1, "a");
+        Assert.Equal(2, _map.LastKey());
+        Assert.Equal(new IntEntry(2, "b"), _map.LastEntry());
+        _map.Put(2, "b2");
+        Assert.Equal(2, _map.LastKey());
+        Assert.Contains(_map.LastEntry(), new[] { new IntEntry(2, "b"), new IntEntry(2, "b2") });
+        _map.Put(3, "c");
+        Assert.Equal(3, _map.LastKey());
+        Assert.Equal(new IntEntry(3, "c"), _map.LastEntry());
+        _map.Put(2, "b3");
+        Assert.Equal(3, _map.LastKey());
+        Assert.Equal(new IntEntry(3, "c"), _map.LastEntry());
+        _map.PollLastEntry();
+        Assert.Equal(2, _map.LastKey());
+        Assert.Contains(_map.LastEntry(), new[] { new IntEntry(2, "b"), new IntEntry(2, "b2"), new IntEntry(2, "b3") });
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    public void NeighborEntryOrKeyMatchesOriginalHundredRepetitions(int relation)
+    [MemberData(nameof(Repetitions))]
+    public void FirstLastKeyOrEntry(int repetition)
     {
-        // Maps lowerEntryOrKey, floorEntryOrKey, ceilEntryOrKey, higherEntryOrKey.
-        var random = new Random(4202 + relation);
-        for (int repetition = 0; repetition < 100; repetition++)
+        _ = repetition;
+        int[] xs = new int[50];
+        for (int i = 0; i < xs.Length; i++)
         {
-            _map.Clear();
-            var keys = new int[50];
-            for (int i = 0; i < keys.Length; i++)
-            { keys[i] = random.Next(50); _map.Add(keys[i], keys[i].ToString()); }
-            Array.Sort(keys);
-            for (int trial = 0; trial < 10; trial++)
+            int key = Random.Shared.Next(50);
+            _map.Put(key, "a");
+            xs[i] = key;
+        }
+        Array.Sort(xs);
+        Assert.Equal(xs[0], _map.FirstKey());
+        Assert.Equal(new IntEntry(xs[0], "a"), _map.FirstEntry());
+        Assert.Equal(xs[xs.Length - 1], _map.LastKey());
+        Assert.Equal(new IntEntry(xs[xs.Length - 1], "a"), _map.LastEntry());
+    }
+
+    [Theory]
+    [MemberData(nameof(Repetitions))]
+    public void LowerEntryOrKey(int repetition)
+    {
+        _ = repetition;
+        IntEntry[] xs = new IntEntry[50];
+        for (int i = 0; i < xs.Length; i++)
+        {
+            int key = Random.Shared.Next(50);
+            xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
+            _map.Put(key, xs[i].GetValue());
+        }
+        Array.Sort(xs);
+        for (int i = 0; i < 10; i++)
+        {
+            IntEntry target = xs[Random.Shared.Next(xs.Length)];
+            IntEntry expected = null;
+            foreach (IntEntry x in xs)
             {
-                int target = keys[random.Next(keys.Length)];
-                int[] candidates = keys.Where(k => relation switch { 0 => k < target, 1 => k <= target, 2 => k >= target, _ => k > target }).ToArray();
-                bool found = Find(relation, target, out var actual);
-                Assert.Equal(candidates.Length != 0, found);
-                if (found)
-                    Assert.Equal(Entry(relation < 2 ? candidates[^1] : candidates[0], actual.Key.ToString()), actual);
+                if (x.CompareTo(target) < 0)
+                {
+                    expected = x;
+                }
+                else
+                {
+                    break;
+                }
             }
+            Assert.Equal(expected, _map.LowerEntry(target.GetKey()));
+            Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.LowerKey(target.GetKey()));
         }
     }
 
     [Theory]
-    [InlineData(false)]
     [InlineData(true)]
-    public void NeighborEntryOrKeyMismatch(bool multiMapped)
+    [InlineData(false)]
+    public void LowerEntryOrKeyMismatch(bool multiMapped)
     {
-        // The four original mismatch methods, each with both duplicate variants.
-        _map.Add(1, "a");
-        _map.Add(3, "b");
-        _map.Add(4, "c");
+        _map.Put(1, "a");
+        _map.Put(3, "b");
+        _map.Put(4, "c");
         if (multiMapped)
-        { _map.Add(1, "a"); _map.Add(3, "b"); _map.Add(4, "c"); }
-        Assert.True(_map.TryGetLower(3, out var e));
-        Assert.Equal(Entry(1, "a"), e);
-        Assert.True(_map.TryGetLower(4, out e));
-        Assert.Equal(Entry(3, "b"), e);
-        Assert.False(_map.TryGetLower(1, out _));
-        Assert.True(_map.TryGetFloor(2, out e));
-        Assert.Equal(Entry(1, "a"), e);
-        Assert.True(_map.TryGetFloor(3, out e));
-        Assert.Equal(Entry(3, "b"), e);
-        _map.Clear();
-        _map.Add(1, "a");
-        _map.Add(2, "b");
-        _map.Add(4, "c");
+        {
+            _map.Put(1, "a");
+            _map.Put(3, "b");
+            _map.Put(4, "c");
+        }
+        Assert.Equal(1, _map.LowerKey(3));
+        Assert.Equal(new IntEntry(1, "a"), _map.LowerEntry(3));
+        Assert.Equal(3, _map.LowerKey(4));
+        Assert.Equal(new IntEntry(3, "b"), _map.LowerEntry(4));
+        Assert.Equal(_noKey, _map.LowerKey(1));
+        Assert.Null(_map.LowerEntry(1));
+    }
+
+    [Theory]
+    [MemberData(nameof(Repetitions))]
+    public void FloorEntryOrKey(int repetition)
+    {
+        _ = repetition;
+        IntEntry[] xs = new IntEntry[50];
+        for (int i = 0; i < xs.Length; i++)
+        {
+            int key = Random.Shared.Next(50);
+            xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
+            _map.Put(key, xs[i].GetValue());
+        }
+        Array.Sort(xs);
+        for (int i = 0; i < 10; i++)
+        {
+            IntEntry target = xs[Random.Shared.Next(xs.Length)];
+            IntEntry expected = null;
+            foreach (IntEntry x in xs)
+            {
+                if (x.CompareTo(target) <= 0)
+                {
+                    expected = x;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            Assert.Equal(expected, _map.FloorEntry(target.GetKey()));
+            Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.FloorKey(target.GetKey()));
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void FloorEntryOrKeyMismatch(bool multiMapped)
+    {
+        _map.Put(1, "a");
+        _map.Put(3, "b");
+        _map.Put(4, "c");
         if (multiMapped)
-        { _map.Add(1, "a"); _map.Add(2, "b"); _map.Add(4, "c"); }
-        Assert.True(_map.TryGetCeiling(2, out e));
-        Assert.Equal(Entry(2, "b"), e);
-        Assert.True(_map.TryGetCeiling(3, out e));
-        Assert.Equal(Entry(4, "c"), e);
-        Assert.True(_map.TryGetHigher(2, out e));
-        Assert.Equal(Entry(4, "c"), e);
-        Assert.True(_map.TryGetHigher(3, out e));
-        Assert.Equal(Entry(4, "c"), e);
-        Assert.False(_map.TryGetHigher(4, out _));
+        {
+            _map.Put(1, "a");
+            _map.Put(3, "b");
+            _map.Put(4, "c");
+        }
+        Assert.Equal(1, _map.FloorKey(2));
+        Assert.Equal(new IntEntry(1, "a"), _map.FloorEntry(2));
+        Assert.Equal(3, _map.FloorKey(3));
+        Assert.Equal(new IntEntry(3, "b"), _map.FloorEntry(3));
+    }
+
+    [Theory]
+    [MemberData(nameof(Repetitions))]
+    public void CeilEntryOrKey(int repetition)
+    {
+        _ = repetition;
+        IntEntry[] xs = new IntEntry[50];
+        for (int i = 0; i < xs.Length; i++)
+        {
+            int key = Random.Shared.Next(50);
+            xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
+            _map.Put(key, xs[i].GetValue());
+        }
+        Array.Sort(xs);
+        for (int i = 0; i < 10; i++)
+        {
+            IntEntry target = xs[Random.Shared.Next(xs.Length)];
+            IntEntry expected = null;
+            foreach (IntEntry x in xs)
+            {
+                if (x.CompareTo(target) >= 0)
+                {
+                    expected = x;
+                    break;
+                }
+            }
+            Assert.Equal(expected, _map.CeilingEntry(target.GetKey()));
+            Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.CeilingKey(target.GetKey()));
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CeilEntryOrKeyMismatch(bool multiMapped)
+    {
+        _map.Put(1, "a");
+        _map.Put(2, "b");
+        _map.Put(4, "c");
+        if (multiMapped)
+        {
+            _map.Put(1, "a");
+            _map.Put(2, "b");
+            _map.Put(4, "c");
+        }
+        Assert.Equal(2, _map.CeilingKey(2));
+        Assert.Equal(new IntEntry(2, "b"), _map.CeilingEntry(2));
+        Assert.Equal(4, _map.CeilingKey(3));
+        Assert.Equal(new IntEntry(4, "c"), _map.CeilingEntry(3));
+    }
+
+    [Theory]
+    [MemberData(nameof(Repetitions))]
+    public void HigherEntryOrKey(int repetition)
+    {
+        _ = repetition;
+        IntEntry[] xs = new IntEntry[50];
+        for (int i = 0; i < xs.Length; i++)
+        {
+            int key = Random.Shared.Next(50);
+            xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
+            _map.Put(key, xs[i].GetValue());
+        }
+        Array.Sort(xs);
+        for (int i = 0; i < 10; i++)
+        {
+            IntEntry target = xs[Random.Shared.Next(xs.Length)];
+            IntEntry expected = null;
+            foreach (IntEntry x in xs)
+            {
+                if (x.CompareTo(target) > 0)
+                {
+                    expected = x;
+                    break;
+                }
+            }
+            Assert.Equal(expected, _map.HigherEntry(target.GetKey()));
+            Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.HigherKey(target.GetKey()));
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void HigherEntryOrKeyMismatch(bool multiMapped)
+    {
+        _map.Put(1, "a");
+        _map.Put(2, "b");
+        _map.Put(4, "c");
+        if (multiMapped)
+        {
+            _map.Put(1, "a");
+            _map.Put(2, "b");
+            _map.Put(4, "c");
+        }
+        Assert.Equal(4, _map.HigherKey(2));
+        Assert.Equal(new IntEntry(4, "c"), _map.HigherEntry(2));
+        Assert.Equal(4, _map.HigherKey(3));
+        Assert.Equal(new IntEntry(4, "c"), _map.HigherEntry(3));
+        Assert.Equal(_noKey, _map.HigherKey(4));
+        Assert.Null(_map.HigherEntry(4));
+    }
+
+    [Fact]
+    public void PollingFirstEntryOfMultiMappedKeys()
+    {
+        _map.Put(2, "b");
+        _map.Put(1, "a");
+        _map.Put(2, "b");
+        _map.Put(3, "c");
+        Assert.Equal(new IntEntry(1, "a"), _map.PollFirstEntry());
+        Assert.Equal(new IntEntry(2, "b"), _map.PollFirstEntry());
+        Assert.Equal(new IntEntry(2, "b"), _map.PollFirstEntry());
+        Assert.Equal(new IntEntry(3, "c"), _map.PollFirstEntry());
+        Assert.True(_map.IsEmpty());
+        Assert.Equal(0, _map.Size());
+        Assert.False(_map.Iterator().HasNext());
+    }
+
+    [Fact]
+    public void PollingLastEntryOfMultiMappedKeys()
+    {
+        _map.Put(2, "b");
+        _map.Put(1, "a");
+        _map.Put(2, "b");
+        _map.Put(3, "c");
+        Assert.Equal(new IntEntry(3, "c"), _map.PollLastEntry());
+        Assert.Equal(new IntEntry(2, "b"), _map.PollLastEntry());
+        Assert.Equal(new IntEntry(2, "b"), _map.PollLastEntry());
+        Assert.Equal(new IntEntry(1, "a"), _map.PollLastEntry());
+        Assert.True(_map.IsEmpty());
+        Assert.Equal(0, _map.Size());
+        Assert.False(_map.Iterator().HasNext());
     }
 
     [Fact]
     public void PollCeilingEntry()
     {
-        _map.Add(1, "a");
-        _map.Add(2, "b");
-        _map.Add(2, "b");
-        _map.Add(3, "c");
-        _map.Add(4, "d");
-        _map.Add(4, "d");
-        foreach (int key in new[] { 2, 2, 3, 4, 4 })
-        {
-            Assert.True(_map.TryTakeCeiling(2, out var entry));
-            Assert.Equal(Entry(key, key == 2 ? "b" : key == 3 ? "c" : "d"), entry);
-        }
-        Assert.False(_map.TryTakeCeiling(2, out _));
-        Assert.False(_map.IsEmpty);
-        Assert.Equal(1, _map.Count);
+        _map.Put(1, "a");
+        _map.Put(2, "b");
+        _map.Put(2, "b");
+        _map.Put(3, "c");
+        _map.Put(4, "d");
+        _map.Put(4, "d");
+        Assert.Equal(new IntEntry(2, "b"), _map.PollCeilingEntry(2));
+        Assert.Equal(new IntEntry(2, "b"), _map.PollCeilingEntry(2));
+        Assert.Equal(new IntEntry(3, "c"), _map.PollCeilingEntry(2));
+        Assert.Equal(new IntEntry(4, "d"), _map.PollCeilingEntry(2));
+        Assert.Equal(new IntEntry(4, "d"), _map.PollCeilingEntry(2));
+        Assert.Null(_map.PollCeilingEntry(2));
+        Assert.False(_map.IsEmpty());
+        Assert.Equal(1, _map.Size());
     }
-
-    private bool Find(int relation, int key, out KeyValuePair<int, string> entry) => relation switch
-    {
-        0 => _map.TryGetLower(key, out entry),
-        1 => _map.TryGetFloor(key, out entry),
-        2 => _map.TryGetCeiling(key, out entry),
-        _ => _map.TryGetHigher(key, out entry)
-    };
 }

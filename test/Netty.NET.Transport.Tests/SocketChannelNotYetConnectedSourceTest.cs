@@ -15,95 +15,185 @@
  */
 
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // Original ordering and independently owned cleanup.
-public class SocketChannelNotYetConnectedSourceTest
+#pragma warning disable xUnit1069 // The Runner bodies observe TestContext.Current.CancellationToken in their latch waits.
+#pragma warning disable xUnit1051 // Channel and group closes run independently of the test cancellation, as in the source.
+public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
 {
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task TestShutdownNotYetConnected(bool adaptive)
+    [Fact(Timeout = 30000)]
+    public async Task TestShutdownNotYetConnected()
     {
-        await using var fixture = new ShutdownFixture(adaptive);
-        var channel = (TcpSocketChannel)await fixture.Client.Handler(new ChannelInboundHandlerAdapter())
-            .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
+        await Run(TestContext.Current, TestShutdownNotYetConnected0);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestShutdownNotYetConnected test name.
+    private async Task TestShutdownNotYetConnected0(Bootstrap cb)
+    {
+        ISocketChannel ch = (ISocketChannel) await cb.Handler(new ChannelInboundHandlerAdapter())
+                .BindAsync(NewSocketAddress());
         try
         {
-            CheckThrowable(await Record.ExceptionAsync(() => channel.ShutdownInputAsync()));
-            CheckThrowable(await Record.ExceptionAsync(() => channel.ShutdownOutputAsync()));
+            Exception cause = await Assert.ThrowsAnyAsync<Exception>(() => ch.ShutdownInputAsync());
+            CheckThrowable(cause);
+
+            cause = await Assert.ThrowsAnyAsync<Exception>(() => ch.ShutdownOutputAsync());
+            CheckThrowable(cause);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await ch.CloseAsync();
+        }
     }
+
     private static void CheckThrowable(Exception cause)
     {
         // Depending on OIO / NIO both are ok
-        Assert.IsType<SocketException>(cause);
-        Assert.Equal(SocketError.NotConnected, ((SocketException)cause).SocketErrorCode);
+        // CLR: java.nio.channels.NotYetConnectedException has no BCL type; the CLR socket reports the condition as
+        // SocketException with SocketError.NotConnected, "The application tried to send or receive data, and the
+        // Socket is not connected" (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketerror), so
+        // the source's SocketException branch accepts it.
+        if (!(cause is SocketException))
+        {
+            ExceptionDispatchInfo.Throw(cause);
+        }
     }
 
-    [Theory(Timeout = 30000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public Task ReadMustBePendingUntilChannelIsActive(bool adaptive) => ReadBeforeConnect(adaptive, true).WaitAsync(TestContext.Current.CancellationToken);
+    [Fact(Timeout = 30000)]
+    public async Task ReadMustBePendingUntilChannelIsActive()
+    {
+        await Run(TestContext.Current, async bootstrap =>
+        {
+            IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+            ServerBootstrap sb = new ServerBootstrap().Group(group);
+            // CLR: bind(0) binds new InetSocketAddress(0), the wildcard address, and the connect below reaches it
+            // because OpenJDK's SocketChannelImpl.checkRemote replaces a wildcard remote address with the loopback
+            // address ("if (address.isAnyLocalAddress()) ... Net.inet4LoopbackAddress()",
+            // https://github.com/openjdk/jdk21u/blob/master/src/java.base/share/classes/sun/nio/ch/SocketChannelImpl.java).
+            // A CLR socket does not make that replacement, so the server binds the loopback address
+            // (NetUtil.LOCALHOST) that the source's connect ends up using, port 0 as in bind(0).
+            IChannel serverChannel = await sb.ChildHandler(new SendFortyTwo())
+                    .Channel<NioServerSocketChannel>().BindAsync(new IPEndPoint(NetUtil.LOCALHOST, 0));
 
+            TaskCompletionSource readLatch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            bootstrap.Handler(new ReadFortyTwo(readLatch));
+            await bootstrap.ConnectAsync(serverChannel.LocalAddress);
+
+            await readLatch.Task.WaitAsync(TestContext.Current.CancellationToken);
+            await group.ShutdownGracefullyAsync();
+        });
+    }
+
+    // CLR: supplemental helper, not part of the source: ChannelOutputShutdownContractTest runs the same read-before-
+    // connect scenario with AUTO_READ disabled on its own event-loop group and allocator.
     internal static async Task ReadBeforeConnect(bool adaptive, bool autoRead)
     {
         await using var fixture = new ShutdownFixture(adaptive);
         IChannel server = await fixture.Server.ChildHandler(new SendFortyTwo()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-        using var reader = new ReadFortyTwo();
+        var read = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel client = null;
         try
         {
-            client = await fixture.Client.Option(ChannelOption.AUTO_READ, autoRead).Handler(reader).ConnectAsync(server.LocalAddress);
-            await reader.Read.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            client = await fixture.Client.Option(ChannelOption.AUTO_READ, autoRead).Handler(new ReadFortyTwo(read)).ConnectAsync(server.LocalAddress);
+            await read.Task.WaitAsync(TimeSpan.FromSeconds(5));
         }
         finally { if (client != null) await client.CloseAsync(); await server.CloseAsync(); }
     }
+
+    // CLR: the source's anonymous server handler as a named class; C# anonymous types "can't add methods, events, or
+    // custom operators" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/
+    // anonymous-types).
     private sealed class SendFortyTwo : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context) =>
-            _ = context.WriteAndFlushAsync(Unpooled.Buffer(4).WriteInt(42));
-    }
-    private sealed class ReadFortyTwo : ChannelInboundHandlerAdapter, IDisposable
-    {
-        private readonly ByteBuf _input = Unpooled.Buffer(4);
-        internal readonly TaskCompletionSource Read = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void HandlerAdded(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            Assert.False(context.Channel.IsActive);
-            context.Read();
+            _ = ctx.WriteAndFlushAsync(Unpooled.CopyInt(42));
         }
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+    }
+
+    // CLR: the codec module (ByteToMessageDecoder) is not part of this port, so this named handler carries the
+    // source's anonymous decoder: handlerAdded asserts the inactive channel and requests a read, inbound bytes
+    // accumulate as ByteToMessageDecoder's cumulation does, decode asserts at most Integer.BYTES (sizeof(int)) readable
+    // bytes and the integer 42, a manual-read channel requests another read while a partial integer is buffered
+    // (ByteToMessageDecoder.channelReadComplete), and handlerRemoved releases the cumulation. A failed assertion
+    // faults the latch instead of being wrapped in a DecoderException, so the test fails without waiting for its
+    // Timeout.
+    private sealed class ReadFortyTwo(TaskCompletionSource readLatch) : ChannelInboundHandlerAdapter
+    {
+        private readonly ByteBuf cumulation = Unpooled.Buffer(sizeof(int));
+
+        public override void HandlerAdded(IChannelHandlerContext ctx)
         {
             try
             {
-                var input = Assert.IsAssignableFrom<ByteBuf>(message);
-                _input.WriteBytes(input, input.ReadableBytes);
-                Assert.True(_input.ReadableBytes <= sizeof(int));
-                if (_input.ReadableBytes == sizeof(int)) { Assert.Equal(42, _input.ReadInt()); Read.TrySetResult(); }
+                Assert.False(ctx.Channel.IsActive);
             }
-            catch (Exception error) { Read.TrySetException(error); }
-            finally { ReferenceCountUtil.Release(message); }
+            catch (Exception error)
+            {
+                readLatch.TrySetException(error);
+                throw;
+            }
+            ctx.Read();
         }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => Read.TrySetException(cause);
-        public override void ChannelReadComplete(ChannelHandlerContext context)
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            // Preserve ByteToMessageDecoder's manual-read continuation when a partial integer has not decoded yet.
-            if (!Read.Task.IsCompleted && _input.ReadableBytes > 0 && !context.Channel.Config.IsAutoRead()) context.Read();
-            context.FireChannelReadComplete();
+            try
+            {
+                ByteBuf @in = (ByteBuf) msg;
+                cumulation.WriteBytes(@in, @in.ReadableBytes);
+                Decode(ctx, cumulation);
+            }
+            catch (Exception error)
+            {
+                readLatch.TrySetException(error);
+            }
+            finally
+            {
+                ReferenceCountUtil.Release(msg);
+            }
         }
-        public void Dispose() => _input.Release();
+
+        private void Decode(IChannelHandlerContext ctx, ByteBuf @in)
+        {
+            Assert.True(@in.ReadableBytes <= sizeof(int));
+            if (@in.ReadableBytes == sizeof(int))
+            {
+                Assert.Equal(42, @in.ReadInt());
+                readLatch.TrySetResult();
+            }
+        }
+
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            if (!readLatch.Task.IsCompleted && cumulation.ReadableBytes > 0 && !ctx.Channel.Config.IsAutoRead())
+            {
+                ctx.Read();
+            }
+            ctx.FireChannelReadComplete();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            readLatch.TrySetException(cause);
+        }
+
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            cumulation.Release();
+        }
     }
 }
 #pragma warning restore xUnit1051
+#pragma warning restore xUnit1069

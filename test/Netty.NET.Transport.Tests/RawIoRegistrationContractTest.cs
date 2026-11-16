@@ -6,75 +6,62 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
-using static Netty.NET.Transport.Tests.ManualIoEventLoopSourceTest;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1031 // Manual I/O must be pumped by the original owner.
-#pragma warning disable xUnit1051 // Independent cleanup.
+// CLR supplemental: raw INioIoHandle registrations on the select()-based NioIoHandler.
+#pragma warning disable xUnit1051 // Independent teardown.
 public class RawIoRegistrationContractTest
 {
     [Fact(Timeout = 5000)]
-    public void ManualLoopCountsTwoSocketCompletionsAsOneHandleBeforeTasks()
+    public void ManualLoopCountsTwoReadyDatagramsAsOneHandleBeforeTasks()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        var token = TestContext.Current.CancellationToken;
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         using var receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        var handle = new RecordingHandle(loop);
+        receiver.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        receiver.Blocking = false;
+        var handle = new RecordingHandle(loop, receiver);
         try
         {
-            receiver.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            var registration = loop.RegisterIoAsync(handle, token).GetAwaiter().GetResult();
-            var publication = Task.Run(async () =>
-            {
-                byte[] buffer = new byte[1];
-                var completions = new Task<bool>[2];
-                for (int i = 0; i < completions.Length; i++)
-                {
-                    Assert.Equal(1, await receiver.ReceiveAsync(buffer.AsMemory(), SocketFlags.None, token));
-                    completions[i] = registration.PublishAsync((int)buffer[0]);
-                }
-                return completions;
-            }, token);
+            IIoRegistration registration = loop.RegisterAsync(handle).GetAwaiter().GetResult();
+            Assert.Equal(NioIoOps.READ.Value(), registration.Submit(NioIoOps.READ));
+            Assert.Equal(NioIoOps.READ, registration.Attachment<NioIoOps>());
             sender.SendTo(new byte[] { 11 }, receiver.LocalEndPoint);
             sender.SendTo(new byte[] { 22 }, receiver.LocalEndPoint);
-            var published = publication.WaitAsync(token).GetAwaiter().GetResult();
+            SpinWait.SpinUntil(() => receiver.Available >= 2, TimeSpan.FromSeconds(2));
 
             bool ordinary = false;
             loop.Execute(() => ordinary = true);
             Assert.Equal(1, loop.RunNow(-1));
             Assert.False(ordinary);
-            Assert.All(published, task => Assert.True(task.GetAwaiter().GetResult()));
             Assert.Equal(new[] { 11, 22 }, handle.Payloads);
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ordinary);
         }
         finally { Terminate(loop); }
-        Assert.Equal(new[] { "registered", "read", "read", "disposed", "unregistered" }, handle.Events);
+        Assert.Equal(new[] { "registered", "read", "unregistered", "closed" }, handle.Events);
     }
 
     [Fact(Timeout = 5000)]
-    public void CancellationInvalidatesQueuedCompletionsAndUnregistersOnTheOwner()
+    public void CancellationUnregistersOnTheOwnerAndAllowsANewRegistration()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        var token = TestContext.Current.CancellationToken;
-        var handle = new RecordingHandle(loop);
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.Blocking = false;
+        var handle = new RecordingHandle(loop, socket);
         try
         {
-            var registration = loop.RegisterIoAsync(handle, token).GetAwaiter().GetResult();
-            var completion = registration.PublishAsync(11);
-            var cancelled = Task.Factory.StartNew(() => registration.CancelAsync(), token, TaskCreationOptions.None,
-                TaskScheduler.Default).WaitAsync(token).GetAwaiter().GetResult();
-            Assert.False(registration.IsValid);
-            Assert.False(cancelled.IsCompleted);
-            Assert.Equal(0, loop.RunNow(-1));
-            Assert.False(completion.GetAwaiter().GetResult());
-            Assert.True(cancelled.GetAwaiter().GetResult());
-            Assert.False(registration.CancelAsync().GetAwaiter().GetResult());
+            IIoRegistration registration = loop.RegisterAsync(handle).GetAwaiter().GetResult();
+            Assert.True(registration.IsValid());
+            Assert.True(registration.Cancel());
+            Assert.False(registration.IsValid());
+            Assert.False(registration.Cancel());
+            Assert.Equal(-1, registration.Submit(NioIoOps.READ));
 
-            var next = loop.RegisterIoAsync(handle, token).GetAwaiter().GetResult();
-            Assert.True(next.CancelAsync().GetAwaiter().GetResult());
+            IIoRegistration next = loop.RegisterAsync(handle).GetAwaiter().GetResult();
+            Assert.True(next.Cancel());
         }
         finally { Terminate(loop); }
         Assert.Equal(new[] { "registered", "unregistered", "registered", "unregistered" }, handle.Events);
@@ -83,86 +70,86 @@ public class RawIoRegistrationContractTest
     [Fact(Timeout = 5000)]
     public async Task ThreadedRegistrationRejectsDuplicatesAndClosesRemainingHandlesOnShutdown()
     {
-        var group = new DefaultEventLoopGroup(1);
-        var loop = Assert.IsType<DefaultEventLoop>(group.Next());
-        var token = TestContext.Current.CancellationToken;
-        var handle = new RecordingHandle(loop);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var loop = Assert.IsType<SingleThreadIoEventLoop>(group.Next());
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.Blocking = false;
+        var handle = new RecordingHandle(loop, socket);
         try
         {
             Assert.Same(loop, ((IIoEventLoopGroup)loop).Next());
-            var registration = await group.RegisterIoAsync(handle, token);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => loop.RegisterIoAsync(handle, token));
-            Assert.Equal(1, loop.RegisteredIoHandles);
-            Assert.True(await registration.PublishAsync(42).WaitAsync(token));
-            await group.StopAsync().WaitAsync(token);
-            Assert.False(registration.IsValid);
-            Assert.False(await registration.PublishAsync(43));
-            Assert.Equal(0, loop.RegisteredIoHandles);
-            await Assert.ThrowsAsync<RejectedExecutionException>(() => loop.RegisterIoAsync(handle, token));
-            Assert.Equal(new[] { "registered", "read", "disposed", "unregistered" }, handle.Events);
+            IIoRegistration registration = await group.RegisterAsync(handle);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => loop.RegisterAsync(handle));
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+            Assert.False(registration.IsValid());
+            Assert.Throws<RejectedExecutionException>(() => { _ = loop.RegisterAsync(handle); });
+            Assert.Equal(new[] { "registered", "unregistered", "closed" }, handle.Events);
         }
         finally { await group.StopAsync(); }
     }
 
     [Fact(Timeout = 5000)]
-    public async Task RegistrationFailureDoesNotLeakTheHandleSlot()
+    public async Task BlockingSocketsAreRejectedAsIllegalBlockingMode()
     {
-        var loop = new DefaultEventLoop();
-        var token = TestContext.Current.CancellationToken;
-        var handle = new RecordingHandle(loop) { FailRegistration = true };
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         try
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => loop.RegisterIoAsync(handle, token));
-            Assert.Equal(0, loop.RegisteredIoHandles);
-            handle.FailRegistration = false;
-            Assert.True((await loop.RegisterIoAsync(handle, token)).IsValid);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => group.RegisterAsync(new RecordingHandle(group.Next(), socket)));
         }
-        finally { await loop.StopAsync(); }
-        Assert.Equal(new[] { "registered", "disposed", "unregistered" }, handle.Events);
+        finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
     }
 
     [Fact(Timeout = 5000)]
-    public async Task ShutdownContinuesAfterAHandleFailsToDispose()
+    public async Task ShutdownContinuesAfterAHandleFailsToClose()
     {
-        var loop = new DefaultEventLoop();
-        var token = TestContext.Current.CancellationToken;
-        var failing = new RecordingHandle(loop) { FailDispose = true };
-        var healthy = new RecordingHandle(loop);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var loop = group.Next();
+        using var first = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { Blocking = false };
+        using var second = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { Blocking = false };
+        var failing = new RecordingHandle(loop, first) { FailClose = true };
+        var healthy = new RecordingHandle(loop, second);
         try
         {
-            var first = await loop.RegisterIoAsync(failing, token);
-            var second = await loop.RegisterIoAsync(healthy, token);
-            await loop.StopAsync().WaitAsync(token);
-            Assert.False(first.IsValid);
-            Assert.False(second.IsValid);
-            Assert.Equal(0, loop.RegisteredIoHandles);
-            Assert.Equal(new[] { "registered", "disposed", "unregistered" }, failing.Events);
-            Assert.Equal(new[] { "registered", "disposed", "unregistered" }, healthy.Events);
+            IIoRegistration one = await loop.RegisterAsync(failing);
+            IIoRegistration two = await loop.RegisterAsync(healthy);
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+            Assert.False(one.IsValid());
+            Assert.False(two.IsValid());
+            Assert.Equal(new[] { "registered", "unregistered", "closed" }, failing.Events);
+            Assert.Equal(new[] { "registered", "unregistered", "closed" }, healthy.Events);
         }
-        finally { await loop.StopAsync(); }
+        finally { await group.StopAsync(); }
     }
 
-    private sealed class RecordingHandle(IEventLoop owner) : IIoHandle
+    private static void Terminate(ManualIoEventLoop loop)
+    {
+        loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        while (!loop.IsTerminated()) loop.RunNow();
+    }
+
+    private sealed class RecordingHandle(IEventExecutor owner, Socket socket) : INioIoHandle
     {
         internal readonly List<string> Events = new();
         internal readonly List<int> Payloads = new();
-        internal bool FailRegistration;
-        internal bool FailDispose;
+        internal bool FailClose;
 
-        public void Registered(IoRegistration registration)
+        public Socket SelectableChannel() => socket;
+
+        public void Registered()
         {
             Assert.True(owner.InEventLoop());
-            Assert.Same(owner, registration.EventLoop);
-            Assert.True(registration.IsValid);
-            if (FailRegistration) throw new InvalidOperationException("Registration callback failed.");
             Events.Add("registered");
         }
 
-        public void HandleCompletion(IoRegistration registration, object completion)
+        public void Handle(IIoRegistration registration, IIoEvent ioEvent)
         {
             Assert.True(owner.InEventLoop());
-            Assert.True(registration.IsValid);
-            Payloads.Add(Assert.IsType<int>(completion));
+            Assert.True(registration.IsValid());
+            Assert.True(NioIoOps.READ.Contains(((INioIoEvent)ioEvent).Ops()));
+            byte[] buffer = new byte[1];
+            while (socket.Receive(buffer, 0, 1, SocketFlags.None, out SocketError error) == 1 && error == SocketError.Success)
+                Payloads.Add(buffer[0]);
             Events.Add("read");
         }
 
@@ -172,11 +159,11 @@ public class RawIoRegistrationContractTest
             Events.Add("unregistered");
         }
 
-        public void Dispose()
+        public void Close()
         {
             Assert.True(owner.InEventLoop());
-            Events.Add("disposed");
-            if (FailDispose) throw new InvalidOperationException("Disposal failed.");
+            Events.Add("closed");
+            if (FailClose) throw new InvalidOperationException("Close failed.");
         }
     }
 }

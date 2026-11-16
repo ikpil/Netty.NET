@@ -74,7 +74,7 @@ public class ByteProcessorTest
             Assert.Equal(24, buf.ForEachByte(21, length - 21, ByteProcessor.FIND_LINEAR_WHITESPACE));
             Assert.Equal(28, buf.ForEachByte(24, length - 24, ByteProcessor.FIND_NON_LINEAR_WHITESPACE));
             Assert.Equal(-1, buf.ForEachByte(28, length - 28, ByteProcessor.FIND_LINEAR_WHITESPACE));
-            Assert.Equal(0, buf.ReaderIndex); Assert.Equal(length, buf.WriterIndex); Assert.Equal(1, buf.ReferenceCount);
+            Assert.Equal(0, buf.ReaderIndex); Assert.Equal(length, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
         });
     }
 
@@ -97,7 +97,7 @@ public class ByteProcessorTest
             Assert.Equal(5, buf.ForEachByteDesc(0, 9, ByteProcessor.FIND_CRLF));
             Assert.Equal(2, buf.ForEachByteDesc(0, 6, ByteProcessor.FIND_NON_CRLF));
             Assert.Equal(-1, buf.ForEachByteDesc(0, 3, ByteProcessor.FIND_CRLF));
-            Assert.Equal(0, buf.ReaderIndex); Assert.Equal(length, buf.WriterIndex); Assert.Equal(1, buf.ReferenceCount);
+            Assert.Equal(0, buf.ReaderIndex); Assert.Equal(length, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
         });
     }
 
@@ -128,7 +128,7 @@ public class ByteProcessorTest
                     Assert.Equal(last, buf.ForEachByteDesc(start, length, Processors[predicate]));
                 }
             Assert.Equal(bytes, ByteBufUtil.GetBytes(buf, 0, bytes.Length));
-            Assert.Equal(7, buf.ReaderIndex); Assert.Equal(249, buf.WriterIndex); Assert.Equal(1, buf.ReferenceCount);
+            Assert.Equal(7, buf.ReaderIndex); Assert.Equal(249, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
         });
     }
 
@@ -151,7 +151,7 @@ public class ByteProcessorTest
                 {
                     if (reverse) buf.ForEachByteDesc(_ => throw failure); else buf.ForEachByte(_ => throw failure);
                 }));
-                Assert.Equal(1, buf.ReaderIndex); Assert.Equal(7, buf.WriterIndex); Assert.Equal(1, buf.ReferenceCount);
+                Assert.Equal(1, buf.ReaderIndex); Assert.Equal(7, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
             }
             buf.ResetReaderIndex(); buf.ResetWriterIndex(); Assert.Equal(1, buf.ReaderIndex); Assert.Equal(7, buf.WriterIndex);
         });

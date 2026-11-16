@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Internal;
@@ -46,7 +47,8 @@ public sealed class AppendableCharSequence : ICharSequence
     {
         get
         {
-            if (index < 0 || index >= pos)
+            // CLR: as charAt(int), only index > length() is rejected; other indexes rely on the array check.
+            if (index > pos)
             {
                 throw new ArgumentOutOfRangeException();
             }
@@ -59,7 +61,7 @@ public sealed class AppendableCharSequence : ICharSequence
     {
         if (length < 0 || length > pos)
         {
-            throw new ArgumentException("length: " + length + " (length: >= 0, <= " + pos + ')');
+            throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture) + " (length: >= 0, <= " + pos.ToString(CultureInfo.InvariantCulture) + ')');
         }
 
         this.pos = length;
@@ -135,7 +137,6 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public AppendableCharSequence SubSequence(int start, int end)
     {
-        CheckRange(start, end, pos);
         if (start == end)
         {
             // If start and end index is the same we need to return an empty sequence to conform to the interface.
@@ -175,8 +176,11 @@ public sealed class AppendableCharSequence : ICharSequence
     public AppendableCharSequence Append(ICharSequence csq, int start, int end)
     {
         CheckNotNull(csq, nameof(csq));
-        CheckRange(start, end, csq.Count);
-
+        if (csq.Count < end)
+        {
+            throw new ArgumentOutOfRangeException(null, "expected: csq.length() >= ("
+                    + end.ToString(CultureInfo.InvariantCulture) + "),but actual is (" + csq.Count.ToString(CultureInfo.InvariantCulture) + ")");
+        }
         int length = end - start;
         if (length > chars.Length - pos)
         {
@@ -230,8 +234,13 @@ public sealed class AppendableCharSequence : ICharSequence
      */
     public string Substring(int start, int end)
     {
-        CheckRange(start, end, pos);
-        return new string(chars, start, end - start);
+        int length = end - start;
+        if (start > pos || length > pos)
+        {
+            throw new ArgumentOutOfRangeException(null, "expected: start and length <= ("
+                    + pos.ToString(CultureInfo.InvariantCulture) + ")");
+        }
+        return new string(chars, start, length);
     }
 
     /**
@@ -262,13 +271,5 @@ public sealed class AppendableCharSequence : ICharSequence
         Arrays.Arraycopy(array, 0, newArray, 0, size);
 
         return newArray;
-    }
-
-    private static void CheckRange(int start, int end, int length)
-    {
-        if (start < 0 || end < start || end > length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(start));
-        }
     }
 }

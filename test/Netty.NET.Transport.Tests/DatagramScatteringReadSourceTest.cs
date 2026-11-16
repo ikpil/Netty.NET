@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -59,7 +60,7 @@ public class DatagramScatteringReadSourceTest
         receiveAllocator.MaxMessagesPerRead(numPackets);
         using var adaptiveAllocator = adaptive ? new AdaptiveByteBufAllocator() : null;
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
-        var loop = new DefaultEventLoopGroup(2);
+        var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
         try
         {
@@ -100,7 +101,7 @@ public class DatagramScatteringReadSourceTest
         const int packetSize = 16;
         using var adaptiveAllocator = adaptive ? new AdaptiveByteBufAllocator() : null;
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
-        var loop = new DefaultEventLoopGroup(2);
+        var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
         try
         {
@@ -121,13 +122,13 @@ public class DatagramScatteringReadSourceTest
         finally { await loop.StopAsync(); }
     }
 
-    private static Bootstrap NewBootstrap(DefaultEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
-        new Bootstrap().Group(loop).ChannelFactory(static () => new DatagramChannel())
+    private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
+        new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
             .Option(ChannelOption.ALLOCATOR, allocator).Handler(handler);
 
     private sealed class Discard : SimpleChannelInboundHandler<object>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, object message)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, object msgs)
         {
             // Nothing will be sent.
         }
@@ -139,7 +140,7 @@ public class DatagramScatteringReadSourceTest
         private int _received;
         private int _batch;
 
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket packet)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
         {
             Assert.Equal(sender, packet.Sender);
             if (bytes == null)
@@ -159,17 +160,17 @@ public class DatagramScatteringReadSourceTest
             _batch++;
         }
 
-        public override void ChannelReadComplete(ChannelHandlerContext context)
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             if (bytes == null)
             {
                 Assert.True(_batch > 1);
                 _batch = 0;
-                context.Read();
+                ctx.Read();
             }
             if (_received == expected) Completed.TrySetResult();
         }
 
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => Completed.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Completed.TrySetException(cause);
     }
 }

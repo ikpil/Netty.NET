@@ -15,12 +15,15 @@
  */
 
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Local;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -30,164 +33,185 @@ public class ManualIoEventLoopSourceTest
     [Fact]
     public void TestRunNow()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        try
+        Thread currentThread = Thread.CurrentThread;
+        using SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(currentThread, new TestIoHandlerFactory(semaphore));
+        Assert.Equal(0, eventLoop.RunNow());
+
+        TestRunnable runnable = new TestRunnable();
+        eventLoop.Execute(runnable.Run);
+        Assert.False(runnable.IsDone());
+
+        Assert.Equal(1, eventLoop.RunNow());
+        Assert.True(runnable.IsDone());
+        eventLoop.StopAsync();
+        while (!eventLoop.IsTerminated())
         {
-            Assert.Equal(0, loop.RunNow());
-            bool done = false;
-            loop.Execute(() => done = true);
-            Assert.False(done);
-            Assert.Equal(1, loop.RunNow());
-            Assert.True(done);
+            eventLoop.RunNow();
         }
-        finally { Terminate(loop); }
+
+        eventLoop.TerminationFuture.GetAwaiter().GetResult();
     }
 
     [Fact]
     public void TestRun()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        try
-        {
-            var clock = Stopwatch.StartNew();
-            Assert.Equal(0, loop.Run(200_000_000));
-            Assert.True(clock.Elapsed >= TimeSpan.FromMilliseconds(200));
+        Thread currentThread = Thread.CurrentThread;
+        using SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(currentThread, new TestIoHandlerFactory(semaphore));
 
-            bool done = false;
-            loop.Execute(() => done = true);
-            Assert.False(done);
-            clock.Restart();
-            Assert.Equal(1, loop.Run(1_000_000_000));
-            Assert.True(clock.Elapsed < TimeSpan.FromSeconds(1));
-            Assert.True(done);
+        long waitTime = TimeSpan.FromMilliseconds(200).Ticks * 100;
+        long current = SystemTimer.NanoTime();
+        Assert.Equal(0, eventLoop.Run(waitTime));
+        long actualNanos = SystemTimer.NanoTime() - current;
+        Assert.True(actualNanos >= waitTime);
+
+        TestRunnable runnable = new TestRunnable();
+        eventLoop.Execute(runnable.Run);
+        Assert.False(runnable.IsDone());
+
+        waitTime = TimeSpan.FromSeconds(1).Ticks * 100;
+        current = SystemTimer.NanoTime();
+        Assert.Equal(1, eventLoop.Run(waitTime));
+        Assert.True(waitTime > SystemTimer.NanoTime() - current);
+
+        Assert.True(runnable.IsDone());
+        eventLoop.StopAsync();
+
+        while (!eventLoop.IsTerminated())
+        {
+            eventLoop.RunNow();
         }
-        finally { Terminate(loop); }
+        eventLoop.TerminationFuture.GetAwaiter().GetResult();
     }
 
-    [Fact(Timeout = 5000)]
-    public async Task TestShutdownOutSideOfOwningThread()
+    [Fact]
+    public void TestShutdownOutSideOfOwningThread()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var returned = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        ManualIoEventLoop loop = null;
-        var owner = new Thread(() =>
-        {
-            try { returned.SetResult(loop.Run(0)); }
-            catch (Exception error) { returned.SetException(error); }
-        }) { IsBackground = true };
-        loop = new ManualIoEventLoop(owner);
-        owner.Start();
-        try
-        {
-            Assert.True(SpinWait.SpinUntil(() => (owner.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
-                TimeSpan.FromSeconds(2)));
-            var termination = loop.StopAsync();
-            Assert.True(loop.IsShuttingDown());
-            // we expect wakeup to be called!
-            Assert.Equal(0, await returned.Task.WaitAsync(TimeSpan.FromSeconds(2), cancellation));
-            await termination.WaitAsync(cancellation);
-        }
-        finally { _ = loop.StopAsync(); }
+        using SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        Thread ownerThread = new Thread(() => { });
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(ownerThread, new TestIoHandlerFactory(semaphore));
+        eventLoop.StopAsync();
+        Assert.True(eventLoop.IsShuttingDown());
+        // we expect wakeup to be called!
+        Assert.Equal(1, semaphore.CurrentCount);
     }
 
     [Fact]
     public void TestCallFromWrongThread()
     {
-        var loop = new ManualIoEventLoop(new Thread(() => { }));
-        Assert.Throws<InvalidOperationException>(() => loop.RunNow());
-        Assert.Throws<InvalidOperationException>(() => loop.Run(10));
+        Thread thread = new Thread(() => { });
+        using SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(thread, new TestIoHandlerFactory(semaphore));
+
+        // CLR: InvalidOperationException replaces IllegalStateException.
+        Assert.Throws<InvalidOperationException>(() => eventLoop.RunNow());
+        Assert.Throws<InvalidOperationException>(() => eventLoop.Run(10));
     }
 
     [Fact]
     public void TestThreadEventExecutorMap()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
-        try
+        BlockingCollection<IEventExecutor> queue = new BlockingCollection<IEventExecutor>();
+        using SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(Thread.CurrentThread, new TestIoHandlerFactory(semaphore));
+        Assert.Null(ThreadExecutorMap.CurrentExecutor());
+        eventLoop.Execute(() => queue.Add(ThreadExecutorMap.CurrentExecutor()));
+        Assert.Equal(1, eventLoop.RunNow());
+        Assert.Same(eventLoop, queue.Take());
+        eventLoop.StopAsync();
+
+        while (!eventLoop.IsTerminated())
         {
-            IEventExecutor seen = null;
-            Assert.Null(ThreadExecutorMap.CurrentExecutor());
-            loop.Execute(() => seen = ThreadExecutorMap.CurrentExecutor());
-            Assert.Equal(1, loop.RunNow());
-            Assert.Same(loop, seen);
-            Assert.Null(ThreadExecutorMap.CurrentExecutor());
+            eventLoop.RunNow();
         }
-        finally { Terminate(loop); }
+        eventLoop.TerminationFuture.GetAwaiter().GetResult();
     }
 
     [Fact(Timeout = 10000)]
     public async Task TestDelayOwningThread()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        var loop = new ManualIoEventLoop(null);
-        var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var ownerBound = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var owner = new Thread(() =>
+        using SemaphoreSlim semaphore = new SemaphoreSlim(0);
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop((Thread)null, new TestIoHandlerFactory(semaphore));
+        Exception failure = null;
+        Thread thread = new Thread(() =>
         {
             try
             {
-                loop.SetOwningThread(Thread.CurrentThread);
-                ownerBound.SetResult(loop.InEventLoop());
-                while (!loop.IsTerminated()) loop.Run(0);
+                eventLoop.SetOwningThread(Thread.CurrentThread);
+                Assert.True(eventLoop.InEventLoop());
+                while (!eventLoop.IsTerminated())
+                {
+                    eventLoop.RunNow();
+                }
             }
-            catch (Exception error)
-            {
-                ownerBound.TrySetException(error);
-                completion.TrySetException(error);
-            }
-        }) { IsBackground = true };
-
-        Assert.False(loop.InEventLoop());
-        loop.Execute(() => completion.SetResult(loop.InEventLoop()));
-        owner.Start();
-        try
+            catch (Exception e) { failure = e; }
+        });
+        Assert.False(eventLoop.InEventLoop());
+        TaskCompletionSource cf = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        eventLoop.Execute(() =>
         {
-            Assert.True(await ownerBound.Task.WaitAsync(cancellation));
-            Assert.True(await completion.Task.WaitAsync(cancellation));
-            await loop.ShutdownGracefullyAsync().WaitAsync(cancellation);
-        }
-        finally
-        {
-            _ = loop.StopAsync();
-            Assert.True(owner.Join(TimeSpan.FromSeconds(3)));
-        }
+            Assert.True(eventLoop.InEventLoop());
+            cf.SetResult();
+        });
+        thread.Start();
+        await cf.Task;
+        _ = eventLoop.ShutdownGracefullyAsync();
+        thread.Join();
+        Assert.Null(failure);
     }
 
     [Fact]
     public void TestRunWithoutOwner()
     {
-        var loop = new ManualIoEventLoop(null);
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop((Thread)null, new TestIoHandlerFactory(new SemaphoreSlim(0)));
         // prior to setOwningThread, runNow is forbidden
-        Assert.Throws<InvalidOperationException>(() => loop.RunNow());
-        loop.SetOwningThread(Thread.CurrentThread);
-        try { loop.RunNow(); } // runs fine
-        finally { Terminate(loop); }
+        Assert.Throws<InvalidOperationException>(() => eventLoop.RunNow());
+        eventLoop.SetOwningThread(Thread.CurrentThread);
+        eventLoop.RunNow(); // runs fine
+        _ = eventLoop.ShutdownGracefullyAsync();
     }
 
     [Fact]
     public void TestRunNonIoTasksSetupEventExecutor()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread, ticker: Ticker.NewMockTicker());
-        try
+        MockTicker ticker = Ticker.NewMockTicker();
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(
+                null, Thread.CurrentThread, LocalIoHandler.NewFactory(), ticker);
+        Assert.Null(ThreadExecutorMap.CurrentExecutor());
+        AtomicBoolean executed = new AtomicBoolean(false);
+        eventLoop.Execute(() =>
         {
-            Assert.Null(ThreadExecutorMap.CurrentExecutor());
-            bool executed = false;
-            IEventExecutor seen = null;
-            var task = loop.SubmitAsync(() =>
-            {
-                Assert.False(executed);
-                executed = true;
-                seen = ThreadExecutorMap.CurrentExecutor();
-            }, TestContext.Current.CancellationToken);
-            Assert.Equal(1, loop.RunNonBlockingTasks(0));
-            task.GetAwaiter().GetResult();
-            Assert.True(executed);
-            Assert.Same(loop, seen);
-            Assert.Null(ThreadExecutorMap.CurrentExecutor());
-        }
-        finally { Terminate(loop); }
+            Assert.True(executed.CompareAndSet(false, true));
+            Assert.Same(eventLoop, ThreadExecutorMap.CurrentExecutor());
+        });
+        Assert.Equal(1, eventLoop.RunNonBlockingTasks(0));
+        Assert.True(executed.Get());
+        _ = eventLoop.ShutdownGracefullyAsync();
     }
 
-    public enum RunMode { Now, Wait, NonIoNow }
+    public enum RunMode
+    {
+        Now,
+        Wait,
+        NonIoNow,
+    }
+
+    // CLR: the enum method runWith becomes a static helper.
+    private static int RunWith(RunMode mode, ManualIoEventLoop el, long timeoutNs)
+    {
+        switch (mode)
+        {
+            case RunMode.Now:
+                return el.RunNow(timeoutNs);
+            case RunMode.Wait:
+                return el.Run(TimeSpan.FromHours(1).Ticks * 100, timeoutNs);
+            case RunMode.NonIoNow:
+                return el.RunNonBlockingTasks(timeoutNs);
+            default:
+                throw new InvalidOperationException("Unknown run mode: " + mode);
+        }
+    }
 
     [Theory]
     [InlineData(RunMode.Now)]
@@ -195,81 +219,169 @@ public class ManualIoEventLoopSourceTest
     [InlineData(RunMode.NonIoNow)]
     public void TestTasksWhileExpiringTimeout(RunMode mode)
     {
-        var ticker = Ticker.NewMockTicker();
-        var loop = new ManualIoEventLoop(Thread.CurrentThread, ticker: ticker);
-        try
+        MockTicker ticker = Ticker.NewMockTicker();
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(
+                null, Thread.CurrentThread, LocalIoHandler.NewFactory(), ticker);
+        AtomicBoolean executedFirst = new AtomicBoolean(false);
+        eventLoop.Execute(() =>
         {
-            bool executedFirst = false;
-            var first = loop.SubmitAsync(() =>
+            Assert.True(executedFirst.CompareAndSet(false, true));
+            ticker.Advance(1);
+        });
+        AtomicBoolean canExecute = new AtomicBoolean(false);
+        AtomicBoolean executedSecond = new AtomicBoolean(false);
+        eventLoop.Execute(() =>
+        {
+            if (!canExecute.Get())
             {
-                Assert.False(executedFirst);
-                executedFirst = true;
-                ticker.Advance(1);
-            }, TestContext.Current.CancellationToken);
-            bool canExecute = false;
-            bool executedSecond = false;
-            var second = loop.SubmitAsync(() =>
+                Assert.Fail("Should not be executed");
+            }
+            else
             {
-                Assert.True(canExecute, "Should not be executed");
-                Assert.False(executedSecond);
-                executedSecond = true;
-            }, TestContext.Current.CancellationToken);
-
-            Assert.Equal(1, Run());
-            first.GetAwaiter().GetResult();
-            Assert.True(executedFirst);
-            Assert.False(executedSecond);
-            canExecute = true;
-            Assert.Equal(1, Run());
-            second.GetAwaiter().GetResult();
-
-            int Run() => mode switch
-            {
-                RunMode.Now => loop.RunNow(1),
-                RunMode.Wait => loop.Run(3_600_000_000_000, 1),
-                RunMode.NonIoNow => loop.RunNonBlockingTasks(1),
-                _ => throw new InvalidOperationException($"Unknown run mode: {mode}")
-            };
-        }
-        finally { Terminate(loop); }
+                Assert.True(executedSecond.CompareAndSet(false, true));
+            }
+        });
+        Assert.Equal(1, RunWith(mode, eventLoop, 1));
+        Assert.True(executedFirst.Get());
+        Assert.False(executedSecond.Get());
+        canExecute.Set(true);
+        Assert.Equal(1, RunWith(mode, eventLoop, 1));
+        _ = eventLoop.ShutdownGracefullyAsync();
     }
 
     [Fact]
     public void TestSetOwnerMultipleTimes()
     {
-        var loop = new ManualIoEventLoop(null);
-        loop.SetOwningThread(Thread.CurrentThread);
-        try { Assert.Throws<InvalidOperationException>(() => loop.SetOwningThread(Thread.CurrentThread)); }
-        finally { Terminate(loop); }
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop((Thread)null, new TestIoHandlerFactory(new SemaphoreSlim(0)));
+        eventLoop.SetOwningThread(Thread.CurrentThread);
+        Assert.Throws<InvalidOperationException>(() => eventLoop.SetOwningThread(Thread.CurrentThread));
+        _ = eventLoop.ShutdownGracefullyAsync();
     }
 
     [Fact]
     public void TestTicker()
     {
-        var ticker = Ticker.NewMockTicker();
-        var loop = new ManualIoEventLoop(Thread.CurrentThread, ticker: ticker);
-        try
-        {
-            int counter = 0;
-            var scheduled = loop.ScheduleAsync(() => counter++, TimeSpan.FromSeconds(60), TestContext.Current.CancellationToken);
-            loop.RunNow();
-            Assert.Equal(0, counter);
-            ticker.Advance(50_000_000_000);
-            loop.RunNow();
-            Assert.Equal(0, counter);
-            ticker.Advance(20_000_000_000);
-            loop.RunNow();
-            Assert.Equal(1, counter);
-            Assert.True(scheduled.IsCompletedSuccessfully);
-        }
-        finally { Terminate(loop); }
+        MockTicker ticker = Ticker.NewMockTicker();
+        ManualIoEventLoop eventLoop = new ManualIoEventLoop(
+                null, Thread.CurrentThread, NioIoHandler.NewFactory(), ticker);
+        AtomicInteger counter = new AtomicInteger();
+        _ = eventLoop.ScheduleAsync(() => counter.IncrementAndGet(), TimeSpan.FromSeconds(60));
+        eventLoop.RunNow();
+        Assert.Equal(0, counter.Get());
+        ticker.Advance(TimeSpan.FromSeconds(50).Ticks * 100);
+        eventLoop.RunNow();
+        Assert.Equal(0, counter.Get());
+        ticker.Advance(TimeSpan.FromSeconds(20).Ticks * 100);
+        eventLoop.RunNow();
+        Assert.Equal(1, counter.Get());
+        _ = eventLoop.ShutdownGracefullyAsync();
     }
 
+    // CLR: drives a caller-owned loop to termination for the supplemental tests that share it.
     internal static void Terminate(ManualIoEventLoop loop)
     {
         var termination = loop.StopAsync();
-        loop.RunNow();
-        Assert.True(loop.IsTerminated());
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!loop.IsTerminated())
+        {
+            Assert.True(DateTime.UtcNow < deadline, "The manual loop did not terminate.");
+            loop.RunNow();
+        }
         termination.GetAwaiter().GetResult();
+    }
+
+    private sealed class TestRunnable
+    {
+        private bool _done;
+
+        public void Run()
+        {
+            _done = true;
+        }
+
+        internal bool IsDone()
+        {
+            return _done;
+        }
+    }
+
+    // CLR: the executor -> new TestIoHandler(semaphore) lambdas become a factory class.
+    private sealed class TestIoHandlerFactory(SemaphoreSlim semaphore) : IIoHandlerFactory
+    {
+        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor) => new TestIoHandler(semaphore);
+    }
+
+    private class TestIoHandler : IIoHandler
+    {
+        private readonly SemaphoreSlim _semaphore;
+
+        internal TestIoHandler(SemaphoreSlim semaphore)
+        {
+            _semaphore = semaphore;
+        }
+
+        public void PrepareToDestroy()
+        {
+            // NOOP
+        }
+
+        public void Destroy()
+        {
+            // NOOP
+        }
+
+        public IIoRegistration Register(IIoHandle handle)
+        {
+            return new TestIoRegistration();
+        }
+
+        // CLR: the anonymous IoRegistration of register(IoHandle) becomes a nested class.
+        private sealed class TestIoRegistration : IIoRegistration
+        {
+            private readonly AtomicBoolean _canceled = new AtomicBoolean();
+
+            public T Attachment<T>()
+            {
+                return default;
+            }
+
+            public long Submit(IIoOps ops)
+            {
+                return 0;
+            }
+
+            public bool Cancel()
+            {
+                return _canceled.CompareAndSet(false, true);
+            }
+
+            public bool IsValid()
+            {
+                return !_canceled.Get();
+            }
+        }
+
+        public void Wakeup()
+        {
+            _semaphore.Release();
+        }
+
+        public int Run(IIoHandlerContext context)
+        {
+            if (context.CanBlock())
+            {
+                if (context.DeadlineNanos() != -1)
+                {
+                    long delay = context.DelayNanos(SystemTimer.NanoTime());
+                    _semaphore.Wait(TimeSpan.FromTicks(Math.Min(delay / 100, TimeSpan.FromDays(1).Ticks)));
+                }
+            }
+            return 0;
+        }
+
+        public bool IsCompatible(Type handleType)
+        {
+            return false;
+        }
     }
 }

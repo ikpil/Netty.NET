@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Netty.NET.Common.Internal;
@@ -134,7 +135,12 @@ public sealed unsafe class NativeMemoryAllocator
         {
             long current = Volatile.Read(ref _reservedBytes);
             if (bytes > MaximumBytes - current)
-                throw new OutOfMemoryException($"Native memory reservation exceeds {MaximumBytes} bytes.");
+            {
+                // CLR: PlatformDependent.incrementMemoryCounter adds first and rolls back on
+                // failure; the CAS loop never publishes the excess, so used is the current value.
+                throw new OutOfDirectMemoryError(string.Create(CultureInfo.InvariantCulture,
+                    $"failed to allocate {bytes} byte(s) of direct memory (used: {current}, max: {MaximumBytes})"));
+            }
             if (Interlocked.CompareExchange(ref _reservedBytes, current + bytes, current) == current) return;
         }
     }

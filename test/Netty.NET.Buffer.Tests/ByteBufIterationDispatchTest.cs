@@ -70,8 +70,8 @@ public class ByteBufIterationDispatchTest
 
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Assert.True(_owner.Release());
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Assert.True(_owner.Release());
+            Assert.Equal(0, Root.RefCnt);
             Assert.Equal(1, Inner.Closes);
             Assert.Equal(_outerTracked ? 1 : 0, Outer.Closes);
             Assert.Equal(0, Native.ReservedBytes);
@@ -136,7 +136,7 @@ public class ByteBufIterationDispatchTest
         }
         Assert.Equal(0, storage.Outer.Records);
         Assert.Equal(0, storage.Inner.Closes);
-        Assert.Equal(1, storage.Root.ReferenceCount);
+        Assert.Equal(1, storage.Root.RefCnt);
         Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
         storage.Root.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);

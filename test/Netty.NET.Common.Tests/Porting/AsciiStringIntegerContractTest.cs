@@ -54,9 +54,9 @@ public class AsciiStringIntegerContractTest
     public void InvalidRadicesAreArgumentErrors(int radix)
     {
         var value = new AsciiString("1");
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseInt16(radix));
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseInt32(radix));
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseInt64(radix));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseShort(radix));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseInt(radix));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.ParseLong(radix));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseInt16(out _, radix));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseInt32(out _, radix));
         Assert.Throws<ArgumentOutOfRangeException>(() => value.TryParseInt64(out _, radix));
@@ -141,18 +141,18 @@ public class AsciiStringIntegerContractTest
         Assert.Equal((short)0, small);
         Assert.Equal(0, medium);
         Assert.Equal(0L, large);
-        Assert.Throws<FormatException>(() => value.ParseInt16());
-        Assert.Throws<FormatException>(() => value.ParseInt32());
-        Assert.Throws<FormatException>(() => value.ParseInt64());
+        Assert.Throws<FormatException>(() => value.ParseShort());
+        Assert.Throws<FormatException>(() => value.ParseInt());
+        Assert.Throws<FormatException>(() => value.ParseLong());
     }
 
     [Fact]
     public void EmptySliceAndNegativeZeroRespectTheLogicalView()
     {
         var value = new AsciiString("!-0!").SubSequence(1, 3, false);
-        Assert.Equal((short)0, value.ParseInt16());
-        Assert.Equal(0, value.ParseInt32());
-        Assert.Equal(0L, value.ParseInt64());
+        Assert.Equal((short)0, value.ParseShort());
+        Assert.Equal(0, value.ParseInt());
+        Assert.Equal(0L, value.ParseLong());
         foreach (int width in new[] { 16, 32, 64 })
         {
             Assert.True(TryParse(value, width, 0, 2, out long result));
@@ -173,12 +173,12 @@ public class AsciiStringIntegerContractTest
             culture.NumberFormat.NegativeSign = "~";
             culture.NumberFormat.PositiveSign = "!";
             CultureInfo.CurrentCulture = culture;
-            Assert.Equal((short)-12, new AsciiString("-12").ParseInt16());
-            Assert.Equal(-12, new AsciiString("-12").ParseInt32());
-            Assert.Equal(-12L, new AsciiString("-12").ParseInt64());
+            Assert.Equal((short)-12, new AsciiString("-12").ParseShort());
+            Assert.Equal(-12, new AsciiString("-12").ParseInt());
+            Assert.Equal(-12L, new AsciiString("-12").ParseLong());
             Assert.False(new AsciiString("~12").TryParseInt64(out _));
-            Assert.Equal(long.MinValue, new AsciiString("-9223372036854775808").ParseInt64());
-            Assert.Equal(255L, new AsciiString("ff").ParseInt64(16));
+            Assert.Equal(long.MinValue, new AsciiString("-9223372036854775808").ParseLong());
+            Assert.Equal(255L, new AsciiString("ff").ParseLong(16));
         }
         finally { CultureInfo.CurrentCulture = previous; }
     }
@@ -198,7 +198,7 @@ public class AsciiStringIntegerContractTest
 
     private static long ParseAllWidths(AsciiString value)
     {
-        long sum = value.ParseInt16() + value.ParseInt32() + value.ParseInt64();
+        long sum = value.ParseShort() + value.ParseInt() + value.ParseLong();
         value.TryParseInt16(out short small);
         value.TryParseInt32(out int medium);
         value.TryParseInt64(out long large);
@@ -222,9 +222,9 @@ public class AsciiStringIntegerContractTest
 
     private static long Parse(AsciiString value, int width, int start, int end, int radix = 10) => width switch
     {
-        16 => value.ParseInt16(start, end, radix),
-        32 => value.ParseInt32(start, end, radix),
-        _ => value.ParseInt64(start, end, radix)
+        16 => value.ParseShort(start, end, radix),
+        32 => value.ParseInt(start, end, radix),
+        _ => value.ParseLong(start, end, radix)
     };
 
     private static bool TryParse(AsciiString value, int width, int start, int end, out long result, int radix = 10)

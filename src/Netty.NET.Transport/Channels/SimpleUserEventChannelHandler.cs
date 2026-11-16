@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using Netty.NET.Common;
 
 namespace Netty.NET.Transport.Channels;
@@ -42,16 +43,37 @@ namespace Netty.NET.Transport.Channels;
  */
 public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAdapter
 {
+    // CLR: the reified type argument and Type.IsInstanceOfType replace TypeParameterMatcher.find/get
+    // (https://learn.microsoft.com/dotnet/api/system.type.isinstanceoftype).
+    private readonly Type matcher;
     private readonly bool _autoRelease;
+
+    /**
+     * see {@link #SimpleUserEventChannelHandler(boolean)} with {@code true} as boolean parameter.
+     */
+    protected SimpleUserEventChannelHandler() : this(true)
+    {
+    }
+
     /**
      * Create a new instance which will try to detect the types to match out of the type parameter of the class.
      *
      * @param autoRelease   {@code true} if handled events should be released automatically by passing them to
      *                      {@link ReferenceCountUtil#release(Object)}.
      */
+    protected SimpleUserEventChannelHandler(bool autoRelease)
+    {
+        matcher = typeof(T);
+        _autoRelease = autoRelease;
+    }
+
     /**
      * see {@link #SimpleUserEventChannelHandler(Class, boolean)} with {@code true} as boolean value.
      */
+    protected SimpleUserEventChannelHandler(Type eventType) : this(eventType, true)
+    {
+    }
+
     /**
      * Create a new instance
      *
@@ -59,21 +81,30 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
      * @param autoRelease    {@code true} if handled events should be released automatically by passing them to
      *                       {@link ReferenceCountUtil#release(Object)}.
      */
-    protected SimpleUserEventChannelHandler(bool autoRelease = true) { _autoRelease = autoRelease; }
+    protected SimpleUserEventChannelHandler(Type eventType, bool autoRelease)
+    {
+        ArgumentNullException.ThrowIfNull(eventType);
+        // CLR: Class<? extends I> is checked at run time.
+        if (!typeof(T).IsAssignableFrom(eventType))
+            throw new ArgumentException($"{eventType} is not assignable to {typeof(T)}", nameof(eventType));
+        matcher = eventType;
+        _autoRelease = autoRelease;
+    }
+
     /**
      * Returns {@code true} if the given user event should be handled. If {@code false} it will be passed to the next
      * {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
      */
-    protected virtual bool AcceptEvent(object evt) => evt is T;
-    public sealed override void UserEventTriggered(ChannelHandlerContext context, object evt)
+    protected virtual bool AcceptEvent(object evt) => matcher.IsInstanceOfType(evt);
+    public sealed override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         bool release = true;
         try
         {
             if (AcceptEvent(evt))
-                EventReceived(context, (T)evt);
+                EventReceived(ctx, (T)evt);
             else
-            { release = false; context.FireUserEventTriggered(evt); }
+            { release = false; ctx.FireUserEventTriggered(evt); }
         }
         finally { if (_autoRelease && release) ReferenceCountUtil.Release(evt); }
     }
@@ -85,5 +116,5 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
      *
      * @throws Exception is thrown if an error occurred
      */
-    protected abstract void EventReceived(ChannelHandlerContext context, T evt);
+    protected abstract void EventReceived(IChannelHandlerContext ctx, T evt);
 }

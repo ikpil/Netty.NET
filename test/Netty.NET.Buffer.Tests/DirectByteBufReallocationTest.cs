@@ -18,6 +18,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -41,7 +42,7 @@ public class DirectByteBufReallocationTest
                 : new UnpooledDirectByteBuf(Allocator, initial, 64, Native);
             Buffer.SetBytes(0, Prefix(initial)).SetIndex(initial / 2, initial)
                 .MarkReaderIndex().MarkWriterIndex();
-            Assert.Same(Allocator, Buffer.Allocator);
+            Assert.Same(Allocator, Buffer.Alloc());
             Assert.True(Buffer.IsDirect);
             Assert.True(Buffer.IsContiguous);
         }
@@ -54,7 +55,7 @@ public class DirectByteBufReallocationTest
 
         public void Dispose()
         {
-            if (Buffer.ReferenceCount != 0) Assert.True(Buffer.Release());
+            if (Buffer.RefCnt != 0) Assert.True(Buffer.Release());
             Assert.Equal(0, Native.ReservedBytes);
             Assert.Equal(0, Allocator.Metric.UsedDirectMemory);
         }
@@ -80,8 +81,8 @@ public class DirectByteBufReallocationTest
         b.Capacity = target;
         Assert.Equal(target, b.Capacity);
         Assert.Equal(64, b.MaxCapacity);
-        Assert.Equal(1, b.ReferenceCount);
-        Assert.Same(s.Allocator, b.Allocator);
+        Assert.Equal(1, b.RefCnt);
+        Assert.Same(s.Allocator, b.Alloc());
         Assert.Equal(Prefix(Math.Min(initial, target)), b.AsMemory(0, Math.Min(initial, target)).ToArray());
         Assert.Equal(Math.Min(initial / 2, target), b.ReaderIndex);
         Assert.Equal(Math.Min(initial, target), b.WriterIndex);
@@ -125,7 +126,7 @@ public class DirectByteBufReallocationTest
         }
         else
         {
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = target);
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = target);
             Assert.Equal(Prefix(8), old.ToArray());
         }
         int capacity = succeeds ? target : 8;
@@ -192,7 +193,7 @@ public class DirectByteBufReallocationTest
             Assert.Equal(1, *(byte*)pin.Pointer);
             s.Accounting(16, 24);
             Assert.True(b.Release());
-            Assert.Equal(0, b.ReferenceCount);
+            Assert.Equal(0, b.RefCnt);
             Assert.Throws<ObjectDisposedException>(() => old.ToArray());
             Assert.Equal(Prefix(8), new ReadOnlySpan<byte>(pin.Pointer, 8).ToArray());
             s.Accounting(0, 8);
@@ -217,7 +218,7 @@ public class DirectByteBufReallocationTest
             try
             {
                 b.Capacity = 16;
-                Assert.Same(creator, b.Allocator);
+                Assert.Same(creator, b.Alloc());
                 Assert.Equal(Prefix(24).Skip(offset).Take(8), b.AsMemory(0, 8).ToArray());
                 Assert.Equal(0, b.ReaderIndex);
                 Assert.Equal(8, b.WriterIndex);

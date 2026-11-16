@@ -92,7 +92,7 @@ public partial class WrappedCompositeByteBufDispatchTest
             var call = Assert.Single(root.Calls);
             Assert.Equal(operation switch { 0 => "ReadByte", 1 => "WriteByte", 2 or 3 => "ReadWord", _ => "SetWord" }, call.Method);
             Assert.Equal((3, operation < 2 ? 1 : operation < 4 ? 8 : 4, operation is 3 or 5), (call.Index, call.Width, call.Little));
-            Assert.Equal((0, 32, 1), (root.ReaderIndex, root.WriterIndex, root.ReferenceCount));
+            Assert.Equal((0, 32, 1), (root.ReaderIndex, root.WriterIndex, root.RefCnt));
             Assert.Equal(4, data.GetByte(3)); Assert.Equal(0, tracker.Records);
         }
         finally { b.Release(); Assert.Equal(0, native.ReservedBytes); }

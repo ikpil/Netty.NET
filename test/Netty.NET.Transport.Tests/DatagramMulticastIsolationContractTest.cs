@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -38,16 +39,16 @@ public class DatagramMulticastIsolationContractTest
         var cancellation = TestContext.Current.CancellationToken;
         var memberPackets = Channel.CreateUnbounded<int>();
         var otherPackets = Channel.CreateUnbounded<int>();
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var peer = new Socket(groupFamily, SocketType.Dgram, ProtocolType.Udp);
         try
         {
             peer.Bind(new IPEndPoint(source, 0));
-            var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => new DatagramChannel(socketFamily, dualMode))
+            var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => new NioDatagramChannel(socketFamily, dualMode))
                 .Option(ChannelOption.IP_MULTICAST_IF, iface).Option(ChannelOption.SO_REUSEADDR, true);
-            var member = (DatagramChannel)await bootstrap.Clone().Handler(new Capture(memberPackets.Writer)).BindAsync(new IPEndPoint(any, 0), cancellation);
+            var member = (NioDatagramChannel)await bootstrap.Clone().Handler(new Capture(memberPackets.Writer)).BindAsync(new IPEndPoint(any, 0), cancellation);
             var local = Assert.IsType<IPEndPoint>(member.LocalAddress);
-            var other = (DatagramChannel)await bootstrap.Clone().Handler(new Capture(otherPackets.Writer)).BindAsync(local, cancellation);
+            var other = (NioDatagramChannel)await bootstrap.Clone().Handler(new Capture(otherPackets.Writer)).BindAsync(local, cancellation);
             var sender = await bootstrap.Clone().Handler(new ChannelInboundHandlerAdapter())
                 .BindAsync(new IPEndPoint(dualMode ? any : source, 0), cancellation);
             var target = new IPEndPoint(multicast, local.Port);
@@ -71,7 +72,7 @@ public class DatagramMulticastIsolationContractTest
             while (memberPackets.Reader.TryRead(out int memberValue)) Assert.Equal(1, memberValue);
             while (otherPackets.Reader.TryRead(out int otherValue)) Assert.Equal(2, otherValue);
 
-            Task JoinAsync(DatagramChannel channel) => sourceSpecific
+            Task JoinAsync(NioDatagramChannel channel) => sourceSpecific
                 ? channel.JoinGroupAsync(multicast, iface, source) : channel.JoinGroupAsync(target, iface);
             Task SendAsync(int value) => sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(value), target), cancellation);
         }
@@ -83,6 +84,6 @@ public class DatagramMulticastIsolationContractTest
 
     private sealed class Capture(ChannelWriter<int> writer) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket message) => writer.TryWrite(message.Content.ReadInt());
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg) => writer.TryWrite(msg.Content.ReadInt());
     }
 }

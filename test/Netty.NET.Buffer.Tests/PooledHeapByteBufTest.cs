@@ -19,7 +19,7 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * Tests big-endian heap channel buffers
  */
-public class PooledHeapByteBufTest : AbstractPooledByteBufTest
+public class PooledHeapByteBufTest : AbstractPooledArenaByteBufTest
 {
     protected override bool Direct => false;
 }

@@ -19,9 +19,9 @@ using System;
 namespace Netty.NET.Common.Internal.Logging;
 
 /**
- * A skeletal implementation of {@link IInternalLogger}.  This class implements
+ * A skeletal implementation of {@link InternalLogger}.  This class implements
  * all methods that have a {@link InternalLogLevel} parameter by default to call
- * specific logger methods such as {@link #info(string)} or {@link #isInfoEnabled()}.
+ * specific logger methods such as {@link #info(String)} or {@link #isInfoEnabled()}.
  */
 public abstract class AbstractInternalLogger : IInternalLogger
 {

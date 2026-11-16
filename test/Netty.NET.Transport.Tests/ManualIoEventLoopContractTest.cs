@@ -9,6 +9,7 @@ using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Local;
 using Netty.NET.Transport.Channels.Sockets;
 using static Netty.NET.Transport.Tests.ManualIoEventLoopSourceTest;
@@ -22,7 +23,7 @@ public class ManualIoEventLoopContractTest
     public async Task ACallerPumpedLoopOwnsTcpCompletionsAndClosesBothChannels()
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var loop = new ManualIoEventLoop(null);
+        var loop = new ManualIoEventLoop((Thread)null, NioIoHandler.NewFactory());
         var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var owner = new Thread(() =>
         {
@@ -39,7 +40,7 @@ public class ManualIoEventLoopContractTest
         var echo = new EchoByte(loop);
         try
         {
-            var listener = await new ServerBootstrap().Group(loop).Channel<TcpServerSocketChannel>()
+            var listener = await new ServerBootstrap().Group(loop).Channel<NioServerSocketChannel>()
                 .ChildHandler(echo).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), cancellation);
             using var peer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             await peer.ConnectAsync(listener.LocalAddress, cancellation);
@@ -68,7 +69,7 @@ public class ManualIoEventLoopContractTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var ticker = Ticker.NewMockTicker();
-        var loop = new ManualIoEventLoop(Thread.CurrentThread, ticker: ticker);
+        var loop = new ManualIoEventLoop(null, Thread.CurrentThread, NioIoHandler.NewFactory(), ticker);
         try
         {
             var scheduled = loop.ScheduleAsync(() => Assert.Fail("Future work ran during shutdown."),
@@ -76,11 +77,11 @@ public class ManualIoEventLoopContractTest
             var termination = loop.ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
             bool ran = false;
             loop.Execute(() => ran = true);
-            Assert.Equal(1, loop.RunNow());
+            // The WAKEUP_TASK that shutdownGracefully offers to the task queue is counted with the queued task.
+            Assert.Equal(2, loop.RunNow());
             Assert.True(ran);
             Assert.True(scheduled.IsCanceled);
             Assert.False(termination.IsCompleted);
-            Assert.Throws<InvalidOperationException>(() => loop.AwaitTermination(TimeSpan.Zero));
             ticker.Advance(2_000_000_001);
             Assert.Equal(0, loop.RunNow());
             Assert.True(termination.IsCompletedSuccessfully);
@@ -95,7 +96,7 @@ public class ManualIoEventLoopContractTest
     [Fact]
     public void BlockingRunReturnsAtTheScheduledDeadline()
     {
-        var loop = new ManualIoEventLoop(Thread.CurrentThread);
+        var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         try
         {
             var watch = Stopwatch.StartNew();
@@ -111,13 +112,16 @@ public class ManualIoEventLoopContractTest
     public void RegistrationMovesToTheNewOwnerBeforeTheFirstLoopTerminates()
     {
         var cancellation = TestContext.Current.CancellationToken;
-        var first = new ManualIoEventLoop(Thread.CurrentThread);
-        var second = new ManualIoEventLoop(Thread.CurrentThread);
+        var first = new ManualIoEventLoop(Thread.CurrentThread, LocalIoHandler.NewFactory());
+        var second = new ManualIoEventLoop(Thread.CurrentThread, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
         try
         {
             first.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();
-            channel.DeregisterAsync(cancellation).GetAwaiter().GetResult();
+            var deregister = channel.DeregisterAsync(cancellation);
+            // AbstractUnsafe.deregister runs later on the owner (#4435).
+            first.RunNonBlockingTasks(0);
+            deregister.GetAwaiter().GetResult();
             second.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();
             Terminate(first);
             Assert.True(channel.IsRegistered);
@@ -138,11 +142,11 @@ public class ManualIoEventLoopContractTest
         internal readonly TaskCompletionSource<(IChannel Channel, IEventExecutor Executor, Thread Thread)> Observed =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
         {
-            Observed.TrySetResult((context.Channel, ThreadExecutorMap.CurrentExecutor(), Thread.CurrentThread));
+            Observed.TrySetResult((ctx.Channel, ThreadExecutorMap.CurrentExecutor(), Thread.CurrentThread));
             Assert.True(loop.InEventLoop());
-            _ = context.WriteAndFlushAsync(Unpooled.WrappedBuffer(new[] { message.ReadByte() }));
+            _ = ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(new[] { msg.ReadByte() }));
         }
     }
 }

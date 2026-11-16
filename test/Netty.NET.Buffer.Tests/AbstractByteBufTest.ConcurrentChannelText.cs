@@ -30,7 +30,7 @@ namespace Netty.NET.Buffer.Tests;
 public abstract partial class AbstractByteBufTest
 {
     [Fact]
-    public void TestDuplicateReadGatheringByteChannelMultipleThreads()
+    public virtual void TestDuplicateReadGatheringByteChannelMultipleThreads()
     {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
@@ -41,7 +41,7 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestSliceReadGatheringByteChannelMultipleThreads()
+    public virtual void TestSliceReadGatheringByteChannelMultipleThreads()
     {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
@@ -74,7 +74,7 @@ public abstract partial class AbstractByteBufTest
                         ByteBuf buf;
                         if (slice) buf = buffer.Slice();
                         else buf = buffer.Duplicate();
-                        while (buf.IsReadable)
+                        while (buf.IsReadable())
                         {
                             if (clock.Elapsed >= TimeSpan.FromSeconds(30))
                                 throw new TimeoutException("The original concurrent channel timeout expired.");
@@ -198,6 +198,9 @@ public abstract partial class AbstractByteBufTest
         using var start = new SemaphoreSlim(0);
         using var finish = new SemaphoreSlim(0);
         var tasks = new List<Task>();
+        // CLR: the supplemental index check compares with each factory's initial indices (a slice factory
+        // returns a full writer index).
+        int[] readerIndices = new int[bufs.Length], writerIndices = new int[bufs.Length];
         Exception failure = null;
         try
         {
@@ -206,6 +209,8 @@ public abstract partial class AbstractByteBufTest
                 bufs[i] = NewBuffer(bufSize);
                 // Make the supplemental content assertion independent of stale pooled allocation contents.
                 bufs[i].SetZero(0, bufSize);
+                readerIndices[i] = bufs[i].ReaderIndex;
+                writerIndices[i] = bufs[i].WriterIndex;
             }
             char[] cs = new char[bufSize / maxBytesPerChar];
             Array.Fill(cs, 'a');
@@ -222,7 +227,7 @@ public abstract partial class AbstractByteBufTest
                 {
                     finish.Release();
                     start.Wait();
-                    for (int j = 0; j < iterations; j++) buf.SetString(0, text, encoding);
+                    for (int j = 0; j < iterations; j++) buf.SetCharSequence(0, text, encoding);
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default));
             }
             CancellationToken token = TestContext.Current.CancellationToken;
@@ -241,11 +246,12 @@ public abstract partial class AbstractByteBufTest
             // Original success means all Futures completed. Also verify actual bytes and absolute indices.
             byte[] expected = new byte[cs.Length];
             Array.Fill(expected, (byte)'a');
-            foreach (ByteBuf buf in bufs)
+            for (int i = 0; i < bufs.Length; i++)
             {
+                ByteBuf buf = bufs[i];
                 Assert.Equal(expected, ByteBufUtil.GetBytes(buf, 0, expected.Length));
-                Assert.Equal(0, buf.ReaderIndex);
-                Assert.Equal(0, buf.WriterIndex);
+                Assert.Equal(readerIndices[i], buf.ReaderIndex);
+                Assert.Equal(writerIndices[i], buf.WriterIndex);
             }
         }
         catch (Exception cause) { failure = cause; throw; }

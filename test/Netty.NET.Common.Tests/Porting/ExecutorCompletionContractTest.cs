@@ -34,7 +34,7 @@ public class ExecutorCompletionContractTest
             LastWork = work;
             _queue.Enqueue(work);
         }
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override void Shutdown() { }
         public override bool IsShuttingDown() => false;
@@ -391,8 +391,8 @@ public class ExecutorCompletionContractTest
         try
         {
             Assert.Equal(1, executor.PendingTaskCount);
-            Assert.Same(executor.Termination, executor.StopAsync());
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);

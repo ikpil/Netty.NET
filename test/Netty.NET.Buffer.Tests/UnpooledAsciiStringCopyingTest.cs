@@ -58,7 +58,7 @@ public class UnpooledAsciiStringCopyingTest
             else Assert.NotSame(Unpooled.EmptyBuffer, copy);
             Assert.Equal(expected.Length, copy.Capacity);
             Assert.Equal(range && payload.Length == 0 ? 0 : int.MaxValue, copy.MaxCapacity);
-            Assert.Equal((0, expected.Length, 1), (copy.ReaderIndex, copy.WriterIndex, copy.ReferenceCount));
+            Assert.Equal((0, expected.Length, 1), (copy.ReaderIndex, copy.WriterIndex, copy.RefCnt));
             Assert.False(copy.IsReadOnly); Assert.False(copy.IsDirect && expected.Length > 0);
             Assert.Equal(expected, ByteBufUtil.GetBytes(copy));
             if (payload.Length > 0) { backing[offset ? 2 : 0] = 0; Assert.Equal(expected, ByteBufUtil.GetBytes(copy)); }

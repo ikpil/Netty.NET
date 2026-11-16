@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -58,7 +59,7 @@ public class SegmentedDatagramSourceTest
         var token = TestContext.Current.CancellationToken;
         using var adaptiveAllocator = adaptive ? new AdaptiveByteBufAllocator() : null;
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
-        var loop = new DefaultEventLoopGroup(2);
+        var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         try
         {
             var sender = await NewBootstrap(loop, allocator, new Discard()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
@@ -103,8 +104,8 @@ public class SegmentedDatagramSourceTest
         finally { await loop.StopAsync(); }
     }
 
-    private static Bootstrap NewBootstrap(DefaultEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
-        new Bootstrap().Group(loop).ChannelFactory(static () => new DatagramChannel())
+    private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
+        new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
             .Option(ChannelOption.ALLOCATOR, allocator).Handler(handler);
 
     internal static void RequireGro(AddressFamily family)
@@ -128,7 +129,7 @@ public class SegmentedDatagramSourceTest
 
     private sealed class Discard : SimpleChannelInboundHandler<object>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, object message)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, object msgs)
         {
             // Nothing will be sent.
         }
@@ -139,12 +140,12 @@ public class SegmentedDatagramSourceTest
         private int _received;
         internal readonly TaskCompletionSource Completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket packet)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
         {
             Assert.Equal(segmentSize, packet.Content.ReadableBytes);
             if (++_received == expected) Completed.TrySetResult();
         }
 
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => Completed.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Completed.TrySetException(cause);
     }
 }

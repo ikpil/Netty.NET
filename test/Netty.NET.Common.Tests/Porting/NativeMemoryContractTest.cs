@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -98,12 +99,16 @@ public class NativeMemoryContractTest
         var allocator = new NativeMemoryAllocator(8);
         Assert.Throws<ArgumentOutOfRangeException>(() => new NativeMemoryAllocator(-1));
         Assert.Throws<ArgumentOutOfRangeException>(() => allocator.Allocate(-1));
-        Assert.Throws<OutOfMemoryException>(() => allocator.Allocate(9));
+        // CLR: the reservation limit reports PlatformDependent.incrementMemoryCounter's
+        // OutOfDirectMemoryError and message.
+        Assert.Equal("failed to allocate 9 byte(s) of direct memory (used: 0, max: 8)",
+            Assert.Throws<OutOfDirectMemoryError>(() => allocator.Allocate(9)).Message);
         Assert.Equal(0, allocator.ReservedBytes);
         using var owner = allocator.Allocate(8);
-        Assert.Throws<OutOfMemoryException>(() => allocator.Allocate(0));
+        Assert.Equal("failed to allocate 1 byte(s) of direct memory (used: 8, max: 8)",
+            Assert.Throws<OutOfDirectMemoryError>(() => allocator.Allocate(0)).Message);
         Assert.Equal(8, allocator.ReservedBytes);
-        Assert.Throws<OutOfMemoryException>(() => new NativeMemoryAllocator(0).Allocate(0));
+        Assert.Throws<OutOfDirectMemoryError>(() => new NativeMemoryAllocator(0).Allocate(0));
     }
 
     [Fact]
@@ -136,7 +141,7 @@ public class NativeMemoryContractTest
         var allocator = new NativeMemoryAllocator(8);
         using var owner = allocator.Allocate(8);
         owner.Memory.Span.Fill(0x7b);
-        Assert.Throws<OutOfMemoryException>(() => allocator.Reallocate(owner, 9));
+        Assert.Throws<OutOfDirectMemoryError>(() => allocator.Reallocate(owner, 9));
         Assert.Throws<ArgumentOutOfRangeException>(() => allocator.Reallocate(owner, -1));
         Assert.Throws<ArgumentException>(() => new NativeMemoryAllocator().Reallocate(owner, 1));
         Assert.Throws<ArgumentNullException>(() => allocator.Reallocate(null, 1));

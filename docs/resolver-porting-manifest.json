@@ -67,7 +67,30 @@
       "dotnet test test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Release",
       "dotnet build test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Release -t:Rebuild -p:CheckForOverflowUnderflow=true",
       "dotnet test test/Netty.NET.Resolver.Tests/Netty.NET.Resolver.Tests.csproj -c Release --no-build"
-    ]
+    ],
+    "jdkSemanticsEvidence": {
+      "newSupplementalCases": 18,
+      "resolverDebug": {
+        "total": 82,
+        "passed": 82,
+        "failed": 0,
+        "skipped": 0
+      },
+      "jdk": "21.0.10 (Corretto); InetAddress.getByName/getAllByName and localhost ordering under preferIPv6Addresses unset/true/system were executed on Windows.",
+      "clr": "net10.0 IPAddress.TryParse and Dns.GetHostAddresses executed on the same host.",
+      "sourceEvidence": [
+        "src/Netty.NET.Resolver/DefaultNameResolver.cs",
+        "src/Netty.NET.Resolver/HostsFileEntriesProvider.cs",
+        "test/Netty.NET.Resolver.Tests/ResolverJdkSemanticsContractTest.cs"
+      ],
+      "platformSources": [
+        "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Inet6Address.html"
+      ],
+      "executionEvidence": [
+        "JDK 21.0.10 reflection: java.nio.channels.UnsupportedAddressTypeException superclass is java.lang.IllegalArgumentException.",
+        "net10.0: new SocketException((int)SocketError.HostNotFound, host) reports HostNotFound with the host as Message."
+      ]
+    }
   },
   "entries": [
     {
@@ -84,7 +107,22 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "CLR reified T replaces TypeParameterMatcher/Class overload; EndPoint input may differ from the resolved T. Unsupported addresses fail Tasks, while null arguments throw synchronously. Task completion replaces both Promise overloads."
+      "decision": "CLR reified T replaces TypeParameterMatcher/Class overload; EndPoint input may differ from the resolved T. Unsupported addresses fail Tasks, while null arguments throw synchronously. Task completion replaces both Promise overloads. Unsupported addresses throw a CLR UnsupportedAddressTypeException that, like the JDK type, extends IllegalArgumentException (ArgumentException) with a message-less constructor.",
+      "publicNameReview": {
+        "date": "2026-11-16",
+        "scope": "Public Java methods/fields of this source file whose name (case/underscore-insensitive, Async allowed) does not occur in the mapped C# files.",
+        "categories": {
+          "java-collection-interface": "Java collection/iterator interface member replaced by the BCL collection interfaces"
+        },
+        "names": [
+          {
+            "name": "close",
+            "kind": "method",
+            "category": "java-collection-interface",
+            "clr": "IDisposable.Dispose"
+          }
+        ]
+      }
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/AddressResolver.java",
@@ -116,7 +154,22 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "ReferenceEqualityComparer dictionary preserves executor identity. A detachable, clearable continuation state replaces lifecycle Future listeners; cleanup runs without dispatch to an already-terminated executor, closes each resolver once and isolates close failures. Dispose clears current entries and permits reuse, as upstream."
+      "decision": "ReferenceEqualityComparer dictionary preserves executor identity. A detachable, clearable continuation state replaces lifecycle Future listeners; cleanup runs without dispatch to an already-terminated executor, closes each resolver once and isolates close failures. Dispose clears current entries and permits reuse, as upstream. Source messages (\"executor not accepting a task\", \"failed to create a new resolver\") and names (r, newResolver, rArray, e, t, logger) restored.",
+      "publicNameReview": {
+        "date": "2026-11-16",
+        "scope": "Public Java methods/fields of this source file whose name (case/underscore-insensitive, Async allowed) does not occur in the mapped C# files.",
+        "categories": {
+          "java-collection-interface": "Java collection/iterator interface member replaced by the BCL collection interfaces"
+        },
+        "names": [
+          {
+            "name": "close",
+            "kind": "method",
+            "category": "java-collection-interface",
+            "clr": "IDisposable.Dispose"
+          }
+        ]
+      }
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/CompositeNameResolver.java",
@@ -132,7 +185,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "Cloned component array, sequential asynchronous fallback, first success including an empty all-result, last failure preserved; composite does not own delegates. Caller cancellation stops fallback."
+      "decision": "Cloned component array, sequential asynchronous fallback, first success including an empty all-result, last failure preserved; composite does not own delegates. Caller cancellation stops fallback. doResolveRec/doResolveAllRec keep the source recursion over resolverIndex with lastFailure as Task continuations; constructor checks use checkNotNull with \"resolvers[i]\" and the source message."
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/DefaultAddressResolverGroup.java",
@@ -164,7 +217,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "Nanosecond refresh interval environment setting, monotonic Common ticker and CAS admission. A single volatile provider snapshot publishes both families together. Invariant normalization and family ordering preserve original contracts. Windows tries both explicit UTF-16 byte orders."
+      "decision": "Nanosecond refresh interval environment setting, monotonic Common ticker and CAS admission. A single volatile provider snapshot publishes both families together. Invariant normalization and family ordering preserve original contracts. Windows tries both explicit UTF-16 byte orders. Source names restored: refreshInterval, firstAddress, allInet4Addresses/allInet6Addresses, interval and currentTime. checkPositiveOrZero and the unknown-type default throw ArgumentException as IllegalArgumentException with the source message. Windows parsing tries the default charset, Java UTF_16 and a preamble-less UTF-8, as parseSilently(defaultCharset, UTF_16, UTF_8) does."
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/DefaultNameResolver.java",
@@ -180,7 +233,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "System.Net.Dns async OS lookup replaces blocking JDK lookup. Null/empty names map to loopback rather than the CLR empty-host machine lookup. Literal fast path and mapped-IPv6 classification avoid reverse DNS. OS address order is retained; exact platform DNS results are environment-dependent."
+      "decision": "System.Net.Dns async OS lookup replaces blocking JDK lookup. Null/empty names map to loopback rather than the CLR empty-host machine lookup. SocketUtils.addressByName/allAddressesByName become private helpers that keep InetAddress.getAllByName literal rules, because IPAddress.TryParse and Dns accept forms the JDK does not: IPv4 literals are one to four decimal parts (textToNumericFormatV4; leading zeros are decimal, not octal), BSD hex/octal forms fail with the host name, bracketed literals must be IPv6 without a port, and IPv4-mapped IPv6 literals become IPv4. Lookup results follow java.net.preferIPv6Addresses as InetAddress does: IPv4 first by default, IPv6 first for \"true\", resolver order for \"system\". doResolve no longer delegates to the virtual doResolveAll. UnknownHostException maps to SocketException(HostNotFound) carrying the host text. JDK 21.0.10 and .NET 10 results for each literal were compared by running both runtimes."
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileEntries.java",
@@ -212,7 +265,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "TextReader, FileInfo and Encoding replace Reader/File/Charset. Parser owns supplied reader. Common NetUtil strict literal parsing, aliases, duplicate order and IPv4-mapped classification retained. Try encodings until first nonempty parse; UTF-16 BOM consumed only for a matching explicitly selected byte order. IPAddress has no attached hostname; dictionary aliases retain lookup names."
+      "decision": "TextReader, FileInfo and Encoding replace Reader/File/Charset. Parser owns supplied reader. Common NetUtil strict literal parsing, aliases, duplicate order and IPv4-mapped classification retained. Try encodings until first nonempty parse. Files are decoded like InputStreamReader: an Encoding with a preamble consumes it, a preamble-less Encoding keeps a BOM as U+FEFF (Java UTF_8/UTF_16LE/UTF_16BE), and the internal UTF_16 instance reproduces Java UTF_16 (BOM selects the byte order, big-endian without a BOM). FileInfo is refreshed before Exists because it caches, unlike File.exists(). Each alias gets its own IPAddress, as getByAddress(hostname, bytes) creates one per name and IPAddress.ScopeId is mutable. EMPTY is internal. The Windows locator keeps WINDOWS_DEFAULT_SYSTEM_ROOT/WINDOWS_HOSTS_FILE_RELATIVE_PATH/X_PLATFORMS_HOSTS_FILE_PATH and string concatenation. toLowerCase(Locale.ENGLISH) is ToLowerInvariant, equal for ASCII host names; Java special casing of non-ASCII input (U+0130, final sigma) is not reproduced. IPAddress has no attached hostname; dictionary aliases retain lookup names. The Windows hosts path is built as System.getenv(\"SystemRoot\") + path, so a missing variable yields the source's \"null\" path segment rather than a root-relative path (docs/common-clr-design.md#source-null-and-boolean-text)."
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileEntriesResolver.java",
@@ -244,7 +297,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "Static compatibility API retains first value only; no instantiable utility class."
+      "decision": "Static compatibility API retains first value only; no instantiable utility class. hostsFileEntries and toMapWithSingleValue(fromMapWithListValue) keep their source names; the type HostsFileEntries is namespace-qualified where the method name hides it."
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/InetNameResolver.java",
@@ -276,7 +329,22 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "DnsEndPoint is unresolved input and IPEndPoint is resolved input/output. Preserve resolved object identity, input port, lookup order, failure identity and delegated disposal. CLR DnsEndPoint.AddressFamily filters results and rejects an empty single result."
+      "decision": "DnsEndPoint is unresolved input and IPEndPoint is resolved input/output. Preserve resolved object identity, input port, lookup order, failure identity and delegated disposal. CLR DnsEndPoint.AddressFamily filters results and rejects an empty single result. Locals inetAddresses/socketAddresses/inetAddress restored.",
+      "publicNameReview": {
+        "date": "2026-11-16",
+        "scope": "Public Java methods/fields of this source file whose name (case/underscore-insensitive, Async allowed) does not occur in the mapped C# files.",
+        "categories": {
+          "java-collection-interface": "Java collection/iterator interface member replaced by the BCL collection interfaces"
+        },
+        "names": [
+          {
+            "name": "close",
+            "kind": "method",
+            "category": "java-collection-interface",
+            "clr": "IDisposable.Dispose"
+          }
+        ]
+      }
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/NameResolver.java",
@@ -372,7 +440,22 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "Random.Shared replaces ThreadLocalRandom; select a random single address, or right-rotate a copy without mutating the delegate list. Empty single lookup fails; empty all lookup succeeds. Delegate is owned and disposed."
+      "decision": "Random.Shared replaces ThreadLocalRandom; select a random single address, or right-rotate a copy without mutating the delegate list. Empty single lookup fails; empty all lookup succeeds. Delegate is owned and disposed. Locals inetAddresses/numAddresses restored; an empty result fails with SocketException(HostNotFound, inetHost).",
+      "publicNameReview": {
+        "date": "2026-11-16",
+        "scope": "Public Java methods/fields of this source file whose name (case/underscore-insensitive, Async allowed) does not occur in the mapped C# files.",
+        "categories": {
+          "java-collection-interface": "Java collection/iterator interface member replaced by the BCL collection interfaces"
+        },
+        "names": [
+          {
+            "name": "close",
+            "kind": "method",
+            "category": "java-collection-interface",
+            "clr": "IDisposable.Dispose"
+          }
+        ]
+      }
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/SimpleNameResolver.java",
@@ -388,7 +471,22 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "Task-producing protected hooks replace Promise mutation, capture synchronous lookup exceptions into failed Tasks, preserve matching cancellation tokens and do not start pre-canceled lookups."
+      "decision": "Task-producing protected hooks replace Promise mutation, capture synchronous lookup exceptions into failed Tasks, preserve matching cancellation tokens and do not start pre-canceled lookups.",
+      "publicNameReview": {
+        "date": "2026-11-16",
+        "scope": "Public Java methods/fields of this source file whose name (case/underscore-insensitive, Async allowed) does not occur in the mapped C# files.",
+        "categories": {
+          "java-collection-interface": "Java collection/iterator interface member replaced by the BCL collection interfaces"
+        },
+        "names": [
+          {
+            "name": "close",
+            "kind": "method",
+            "category": "java-collection-interface",
+            "clr": "IDisposable.Dispose"
+          }
+        ]
+      }
     },
     {
       "upstream": "resolver/src/test/java/io/netty/resolver/DefaultHostsFileEntriesResolverTest.java",
@@ -442,7 +540,7 @@
       ],
       "hashMode": "utf8-lf",
       "kind": "test",
-      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation. givenHostsParserWith keeps mockParser and mockedAnswer."
     },
     {
       "upstream": "resolver/src/test/java/io/netty/resolver/HostsFileEntriesProviderTest.java",
@@ -476,7 +574,7 @@
       ],
       "hashMode": "utf8-lf",
       "kind": "test",
-      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation. assertNotNull(map.get(\"host7\"), msg) uses GetValueOrDefault so the messaged null check, not the indexer, fails."
     },
     {
       "upstream": "resolver/src/test/java/io/netty/resolver/HostsFileParserTest.java",
@@ -506,7 +604,7 @@
       ],
       "hashMode": "utf8-lf",
       "kind": "test",
-      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation."
+      "decision": "Original method names, inputs, assertions, helper structure, reader ownership and comments retained. Java collections/types/exceptions become CLR equivalents; IPv6 formatting is compressed by IPAddress, Unicode test uses BigEndianUnicode for the unchanged big-endian resource, and Moq callbacks preserve per-parse snapshot recreation. assertNotNull(map.get(\"host7\"), msg) uses GetValueOrDefault so the messaged null check, not the indexer, fails."
     },
     {
       "upstream": "resolver/src/test/java/io/netty/resolver/InetSocketAddressResolverTest.java",

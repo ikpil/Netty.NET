@@ -14,32 +14,13 @@
  * under the License.
  */
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Netty.NET.Buffer.Tests;
 
-// The original single-NIO-region assumption selects these six inherited providers.
-// Composite has a different testInternalNioBuffer override, ported in CompositeByteBufGatheringTest.
-public abstract class AbstractContiguousByteBufTest : AbstractByteBufTest
+// CLR: the original capacity bodies call newBuffer with a finite maxCapacity. Fixtures whose original
+// newBuffer assumes maxCapacity == Integer.MAX_VALUE (composite, slice, wrapped address) skip them in
+// the source; the CLR selects them structurally by not inheriting this class.
+public abstract class AbstractContiguousByteBufTest : AbstractSingleRegionByteBufTest
 {
-    private static readonly SemaphoreSlim InternalBorrowGrowthGate = new(1, 1);
-
-    [Fact]
-    public void TestNioBuffer1() => AssertOriginalNioBuffer1();
-
-    [Fact]
-    public void TestToByteBuffer2() => AssertOriginalToByteBuffer2();
-
-    [Fact]
-    public async Task TestInternalNioBuffer()
-    {
-        // Keep every original 32/64-MiB input, but bound simultaneous test allocations.
-        await InternalBorrowGrowthGate.WaitAsync(TestContext.Current.CancellationToken);
-        try { AssertOriginalInternalNioBufferGrowth(); }
-        finally { InternalBorrowGrowthGate.Release(); }
-    }
-
     [Fact]
     public void TestCapacityEnforceMaxCapacity() => AssertOriginalCapacityEnforceMaxCapacity();
 

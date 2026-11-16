@@ -55,14 +55,14 @@ public class ByteBufDiagnosticsTest
             };
             if (kind == 5 && viewKind == 3) expected = rootText; // Already read-only: AsReadOnly returns itself.
             Assert.Equal(expected, view.ToString()); Assert.Equal(expected, ((object)view).ToString());
-            Assert.Equal(3, root.ReaderIndex); Assert.Equal(13, root.WriterIndex); Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(3, root.ReaderIndex); Assert.Equal(13, root.WriterIndex); Assert.Equal(1, root.RefCnt);
             root.SetIndex(4, 14); root.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(rootText, root.ToString());
             Assert.True(owner.Release());
             string freed = viewKind == 0 || kind == 5 && viewKind == 3 ? names[kind] + "(freed" + components + ")"
                 : viewKind == 3 ? "ReadOnlyByteBuf(freed)" : "ByteBufView(freed)";
             Assert.Equal(freed, view.ToString());
         }
-        finally { if (owner.ReferenceCount > 0) owner.Release(); allocator?.Dispose(); }
+        finally { if (owner.RefCnt > 0) owner.Release(); allocator?.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -101,7 +101,7 @@ public class ByteBufDiagnosticsTest
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(freed)") + ')', wrapper.ToString());
             Assert.Equal(kind is 2 or 4 ? 1 : 0, tracker.Records); // Only advanced Release records.
         }
-        finally { if (root.ReferenceCount > 0) wrapper.Release(); if (root.ReferenceCount > 0) root.Release(); }
+        finally { if (root.RefCnt > 0) wrapper.Release(); if (root.RefCnt > 0) root.Release(); }
     }
 
     [Theory]
@@ -120,7 +120,7 @@ public class ByteBufDiagnosticsTest
             // CLR clears component references; the freed diagnostic preserves the original count.
             Assert.Equal(0, root.NumComponents);
         }
-        finally { if (root.ReferenceCount > 0) wrapper.Release(); }
+        finally { if (root.RefCnt > 0) wrapper.Release(); }
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public class ByteBufDiagnosticsTest
     private sealed class MetadataOnlyBuffer(bool freed) : ByteBuf(64)
     {
         internal int StorageReads;
-        public override int ReferenceCount => freed ? 0 : 1;
+        public override int RefCnt => freed ? 0 : 1;
         public override int Capacity { get => !freed ? 16 : throw new Exception("Freed capacity accessed"); set => throw new NotSupportedException(); }
         public override bool IsDirect => false;
         public override ByteBuf Unwrap() => !freed ? null : throw new Exception("Freed unwrap accessed");

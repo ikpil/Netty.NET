@@ -29,7 +29,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     private byte[] _array;
     private readonly IByteBufAllocator _bufferAllocator;
     private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
-    public override IByteBufAllocator Allocator => _bufferAllocator;
+    public override IByteBufAllocator Alloc() => _bufferAllocator;
 /**
      * Creates a new heap buffer with a newly allocated byte array.
      *
@@ -89,7 +89,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
-        ByteBuf result = Allocator.HeapBuffer(length, MaxCapacity);
+        ByteBuf result = Alloc().HeapBuffer(length, MaxCapacity);
         // CLR spans preserve the original array-write extension point without exposing the backing array.
         try { return result.WriteBytes(_array.AsSpan(index, length)); }
         catch { result.Release(); throw; }

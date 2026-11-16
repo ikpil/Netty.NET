@@ -32,7 +32,7 @@ public class ServerBootstrapSourceTest
     [Fact]
     public async Task TestSetOptionsThrow()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         SourceTestChannel created = null;
         try
         {
@@ -48,14 +48,14 @@ public class ServerBootstrapSourceTest
     public async Task TestHandlerRegister()
     {
         var added = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         try
         {
             var bootstrap = new ServerBootstrap().Channel<LocalServerChannel>().Group(group)
-                .ChildHandler(new ChannelInboundHandlerAdapter()).Handler(new ParentHandler(context =>
+                .ChildHandler(new ChannelInboundHandlerAdapter()).Handler(new ParentHandler(ctx =>
                 {
                     Exception error = null;
-                    try { Assert.True(context.Executor.InEventLoop()); }
+                    try { Assert.True(ctx.Executor.InEventLoop()); }
                     catch (Exception cause) { error = cause; }
                     finally { added.TrySetResult(error); }
                 }));
@@ -74,7 +74,7 @@ public class ServerBootstrapSourceTest
         var read = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var init = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var handler = new ParentHandler(_ => init.TrySetResult(), (_, _) => read.TrySetResult());
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         IChannel server = null, client = null;
         try
         {
@@ -96,7 +96,7 @@ public class ServerBootstrapSourceTest
     [Fact]
     public async Task OptionsAndAttributesMustBeAvailableOnChildChannelInit()
     {
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var address = new LocalAddress(Guid.NewGuid().ToString());
         var key = AttributeKey<string>.ValueOf(Guid.NewGuid().ToString());
         bool requestServed = false;
@@ -123,11 +123,11 @@ public class ServerBootstrapSourceTest
         }
         Assert.True(Volatile.Read(ref requestServed));
     }
-    private sealed class ParentHandler(Action<ChannelHandlerContext> added, Action<ChannelHandlerContext, object> read = null) : ChannelInboundHandlerAdapter
+    private sealed class ParentHandler(Action<IChannelHandlerContext> added, Action<IChannelHandlerContext, object> read = null) : ChannelInboundHandlerAdapter
     {
-        public override void HandlerAdded(ChannelHandlerContext context) => added(context);
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { read?.Invoke(context, message); base.ChannelRead(context, message); }
+        public override void HandlerAdded(IChannelHandlerContext ctx) => added(ctx);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { read?.Invoke(ctx, msg); base.ChannelRead(ctx, msg); }
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class ServerBootstrapSourceTest
         using var registration = ChannelInitializerExtension.Register(extension);
         var address = new LocalAddress(nameof(ServerBootstrapSourceTest));
         IChannel expectedServer = null, expectedChild = null, server = null, client = null;
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         try
         {
             var sb = new ServerBootstrap().Group(group).Channel<LocalServerChannel>()

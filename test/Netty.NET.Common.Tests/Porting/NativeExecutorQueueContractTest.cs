@@ -211,7 +211,9 @@ public class NativeExecutorQueueContractTest
         executor.Advance(1);
         executor.Closed = true;
         Assert.True(executor.Drain());
-        Assert.Equal(1, calls);
+        // ScheduledFutureTask.run executes a due periodic task after shutdown and only skips re-adding
+        // it. CLR: the skipped membership is canceled instead of staying pending forever.
+        Assert.Equal(2, calls);
         Assert.True(periodic.IsCanceled);
         Assert.Null(executor.Head);
     }

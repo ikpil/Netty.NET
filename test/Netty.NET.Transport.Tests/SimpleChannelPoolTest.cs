@@ -107,7 +107,7 @@ public class SimpleChannelPoolTest
             await release;
             Assert.True(release.IsCompletedSuccessfully);
             Assert.True(released);
-            await channel.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
+            await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
             Assert.False(channel.IsActive);
         }
         finally { if (channel != null) await channel.CloseAsync(); }
@@ -272,7 +272,7 @@ public class SimpleChannelPoolTest
     // event-loop group, server and cleanup; all original per-case operations/assertions remain above.
     internal sealed class Setup : IAsyncDisposable
     {
-        internal readonly DefaultEventLoopGroup Group = new(2);
+        internal readonly MultiThreadIoEventLoopGroup Group = new(2, LocalIoHandler.NewFactory());
         internal readonly Bootstrap Client;
         private IChannel _server;
         private Setup(LocalAddress address) => Client = new Bootstrap().RemoteAddress(address).Group(Group).Channel<LocalChannel>();

@@ -46,7 +46,7 @@ public class UnorderedStopContractTest
         var reservation = new ReentrantCancellation(() =>
         {
             pendingInsideCancellation = executor.PendingTaskCount;
-            completedInsideCancellation = executor.Termination.IsCompleted;
+            completedInsideCancellation = executor.TerminationFuture.IsCompleted;
             terminatedInsideCancellation = executor.AwaitTermination(TimeSpan.Zero);
             settledInsideCancellation = results.All(task => task.IsCompleted);
             reentrantStop = executor.StopAsync();
@@ -63,7 +63,7 @@ public class UnorderedStopContractTest
         Assert.False(terminatedInsideCancellation);
         Assert.False(settledInsideCancellation);
         Assert.Same(stopping, reentrantStop);
-        Assert.Same(executor.Termination, stopping);
+        Assert.Same(executor.TerminationFuture, stopping);
         Assert.Equal(1, reservation.Cancellations);
         Assert.True(reservation.Result.IsCanceled);
         Assert.All(results, task => Assert.True(task.IsCanceled));
@@ -87,7 +87,7 @@ public class UnorderedStopContractTest
         var results = new Task[count * 4];
         using var registration = executor.StopToken.UnsafeRegister(_ =>
         {
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.All(results, task => Assert.True(task.IsCanceled));
             callbackEntered.Set();
@@ -149,9 +149,9 @@ public class UnorderedStopContractTest
             Task queued = executor.SubmitAsync(() => Assert.Fail("Removed work ran"));
             Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
             Assert.Equal(2, executor.PendingTaskCount);
-            if (repeatRequest) Assert.Same(executor.Termination, executor.StopAsync());
+            if (repeatRequest) Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Task stopping = executor.StopAsync();
-            Assert.Same(executor.Termination, stopping);
+            Assert.Same(executor.TerminationFuture, stopping);
             Assert.Same(stopping, executor.StopAsync());
             Assert.True(executor.StopToken.IsCancellationRequested);
             Assert.True(queued.IsCanceled);
@@ -201,7 +201,7 @@ public class UnorderedStopContractTest
         using var registration = executor.StopToken.UnsafeRegister(_ =>
         {
             callback = Environment.CurrentManagedThreadId;
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.Equal(0, executor.PendingTaskCount);
             entered.Set();
             Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
@@ -270,7 +270,7 @@ public class UnorderedStopContractTest
         await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.False(token.IsCancellationRequested);
         Assert.Equal(token, executor.StopToken);
-        Assert.Same(executor.Termination, executor.StopAsync());
+        Assert.Same(executor.TerminationFuture, executor.StopAsync());
         Assert.Equal(0, callbacks);
     }
 
@@ -309,7 +309,7 @@ public class UnorderedStopContractTest
         int callbacks = 0;
         using var registration = executor.StopToken.UnsafeRegister(_ => { Assert.Equal(0, executor.PendingTaskCount); ++callbacks; }, null);
         Task queued = executor.SubmitAsync(() => Assert.Fail("Work admitted after reentrant stop"), executor.StopToken);
-        await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(queued.IsCanceled);
         Assert.Equal(1, callbacks);
         Assert.Equal(0, executor.WorkerCount);
@@ -391,7 +391,7 @@ public class UnorderedStopContractTest
         Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
         await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Same(first, second);
-        Assert.Same(executor.Termination, first);
+        Assert.Same(executor.TerminationFuture, first);
         await first.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(1, callbacks);
     }

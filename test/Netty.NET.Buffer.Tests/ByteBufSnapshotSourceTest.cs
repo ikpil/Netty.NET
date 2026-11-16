@@ -47,8 +47,8 @@ public class ByteBufSnapshotSourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -58,7 +58,7 @@ public class ByteBufSnapshotSourceTest
     public enum SnapshotCase
     {
         CopyNegativeIndex, CopyBeyondCapacity, CopyIndexBeyondCapacity, CopyAtCapacity,
-        CopyIndependence, DuplicateSharing, ExplicitEndianSlice, CopyAfterRelease,
+        CopyIndependence, DuplicateSharing, CopyAfterRelease,
         CopyAfterReleaseAlias, ReadOnlyRelease
     }
 
@@ -79,9 +79,9 @@ public class ByteBufSnapshotSourceTest
         {
             if (scenario == SnapshotCase.ReadOnlyRelease)
             {
-                Assert.Equal(1, buffer.ReferenceCount);
+                Assert.Equal(1, buffer.RefCnt);
                 Assert.True(buffer.AsReadOnly().Release());
-                Assert.Equal(0, buffer.ReferenceCount);
+                Assert.Equal(0, buffer.RefCnt);
             }
             else
             {
@@ -99,24 +99,11 @@ public class ByteBufSnapshotSourceTest
             { SnapshotCase.CopyNegativeIndex => (-1, 0), SnapshotCase.CopyBeyondCapacity => (0, capacity + 1), SnapshotCase.CopyIndexBeyondCapacity => (capacity + 1, 0), _ => (capacity, 1) };
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Copy(index, length));
             Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             return;
         }
         byte[] bytes = new byte[capacity]; new Random(12345).NextBytes(bytes);
         for (int i = 0; i < bytes.Length; ++i) buffer.SetByte(i, bytes[i]);
-        if (scenario == SnapshotCase.ExplicitEndianSlice)
-        {
-            foreach ((int offset, int length) in new[] { (0, capacity), (0, capacity - 1), (1, capacity - 1), (1, capacity - 2) })
-            {
-                ByteBuf slice = buffer.Slice(offset, length);
-                // Explicit BE/LE accessors replace mutable Java order identities.
-                Assert.Equal(BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(offset, 4)), slice.GetInt(0));
-                Assert.Equal(BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(offset, 4)), slice.GetIntLE(0));
-                Assert.Equal(0, slice.ReaderIndex); Assert.Equal(length, slice.WriterIndex);
-            }
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
-            return;
-        }
         const int reader = capacity / 3, writer = capacity * 2 / 3;
         buffer.SetIndex(reader, writer);
         if (scenario == SnapshotCase.CopyIndependence)
@@ -134,7 +121,7 @@ public class ByteBufSnapshotSourceTest
                 copy.SetByte(1, unchecked((byte)(copy.GetByte(1) + 1)));
                 Assert.NotEqual(buffer.GetByte(reader + 1), copy.GetByte(1));
             }
-            finally { Assert.True(copy.Release()); Assert.Equal(0, copy.ReferenceCount); }
+            finally { Assert.True(copy.Release()); Assert.Equal(0, copy.RefCnt); }
         }
         else
         {
@@ -150,7 +137,34 @@ public class ByteBufSnapshotSourceTest
             Assert.Equal(reader, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
         }
         Assert.Equal(reader, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
+    }
+
+    // Inherited AbstractByteBufTest.testSliceEndianness over the five providers.
+    [Theory]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)]
+    public void TestSliceEndiannessAcrossProviders(int provider)
+    {
+        const int capacity = 4096;
+        using var s = new Storage(provider, capacity);
+        ByteBuf buffer = s.Root;
+        // CLR: CLR ByteBuf has no mutable order() facade. Known bytes let explicit BE/LE accessors show that
+        // each slice reads the parent's wire bytes in both byte orders.
+        byte[] bytes = new byte[capacity]; new Random(12345).NextBytes(bytes);
+        for (int i = 0; i < bytes.Length; ++i) buffer.SetByte(i, bytes[i]);
+        AssertSliceEndianness(bytes, buffer.Slice(0, buffer.Capacity), 0, capacity);
+        AssertSliceEndianness(bytes, buffer.Slice(0, buffer.Capacity - 1), 0, capacity - 1);
+        AssertSliceEndianness(bytes, buffer.Slice(1, buffer.Capacity - 1), 1, capacity - 1);
+        AssertSliceEndianness(bytes, buffer.Slice(1, buffer.Capacity - 2), 1, capacity - 2);
+        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
+    }
+
+    private static void AssertSliceEndianness(byte[] bytes, ByteBuf slice, int offset, int length)
+    {
+        // Explicit BE/LE accessors replace mutable Java order identities.
+        Assert.Equal(BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(offset, 4)), slice.GetInt(0));
+        Assert.Equal(BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(offset, 4)), slice.GetIntLE(0));
+        Assert.Equal(0, slice.ReaderIndex); Assert.Equal(length, slice.WriterIndex);
     }
 
     public static IEnumerable<object[]> IndexedCases()
@@ -178,8 +192,8 @@ public class ByteBufSnapshotSourceTest
             Assert.Equal(bytes[index..(index + length)], ByteBufUtil.GetBytes(copy, 0, length));
             Assert.Equal(length, copy.Capacity); Assert.Equal(0, copy.ReaderIndex); Assert.Equal(length, copy.WriterIndex);
             Assert.False(copy.IsReadOnly); Assert.Equal(provider is 1 or 4, copy.IsDirect);
-            Assert.Same(source.Allocator, copy.Allocator); Assert.Equal(source.MaxCapacity, copy.MaxCapacity);
-            Assert.Equal(1, copy.ReferenceCount); Assert.Equal(1, source.ReferenceCount); Assert.Equal(1, s.Root.ReferenceCount);
+            Assert.Same(source.Alloc(), copy.Alloc()); Assert.Equal(source.MaxCapacity, copy.MaxCapacity);
+            Assert.Equal(1, copy.RefCnt); Assert.Equal(1, source.RefCnt); Assert.Equal(1, s.Root.RefCnt);
             if (length != 0)
             {
                 s.Root.SetByte(index, unchecked((byte)(bytes[index] + 1)));
@@ -194,8 +208,8 @@ public class ByteBufSnapshotSourceTest
             if (form != 0) s.Root.SetIndex(0, 32).ResetWriterIndex().ResetReaderIndex();
             Assert.Equal(5, s.Root.ReaderIndex); Assert.Equal(9, s.Root.WriterIndex);
         }
-        finally { Assert.True(copy.Release()); Assert.Equal(0, copy.ReferenceCount); }
-        Assert.Equal(1, s.Root.ReferenceCount);
+        finally { Assert.True(copy.Release()); Assert.Equal(0, copy.RefCnt); }
+        Assert.Equal(1, s.Root.RefCnt);
     }
 
     [Theory]
@@ -206,6 +220,6 @@ public class ByteBufSnapshotSourceTest
         s.Root.Clear(); Assert.True(s.Root.Release());
         foreach ((int index, int length) in new[] { (0, 0), (0, 1), (8, 0) })
             Assert.Throws<IllegalReferenceCountException>(() => s.Root.Copy(index, length));
-        Assert.Equal(0, s.Root.ReferenceCount);
+        Assert.Equal(0, s.Root.RefCnt);
     }
 }

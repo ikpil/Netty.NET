@@ -143,7 +143,7 @@ public static partial class ByteBufUtil
         ArgumentOutOfRangeException.ThrowIfNegative(extraCapacity);
         int capacity = checked(encoding.GetByteCount(text) + extraCapacity);
         ByteBuf result = allocator.Buffer(capacity);
-        try { result.WriteString(text, encoding); return result; }
+        try { result.WriteCharSequence(text, encoding); return result; }
         catch { result.Release(); throw; }
     }
 }

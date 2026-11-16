@@ -52,7 +52,7 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
         { return DoResolveAsync(inetHost, cancellationToken); }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
         { return Task.FromCanceled<T>(cancellationToken); }
-        catch (Exception error) { return Task.FromException<T>(error); }
+        catch (Exception e) { return Task.FromException<T>(e); }
     }
 
     public Task<IReadOnlyList<T>> ResolveAllAsync(string inetHost, CancellationToken cancellationToken = default)
@@ -63,7 +63,7 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
         { return DoResolveAllAsync(inetHost, cancellationToken); }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
         { return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken); }
-        catch (Exception error) { return Task.FromException<IReadOnlyList<T>>(error); }
+        catch (Exception e) { return Task.FromException<IReadOnlyList<T>>(e); }
     }
 
     /**

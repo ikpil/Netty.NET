@@ -68,7 +68,7 @@ public class CompositeByteBufAllocationFailureTest
         {
             0 => new UnpooledByteBufAllocator(direct, true, native),
             1 => new PooledByteBufAllocator(direct, maxOrder: 1, nativeAllocator: native),
-            _ => new AdaptiveByteBufAllocator(direct, false, native)
+            _ => new AdaptiveByteBufAllocator(direct, lowMemory: false, nativeAllocator: native)
         };
         var observation = new Observation { FailAt = failAt }; var allocator = new Allocator(backing, observation);
         var composite = new CompositeByteBuf(allocator, direct, operation == 2 ? 2 : operation == 3 ? 3 : 8);
@@ -103,17 +103,17 @@ public class CompositeByteBufAllocationFailureTest
                 Assert.Equal(starts[first + i], observation.Visits[i].Index); Assert.Equal(lengths[first + i], observation.Visits[i].Length);
             }
             ByteBuf destination = observation.Allocations[^1];
-            Assert.Equal(failAt == 0 ? 1 : 0, destination.ReferenceCount);
+            Assert.Equal(failAt == 0 ? 1 : 0, destination.RefCnt);
             Assert.Equal(reader, composite.ReaderIndex); Assert.Equal(writer, composite.WriterIndex);
             Assert.Equal(expected, composite.AsReadOnlySequence(0, expected.Length).ToArray());
             Assert.Equal(failAt != 0 ? operation == 3 ? 4 : 3 : operation == 1 ? 2 : 1, composite.NumComponents);
-            for (int i = 0; i < 3; ++i) Assert.Equal(failAt != 0 || operation == 1 && i == 0 ? 1 : 0, sources[i].ReferenceCount);
+            for (int i = 0; i < 3; ++i) Assert.Equal(failAt != 0 || operation == 1 && i == 0 ? 1 : 0, sources[i].RefCnt);
         }
         finally
         {
-            if (composite.ReferenceCount > 0) composite.Release();
-            foreach (ByteBuf source in sources) if (source?.ReferenceCount > 0) source.Release();
-            foreach (ByteBuf allocation in observation.Allocations) if (allocation.ReferenceCount > 0) allocation.Release();
+            if (composite.RefCnt > 0) composite.Release();
+            foreach (ByteBuf source in sources) if (source?.RefCnt > 0) source.Release();
+            foreach (ByteBuf allocation in observation.Allocations) if (allocation.RefCnt > 0) allocation.Release();
             (backing as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
         }
     }

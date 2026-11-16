@@ -27,8 +27,13 @@ namespace Netty.NET.Common;
 // Utility
 // CLR adaptation: MemoryMarshal reads/writes bounded native-order words,
 // including unaligned slices. JVM Unsafe capability does not select this path.
+// CLR: hence Java's scalar fallbacks for !PlatformDependent.isUnaligned()
+// (linearContainsUpperCase, linearContainsLowerCase, linearToLowerCase, linearToUpperCase)
+// have no separate method; their byte-at-a-time results equal the word path for every input.
 // CLR adaptation: a static class supplies the original non-instantiable utility.
-public static class AsciiStringUtil
+// CLR: Java declares this helper package-private (final class with static members); the CLR
+// counterpart is internal. Tests reach it through InternalsVisibleTo.
+internal static class AsciiStringUtil
 {
     /**
      * Convert the {@link AsciiString} to a lower case.
@@ -36,14 +41,14 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the new {@link AsciiString} in lower case
      */
-    public static AsciiString ToLowerCase(AsciiString str)
+    internal static AsciiString ToLowerCase(AsciiString @string)
     {
-        byte[] byteArray = str.Array();
-        int offset = str.ArrayOffset();
-        int length = str.Length();
+        byte[] byteArray = @string.Array();
+        int offset = @string.ArrayOffset();
+        int length = @string.Length();
         if (!ContainsUpperCase(byteArray, offset, length))
         {
-            return str;
+            return @string;
         }
 
         byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
@@ -154,14 +159,14 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the {@link AsciiString} in upper case
      */
-    public static AsciiString ToUpperCase(AsciiString str)
+    internal static AsciiString ToUpperCase(AsciiString @string)
     {
-        byte[] byteArray = str.Array();
-        int offset = str.ArrayOffset();
-        int length = str.Length();
+        byte[] byteArray = @string.Array();
+        int offset = @string.ArrayOffset();
+        int length = @string.Length();
         if (!ContainsLowerCase(byteArray, offset, length))
         {
-            return str;
+            return @string;
         }
 
         byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
@@ -275,7 +280,7 @@ public static class AsciiStringUtil
      * @param value the byte to check
      * @return {@code true} if the byte is upper case, {@code false} otherwise.
      */
-    public static bool IsUpperCase(byte value)
+    internal static bool IsUpperCase(byte value)
     {
         return value >= 'A' && value <= 'Z';
     }
@@ -286,7 +291,7 @@ public static class AsciiStringUtil
      * @param value the byte to convert
      * @return the lower case byte
      */
-    public static byte ToLowerCase(byte value)
+    internal static byte ToLowerCase(byte value)
     {
         return IsUpperCase(value) ? (byte)(value + 32) : value;
     }
@@ -297,7 +302,7 @@ public static class AsciiStringUtil
      * @param value the byte to convert
      * @return the upper case byte
      */
-    public static byte ToUpperCase(byte value)
+    internal static byte ToUpperCase(byte value)
     {
         return IsLowerCase(value) ? (byte)(value - 32) : value;
     }

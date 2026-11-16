@@ -31,7 +31,7 @@ public abstract partial class ByteBuf
     public override string ToString()
     {
         string name = StringUtil.SimpleClassName(this);
-        if (ReferenceCount == 0) return name + "(freed)";
+        if (RefCnt == 0) return name + "(freed)";
         // CLR: invariant formatting preserves Java's decimal metadata across caller cultures.
         string result = FormattableString.Invariant($"{name}(ridx: {_readerIndex}, widx: {_writerIndex}, cap: {Capacity}");
         int maximum = DiagnosticMaxCapacity;

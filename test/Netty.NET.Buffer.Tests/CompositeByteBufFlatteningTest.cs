@@ -46,17 +46,25 @@ public class CompositeByteBufFlatteningTest
         foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
 
-    public static IEnumerable<object[]> Wrappers()
+    // CLR: heap/native factories; the unpooled rows keep the shared-counter model of non-pooled slices.
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestAddFlattenedComponentsAcrossProviders(bool pooled, bool direct)
     {
-        foreach (object[] provider in Providers())
-        foreach (bool wrapped in new[] { false, true }) yield return [provider[0], provider[1], wrapped];
+        TestAddFlattenedComponents0(pooled, direct, false);
     }
 
     [Theory]
-    [MemberData(nameof(Wrappers))]
-    public void FlatteningMixedRetainedSlicesPreservesTheirOwnCountersAndReadableIntersections(
-        bool pooled, bool direct, bool wrapped)
+    [MemberData(nameof(Providers))]
+    public void TestAddFlattenedComponentsWithWrappedCompositeAcrossProviders(bool pooled, bool direct)
     {
+        TestAddFlattenedComponents0(pooled, direct, true);
+    }
+
+    // CLR: xUnit1024 forbids overloading the TestAddFlattenedComponents test name.
+    private static void TestAddFlattenedComponents0(bool pooled, bool direct, bool addWrapped)
+    {
+        bool wrapped = addWrapped;
         using var storage = new Storage(pooled, direct);
         // The original composites/prefix are unpooled; only the retained-slice root must be pooled.
         var compositeAllocator = new UnpooledByteBufAllocator(direct, storage.Native);
@@ -93,8 +101,8 @@ public class CompositeByteBufFlatteningTest
             // set readable range to be from middle of first component
             // to middle of penultimate component
             source.SetIndex(1, 5);
-            Assert.Equal(1, source.ReferenceCount);
-            Assert.Equal(pooled ? 1 : 4, s4.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
+            Assert.Equal(pooled ? 1 : 4, s4.RefCnt);
             copy = source.Copy();
             CompositeByteBuf input = wrapped ? new WrappedCompositeByteBuf(source) : source;
             target.AddFlattenedComponents(input, true);
@@ -106,34 +114,34 @@ public class CompositeByteBufFlatteningTest
             Assert.Equal(5, target.NumComponents);
             Assert.Equal(10, target.Capacity);
             Assert.Equal(10, target.WriterIndex);
-            Assert.Equal(0, input.ReferenceCount);
-            Assert.Equal(0, source.ReferenceCount);
+            Assert.Equal(0, input.RefCnt);
+            Assert.Equal(0, source.RefCnt);
             // s4 wasn't in added range so should have been jettisoned
-            Assert.Equal(pooled ? 0 : 3, s4.ReferenceCount);
-            Assert.Equal(pooled ? 2 : 3, s1.ReferenceCount);
-            Assert.Equal(pooled ? 1 : 3, s2.ReferenceCount);
-            Assert.Equal(pooled ? 2 : 3, s3.ReferenceCount);
-            Assert.Equal(1, target.ReferenceCount);
+            Assert.Equal(pooled ? 0 : 3, s4.RefCnt);
+            Assert.Equal(pooled ? 2 : 3, s1.RefCnt);
+            Assert.Equal(pooled ? 1 : 3, s2.RefCnt);
+            Assert.Equal(pooled ? 2 : 3, s3.RefCnt);
+            Assert.Equal(1, target.RefCnt);
             s2.SetByte(1, 99);
             Assert.Equal(new byte[] { 1, 2, 3, 1, 2, 3, 99, 1, 99, 1 }, target.ReadableSequence.ToArray());
             Assert.Equal(new byte[] { 2, 1, 2, 1 }, copy.ReadableMemory.ToArray());
             // releasing composite should release the remaining components
             Assert.True(target.Release());
-            Assert.Equal(0, target.ReferenceCount);
-            Assert.All(new[] { root, prefix, s1, s2, s3, s4 }, buffer => Assert.Equal(0, buffer.ReferenceCount));
+            Assert.Equal(0, target.RefCnt);
+            Assert.All(new[] { root, prefix, s1, s2, s3, s4 }, buffer => Assert.Equal(0, buffer.RefCnt));
         }
         finally
         {
             copy?.Release(); // CLR: the original temporary copy must also release its owned storage.
-            if (target.ReferenceCount > 0) target.Release();
-            if (source?.ReferenceCount > 0) source.Release();
+            if (target.RefCnt > 0) target.Release();
+            if (source?.RefCnt > 0) source.Release();
             if (rootOwned) root.Release();
         }
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void NestedSliceExposesTwoBorrowedSingleByteMemorySegments(bool pooled, bool direct)
+    public void TestNestedLayout(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf inner = storage.Allocator.CompositeBuffer(), outer = storage.Allocator.CompositeBuffer();
@@ -154,23 +162,23 @@ public class CompositeByteBufFlatteningTest
             Assert.Equal(2, outer.Capacity);
             Assert.Equal(0, outer.WriterIndex);
             Assert.Equal(0, inner.WriterIndex);
-            Assert.Equal(1, inner.ReferenceCount);
+            Assert.Equal(1, inner.RefCnt);
             first.SetByte(1, 9);
             Assert.Equal(new byte[] { 9, 3 }, sequence.ToArray());
         }
         finally
         {
             outer.Release();
-            if (inner.ReferenceCount > 0) inner.Release();
+            if (inner.RefCnt > 0) inner.Release();
         }
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
-        Assert.Equal(0, inner.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
+        Assert.Equal(0, inner.RefCnt);
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void ForwardAndReverseVisitorsSeeEveryByteOfTheNestedComposite(bool pooled, bool direct)
+    public void ForEachByteOnNestedCompositeByteBufMustSeeEntireFlattenedContentsAcrossProviders(bool pooled, bool direct)
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf inner = storage.Allocator.CompositeBuffer(), outer = storage.Allocator.CompositeBuffer();
@@ -199,8 +207,8 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             outer.Release();
-            if (inner.ReferenceCount > 0) inner.Release();
+            if (inner.RefCnt > 0) inner.Release();
         }
-        Assert.Equal(0, inner.ReferenceCount);
+        Assert.Equal(0, inner.RefCnt);
     }
 }

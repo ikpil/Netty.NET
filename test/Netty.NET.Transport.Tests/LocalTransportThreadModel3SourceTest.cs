@@ -54,8 +54,8 @@ public class LocalTransportThreadModel3SourceTest
 
     private static async Task RunConcurrentAddRemoveAsync(bool inbound, CancellationToken token)
     {
-        var servers = new DefaultEventLoopGroup(4);
-        var clients = new DefaultEventLoopGroup(4, new DefaultThreadFactory("l"));
+        var servers = new MultiThreadIoEventLoopGroup(4, LocalIoHandler.NewFactory());
+        var clients = new MultiThreadIoEventLoopGroup(4, new DefaultThreadFactory("l"), LocalIoHandler.NewFactory());
         var executors = Enumerable.Range(1, 5)
             .Select(i => new DefaultEventExecutorGroup(4, new DefaultThreadFactory($"e{i}"))).ToArray();
         using var stopModifier = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -131,10 +131,10 @@ public class LocalTransportThreadModel3SourceTest
     [Sharable]
     private sealed class DiscardInput : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             // Discard
-            ReferenceCountUtil.Release(message);
+            ReferenceCountUtil.Release(msg);
         }
     }
 
@@ -146,27 +146,27 @@ public class LocalTransportThreadModel3SourceTest
         internal readonly ConcurrentQueue<EventType> Events = new();
         internal readonly TaskCompletionSource Unregistered = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => Events.Enqueue(EventType.ExceptionCaught);
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Events.Enqueue(EventType.ExceptionCaught);
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         { if (inbound) Events.Enqueue(EventType.UserEvent); }
-        public override void ChannelReadComplete(ChannelHandlerContext context)
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         { if (inbound) Events.Enqueue(EventType.MessageReceivedLast); }
-        public override void ChannelInactive(ChannelHandlerContext context) => Events.Enqueue(EventType.Inactive);
-        public override void ChannelActive(ChannelHandlerContext context) => Events.Enqueue(EventType.Active);
-        public override void ChannelUnregistered(ChannelHandlerContext context)
+        public override void ChannelInactive(IChannelHandlerContext ctx) => Events.Enqueue(EventType.Inactive);
+        public override void ChannelActive(IChannelHandlerContext ctx) => Events.Enqueue(EventType.Active);
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
             Events.Enqueue(EventType.Unregistered);
             Unregistered.TrySetResult();
         }
-        public override void ChannelRegistered(ChannelHandlerContext context) => Events.Enqueue(EventType.Registered);
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRegistered(IChannelHandlerContext ctx) => Events.Enqueue(EventType.Registered);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { if (inbound) Events.Enqueue(EventType.MessageReceived); }
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             if (!inbound) Events.Enqueue(EventType.Write);
             return Task.CompletedTask;
         }
-        public override void Read(ChannelHandlerContext context)
+        public override void Read(IChannelHandlerContext ctx)
         { if (!inbound) Events.Enqueue(EventType.Read); }
     }
 }

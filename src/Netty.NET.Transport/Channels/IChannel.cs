@@ -143,7 +143,7 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
      * Returns the {@link ChannelFuture} which will be notified when this
      * channel is closed.  This method always returns the same future instance.
      */
-    Task CloseCompletion { get; }
+    Task CloseFuture { get; }
     /**
      * Returns {@code true} if and only if the I/O thread will perform the
      * requested write operation immediately.  Any write requests made when
@@ -171,11 +171,15 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
     /**
      * Return the assigned {@link ChannelPipeline}.
      */
-    DefaultChannelPipeline Pipeline { get; }
+    IChannelPipeline Pipeline { get; }
     /**
      * Return the assigned {@link ByteBufAllocator} which will be used to allocate {@link ByteBuf}s.
      */
-    IByteBufAllocator Allocator => Config.GetAllocator();
+    IByteBufAllocator Alloc() => Config.GetAllocator();
+    /**
+     * Return the value of the given {@link ChannelOption}
+     */
+    // CLR: getOption(option) is the try pattern (recorded publicNameReview category try-pattern).
     bool TryGetOption<T>(ChannelOption<T> option, out T value) => Config.TryGetOption(option, out value);
     /**
      * Sets a configuration property with the specified name and value.

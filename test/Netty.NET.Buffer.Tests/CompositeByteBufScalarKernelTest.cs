@@ -145,15 +145,15 @@ public class CompositeByteBufScalarKernelTest
             Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(5, first.ReaderIndex); Assert.Equal(21, first.WriterIndex);
             Assert.Equal(3, second.ReaderIndex); Assert.Equal(19, second.WriterIndex);
-            Assert.Equal(form >= 5 ? 2 : 1, owner.ReferenceCount);
-            Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(form >= 5 ? 2 : 1, owner.RefCnt);
+            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
         }
         finally
         {
-            if (retained?.ReferenceCount > 0) retained.Release();
-            if (owner?.ReferenceCount > 0) owner.Release();
-            if (first.ReferenceCount > 0) first.Release();
-            if (second.ReferenceCount > 0) second.Release();
+            if (retained?.RefCnt > 0) retained.Release();
+            if (owner?.RefCnt > 0) owner.Release();
+            if (first.RefCnt > 0) first.Release();
+            if (second.RefCnt > 0) second.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
     }

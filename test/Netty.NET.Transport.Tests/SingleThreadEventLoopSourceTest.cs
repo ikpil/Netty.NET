@@ -38,7 +38,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
             if (!loop.IsShuttingDown()) _ = loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
-            await loop.Termination.WaitAsync(TimeSpan.FromSeconds(10));
+            await loop.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(10));
         Assert.Equal(1, _a.CleanedUp);
     }
 
@@ -47,7 +47,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         _a.Shutdown();
         AssertRejection(_a);
-        await _a.Termination.WaitAsync(TestContext.Current.CancellationToken);
+        await _a.TerminationFuture.WaitAsync(TestContext.Current.CancellationToken);
     }
     [Fact(Timeout = 10000)]
     public async Task ShutdownAfterStart()
@@ -61,7 +61,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         AssertRejection(_a);
         Assert.True(_a.IsShutdown());
         // Wait until the event loop is terminated.
-        await _a.Termination.WaitAsync(TestContext.Current.CancellationToken);
+        await _a.TerminationFuture.WaitAsync(TestContext.Current.CancellationToken);
     }
     private static void AssertRejection(IEventExecutor loop) => Assert.Throws<RejectedExecutionException>(() => loop.Execute(Noop));
 
@@ -173,7 +173,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             // Let the other tasks run.
             latch.Set();
             // Wait until the event loop is terminated.
-            await _a.Termination.WaitAsync(TestContext.Current.CancellationToken);
+            await _a.TerminationFuture.WaitAsync(TestContext.Current.CancellationToken);
             // Make sure loop.shutdown() above triggered wakeup().
             Assert.Equal(numTasks, Volatile.Read(ref ranTasks));
         }
@@ -279,7 +279,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             }
         }
         protected virtual void RunTasks0() => RunAllTasks();
-        public override void Wakeup(bool inEventLoop)
+        protected override void Wakeup(bool inEventLoop)
         {
             lock (_wakeupGate)
             {

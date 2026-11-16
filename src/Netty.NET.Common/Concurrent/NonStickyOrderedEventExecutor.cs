@@ -162,7 +162,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         return _executor.ShutdownGracefullyAsync(quietPeriod, timeout);
     }
 
-    public override Task Termination => _executor.Termination;
+    public override Task TerminationFuture => _executor.TerminationFuture;
     public override Task StopAsync() => _executor.StopAsync();
 
     public override void Shutdown()

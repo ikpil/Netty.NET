@@ -25,6 +25,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
 using Microsoft.Win32.SafeHandles;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -83,7 +85,7 @@ public class AdaptiveByteBufTest
             var buffer = Buffer(allocator, direct, requested, maximum);
             try
             {
-                int fast = new AdaptiveAllocationPolicy(lowMemory).ComputeBufferCapacity(requested, maximum);
+                int fast = allocator.ComputeBufferCapacity(direct, requested, maximum);
                 Assert.Equal(fast, buffer.Allocation.Length);
                 Assert.Equal(Math.Min(fast, maximum), buffer.MaxFastWritableBytes);
                 buffer.WriterIndex = requested; AdaptiveChunkAllocation before = buffer.Allocation;
@@ -118,7 +120,7 @@ public class AdaptiveByteBufTest
             // When we unwrap the derived buffer we should get our original buffer of type AdaptiveByteBuf back.
             ByteBuf unwrappedRetained = retained is SimpleLeakAwareByteBuf ? retained.Unwrap().Unwrap() : retained.Unwrap();
             Assert.IsType<AdaptiveByteBuf>(unwrappedRetained); Assert.Same(root, unwrappedRetained);
-            Assert.Equal(2, buffer.ReferenceCount); Assert.False(retained.Release());
+            Assert.Equal(2, buffer.RefCnt); Assert.False(retained.Release());
         }
         finally { Assert.True(buffer.Release()); }
     }
@@ -130,17 +132,17 @@ public class AdaptiveByteBufTest
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
         var root = Buffer(allocator, direct, 7, 1000); root.SetBytes(0, Pattern(7));
         ByteBuf slice = root.RetainedSlice(2, 5), duplicate = slice.RetainedDuplicate();
-        Assert.Equal(3, root.ReferenceCount); Assert.False(root.Release());
-        Assert.Equal(2, slice.ReferenceCount); Assert.Same(root, slice.Unwrap());
+        Assert.Equal(3, root.RefCnt); Assert.False(root.Release());
+        Assert.Equal(2, slice.RefCnt); Assert.Same(root, slice.Unwrap());
         var nested = duplicate.Slice(1, 3); root.Capacity = 100;
         Assert.Equal(new byte[] { 3, 4, 5 }, nested.AsSpan(0, 3).ToArray());
         Assert.False(duplicate.Release()); Assert.True(slice.Release());
-        Assert.Equal(0, nested.ReferenceCount); Assert.Null(root.Allocation);
+        Assert.Equal(0, nested.RefCnt); Assert.Null(root.Allocation);
         Assert.Throws<IllegalReferenceCountException>(() => nested.GetByte(0));
-        Assert.Throws<IllegalReferenceCountException>(() => root.Allocator);
+        Assert.Throws<IllegalReferenceCountException>(() => root.Alloc());
         Assert.Throws<IllegalReferenceCountException>(() => root.Capacity = 8);
         ByteBuf fresh = Buffer(allocator, direct, 7, 1000);
-        Assert.NotSame(root, fresh); Assert.Equal(0, root.ReferenceCount); fresh.Release();
+        Assert.NotSame(root, fresh); Assert.Equal(0, root.RefCnt); fresh.Release();
     }
 
     [Theory]
@@ -156,10 +158,12 @@ public class AdaptiveByteBufTest
             ByteBuf copy = buffer.Copy(1, 5);
             try
             {
-                int expectedMax = new AdaptiveAllocationPolicy(lowMemory).IsPooled(requested)
-                    ? new AdaptiveAllocationPolicy(lowMemory).ComputeChunkSize(requested) : max;
+                // The raw chunk delegate's maximum: the 32-byte class chunk, a fresh buddy
+                // chunk (eight buffers, next power of two) or the dedicated chunk's maximum.
+                int expectedMax = requested == 7 ? 131072 : requested == 16897 && !lowMemory ? 262144 : max;
+                Assert.Equal(requested == 7 || requested == 16897 && !lowMemory, allocator.IsPooled(requested));
                 Assert.Equal(expectedMax, copy.MaxCapacity); Assert.Equal(direct, copy.IsDirect);
-                Assert.Same(allocator, copy.Allocator); Assert.Equal((0, 5), (copy.ReaderIndex, copy.WriterIndex));
+                Assert.Same(allocator, copy.Alloc()); Assert.Equal((0, 5), (copy.ReaderIndex, copy.WriterIndex));
                 Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, copy.AsSpan(0, 5).ToArray());
                 copy.SetByte(0, 99); Assert.Equal(1, buffer.GetByte(1));
                 Assert.Equal((2, 6), (buffer.ReaderIndex, buffer.WriterIndex));
@@ -190,7 +194,7 @@ public class AdaptiveByteBufTest
             if (!direct) Assert.Equal(64, array.Offset);
             b.Clear(); string text = "A\uD55C\U0001F600"; int written = ByteBufUtil.WriteUtf8(b, text);
             Assert.Equal(Encoding.UTF8.GetBytes(text), b.AsSpan(0, written).ToArray());
-            Assert.Equal(text, b.GetString(0, written, Encoding.UTF8));
+            Assert.Equal(text, b.ToString(0, written, Encoding.UTF8));
             Assert.Equal(new byte[64], guard.AsSpan(0, 64).ToArray());
         }
         finally { b.Release(); guard.Release(); }
@@ -261,7 +265,7 @@ public class AdaptiveByteBufTest
             Assert.NotSame(original, b.Allocation); Assert.Equal(0, Marshal.ReadByte(Pointer(pin)));
             Assert.Throws<ObjectDisposedException>(() => old.Span.Clear());
             // Exhaust the other FIFO slots before asking for reuse of the returned slot.
-            for (int i = 1; i < AdaptiveAllocationPolicy.MinChunkSize / 32; i++)
+            for (int i = 1; i < AdaptivePoolingAllocator.MIN_CHUNK_SIZE / 32; i++)
             {
                 var first = Buffer(allocator, direct, 32, 1000); held.Add(first);
                 Assert.NotEqual(original.Offset, first.Allocation.Offset);
@@ -283,7 +287,7 @@ public class AdaptiveByteBufTest
         b.SetIndex(3, 6); AdaptiveChunkAllocation original = b.Allocation;
         try
         {
-            Assert.Throws<OutOfMemoryException>(() => b.Capacity = 33);
+            Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 33);
             Assert.Equal(7, b.Capacity); Assert.Same(original, b.Allocation);
             Assert.Equal(Pattern(7), b.AsSpan(0, 7).ToArray()); Assert.Equal((3, 6), (b.ReaderIndex, b.WriterIndex));
             b.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((2, 5), (b.ReaderIndex, b.WriterIndex));
@@ -300,7 +304,7 @@ public class AdaptiveByteBufTest
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
         var root = Buffer(allocator, direct, 7, 1000); root.SetBytes(0, Pattern(7));
         ByteBuf child = root.RetainedSlice(1, 5); var pin = child.AsMemory(0, 5).Pin();
-        root.Release(); allocator.Dispose(); Assert.Equal(1, child.ReferenceCount);
+        root.Release(); allocator.Dispose(); Assert.Equal(1, child.RefCnt);
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, child.AsSpan(0, 5).ToArray());
         root.Capacity = 32; Assert.Throws<ObjectDisposedException>(() => root.Capacity = 33);
         child.Release(); Assert.Equal(131072, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
@@ -314,10 +318,10 @@ public class AdaptiveByteBufTest
         Assert.Throws<ArgumentNullException>(() => new AdaptiveByteBuf(7, 7, null));
         Assert.Throws<ArgumentOutOfRangeException>(() => new AdaptiveByteBuf(8, 7, (_, _) => throw new Exception()));
         Assert.Throws<InvalidOperationException>(() => new AdaptiveByteBuf(7, 7, (_, _) => null));
-        var registry = new AdaptiveChunkRegistry(); var raw = new UnpooledHeapByteBuf(3, 3);
-        using var chunk = new AdaptiveChunk(raw, registry);
+        var registry = new ChunkRegistry(); var raw = new UnpooledHeapByteBuf(3, 3);
+        using var chunk = new Chunk(raw, registry);
         Assert.Throws<InvalidOperationException>(() => new AdaptiveByteBuf(7, 7, (_, _) => chunk.TryAllocate(3)));
-        chunk.Dispose(); Assert.Equal(0, raw.ReferenceCount); Assert.Equal(0, registry.TotalCapacity);
+        chunk.Dispose(); Assert.Equal(0, raw.RefCnt); Assert.Equal(0, registry.TotalCapacity);
     }
 
     [Theory]
@@ -398,7 +402,7 @@ public class AdaptiveByteBufTest
 
     private sealed class FaultingStorage(IByteBufAllocator allocator, FaultingMemory memory, int max) : AbstractReferenceCountedByteBuf(max)
     {
-        public override IByteBufAllocator Allocator => allocator;
+        public override IByteBufAllocator Alloc() => allocator;
         public override int Capacity { get => memory.Memory.Length; set => throw new NotSupportedException(); }
         public override bool IsDirect => false;
         protected override Memory<byte> GetMemoryCore(int index, int length) => memory.Memory.Slice(index, length);

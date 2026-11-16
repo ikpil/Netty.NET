@@ -39,7 +39,7 @@ public class UnpooledCopyingTest
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(Array.Empty<byte>(), Array.Empty<byte>()));
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(source));
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(source, source));
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             Assert.Equal(0, source.ReaderIndex);
             Assert.Equal(0, source.WriterIndex);
         }
@@ -137,7 +137,7 @@ public class UnpooledCopyingTest
             Assert.Equal(new byte[] { 1, 2, 3 }, Bytes(copy));
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(4, source.WriterIndex);
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             source.ReaderIndex = 2; source.WriterIndex = 3;
             source.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, source.ReaderIndex);
@@ -150,7 +150,7 @@ public class UnpooledCopyingTest
             Assert.Equal(new byte[] { 1, 8, 3, 4 }, Bytes(copy));
         }
         finally { copy.Release(); }
-        Assert.Equal(1, source.ReferenceCount);
+        Assert.Equal(1, source.RefCnt);
         source.Release();
         Assert.Equal(0, allocator.ReservedBytes);
     }
@@ -166,7 +166,7 @@ public class UnpooledCopyingTest
         a.WriteBytes(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
         b.WriteBytes(new byte[] { 7, 3, 6 }).SetIndex(1, 2);
         ByteBuf copy = Unpooled.CopiedBuffer(a.AsReadOnly(), b.AsReadOnly());
-        Assert.Equal(new[] { 1, 1 }, new[] { a.ReferenceCount, b.ReferenceCount });
+        Assert.Equal(new[] { 1, 1 }, new[] { a.RefCnt, b.RefCnt });
         Assert.Equal(new[] { 1, 3, 1, 2 }, new[] { a.ReaderIndex, a.WriterIndex, b.ReaderIndex, b.WriterIndex });
         a.Release(); b.Release();
         Assert.Equal(0, allocator.ReservedBytes);
@@ -193,7 +193,7 @@ public class UnpooledCopyingTest
             Assert.Equal(int.MaxValue, single.MaxCapacity);
             Assert.Equal(2, multiple.MaxCapacity);
             Assert.Equal(Bytes(single), Bytes(multiple));
-            Assert.Equal(new[] { 1, 1 }, new[] { source.ReferenceCount, empty.ReferenceCount });
+            Assert.Equal(new[] { 1, 1 }, new[] { source.RefCnt, empty.RefCnt });
         }
         finally { single.Release(); multiple.Release(); source.Release(); empty.Release(); }
     }
@@ -209,8 +209,8 @@ public class UnpooledCopyingTest
         try
         {
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(copy));
-            Assert.Equal(2, owner.ReferenceCount);
-            Assert.Equal(1, nested.ReferenceCount);
+            Assert.Equal(2, owner.RefCnt);
+            Assert.Equal(1, nested.RefCnt);
             Assert.Equal(3, nested.NumComponents);
             copy.Release(); copy = null;
             Assert.Equal(new byte[] { 1, 2 }, Bytes(retained));
@@ -253,7 +253,7 @@ public class UnpooledCopyingTest
         try
         {
             Assert.Equal(new byte[] { 1, 2, 1, 2, 1, 2 }, Bytes(copy));
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
         }
         finally { copy.Release(); source.Release(); }
     }
@@ -271,7 +271,7 @@ public class UnpooledCopyingTest
         try
         {
             Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer(source, null, source));
-            Assert.Equal(1, source.ReferenceCount);
+            Assert.Equal(1, source.RefCnt);
             Assert.Equal(new byte[] { 1 }, Bytes(source));
         }
         finally { source.Release(); }
@@ -288,7 +288,7 @@ public class UnpooledCopyingTest
         {
             Assert.Same(source.Failure, Assert.Throws<InvalidOperationException>(() => multiple
                 ? Unpooled.CopiedBuffer(other, source) : Unpooled.CopiedBuffer(source)));
-            Assert.Equal(new[] { 1, 1 }, new[] { source.ReferenceCount, other.ReferenceCount });
+            Assert.Equal(new[] { 1, 1 }, new[] { source.RefCnt, other.RefCnt });
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(3, source.WriterIndex);
             source.Fail = false;
@@ -309,7 +309,7 @@ public class UnpooledCopyingTest
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(dead));
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(dead, dead));
             Assert.Throws<IllegalReferenceCountException>(() => Unpooled.CopiedBuffer(readable, dead));
-            Assert.Equal(1, readable.ReferenceCount);
+            Assert.Equal(1, readable.RefCnt);
         }
         finally { readable.Release(); }
     }
@@ -327,7 +327,7 @@ public class UnpooledCopyingTest
             try
             {
                 Assert.Throws<ArgumentException>(() => Unpooled.CopiedBuffer(inputs));
-                Assert.Equal(1, source.ReferenceCount);
+                Assert.Equal(1, source.RefCnt);
                 Assert.Equal(0, source.ReaderIndex);
                 Assert.Equal(backing.Length, source.WriterIndex);
             }

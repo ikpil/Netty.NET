@@ -41,7 +41,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     private int _capacity;
     private readonly IByteBufAllocator _bufferAllocator;
     private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
-    public override IByteBufAllocator Allocator => _bufferAllocator;
+    public override IByteBufAllocator Alloc() => _bufferAllocator;
 
     /**
          * Creates a new direct buffer.
@@ -167,7 +167,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         // including a callback that resizes or releases this buffer. Copy only reads.
         using BufferMemoryLease lease = AcquireReadLease();
         ReadOnlySpan<byte> source = AsReadOnlySpan(index, length);
-        ByteBuf result = Allocator.DirectBuffer(length, MaxCapacity);
+        ByteBuf result = Alloc().DirectBuffer(length, MaxCapacity);
         try { return result.WriteBytes(source); }
         catch { result.Release(); throw; }
     }

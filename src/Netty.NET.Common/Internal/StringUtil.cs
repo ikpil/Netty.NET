@@ -17,6 +17,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Netty.NET.Common.Internal;
@@ -334,7 +335,8 @@ public static class StringUtil
         int lo = DecodeHexNibble(s.CharAt(pos + 1));
         if (hi == -1 || lo == -1)
         {
-            throw new ArgumentException($"invalid hex byte '{s.SubSequence(pos, pos + 2)}' at index {pos} of '{s}'");
+            // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
+            throw new ArgumentException(string.Create(CultureInfo.CurrentCulture, $"invalid hex byte '{s.SubSequence(pos, pos + 2)}' at index {pos} of '{s}'"));
         }
 
         return (byte)((hi << 4) + lo);
@@ -349,7 +351,8 @@ public static class StringUtil
         int lo = DecodeHexNibble(str[index + 1]);
         if (hi == -1 || lo == -1)
         {
-            throw new ArgumentException($"invalid hex byte '{str.Substring(index, 2)}' at index {index} of '{str}'");
+            // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
+            throw new ArgumentException(string.Create(CultureInfo.CurrentCulture, $"invalid hex byte '{str.Substring(index, 2)}' at index {index} of '{str}'"));
         }
         return (byte)((hi << 4) + lo);
     }
@@ -365,7 +368,7 @@ public static class StringUtil
     {
         if (length < 0 || (length & 1) != 0)
         {
-            throw new ArgumentException("length: " + length);
+            throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture));
         }
 
         if (length == 0)
@@ -398,7 +401,7 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(hexDump);
         int length = hexDump.Length;
-        if ((length & 1) != 0) throw new ArgumentException("length: " + length);
+        if ((length & 1) != 0) throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture));
         if (length == 0) return EmptyArrays.EMPTY_BYTES;
         // Read the native immutable string directly; only the owned byte result is allocated on success.
         byte[] bytes = new byte[length / 2];
@@ -776,7 +779,7 @@ public static class StringUtil
 
     private static ArgumentException NewInvalidEscapedCsvFieldException(string value, int index)
     {
-        return new ArgumentException("invalid escaped CSV field: " + value + " index: " + index);
+        return new ArgumentException("invalid escaped CSV field: " + value + " index: " + index.ToString(CultureInfo.InvariantCulture));
     }
 
     /**

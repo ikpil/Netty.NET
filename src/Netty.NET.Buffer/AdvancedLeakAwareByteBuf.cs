@@ -470,20 +470,26 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     { RecordLeakNonRefCountingOperation(_leak); return Buffer.WriteBytesAsync(source, length, cancellationToken); }
 
-    public override string GetString(Encoding encoding)
-    { RecordLeakNonRefCountingOperation(_leak); return Buffer.GetString(encoding); }
+    public override string ToString(Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ToString(charset); }
 
-    public override string GetString(int index, int length, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(_leak); return Buffer.GetString(index, length, encoding); }
+    public override string ToString(int index, int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ToString(index, length, charset); }
 
-    public override string ReadString(int length, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ReadString(length, encoding); }
+    public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.GetCharSequence(index, length, charset); }
 
-    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(_leak); return Buffer.SetString(index, text, encoding); }
+    public override ICharSequence ReadCharSequence(int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ReadCharSequence(length, charset); }
 
-    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding)
-    { RecordLeakNonRefCountingOperation(_leak); return Buffer.WriteString(text, encoding); }
+    public override string ReadString(int length, Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ReadString(length, charset); }
+
+    public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.SetCharSequence(index, sequence, charset); }
+
+    public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.WriteCharSequence(sequence, charset); }
 
     public override int IndexOf(int fromIndex, int toIndex, byte value)
     { RecordLeakNonRefCountingOperation(_leak); return Buffer.IndexOf(fromIndex, toIndex, value); }

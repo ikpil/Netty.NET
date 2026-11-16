@@ -37,8 +37,8 @@ public class UnorderedTerminationContractTest
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            Task termination = executor.Termination;
-            if (immediate) Assert.Same(executor.Termination, executor.StopAsync());
+            Task termination = executor.TerminationFuture;
+            if (immediate) Assert.Same(executor.TerminationFuture, executor.StopAsync());
             else Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
             Assert.True(executor.IsShutdown());
             Assert.False(termination.IsCompleted);
@@ -94,14 +94,14 @@ public class UnorderedTerminationContractTest
         bool completedInsideFactory = false;
         executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ =>
         {
-            Assert.Same(executor.Termination, executor.StopAsync());
-            completedInsideFactory = executor.Termination.IsCompleted;
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            completedInsideFactory = executor.TerminationFuture.IsCompleted;
             return null;
         }));
         Task work = executor.SubmitAsync(() => Assert.Fail("Removed invocation ran"));
         Assert.False(completedInsideFactory);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
-        await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(executor.IsTerminated());
     }
 
@@ -147,10 +147,10 @@ public class UnorderedTerminationContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
-        Assert.Same(executor.Termination, executor.StopAsync());
-        Assert.True(executor.Termination.IsCompletedSuccessfully);
+        Assert.Same(executor.TerminationFuture, executor.StopAsync());
+        Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
         Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
-        Assert.Same(executor.Termination, executor.StopAsync());
+        Assert.Same(executor.TerminationFuture, executor.StopAsync());
         Assert.True(executor.IsTerminated());
         Assert.Equal(0, executor.PendingTaskCount);
         Assert.True(scheduled.IsCanceled);

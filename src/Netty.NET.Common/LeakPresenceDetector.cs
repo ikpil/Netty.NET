@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Netty.NET.Common.Internal;
@@ -179,7 +180,7 @@ public static class LeakPresenceDetector
                             "LeakPresenceDetector.staticInitializer so that this resource is excluded.";
                     else
                         message = "Resource created outside static initializer on thread '" +
-                            (thread.Name ?? thread.ManagedThreadId.ToString()) + "' (" + thread.ThreadState + "), likely leak.";
+                            (thread.Name ?? thread.ManagedThreadId.ToString(CultureInfo.InvariantCulture)) + "' (" + thread.ThreadState + "), likely leak.";
                 }
                 return message;
             }
@@ -193,7 +194,7 @@ public static class LeakPresenceDetector
      */
     public sealed class AllocationProhibitedException : InvalidOperationException
     {
-        public AllocationProhibitedException(string message) : base(message) { }
+        public AllocationProhibitedException(string s) : base(s) { }
     }
 }
 

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
@@ -33,30 +34,77 @@ namespace Netty.NET.Transport.Channels;
  * {@link IoEventLoop} to also do other work. Care must be taken that the {@link #runNow() or
  * {@link #waitAndRun()}} methods are called in a timely fashion.
  */
-/// <summary>An event loop pumped by its owning thread.</summary>
-public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
+public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
 {
-    private const int Started = 0;
-    private const int ShuttingDown = 1;
-    private const int ShutdownState = 2;
-    private const int Terminated = 3;
+    private static new readonly Action WAKEUP_TASK = () =>
+    {
+        // NOOP
+    };
+    private const int ST_STARTED = 0;
+    private const int ST_SHUTTING_DOWN = 1;
+    private const int ST_SHUTDOWN = 2;
+    private const int ST_TERMINATED = 3;
 
-    private readonly object _gate = new();
-    private readonly LinkedBlockingQueue<Action> _tasks = new(int.MaxValue);
-    private readonly Queue<(object Source, IoCompletion Completion)> _io = new();
-    private readonly HashSet<AbstractChannel> _channels = new(ReferenceEqualityComparer.Instance);
-    private readonly CompletionIoHandler _ioHandler;
-    private readonly TaskCompletionSource _termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly AtomicInteger _state;
+    private readonly TaskCompletionSource _terminationFuture = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    // CLR: LinkedBlockingQueue is the unbounded IQueue that fetchFromScheduledTaskQueue accepts; it is only polled.
+    private readonly IQueue<Action> _taskQueue = new LinkedBlockingQueue<Action>(int.MaxValue, ReferenceEqualityComparer.Instance);
+    private readonly IIoHandlerContext _nonBlockingContext;
+    private readonly BlockingIoHandlerContext _blockingContext;
+    private readonly IIoEventLoopGroup _parent;
+    private readonly AtomicReference<Thread> _owningThread;
+    private readonly IIoHandler _handler;
     private readonly Ticker _ticker;
-    private Thread _owner;
-    private int _state;
+
+    private long _gracefulShutdownQuietPeriod;
+    private long _gracefulShutdownTimeout;
+    private long _gracefulShutdownStartTime;
+    private long _lastExecutionTime;
+    private bool _initialized;
+    // CLR: a native close offloaded to a TaskScheduler reserves its owner callback; termination waits for it.
     private int _pendingCloseCompletions;
-    private bool _wakeRequested;
-    private bool _running;
-    private long _quietPeriod;
-    private long _shutdownTimeout;
-    private long? _shutdownStarted;
-    private long _lastExecution;
+
+    /**
+     * This allows to specify additional blocking conditions which will be used by the {@link IoHandler} to decide
+     * whether it is allowed to block or not.
+     */
+    protected virtual bool CanBlock()
+    {
+        return true;
+    }
+
+    /**
+     * Create a new {@link IoEventLoop} that is owned by the user and so needs to be driven by the user with the given
+     * {@link Thread}. This means that the user is responsible to call either {@link #runNow()} or
+     * {@link #run(long)} to execute IO or tasks that were submitted to this {@link IoEventLoop}.
+     *
+     * @param owningThread      the {@link Thread} that executes the IO and tasks for this {@link IoEventLoop}. The
+     *                          user will use this {@link Thread} to call {@link #runNow()} or {@link #run(long)} to
+     *                          make progress.
+     * @param factory           the {@link IoHandlerFactory} that will be used to create the {@link IoHandler} that is
+     *                          used by this {@link IoEventLoop}.
+     */
+    public ManualIoEventLoop(Thread owningThread, IIoHandlerFactory factory) : this(null, owningThread, factory)
+    {
+    }
+
+    /**
+     * Create a new {@link IoEventLoop} that is owned by the user and so needs to be driven by the user with the given
+     * {@link Thread}. This means that the user is responsible to call either {@link #runNow()} or
+     * {@link #run(long)} to execute IO or tasks that were submitted to this {@link IoEventLoop}.
+     *
+     * @param parent            the parent {@link IoEventLoopGroup} or {@code null} if no parent.
+     * @param owningThread      the {@link Thread} that executes the IO and tasks for this {@link IoEventLoop}. The
+     *                          user will use this {@link Thread} to call {@link #runNow()} or {@link #run(long)} to
+     *                          make progress. If {@code null}, must be set later using
+     *                          {@link #setOwningThread(Thread)}.
+     * @param factory           the {@link IoHandlerFactory} that will be used to create the {@link IoHandler} that is
+     *                          used by this {@link IoEventLoop}.
+     */
+    public ManualIoEventLoop(IIoEventLoopGroup parent, Thread owningThread, IIoHandlerFactory factory)
+        : this(parent, owningThread, factory, global::Netty.NET.Common.Concurrent.Ticker.SystemTicker())
+    {
+    }
 
     /**
      * Create a new {@link IoEventLoop} that is owned by the user and so needs to be driven by the user with the given
@@ -74,127 +122,154 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
      *                          not use the ticker, so if the ticker advances faster than system time, you may have to
      *                          {@link #wakeup()} this event loop manually.
      */
-    public ManualIoEventLoop(Thread owningThread, IEventLoopGroup parent = null, Ticker ticker = null)
-        : this(owningThread, parent, ticker, new CompletionIoHandler()) { }
-
-    public ManualIoEventLoop(Thread owningThread, IEventLoopGroup parent, Ticker ticker, CompletionIoHandler ioHandler) : base(parent)
+    public ManualIoEventLoop(IIoEventLoopGroup parent, Thread owningThread, IIoHandlerFactory factory, Ticker ticker)
+        : base(parent)
     {
-        _owner = owningThread;
-        _ticker = ticker ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
-        _ioHandler = ioHandler ?? throw new ArgumentNullException(nameof(ioHandler));
-        _ioHandler.Attach(this, (registration, dispatch) => SubmitIoAsync(registration, dispatch));
+        _parent = parent;
+        _owningThread = new AtomicReference<Thread>(owningThread);
+        _nonBlockingContext = new NonBlockingIoHandlerContext(this);
+        _blockingContext = new BlockingIoHandlerContext(this);
+        _handler = ObjectUtil.CheckNotNull(factory, "factory").NewHandler(this);
+        _ticker = ObjectUtil.CheckNotNull(ticker, "ticker");
+        _state = new AtomicInteger(ST_STARTED);
     }
 
-    public override Ticker Ticker() => _ticker;
-    public override ManualIoEventLoop Next() => this;
-    IEventLoop IEventLoopGroup.Next() => this;
-    public override bool InEventLoop(Thread thread) => thread != null && ReferenceEquals(Volatile.Read(ref _owner), thread);
+    public sealed override Ticker Ticker()
+    {
+        return _ticker;
+    }
 
     /**
-     * Set the owning thread that will call {@link #run}. May only be called once, and only if the owning thread was
-     * not set in the constructor already.
+     * Poll and run tasks from the task queue, until the task queue is empty or the given deadline is exceeded.<br>
+     * If {@code timeoutNanos} is less or equals 0, no deadline is applied.
      *
-     * @param owningThread The owning thread
+     * @param timeoutNanos the maximum time in nanoseconds to run tasks.
      */
-    public void SetOwningThread(Thread owningThread)
+    public int RunNonBlockingTasks(long timeoutNanos)
     {
-        ArgumentNullException.ThrowIfNull(owningThread);
-        if (Interlocked.CompareExchange(ref _owner, owningThread, null) != null)
-            throw new InvalidOperationException("The owning thread is already set.");
+        return RunAllTasks(timeoutNanos, true);
     }
 
-    public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
+    private int RunAllTasks(long timeoutNanos, bool setCurrentExecutor)
     {
-        ArgumentNullException.ThrowIfNull(channel);
-        return channel.RegisterAsync(this, cancellationToken);
-    }
-
-    public Task<IoRegistration> RegisterIoAsync(IIoHandle handle, CancellationToken cancellationToken = default) =>
-        _ioHandler.RegisterAsync(handle, cancellationToken);
-    public bool IsCompatible(Type handleType) => _ioHandler.IsCompatible(handleType);
-    public bool IsIoType(Type handlerType) => _ioHandler.GetType() == handlerType;
-
-    internal void ChannelRegistered(AbstractChannel channel)
-    {
-        lock (_gate)
+        Debug.Assert(InEventLoop());
+        IQueue<Action> taskQueue = _taskQueue;
+        // since the taskQueue is unbounded we don't need to keep on calling this while draining it.
+        bool alwaysTrue = FetchFromScheduledTaskQueue(taskQueue);
+        Debug.Assert(alwaysTrue);
+        if (!taskQueue.TryDequeue(out Action task))
         {
-            if (IsShutdown()) throw new RejectedExecutionException("The event loop is shut down.");
-            _channels.Add(channel);
+            return 0;
         }
-    }
-
-    internal void ChannelUnregistered(AbstractChannel channel)
-    {
-        lock (_gate) _channels.Remove(channel);
-    }
-
-    public override void Execute(Action task)
-    {
-        ArgumentNullException.ThrowIfNull(task);
-        lock (_gate)
+        IEventExecutor old = setCurrentExecutor ? ThreadExecutorMap.SetCurrentExecutor(this) : null;
+        try
         {
-            if (IsShutdown()) throw new RejectedExecutionException("The event loop is shut down.");
-            _tasks.TryEnqueue(task);
-            Monitor.Pulse(_gate);
-        }
-    }
-
-    // CLR-only native-close admission; public task submission remains closed after StopAsync.
-    internal Action<Action> ReserveCloseCompletion()
-    {
-        if (!InEventLoop()) throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
-        _pendingCloseCompletions++;
-        return completion =>
-        {
-            lock (_gate)
+            long deadline = timeoutNanos > 0 ? _ticker.NanoTime() + timeoutNanos : 0;
+            int runTasks = 0;
+            long lastExecutionTime;
+            Ticker ticker = _ticker;
+            for (;;)
             {
-                _tasks.TryEnqueue(() =>
+                SafeExecute(task);
+
+                runTasks++;
+
+                if (timeoutNanos > 0)
                 {
-                    try { completion(); }
-                    finally { _pendingCloseCompletions--; }
-                });
-                Monitor.Pulse(_gate);
+                    lastExecutionTime = ticker.NanoTime();
+                    if (unchecked(lastExecutionTime - deadline) >= 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (!taskQueue.TryDequeue(out task))
+                {
+                    lastExecutionTime = ticker.NanoTime();
+                    break;
+                }
             }
-        };
-    }
-
-    internal Task SubmitIoAsync(object source, Func<(Task Completion, bool Handled)> dispatch,
-        bool captureContext = true)
-    {
-        var completion = new IoCompletion(dispatch, captureContext);
-        lock (_gate)
-        {
-            if (IsShutdown())
-                throw new RejectedExecutionException("The event loop is shut down.");
-            _io.Enqueue((source, completion));
-            Monitor.Pulse(_gate);
+            _lastExecutionTime = lastExecutionTime;
+            return runTasks;
         }
-        return completion.Completion;
-    }
-
-    /**
-     * Force a wakeup and so the {@link #run(long)} method will unblock and return even if there was nothing to do.
-     */
-    public void Wakeup()
-    {
-        lock (_gate)
+        finally
         {
-            if (IsShuttingDown()) return;
-            _wakeRequested = true;
-            Monitor.Pulse(_gate);
+            if (setCurrentExecutor)
+            {
+                ThreadExecutorMap.SetCurrentExecutor(old);
+            }
         }
     }
 
-    /**
-     * Run all ready IO and tasks for this {@link IoEventLoop}.
-     * This methods will <strong>NOT</strong> block and wait for IO / tasks to be ready, it will just
-     * return directly if there is nothing to do.
-     * <p>
-     * <strong>Must be called from the owning {@link Thread} that was passed as a parameter on construction.</strong>
-     *
-     * @return the number of IO and tasks executed.
-     */
-    public int RunNow() => Run(-1);
+    private int Run(IIoHandlerContext context, long runAllTasksTimeoutNanos)
+    {
+        if (!_initialized)
+        {
+            if (_owningThread.Get() == null)
+            {
+                throw new InvalidOperationException("Owning thread not set");
+            }
+            _initialized = true;
+            _handler.Initialize();
+        }
+        IEventExecutor old = ThreadExecutorMap.SetCurrentExecutor(this);
+        try
+        {
+            if (IsShuttingDown())
+            {
+                if (_terminationFuture.Task.IsCompleted)
+                {
+                    // Already completely terminated
+                    return 0;
+                }
+                return RunAllTasksBeforeDestroy();
+            }
+            int ioTasks = _handler.Run(context);
+            // Now run all tasks.
+            if (runAllTasksTimeoutNanos < 0)
+            {
+                return ioTasks;
+            }
+            Debug.Assert(runAllTasksTimeoutNanos >= 0);
+            return ioTasks + RunAllTasks(runAllTasksTimeoutNanos, false);
+        }
+        finally
+        {
+            ThreadExecutorMap.SetCurrentExecutor(old);
+        }
+    }
+
+    private int RunAllTasksBeforeDestroy()
+    {
+        // Run all tasks before prepare to destroy.
+        int run = RunAllTasks(-1, false);
+        _handler.PrepareToDestroy();
+        // CLR: an offloaded native close keeps the loop alive until its reserved owner callback has run.
+        if (ConfirmShutdown() && _pendingCloseCompletions == 0)
+        {
+            // Destroy the handler now and run all remaining tasks.
+            try
+            {
+                _handler.Destroy();
+                for (;;)
+                {
+                    int r = RunAllTasks(-1, false);
+                    run += r;
+                    if (r == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                _state.Set(ST_TERMINATED);
+                _terminationFuture.TrySetResult();
+            }
+        }
+        return run;
+    }
+
     /**
      * Executes all ready IO and tasks for this {@link IoEventLoop}.
      * This methods will <strong>NOT</strong> block and wait for IO / tasks to be ready, it will just
@@ -208,20 +283,26 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
      * @return the number of IO and tasks executed.
      * @throws IllegalStateException if the method is not called from the owning {@link Thread}.
      */
-    public int RunNow(long runAllTasksTimeoutNanos) => Run(-1, runAllTasksTimeoutNanos);
+    public int RunNow(long runAllTasksTimeoutNanos)
+    {
+        CheckCurrentThread();
+        return Run(_nonBlockingContext, runAllTasksTimeoutNanos);
+    }
+
     /**
      * Run all ready IO and tasks for this {@link IoEventLoop}.
-     * This methods will block and wait for IO / tasks to be ready if there is nothing to process atm for the given
-     * {@code waitNanos}.
+     * This methods will <strong>NOT</strong> block and wait for IO / tasks to be ready, it will just
+     * return directly if there is nothing to do.
      * <p>
-     * <strong>Must be called from the owning {@link Thread} that was passed as an parameter on construction.</strong>
+     * <strong>Must be called from the owning {@link Thread} that was passed as a parameter on construction.</strong>
      *
-     * @param waitNanos the maximum amount of nanoseconds to wait before returning. IF {@code 0} it will block until
-     *                  there is some IO / tasks ready, if {@code -1} will not block at all and just return directly
-     *                  if there is nothing to run (like {@link #runNow()}).
-     * @return          the number of IO and tasks executed.
+     * @return the number of IO and tasks executed.
      */
-    public int Run(long waitNanos) => Run(waitNanos, 0);
+    public int RunNow()
+    {
+        CheckCurrentThread();
+        return Run(_nonBlockingContext, 0);
+    }
 
     /**
      * Run all ready IO and tasks for this {@link IoEventLoop}.
@@ -237,235 +318,444 @@ public sealed class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEvent
      *                  if there is nothing to run (like {@link #runNow()}).
      * @return          the number of IO and tasks executed.
      */
-    /// <summary>
-    /// A zero wait permits indefinite blocking. A negative wait pumps without blocking.
-    /// A negative task budget processes socket I/O completions only.
-    /// </summary>
     public int Run(long waitNanos, long runAllTasksTimeoutNanos)
     {
-        EnterRun();
-        var previous = ThreadExecutorMap.SetCurrentExecutor(this);
+        CheckCurrentThread();
+
+        IIoHandlerContext context;
+        if (waitNanos < 0)
+        {
+            context = _nonBlockingContext;
+        }
+        else
+        {
+            context = _blockingContext;
+            _blockingContext.MaxBlockingNanos = waitNanos == 0 ? long.MaxValue : waitNanos;
+        }
+        return Run(context, runAllTasksTimeoutNanos);
+    }
+
+    /**
+     * Run all ready IO and tasks for this {@link IoEventLoop}.
+     * This methods will block and wait for IO / tasks to be ready if there is nothing to process atm for the given
+     * {@code waitNanos}.
+     * <p>
+     * <strong>Must be called from the owning {@link Thread} that was passed as an parameter on construction.</strong>
+     *
+     * @param waitNanos the maximum amount of nanoseconds to wait before returning. IF {@code 0} it will block until
+     *                  there is some IO / tasks ready, if {@code -1} will not block at all and just return directly
+     *                  if there is nothing to run (like {@link #runNow()}).
+     * @return          the number of IO and tasks executed.
+     */
+    public int Run(long waitNanos)
+    {
+        return Run(waitNanos, 0);
+    }
+
+    // CLR: InvalidOperationException replaces IllegalStateException.
+    private void CheckCurrentThread()
+    {
+        if (!InEventLoop(Thread.CurrentThread))
+        {
+            throw new InvalidOperationException();
+        }
+    }
+
+    /**
+     * Force a wakeup and so the {@link #run(long)} method will unblock and return even if there was nothing to do.
+     */
+    public void Wakeup()
+    {
+        if (IsShuttingDown())
+        {
+            return;
+        }
+        _handler.Wakeup();
+    }
+
+    public sealed override IIoEventLoop Next()
+    {
+        return this;
+    }
+
+    IEventLoop IEventLoopGroup.Next() => this;
+
+    public sealed override IEventExecutorGroup Parent()
+    {
+        return _parent;
+    }
+
+    /**
+     * @deprecated Use {@link #register(IoHandle)}
+     */
+    // CLR: the Task-returning RegisterAsync(IChannel) replaces the deprecated register(Channel),
+    // register(ChannelPromise) and register(Channel, ChannelPromise) overloads.
+    public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
+    {
+        ObjectUtil.CheckNotNull(channel, "channel");
+        return channel.RegisterAsync(this, cancellationToken);
+    }
+
+    // CLR: Task<IIoRegistration> replaces Future<IoRegistration>; the TaskCompletionSource is the promise.
+    public Task<IIoRegistration> RegisterAsync(IIoHandle handle)
+    {
+        var promise = new TaskCompletionSource<IIoRegistration>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (InEventLoop())
+        {
+            RegisterForIo0(handle, promise);
+        }
+        else
+        {
+            Execute(() => RegisterForIo0(handle, promise));
+        }
+
+        return promise.Task;
+    }
+
+    private void RegisterForIo0(IIoHandle handle, TaskCompletionSource<IIoRegistration> promise)
+    {
+        Debug.Assert(InEventLoop());
+        IIoRegistration registration;
         try
         {
-            // Already completely terminated
-            if (IsTerminated()) return 0;
-            if (!IsShuttingDown() && waitNanos >= 0) WaitForWork(waitNanos);
+            registration = _handler.Register(handle);
+        }
+        catch (Exception e)
+        {
+            promise.SetException(e);
+            return;
+        }
+        promise.SetResult(registration);
+    }
+
+    public bool IsCompatible(Type handleType)
+    {
+        return _handler.IsCompatible(handleType);
+    }
+
+    public bool IsIoType(Type handlerType)
+    {
+        return _handler.GetType() == handlerType;
+    }
+
+    public sealed override bool InEventLoop(Thread thread)
+    {
+        return _owningThread.Get() == thread;
+    }
+
+    /**
+     * Set the owning thread that will call {@link #run}. May only be called once, and only if the owning thread was
+     * not set in the constructor already.
+     *
+     * @param owningThread The owning thread
+     */
+    public void SetOwningThread(Thread owningThread)
+    {
+        ObjectUtil.CheckNotNull(owningThread, "owningThread");
+        if (!_owningThread.CompareAndSet(null, owningThread))
+        {
+            throw new InvalidOperationException("Owning thread already set");
+        }
+    }
+
+    private void Shutdown0(long quietPeriod, long timeout, int shutdownState)
+    {
+        bool inEventLoop = InEventLoop();
+        bool wakeup;
+        int oldState;
+        for (;;)
+        {
             if (IsShuttingDown())
             {
-                if (waitNanos >= 0) WaitForShutdownProgress(waitNanos);
-                return RunShutdown();
-            }
-
-            int ioCount = RunIo();
-            // Now run all tasks.
-            return runAllTasksTimeoutNanos < 0 ? ioCount : ioCount + RunTasks(runAllTasksTimeoutNanos);
-        }
-        finally
-        {
-            ThreadExecutorMap.SetCurrentExecutor(previous);
-            _running = false;
-        }
-    }
-
-    /**
-     * Poll and run tasks from the task queue, until the task queue is empty or the given deadline is exceeded.<br>
-     * If {@code timeoutNanos} is less or equals 0, no deadline is applied.
-     *
-     * @param timeoutNanos the maximum time in nanoseconds to run tasks.
-     */
-    public int RunNonBlockingTasks(long timeoutNanos)
-    {
-        EnterRun();
-        var previous = ThreadExecutorMap.SetCurrentExecutor(this);
-        try { return IsTerminated() ? 0 : RunTasks(timeoutNanos); }
-        finally
-        {
-            ThreadExecutorMap.SetCurrentExecutor(previous);
-            _running = false;
-        }
-    }
-
-    private void EnterRun()
-    {
-        if (!InEventLoop()) throw new InvalidOperationException("The event loop must be driven by its owning thread.");
-        if (_running) throw new InvalidOperationException("The event loop is already running.");
-        _running = true;
-    }
-
-    private void WaitForWork(long waitNanos)
-    {
-        var clock = global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
-        long started = clock.NanoTime();
-        lock (_gate)
-        {
-            while (!IsShuttingDown() && !_wakeRequested && _tasks.IsEmpty() && _io.Count == 0)
-            {
-                // we cannot just check Math.min as nanoTime can be negative or wrap around!
-                // Compare the remaining durations after subtracting their respective clocks.
-                long remaining = waitNanos == 0 ? long.MaxValue : waitNanos - unchecked(clock.NanoTime() - started);
-                long scheduled = NextScheduledTaskNano();
-                if (scheduled >= 0) remaining = Math.Min(remaining, scheduled);
-                if (remaining <= 0) break;
-
-                WaitForSignal(remaining);
-            }
-
-            _wakeRequested = false;
-        }
-    }
-
-    private void WaitForShutdownProgress(long waitNanos)
-    {
-        lock (_gate)
-        {
-            if (_state != ShuttingDown || _shutdownStarted is not long started || !_tasks.IsEmpty() || _io.Count != 0)
                 return;
-            long now = _ticker.NanoTime();
-            long remaining = Math.Min(_shutdownTimeout - unchecked(now - started),
-                _quietPeriod - unchecked(now - _lastExecution));
-            if (waitNanos > 0) remaining = Math.Min(remaining, waitNanos);
-            if (remaining > 0) WaitForSignal(remaining);
+            }
+            int newState;
+            wakeup = true;
+            oldState = _state.Get();
+            if (inEventLoop)
+            {
+                newState = shutdownState;
+            }
+            else if (oldState == ST_STARTED)
+            {
+                newState = shutdownState;
+            }
+            else
+            {
+                newState = oldState;
+                wakeup = false;
+            }
+
+            if (_state.CompareAndSet(oldState, newState))
+            {
+                break;
+            }
         }
-    }
-
-    private void WaitForSignal(long remainingNanos)
-    {
-        // this is a positive amount of nanos or Long.MAX_VALUE for no limit
-        int milliseconds = remainingNanos == long.MaxValue ? Timeout.Infinite
-            : (int)Math.Min(int.MaxValue, 1 + (remainingNanos - 1) / 1_000_000);
-        Monitor.Wait(_gate, milliseconds);
-    }
-
-    private int RunTasks(long timeoutNanos)
-    {
-        // since the taskQueue is unbounded we don't need to keep on calling this while draining it.
-        FetchFromScheduledTaskQueue(_tasks);
-        long started = _ticker.NanoTime();
-        int count = 0;
-        while (_tasks.TryDequeue(out Action task))
+        if (quietPeriod != -1)
         {
-            SafeExecute(task);
-            count++;
-            _lastExecution = _ticker.NanoTime();
-            if (timeoutNanos > 0 && unchecked(_lastExecution - started) >= timeoutNanos) break;
+            Volatile.Write(ref _gracefulShutdownQuietPeriod, quietPeriod);
         }
-        return count;
-    }
-
-    /**
-     * @return          the number of {@link IoHandle} for which I/O was handled.
-     *                  Internal events such as wakeups and timer expirations must not be included in this count.
-     */
-    private int RunIo()
-    {
-        int remaining;
-        lock (_gate) remaining = _io.Count;
-        if (remaining == 0) return 0;
-
-        // Only drain the current snapshot. Socket operations may re-arm or publish another
-        // completion, and ordinary tasks must still get their turn.
-        HashSet<object> handled = null;
-        while (remaining-- > 0)
+        if (timeout != -1)
         {
-            (object Source, IoCompletion Completion) entry;
-            lock (_gate) entry = _io.Dequeue();
-            if (entry.Completion.Dispatch())
-                (handled ??= new HashSet<object>(ReferenceEqualityComparer.Instance)).Add(entry.Source);
+            Volatile.Write(ref _gracefulShutdownTimeout, timeout);
         }
-        return handled?.Count ?? 0;
+
+        if (wakeup)
+        {
+            // same as AbstractScheduledEventExecutor.WAKEUP_TASK
+            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _handler.Wakeup();
+        }
     }
 
-    public override Task Termination => _termination.Task;
-    public override bool IsShuttingDown() => Volatile.Read(ref _state) >= ShuttingDown;
-    public override bool IsShutdown() => Volatile.Read(ref _state) >= ShutdownState;
-    public override bool IsTerminated() => Volatile.Read(ref _state) == Terminated;
-
-    public override bool AwaitTermination(TimeSpan timeout)
+    // CLR: TimeSpan replaces the (long, TimeUnit) pair; ArgumentException replaces IllegalArgumentException.
+    public sealed override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        // We need to check if the method was called from within the EventLoop as this would cause a deadlock.
-        if (InEventLoop() && !Termination.IsCompleted)
-            throw new InvalidOperationException("The owning thread must drive the event loop to termination.");
-        return Termination.Wait(timeout);
+        ObjectUtil.CheckPositiveOrZero(quietPeriod.Ticks, "quietPeriod");
+        if (timeout < quietPeriod)
+        {
+            throw new ArgumentException(
+                    "timeout: " + timeout + " (expected >= quietPeriod (" + quietPeriod + "))");
+        }
+
+        Shutdown0(ToNanos(quietPeriod), ToNanos(timeout), ST_SHUTTING_DOWN);
+        return TerminationFuture;
     }
 
-    [Obsolete]
-    public override void Shutdown() => StopAsync();
-
-    public override Task StopAsync() => RequestShutdown(0, 0, ShutdownState);
-
-    public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(quietPeriod, TimeSpan.Zero);
-        ArgumentOutOfRangeException.ThrowIfLessThan(timeout, quietPeriod);
-        return RequestShutdown(ToNanoseconds(quietPeriod), ToNanoseconds(timeout), ShuttingDown);
-    }
-
-    private static long ToNanoseconds(TimeSpan duration) =>
+    private static long ToNanos(TimeSpan duration) =>
         duration.Ticks > long.MaxValue / 100 ? long.MaxValue : duration.Ticks * 100;
 
-    private Task RequestShutdown(long quietPeriod, long timeout, int state)
+    [Obsolete]
+    public sealed override void Shutdown()
     {
-        lock (_gate)
-        {
-            if (_state == Started || (_state == ShuttingDown && state == ShutdownState))
-            {
-                _quietPeriod = quietPeriod;
-                _shutdownTimeout = timeout;
-                Volatile.Write(ref _state, state);
-                Monitor.Pulse(_gate);
-            }
-        }
-        return Termination;
+        Shutdown0(-1, -1, ST_SHUTDOWN);
     }
 
-    private int RunShutdown()
+    // CLR: StopAsync is the Task-returning shutdown() of the Common executor contract.
+    public sealed override Task StopAsync()
     {
-        long started = _shutdownStarted ??= _ticker.NanoTime();
-        // Run all tasks before prepare to destroy.
-        int count = RunTasks(0);
-        CloseRegisteredChannels();
-        count += RunIo();
+        Shutdown0(-1, -1, ST_SHUTDOWN);
+        return TerminationFuture;
+    }
+
+    public sealed override Task TerminationFuture => _terminationFuture.Task;
+
+    public sealed override bool IsShuttingDown()
+    {
+        return _state.Get() >= ST_SHUTTING_DOWN;
+    }
+
+    public sealed override bool IsShutdown()
+    {
+        return _state.Get() >= ST_SHUTDOWN;
+    }
+
+    public sealed override bool IsTerminated()
+    {
+        return _state.Get() == ST_TERMINATED;
+    }
+
+    // CLR: invokeAny/invokeAll have no counterpart on the Task-based executor; the synchronous AwaitTermination is
+    // the blocking call that would deadlock when made by the owner before termination.
+    public sealed override bool AwaitTermination(TimeSpan timeout)
+    {
+        if (!_terminationFuture.Task.IsCompleted)
+        {
+            // We need to check if the method was called from within the EventLoop as this would cause a deadlock.
+            ThrowIfInEventLoop("awaitTermination");
+        }
+        return _terminationFuture.Task.Wait(timeout);
+    }
+
+    private void ThrowIfInEventLoop(string method)
+    {
+        if (InEventLoop())
+        {
+            throw new RejectedExecutionException(
+                    "Calling " + method + " from within the EventLoop is not allowed as it would deadlock");
+        }
+    }
+
+    // CLR: RejectedExecutionException is Common's port of the Java exception.
+    public sealed override void Execute(Action command)
+    {
+        ObjectUtil.CheckNotNull(command, "command");
+        bool inEventLoop = InEventLoop();
+        if (inEventLoop)
+        {
+            if (IsShutdown())
+            {
+                throw new RejectedExecutionException("event executor terminated");
+            }
+        }
+        _taskQueue.TryEnqueue(command);
+        if (!inEventLoop)
+        {
+            if (IsShutdown())
+            {
+                bool reject = false;
+                try
+                {
+                    if (_taskQueue.TryRemove(command))
+                    {
+                        reject = true;
+                    }
+                }
+                catch (NotSupportedException)
+                {
+                    // The task queue does not support removal so the best thing we can do is to just move on and
+                    // hope we will be able to pick-up the task before its completely terminated.
+                    // In worst case we will log on termination.
+                }
+                if (reject)
+                {
+                    throw new RejectedExecutionException("event executor terminated");
+                }
+            }
+            _handler.Wakeup();
+        }
+    }
+
+    // CLR-only native-close admission; public task submission remains closed after StopAsync.
+    internal Action<Action> ReserveCloseCompletion()
+    {
+        if (!InEventLoop()) throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        _pendingCloseCompletions++;
+        return completion =>
+        {
+            _taskQueue.TryEnqueue(() =>
+            {
+                try { completion(); }
+                finally { _pendingCloseCompletions--; }
+            });
+            _handler.Wakeup();
+        };
+    }
+
+    private bool HasTasks()
+    {
+        return !_taskQueue.IsEmpty();
+    }
+
+    // CLR: InvalidOperationException replaces IllegalStateException.
+    private bool ConfirmShutdown()
+    {
+        if (!IsShuttingDown())
+        {
+            return false;
+        }
+
+        if (!InEventLoop())
+        {
+            throw new InvalidOperationException("must be invoked from an event loop");
+        }
+
         CancelScheduledTasks();
 
-        lock (_gate)
+        if (_gracefulShutdownStartTime == 0)
         {
-            if (_pendingCloseCompletions != 0) return count;
-            long now = _ticker.NanoTime();
+            _gracefulShutdownStartTime = _ticker.NanoTime();
+        }
+
+        if (RunAllTasks(-1, false) > 0)
+        {
+            if (IsShutdown())
+            {
+                // Executor shut down - no new tasks anymore.
+                return true;
+            }
+
             // There were tasks in the queue. Wait a little bit more until no tasks are queued for the quiet period or
             // terminate if the quiet period is 0.
             // See https://github.com/netty/netty/issues/4241
-            if (_state == ShuttingDown && _quietPeriod > 0 &&
-                unchecked(now - started) < _shutdownTimeout &&
-                (!_tasks.IsEmpty() || _io.Count != 0 || unchecked(now - _lastExecution) <= _quietPeriod))
-                return count;
-
-            // Executor shut down - no new tasks anymore.
-            Volatile.Write(ref _state, ShutdownState);
+            if (Volatile.Read(ref _gracefulShutdownQuietPeriod) == 0)
+            {
+                return true;
+            }
+            return false;
         }
 
-        // Execute work accepted before shutdown admission closed.
-        count += RunTasks(0);
-        CloseRegisteredChannels();
-        count += RunIo();
-        CancelScheduledTasks();
-        if (_pendingCloseCompletions != 0) return count;
-        _ioHandler.CloseAll();
-        Volatile.Write(ref _state, Terminated);
-        _termination.SetResult();
-        return count;
+        long nanoTime = _ticker.NanoTime();
+
+        if (IsShutdown() || unchecked(nanoTime - _gracefulShutdownStartTime) > Volatile.Read(ref _gracefulShutdownTimeout))
+        {
+            return true;
+        }
+
+        if (unchecked(nanoTime - _lastExecutionTime) <= Volatile.Read(ref _gracefulShutdownQuietPeriod))
+        {
+            try
+            {
+                Thread.Sleep(100);
+            }
+            catch (ThreadInterruptedException)
+            {
+                // Ignore
+            }
+
+            return false;
+        }
+
+        // No tasks were added for last quiet period - hopefully safe to shut down.
+        // (Hopefully because we really cannot make a guarantee that there will be no execute() calls by a user.)
+        return true;
     }
 
-    private void CloseRegisteredChannels()
+    // CLR: the anonymous non-blocking IoHandlerContext of the Java field becomes a nested class.
+    private sealed class NonBlockingIoHandlerContext(ManualIoEventLoop loop) : IIoHandlerContext
     {
-        AbstractChannel[] channels;
-        lock (_gate)
+        public bool CanBlock()
         {
-            if (_channels.Count == 0) return;
-            channels = new AbstractChannel[_channels.Count];
-            _channels.CopyTo(channels);
+            Debug.Assert(loop.InEventLoop());
+            return false;
         }
 
-        foreach (var channel in channels)
-            SafeExecute(() => _ = channel.Close());
+        public long DelayNanos(long currentTimeNanos)
+        {
+            Debug.Assert(loop.InEventLoop());
+            return 0;
+        }
+
+        public long DeadlineNanos()
+        {
+            Debug.Assert(loop.InEventLoop());
+            return -1;
+        }
+    }
+
+    private sealed class BlockingIoHandlerContext(ManualIoEventLoop loop) : IIoHandlerContext
+    {
+        // this is a positive amount of nanos or Long.MAX_VALUE for no limit
+        internal long MaxBlockingNanos = long.MaxValue;
+
+        public bool CanBlock()
+        {
+            Debug.Assert(loop.InEventLoop());
+            return !loop.HasTasks() && !loop.HasScheduledTasks() && loop.CanBlock();
+        }
+
+        public long DelayNanos(long currentTimeNanos)
+        {
+            Debug.Assert(loop.InEventLoop());
+            return Math.Min(MaxBlockingNanos, loop.DelayNanos(currentTimeNanos, MaxBlockingNanos));
+        }
+
+        public long DeadlineNanos()
+        {
+            Debug.Assert(loop.InEventLoop());
+            long next = loop.NextScheduledTaskDeadlineNanos();
+            if (MaxBlockingNanos == long.MaxValue)
+            {
+                // next == -1? -1 : next i.e. return next
+                return next;
+            }
+            long now = loop._ticker.NanoTime();
+            // we cannot just check Math.min as nanoTime can be negative or wrap around!
+            if (next == -1 || unchecked(next - now) > MaxBlockingNanos)
+            {
+                return unchecked(now + MaxBlockingNanos);
+            }
+            return next;
+        }
     }
 }

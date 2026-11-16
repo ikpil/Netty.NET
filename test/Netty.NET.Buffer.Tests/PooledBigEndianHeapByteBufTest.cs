@@ -18,20 +18,14 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * Tests big-endian heap channel buffers
  */
-public class PooledBigEndianHeapByteBufTest : AbstractPooledByteBufTransferTest
+public class PooledBigEndianHeapByteBufTest : AbstractPooledByteBufTest
 {
+    // CLR: a scoped allocator over the fixture's NativeMemoryAllocator replaces the JVM-global
+    // PooledByteBufAllocator.DEFAULT, so AbstractByteBufTest.Dispose can release it and prove zero reservations.
     public PooledBigEndianHeapByteBufTest() => Init(new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: Native));
 
     protected override ByteBuf Alloc(int length, int maxCapacity)
     {
-        ByteBuf result = Allocator.HeapBuffer(length, maxCapacity);
-        return result;
+        return Allocator.HeapBuffer(length, maxCapacity);
     }
-
-    [Fact]
-    public void TestMaxFastWritableBytes() => AssertOriginalPooledMaxFastWritableBytes();
-
-    [Fact]
-    public void TestEnsureWritableDoesntGrowTooMuch() => AssertOriginalPooledEnsureWritableDoesntGrowTooMuch();
-
 }

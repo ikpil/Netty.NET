@@ -21,8 +21,11 @@ namespace Netty.NET.Common;
 /**
  * Annotation to suppress forbidden-apis errors inside a whole class, a method, or a field.
  */
+// CLR: RetentionPolicy.CLASS has no separate CLR level; the attribute is emitted to metadata.
+// No forbidden-apis bytecode check runs on the CLR build, so it documents the reviewed use
+// site (reason) exactly as the source annotation does.
 [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Class, Inherited = false)]
-public class SuppressForbiddenAttribute : Attribute
+public sealed class SuppressForbiddenAttribute : Attribute
 {
     public readonly string Reason;
 

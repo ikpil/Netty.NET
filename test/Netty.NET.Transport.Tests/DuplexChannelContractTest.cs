@@ -39,11 +39,11 @@ public class DuplexChannelContractTest
             Assert.False(duplex.IsInputShutdown); Assert.False(duplex.IsOutputShutdown); Assert.False(duplex.IsShutdown);
             await duplex.ShutdownOutputAsync();
             Assert.False(duplex.IsInputShutdown); Assert.True(duplex.IsOutputShutdown); Assert.False(duplex.IsShutdown);
-            await child.WriteAndFlushAsync(child.Allocator.Buffer(1).WriteByte(42), cancellation);
+            await child.WriteAndFlushAsync(child.Alloc().Buffer(1).WriteByte(42), cancellation);
             client.Read();
             Assert.Equal(42, await received.Task.WaitAsync(cancellation));
             // The source reports the already-shut output failure, but still shuts down the input.
-            await Assert.ThrowsAsync<IOException>(() => duplex.ShutdownAsync());
+            await Assert.ThrowsAnyAsync<ClosedChannelException>(() => duplex.ShutdownAsync());
             Assert.True(duplex.IsInputShutdown); Assert.True(duplex.IsOutputShutdown); Assert.True(duplex.IsShutdown);
             Assert.True(duplex.IsOpen);
             await duplex.CloseAsync();
@@ -53,8 +53,8 @@ public class DuplexChannelContractTest
     }
     private sealed class Signal(TaskCompletionSource<byte> received) : SimpleChannelInboundHandler<ByteBuf>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf buffer) => received.TrySetResult((byte)buffer.ReadByte());
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error) => received.TrySetException(error);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer) => received.TrySetResult((byte)buffer.ReadByte());
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
     }
 }
 #pragma warning restore xUnit1051

@@ -39,7 +39,8 @@ compares comment text and multiplicity while ignoring whitespace. Markdown
 provenance is tokenized within each Java/C# code fence; prose quotes cannot
 swallow archived comments as source strings. Passing this
 check does not establish behavioral compatibility or correct comment placement;
-both still require review.
+both still require review. Add `-Check` to gate the manifest: it fails unless every
+entry has a finished, evidence-backed disposition (see the 2026-11-16 closure review).
 
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
@@ -483,8 +484,8 @@ semantics, other pending work/platforms and the focused Global completion stall.
 AdaptiveCalculator now has scoped receive/io_uring consumer review and bounded
 native bucket selection: fixes tiny, narrow/nonaligned and terminal Int32 failures;
 retains conventional ramp/hysteresis and exposes readonly NextSize without an alias.
-See [native adaptive sizing](common-clr-design.md#native-bounded-adaptive-sizing)
-for original bug reproduction and deliberate behavior changes. Twelve CLR cases:
+Superseded by [source adaptive sizing](common-clr-design.md#source-adaptive-sizing)
+on 2026-11-14; the bounded table described here was withdrawn. Twelve CLR cases:
 identical baseline three pass/nine fail, final Debug/checked Release 12 pass.
 360 Java/baseline trace rows match; all 360 native rows match the independent
 value-based specification, with 166 documented Java differences. Warmed 100000
@@ -2126,6 +2127,7 @@ are removed. Twelve managed-byte and 20 independent scalar-oracle case tests pas
 the affected Debug selection passes 146 cases. All nine AsciiStringUtil comments
 remain beside the corresponding implementation. See [common-heap-memory.md](common-heap-memory.md).
 
+(Superseded on 2026-11-16 by the faithful ConcurrentSkipListIntObjMultimap port.)
 ConcurrentOrderedMultiMap uses standard sorted buckets with atomic compound
 operations, native Try/KeyValuePair APIs and snapshot iteration. All 20 original
 test-method scenarios are covered by 19 translated cases; five randomized
@@ -2569,3 +2571,86 @@ capture another managed thread's stack; those limitations remain explicit.
 
 The subsequent CLR worker replacement failure boundary is implemented in
 [common-unordered-worker-failure.md](common-unordered-worker-failure.md).
+
+## Source Common behaviour checkpoint (2026-11-14)
+
+AdaptiveCalculator is again the pinned algorithm, including its tiny/narrow/terminal
+failures; AppendableCharSequence and the Arrays copy helpers keep the pinned range
+checks and messages; ObjectUtil and the touched messages render numbers as Java
+does, independent of the current culture. Decisions and evidence:
+[source adaptive sizing](common-clr-design.md#source-adaptive-sizing),
+[source number text](common-clr-design.md#source-number-text-in-messages) and
+[AppendableCharSequence bounds](common-clr-design.md#source-appendablecharsequence-bounds).
+Java probe rows (142 adaptive, 98 sequence/copy, 78 ObjectUtil, 466092 number texts)
+match the CLR counterpart under de-DE, ko-KR, ar-SA and sv-SE.
+
+## Culture-independent number text checkpoint (2026-11-14)
+
+A Roslyn semantic scan of Common, Buffer, Resolver and Transport found 107 implicit
+current-culture number conversions on 76 lines and now finds none. Sites follow the
+source: concatenation and SLF4J templates are culture-free, Java String.format sites
+keep CurrentCulture explicitly, and MessageFormatter/AsciiString texts match JDK 21
+output under four locales. See
+[source number text](common-clr-design.md#source-number-text-in-messages).
+
+## Null and boolean text checkpoint (2026-11-14)
+
+A Roslyn scan of the four modules found 2 bool and 196 possibly-null text
+conversions; after review four null sites and both bool sites differed from Java
+string conversion and were fixed, and the logger calls involved use the source
+templates again. See [source null and boolean text](common-clr-design.md#source-null-and-boolean-text).
+
+## Class names in text checkpoint (2026-11-14)
+
+All 48 C# ToString() overrides were paired with the pinned toString() bodies and all
+29 type-name values that reach text were reviewed; simpleClassName/getName are
+restored at eight sites and the context/pipeline toString() overrides are ported.
+See [source class names](common-clr-design.md#source-class-names-in-text).
+
+## Public API names checkpoint (2026-11-14)
+
+Owner-decided Java names are restored for RefCnt, CloseFuture, ByteBuf
+IsReadable/IsWritable and ToString(Encoding), the NetUtil constants and predicates, and
+the PooledByteBufAllocator source constructors. See
+[naming policy decisions](common-clr-design.md#naming-policy-decisions-2026-11-14).
+
+## Common closure review (2026-11-16)
+
+All 272 Common manifest entries now have a finished disposition: 154 verified,
+61 clr-replacement, 51 not-applicable and 6 deprecated-not-ported (none pending or
+in-progress). The 58 entries that were open, plus the CommonsLogger tests and the
+ConcurrentSkipListIntObjMultimap test, were closed as follows:
+
+- verified after a member-by-member review: AsciiString, AsciiStringUtil,
+  ConcurrentSkipListIntObjMultimap (faithful port), EventExecutor, GlobalEventExecutor,
+  OrderedEventExecutor, ScheduledFutureTask, SingleThreadEventExecutor,
+  ThreadAwareExecutor, ThreadProperties, UnorderedThreadPoolEventExecutor,
+  ConstantTimeUtils, EmptyArrays, OutOfDirectMemoryError (ported), PlatformDependent,
+  ResourcesUtil, ThrowableUtil, SuppressForbidden, UnstableApi and the logging types
+  AbstractInternalLogger, FormattingTuple, InternalLogLevel, InternalLogger,
+  InternalLoggerFactory, MessageFormatter.
+- clr-replacement: PlatformDependent0 (dissolved class) and the four package-info
+  files that map to Common namespaces.
+- not-applicable: SuppressJava8Requirement, 9 jctools DoNotRemove, 9 jctools
+  package-info, 4 GraalVM substitutions and the svm package-info.
+- deprecated-not-ported (new status, owner decision): ResourceLeakException,
+  SuppressJava6Requirement, CommonsLogger, CommonsLoggerFactory and their two tests;
+  the C# CommonsLogger/CommonsLoggerFactory translations and tests were deleted.
+
+Original comments: every finished entry preserves all of its original comments
+(verified ones in source; excluded files and JVM-only members in
+[common-jvm-source-exclusions.md](common-jvm-source-exclusions.md)).
+`tools/Test-CommonCommentCoverage.ps1 -Check` now fails on any pending/in-progress or
+unknown status, empty evidence, a verified entry without implementation or with missing
+comments, a replacement/exclusion without its reason, or a deprecated-not-ported entry
+without `deprecation.javadoc` and `deprecation.replacement`.
+
+Behaviour fixes found by the review: due ordered scheduled tasks run after shutdown as in
+ScheduledFutureTask.run; GlobalEventExecutor schedules its quiet task with an id, skips
+canceled tasks when fetching and logs through its own logger; MessageFormatter searches
+ordinally; ThrowableUtil frames use "Type.method(Unknown Source)"; os-release reads are
+bounded to 8 KiB; ResourcesUtil no longer URL-decodes paths; the native reservation limit
+throws OutOfDirectMemoryError with the source message. Design notes:
+[common-clr-design.md](common-clr-design.md#common-closure-review-decisions-2026-11-16).
+
+Results on Windows/net10.0 Debug: solution build 0 errors/49 warnings: Common 3226 passed/14 skipped of 3242 (2 timing-sensitive AutoScalingEventExecutorChooserFactoryTest cases failed under full-suite load and pass alone, 7/7); Buffer 30136 passed; Resolver 82 passed; Transport 1148 passed/80 skipped with the 35 known Unix-domain-socket host failures.

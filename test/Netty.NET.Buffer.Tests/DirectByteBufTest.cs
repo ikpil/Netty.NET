@@ -17,6 +17,7 @@
 using System;
 using System.Buffers;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -86,7 +87,7 @@ public class DirectByteBufTest : HeapByteBufTest
             buffer.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
             buffer.ReaderIndex = 3;
             Memory<byte> existing = buffer.AsMemory(0, 8);
-            Assert.Throws<OutOfMemoryException>(() => buffer.Capacity = 12);
+            Assert.Throws<OutOfDirectMemoryError>(() => buffer.Capacity = 12);
             Assert.Equal(8, buffer.Capacity);
             Assert.Equal(3, buffer.ReaderIndex);
             Assert.Equal(8, buffer.WriterIndex);
@@ -123,7 +124,7 @@ public class DirectByteBufTest : HeapByteBufTest
         try
         {
             Assert.True(buffer.Release());
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
             Assert.Equal(8, allocator.ReservedBytes);
             Assert.Equal(3, *(byte*)pin.Pointer);
             Assert.Throws<IllegalReferenceCountException>(() => buffer.GetByte(2));

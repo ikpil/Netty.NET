@@ -19,7 +19,7 @@ public class DefaultChooserContractTest
         public override bool IsTerminated() => throw new NotSupportedException();
         [Obsolete]
         public override void Shutdown() => throw new NotSupportedException();
-        public override Task Termination => throw new NotSupportedException();
+        public override Task TerminationFuture => throw new NotSupportedException();
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
         public override bool AwaitTermination(TimeSpan timeout) => throw new NotSupportedException();
     }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using Netty.NET.Common;
 using static Netty.NET.Buffer.Tests.AllocatorLeakDetectionTest;
+using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -53,15 +54,17 @@ public class AllocatorStorageContractTest
     public static IEnumerable<object[]> CopyWindows()
     {
         foreach (object[] p in Providers())
-        foreach (int window in new[] { 0, 1, 2 }) yield return [p[0], p[1], window];
+        foreach (int window in new[] { 1, 2 }) yield return [p[0], p[1], window];
     }
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void FactoryStorageMatchesManagedHeapAndOwnedNativePolicy(int provider, bool preferDirect)
+    public void TestUnsafeHeapBufferAndUnsafeDirectBuffer(int provider, bool preferDirect)
     {
+        // CLR: managed heap and owned native storage types replace the JVM safe/Unsafe subclasses. Providers 0/1
+        // are the original newUnpooledAllocator factories; provider 3 is the AdaptiveByteBufAllocatorTest override.
         using var s = new Storage(provider, preferDirect);
-        foreach (bool direct in new[] { false, true })
+        foreach (bool direct in new[] { true, false })
         {
             ByteBuf buffer = direct ? s.Allocator.DirectBuffer() : s.Allocator.HeapBuffer();
             try
@@ -81,11 +84,11 @@ public class AllocatorStorageContractTest
                 }
                 Assert.Equal(direct, buffer.IsDirect);
                 Assert.True(buffer.IsContiguous);
-                Assert.Same(s.Allocator, storage.Allocator);
+                Assert.Same(s.Allocator, storage.Alloc());
                 Assert.Equal(256, buffer.Capacity);
                 Assert.Equal(0, buffer.ReaderIndex);
                 Assert.Equal(0, buffer.WriterIndex);
-                Assert.Equal(1, buffer.ReferenceCount);
+                Assert.Equal(1, buffer.RefCnt);
             }
             finally { Assert.True(buffer.Release()); }
         }
@@ -93,14 +96,14 @@ public class AllocatorStorageContractTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public unsafe void DirectStorageExposesAValidAddressWithinThePinScope(int provider, bool preferDirect)
+    public unsafe void DirectBuffersMustHaveMemoryAddress(int provider, bool preferDirect)
     {
         using var s = new Storage(provider, preferDirect);
         ByteBuf buffer = s.Allocator.DirectBuffer();
         try
         {
             // Unwrap if needed
-            Assert.Same(s.Allocator, UnwrapLeak(buffer).Allocator);
+            Assert.Same(s.Allocator, UnwrapLeak(buffer).Alloc());
             // The memory address must always be available when we either have Unsafe available,
             // or when we have memory segments available (though CleanerJava25 only enables for Java 25+).
             // CLR: borrow an address only within a pin; no JVM capability check or persistent pointer API.
@@ -113,7 +116,7 @@ public class AllocatorStorageContractTest
                 Assert.Equal(0xa5, ((byte*)pin.Pointer)[buffer.Capacity - 1]);
                 Assert.Equal(0, buffer.ReaderIndex);
                 Assert.Equal(0, buffer.WriterIndex);
-                Assert.Equal(1, buffer.ReferenceCount);
+                Assert.Equal(1, buffer.RefCnt);
             }
         }
         finally { Assert.True(buffer.Release()); }
@@ -121,10 +124,11 @@ public class AllocatorStorageContractTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public void CapacityAboveMaximumPreservesTheOriginalStorageAndState(int provider, bool preferDirect)
+    public void TestCapacityNotGreaterThanMaxCapacity(int provider, bool preferDirect)
     {
         using var s = new Storage(provider, preferDirect);
         const int maximum = 100000;
+        // CLR: the public DirectBuffer factory replaces the protected newDirectBuffer access.
         ByteBuf buffer = s.Allocator.DirectBuffer(maximum, maximum);
         try
         {
@@ -132,14 +136,16 @@ public class AllocatorStorageContractTest
             long reserved = s.Native.ReservedBytes;
             var metric = ((IByteBufAllocatorMetricProvider)s.Allocator).Metric;
             long used = metric.UsedDirectMemory;
+            // CLR: ArgumentOutOfRangeException replaces IllegalArgumentException.
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = maximum + 1);
+            // CLR: the rejected resize leaves storage, state, metric and native reservation unchanged.
             Assert.Equal(maximum, buffer.Capacity);
             Assert.Equal(maximum, buffer.MaxCapacity);
             Assert.Equal(0x5a, buffer.GetByte(0));
             Assert.Equal(0xa5, buffer.GetByte(maximum - 1));
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(0, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(reserved, s.Native.ReservedBytes);
             Assert.Equal(used, metric.UsedDirectMemory);
         }
@@ -147,22 +153,56 @@ public class AllocatorStorageContractTest
     }
 
     [Theory]
+    [MemberData(nameof(Providers))]
+    public void TestSetBytesFromOwnInternalNioBuffer(int provider, bool preferDirect)
+    {
+        using var s = new Storage(provider, preferDirect);
+        int size = 8;
+        ByteBuf directBuffer = s.Allocator.DirectBuffer(size, size);
+        try
+        {
+            for (int i = 0; i < size; ++i)
+            {
+                directBuffer.SetByte(i, i);
+            }
+            int srcStartIndex = size / 2;
+            // The source is this buffer's own internal NIO buffer.
+            // CLR: ReadOnlyMemory/Span carries the exact source window without a NIO cursor.
+            ReadOnlyMemory<byte> srcByteBuf = directBuffer.AsReadOnlyMemory(srcStartIndex, size - srcStartIndex);
+            long reserved = s.Native.ReservedBytes;
+            Assert.Same(directBuffer, directBuffer.SetBytes(0, srcByteBuf.Span));
+            for (int i = 0; i < srcStartIndex; i++)
+            {
+                Assert.Equal((byte)(srcStartIndex + i), directBuffer.GetByte(i));
+            }
+            for (int i = srcStartIndex; i < size; i++)
+            {
+                Assert.Equal((byte)i, directBuffer.GetByte(i));
+            }
+            // CLR: capacity, indices, claim and native reservation stay unchanged.
+            Assert.Equal(size, directBuffer.Capacity);
+            Assert.Equal(size, directBuffer.MaxCapacity);
+            Assert.Equal(0, directBuffer.ReaderIndex);
+            Assert.Equal(0, directBuffer.WriterIndex);
+            Assert.Equal(1, directBuffer.RefCnt);
+            Assert.Equal(reserved, s.Native.ReservedBytes);
+        }
+        finally { Assert.True(directBuffer.Release()); }
+    }
+
+    // CLR: supplemental overlapping windows of the own-memory copy, in both directions.
+    [Theory]
     [MemberData(nameof(CopyWindows))]
-    public void OwnBorrowedMemoryCopiesTheOriginalWindowAndOverlappingRanges(int provider, bool preferDirect, int window)
+    public void OwnBorrowedMemoryCopiesOverlappingRanges(int provider, bool preferDirect, int window)
     {
         using var s = new Storage(provider, preferDirect);
         ByteBuf buffer = s.Allocator.DirectBuffer(8, 8);
         try
         {
             byte[] original = [0, 1, 2, 3, 4, 5, 6, 7], expected = (byte[])original.Clone();
-            (int source, int destination, int length) = window switch
-            {
-                0 => (4, 0, 4), 1 => (2, 0, 6), _ => (0, 2, 6)
-            };
+            (int source, int destination, int length) = window == 1 ? (2, 0, 6) : (0, 2, 6);
             buffer.SetBytes(0, original);
             for (int i = 0; i < length; ++i) expected[destination + i] = original[source + i];
-            // The source is this buffer's own internal NIO buffer.
-            // CLR: ReadOnlyMemory/Span carries the exact source window without a NIO cursor.
             ReadOnlyMemory<byte> borrowed = buffer.AsReadOnlyMemory(source, length);
             long reserved = s.Native.ReservedBytes;
             Assert.Same(buffer, buffer.SetBytes(destination, borrowed.Span));
@@ -172,7 +212,7 @@ public class AllocatorStorageContractTest
             Assert.Equal(8, buffer.MaxCapacity);
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(0, buffer.WriterIndex);
-            Assert.Equal(1, buffer.ReferenceCount);
+            Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(reserved, s.Native.ReservedBytes);
         }
         finally { Assert.True(buffer.Release()); }

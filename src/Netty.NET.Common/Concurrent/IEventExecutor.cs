@@ -33,7 +33,9 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      */
     IEventExecutorGroup Parent();
 
-    bool IsExecutorThread(Thread thread);
+    // CLR: Java's default isExecutorThread(thread) (= inEventLoop(thread)), inEventLoop(), isSuspended()
+    // and trySuspend() bodies live in AbstractEventExecutor and UnorderedThreadPoolEventExecutor;
+    // IsExecutorThread itself is inherited from IThreadAwareExecutor.
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument

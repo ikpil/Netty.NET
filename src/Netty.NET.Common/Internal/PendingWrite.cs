@@ -34,10 +34,10 @@ public sealed class PendingWrite
     // The caller supplies its producer-owned TCS and exposes only its Task to observers.
     // Do not retain this node after recycling or across an asynchronous handoff;
     // capture Message and transfer the completion source before returning it to the pool.
-    public static PendingWrite Rent(object message, TaskCompletionSource completion = null)
+    public static PendingWrite Rent(object msg, TaskCompletionSource completion = null)
     {
         PendingWrite pending = RECYCLER.Get();
-        pending._msg = message;
+        pending._msg = msg;
         pending._completion = completion;
         Volatile.Write(ref pending._active, 1);
         return pending;

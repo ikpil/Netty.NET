@@ -8,6 +8,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -25,7 +26,7 @@ public class TcpFastOpenContractTest
         listener.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.FastOpen, 5);
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         listener.Listen(2);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             for (int connection = 0; connection < 2; connection++)
@@ -72,7 +73,7 @@ public class TcpFastOpenContractTest
         listener.Bind(local);
         listener.Listen(1);
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var payload = new byte[8192];
         Random.Shared.NextBytes(payload);
         var buffer = Unpooled.WrappedBuffer(payload);
@@ -103,7 +104,7 @@ public class TcpFastOpenContractTest
                 offset += count;
             }
             Assert.Equal(payload, received);
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
         }
         finally { await group.StopAsync(); }
     }
@@ -117,7 +118,7 @@ public class TcpFastOpenContractTest
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         listener.Listen(1);
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             await NewClient(group, socket).Option(ChannelOption.TCP_FASTOPEN_CONNECT, true)
@@ -137,12 +138,12 @@ public class TcpFastOpenContractTest
         var token = TestContext.Current.CancellationToken;
         // Use an endpoint that the successful warm-up connections have not put in the cookie cache.
         var address = IPAddress.Parse(cancel ? "127.0.0.252" : "127.0.0.253");
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
         try
         {
-            var server = await new ServerBootstrap().Group(group).ChannelFactory(static () => new TcpServerSocketChannel())
+            var server = await new ServerBootstrap().Group(group).ChannelFactory(static () => new NioServerSocketChannel())
                 .ChildHandler(new ChannelInboundHandlerAdapter()).BindAsync(new IPEndPoint(address, 0), token);
             LinuxTcpMd5SourceTest.SetServerKeys(server, LinuxTcpMd5SourceTest.Keys(IPAddress.Loopback, "abc"u8.ToArray()));
             var channel = await NewClient(group, socket)
@@ -164,12 +165,12 @@ public class TcpFastOpenContractTest
                 await Assert.ThrowsAsync<ConnectTimeoutException>(() => connecting);
             await Assert.ThrowsAnyAsync<Exception>(() => write.WaitAsync(TimeSpan.FromSeconds(3), token));
             Assert.False(channel.IsOpen);
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
         }
         finally { await group.StopAsync(); }
     }
 
-    private static Bootstrap NewClient(DefaultEventLoopGroup group, Socket socket) =>
-        new Bootstrap().Group(group).ChannelFactory(() => new TcpSocketChannel(socket))
+    private static Bootstrap NewClient(MultiThreadIoEventLoopGroup group, Socket socket) =>
+        new Bootstrap().Group(group).ChannelFactory(() => new NioSocketChannel(socket))
             .Handler(new ChannelInboundHandlerAdapter());
 }

@@ -37,7 +37,7 @@ public static class HostsFileParser
      *
      * @return a {@link HostsFileEntries}
      */
-    public static HostsFileEntries ParseSilently() => ToEntries(HostsFileEntriesProvider.Parser().ParseSilently());
+    public static HostsFileEntries ParseSilently() => HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently());
     /**
      * Parse hosts file at standard OS location using the given {@link Charset}s one after each other until
      * we were able to parse something or none is left.
@@ -45,14 +45,14 @@ public static class HostsFileParser
      * @param charsets the {@link Charset}s to try as file encodings when parsing.
      * @return a {@link HostsFileEntries}
      */
-    public static HostsFileEntries ParseSilently(params Encoding[] charsets) => ToEntries(HostsFileEntriesProvider.Parser().ParseSilently(charsets));
+    public static HostsFileEntries ParseSilently(params Encoding[] charsets) => HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently(charsets));
     /**
      * Parse hosts file at standard OS location using the system default {@link Charset} for decoding.
      *
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse() => ToEntries(HostsFileEntriesProvider.Parser().Parse());
+    public static HostsFileEntries Parse() => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse());
     /**
      * Parse a hosts file using the system default {@link Charset} for decoding.
      *
@@ -60,7 +60,7 @@ public static class HostsFileParser
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse(FileInfo file) => ToEntries(HostsFileEntriesProvider.Parser().Parse(file));
+    public static HostsFileEntries Parse(FileInfo file) => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file));
     /**
      * Parse a hosts file.
      *
@@ -69,7 +69,7 @@ public static class HostsFileParser
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse(FileInfo file, params Encoding[] charsets) => ToEntries(HostsFileEntriesProvider.Parser().Parse(file, charsets));
+    public static HostsFileEntries Parse(FileInfo file, params Encoding[] charsets) => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file, charsets));
     /**
      * Parse a reader of hosts file format.
      *
@@ -77,18 +77,27 @@ public static class HostsFileParser
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse(TextReader reader) => ToEntries(HostsFileEntriesProvider.Parser().Parse(reader));
+    public static HostsFileEntries Parse(TextReader reader) => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(reader));
 
-    private static HostsFileEntries ToEntries(HostsFileEntriesProvider provider)
-        => ReferenceEquals(provider, HostsFileEntriesProvider.Empty) ? HostsFileEntries.Empty :
-            new HostsFileEntries(FirstValues(provider.Ipv4Entries()), FirstValues(provider.Ipv6Entries()));
-
-    private static Dictionary<string, IPAddress> FirstValues(IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> entries)
+    private static HostsFileEntries HostsFileEntries(HostsFileEntriesProvider provider)
     {
-        var result = new Dictionary<string, IPAddress>(entries.Count);
-        foreach (var entry in entries)
-            if (entry.Value.Count != 0)
-                result.Add(entry.Key, entry.Value[0]);
+        // CLR: inside this class the simple name HostsFileEntries binds to this method, so the type is qualified.
+        return ReferenceEquals(provider, HostsFileEntriesProvider.Empty) ? Netty.NET.Resolver.HostsFileEntries.Empty :
+                new HostsFileEntries(ToMapWithSingleValue(provider.Ipv4Entries()), ToMapWithSingleValue(provider.Ipv6Entries()));
+    }
+
+    private static Dictionary<string, IPAddress> ToMapWithSingleValue(
+        IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> fromMapWithListValue)
+    {
+        var result = new Dictionary<string, IPAddress>(fromMapWithListValue.Count);
+        foreach (var entry in fromMapWithListValue)
+        {
+            IReadOnlyList<IPAddress> value = entry.Value;
+            if (value.Count != 0)
+            {
+                result.Add(entry.Key, value[0]);
+            }
+        }
         return result;
     }
 }

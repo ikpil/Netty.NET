@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 
 namespace Netty.NET.Transport.Channels;
 
@@ -52,33 +53,44 @@ internal static class ChannelHandlerMask
         int mask = MaskExceptionCaught;
         // CLR: a bound interface delegate identifies the actual virtual or explicit implementation, including in NativeAOT.
         // The source Class parameter remains the cache/type discriminator; the representative instance is not invoked.
-        if (typeof(IChannelInboundHandler).IsAssignableFrom(handlerType))
+        try
         {
-            var inbound = (IChannelInboundHandler)handler;
-            mask |= MaskAllInbound;
-            if (IsSkippable(inbound.ChannelRegistered)) mask &= ~MaskChannelRegistered;
-            if (IsSkippable(inbound.ChannelUnregistered)) mask &= ~MaskChannelUnregistered;
-            if (IsSkippable(inbound.ChannelActive)) mask &= ~MaskChannelActive;
-            if (IsSkippable(inbound.ChannelInactive)) mask &= ~MaskChannelInactive;
-            if (IsSkippable(inbound.ChannelRead)) mask &= ~MaskChannelRead;
-            if (IsSkippable(inbound.ChannelReadComplete)) mask &= ~MaskChannelReadComplete;
-            if (IsSkippable(inbound.ChannelWritabilityChanged)) mask &= ~MaskChannelWritabilityChanged;
-            if (IsSkippable(inbound.UserEventTriggered)) mask &= ~MaskUserEventTriggered;
+            if (typeof(IChannelInboundHandler).IsAssignableFrom(handlerType))
+            {
+                var inbound = (IChannelInboundHandler)handler;
+                mask |= MaskAllInbound;
+                if (IsSkippable(inbound.ChannelRegistered)) mask &= ~MaskChannelRegistered;
+                if (IsSkippable(inbound.ChannelUnregistered)) mask &= ~MaskChannelUnregistered;
+                if (IsSkippable(inbound.ChannelActive)) mask &= ~MaskChannelActive;
+                if (IsSkippable(inbound.ChannelInactive)) mask &= ~MaskChannelInactive;
+                if (IsSkippable(inbound.ChannelRead)) mask &= ~MaskChannelRead;
+                if (IsSkippable(inbound.ChannelReadComplete)) mask &= ~MaskChannelReadComplete;
+                if (IsSkippable(inbound.ChannelWritabilityChanged)) mask &= ~MaskChannelWritabilityChanged;
+                if (IsSkippable(inbound.UserEventTriggered)) mask &= ~MaskUserEventTriggered;
+            }
+            if (typeof(IChannelOutboundHandler).IsAssignableFrom(handlerType))
+            {
+                var outbound = (IChannelOutboundHandler)handler;
+                mask |= MaskAllOutbound;
+                if (IsSkippable(outbound.BindAsync)) mask &= ~MaskBind;
+                if (IsSkippable(outbound.ConnectAsync)) mask &= ~MaskConnect;
+                if (IsSkippable(outbound.DisconnectAsync)) mask &= ~MaskDisconnect;
+                if (IsSkippable(outbound.CloseAsync)) mask &= ~MaskClose;
+                if (IsSkippable(outbound.DeregisterAsync)) mask &= ~MaskDeregister;
+                if (IsSkippable(outbound.Read)) mask &= ~MaskRead;
+                if (IsSkippable(outbound.WriteAsync)) mask &= ~MaskWrite;
+                if (IsSkippable(outbound.Flush)) mask &= ~MaskFlush;
+            }
+            if (IsSkippable(handler.ExceptionCaught)) mask &= ~MaskExceptionCaught;
         }
-        if (typeof(IChannelOutboundHandler).IsAssignableFrom(handlerType))
+        catch (Exception e)
         {
-            var outbound = (IChannelOutboundHandler)handler;
-            mask |= MaskAllOutbound;
-            if (IsSkippable(outbound.BindAsync)) mask &= ~MaskBind;
-            if (IsSkippable(outbound.ConnectAsync)) mask &= ~MaskConnect;
-            if (IsSkippable(outbound.DisconnectAsync)) mask &= ~MaskDisconnect;
-            if (IsSkippable(outbound.CloseAsync)) mask &= ~MaskClose;
-            if (IsSkippable(outbound.DeregisterAsync)) mask &= ~MaskDeregister;
-            if (IsSkippable(outbound.Read)) mask &= ~MaskRead;
-            if (IsSkippable(outbound.WriteAsync)) mask &= ~MaskWrite;
-            if (IsSkippable(outbound.Flush)) mask &= ~MaskFlush;
+            // Should never reach here.
+            // CLR: ExceptionDispatchInfo.Throw rethrows the original exception unchanged as PlatformDependent.throwException
+            // does (https://learn.microsoft.com/dotnet/api/system.runtime.exceptionservices.exceptiondispatchinfo.throw).
+            ExceptionDispatchInfo.Throw(e);
         }
-        if (IsSkippable(handler.ExceptionCaught)) mask &= ~MaskExceptionCaught;
+
         return mask;
     }
     private static bool IsSkippable(Delegate method)

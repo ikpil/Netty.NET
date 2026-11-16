@@ -21,6 +21,7 @@ using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -34,13 +35,13 @@ public class AbstractEventLoopSourceTest
     [Fact(Timeout = 10000)]
     public async Task TestReregister()
     {
-        var group = new DefaultEventLoopGroup(2);
-        var group2 = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+        var group2 = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var executors = new DefaultEventExecutorGroup(2);
         IChannel server = null;
         try
         {
-            server = await new ServerBootstrap().Channel<TcpServerSocketChannel>().Group(group)
+            server = await new ServerBootstrap().Channel<NioServerSocketChannel>().Group(group)
                 .ChildHandler(new ChannelInboundHandlerAdapter()).Handler(new ActionChannelInitializer<IChannel>(ch =>
                 {
                     ch.Pipeline.AddLast("handler", new TestChannelHandler());
@@ -69,22 +70,22 @@ public class AbstractEventLoopSourceTest
     [InlineData(true)]
     public async Task TestReregisterOnChannelHandlerContext(bool throughChannel)
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         Exception failure = null;
         IChannel server = null, client = null;
         try
         {
-            server = await new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>()
+            server = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
                 .ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
                 {
                     ch.Pipeline.AddLast("logging", new LoggingHandler());
                     ch.Pipeline.AddLast(new ReRegisterHandler(group, throughChannel, error => failure = error));
                 })).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-            client = await new Bootstrap().Group(group).Channel<TcpSocketChannel>().Handler(new ClientReader(error => failure = error))
+            client = await new Bootstrap().Group(group).Channel<NioSocketChannel>().Handler(new ClientReader(error => failure = error))
                 .ConnectAsync(server.LocalAddress);
             _ = CloseServerAfterClient(client, server);
             await client.WriteAndFlushAsync(Unpooled.CopiedBuffer(Encoding.ASCII.GetBytes("hello")));
-            await server.CloseCompletion.WaitAsync(TestContext.Current.CancellationToken);
+            await server.CloseFuture.WaitAsync(TestContext.Current.CancellationToken);
             Assert.Null(failure);
         }
         finally
@@ -95,12 +96,12 @@ public class AbstractEventLoopSourceTest
         }
     }
     private static async Task CloseServerAfterClient(IChannel client, IChannel server)
-    { await client.CloseCompletion; await server.CloseAsync(); }
+    { await client.CloseFuture; await server.CloseAsync(); }
     private sealed class LoggingHandler : ChannelInboundHandlerAdapter { }
-    private sealed class ReRegisterHandler(DefaultEventLoopGroup group, bool throughChannel, Action<Exception> failed) : ChannelInboundHandlerAdapter
+    private sealed class ReRegisterHandler(MultiThreadIoEventLoopGroup group, bool throughChannel, Action<Exception> failed) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext ctx, object message) => _ = ReRegister(ctx, message);
-        private async Task ReRegister(ChannelHandlerContext outCtx, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _ = ReRegister(ctx, msg);
+        private async Task ReRegister(IChannelHandlerContext outCtx, object msg)
         {
             bool handedOff = false;
             try
@@ -114,35 +115,35 @@ public class AbstractEventLoopSourceTest
                 await next.SubmitAsync(() =>
                 {
                     outCtx.Pipeline.AddLast(new EchoThroughOriginalContext(outCtx));
-                    handedOff = true; outCtx.FireChannelRead(message);
+                    handedOff = true; outCtx.FireChannelRead(msg);
                 });
             }
             catch (Exception error)
             {
-                if (!handedOff) ((ByteBuf)message).Release();
+                if (!handedOff) ((ByteBuf)msg).Release();
                 failed(error); await outCtx.CloseAsync();
             }
         }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         { ctx.FireExceptionCaught(cause); failed(cause); _ = ctx.CloseAsync(); }
     }
-    private sealed class EchoThroughOriginalContext(ChannelHandlerContext outCtx) : ChannelInboundHandlerAdapter
-    { public override void ChannelRead(ChannelHandlerContext ctx, object message) => _ = outCtx.WriteAndFlushAsync(message); }
+    private sealed class EchoThroughOriginalContext(IChannelHandlerContext outCtx) : ChannelInboundHandlerAdapter
+    { public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _ = outCtx.WriteAndFlushAsync(msg); }
     private sealed class ClientReader(Action<Exception> failed) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext ctx, object message) { ((ByteBuf)message).Release(); _ = ctx.CloseAsync(); }
-        public override void ExceptionCaught(ChannelHandlerContext ctx, Exception cause)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { ((ByteBuf)msg).Release(); _ = ctx.CloseAsync(); }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         { failed(cause); ctx.FireExceptionCaught(cause); _ = ctx.CloseAsync(); }
     }
 
     [Fact(Timeout = 5000)]
     public async Task TestShutdownGracefullyNoQuietPeriod()
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         try
         {
             // Not close the Channel to ensure the EventLoop is still shutdown in time.
-            await new ServerBootstrap().Group(group).Channel<TcpServerSocketChannel>().ChildHandler(new ChannelInboundHandlerAdapter())
+            await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>().ChildHandler(new ChannelInboundHandlerAdapter())
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
             var shutdown = group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMinutes(1));
             await shutdown.WaitAsync(TimeSpan.FromMilliseconds(600), TestContext.Current.CancellationToken);
@@ -152,5 +153,5 @@ public class AbstractEventLoopSourceTest
     }
     private sealed class TestChannelHandler : ChannelDuplexHandler { }
     private sealed class TestChannelHandler2 : ChannelDuplexHandler
-    { public override void ChannelRead(ChannelHandlerContext ctx, object message) { } }
+    { public override void ChannelRead(IChannelHandlerContext ctx, object msg) { } }
 }

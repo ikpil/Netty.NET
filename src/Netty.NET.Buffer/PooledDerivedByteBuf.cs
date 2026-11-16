@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Text;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -89,18 +90,19 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     }
 
     public override ByteBuf Unwrap() => Root;
-    public override IByteBufAllocator Allocator => Root.Allocator;
+    public override IByteBufAllocator Alloc() => Root.Alloc();
     public override bool IsDirect => Root.IsDirect;
     public override bool IsReadOnly => Root.IsReadOnly;
     public override bool IsContiguous => Root.IsContiguous;
-    public override string GetString(int index, int length, Encoding encoding)
+    public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
-        // Only non-retained slices inherit the unpooled slice's character delegate.
-        // Independently counted pooled views and duplicates keep their local decoder.
-        if (IsIndependent || !_fixedCapacity) return base.GetString(index, length, encoding);
-        ArgumentNullException.ThrowIfNull(encoding);
+        // Only non-retained slices inherit the unpooled slice's character delegate
+        // (AbstractUnpooledSlicedByteBuf.getCharSequence). Independently counted pooled views and duplicates keep
+        // their local decoder; toString/readString decode locally as in the source.
+        if (IsIndependent || !_fixedCapacity) return base.GetCharSequence(index, length, charset);
+        ArgumentNullException.ThrowIfNull(charset);
         CheckIndex(index, length);
-        return Root.GetString(_offset + index, length, encoding);
+        return Root.GetCharSequence(_offset + index, length, charset);
     }
     public override int Capacity
     {
@@ -179,15 +181,17 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     }
     public override int SetBytes(int index, Stream source, int length)
     {
+        EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        EnsureCanWrite(); CheckIndex(index, length);
+        CheckIndex(index, length);
         return Root.SetBytes(_offset + index, source, length);
     }
     public override async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
         CancellationToken cancellationToken = default)
     {
+        EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        EnsureCanWrite(); CheckIndex(index, length);
+        CheckIndex(index, length);
         return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
     // Forward the channel policy with translated buffer coordinates; the file
@@ -208,16 +212,16 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     }
     public override int SetBytes(int index, Socket source, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         return Root.SetBytes(_offset + index, source, length);
     }
     public override async ValueTask<int> SetBytesAsync(int index, Socket source, int length,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
         return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
@@ -276,8 +280,8 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     }
     public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         Root.SetBytes(_offset + index, source, sourceIndex, length);
         return this;
@@ -420,7 +424,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         WriterIndex += 8;
         return this;
     }
-    public override int ReferenceCount => _referenceCountDelegate?.ReferenceCount ?? base.ReferenceCount;
+    public override int RefCnt => _referenceCountDelegate?.RefCnt ?? base.RefCnt;
     public override ByteBuf Retain(int increment = 1)
     {
         if (IsIndependent) base.Retain(increment); else _referenceCountDelegate.Retain(increment);

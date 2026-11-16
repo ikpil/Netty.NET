@@ -31,7 +31,7 @@ public static partial class ByteBufUtil
     public static bool IsAccessible(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-        return buffer.ReferenceCount != 0;
+        return buffer.RefCnt != 0;
     }
 
     /**
@@ -41,7 +41,7 @@ public static partial class ByteBufUtil
     public static ByteBuf EnsureAccessible(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-        int count = buffer.ReferenceCount;
+        int count = buffer.RefCnt;
         if (count == 0) throw new IllegalReferenceCountException(count);
         return buffer;
     }

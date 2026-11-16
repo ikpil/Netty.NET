@@ -100,7 +100,7 @@ public class ByteBufArrayExtractionTest
             Assert.Equal(data[20..], ByteBufUtil.GetBytes(b, 20, 12));
             Assert.Equal(data[20..], ByteBufUtil.GetBytes(b, 20, 12, false));
             b.SetIndex(4, 21).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(20, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(3, b.ReaderIndex); Assert.Equal(20, b.WriterIndex); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }
@@ -145,7 +145,7 @@ public class ByteBufArrayExtractionTest
             byte before = b.GetByte(0); copy[0] ^= 64; Assert.Equal(before, b.GetByte(0));
             byte[] defaultCopy = ByteBufUtil.GetBytes(b);
             Assert.NotSame(extracted, defaultCopy); defaultCopy[0] ^= 32; Assert.Equal(before, b.GetByte(0));
-            Assert.Equal(1, owner.ReferenceCount);
+            Assert.Equal(1, owner.RefCnt);
         }
         finally { owner.Release(); }
     }
@@ -186,6 +186,6 @@ public class ByteBufArrayExtractionTest
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.GetBytes(null, 0, 0, false));
         Assert.Same(Array.Empty<byte>(), ByteBufUtil.GetBytes(Unpooled.EmptyBuffer));
         Assert.Same(Array.Empty<byte>(), ByteBufUtil.GetBytes(Unpooled.EmptyBuffer, 0, 0, false));
-        Assert.Equal(1, Unpooled.EmptyBuffer.ReferenceCount);
+        Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
     }
 }

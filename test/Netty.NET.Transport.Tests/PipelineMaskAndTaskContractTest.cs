@@ -118,30 +118,30 @@ public class PipelineMaskAndTaskContractTest
     private class SkippedRead : ChannelInboundHandlerAdapter
     {
         [Skip]
-        public override void ChannelRead(ChannelHandlerContext context, object message) => context.FireChannelRead(message);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ctx.FireChannelRead(msg);
     }
     private sealed class ActiveOverride : SkippedRead
     {
         internal int Reads;
-        public override void ChannelRead(ChannelHandlerContext context, object message) { Reads++; context.FireChannelRead(message); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
     }
     private sealed class ExplicitSkippedRead : ChannelInboundHandlerAdapter, IChannelInboundHandler
     {
         internal int Reads;
         [Skip]
-        void IChannelInboundHandler.ChannelRead(ChannelHandlerContext context, object message) { Reads++; context.FireChannelRead(message); }
+        void IChannelInboundHandler.ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
     }
     private sealed class BlockUserEvent(TaskCompletionSource entered, ManualResetEventSlim release, TaskCompletionSource removed) : ChannelInboundHandlerAdapter
     {
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt)
-        { entered.TrySetResult(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); context.FireUserEventTriggered(evt); }
-        public override void HandlerRemoved(ChannelHandlerContext context) => removed.TrySetResult();
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        { entered.TrySetResult(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); ctx.FireUserEventTriggered(evt); }
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => removed.TrySetResult();
     }
     private sealed class RecordEvents(ChannelWriter<string> events, TaskCompletionSource removed) : ChannelInboundHandlerAdapter
     {
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt) => events.TryWrite((string)evt);
-        public override void ChannelRead(ChannelHandlerContext context, object message) => events.TryWrite((string)message);
-        public override void HandlerRemoved(ChannelHandlerContext context) => removed.TrySetResult();
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => events.TryWrite((string)evt);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => events.TryWrite((string)msg);
+        public override void HandlerRemoved(IChannelHandlerContext ctx) => removed.TrySetResult();
     }
     private sealed class ForeignCompletion(IEventExecutor executor) : ChannelOutboundHandlerAdapter
     {
@@ -151,32 +151,32 @@ public class PipelineMaskAndTaskContractTest
             executor.Execute(() => producer.SetResult());
             return producer.Task;
         }
-        public override Task BindAsync(ChannelHandlerContext c, EndPoint address, CancellationToken token) => Complete();
-        public override Task ConnectAsync(ChannelHandlerContext c, EndPoint remote, EndPoint local, CancellationToken token) => Complete();
-        public override Task DisconnectAsync(ChannelHandlerContext c, CancellationToken token) => Complete();
-        public override Task CloseAsync(ChannelHandlerContext c, CancellationToken token) => Complete();
-        public override Task DeregisterAsync(ChannelHandlerContext c, CancellationToken token) => Complete();
-        public override Task WriteAsync(ChannelHandlerContext c, object message, CancellationToken token) => Complete();
+        public override Task BindAsync(IChannelHandlerContext c, EndPoint address, CancellationToken token) => Complete();
+        public override Task ConnectAsync(IChannelHandlerContext c, EndPoint remote, EndPoint local, CancellationToken token) => Complete();
+        public override Task DisconnectAsync(IChannelHandlerContext c, CancellationToken token) => Complete();
+        public override Task CloseAsync(IChannelHandlerContext c, CancellationToken token) => Complete();
+        public override Task DeregisterAsync(IChannelHandlerContext c, CancellationToken token) => Complete();
+        public override Task WriteAsync(IChannelHandlerContext c, object msg, CancellationToken token) => Complete();
     }
     private sealed class OwnerObserver(ChannelWriter<bool> callbacks) : ChannelOutboundHandlerAdapter
     {
-        private async Task Observe(ChannelHandlerContext c, Task operation)
+        private async Task Observe(IChannelHandlerContext c, Task operation)
         {
             await operation.ConfigureAwait(false);
             // Native Task consumers choose scheduling. Restore explicit ownership before touching handler state.
             await c.Executor.SubmitAsync(() => callbacks.TryWrite(c.Executor.InEventLoop())).ConfigureAwait(false);
         }
-        public override Task BindAsync(ChannelHandlerContext c, EndPoint address, CancellationToken token) => Observe(c, c.BindAsync(address, token));
-        public override Task ConnectAsync(ChannelHandlerContext c, EndPoint remote, EndPoint local, CancellationToken token) => Observe(c, c.ConnectAsync(remote, local, token));
-        public override Task DisconnectAsync(ChannelHandlerContext c, CancellationToken token) => Observe(c, c.DisconnectAsync(token));
-        public override Task CloseAsync(ChannelHandlerContext c, CancellationToken token) => Observe(c, c.CloseAsync(token));
-        public override Task DeregisterAsync(ChannelHandlerContext c, CancellationToken token) => Observe(c, c.DeregisterAsync(token));
-        public override Task WriteAsync(ChannelHandlerContext c, object message, CancellationToken token) => Observe(c, c.WriteAsync(message, token));
+        public override Task BindAsync(IChannelHandlerContext c, EndPoint address, CancellationToken token) => Observe(c, c.BindAsync(address, token));
+        public override Task ConnectAsync(IChannelHandlerContext c, EndPoint remote, EndPoint local, CancellationToken token) => Observe(c, c.ConnectAsync(remote, local, token));
+        public override Task DisconnectAsync(IChannelHandlerContext c, CancellationToken token) => Observe(c, c.DisconnectAsync(token));
+        public override Task CloseAsync(IChannelHandlerContext c, CancellationToken token) => Observe(c, c.CloseAsync(token));
+        public override Task DeregisterAsync(IChannelHandlerContext c, CancellationToken token) => Observe(c, c.DeregisterAsync(token));
+        public override Task WriteAsync(IChannelHandlerContext c, object msg, CancellationToken token) => Observe(c, c.WriteAsync(msg, token));
     }
     private sealed class ThrowWrite(Exception error) : ChannelDuplexHandler
     {
         internal int PipelineErrors;
-        public override Task WriteAsync(ChannelHandlerContext c, object message, CancellationToken token) => throw error;
-        public override void ExceptionCaught(ChannelHandlerContext c, Exception cause) => PipelineErrors++;
+        public override Task WriteAsync(IChannelHandlerContext c, object msg, CancellationToken token) => throw error;
+        public override void ExceptionCaught(IChannelHandlerContext c, Exception cause) => PipelineErrors++;
     }
 }

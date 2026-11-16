@@ -2507,6 +2507,14 @@ artifacts/buffer-pooled-derived-validation (ignored), buffer-pooled-derived-*.tr
 
 ## Adaptive allocation policy and buddy core
 
+Superseded names (2026-11-16): the internal Adaptive* types named in this and later
+historical sections were moved into AdaptivePoolingAllocator as the source's nested types.
+AdaptiveAllocationPolicy became the SizeClass/Buddy ChunkManagementStrategy and
+ChunkController types, AdaptiveBuddyTree was folded into BuddyChunk, and AdaptiveMagazine,
+AdaptiveChunk, AdaptiveSizeClassedChunk and the chunk caches became Magazine, Chunk,
+SizeClassedChunk and the IChunkCache implementations. See docs/common-clr-design.md
+"Public name categories (2026-11-16)".
+
 The pinned allocator's actual size/controller/tree code is now ported as internal
 AdaptiveAllocationPolicy and AdaptiveBuddyTree components. It uses 16 fixed classes,
 128-KiB minimum chunks with at least 32 segments, power-of-two buddy reservations,
@@ -6167,6 +6175,9 @@ unpooled, pooled and adaptive heap/native roots. The original pooled allocation
 helper checks indices before and after resetting marks; adaptive factories check
 storage kind. The narrow AbstractPooledByteBufTransferTest helper preserves the
 pre-existing AbstractPooledByteBufTest arena fixture and all its consumers unchanged.
+(Superseded on 2026-11-16: the helper is now the Java-shaped AbstractPooledByteBufTest
+and the arena fixture is AbstractPooledArenaByteBufTest; see
+[Buffer test fixture completion](#buffer-test-fixture-completion-2026-11-16).)
 
 Memory<byte> replaces a heap ByteBuffer backing. CLR and Java RNG streams differ,
 but each preserves its original seed/replay test strategy. Explicit unchecked byte
@@ -6829,3 +6840,155 @@ provider/exact-input gaps outside the completed ByteBufUtilTest and consumer/mod
 validation. Implement confirmed portable gaps
 first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.
+
+## Source allocator defaults, cache eligibility and lock-free binding lookup
+
+This unit supersedes the earlier one-arena, cache-off and lowMemory=false defaults recorded above.
+PooledByteBufAllocator now follows the source for both the shared Default and explicit constructors.
+Default arena counts are min(2 * availableProcessors, maxMemory / chunkSize / 2 / 3), with
+GCMemoryInfo.TotalAvailableMemoryBytes standing for Runtime.maxMemory() and a positive
+io.netty.maxDirectMemory overriding the direct budget. Omitted constructor arguments take the DEFAULT_*
+values (arena counts, page size, maxOrder, small/normal cache sizes, useCacheForAllThreads, alignment).
+Cache sizes pass through unchecked, so nonpositive sizes disable a cache. Caches are created only for
+useCacheForAllThreads, FastThreadLocalThread or executor-mapped threads, for every allocator. Allocation
+no longer holds an allocator-wide lock: the binding registry is read lock-free and PoolArena and
+PoolThreadCache synchronize themselves. AdaptiveByteBufAllocator keeps the source argument order
+(preferDirect, useCacheForNonEventLoopThreads). Its lowMemory default is the source IS_LOW_MEM: a GC
+memory budget of at most 512 MiB. Read-only views reject Stream, Socket and ByteBuf range mutations
+before the null-source check, as ReadOnlyByteBuf does.
+
+Evidence: pinned-source and CLR probes print the same values for the default budget and for
+-Xmx256m/DOTNET_GCHeapHardLimit=0x10000000 (24 and 10 arenas per kind; 256/64 cache sizes; caching
+only for eligible threads; adaptive low-memory usage 32768 then 0). Without -Xmx the JVM default heap is
+a quarter of physical memory, whereas the CLR GC budget is all physical memory (75% in containers).
+Original-style fixtures now pass explicit arena counts and useCacheForAllThreads where the source
+fixtures do. tools/Update-BufferPortingManifest.ps1 -Check fails identically at HEAD under Windows
+PowerShell 5.1 (testWriteCharSequence); it was not run under PowerShell 7.
+
+## Culture-independent number text (2026-11-14)
+
+Buffer diagnostics and messages that put numbers into text (PoolChunk handle
+assertion, PoolSubpage bitmap failure, UnpooledByteBufAllocatorMetric, adaptive
+buddy chunk/tree and thread-local cache diagnostics, ByteBufInputStream field size)
+render them with the invariant culture, as Java concatenation does. The rule, the
+Roslyn scan evidence and the String.format exception are recorded in
+[common-clr-design.md](common-clr-design.md#source-number-text-in-messages).
+
+AbstractByteBufAllocator.toString now prints `simpleClassName(this) + "(directByDefault: " + directByDefault + ')'`
+with Java's "true"/"false"; see
+[source null and boolean text](common-clr-design.md#source-null-and-boolean-text).
+
+DefaultByteBufHolder, PooledByteBufAllocatorMetric and UnpooledByteBufAllocatorMetric
+name themselves with StringUtil.SimpleClassName(this), as the source's
+simpleClassName(this); see [source class names](common-clr-design.md#source-class-names-in-text).
+
+## Java public names restored (2026-11-14)
+
+refCnt(), isReadable()/isReadable(int size), isWritable()/isWritable(int size),
+toString(Charset charset) and toString(int index, int length, Charset charset) are
+RefCnt, IsReadable()/IsReadable(int size), IsWritable()/IsWritable(int size) and
+ToString(Encoding charset)/ToString(int index, int length, Encoding charset);
+PooledByteBufAllocator exposes the nine source constructors. The public API checker
+targets were moved accordingly. See
+[naming policy decisions](common-clr-design.md#naming-policy-decisions-2026-11-14).
+
+## Buffer test fixture completion (2026-11-16)
+
+This unit closes the 45 Buffer test entries that were `pending` or `in-progress`.
+Each one is now either ported and `verified`, or recorded as not ported with
+evidence. The C# test classes now mirror the Java inheritance. xUnit, like JUnit,
+runs inherited `[Fact]`s once per concrete class. Where a Java fixture overrides an
+inherited test, the C# base method is `virtual` and the fixture overrides it under
+the same name.
+
+Hierarchies:
+
+- `ByteBufAllocatorTest` (abstract) -> `AbstractByteBufAllocatorTest<T>` ->
+  `UnpooledByteBufAllocatorTest`, `PooledByteBufAllocatorTest` (->
+  `AlignedPooledByteBufAllocatorTest`) and `AdaptiveByteBufAllocatorTest` (->
+  `AdaptiveByteBufAllocatorUseCacheForNonEventLoopThreadsTest`).
+- `AbstractByteBufTest` -> `AbstractSingleRegionByteBufTest` (the four single-NIO-region
+  bodies) -> `AbstractContiguousByteBufTest` (the five finite-capacity bodies). The
+  concrete fixtures below inherit from these.
+  - `BigEndianHeapByteBufTest` -> `SimpleLeakAwareByteBufTest` -> `AdvancedLeakAwareByteBufTest`
+  - `BigEndianDirectByteBufTest` -> `WrappedUnpooledUnsafeByteBufTest`
+  - `DuplicatedByteBufTest` -> `RetainedDuplicatedByteBufTest`
+  - `SlicedByteBufTest` -> `RetainedSlicedByteBufTest`
+  - `AbstractPooledByteBufTest` -> `PooledBigEndianHeap/DirectByteBufTest` and
+    `PooledAlignedBigEndianDirectByteBufTest`; `AbstractAdaptiveByteBufTest` ->
+    `AdaptiveBigEndianHeap/DirectByteBufTest`
+  - `AbstractCompositeByteBufTest` -> `BigEndianCompositeByteBufTest` ->
+    `WrappedCompositeByteBufTest` -> `SimpleLeakAwareCompositeByteBufTest` ->
+    `AdvancedLeakAwareCompositeByteBufTest`
+- `ReadOnlyDirectByteBufferBufTest` -> `ReadOnlyByteBufferBufTest` and
+  `ReadOnlyUnsafeDirectByteBufferBufTest`.
+
+Java's `newBuffer` assumption `maxCapacity == Integer.MAX_VALUE` (sliced, composite and
+wrapped-address fixtures) is expressed in the class structure instead of as a skip.
+Those fixtures do not inherit `AbstractContiguousByteBufTest`. Bodies that ran only in
+CLR provider-matrix classes now live in the inherited base:
+`AbstractByteBufTest.DerivedViews.cs`, `.Text.cs` and `.Lifetime.cs`. The
+provider-matrix classes stay as separately named CLR supplements. The same applies
+to the composite bodies that use `newCompositeBuffer()`, which is now a virtual
+factory that `WrappedCompositeByteBufTest` overrides as in Java. CLR supplement tests
+that used to share a class name with an original fixture moved to separately named
+classes (`*ClrContractTest`, `*ContractTest`, `*FactoryTest`, `AbstractPooledArenaByteBufTest`,
+`SharedSizeClassedChunkCacheTest`). Each manifest entry lists these moves under `movedTests`.
+
+Java `@Disabled` overrides become overrides with `[Fact(Skip = "<original reason>")]`.
+xUnit v3 reports them as skipped and the base body does not run. These are the only
+skipped tests.
+
+Not ported (owner decisions, 2026-11-16):
+
+- `deprecated-not-ported` (7): LittleEndianHeap/Direct/Composite, PooledLittleEndianHeap/Direct
+  and AdaptiveLittleEndianHeap/Direct. Each fixture only reruns the inherited suite
+  through `ByteBuf.order(ByteOrder)`. That member is `@Deprecated` with "use the Little
+  Endian accessors, e.g. {@code getShortLE}, {@code getIntLE} instead of creating a buffer
+  with swapped {@code endianness}." The big-endian C# counterpart runs the same suite.
+  Its LE round-trip and explicit-LE tests exercise the replacement accessors.
+- `jvm-only-replaced` (4): BigEndianUnsafeDirect, BigEndianUnsafeNoCleanerDirect,
+  LittleEndianUnsafeDirect and LittleEndianUnsafeNoCleanerDirect. They only select
+  `sun.misc.Unsafe` or no-cleaner direct buffers. Both LittleEndianUnsafe* fixtures
+  override `newBuffer` without calling `order(LITTLE_ENDIAN)`, so the deprecation rule
+  does not apply to them. `BigEndianDirectByteBufTest` runs the same suite on the single
+  CLR native provider (`NativeMemoryAllocator`).
+- Method level: `ReadOnlyDirectByteBufferBufTest.testConstructWithWritable` and its base
+  `testMemoryAddress` are `jvm-only-replaced`, with sources in the manifest. The
+  `ReadOnlyUnsafeDirectByteBufferBufTest.testMemoryAddress` override is ported.
+
+`tools/Update-BufferPortingManifest.ps1 -Check` now covers every test entry:
+
+- Every `verified`, `deprecated-not-ported` or `jvm-only-replaced` test entry must give
+  each declared `@Test`, `@ParameterizedTest` or `@RepeatedTest` method exactly one
+  decision.
+  - A case mapping's first CLR test must carry the Java name, with only the first
+    letter's case changed, and be declared in a listed implementation file.
+  - A not-ported method needs its source contract, reason, existing CLR evidence
+    files and https URLs.
+- Verified fixtures that inherit original tests need an `inheritedSuiteReview`.
+- Deprecated fixtures quote the exact `@deprecated` text. The checker reads it from
+  the pinned javadoc directly above `@Deprecated`. They also name the replacement
+  accessors found in that text, and show the deprecated call in the fixture code or
+  in a recorded ancestor fixture.
+- JVM-only fixtures record the selection code (`PlatformDependent.hasUnsafe()`,
+  `new UnpooledUnsafeDirectByteBuf(` ...), which must appear in the pinned fixture.
+- CLR test declarations may be `virtual`, `override` or `sealed`.
+- `-ManifestPath` checks a copy. Fourteen deliberately broken copies are each rejected
+  with their specific message.
+
+Earlier verified fixtures without explicit mappings got same-name `ported` mappings:
+AbstractReferenceCountedByteBufTest, AdaptivePoolingAllocatorTest, ByteProcessorTest,
+ConsolidationTest, DefaultByteBufHolderTest, UnreleaseableByteBufTest and the three
+search fixtures. Their bodies were reviewed earlier; only the partition is new.
+
+One src change: `PooledByteBufAllocator` rejects maxOrder outside 0-14 with the pinned
+message `"maxOrder: " + maxOrder + " (expected: 0-14)"`, which `testRejectNegativeMaxOrder`
+checks. The exception type is unchanged.
+
+Results: `dotnet test` on Buffer.Tests (net10.0 Debug, private artifacts path) reports 36232 passed,
+9 skipped and 0 failed, against the 30136 baseline. The 9 skips are the original `@Disabled` overrides:
+two each in SlicedByteBufTest and RetainedSlicedByteBufTest, two in each adaptive fixture, and one in
+UnpooledByteBufAllocatorTest. Both Buffer checkers pass. The manifest now has 49 verified, 7
+deprecated-not-ported, 4 JVM-only-replaced and 6 clr-replacement test entries, and no pending or
+in-progress test entry.

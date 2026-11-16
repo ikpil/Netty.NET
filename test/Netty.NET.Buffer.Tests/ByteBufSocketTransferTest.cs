@@ -59,7 +59,7 @@ public class ByteBufSocketTransferTest
         Assert.Equal(2 + sent, b.ReaderIndex); Assert.Equal(18, b.WriterIndex);
         b.ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(2, b.ReaderIndex); Assert.Equal(18, b.WriterIndex);
-        Assert.Equal(1, b.ReferenceCount);
+        Assert.Equal(1, b.RefCnt);
         Assert.False(pair.Local.SafeHandle.IsClosed);
     }
 
@@ -98,7 +98,7 @@ public class ByteBufSocketTransferTest
         Assert.Equal(0, await Write(b, async, second.Local, 12, second.Token));
         b.ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(2, b.ReaderIndex); Assert.Equal(5, b.WriterIndex);
-        Assert.Equal(1, b.ReferenceCount);
+        Assert.Equal(1, b.RefCnt);
     }
 
     [Theory]
@@ -270,7 +270,7 @@ public class ByteBufSocketTransferTest
         }
         public void Dispose()
         {
-            if (Buffer.ReferenceCount != 0) Buffer.Release(Buffer.ReferenceCount);
+            if (Buffer.RefCnt != 0) Buffer.Release(Buffer.RefCnt);
             _allocator?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
         }

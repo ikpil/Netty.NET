@@ -14,8 +14,6 @@
  * under the License.
  */
 
-using System;
-
 namespace Netty.NET.Transport.Channels;
 
 /**
@@ -26,8 +24,10 @@ namespace Netty.NET.Transport.Channels;
  * All the methods are expected to be called from the {@link IoHandler} on which this {@link IoHandle}
  * was registered via {@link IoHandler#register(IoHandle)}.
  */
-/// <summary>An I/O resource whose lifecycle and completion callbacks run on its event loop.</summary>
-public interface IIoHandle : IDisposable
+// CLR: java.lang.AutoCloseable only enables try-with-resources; the IoHandler calls Close() directly, so the CLR
+// interface keeps the Java close() method instead of IDisposable.
+// https://learn.microsoft.com/dotnet/api/system.idisposable
+public interface IIoHandle
 {
     /**
      * Be called once there is something to handle.
@@ -36,13 +36,13 @@ public interface IIoHandle : IDisposable
      * @param ioEvent       the {@link IoEvent} that must be handled. The {@link IoEvent} is only valid
      *                      while this method is executed and so must not escape it.
      */
-    void HandleCompletion(IoRegistration registration, object completion);
+    void Handle(IIoRegistration registration, IIoEvent ioEvent);
 
     /**
      * Called once this {@link IoHandle} was registered and so will start to receive events
      * via {@link #handle(IoRegistration, IoEvent)}.
      */
-    void Registered(IoRegistration registration)
+    void Registered()
     {
         // Noop by default.
     }
@@ -61,5 +61,5 @@ public interface IIoHandle : IDisposable
      * still receive events via {@link #handle(IoRegistration, IoEvent)} (if it was previous be registered and so its
      * {@link #registered()} method was called) until the {@link #unregistered()} method is called.
      */
-    // CLR shutdown invalidates the registration before disposing the handle.
+    void Close();
 }

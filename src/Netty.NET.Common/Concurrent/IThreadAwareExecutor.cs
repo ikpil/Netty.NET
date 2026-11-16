@@ -19,12 +19,12 @@ using System.Threading;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * IExecutor that is aware its execution thread.
+ * Executor that is aware its execution thread.
  */
 public interface IThreadAwareExecutor : IExecutor
 {
     /**
-     * Return {@code true} if the given {@link Thread} is used by this {@link IThreadAwareExecutor} to execute
+     * Return {@code true} if the given {@link Thread} is used by this {@link ThreadAwareExecutor} to execute
      * work.
      */
     bool IsExecutorThread(Thread thread);

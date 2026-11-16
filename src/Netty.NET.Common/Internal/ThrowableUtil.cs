@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -35,14 +36,16 @@ public static class ThrowableUtil
         ObjectUtil.CheckNotNull(cause, "cause");
         ObjectUtil.CheckNotNull(clazz, "clazz");
         // CLR permits assigning a remote trace only before an exception has been thrown.
-        if (cause.StackTrace == null) ExceptionDispatchInfo.SetRemoteStackTrace(cause, "   at " + clazz.FullName + "." + method + " (Unknown Source)");
+        // CLR: the single frame uses StackTraceElement.toString() for a null file name and line -1,
+        // "className.method(Unknown Source)", with Type.FullName for Class.getName().
+        if (cause.StackTrace == null) ExceptionDispatchInfo.SetRemoteStackTrace(cause, "   at " + clazz.FullName + "." + method + "(Unknown Source)");
         return cause;
     }
     // CLR factory compatibility overload retains the caller's source location.
     public static T UnknownStackTrace<T>(Func<string, T> factory, Type clazz,
         [CallerMemberName] string method = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) where T : Exception
     {
-        return UnknownStackTrace(factory("location: " + clazz.Name + "::" + method + "() in " + file + ":" + line), clazz, method);
+        return UnknownStackTrace(factory("location: " + clazz.Name + "::" + method + "() in " + file + ":" + line.ToString(CultureInfo.InvariantCulture)), clazz, method);
     }
     /**
      * Gets the stack trace from a Throwable as a String.

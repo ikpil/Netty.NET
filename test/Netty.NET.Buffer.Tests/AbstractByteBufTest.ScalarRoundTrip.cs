@@ -169,27 +169,27 @@ public abstract partial class AbstractByteBufTest
         {
             byte value = unchecked((byte)NextSignedInt32());
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             buffer.WriteByte(value);
         }
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             byte value = unchecked((byte)NextSignedInt32());
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             Assert.Equal(value, buffer.ReadByte());
         }
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
     [Fact]
@@ -200,27 +200,27 @@ public abstract partial class AbstractByteBufTest
         {
             byte value = unchecked((byte)NextSignedInt32());
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             buffer.WriteByte(value);
         }
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             int value = NextSignedInt32() & 0xFF;
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             Assert.Equal(value, buffer.ReadByte());
         }
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
     [Fact]
@@ -572,7 +572,7 @@ public abstract partial class AbstractByteBufTest
         {
             short value = unchecked((short)NextSignedInt32());
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteShort(value);
@@ -585,14 +585,14 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadShort());
@@ -605,8 +605,8 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
     private void AssertSequentialUnsignedShortAccess(bool testBigEndian)
@@ -616,7 +616,7 @@ public abstract partial class AbstractByteBufTest
         {
             short value = unchecked((short)NextSignedInt32());
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteShort(value);
@@ -629,14 +629,14 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i += 2)
         {
             int value = NextSignedInt32() & 0xFFFF;
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadUnsignedShort());
@@ -649,8 +649,8 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
     private void AssertSequentialMediumAccess(bool testBigEndian)
@@ -660,7 +660,7 @@ public abstract partial class AbstractByteBufTest
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteMedium(value);
@@ -680,7 +680,7 @@ public abstract partial class AbstractByteBufTest
         {
             int value = NextSignedInt32() << 8 >> 8;
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadMedium());
@@ -704,7 +704,7 @@ public abstract partial class AbstractByteBufTest
         {
             int value = NextSignedInt32() & 0x00FFFFFF;
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteMedium(value);
@@ -724,7 +724,7 @@ public abstract partial class AbstractByteBufTest
         {
             int value = NextSignedInt32() & 0x00FFFFFF;
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadUnsignedMedium());
@@ -748,7 +748,7 @@ public abstract partial class AbstractByteBufTest
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteInt(value);
@@ -761,14 +761,14 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadInt());
@@ -781,8 +781,8 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
     private void AssertSequentialUnsignedIntAccess(bool testBigEndian)
@@ -792,7 +792,7 @@ public abstract partial class AbstractByteBufTest
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteInt(value);
@@ -805,14 +805,14 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             long value = NextSignedInt32() & 0xFFFFFFFFL;
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadUnsignedInt());
@@ -825,8 +825,8 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
     private void AssertSequentialLongAccess(bool testBigEndian)
@@ -836,7 +836,7 @@ public abstract partial class AbstractByteBufTest
         {
             long value = NextSignedInt64();
             Assert.Equal(i, buffer.WriterIndex);
-            Assert.True(buffer.IsWritable);
+            Assert.True(buffer.IsWritable());
             if (testBigEndian)
             {
                 buffer.WriteLong(value);
@@ -849,14 +849,14 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
         for (int i = 0; i < buffer.Capacity; i += 8)
         {
             long value = NextSignedInt64();
             Assert.Equal(i, buffer.ReaderIndex);
-            Assert.True(buffer.IsReadable);
+            Assert.True(buffer.IsReadable());
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadLong());
@@ -869,8 +869,8 @@ public abstract partial class AbstractByteBufTest
 
         Assert.Equal(buffer.Capacity, buffer.ReaderIndex);
         Assert.Equal(buffer.Capacity, buffer.WriterIndex);
-        Assert.False(buffer.IsReadable);
-        Assert.False(buffer.IsWritable);
+        Assert.False(buffer.IsReadable());
+        Assert.False(buffer.IsWritable());
     }
 
 }

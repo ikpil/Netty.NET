@@ -88,7 +88,7 @@ public class PooledProviderCopyTest
             root.SetIndex(3, 10).MarkReaderIndex().MarkWriterIndex();
             if (view == 2) target = root.Slice(2, 9);
             if (view == 3) target = root.RetainedSlice(2, 9);
-            int reader = root.ReaderIndex, writer = root.WriterIndex, claims = root.ReferenceCount;
+            int reader = root.ReaderIndex, writer = root.WriterIndex, claims = root.RefCnt;
             ByteBuf Copy() => view == 1 ? target.Copy() : target.Copy(view >= 2 ? 1 : 3, 7);
             if (mode != 0) Assert.Same(observation.Failure, Assert.Throws<CopyFailure>(() => Copy()));
             else result = Copy();
@@ -98,15 +98,15 @@ public class PooledProviderCopyTest
             Assert.Equal(direct ? "Buffer" : "Span", observation.Method);
             Assert.Equal(1, observation.Calls); Assert.Equal(7, observation.Length);
             if (direct) { Assert.Same(root, observation.Source); Assert.Equal(3, observation.SourceIndex); }
-            Assert.Equal(mode == 0 ? 1 : 0, destination.ReferenceCount);
+            Assert.Equal(mode == 0 ? 1 : 0, destination.RefCnt);
             if (mode == 0)
             {
                 Assert.Same(destination, result); Assert.Equal(direct, result.IsDirect);
-                Assert.Same(allocator, result.Allocator); Assert.Equal((0, 7), (result.ReaderIndex, result.WriterIndex));
+                Assert.Same(allocator, result.Alloc()); Assert.Equal((0, 7), (result.ReaderIndex, result.WriterIndex));
                 Assert.Equal(data.AsSpan(3, 7).ToArray(), result.AsSpan(0, 7).ToArray());
                 result.SetByte(0, 77); Assert.Equal(3, root.GetByte(3));
             }
-            Assert.Equal((reader, writer, claims), (root.ReaderIndex, root.WriterIndex, root.ReferenceCount));
+            Assert.Equal((reader, writer, claims), (root.ReaderIndex, root.WriterIndex, root.RefCnt));
             root.SetIndex(4, 11).ResetWriterIndex().ResetReaderIndex(); Assert.Equal((3, 10), (root.ReaderIndex, root.WriterIndex));
             Assert.Equal(data, root.AsSpan(0, capacity).ToArray());
             Assert.Equal(new byte[capacity], guard.AsSpan(0, capacity).ToArray());
@@ -115,7 +115,7 @@ public class PooledProviderCopyTest
         {
             if (view == 3 && !ReferenceEquals(target, root)) target.Release();
             root.Release(); guard.Release();
-            foreach (ByteBuf b in allocator.Created) if (b.ReferenceCount > 0) b.Release();
+            foreach (ByteBuf b in allocator.Created) if (b.RefCnt > 0) b.Release();
             arena.Dispose(); Assert.Equal(0, native.ReservedBytes);
         }
     }

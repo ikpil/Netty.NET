@@ -203,14 +203,14 @@ public partial class LocalChannelSourceTest
                     }
                     try
                     { await peer.WriteAndFlushAsync(data2.RetainedDuplicate()); }
-                    catch (IOException) { writeFailed.TrySetResult(); }
+                    catch (ClosedChannelException) { writeFailed.TrySetResult(); }
                 });
                 return copy.CloseAsync();
             });
             await messageRead.WaitAsync();
             await writeFailed.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await peer.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
-            await client.CloseCompletion.WaitAsync(TimeSpan.FromSeconds(5));
+            await peer.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
+            await client.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             await completion;
             if (peerWrite != null)
                 await peerWrite;
@@ -245,42 +245,42 @@ public partial class LocalChannelSourceTest
     private sealed class MatchRead(ByteBuf expected, MessageCount count, bool inactive = false, bool writeOnActive = false, int? expectedCount = null)
         : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context)
-        { if (writeOnActive) _ = context.WriteAndFlushAsync(expected.RetainedDuplicate()); else context.FireChannelActive(); }
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        { if (writeOnActive) _ = ctx.WriteAndFlushAsync(expected.RetainedDuplicate()); else ctx.FireChannelActive(); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            if (expected.Equals(message) && (!expectedCount.HasValue || count.Current == expectedCount.Value))
-            { ReferenceCountUtil.SafeRelease(message); count.Signal(); }
+            if (expected.Equals(msg) && (!expectedCount.HasValue || count.Current == expectedCount.Value))
+            { ReferenceCountUtil.SafeRelease(msg); count.Signal(); }
             else
-                context.FireChannelRead(message);
+                ctx.FireChannelRead(msg);
         }
-        public override void ChannelInactive(ChannelHandlerContext context)
-        { if (inactive) count.Signal(); context.FireChannelInactive(); }
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        { if (inactive) count.Signal(); ctx.FireChannelInactive(); }
     }
     private sealed class EchoThenClose(ByteBuf data, MessageCount count) : ChannelInboundHandlerAdapter
     {
         internal object Unreleased;
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            if (data.Equals(message))
+            if (data.Equals(msg))
             {
-                Unreleased = message;
+                Unreleased = msg;
                 count.Signal();
-                _ = context.WriteAndFlushAsync(data.RetainedDuplicate());
-                _ = context.CloseAsync();
+                _ = ctx.WriteAndFlushAsync(data.RetainedDuplicate());
+                _ = ctx.CloseAsync();
             }
             else
-                context.FireChannelRead(message);
+                ctx.FireChannelRead(msg);
         }
-        public override void ChannelInactive(ChannelHandlerContext context) { count.Signal(); context.FireChannelInactive(); }
+        public override void ChannelInactive(IChannelHandlerContext ctx) { count.Signal(); ctx.FireChannelInactive(); }
     }
     private sealed class ReadFrames(MessageCount count) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
-            if (message is not ByteBuf buffer)
-            { context.FireChannelRead(message); return; }
-            while (buffer.IsReadable)
+            if (msg is not ByteBuf buffer)
+            { ctx.FireChannelRead(msg); return; }
+            while (buffer.IsReadable())
             {
                 int size = buffer.ReadInt();
                 var slice = buffer.ReadRetainedSlice(size);

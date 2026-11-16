@@ -53,6 +53,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Buffers;
 using System.Text;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -150,7 +151,7 @@ internal sealed class ByteBufView : ByteBuf
     protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
     { EnsureCanWrite(); CheckIndex(index, source.Length); _parent.SetBytesFromIoCore(_offset + index, source); }
     protected override void SetZeroCore(int index, int length) => _parent.SetZero(_offset + index, length);
-    public override IByteBufAllocator Allocator => _parent.Allocator;
+    public override IByteBufAllocator Alloc() => _parent.Alloc();
     public override bool IsContiguous => _parent.IsContiguous;
     public override bool IsDirect => _parent.IsDirect;
     public override bool IsReadOnly => _parent.IsReadOnly;
@@ -165,14 +166,15 @@ internal sealed class ByteBufView : ByteBuf
         }
     }
     public override ByteBuf Unwrap() => _parent;
-    public override string GetString(int index, int length, Encoding encoding)
+    // AbstractUnpooledSlicedByteBuf.getCharSequence: checkIndex0(index, length) and delegate to the parent at the
+    // translated index. toString(int, int, Charset) and readString keep AbstractByteBuf's local decoding, as in the
+    // source. CLR: duplicates (no fixed capacity) are not sliced views and keep the base implementation.
+    public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
-        if (!_fixedCapacity) return base.GetString(index, length, encoding);
-        // AbstractUnpooledSlicedByteBuf.getCharSequence delegates to its parent.
-        // CLR merges String/CharSequence reads into this one string API.
-        ArgumentNullException.ThrowIfNull(encoding);
+        if (!_fixedCapacity) return base.GetCharSequence(index, length, charset);
+        ArgumentNullException.ThrowIfNull(charset);
         CheckIndex(index, length);
-        return _parent.GetString(_offset + index, length, encoding);
+        return _parent.GetCharSequence(_offset + index, length, charset);
     }
     // AbstractByteBuf's readable overload uses its own loop, not the indexed virtual delegate.
     public override int ForEachByte(Func<byte, bool> processor)
@@ -231,15 +233,17 @@ internal sealed class ByteBufView : ByteBuf
     }
     public override int SetBytes(int index, Stream source, int length)
     {
+        EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        EnsureCanWrite(); CheckIndex(index, length);
+        CheckIndex(index, length);
         return _parent.SetBytes(_offset + index, source, length);
     }
     public override async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
         CancellationToken cancellationToken = default)
     {
+        EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        EnsureCanWrite(); CheckIndex(index, length);
+        CheckIndex(index, length);
         return await _parent.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
     // Forward the channel policy with translated buffer coordinates; the file
@@ -260,16 +264,16 @@ internal sealed class ByteBufView : ByteBuf
     }
     public override int SetBytes(int index, Socket source, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         return _parent.SetBytes(_offset + index, source, length);
     }
     public override async ValueTask<int> SetBytesAsync(int index, Socket source, int length,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
         return await _parent.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
@@ -328,8 +332,8 @@ internal sealed class ByteBufView : ByteBuf
     }
     public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
-        ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         _parent.SetBytes(_offset + index, source, sourceIndex, length);
         return this;
@@ -462,7 +466,7 @@ internal sealed class ByteBufView : ByteBuf
         _parent.SetLongLE(_offset + index, value);
         return this;
     }
-    public override int ReferenceCount => _parent.ReferenceCount;
+    public override int RefCnt => _parent.RefCnt;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => _parent.Release(decrement);
     public override ByteBuf Touch(object hint = null) { _parent.Touch(hint); return this; }

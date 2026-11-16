@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
 using static Netty.NET.Buffer.Tests.AllocatorLeakDetectionTest;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -34,7 +35,7 @@ public class PooledByteBufAllocatorThreadBindingTest
     private static void AllocateAndRelease(PooledByteBufAllocator a, bool direct)
     {
         ByteBuf b = direct ? a.DirectBuffer(48) : a.HeapBuffer(48);
-        try { b.WriteInt(42); Assert.Equal(42, b.ReadInt()); Assert.Same(a, b.Allocator); }
+        try { b.WriteInt(42); Assert.Equal(42, b.ReadInt()); Assert.Same(a, b.Alloc()); }
         finally { b.Release(); }
     }
 
@@ -252,7 +253,7 @@ public class PooledByteBufAllocatorThreadBindingTest
         try
         {
             await w0.InvokeAsync(() => held = a.DirectBuffer(131072).WriteInt(42));
-            await w1.InvokeAsync(() => Assert.Throws<OutOfMemoryException>(() => a.DirectBuffer(48)));
+            await w1.InvokeAsync(() => Assert.Throws<OutOfDirectMemoryError>(() => a.DirectBuffer(48)));
             Assert.Equal(2, a.Metric.NumThreadLocalCaches);
             Assert.Equal(0, a.Metric.DirectArenas[1].NumAllocations);
             Assert.Equal(0, a.Metric.DirectArenas[1].NumActiveBytes);

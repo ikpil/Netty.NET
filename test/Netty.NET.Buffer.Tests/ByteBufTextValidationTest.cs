@@ -144,7 +144,7 @@ public class ByteBufTextValidationTest
             Assert.True(ByteBufUtil.IsText(b, 0, 4, Encoding.UTF8));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.IsText(b, 0, 8, Encoding.UTF8));
             b.SetIndex(3, 5).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(2, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }
@@ -196,7 +196,7 @@ public class ByteBufTextValidationTest
             {
                 while (Interlocked.Decrement(ref remaining) > 0) Assert.True(ByteBufUtil.IsText(b, Encoding.Latin1));
             }, TestContext.Current.CancellationToken)));
-            Assert.Equal(0, b.ReaderIndex); Assert.Equal(13, b.WriterIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(0, b.ReaderIndex); Assert.Equal(13, b.WriterIndex); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }
@@ -211,7 +211,7 @@ public class ByteBufTextValidationTest
         {
             wrapper.ReaderIndex = 1; Assert.True(ByteBufUtil.IsText(wrapper, Encoding.ASCII));
             Assert.False(ByteBufUtil.IsText(wrapper, 0, 2, Encoding.ASCII));
-            Assert.Equal(1, b.ReaderIndex); Assert.Equal(1, b.ReferenceCount);
+            Assert.Equal(1, b.ReaderIndex); Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
         foreach (Encoding encoding in new[] { Encoding.UTF8, Encoding.ASCII, Encoding.Unicode, Encoding.Latin1 })

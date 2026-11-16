@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Netty.NET.Buffer;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels;
 
@@ -48,11 +49,8 @@ public class DefaultChannelConfig : IChannelConfig
     protected DefaultChannelConfig(IChannel channel, IRecvByteBufAllocator allocator)
     {
         ArgumentNullException.ThrowIfNull(channel);
-        ArgumentNullException.ThrowIfNull(allocator);
+        SetRecvByteBufAllocator(allocator, channel.Metadata);
         Channel = channel;
-        if (allocator is IMaxMessagesRecvByteBufAllocator messages)
-            messages.MaxMessagesPerRead(channel.Metadata.DefaultMaxMessagesPerRead());
-        _receiveAllocator = allocator;
     }
 #pragma warning disable CS0612, CS0618 // The original config explicitly supports deprecated option aliases.
     private static readonly ChannelOption[] StandardOptions = {
@@ -173,10 +171,10 @@ public class DefaultChannelConfig : IChannelConfig
      * @throws IllegalStateException if {@link #getRecvByteBufAllocator()} does not return an object of type
      * {@link MaxMessagesRecvByteBufAllocator}.
      */
-    public int GetMaxMessagesPerRead() => _receiveAllocator is IMaxMessagesRecvByteBufAllocator allocator ? allocator.MaxMessagesPerRead() : throw new InvalidOperationException("Receive allocator must support a message budget.");
+    public int GetMaxMessagesPerRead() => _receiveAllocator is IMaxMessagesRecvByteBufAllocator allocator ? allocator.MaxMessagesPerRead() : throw new InvalidOperationException("getRecvByteBufAllocator() must return an object of type MaxMessagesRecvByteBufAllocator");
     [Obsolete("Use the receive allocator's MaxMessagesPerRead.")]
     public IChannelConfig SetMaxMessagesPerRead(int value)
-    { if (_receiveAllocator is not IMaxMessagesRecvByteBufAllocator allocator) throw new InvalidOperationException("Receive allocator must support a message budget."); allocator.MaxMessagesPerRead(value); return this; }
+    { if (_receiveAllocator is not IMaxMessagesRecvByteBufAllocator allocator) throw new InvalidOperationException("getRecvByteBufAllocator() must return an object of type MaxMessagesRecvByteBufAllocator"); allocator.MaxMessagesPerRead(value); return this; }
 #pragma warning restore CS0612, CS0618
     /**
      * Get the maximum number of message to write per eventloop run. Once this limit is
@@ -190,14 +188,43 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetMaxMessagesPerWrite(int value)
     { ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value); Volatile.Write(ref _maxMessagesPerWrite, value); return this; }
     public int GetWriteSpinCount() => Volatile.Read(ref _writeSpinCount);
-    public virtual IChannelConfig SetWriteSpinCount(int value)
-    { ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value); Volatile.Write(ref _writeSpinCount, value == int.MaxValue ? value - 1 : value); return this; }
+    public virtual IChannelConfig SetWriteSpinCount(int writeSpinCount)
+    {
+        ObjectUtil.CheckPositive(writeSpinCount, "writeSpinCount");
+        // Integer.MAX_VALUE is used as a special value in the channel implementations to indicate the channel cannot
+        // accept any more data, and results in the writeOp being set on the selector (or execute a runnable which tries
+        // to flush later because the writeSpinCount quantum has been exhausted). This strategy prevents additional
+        // conditional logic in the channel implementations, and shouldn't be noticeable in practice.
+        if (writeSpinCount == int.MaxValue)
+        {
+            --writeSpinCount;
+        }
+        Volatile.Write(ref _writeSpinCount, writeSpinCount);
+        return this;
+    }
     public IByteBufAllocator GetAllocator() => Volatile.Read(ref _allocator);
     public virtual IChannelConfig SetAllocator(IByteBufAllocator value)
     { ArgumentNullException.ThrowIfNull(value); Volatile.Write(ref _allocator, value); return this; }
     public IRecvByteBufAllocator GetRecvByteBufAllocator() => Volatile.Read(ref _receiveAllocator);
     public virtual IChannelConfig SetRecvByteBufAllocator(IRecvByteBufAllocator value)
     { ArgumentNullException.ThrowIfNull(value); Volatile.Write(ref _receiveAllocator, value); return this; }
+
+    /**
+     * Set the {@link RecvByteBufAllocator} which is used for the channel to allocate receive buffers.
+     * @param allocator the allocator to set.
+     * @param metadata Used to set the {@link ChannelMetadata#defaultMaxMessagesPerRead()} if {@code allocator}
+     * is of type {@link MaxMessagesRecvByteBufAllocator}.
+     */
+    private void SetRecvByteBufAllocator(IRecvByteBufAllocator allocator, ChannelMetadata metadata)
+    {
+        ObjectUtil.CheckNotNull(allocator, "allocator");
+        ObjectUtil.CheckNotNull(metadata, "metadata");
+        if (allocator is IMaxMessagesRecvByteBufAllocator messages)
+        {
+            messages.MaxMessagesPerRead(metadata.DefaultMaxMessagesPerRead());
+        }
+        SetRecvByteBufAllocator(allocator);
+    }
     public bool IsAutoRead() => Volatile.Read(ref _autoRead) == 1;
     public virtual IChannelConfig SetAutoRead(bool value)
     {
@@ -223,7 +250,8 @@ public class DefaultChannelConfig : IChannelConfig
         {
             var old = Volatile.Read(ref _waterMark);
             if (value < old.Low())
-                throw new ArgumentOutOfRangeException(nameof(value));
+                throw new ArgumentOutOfRangeException(nameof(value), "writeBufferHighWaterMark cannot be less than " +
+                        "writeBufferLowWaterMark (" + old.Low() + "): " + value);
             if (Interlocked.CompareExchange(ref _waterMark, new(old.Low(), value, false), old) == old)
                 return this;
         }
@@ -236,7 +264,8 @@ public class DefaultChannelConfig : IChannelConfig
         {
             var old = Volatile.Read(ref _waterMark);
             if (value > old.High())
-                throw new ArgumentOutOfRangeException(nameof(value));
+                throw new ArgumentOutOfRangeException(nameof(value), "writeBufferLowWaterMark cannot be greater than " +
+                        "writeBufferHighWaterMark (" + old.High() + "): " + value);
             if (Interlocked.CompareExchange(ref _waterMark, new(value, old.High(), false), old) == old)
                 return this;
         }

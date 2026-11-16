@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Local;
 using Netty.NET.Transport.Channels.Sockets;
 using static Netty.NET.Transport.Tests.LinuxTcpMd5SourceTest;
@@ -79,11 +80,11 @@ public class LinuxTcpConnectOptionsContractTest
         using var listener = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         listener.Bind(local);
         listener.Listen(1);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             var client = await new Bootstrap().Group(group)
-                .ChannelFactory(() => new TcpSocketChannel(address.AddressFamily))
+                .ChannelFactory(() => new NioSocketChannel(address.AddressFamily))
                 .Option(ChannelOption.IP_BIND_ADDRESS_NO_PORT, true)
                 .Handler(new ChannelInboundHandlerAdapter()).BindAsync(local, token);
             Assert.True(client.Config.TryGetOption(ChannelOption.IP_BIND_ADDRESS_NO_PORT, out bool enabled));

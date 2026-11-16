@@ -1,3 +1,4 @@
+using Netty.NET.Transport.Channels.Nio;
 using System;
 using System.Net.Sockets;
 using System.Reflection;
@@ -17,9 +18,9 @@ public class DatagramMulticastConfigContractTest
     [InlineData(AddressFamily.InterNetworkV6)]
     public async Task MulticastTtlUsesMulticastOptionWithoutChangingUnicastTtl(AddressFamily family)
     {
-        var channel = new DatagramChannel(family);
-        var group = new DefaultEventLoopGroup(1);
-        var socket = (Socket)typeof(DatagramChannel).GetField("_socket", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(channel)!;
+        var channel = new NioDatagramChannel(family);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var socket = (Socket)typeof(AbstractNioChannel).GetMethod("JavaChannel", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(channel, null)!;
         var level = family == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
         try
         {

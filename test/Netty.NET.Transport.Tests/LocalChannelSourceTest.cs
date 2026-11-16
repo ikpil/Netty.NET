@@ -57,7 +57,7 @@ public partial class LocalChannelSourceTest
                 // Close the channel
                 await CloseChannel(client);
                 await CloseChannel(server);
-                await server.CloseCompletion;
+                await server.CloseFuture;
                 Assert.Null(LocalChannelRegistry.Get(TestAddress));
             }
             finally { await CloseChannel(client); await CloseChannel(server); }
@@ -86,7 +86,9 @@ public partial class LocalChannelSourceTest
             server = await serverBootstrap.BindAsync(TestAddress);
             // Connect to the server
             client = await clientBootstrap.ConnectAsync(server.LocalAddress).WaitAsync(TimeSpan.FromSeconds(10));
-            await Assert.ThrowsAsync<InvalidOperationException>(() => client.ConnectAsync(server.LocalAddress));
+            var error = await Assert.ThrowsAsync<SocketException>(() => client.ConnectAsync(server.LocalAddress));
+            // CLR: SocketError.IsConnected stands for AlreadyConnectedException.
+            Assert.Equal(SocketError.IsConnected, error.SocketErrorCode);
             await client.CloseAsync();
             Assert.Null(cause);
         }
@@ -94,14 +96,14 @@ public partial class LocalChannelSourceTest
     }
     private static Task CloseChannel(IChannel channel) => channel?.CloseAsync() ?? Task.CompletedTask;
     private class TestHandler : ChannelInboundHandlerAdapter
-    { public override void ChannelRead(ChannelHandlerContext context, object message) => ReferenceCountUtil.SafeRelease(message); }
+    { public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReferenceCountUtil.SafeRelease(msg); }
     private sealed class ExceptionCatcher(Action<Exception> caught) : ChannelInboundHandlerAdapter
-    { public override void ExceptionCaught(ChannelHandlerContext context, Exception cause) => caught(cause); }
+    { public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => caught(cause); }
     private sealed class Groups : IAsyncDisposable
     {
-        internal readonly DefaultEventLoopGroup First = new(2);
-        internal readonly DefaultEventLoopGroup Second = new(2);
-        internal readonly DefaultEventLoopGroup Shared = new(1);
+        internal readonly MultiThreadIoEventLoopGroup First = new(2, LocalIoHandler.NewFactory());
+        internal readonly MultiThreadIoEventLoopGroup Second = new(2, LocalIoHandler.NewFactory());
+        internal readonly MultiThreadIoEventLoopGroup Shared = new(1, LocalIoHandler.NewFactory());
         public async ValueTask DisposeAsync() => await Task.WhenAll(First.StopAsync(), Second.StopAsync(), Shared.StopAsync()).WaitAsync(TimeSpan.FromSeconds(10));
     }
 }

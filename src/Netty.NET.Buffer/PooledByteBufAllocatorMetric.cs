@@ -15,6 +15,7 @@
  */
 using System;
 using System.Collections.Generic;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -82,5 +83,5 @@ public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
     public long UsedHeapMemory => _allocator.UsedHeapMemory;
     public long UsedDirectMemory => _allocator.UsedDirectMemory;
     public override string ToString()
-        => FormattableString.Invariant($"{nameof(PooledByteBufAllocatorMetric)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; normalCacheSize: {NormalCacheSize}; numThreadLocalCaches: {NumThreadLocalCaches}; chunkSize: {ChunkSize})");
+        => FormattableString.Invariant($"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; normalCacheSize: {NormalCacheSize}; numThreadLocalCaches: {NumThreadLocalCaches}; chunkSize: {ChunkSize})");
 }

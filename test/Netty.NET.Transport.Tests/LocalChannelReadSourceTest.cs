@@ -48,7 +48,7 @@ public partial class LocalChannelSourceTest
             client = (LocalChannel)await cb.ConnectAsync(server.LocalAddress);
             // Close the channel
             await CloseChannel(client);
-            Assert.True(client.IsInboundBufferEmpty);
+            Assert.True(client.inboundBuffer.IsEmpty);
             await CloseChannel(server);
         }
         finally { await CloseChannel(client); await CloseChannel(server); }
@@ -254,33 +254,33 @@ public partial class LocalChannelSourceTest
 
     private sealed class DropEchoClient : SimpleChannelInboundHandler<ByteBuf>
     {
-        public override void ChannelActive(ChannelHandlerContext context) => _ = context.WriteAndFlushAsync(context.Allocator.Buffer().WriteZero(100));
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        public override void ChannelActive(IChannelHandlerContext ctx) => _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer().WriteZero(100));
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer)
         {
             // Just drop the buffer
         }
     }
     private sealed class SplitEchoAndClose : SimpleChannelInboundHandler<ByteBuf>
     {
-        protected override void ChannelRead0(ChannelHandlerContext context, ByteBuf message)
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer)
         {
-            while (message.IsReadable)
+            while (buffer.IsReadable())
             {
                 // Fill the ChannelOutboundBuffer with multiple buffers
-                _ = context.WriteAsync(message.ReadRetainedSlice(1));
+                _ = ctx.WriteAsync(buffer.ReadRetainedSlice(1));
             }
             // Flush and so transfer the written buffers to the inboundBuffer of the remote peer.
             // After this point the remote peer is responsible to release all the buffers.
-            context.Flush();
+            ctx.Flush();
             // This close call will trigger the remote peer close as well.
-            _ = context.CloseAsync();
+            _ = ctx.CloseAsync();
         }
     }
-    private static void WriteAndFlushReadOnSuccess(ChannelHandlerContext context, object message)
+    private static void WriteAndFlushReadOnSuccess(IChannelHandlerContext ctx, object msg)
     {
-        var write = context.WriteAndFlushAsync(message);
+        var write = ctx.WriteAndFlushAsync(msg);
         if (write.IsCompletedSuccessfully)
-            context.Read();
+            ctx.Read();
         else
             _ = ReadAfterWriteAsync();
         async Task ReadAfterWriteAsync()
@@ -289,13 +289,13 @@ public partial class LocalChannelSourceTest
             { await write.ConfigureAwait(false); }
             catch { return; }
             // CLR: a Task continuation does not confer ownership of the original executor.
-            await context.Executor.SubmitAsync(() => context.Read()).ConfigureAwait(false);
+            await ctx.Executor.SubmitAsync(() => ctx.Read()).ConfigureAwait(false);
         }
     }
     private sealed class ManualEchoClient : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context) => WriteAndFlushReadOnSuccess(context, "test");
-        public override void ChannelRead(ChannelHandlerContext context, object message) => WriteAndFlushReadOnSuccess(context, message);
+        public override void ChannelActive(IChannelHandlerContext ctx) => WriteAndFlushReadOnSuccess(ctx, "test");
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => WriteAndFlushReadOnSuccess(ctx, msg);
     }
     private sealed class EchoCounter(TaskCompletionSource completed, int remaining)
     {
@@ -309,36 +309,36 @@ public partial class LocalChannelSourceTest
     }
     private sealed class ManualEchoServer(EchoCounter counter) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context) => context.Read();
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { if (counter.Signal()) WriteAndFlushReadOnSuccess(context, message); }
+        public override void ChannelActive(IChannelHandlerContext ctx) => ctx.Read();
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { if (counter.Signal()) WriteAndFlushReadOnSuccess(ctx, msg); }
     }
     private sealed class WriteTenMessages : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
             for (int i = 0; i < 10; i++)
-                _ = context.WriteAsync(i);
-            context.Flush();
+                _ = ctx.WriteAsync(i);
+            ctx.Flush();
         }
     }
     private sealed class ChannelReadHandler(TaskCompletionSource completed, bool autoRead) : ChannelInboundHandlerAdapter
     {
         private int _read;
         private int _remaining = 5;
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
             if (!autoRead)
-                context.Read();
-            context.FireChannelActive();
+                ctx.Read();
+            ctx.FireChannelActive();
         }
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Assert.Equal(0, _read);
             _read++;
-            context.FireChannelRead(message);
+            ctx.FireChannelRead(msg);
         }
-        public override void ChannelReadComplete(ChannelHandlerContext context)
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             Assert.Equal(1, _read);
             if (_remaining > 0 && --_remaining == 0)
@@ -349,21 +349,21 @@ public partial class LocalChannelSourceTest
                 {
                     // The read will be scheduled 100ms in the future to ensure we not receive any
                     // channelRead calls in the meantime.
-                    _ = context.Executor.ScheduleAsync(() => { _read = 0; context.Read(); }, TimeSpan.FromMilliseconds(100));
+                    _ = ctx.Executor.ScheduleAsync(() => { _read = 0; ctx.Read(); }, TimeSpan.FromMilliseconds(100));
                 }
                 else
                     _read = 0;
             }
             else
                 _read = 0;
-            context.FireChannelReadComplete();
+            ctx.FireChannelReadComplete();
         }
-        public override void ExceptionCaught(ChannelHandlerContext context, Exception error)
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             // CLR: surface original callback assertion failures to the awaiting test as well as the pipeline.
-            completed.TrySetException(error);
-            context.FireExceptionCaught(error);
-            _ = context.CloseAsync();
+            completed.TrySetException(cause);
+            ctx.FireExceptionCaught(cause);
+            _ = ctx.CloseAsync();
         }
     }
     private sealed class QueuedLocalServer(Action queued) : LocalServerChannel
@@ -374,10 +374,10 @@ public partial class LocalChannelSourceTest
     private sealed class ReadCompleteCounts(System.Threading.Channels.ChannelWriter<int> counts) : ChannelInboundHandlerAdapter
     {
         private int _messagesRead;
-        public override void ChannelRead(ChannelHandlerContext context, object message)
-        { _messagesRead++; context.FireChannelRead(message); }
-        public override void ChannelReadComplete(ChannelHandlerContext context)
-        { counts.TryWrite(_messagesRead); _messagesRead = 0; context.FireChannelReadComplete(); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        { _messagesRead++; ctx.FireChannelRead(msg); }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        { counts.TryWrite(_messagesRead); _messagesRead = 0; ctx.FireChannelReadComplete(); }
     }
     private sealed class ReadCompleteRecvAllocator(TaskCompletionSource completed) : DefaultMaxMessagesRecvByteBufAllocator
     {

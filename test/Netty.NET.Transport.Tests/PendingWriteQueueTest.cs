@@ -32,27 +32,27 @@ namespace Netty.NET.Transport.Tests;
 public class PendingWriteQueueTest
 {
     [Fact]
-    public async Task TestRemoveAndWrite() => await AssertWrite(new TestHandler((queue, context, observations) =>
+    public async Task TestRemoveAndWrite() => await AssertWrite(new TestHandler((queue, ctx, observations) =>
     {
-        Assert.False(context.Channel.IsWritable, "Should not be writable anymore");
+        Assert.False(ctx.Channel.IsWritable, "Should not be writable anymore");
         Task future = queue.RemoveAndWriteAsync();
         observations.Add(OnCompleted(future, () => AssertQueueEmpty(queue)));
-        context.Flush();
+        ctx.Flush();
     }), 1);
     [Fact]
-    public async Task TestRemoveAndWriteAll() => await AssertWrite(new TestHandler((queue, context, observations) =>
+    public async Task TestRemoveAndWriteAll() => await AssertWrite(new TestHandler((queue, ctx, observations) =>
     {
-        Assert.False(context.Channel.IsWritable, "Should not be writable anymore");
+        Assert.False(ctx.Channel.IsWritable, "Should not be writable anymore");
         Task future = queue.RemoveAndWriteAllAsync();
         observations.Add(OnCompleted(future, () => AssertQueueEmpty(queue)));
-        context.Flush();
+        ctx.Flush();
     }), 3);
     [Fact]
-    public async Task TestRemoveAndFail() => await AssertWriteFails(new TestHandler((queue, context, _) =>
-    { queue.RemoveAndFail(new TestException()); context.Flush(); }), 1);
+    public async Task TestRemoveAndFail() => await AssertWriteFails(new TestHandler((queue, ctx, _) =>
+    { queue.RemoveAndFail(new TestException()); ctx.Flush(); }), 1);
     [Fact]
-    public async Task TestRemoveAndFailAll() => await AssertWriteFails(new TestHandler((queue, context, _) =>
-    { queue.RemoveAndFailAll(new TestException()); context.Flush(); }), 3);
+    public async Task TestRemoveAndFailAll() => await AssertWriteFails(new TestHandler((queue, ctx, _) =>
+    { queue.RemoveAndFailAll(new TestException()); ctx.Flush(); }), 3);
     [Fact]
     public void ShouldFireChannelWritabilityChangedAfterRemoval()
     {
@@ -64,7 +64,7 @@ public class PendingWriteQueueTest
         // Trigger channelWritabilityChanged() by adding a message that's larger than the high watermark.
         handler.Queue.Add(message, new TaskCompletionSource());
         channel.Finish();
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
     }
     private static async Task AssertWrite(TestHandler handler, int count)
     {
@@ -77,7 +77,7 @@ public class PendingWriteQueueTest
             buffers[i] = buffer.RetainedDuplicate();
         Assert.True(channel.WriteOutbound(buffers));
         Assert.True(channel.Finish());
-        await channel.CloseCompletion;
+        await channel.CloseFuture;
         await Task.WhenAll(handler.Observations).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         for (int i = 0; i < count; i++)
             AssertBuffer(channel, buffer);
@@ -109,7 +109,7 @@ public class PendingWriteQueueTest
             buffers[i] = buffer.RetainedDuplicate();
         Assert.Throws<TestException>(() => Assert.False(channel.WriteOutbound(buffers)));
         Assert.False(channel.Finish());
-        await channel.CloseCompletion;
+        await channel.CloseFuture;
         buffer.Release();
         Assert.Null(channel.ReadOutbound());
     }
@@ -157,16 +157,16 @@ public class PendingWriteQueueTest
         Assert.True(first.Task.IsCompleted);
         Assert.True(second.Task.IsCompleted);
         Assert.False(second.Task.IsCompletedSuccessfully);
-        Assert.Equal(0, firstBuffer.ReferenceCount);
-        Assert.Equal(0, secondBuffer.ReferenceCount);
+        Assert.Equal(0, firstBuffer.RefCnt);
+        Assert.Equal(0, secondBuffer.RefCnt);
         Assert.False(third.Task.IsCompleted);
-        Assert.Equal(1, thirdBuffer.ReferenceCount);
+        Assert.Equal(1, thirdBuffer.RefCnt);
         Assert.Equal(1, queue.Size);
         Assert.Equal(bytesPerWrite, queue.Bytes);
         Assert.True(listener.IsCompletedSuccessfully);
         queue.RemoveAndFailAll(new Exception());
         Assert.True(third.Task.IsCompleted);
-        Assert.Equal(0, thirdBuffer.ReferenceCount);
+        Assert.Equal(0, thirdBuffer.RefCnt);
         Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
         Assert.False(channel.Finish());
     }
@@ -281,33 +281,33 @@ public class PendingWriteQueueTest
         _ = completed.Exception;
         callback();
     }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-    private sealed class TestHandler(Action<PendingWriteQueue, ChannelHandlerContext, List<Task>> flush) : ChannelDuplexHandler
+    private sealed class TestHandler(Action<PendingWriteQueue, IChannelHandlerContext, List<Task>> flush) : ChannelDuplexHandler
     {
         private PendingWriteQueue _queue;
         private int _expectedSize;
         internal readonly List<Task> Observations = new();
-        public override void HandlerAdded(ChannelHandlerContext context) => _queue = new PendingWriteQueue(context);
-        public override void ChannelActive(ChannelHandlerContext context)
-        { base.ChannelActive(context); AssertQueueEmpty(_queue); Assert.True(context.Channel.IsWritable, "Should be writable"); }
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override void HandlerAdded(IChannelHandlerContext ctx) => _queue = new PendingWriteQueue(ctx);
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        { base.ChannelActive(ctx); AssertQueueEmpty(_queue); Assert.True(ctx.Channel.IsWritable, "Should be writable"); }
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
-            Task result = _queue.Add(message, token);
+            Task result = _queue.Add(msg, token);
             Assert.False(_queue.IsEmpty);
             Assert.Equal(++_expectedSize, _queue.Size);
             Assert.NotNull(_queue.Current);
             return result;
         }
-        public override void Flush(ChannelHandlerContext context) => flush(_queue, context, Observations);
+        public override void Flush(IChannelHandlerContext ctx) => flush(_queue, ctx, Observations);
     }
     private sealed class RemovalOnWritabilityHandler : ChannelInboundHandlerAdapter
     {
         internal PendingWriteQueue Queue;
-        public override void HandlerAdded(ChannelHandlerContext context) => Queue = new PendingWriteQueue(context);
-        public override void ChannelWritabilityChanged(ChannelHandlerContext context)
+        public override void HandlerAdded(IChannelHandlerContext ctx) => Queue = new PendingWriteQueue(ctx);
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             if (Queue.Current is not ByteBuf message)
                 return;
-            Assert.Equal(1, message.ReferenceCount);
+            Assert.Equal(1, message.RefCnt);
             // This call will trigger another channelWritabilityChanged() event because the number of
             // pending bytes will go below the low watermark.
             //
@@ -315,15 +315,15 @@ public class PendingWriteQueueTest
             // channelWritabilityChanged() event, we will end up with attempting to remove the same
             // element twice, resulting in the double release.
             Queue.Remove();
-            Assert.Equal(0, message.ReferenceCount);
+            Assert.Equal(0, message.RefCnt);
         }
     }
     private sealed class FlushEveryWrite : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(ChannelHandlerContext context, object message, CancellationToken token)
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             // Convert to writeAndFlush(...) so the promise will be notified by the transport.
-            return context.WriteAndFlushAsync(message, token);
+            return ctx.WriteAndFlushAsync(msg, token);
         }
     }
     private sealed class TestException : Exception { }

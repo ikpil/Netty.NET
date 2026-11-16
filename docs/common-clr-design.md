@@ -7215,55 +7215,390 @@ native-environment-settings-* TRX/JSON. Windows/net10.0 only; other OS/runtime,
 logger/backend/platform work and the prior focused Global completion stall remain.
 
 
-## Native bounded adaptive sizing
+## Source adaptive sizing
 
-Pinned AdaptiveCalculator.java has no direct common test fixture. Actual owners
-are transport/.../AdaptiveRecvByteBufAllocator.java:46-69 (full-read feedback and
-read-cycle totals) and transport-classes-io_uring/.../IoUringAdaptiveBufferRingAllocator.java:31,72-90
-(full attempted/actual reads). AdaptiveRecvByteBufAllocatorTest's ramp, interval,
-partial-read and bound scenarios inform this primitive review; channel/buffer/ring
-integration itself remains outside common. Keep one mutable predictor per serial
-owner: four-bucket growth, one-bucket decrease after two small samples, middle-band
-samples retaining the pending decrease, full growth clearing it and floor rounding
-of nonaligned maximums. Negative feedback still counts as underfilled, as pinned.
+Superseded on 2026-11-14: the earlier native bounded table (1..15 and Int32.MaxValue
+added, floor indices, inclusive clamping, a growable full first bucket) changed the
+pinned algorithm and is withdrawn, following the project rule that the port keeps
+the original behaviour unless the CLR cannot express it. AdaptiveCalculator.cs is
+again a line-for-line port of AdaptiveCalculator.java: the 16..496 step-16 and
+512..2^30 power-of-two table, getSizeTableIndex binary search, ceil minIndex, floor
+maxIndex/initial index, max(SIZE_TABLE[index], minimum) on decrease and
+min(SIZE_TABLE[index], maximum) on growth, and record() comparing with
+SIZE_TABLE[max(0, index - 1)]. The original consequences are therefore kept:
+an initial size below 16 makes the constructor index -1 (IndexOutOfRangeException
+for ArrayIndexOutOfBoundsException), bounds between two buckets publish sizes outside
+[minimum, maximum] (81,81,81 grows to 80 and shrinks to 96), a minimum above 2^30
+fails on the second decrease, and a full 16-byte first bucket only arms the decrease.
+Argument failures use ObjectUtil.checkPositive and IllegalArgumentException
+(ArgumentException) with the source messages "initial: N" and "maximum: N";
+AdaptiveRecvByteBufAllocator uses the same checks and messages, so a too-small
+initial size fails when NewHandle creates the calculator, as in the source. NextSize
+stays a read-only property for nextSize(). All three original comments remain.
 
-The original legal positive constructor domain is larger than its table: initial
-below 16 indexes -1; narrow/nonaligned minimum ceil can exceed maximum floor;
-high minimum above 2^30 can index past the table. These are reproduced in both
-executed Java and baseline CLR, not intentional allocation contracts. Do not copy
-out-of-range guesses or array failures into the port. The native shared private
-table adds 1..15 and Int32.MaxValue to the original 53 buckets (69 total), with
-List<int>.ToArray and Array.BinarySearch replacing manual copy/search. Floor
-indices keep minimum <= initial <= maximum ordered, and each published size is
-clamped to the inclusive requested bounds. A filled 16-byte bucket can now grow
-instead of being classified as small; the first 1-byte bucket has a zero predecessor
-so it can also grow. No per-instance table copy, CLR field-offset facade or locking
-is added. Constructor ordering violations use ArgumentOutOfRangeException with
-native parameter/value metadata. The observational NextSize property replaces the
-getter method; Record remains the state mutation, and both require serial ownership.
+Evidence: the unmodified pinned class ran on Corretto 21.0.10 over 138 bound
+configurations (minimum in {1, 8, 15, 16, 17, 64, 81, 95, 511, 512, 513, 1000, 2^30,
+2^30+1, Int32.MaxValue-1, Int32.MaxValue}, up to four maximums and three initial sizes
+each) and a fixed 23-step feedback sequence including zero, negative, partial,
+full and maximum reads, plus four invalid argument sets. The CLR counterpart printed
+the same 142 rows under de-DE, ko-KR, ar-SA and sv-SE, with only the documented
+exception type mapping. AdaptiveCalculatorContractTest keeps 13 of those rows.
 
-All three original source comments remain verbatim, including the Java overflow
-warning beside the retained shifting table loop. All 12 new CLR fixture cases
-are byte-identical across before/after assemblies: a test-only bound query delegate
-supports the old method solely for comparison; no production compatibility alias.
-They cover consumer ramp/hysteresis, six tiny/narrow/terminal intervals, invalid
-arguments, readonly API and 117 boundary configurations with directional feedback.
-Baseline checked Release has three passes/nine failures; final Debug/checked Release
-pass all 12. The one-byte predecessor fix was followed by fresh final whole runs.
+## Source number text in messages
 
-Executed byte-exact pinned Java/CLR baseline trace rows match all 360; native differs
-on 166 rows in ten affected small/nonaligned/terminal configurations. All 360 native
-rows match a separate value-based predecessor/successor specification, and five
-conventional aligned consumer traces remain exact. Differences are captured per row
-in artifacts/native-adaptive-sizing-validation/native-policy-differences.json.
-A byte-identical external native property consumer fails old API compilation and
-passes default receive-feedback, narrow/terminal and argument metadata checks.
-Warmed 100000 Record/query calls allocate zero measured bytes in baseline and final
-on Windows/net10.0; throughput and other runtimes are not certified. Evidence:
-native-adaptive-sizing-* TRX/JSON and artifacts/native-adaptive-sizing-validation.
-Full allocator/backend/OS integration and the prior focused Global completion
-stall remain open; whole-suite success does not close those reviews.
+Java string concatenation renders numbers with Integer/Long/Short.toString and
+Double/Float.toString, which never depend on a locale; C# concatenation uses the
+current culture (for example U+061C before '-' in ar-SA, U+2212 in sv-SE and a
+decimal comma in de-DE). ObjectUtil, AdaptiveCalculator, AdaptiveRecvByteBufAllocator,
+AppendableCharSequence and the Arrays.copyOfRange counterpart therefore format
+integers with the invariant culture and doubles/floats through the internal
+JdkDecimal helper. JdkDecimal follows the JDK 19+ Double.toString specification
+(JDK-4511638): the shortest decimal that rounds to the value, the closest of length
+one or two when the shortest has one digit (Double.MIN_VALUE is "4.9E-324"), plain
+notation in [10^-3, 10^7) with at least one fractional digit and "d.dddE[-]n"
+otherwise. .NET Core 3.0+ "R" supplies the shortest round-tripping digits and
+correctly rounded "En" precision supplies candidates (Microsoft Learn, standard
+numeric format strings; .NET Core 3.0 IEEE formatting changes). On .NET 10.0.8 "R"
+does not round-trip 2^-25 and 2^-958, the only failures among all 2098 powers of
+two, so a non-round-tripping result falls back to the shortest precision whose
+correctly rounded decimal, or the neighbour across the value, round-trips.
 
+Evidence: Double.toString/Float.toString on JDK 21 for 466092 values (all 2^k with
+both neighbours, every one-digit decimal power with both neighbours, the first 20000
+subnormals of each type, 200000 random bit patterns of each type and named edge
+values) match JdkDecimal exactly under de-DE, ko-KR, ar-SA and sv-SE, as do the
+pinned ObjectUtil outcomes for 78 double/float checks.
+
+Applied across Common, Buffer, Resolver and Transport on 2026-11-14. A Roslyn
+semantic scan (Microsoft.CodeAnalysis.CSharp 5.6.0, the four module sources compiled
+with zero errors against the net10.0 reference assemblies) lists every implicit
+number-to-text conversion through the current culture: numeric operands of string
+`+`/`+=`, interpolations without an IFormatProvider, numeric ToString() and
+StringBuilder.Append/Insert(value), string.Format/Concat/Join, TextWriter.Write and
+Convert.ToString without a provider, plus culture-sensitive numeric Parse/TryParse.
+It found 107 such conversions on 76 lines and no culture-sensitive parse; after the
+change it reports zero. Rules applied per site, by the pinned source:
+
+- Java concatenation, StringBuilder.append(int/long) and toString(): integers use
+  ToString(CultureInfo.InvariantCulture) and double/float use JdkDecimal (exception
+  messages, toString(), thread names "pool-N-thread-M", generated handler names,
+  leak reports, IPv4/IPv6 text, debug assertions).
+- Java SLF4J templates: the port uses the same "{}" template again
+  (SystemPropertyUtil integer/long fallback warnings, NetUtil SOMAXCONN debug), so
+  MessageFormatter formats the arguments.
+- Java String.format: Java formats with the default locale (verified: "%d" prints
+  U+0665 in ar-SA and U+06F5 in fa-IR while concatenation prints ASCII), so these five
+  sites keep culture-sensitive text and state it with CultureInfo.CurrentCulture:
+  AutoScalingEventExecutorChooserFactory minThreads/maxThreads, HashedWheelTimer
+  tickDuration, HashedWheelBucket timeout.deadline and both StringUtil hex decode
+  messages. .NET cultures do not substitute native digits, so the text matches Java
+  only in locales whose digits and minus sign agree.
+- CLR-only messages (native memory, adaptive buddy tree/chunk diagnostics, EventId)
+  follow the concatenation rule.
+
+MessageFormatter already formatted boxed numbers with the invariant culture; its
+primitive int/long/short/byte arrays now do too, and float/double values (boxed and in
+arrays) use JdkDecimal instead of "R" plus ".0", which printed 10000000.0 for 1e7
+where StringBuilder.append(double) prints 1.0E7. AsciiString passed its source
+IndexOutOfBoundsException text as the ArgumentOutOfRangeException parameter name;
+the ten throws now pass a null parameter name so Message is the source text.
+Evidence: JDK 21 runs of the pinned MessageFormatter and AsciiString under en-US,
+ar-SA, sv-SE and de-DE print identical text, which
+CultureIndependentMessageContractTest (Common and Transport) asserts under ar-SA,
+sv-SE and de-DE.
+
+## Source null and boolean text
+
+Java string conversion (JLS 5.1.11, used by `+`, StringBuilder.append and
+String.valueOf) renders null as "null" and booleans as "true"/"false"; C#
+concatenation, interpolation and StringBuilder.Append render null as an empty string
+and bool as "True"/"False". A second Roslyn semantic scan of Common, Buffer,
+Resolver and Transport (same compilation setup as the number scan) lists every bool
+and every reference or Nullable<T> value in string `+`/`+=`, interpolation,
+StringBuilder.Append/Insert(value), string.Concat/Join and bool.ToString(). It found
+2 bool sites and 196 reference candidates that are not provably non-null by
+expression form. Each candidate was reviewed in context: all but four are guarded
+by an earlier null check, a constructor contract, a non-null producer
+(SimpleClassName, ToString, AsShortText, literals) or the surrounding branch, as in
+the source. The changed sites are:
+
+- SystemPropertyUtil boolean fallback and property-access warnings and the
+  NetUtilInitializations loopback debug lines use the source SLF4J templates again
+  (the C# text also said "bool" where the source says "boolean"); MessageFormatter
+  renders bool as "true"/"false" and null as "null".
+- AbstractByteBufAllocator.toString prints simpleClassName and "true"/"false".
+- AbstractChannel.toString prints "L:null" when only the remote address is known.
+- DefaultAddressedEnvelope.toString prints a missing recipient as "null" and uses
+  simpleClassName (GetType().Name exposed the CLR generic arity suffix).
+- InternetProtocolFamily.of(null) reports "address null not supported".
+- HostsFileEntriesProvider builds the Windows hosts path from
+  System.getenv("SystemRoot") + path, so a missing variable yields the source's
+  "null\system32\drivers\etc\hosts" instead of a root-relative path.
+
+After the change the scan reports no bool site; the remaining reference candidates
+are the reviewed non-null ones. Evidence: JDK 21 runs of the pinned classes print
+"UnpooledByteBufAllocator(directByDefault: false)",
+"DefaultAddressedEnvelope(sender/<unresolved>:1 => null, msg)", "address null not
+supported" and "L:null R:true" for StringBuilder.append(null).append(true);
+JavaStringConversionContractTest (Transport) and CultureIndependentMessageContractTest
+(Common) assert the CLR texts. Not covered: values typed object or a generic T whose
+runtime value is a bool, beyond MessageFormatter and the bootstrap option renderer
+that already format them as the source does.
+
+## Naming policy decisions (2026-11-14)
+
+The project owner settled the identifier questions left open by the fidelity review:
+
+- Public members keep their Java names; only capitalization and the accepted Async
+  suffix may differ, and no compatibility aliases are added. The documented
+  C#-idiom renames are withdrawn: ReferenceCount becomes RefCnt, CanRead/CanWrite(int)
+  become IsReadable/IsWritable(int), GetString(Encoding) becomes ToString(Encoding),
+  CloseCompletion becomes CloseFuture, and NetUtil keeps LOCALHOST4, LOCALHOST6,
+  LOCALHOST, LOOPBACK_IF, NETWORK_INTERFACES and SOMAXCONN.
+- Handler and pipeline parameters keep the Java names (ctx, msg, cause, promise)
+  instead of context/message (applied, see below).
+- Original test methods merged into one CLR test are split back so each original
+  method has a CLR test of the same name (Buffer FixedCompositeByteBufTest,
+  ReadOnlyByteBufTest and UnpooledTest, Common ConcurrentSkipListIntObjMultimapTest,
+  and every other merged mapping; applied, see below).
+- A source-thrown IndexOutOfBoundsException stays ArgumentOutOfRangeException:
+  Microsoft Learn (Using Standard Exception Types) reserves IndexOutOfRangeException
+  for the execution engine. Array accesses checked by the runtime keep the runtime's
+  IndexOutOfRangeException, as the source keeps ArrayIndexOutOfBoundsException.
+
+The renames and test splits are applied unit by unit; until a unit is done its old
+names remain recorded here as pending work, not as accepted exceptions.
+
+Applied on 2026-11-14 (public API unit), with Roslyn semantic renames across the
+solution (Microsoft.CodeAnalysis.Workspaces.MSBuild 5.3.0) so overrides, interface
+implementations and test fixtures move together and BCL members such as
+Stream.CanRead and Encoding.GetString are untouched:
+
+- IReferenceCounted.RefCnt (and every implementation; the ByteBuf field is _refCnt),
+  IChannel.CloseFuture, ByteBuf.ToString(Encoding charset) and
+  ToString(int index, int length, Encoding charset).
+- ByteBuf.IsReadable()/IsWritable() and IsReadable(int size)/IsWritable(int size):
+  the parameterless members are methods again, as in the source, because a C#
+  property cannot share its name with the int overloads.
+- NetUtil.LOCALHOST4, LOCALHOST6, LOCALHOST, LOOPBACK_IF, NETWORK_INTERFACES, SOMAXCONN,
+  IsIpV4StackPreferred and IsIpV6AddressesPreferred. LOCALHOST4/LOCALHOST6 are
+  restored (each read returns a copy, as LOCALHOST does, because IPAddress has a
+  mutable ScopeId) and MacAddressUtil and InternetProtocolFamily.localhost() use them
+  as the source does.
+- PooledByteBufAllocator has the nine source constructors with their parameter lists
+  and delegation chain (the four @Deprecated ones are [Obsolete]). Two CLR-only
+  constructors keep the native memory source, pool selection and trim/capacity
+  overrides after the source's longest positional order, so source-shaped calls bind
+  to the source overloads.
+
+Applied on 2026-11-14 (handler parameter unit), with a Roslyn semantic pass over the
+solution. Every C# parameter named context or message, and every System.Exception
+parameter, is paired with the Java method of the same name and arity in the Java files
+the porting manifests map to that C# file; the Java parameter at the same position must
+have a compatible type (Object, a type variable, (Abstract)ChannelHandlerContext,
+Throwable, ...). A CLR shape with a different arity takes the one same-typed parameter
+of the same-name Java method. The Java name decides:
+
+- 669 context/message parameters: ctx (459), msg (200), and the source's own name
+  where it is not ctx/msg: DefaultChannelPipeline's link helper newCtx (addFirst0,
+  addLast0, addBefore0, addAfter0), the epoll datagram discard handlers' Object msgs,
+  LocalChannelTest's ByteBuf buffer, the testsuite echo/gathering/cancel handlers'
+  ByteBuf in (written @in, C# verbatim identifier), ConnectTimeoutException(String msg)
+  and LeakPresenceDetector.AllocationProhibitedException(String s).
+- 39 exception parameters: cause (handler exceptionCaught, exception constructors that
+  used innerException, onUnhandledInboundException, closeOnReadError), t
+  (InternalLogger trace/debug/info/warn/error, AbstractChannel.handleWriteError) and
+  error (SocketChannelEOFTest's handler, where the source writes Throwable error).
+- Overrides and interface implementations without a Java method of their own repeat the
+  name of the member they override or implement (Microsoft Learn, CA1725 Parameter
+  names should match base declaration). 32 members whose Java code has another name
+  or shape use the name of the Java code they replace, recorded with the evidence in
+  the review list: for example DoWrite(object msg) after `Object msg = in.current()` in
+  EmbeddedChannel/LocalChannel.doWrite and doWriteMessage(Object msg, ...), the
+  pipeline helpers after callHandlerAdded0/callHandlerRemoved0/remove/
+  atomicRemoveFromHandlerList(ctx), and test callback lambdas after the source
+  handler methods they stand for.
+- Kept because the source uses them: ChannelGroup.write/writeAndFlush(Object message),
+  DefaultAddressedEnvelope(T message), String message exception constructors and
+  SocketChannelEOFTest's context/message handler.
+- Not renamed: String message parameters of CLR-only members, BCL overrides
+  (TraceListener), the internal outbound dispatch lambda, LinuxUdpOffload's native
+  sendmsg/recvmsg entry points and ChannelOutboundBuffer.Close(flushedCause,
+  unflushedCause), whose two causes cannot share the one Java name. promise stays the
+  recorded CancellationToken plus returned Task replacement.
+
+Exception constructors now take (string message, Exception cause) as the source does;
+Microsoft Learn CA1032 (Implement standard exception constructors) lists the standard
+set by parameter types only (NewException(string, Exception)), so it is unchanged.
+
+Applied on 2026-11-14 (original test split unit): every declared original test method in
+a reviewed or verified mapping now has a CLR test whose name is the Java name with the
+first letter capitalized. Merged theory/table tests were split, descriptively named
+tests were renamed, and the porting manifests list the same-name test first in each
+caseMapping (tools/Update-BufferPortingManifest.ps1 -Check verifies every target):
+
+- Common: ConcurrentSkipListIntObjMultimapTest (20 methods; the noKey/null assertions
+  the merged theories had dropped are back, through helpers over the native Try APIs),
+  PromiseCombinerTest, PromiseNotifierTest and PromiseAggregatorTest (23 methods, with
+  testAddAfterFinish/testAddAllAfterFinish and testNullPromisesArray/
+  testNullPromiseInArray split and testNullArgument added),
+  SingleThreadEventExecutorTest's four invoke* methods, PlatformDependentTest
+  java25MustHaveCleanerImplAvailable and StringUtilTest escapeCsvWithTrimming.
+- Buffer: FixedCompositeByteBufTest (36), ReadOnlyByteBufTest (27), UnpooledTest (41,
+  now its own UnpooledTest.cs instead of UnpooledSourceTest.cs), ByteBufAllocatorTest
+  (12), the search processor tests (10), UnreleaseableByteBufTest (2) and 127 mapped
+  AbstractByteBufTest, AbstractCompositeByteBufTest, AbstractByteBufAllocatorTest,
+  SlicedByteBufTest, DuplicatedByteBufTest, ReadOnlyByteBufferBufTest,
+  AdaptiveByteBufAllocatorTest and AbstractReferenceCountedByteBufTest methods.
+- CLR variants (heap/native, pooled, sync/async, layouts, providers) stay as theory
+  rows of the same-named test. When a helper would overload a test name (xUnit1024 is a
+  build error), the helper takes a 0 suffix. CLR-only checks of the former merged tests
+  were folded into the split tests with a CLR comment or kept as supplementary tests.
+- testCompareTo2 and testToByteBuffer3 now have same-name CLR replacement checks
+  (fixed-wire comparison; explicit BE/LE reads of the borrowed region). They still do not
+  claim the Java mutable-order bodies.
+
+Test counts fall where a table theory became one fact that loops over the same rows as
+the source does (UnpooledTest.testCompare was 256 theory rows). Not part of this unit:
+methods recorded as clr-not-applicable with evidence (mostly Transport promise, selector
+and JVM process cases), JVM-only Common methods documented in common-platform-runtime.md
+and common-clr-design.md, and original methods that are still unported in in-progress or
+pending fixtures.
+
+A public-name audit of the reviewed source entries still lists 733 public Java names
+that do not occur in the mapped C# files (common 199, buffer 236, resolver 5,
+transport 293); most are documented JVM-only or Task/Memory replacements, and the
+remaining getter/setter, signed/unsigned byte and other renames are the next units.
+
+### Public name categories (2026-11-16)
+
+The project owner settled the remaining public-name gaps (731 audit rows on
+2026-11-16, many of them the same member repeated across subclasses) by category:
+
+- Same-concept members take the Java name. alloc() is Alloc() on ByteBuf, IChannel and
+  ChannelHandlerContext (it was the Allocator property); terminationFuture() is the
+  TerminationFuture Task property, as closeFuture() is CloseFuture; setCharSequence and
+  writeCharSequence replace SetString and WriteString; getCharSequence and
+  readCharSequence are added beside readString with the source's AsciiString result for
+  US-ASCII and ISO-8859-1 (code pages 20127 and 28591, because .NET has no Charset
+  identity) and a StringCharSequence otherwise. AsciiString's ParseInt16/32/64 and
+  ParseSingle are parseShort/parseInt/parseLong/parseFloat again, with the four Java
+  overload shapes (the TryParse* methods stay CLR additions). Unsafe.recvBufAllocHandle()
+  is the protected RecvBufAllocHandle() on the channel (it was the ReceiveHandle
+  property), FastThreadLocalThread exposes ThreadLocalMap()/SetThreadLocalMap(...) as the
+  source does, and TraceRecord names BOTTOM_POS again. Deprecated source aliases and
+  factories are not added: unmodifiableBuffer(ByteBuf) (its Javadoc says to use
+  asReadOnly()), FileRegion.transfered() and EmbeddedChannel.lastInboundBuffer()/
+  lastOutboundBuffer().
+- AdaptivePoolingAllocator internals follow the source structure again (owner choice
+  "names and structure", 2026-11-16): the former top-level Adaptive* types are nested in
+  the partial AdaptivePoolingAllocator under the Java names (MagazineGroup, Magazine,
+  Chunk, ChunkRegistry, SizeClassedChunk with IntStack, BuddyChunk with the buddy array
+  folded back in, IChunkCache, SizeClassedChunkCache, ThreadLocalSizeClassedChunkCache,
+  SharedSizeClassedChunkCache, ConcurrentSkipListChunkCache, AdaptiveByteBuf), and
+  IChunkManagementStrategy/IChunkController with the SizeClass and Buddy strategies and
+  controllers carry computeBufferCapacity, newChunkAllocation, createController and
+  createChunkCache; AdaptiveByteBufAllocator supplies HeapChunkAllocator and
+  DirectChunkAllocator as IChunkAllocator. Nested types are internal rather than private
+  so the test assembly can reach them. Two recorded CLR decisions stay: wrappers are not
+  recycled (no AdaptiveRecycler, so no newBuffer/sharedWith), and Chunk.TryAllocate hands
+  out a Memory-based AdaptiveChunkAllocation where readInitInto initializes the buffer.
+  The Java statics IS_LOW_MEM, MAX_STRIPES, MAX_CHUNK_SIZE, MAX_POOLED_BUF_SIZE and the
+  CHUNK_*/THREAD_LOCAL_CACHE_* settings remain per-allocator values, each commented with
+  the static it replaces.
+- Netty-declared getters and setters are Java methods: getFoundNeedleId(), getIoRatio()
+  and setIoRatio(int) (with checkInRange's ArgumentException), and
+  MultiThreadIoEventLoopGroup.setIoRatio as DefaultEventLoopGroup.SetIoRatio. The socket,
+  server-socket and datagram config interfaces are ported as IDuplexChannelConfig,
+  ISocketChannelConfig, IServerSocketChannelConfig and IDatagramChannelConfig (the
+  code base's I prefix) with their typed accessors as Java-named methods. As in the
+  source, DefaultServerSocketChannelConfig is split out of DefaultSocketChannelConfig
+  for listeners, the datagram config is the public DefaultDatagramChannelConfig (it also
+  carries NioDatagramChannelConfig's accessors), and the standard ChannelOption dispatch
+  calls the accessors as getOption/setOption do. Consequences: a native SocketException
+  from a standard option now surfaces as ChannelException through options too (the
+  source wraps it the same way); setPerformancePreferences is the no-op it is in OpenJDK
+  java.net.Socket/ServerSocket ("Not implemented yet"); the datagram buffer-size
+  rejection of sizes <= 0 done by the JDK DatagramSocketAdaptor is not added, so the
+  option-visible behavior stays as it was. Setters the source re-declares only to
+  narrow the return type are inherited, not repeated. Members inherited from the BCL
+  keep the BCL names (Exception.Message, KeyValuePair.Key/Value).
+- ChannelConfig.getOption stays TryGetOption<T>(option, out T value). Java returns null
+  for an unknown option; an unconstrained C# T cannot be null for value types, so the
+  Try-Parse pattern (Microsoft Learn, Exceptions and Performance: "DO use the prefix
+  'Try' and Boolean return type") keeps "unknown" distinct from a default value.
+- ByteBuf.getByte/readByte keep the unsigned System.Byte result (Microsoft Learn,
+  System.Byte: "an 8-bit unsigned integer"; BinaryReader likewise pairs ReadByte with a
+  separate ReadSByte). No sbyte switch and no getUnsignedByte/readUnsignedByte are added.
+- JVM-only families stay replaced, without Java-named facades, and every absent name is
+  recorded with its replacement in the manifest entry's publicNameReview:
+  Promise/Future/listener members use Task and TaskCompletionSource (Microsoft Learn,
+  Task-based Asynchronous Pattern); ExecutorService invokeAll/invokeAny/shutdownNow use
+  Task.WhenAll/WhenAny and ShutdownGracefullyAsync; NIO buffers, addresses, byte order and
+  backing arrays use Memory/Span/ReadOnlySequence, scoped pins, MemoryMarshal.TryGetArray
+  and explicit BE/LE accessors (Microsoft Learn, Memory<T> and Span<T> usage guidelines);
+  Unsafe, VarHandle and JVM platform probes have no CLR counterpart; Java collection and
+  iterator interfaces use the BCL collection interfaces; Throwable.fillInStackTrace and
+  initCause are covered by Exception (the stack is captured when thrown and
+  InnerException is set at construction, Microsoft Learn Exception.InnerException).
+
+## Source class names in text
+
+Java toString() and messages name classes in three ways, mapped as follows:
+StringUtil.simpleClassName(x) -> StringUtil.SimpleClassName(x) (namespace-less
+FullName, generic arity removed, nested types spelled Outer+Inner for Java's
+Outer$Inner); Class.getName() -> Type.FullName; Class.getSimpleName() -> the CLR
+type name (nameof). CLR-renamed types keep their CLR spelling (ITimerTask for
+TimerTask, TaskCanceledException for CancellationException). Two Roslyn listings
+compared the four modules with the pinned sources: all 48 C# ToString() overrides
+paired with the 52 Java toString() bodies by class name, and all 29 Type.Name,
+Type.FullName and nameof(type) values that reach text. Changes:
+
+- simpleClassName(this) restored where GetType().Name, nameof or a literal class
+  name stood in: DefaultByteBufHolder, PooledByteBufAllocatorMetric,
+  UnpooledByteBufAllocatorMetric (nested, so "UnpooledByteBufAllocator+
+  UnpooledByteBufAllocatorMetric"), DefaultChannelGroup and the bootstrap configs,
+  including simpleClassName(group) and simpleClassName(childGroup).
+- getName() restored: LeanCancellationException.toString (the CLR counterpart's
+  FullName), MessageFormatter's failed-toString report and the stream channel's
+  "Unexpected message type: " + StringUtil.className(msg).
+- Missing overrides ported: AbstractChannelHandlerContext.toString
+  ("ChannelHandlerContext(name, channel)") and DefaultChannelPipeline.toString
+  ("DefaultChannelPipeline{(name = handler FullName), ...}", sealed like the final
+  source method), with its original Javadoc.
+
+Evidence: JDK 21 runs of the pinned classes print
+"UnpooledByteBufAllocator$UnpooledByteBufAllocatorMetric(usedHeapMemory: 0;
+usedDirectMemory: 0)", "DefaultChannelGroup(name: g, size: 0)",
+"ServerBootstrap(ServerBootstrapConfig(group: DefaultEventLoopGroup, childGroup:
+DefaultEventLoopGroup))", "ChannelHandlerContext(ChannelInboundHandlerAdapter#0,
+[id: 0xembedded, L:embedded - R:embedded])" and the pipeline text;
+JavaStringConversionContractTest asserts the CLR texts. Since 2026-11-17 the
+EmbeddedChannelPipeline subclass prints "EmbeddedChannel+EmbeddedChannelPipeline{...}" for
+the JVM's "EmbeddedChannel$EmbeddedChannelPipeline{...}". Remaining differences that follow
+earlier structural decisions: a bootstrap channel factory is a
+Func<IChannel> delegate rather than ReflectiveChannelFactory; EndPoint/IPAddress
+text differs from InetSocketAddress/InetAddress.toString(). Java classes whose
+toString() has no CLR counterpart class (Version, IntEntry, SwappedByteBuf,
+PromiseTask adapters, DefaultPromise) are not ported types.
+
+## Source AppendableCharSequence bounds
+
+AppendableCharSequence keeps the pinned checks rather than a strict CLR range:
+charAt and the indexer reject only index > length() (index == length() reads the
+retained buffer character; a negative index or one equal to the buffer size fails
+in the array access), subSequence relies on Arrays.copyOfRange (zero padding past
+the buffer, "from > to" IllegalArgumentException), append(csq, start, end) only
+checks csq.length() >= end with the source message, and substring checks
+start <= length() and end - start <= length() with the source message.
+IndexOutOfBoundsException thrown by the source maps to ArgumentOutOfRangeException
+without a parameter name so Message is the source text. The Arrays helper now
+follows java.util.Arrays.copyOfRange and System.arraycopy: the end may exceed the
+array, from > to is an ArgumentException "from > to" and every range violation is
+ArgumentOutOfRangeException. AsciiString.toByteArray(start, end), the other
+copyOfRange caller, inherits the JDK padding. 98 probe rows (charAt, subSequence,
+substring, append with String and AppendableCharSequence sources, setLength and
+copyOfRange) match the pinned Java output.
 
 ## Native MAC address text conversion
 
@@ -8336,3 +8671,164 @@ for the test and total worker joins. This changes test timing policy, not detect
 behavior or production performance. The pristine tracked-source stress control is
 retained separately. Whole common, the separate package/MTP configuration and
 focused Global completion stall remain open.
+
+## Common closure review decisions (2026-11-16)
+
+Design-level adaptations made while finishing the last 58 pending/in-progress Common
+entries. Per-entry evidence is in the manifest; the summary is in
+[common-porting.md](common-porting.md#common-closure-review-2026-11-16).
+
+- ConcurrentSkipListIntObjMultimap is now a faithful port of the pinned skip list
+  under its Java name; the SortedList/Try-API stand-in ConcurrentOrderedMultiMap
+  ([common-ordered-multimap.md](common-ordered-multimap.md)) is deleted.
+  AtomicReferenceFieldUpdater CAS maps to Interlocked.CompareExchange on volatile
+  fields (https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked.compareexchange),
+  VarHandle.acquireFence to Volatile.ReadBarrier
+  (https://learn.microsoft.com/en-us/dotnet/api/system.threading.volatile.readbarrier),
+  LongAdder to Interlocked.Add, ThreadLocalRandom.nextInt() to a full 32-bit
+  Random.Shared value (the level choice uses the sign bit). Buffer's
+  AdaptivePoolingAllocator chunk cache keeps its recorded SortedDictionary.
+- OutOfDirectMemoryError is ported. NativeMemoryAllocator's reservation limit (the
+  counterpart of incrementMemoryCounter/DIRECT_MEMORY_LIMIT) throws it with the
+  source text; it derives from the unsealed OutOfMemoryException
+  (https://learn.microsoft.com/en-us/dotnet/api/system.outofmemoryexception), so
+  existing handlers still catch it. Host allocation failures stay OutOfMemoryException.
+- Ordered scheduled work: like ScheduledFutureTask.run, a due task runs even after
+  the executor is shut down (for example in the final confirmShutdown drain); shutdown
+  only stops a periodic task from being re-added. The CLR still cancels that periodic
+  task instead of leaving it pending forever. Unordered admission keeps its own
+  run-after-termination guard.
+- AsciiString: java.lang.CharSequence maps to ICharSequence (IReadOnlyList<char>
+  plus the CharSequence helpers Netty needs). The instance contains/indexOf/
+  lastIndexOf(CharSequence) and split(char) methods are restored from the source;
+  matches(String)/split(String, int) stay replaced by Regex. compareTo(CharSequence)
+  is IComparable<ICharSequence>; the non-generic CompareTo(object) follows the
+  IComparable contract (https://learn.microsoft.com/en-us/dotnet/api/system.icomparable.compareto).
+  subSequence returns AsciiString with explicit ICharSequence implementations.
+- Java package documentation (package-info.java) is kept at a file-scoped namespace
+  declaration, as Resolver already does; C# documentation comments cannot document a
+  namespace (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/).
+- @UnstableApi (RetentionPolicy.SOURCE) is a [Conditional] attribute class, which is
+  not emitted to metadata unless its symbol is defined
+  (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.conditionalattribute).
+  @SuppressForbidden (CLASS) stays an ordinary attribute.
+- JVM build/packaging artifacts (Animal Sniffer marker, JPMS DoNotRemove placeholders,
+  shaded package-info, GraalVM substitutions) and @Deprecated types are not ported;
+  reasons and original comments are in [common-jvm-source-exclusions.md](common-jvm-source-exclusions.md).
+- Logging: InternalLoggerFactory keeps the source newDefaultFactory/useJdkLoggerFactory
+  steps with InternalDefaultLoggerFactory (TraceSource) as the JDK-logging replacement;
+  MessageFormatter searches anchors ordinally like String.indexOf.
+- Stack traces: ThrowableUtil.unknownStackTrace writes StackTraceElement's
+  "Type.method(Unknown Source)" frame; GlobalEventExecutor's stackless termination
+  failure freezes that frame (no fillInStackTrace on the CLR).
+- Visibility follows Java where nothing outside the package needs more:
+  AsciiStringUtil, SingleThreadEventExecutor.offerTask/DEFAULT_MAX_PENDING_EXECUTOR_TASKS,
+  PlatformDependent classifier helpers are internal; SingleThreadEventExecutor.wakeup is
+  protected internal; DefaultThreadProperties and the CharEqualityComparator family are
+  nested types again (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/access-modifiers).
+- PlatformDependent reads os-release through BoundedInputStream (8 KiB) as the source
+  does, and maps java.io.tmpdir to Path.GetTempPath()
+  (https://learn.microsoft.com/en-us/dotnet/api/system.io.path.gettemppath).
+  PlatformDependent0 is recorded as a dissolved CLR replacement; every JVM-only name
+  family of both files is listed in the PlatformDependent entry's jvmNameReview.
+
+## Transport Java type names and hierarchy (2026-11-16)
+
+Transport follows the naming rule above at type level; the full map is in
+[transport-porting.md](transport-porting.md#java-type-names-and-hierarchy-2026-11-16).
+
+- Channel classes take the Java names (`NioSocketChannel`, `NioServerSocketChannel`,
+  `NioDatagramChannel`, `NioDomainSocketChannel`, `NioServerDomainSocketChannel`) and the
+  Java hierarchy under `AbstractNioChannel` -> `AbstractNioByteChannel` /
+  `AbstractNioMessageChannel` (namespace `Netty.NET.Transport.Channels.Nio`). The
+  underlying `System.Net.Sockets.Socket` is named `JavaChannel()` like the source accessor
+  and is recorded in `// CLR:` comments
+  (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket).
+- Missing Java interfaces are added with the `I` prefix (`ISocketChannel`,
+  `IServerSocketChannel`, `IDatagramChannel`, `IChannelInboundInvoker`, `IChannelPipeline`,
+  `IChannelHandlerContext`); handlers take `IChannelHandlerContext` and `IChannel.Pipeline`
+  returns `IChannelPipeline`. As for the Common and socket-config interfaces, members that
+  Java re-declares only to narrow a return type are inherited unchanged: C# 9 covariant
+  returns cover class overrides only
+  (https://github.com/dotnet/csharplang/blob/main/proposals/csharp-9.0/covariant-returns.md).
+- Package-private Java classes stay internal (`AbstractChannelHandlerContext`,
+  `DefaultChannelHandlerContext`, `FailedChannel`).
+- Where Java repeats code in sibling classes (stream members in `NioSocketChannel` and
+  `NioDomainSocketChannel`, the accept loop in both NIO server channels) and the CLR
+  implementations are identical, the code lives once in the closest common Java base
+  class, with a `// CLR:` note.
+
+## Transport I/O core readiness (2026-11-16)
+
+- Decision: the Transport I/O core follows the Java 4.2 `IoHandler`/`IoHandle`/`IoRegistration`/`IoOps`/`IoEvent`
+  interfaces. `NioIoHandler` reports `SelectionKey`-valued `NioIoOps` readiness from a private `Socket.Select`
+  selector with a self-connected loopback UDP wakeup socket, the design of OpenJDK `WindowsSelectorImpl`
+  (`select()` fd sets plus a wakeup pipe). NIO channels use non-blocking `Socket` calls (`Blocking = false`,
+  `SocketError.WouldBlock` for Java's 0/`null`).
+- Rejected alternative: arming CLR asynchronous operations per interest (zero-byte receive, `AcceptAsync`,
+  `ConnectAsync`, send completion), the completion style of Netty's io_uring transport (`IoUringIoOps`,
+  `IoUringIoEvent`, `IoUringIoHandler`). A zero-length UDP receive consumes the datagram and write readiness
+  would need a data-carrying send, so completions could not stay pure readiness.
+- Common: no change. `SingleThreadEventExecutor` already exposes the hooks `SingleThreadIoEventLoop` needs
+  (`Wakeup(bool)`, `DelayNanos`, `DeadlineNanos`, `HasScheduledTasks`, `RunAllTasks(long)`, `ReportActiveIoTime`,
+  `CanSuspend(int)`, `Cleanup`, task-queue constructors). `SystemTimer.NanoTime()` is the `System.nanoTime()`
+  that the I/O handlers pass to `IoHandlerContext.delayNanos`.
+- Evidence: https://learn.microsoft.com/dotnet/api/system.net.sockets.socket.select,
+  https://learn.microsoft.com/windows/win32/api/winsock2/nf-winsock2-select,
+  https://github.com/openjdk/jdk/blob/master/src/java.base/windows/classes/sun/nio/ch/WindowsSelectorImpl.java;
+  details in docs/transport-porting.md (Transport I/O core alignment).
+
+## Transport comment and contract completion (2026-11-16)
+
+- Per-comment dispositions inside ported entries: an original comment stays with the Java code it documents.
+  Only a comment whose documented member is `@Deprecated` (with a named replacement) or uses a JVM-only API
+  (Future/Promise family, NIO selector/provider plumbing, ClassLoader/JMX reflection, `fillInStackTrace`, the
+  folded `Channel.Unsafe`) may be left out, and the manifest names that member; the checker verifies it in the
+  pinned source (docs/transport-porting.md, "Comment and contract completion").
+- DefaultChannelId: the Java machine/process/sequence/timestamp/random layout replaces the earlier Guid, so the
+  four layout tests are mapped. `Environment.ProcessId` replaces ProcessHandle/JMX
+  ([Environment.ProcessId](https://learn.microsoft.com/dotnet/api/system.environment.processid)).
+- `IEventLoop` extends `IEventLoopGroup` as `EventLoop` does; a default interface implementation returns `this`
+  from `Next()`. `IChannelInboundHandler` re-abstracts `IChannelHandler.ExceptionCaught` explicitly instead of
+  hiding it, so there is still one slot
+  ([re-abstraction](https://learn.microsoft.com/dotnet/csharp/language-reference/proposals/csharp-8.0/default-interface-methods#reabstraction)).
+- Bootstraps: a public abstract `AbstractBootstrap` holds the shared Java-shaped registration/bind machinery.
+  The builder members stay on the subclasses (no self-typed generic parameter). A `Task` stands for the
+  `ChannelFuture`; `IsCompleted` is the `isDone()` fast path and continuations replace listeners. Promise
+  notification executors (`PendingRegistrationPromise`) have no Task counterpart.
+- `AbstractChannel` caches `localAddress()`/`remoteAddress()` over abstract `LocalAddress0()`/`RemoteAddress0()`
+  as Java does, so an address read before close stays readable after it.
+- `annotateConnectException`: ConnectException, NoRouteToHostException and SocketException are all
+  `SocketException`. The annotated result is a new `SocketException` with the same error code and the Java
+  message (`SocketException` takes no inner exception). `IsConnected`/`AlreadyInProgress` stand for Java's
+  non-SocketException `AlreadyConnectedException`/`ConnectionPendingException` and are not annotated
+  ([SocketException constructor](https://learn.microsoft.com/dotnet/api/system.net.sockets.socketexception.-ctor)).
+- `NioDatagramChannel()` opens the JDK default family: IPv6 with `Socket.DualMode` when IPv6 is available, as
+  OpenJDK `DatagramChannelImpl` uses INET6 and clears IPV6_V6ONLY
+  ([Socket.DualMode](https://learn.microsoft.com/dotnet/api/system.net.sockets.socket.dualmode)).
+- `DatagramPacket` derives from `DefaultAddressedEnvelope<ByteBuf, IPEndPoint>` (Java hierarchy), so its
+  `ToString` is the envelope text and equality is reference identity.
+
+## Transport context and pipeline structure (2026-11-17)
+
+AbstractChannelHandlerContext, DefaultChannelPipeline and EmbeddedChannel follow the Java structure
+(docs/transport-porting.md, "Context, pipeline and EmbeddedChannel structure"). CLR decisions:
+
+- Dispatch: the source calls `handler()` through `ChannelInboundHandlerAdapter`/`ChannelDuplexHandler`/
+  `ChannelOutboundHandlerAdapter` casts only to avoid HotSpot's secondary-supers cache contention (JDK-8180450).
+  A C# call through the adapter class would bypass a handler that re-implements the interface explicitly, so
+  the context keeps the head check and then calls the interface
+  ([interface re-implementation](https://learn.microsoft.com/dotnet/csharp/language-reference/language-specification/interfaces)).
+- Handler state: `Interlocked.CompareExchange` on the volatile field replaces `AtomicIntegerFieldUpdater`; CS0420 is
+  suppressed for it because Interlocked performs its own fenced access
+  ([CS0420](https://learn.microsoft.com/dotnet/csharp/language-reference/compiler-messages/cs0420)).
+- Promises: each outbound operation returns its Task; across an executor hop the operation is re-invoked from the
+  calling context and its Task completes a `TaskCompletionSource` with `RunContinuationsAsynchronously` (the
+  source passes the same promise down). `safeExecute` without a promise stands for `channel().voidPromise()` and
+  fires `exceptionCaught` for a registered channel
+  ([TaskCompletionSource](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcompletionsource)).
+- `WriteTask` uses the Common `Recycler` (`Recycler.Create`); `IdentityHashMap` is a `Dictionary` with
+  `ReferenceEqualityComparer.Instance`; `synchronized (this)` is `lock` on a private object
+  ([lock statement](https://learn.microsoft.com/dotnet/csharp/language-reference/statements/lock)).
+- `EmbeddedChannel.builder()` cannot be declared next to the nested `Builder` type
+  ([CS0102](https://learn.microsoft.com/dotnet/csharp/misc/cs0102)); `new EmbeddedChannel.Builder()` replaces it.

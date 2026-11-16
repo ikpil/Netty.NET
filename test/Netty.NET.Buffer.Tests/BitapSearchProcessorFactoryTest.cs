@@ -22,7 +22,7 @@ namespace Netty.NET.Buffer.Tests;
 public class BitapSearchProcessorFactoryTest
 {
     [Fact]
-    public void AcceptMaximumLengthNeedle()
+    public void TestAcceptMaximumLengthNeedle()
     {
         var processor = AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(new byte[64]).NewSearchProcessor();
         for (int i = 0; i < 63; i++) Assert.True(processor.Process(0));
@@ -31,6 +31,6 @@ public class BitapSearchProcessorFactoryTest
     }
 
     [Fact]
-    public void RejectTooLongNeedle()
+    public void TestRejectTooLongNeedle()
         => Assert.Throws<ArgumentException>(() => AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(new byte[65]));
 }

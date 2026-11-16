@@ -82,33 +82,35 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
      * using {@link DefaultThreadFactory}.
      */
     /// <remarks>Workers start on admission. Zero uses one transient worker while reservations remain.</remarks>
-    public UnorderedThreadPoolEventExecutor(int workerCount)
-        : this(workerCount, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor))) { }
+    public UnorderedThreadPoolEventExecutor(int corePoolSize)
+        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor))) { }
 
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)}
      */
-    public UnorderedThreadPoolEventExecutor(int workerCount, IThreadFactory threadFactory)
-        : this(workerCount, threadFactory, (_, _) => throw new RejectedExecutionException()) { }
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory)
+        // CLR: ThreadPoolExecutor.AbortPolicy throws RejectedExecutionException("Task ... rejected from ...");
+        // the CLR default delegate throws it without that JDK text (Action has no task-specific ToString).
+        : this(corePoolSize, threadFactory, (_, _) => throw new RejectedExecutionException()) { }
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int,
      * ThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
-    public UnorderedThreadPoolEventExecutor(int workerCount, Action<Action, UnorderedThreadPoolEventExecutor> handler)
-        : this(workerCount, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler) { }
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, Action<Action, UnorderedThreadPoolEventExecutor> handler)
+        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler) { }
 
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory, RejectedExecutionHandler)}
      */
     // CLR represents the JDK rejection handler as a delegate; it is not Netty's SingleThread rejection handler.
-    public UnorderedThreadPoolEventExecutor(int workerCount, IThreadFactory threadFactory,
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory,
         Action<Action, UnorderedThreadPoolEventExecutor> handler)
     {
-        if (workerCount < 0) throw new ArgumentOutOfRangeException(nameof(workerCount));
+        if (corePoolSize < 0) throw new ArgumentOutOfRangeException(nameof(corePoolSize));
         ArgumentNullException.ThrowIfNull(threadFactory);
         ArgumentNullException.ThrowIfNull(handler);
-        configuredWorkerCount = workerCount;
+        configuredWorkerCount = corePoolSize;
         this.threadFactory = threadFactory;
         rejectedHandler = handler;
         stopToken = stopSource.Token;
@@ -146,7 +148,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             else termination.TrySetResult();
         }
     }
-    public Task Termination => termination.Task;
+    public Task TerminationFuture => termination.Task;
     public Task ShutdownGracefullyAsync() => ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
     /// <summary>Gets the number of pending invocation reservations, including future deadlines.</summary>
     /// <remarks>
@@ -178,7 +180,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     public Task StopAsync()
     {
         StopCore();
-        return Termination;
+        return TerminationFuture;
     }
 
     private void StopCore()
@@ -263,7 +265,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 PublishPoolState();
             }
         }
-        return Termination;
+        return TerminationFuture;
     }
 
     private void CheckGracefulShutdown()
@@ -768,10 +770,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             this.owner = owner;
             _task = task;
             sequence = Interlocked.Increment(ref nextSequence) - 1;
-            task.AssignId(sequence);
+            task.SetId(sequence);
         }
         public bool IsCancelled() => _task.IsCanceled;
-        public void CancelOuter() => _task.CancelForShutdown();
+        public void CancelOuter() => _task.CancelWithoutRemove();
         public void Reject(Exception error) => _task.Reject(error);
         public void Run() => _task.QueueCallback();
     }

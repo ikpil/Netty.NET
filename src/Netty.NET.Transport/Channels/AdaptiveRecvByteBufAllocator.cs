@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Channels;
@@ -59,11 +60,15 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
      */
     public AdaptiveRecvByteBufAllocator(int minimum, int initial, int maximum)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minimum);
+        ObjectUtil.CheckPositive(minimum, "minimum");
         if (initial < minimum)
-            throw new ArgumentOutOfRangeException(nameof(initial));
+        {
+            throw new ArgumentException("initial: " + initial.ToString(CultureInfo.InvariantCulture));
+        }
         if (maximum < initial)
-            throw new ArgumentOutOfRangeException(nameof(maximum));
+        {
+            throw new ArgumentException("maximum: " + maximum.ToString(CultureInfo.InvariantCulture));
+        }
         _minimum = minimum;
         _initial = initial;
         _maximum = maximum;

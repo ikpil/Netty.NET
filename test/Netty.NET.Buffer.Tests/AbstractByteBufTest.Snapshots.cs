@@ -203,9 +203,9 @@ public abstract partial class AbstractByteBufTest
     public void TestReadOnlyRelease()
     {
         ByteBuf buf = NewBuffer(8);
-        Assert.Equal(1, buf.ReferenceCount);
+        Assert.Equal(1, buf.RefCnt);
         Assert.True(buf.AsReadOnly().Release());
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
     }
 
 }

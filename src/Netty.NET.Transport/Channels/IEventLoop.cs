@@ -25,7 +25,12 @@ namespace Netty.NET.Transport.Channels;
  * implementation details and internals.
  *
  */
-public interface IEventLoop : IOrderedEventExecutor
+public interface IEventLoop : IOrderedEventExecutor, IEventLoopGroup
 {
-    Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default);
+    // CLR: EventLoop.next() is AbstractEventExecutor.next(), which returns this.
+    IEventLoop IEventLoopGroup.Next() => this;
+
+    // CLR: IOrderedEventExecutor and IEventLoopGroup are both reachable; redeclaring register(Channel) here gives
+    // callers that hold an IEventLoop one member.
+    new Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default);
 }

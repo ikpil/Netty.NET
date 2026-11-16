@@ -27,6 +27,6 @@ public class ChannelPipelineException : ChannelException
      */
     public ChannelPipelineException() { }
     public ChannelPipelineException(string message) : base(message) { }
-    public ChannelPipelineException(string message, Exception innerException) : base(message, innerException) { }
-    public ChannelPipelineException(Exception cause) : base(cause.Message, cause) { }
+    public ChannelPipelineException(string message, Exception cause) : base(message, cause) { }
+    public ChannelPipelineException(Exception cause) : base(cause) { }
 }

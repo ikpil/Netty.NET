@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
@@ -77,7 +78,8 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
         maxChildren = ObjectUtil.CheckPositive(maxThreads, "maxThreads");
         if (minThreads > maxThreads)
         {
-            throw new ArgumentException($"minThreads: {minThreads} must not be greater than maxThreads: {maxThreads}");
+            // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
+            throw new ArgumentException(string.Create(CultureInfo.CurrentCulture, $"minThreads: {minThreads} must not be greater than maxThreads: {maxThreads}"));
         }
         utilizationCheckPeriodNanos = AbstractScheduledEventExecutor.ToNanos(ObjectUtil.CheckPositive(utilizationWindow, "utilizationWindow"));
         this.scaleDownThreshold = ObjectUtil.CheckInRange(scaleDownThreshold, 0.0, 1.0, "scaleDownThreshold");
@@ -86,7 +88,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
         {
             throw new ArgumentException(
                     "scaleDownThreshold must be less than scaleUpThreshold: " +
-                    scaleDownThreshold + " >= " + scaleUpThreshold);
+                    JdkDecimal.DoubleToString(scaleDownThreshold) + " >= " + JdkDecimal.DoubleToString(scaleUpThreshold));
         }
         this.maxRampUpStep = ObjectUtil.CheckPositive(maxRampUpStep, "maxRampUpStep");
         this.maxRampDownStep = ObjectUtil.CheckPositive(maxRampDownStep, "maxRampDownStep");
@@ -157,7 +159,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
 
             if (executors.Length > 0)
             {
-                Task termination = executors[0].Termination;
+                Task termination = executors[0].TerminationFuture;
                 // CLR adaptation: scheduled-task cancellation is thread-safe;
                 // no Future listener or caller context owns this lifecycle action.
                 termination.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>

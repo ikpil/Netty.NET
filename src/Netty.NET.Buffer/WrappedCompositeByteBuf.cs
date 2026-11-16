@@ -17,6 +17,7 @@
 using System;
 using System.Buffers;
 using System.Text;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -30,15 +31,15 @@ internal partial class WrappedCompositeByteBuf : CompositeByteBuf
 
     public sealed override ByteBuf Unwrap() => Wrapped;
     public sealed override string ToString() => Wrapped.ToString();
-    public override IByteBufAllocator Allocator => Wrapped.Allocator;
+    public override IByteBufAllocator Alloc() => Wrapped.Alloc();
     public override int Capacity { get => Wrapped.Capacity; set => Wrapped.Capacity = value; }
     public override bool IsDirect => Wrapped.IsDirect;
     public override bool IsReadOnly => Wrapped.IsReadOnly;
     public override bool IsContiguous => Wrapped.IsContiguous;
     public override int MaxFastWritableBytes => Wrapped.MaxFastWritableBytes;
-    public sealed override bool CanRead(int byteCount) => Wrapped.CanRead(byteCount);
-    public override bool CanWrite(int byteCount) => Wrapped.CanWrite(byteCount);
-    public override int ReferenceCount => Wrapped.ReferenceCount;
+    public sealed override bool IsReadable(int size) => Wrapped.IsReadable(size);
+    public override bool IsWritable(int size) => Wrapped.IsWritable(size);
+    public override int RefCnt => Wrapped.RefCnt;
     public override CompositeByteBuf Retain(int increment = 1) { Wrapped.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => Wrapped.Release(decrement);
     public override CompositeByteBuf Touch(object hint = null) { Wrapped.Touch(hint); return this; }
@@ -82,13 +83,16 @@ internal partial class WrappedCompositeByteBuf : CompositeByteBuf
     public override int BytesBefore(byte value) => Wrapped.BytesBefore(value);
     public override int BytesBefore(int length, byte value) => Wrapped.BytesBefore(length, value);
     public override int BytesBefore(int index, int length, byte value) => Wrapped.BytesBefore(index, length, value);
-    public override string GetString(Encoding encoding) => Wrapped.GetString(encoding);
-    public override string GetString(int index, int length, Encoding encoding)
-        => Wrapped.GetString(index, length, encoding);
-    public override string ReadString(int length, Encoding encoding) => Wrapped.ReadString(length, encoding);
-    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
-        => Wrapped.SetString(index, text, encoding);
-    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => Wrapped.WriteString(text, encoding);
+    public override string ToString(Encoding charset) => Wrapped.ToString(charset);
+    public override string ToString(int index, int length, Encoding charset)
+        => Wrapped.ToString(index, length, charset);
+    public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
+        => Wrapped.GetCharSequence(index, length, charset);
+    public override ICharSequence ReadCharSequence(int length, Encoding charset) => Wrapped.ReadCharSequence(length, charset);
+    public override string ReadString(int length, Encoding charset) => Wrapped.ReadString(length, charset);
+    public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
+        => Wrapped.SetCharSequence(index, sequence, charset);
+    public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => Wrapped.WriteCharSequence(sequence, charset);
     public override int ForEachByte(Func<byte, bool> processor) => Wrapped.ForEachByte(processor);
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         => Wrapped.ForEachByte(index, length, processor);

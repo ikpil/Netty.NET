@@ -18,18 +18,21 @@ using System;
 
 namespace Netty.NET.Transport.Channels;
 
-// CLR channels always expose the native DefaultChannelPipeline. Keep the estimator snapshot and
-// route byte accounting through that pipeline's current owner; a detached/closed outbound queue is a no-op.
+// CLR channels always expose the native DefaultChannelPipeline (newTracker's DefaultChannelPipelinePendingBytesTracker
+// case). Keep the estimator snapshot and route byte accounting through that pipeline's current owner; a
+// detached/closed outbound queue is a no-op.
 internal sealed class PendingBytesTracker
 {
     private readonly IChannel _channel;
+    private readonly DefaultChannelPipeline _pipeline;
     private readonly IMessageSizeEstimator.IHandle _estimator;
     internal PendingBytesTracker(IChannel channel)
     {
         _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-        _estimator = channel.Pipeline.EstimatorHandle ?? throw new InvalidOperationException("Message size estimator returned a null handle.");
+        _pipeline = (DefaultChannelPipeline)channel.Pipeline;
+        _estimator = _pipeline.EstimatorHandle() ?? throw new InvalidOperationException("Message size estimator returned a null handle.");
     }
-    internal int Size(object message) => _estimator.Size(message);
+    internal int Size(object msg) => _estimator.Size(msg);
     private ChannelOutboundBuffer Buffer
     {
         get
@@ -37,7 +40,7 @@ internal sealed class PendingBytesTracker
             // We need to guard against null as channel.unsafe().outboundBuffer() may returned null
             // if the channel was already closed when constructing the PendingBytesTracker.
             // See https://github.com/netty/netty/issues/3967
-            var buffer = _channel.Pipeline.Owner.OutboundBuffer;
+            var buffer = _pipeline.Owner.OutboundBuffer;
             if (_channel.IsOpen && !buffer.IsClosed)
                 return buffer;
             // Noop

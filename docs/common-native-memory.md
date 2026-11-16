@@ -46,8 +46,9 @@ Cleaner/DirectCleaner use NativeMemory, SafeHandle and MemoryManager instead of
 a replicated provider hierarchy. CleanerJava6/9/24Linker/25 are JVM provider
 implementations, with their native allocation/deallocation purpose fulfilled by
 the CLR owner. Their exact original comments are retained as provenance below.
-The unused OutOfDirectMemoryErrorException adapter remains a separate pending
-review; allocation failures here use the standard OutOfMemoryException.
+OutOfDirectMemoryError is ported (2026-11-16): the reservation limit throws it with
+the source message "failed to allocate N byte(s) of direct memory (used: U, max: M)";
+host allocation failures keep the standard OutOfMemoryException.
 
 ## Native API and lifetime rules
 
@@ -121,7 +122,7 @@ required aligned payload capacity.
 | PlatformDependent0Test zero address | Rejects null/nonempty memory explicitly; accepts null/empty memory. Unlike Java's metadata-only ByteBuffer, CLR nonempty Span requires a nonzero pointer. Real pinned allocation consumers supply valid addresses. |
 | PlatformDependent0Test Java version/parser and SecurityManager methods | Remain JVM-specific exclusions with exact decisions/comments in common-platform-runtime.md. |
 | PlatformDependentTest zero-capacity allocation | Allocates an empty native owner, asserts its nonzero pin address and verifies deterministic reservation return. |
-| PlatformDependentTest Java-25 cleaner provider | Replaced by ClrNativeAllocationSupportsDeterministicCleanup, exercising actual zeroed native storage and release. No unsupported-runtime guard hides the operation. |
+| PlatformDependentTest Java-25 cleaner provider | Replaced by Java25MustHaveCleanerImplAvailable (named ClrNativeAllocationSupportsDeterministicCleanup before the 2026-11-14 one-to-one test naming decision), exercising actual zeroed native storage and release. No unsupported-runtime guard hides the operation. |
 | PlatformDependentTest equality, constant-time equality, zero and ASCII hash | Original cases remain and execute with the CLR primitive implementation. This is not a certification of all PlatformDependent APIs. |
 
 NativeMemoryContractTest adds 26 cases covering native/empty ownership, bounded

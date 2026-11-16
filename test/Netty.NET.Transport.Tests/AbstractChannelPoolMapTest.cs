@@ -30,7 +30,7 @@ public class AbstractChannelPoolMapTest
     [Fact]
     public async Task TestMap()
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
         try
         {
             var bootstrap = new Bootstrap().RemoteAddress(new LocalAddress(ChannelPoolTestUtils.GetLocalAddrId()))
@@ -56,7 +56,7 @@ public class AbstractChannelPoolMapTest
     [Fact]
     public async Task TestRemoveClosesChannelPool()
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
         try
         {
             var bootstrap = new Bootstrap().RemoteAddress(new LocalAddress(ChannelPoolTestUtils.GetLocalAddrId()))
@@ -75,7 +75,7 @@ public class AbstractChannelPoolMapTest
     [Fact]
     public async Task TestCloseClosesPoolsImmediately()
     {
-        var group = new DefaultEventLoopGroup(2);
+        var group = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
         try
         {
             var bootstrap = new Bootstrap().RemoteAddress(new LocalAddress(ChannelPoolTestUtils.GetLocalAddrId()))

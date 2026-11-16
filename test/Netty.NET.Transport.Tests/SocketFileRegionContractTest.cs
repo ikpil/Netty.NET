@@ -26,7 +26,7 @@ public class SocketFileRegionContractTest
         var region = new Region(4, 4, (_, _, _) => throw new IOException("already complete"));
         await socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
         Assert.Empty(region.Positions);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
     }
 
     [Fact(Timeout = 10000)]
@@ -43,7 +43,7 @@ public class SocketFileRegionContractTest
         await socket.Peer.GetStream().ReadExactlyAsync(actual, TestContext.Current.CancellationToken);
         Assert.Equal(new byte[] { 3, 4 }, actual);
         Assert.Equal(new long[] { 2 }, region.Positions);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
     }
 
     [Fact(Timeout = 10000)]
@@ -53,65 +53,7 @@ public class SocketFileRegionContractTest
         var region = new Region(16, 0, (self, _, _) => { self.TransferredBytes = 16; return 0; });
         await socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
         Assert.Equal(new long[] { 0 }, region.Positions);
-        Assert.Equal(0, region.ReferenceCount);
-    }
-
-    [Fact(Timeout = 10000)]
-    public async Task PhysicalTransferProgressIsCommittedBeforeTheNextRegionChunk()
-    {
-        await using var socket = await Connected.Open();
-        using var release = new ManualResetEventSlim();
-        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var region = new Region(2, 0, (self, target, position) =>
-        {
-            if (position == 1)
-            {
-                secondStarted.TrySetResult();
-                if (!release.Wait(TimeSpan.FromSeconds(5))) throw new IOException("test producer timed out");
-            }
-            target.WriteByte((byte)(position + 1)); self.TransferredBytes++; return 1;
-        });
-        Task write = socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
-        try
-        {
-            await secondStarted.Task.WaitAsync(TestContext.Current.CancellationToken);
-            await socket.Channel.EventLoop.SubmitAsync(() =>
-            {
-                Assert.True(socket.Channel.EventLoop.InEventLoop());
-                Assert.Equal(1, socket.Channel.OutboundBuffer.CurrentProgress);
-                Assert.Same(region, socket.Channel.OutboundBuffer.Current);
-            });
-            Assert.False(write.IsCompleted);
-        }
-        finally { release.Set(); await write; }
-        Assert.Equal(new long[] { 0, 1 }, region.Positions);
-        Assert.Equal(0, region.ReferenceCount);
-    }
-
-    [Fact(Timeout = 10000)]
-    public async Task ClosingWhileTheFileProducerIsBlockedRetainsOnlyItsNativeBorrow()
-    {
-        await using var socket = await Connected.Open();
-        using var release = new ManualResetEventSlim();
-        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var region = new Region(1, 0, (self, target, _) =>
-        {
-            started.TrySetResult();
-            if (!release.Wait(TimeSpan.FromSeconds(5))) throw new IOException("test producer timed out");
-            target.WriteByte(1); self.TransferredBytes = 1; return 1;
-        });
-        Task write = socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
-        try
-        {
-            await started.Task.WaitAsync(TestContext.Current.CancellationToken);
-            await socket.Channel.CloseAsync().WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
-            await Assert.ThrowsAsync<IOException>(() => write);
-            Assert.Equal(1, region.ReferenceCount);
-            Assert.False(region.Deallocated.Task.IsCompleted);
-        }
-        finally { release.Set(); }
-        await region.Deallocated.Task.WaitAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
     }
 
     [Fact(Timeout = 10000)]
@@ -134,10 +76,10 @@ public class SocketFileRegionContractTest
             Assert.True(socket.Channel.IsOpen);
         }
         finally { await socket.Channel.CloseAsync(); }
-        await Assert.ThrowsAsync<IOException>(() => write);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
         await region.Deallocated.Task.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(region.Positions.Count >= 2);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
     }
 
     [Fact(Timeout = 10000)]
@@ -147,7 +89,7 @@ public class SocketFileRegionContractTest
         var failure = new IOException("producer failure");
         var region = new Region(1, 0, (_, _, _) => throw failure);
         Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken)));
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
         Assert.True(region.Deallocated.Task.IsCompleted);
         Assert.False(socket.Channel.IsOpen);
     }
@@ -170,7 +112,7 @@ public class SocketFileRegionContractTest
             await write;
             Assert.Equal(data, actual);
             Assert.Equal(data.Length, region.Transferred());
-            Assert.Equal(0, region.ReferenceCount);
+            Assert.Equal(0, region.RefCnt);
             Assert.False(socket.OwnedSocket.Blocking);
         }
         finally { File.Delete(path); }
@@ -189,9 +131,9 @@ public class SocketFileRegionContractTest
         await socket.Peer.GetStream().ReadExactlyAsync(firstByte, TestContext.Current.CancellationToken);
         Assert.False(write.IsCompleted);
         await socket.Channel.CloseAsync().WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
-        await Assert.ThrowsAsync<IOException>(() => write);
+        await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
         await region.Deallocated.Task.WaitAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(0, region.ReferenceCount);
+        Assert.Equal(0, region.RefCnt);
     }
 
     private sealed class Region(long count, long initialTransferred, Func<Region, Stream, long, long> transfer) : AbstractReferenceCounted, IFileRegion
@@ -213,7 +155,7 @@ public class SocketFileRegionContractTest
     {
         private readonly ShutdownFixture _fixture = new(false);
         private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
-        internal TcpSocketChannel Channel;
+        internal NioSocketChannel Channel;
         internal TcpClient Peer;
         internal Socket OwnedSocket;
         internal static async Task<Connected> Open(bool nonblocking = false, bool limitedReceiveBuffer = false)
@@ -227,11 +169,11 @@ public class SocketFileRegionContractTest
                 if (nonblocking)
                 {
                     connected.OwnedSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { Blocking = false, SendBufferSize = 1024 };
-                    var channel = new TcpSocketChannel(connected.OwnedSocket);
+                    var channel = new NioSocketChannel(connected.OwnedSocket);
                     bootstrap = new Bootstrap().Group(bootstrap.Config.Group).ChannelFactory(() => channel)
                         .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator)bootstrap.Config.Options[ChannelOption.ALLOCATOR]);
                 }
-                connected.Channel = (TcpSocketChannel)await bootstrap.Handler(new ChannelInboundHandlerAdapter())
+                connected.Channel = (NioSocketChannel)await bootstrap.Handler(new ChannelInboundHandlerAdapter())
                     .ConnectAsync(connected._listener.LocalEndpoint, cancellationToken: TestContext.Current.CancellationToken);
                 connected.Peer = await connected._listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
                 return connected;

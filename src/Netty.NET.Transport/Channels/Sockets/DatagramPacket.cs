@@ -23,23 +23,75 @@ namespace Netty.NET.Transport.Channels.Sockets;
 /**
  * The message container that is used for {@link DatagramChannel} to communicate with the remote peer.
  */
-public class DatagramPacket : DefaultByteBufHolder, IAddressedEnvelope<ByteBuf, IPEndPoint>
+// CLR: Java overrides retain/touch only for the covariant return type; the C# members hide the envelope's members
+// with the DatagramPacket return type and the IByteBufHolder members are implemented explicitly.
+public class DatagramPacket : DefaultAddressedEnvelope<ByteBuf, IPEndPoint>, IByteBufHolder
 {
     /**
      * Create a new instance with the specified packet {@code data} and {@code recipient} address.
      */
+    public DatagramPacket(ByteBuf data, IPEndPoint recipient) : base(data, recipient)
+    {
+    }
+
     /**
      * Create a new instance with the specified packet {@code data}, {@code recipient} address, and {@code sender}
      * address.
      */
-    public DatagramPacket(ByteBuf data, IPEndPoint recipient, IPEndPoint sender = null) : base(data)
+    public DatagramPacket(ByteBuf data, IPEndPoint recipient, IPEndPoint sender) : base(data, recipient, sender)
     {
-        if (recipient == null && sender == null)
-            throw new ArgumentNullException(nameof(recipient));
-        Recipient = recipient;
-        Sender = sender;
     }
-    public IPEndPoint Recipient { get; }
-    public IPEndPoint Sender { get; }
-    public override IByteBufHolder Replace(ByteBuf content) => new DatagramPacket(content, Recipient, Sender);
+
+    public virtual DatagramPacket Copy()
+    {
+        return Replace(Content.Copy());
+    }
+
+    public virtual DatagramPacket Duplicate()
+    {
+        return Replace(Content.Duplicate());
+    }
+
+    public virtual DatagramPacket RetainedDuplicate()
+    {
+        return Replace(Content.RetainedDuplicate());
+    }
+
+    public virtual DatagramPacket Replace(ByteBuf content)
+    {
+        return new DatagramPacket(content, Recipient, Sender);
+    }
+
+    public new DatagramPacket Retain()
+    {
+        base.Retain();
+        return this;
+    }
+
+    public new DatagramPacket Retain(int increment)
+    {
+        base.Retain(increment);
+        return this;
+    }
+
+    public new DatagramPacket Touch()
+    {
+        base.Touch();
+        return this;
+    }
+
+    public new DatagramPacket Touch(object hint)
+    {
+        base.Touch(hint);
+        return this;
+    }
+
+    IByteBufHolder IByteBufHolder.Copy() => Copy();
+    IByteBufHolder IByteBufHolder.Duplicate() => Duplicate();
+    IByteBufHolder IByteBufHolder.RetainedDuplicate() => RetainedDuplicate();
+    IByteBufHolder IByteBufHolder.Replace(ByteBuf content) => Replace(content);
+    IByteBufHolder IByteBufHolder.Retain() => Retain();
+    IByteBufHolder IByteBufHolder.Retain(int increment) => Retain(increment);
+    IByteBufHolder IByteBufHolder.Touch() => Touch();
+    IByteBufHolder IByteBufHolder.Touch(object hint) => Touch(hint);
 }

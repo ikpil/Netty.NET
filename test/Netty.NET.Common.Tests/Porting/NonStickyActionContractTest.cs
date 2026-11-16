@@ -19,7 +19,7 @@ public class NonStickyActionContractTest
         public override bool IsTerminated() => false;
         [Obsolete]
         public override void Shutdown() => throw new NotSupportedException();
-        public override Task Termination => throw new NotSupportedException();
+        public override Task TerminationFuture => throw new NotSupportedException();
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
         public override bool AwaitTermination(TimeSpan timeout) => false;
     }

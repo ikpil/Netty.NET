@@ -23,4 +23,15 @@ namespace Netty.NET.Buffer.Tests;
 public class BigEndianCompositeByteBufTest : AbstractCompositeByteBufTest
 {
     public BigEndianCompositeByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+
+    [Fact]
+    public override void TestInternalNioBufferAfterRelease()
+    {
+        // CLR: the original expects UnsupportedOperationException because a multi-component
+        // CompositeByteBuf.internalNioBuffer is unsupported before any accessibility check. The CLR
+        // AsMemory replacement checks accessibility first (ByteBuf.AsMemory) and only rejects ranges that
+        // span components (CompositeByteBuf.GetMemoryCore, NotSupportedException); the released one-byte
+        // range lies in one component, so the released composite fails with IllegalReferenceCountException.
+        TestInternalNioBufferAfterRelease0<IllegalReferenceCountException>();
+    }
 }

@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -38,7 +39,7 @@ public class ChannelPromiseTaskContractTest
         var buf = Unpooled.Buffer(1).WriteByte(1);
         Task future = fixture.Channel.WriteAndFlushAsync(buf, cancellation.Token);
         Assert.False(future.IsCompleted);
-        Assert.Equal(2, buf.ReferenceCount);
+        Assert.Equal(2, buf.RefCnt);
         cancellation.Cancel();
         Assert.False(future.IsCompleted);
         var e = new IOException("Native write failed.");
@@ -48,7 +49,7 @@ public class ChannelPromiseTaskContractTest
         Assert.False(future.IsCanceled);
         if (fail) Assert.Same(e, Assert.Throws<IOException>(() => future.GetAwaiter().GetResult()));
         else Assert.True(future.IsCompletedSuccessfully);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
         Assert.True(fixture.Channel.IsOpen);
     }
 
@@ -63,11 +64,11 @@ public class ChannelPromiseTaskContractTest
         cancellation.Cancel();
         Assert.ThrowsAny<OperationCanceledException>(() => waiting.GetAwaiter().GetResult());
         Assert.False(future.IsCompleted);
-        Assert.Equal(2, buf.ReferenceCount);
+        Assert.Equal(2, buf.RefCnt);
         fixture.Write.SetResult();
         fixture.PumpUntil(() => future.IsCompleted);
         Assert.True(future.IsCompletedSuccessfully);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     [Fact]
@@ -76,7 +77,7 @@ public class ChannelPromiseTaskContractTest
         using var fixture = new Fixture();
         var buf = Unpooled.Buffer(1).WriteByte(1);
         Task future = fixture.Channel.WriteAndFlushAsync(buf, TestContext.Current.CancellationToken);
-        Task<(bool, int)> consumer = future.ContinueWith(_ => (fixture.Loop.InEventLoop(), buf.ReferenceCount),
+        Task<(bool, int)> consumer = future.ContinueWith(_ => (fixture.Loop.InEventLoop(), buf.RefCnt),
             TestContext.Current.CancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         fixture.Write.SetResult();
         fixture.PumpUntil(() => consumer.IsCompleted);
@@ -96,18 +97,18 @@ public class ChannelPromiseTaskContractTest
         fixture.Write.SetException(e);
         fixture.PumpUntil(() => future.IsCompleted);
         Assert.Same(e, Assert.Throws<IOException>(() => future.GetAwaiter().GetResult()));
-        Assert.False(fixture.Channel.CloseCompletion.IsCompleted);
+        Assert.False(fixture.Channel.CloseFuture.IsCompleted);
         Task closeFuture = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
         fixture.PumpUntil(() => closeFuture.IsCompleted);
         Assert.True(closeFuture.IsCompletedSuccessfully);
-        Assert.True(fixture.Channel.CloseCompletion.IsCompletedSuccessfully);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.True(fixture.Channel.CloseFuture.IsCompletedSuccessfully);
+        Assert.Equal(0, buf.RefCnt);
     }
 
     private sealed class Fixture : IDisposable
     {
         internal readonly TaskCompletionSource Write = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread);
+        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread, NioIoHandler.NewFactory());
         internal readonly TaskTestChannel Channel;
         internal Fixture()
         {
@@ -136,8 +137,8 @@ public class ChannelPromiseTaskContractTest
 // These overrides implement existing CLR transport hooks, not additional Java Future APIs.
 internal sealed class TaskTestChannel(Func<object, Task> write) : AbstractChannel(null, new ChannelMetadata(false))
 {
-    public override EndPoint LocalAddress => null;
-    public override EndPoint RemoteAddress => null;
+    protected override EndPoint LocalAddress0() => null;
+    protected override EndPoint RemoteAddress0() => null;
     protected override void DoRegister() => SetActive(true);
     protected override bool ContinueOnWriteError => true;
     protected override Task DoWrite(object msg) => write(msg);

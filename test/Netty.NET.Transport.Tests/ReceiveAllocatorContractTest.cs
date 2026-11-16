@@ -115,15 +115,34 @@ public class ReceiveAllocatorContractTest
     [Theory]
     [InlineData(1)]
     [InlineData(15)]
-    [InlineData(81)]
-    public void AdaptiveAllocatorUsesCommonClrBoundedSmallRangePolicy(int size)
+    public void AdaptiveAllocatorRejectsInitialBelowFirstSourceBucketWhenTheHandleIsCreated(int size)
     {
-        var handle = new AdaptiveRecvByteBufAllocator(size, size, size).NewHandle();
-        Assert.Equal(size, handle.Guess());
-        handle.AttemptedBytesRead(size);
-        handle.LastBytesRead(size);
+        // As in the source, the constructor accepts the bounds and AdaptiveCalculator fails with an array index
+        // error (ArrayIndexOutOfBoundsException) because no 16-byte bucket fits below the initial size.
+        var allocator = new AdaptiveRecvByteBufAllocator(size, size, size);
+        Assert.Throws<IndexOutOfRangeException>(() => allocator.NewHandle());
+    }
+
+    [Fact]
+    public void AdaptiveAllocatorKeepsSourceRoundingForBoundsBetweenBuckets()
+    {
+        // Pinned AdaptiveCalculator(81, 81, 81): the first guess is the minimum, growth rounds down to the 80 bucket.
+        var handle = new AdaptiveRecvByteBufAllocator(81, 81, 81).NewHandle();
+        Assert.Equal(81, handle.Guess());
+        handle.AttemptedBytesRead(81);
+        handle.LastBytesRead(81);
         handle.ReadComplete();
-        Assert.Equal(size, handle.Guess());
+        Assert.Equal(80, handle.Guess());
+    }
+
+    [Theory]
+    [InlineData(0, 1, 2, "minimum : 0 (expected: > 0)")]
+    [InlineData(64, 63, 128, "initial: 63")]
+    [InlineData(64, 128, 127, "maximum: 127")]
+    public void AdaptiveAllocatorUsesSourceArgumentMessages(int minimum, int initial, int maximum, string message)
+    {
+        var e = Assert.Throws<ArgumentException>(() => new AdaptiveRecvByteBufAllocator(minimum, initial, maximum));
+        Assert.Equal(message, e.Message);
     }
 
     [Fact]

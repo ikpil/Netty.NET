@@ -15,84 +15,128 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Transport.Channels;
-using Netty.NET.Transport.Channels.Sockets;
-using static Netty.NET.Transport.Tests.ManualIoEventLoopSourceTest;
+using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1031 // Drive the original scenario on the same physical owner thread.
 public class NioIoHandlerSourceTest
 {
     [Fact(Timeout = 5000)]
     public void TestNioHandlerCanBeDrivenByMainThread()
     {
-        var cancellation = TestContext.Current.CancellationToken;
-        Thread owner = Thread.CurrentThread;
+        IIoHandlerFactory factory = NioIoHandler.NewFactory();
+        Thread current = Thread.CurrentThread;
+        ConcurrentQueue<Action> tasks = new ConcurrentQueue<Action>();
         // Create our own IoExecutor that is driven by the main thread
-        var loop = new ManualIoEventLoop(owner);
-        // Open a ServerSocketChannel that we can connect to.
-        var address = Socket.OSSupportsIPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
-        using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        socket.Bind(new IPEndPoint(address, 0));
-        socket.Listen(128);
-        var listener = new TcpServerSocketChannel(socket);
-        listener.Config.SetAutoRead(false);
-        var accepted = new Accepted();
-        listener.Pipeline.AddLast(accepted);
-        try
-        {
-            loop.RegisterAsync(listener, cancellation).GetAwaiter().GetResult();
-            listener.Read();
-            using var peer = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            // Do the connect in another thread so we don't block our io execution loop.
-            var connect = Task.Run(async () => await peer.ConnectAsync(socket.LocalEndPoint, cancellation), cancellation);
-            int count = 0;
+        IThreadAwareExecutor executor = new MainThreadExecutor(current, tasks);
+        IIoHandlerContext context = new BusySpinContext();
+        IIoHandler handler = factory.NewHandler(executor);
 
-            // Let's loop until our registration was cancelled.
-            while (listener.IsRegistered)
-            {
-                cancellation.ThrowIfCancellationRequested();
-                // Just busy spin.
-                count += loop.RunNow(-1);
-                // Execute all tasks that were dispatched.
-                loop.RunNonBlockingTasks(0);
-                if (accepted.Owner != null)
-                {
-                    // We accepted the connection, let's cancel the registration.
-                    listener.DeregisterAsync(cancellation).GetAwaiter().GetResult();
-                    Assert.False(listener.IsRegistered);
-                }
-                else
-                    Thread.Yield();
-            }
-            Assert.Same(owner, accepted.Owner);
-            Assert.Equal(1, count);
-            // Wait until the connect thread is done.
-            connect.GetAwaiter().GetResult();
-        }
-        finally
+        // Open a ServerSocketChannel that we can connect to.
+        Socket channel = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        channel.Blocking = false;
+        channel.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        channel.Listen(128);
+        // Do the connect in another thread so we don't block our io execution loop.
+        Thread t = new Thread(() =>
         {
-            // Let's now close the ServerSocketChannel and after that destroy the IoHandler.
-            var close = listener.Close();
-            loop.RunNow();
-            close.GetAwaiter().GetResult();
-            Terminate(loop);
+            using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(channel.LocalEndPoint);
+        });
+        AtomicBoolean acceptedConnection = new AtomicBoolean();
+        IIoRegistration registration = handler.Register(new AcceptingHandle(channel, acceptedConnection));
+        registration.Submit(NioIoOps.ACCEPT);
+        t.Start();
+        // Let's loop until our registration was cancelled.
+        while (registration.IsValid())
+        {
+            handler.Run(context);
+            for (;;)
+            {
+                // Execute all tasks that were dispatched.
+                if (!tasks.TryDequeue(out Action r))
+                {
+                    break;
+                }
+                r();
+            }
+            if (acceptedConnection.Get())
+            {
+                // We accepted the connection, let's cancel the registration.
+                Assert.True(registration.Cancel());
+            }
+        }
+        // Wait until the connect thread is done.
+        t.Join();
+        // Let's now close the ServerSocketChannel and after that destroy the IoHandler.
+        channel.Close();
+        handler.PrepareToDestroy();
+        handler.Destroy();
+    }
+
+    // CLR: the anonymous ThreadAwareExecutor, IoHandlerContext and NioSelectableChannelIoHandle of the Java method
+    // become nested classes.
+    private sealed class MainThreadExecutor(Thread current, ConcurrentQueue<Action> tasks) : IThreadAwareExecutor
+    {
+        public bool IsExecutorThread(Thread thread)
+        {
+            return current == thread;
+        }
+
+        public void Execute(Action command)
+        {
+            tasks.Enqueue(command);
         }
     }
 
-    private sealed class Accepted : ChannelInboundHandlerAdapter
+    private sealed class BusySpinContext : IIoHandlerContext
     {
-        internal Thread Owner;
-        public override void ChannelRead(ChannelHandlerContext context, object message)
+        public bool CanBlock()
         {
-            // Just accept the connection and close it.
-            ((AbstractChannel)message).CloseForcibly();
-            Owner = Thread.CurrentThread;
+            // Just busy spin.
+            return false;
+        }
+
+        public long DelayNanos(long currentTimeNanos)
+        {
+            return 0;
+        }
+
+        public long DeadlineNanos()
+        {
+            return -1;
+        }
+    }
+
+    private sealed class AcceptingHandle(Socket channel, AtomicBoolean acceptedConnection)
+        : NioSelectableChannelIoHandle<Socket>(channel)
+    {
+        protected override void Handle(Socket channel, NioIoOps key)
+        {
+            // CLR: SelectionKey.isAcceptable() is the OP_ACCEPT bit of the ready NioIoOps.
+            if (key.Contains(NioIoOps.ACCEPT))
+            {
+                try
+                {
+                    // Just accept the connection and close it.
+                    Socket accepted = channel.Accept();
+                    accepted.Close();
+                }
+                catch (Exception)
+                {
+                    // ignore
+                }
+                finally
+                {
+                    acceptedConnection.Set(true);
+                }
+            }
         }
     }
 }

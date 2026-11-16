@@ -75,7 +75,7 @@ public class UnorderedExecutorContractTest
             var work = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 17; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var future = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-            Assert.Same(executor.Termination, future);
+            Assert.Same(executor.TerminationFuture, future);
             Assert.False(future.IsCompleted);
             Assert.True(executor.IsShutdown());
             Assert.True(executor.IsShuttingDown());
@@ -131,8 +131,8 @@ public class UnorderedExecutorContractTest
             }, executor.StopToken);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1));
-            Assert.Same(executor.Termination, executor.StopAsync());
-            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.ThrowsAny<OperationCanceledException>(() => running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(running.IsCanceled);
             Assert.True(delayed.IsCanceled);
@@ -478,11 +478,11 @@ public class UnorderedExecutorContractTest
             var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
             executor.Shutdown();
             Assert.False(future.IsCanceled);
-            Assert.False(executor.Termination.IsCompleted);
+            Assert.False(executor.TerminationFuture.IsCompleted);
             cancellation.Cancel();
             Assert.True(future.IsCanceled);
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
-            Assert.True(executor.Termination.IsCompletedSuccessfully);
+            Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
         }
         finally { Stop(executor); }
     }

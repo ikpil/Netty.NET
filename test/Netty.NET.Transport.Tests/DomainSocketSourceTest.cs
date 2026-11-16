@@ -19,6 +19,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -30,10 +31,10 @@ public class DomainSocketSourceTest
     public async Task AccessParent()
     {
         RequireDomainSockets();
-        var parent = new DomainServerSocketChannel();
+        var parent = new NioServerDomainSocketChannel();
         using var socket = NewSocket();
-        var child = new DomainSocketChannel(parent, socket);
-        var group = new DefaultEventLoopGroup(1);
+        var child = new NioDomainSocketChannel(parent, socket);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             Assert.Same(parent, child.Parent);
@@ -52,7 +53,7 @@ public class DomainSocketSourceTest
         RequireDomainSockets();
         using var socket = NewSocket();
         var server = new ProbeServer(socket);
-        var group = new DefaultEventLoopGroup(1);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             await group.RegisterAsync(server);
@@ -67,8 +68,8 @@ public class DomainSocketSourceTest
     public async Task TestIsActiveFalseAfterClose()
     {
         RequireDomainSockets();
-        var server = new DomainServerSocketChannel();
-        var group = new DefaultEventLoopGroup(1);
+        var server = new NioServerDomainSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             await group.RegisterAsync(server);
@@ -94,8 +95,8 @@ public class DomainSocketSourceTest
             socket.Bind(NewAddress());
             socket.Listen(128);
         }
-        var server = new DomainServerSocketChannel(socket);
-        var group = new DefaultEventLoopGroup(1);
+        var server = new NioServerDomainSocketChannel(socket);
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             await group.RegisterAsync(server);
@@ -116,7 +117,7 @@ public class DomainSocketSourceTest
     }
 
     // Override just to to be able to call directly via unit tests.
-    private sealed class ProbeServer(Socket socket) : DomainServerSocketChannel(socket)
+    private sealed class ProbeServer(Socket socket) : NioServerDomainSocketChannel(socket)
     {
         internal bool ShouldClose(Exception error) => CloseOnReadError(error);
     }

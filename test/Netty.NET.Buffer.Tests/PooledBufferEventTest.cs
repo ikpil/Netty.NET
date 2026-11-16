@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -32,7 +33,8 @@ public class PooledBufferEventCollection { }
 public class PooledBufferEventTest
 {
     private static PooledByteBufAllocator NewAllocator(NativeMemoryAllocator native, int cache = 0, bool pooled = true)
-        => new(poolHeap: pooled, poolDirect: pooled, maxOrder: 1, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache);
+        => new(poolHeap: pooled, poolDirect: pooled, maxOrder: 1, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache,
+            useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
     private static ByteBuf Allocate(PooledByteBufAllocator allocator, bool direct, int size, int max = 40000)
         => direct ? allocator.DirectBuffer(size, max) : allocator.HeapBuffer(size, max);
 
@@ -157,7 +159,7 @@ public class PooledBufferEventTest
         try
         {
             buffer.WriteInt(0x12345678); buffer.SetIndex(1, 4);
-            Assert.Throws<OutOfMemoryException>(() => buffer.Capacity = 20000);
+            Assert.Throws<OutOfDirectMemoryError>(() => buffer.Capacity = 20000);
             Assert.Equal(new[] { 1, 3 }, listener.Events.Select(e => e.Id));
             Check(listener.Events[1], 3, 16, 16, 40000, true); Assert.Equal(20000, listener.Events[1].Number("newCapacity"));
             Assert.Equal(16, buffer.Capacity); Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex);
@@ -172,7 +174,7 @@ public class PooledBufferEventTest
     {
         var native = new NativeMemoryAllocator(0); using var allocator = NewAllocator(native);
         using var listener = new Listener();
-        Assert.Throws<OutOfMemoryException>(() => Allocate(allocator, true, 16));
+        Assert.Throws<OutOfDirectMemoryError>(() => Allocate(allocator, true, 16));
         Assert.Throws<ArgumentOutOfRangeException>(() => Allocate(allocator, false, -1));
         ByteBuf buffer = Allocate(allocator, false, 16, 16);
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 17);
@@ -272,7 +274,7 @@ public class PooledBufferEventTest
                 using var listener = new Listener(source: source);
                 Type type = assembly.GetType(typeof(PooledByteBufAllocator).FullName);
                 var allocator = (IDisposable)Activator.CreateInstance(type,
-                    new object[] { false, true, true, 8192, 1, 0, null, 0, 0, 32768, 8192, default(TimeSpan) });
+                    new object[] { false, true, true, 8192, 1, 0, 0, null, 0, null, 32768, 8192, default(TimeSpan) });
                 using (allocator)
                 {
                     object buffer = type.GetMethod("HeapBuffer", new[] { typeof(int), typeof(int) }).Invoke(allocator, new object[] { 17, 23 });

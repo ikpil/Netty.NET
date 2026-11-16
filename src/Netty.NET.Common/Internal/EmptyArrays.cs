@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 
@@ -30,10 +31,17 @@ public static class EmptyArrays
     public static readonly string[] EMPTY_STRINGS = Array.Empty<string>();
     public static readonly AsciiString[] EMPTY_ASCII_STRINGS = Array.Empty<AsciiString>();
     public static readonly StackFrame[] EMPTY_STACK_TRACE = Array.Empty<StackFrame>();
-    //public static readonly ByteBuffer[] EMPTY_BYTE_BUFFERS = Array.Empty<ByteBuffer>();
+    // CLR: EMPTY_BYTE_BUFFERS (java.nio.ByteBuffer[]) has no array counterpart. Buffer ports
+    // nioBuffers() as ReadOnlySequence<byte>, whose empty value is ReadOnlySequence<byte>.Empty.
     public static readonly X509Certificate[] EMPTY_CERTIFICATES = Array.Empty<X509Certificate>();
-    public static readonly X509Certificate[] EMPTY_X509_CERTIFICATES = Array.Empty<X509Certificate>();
+    // CLR: java.security.cert.Certificate maps to the X509Certificate base class and
+    // java.security.cert.X509Certificate to X509Certificate2; the legacy
+    // javax.security.cert.X509Certificate has no separate CLR type and also uses X509Certificate2.
+    public static readonly X509Certificate2[] EMPTY_X509_CERTIFICATES = Array.Empty<X509Certificate2>();
     public static readonly X509Certificate2[] EMPTY_JAVAX_X509_CERTIFICATES = Array.Empty<X509Certificate2>();
+
+    // CLR: the raw Map.Entry[] becomes the BCL entry type KeyValuePair<object, object>[].
+    public static readonly KeyValuePair<object, object>[] EMPTY_MAP_ENTRY = Array.Empty<KeyValuePair<object, object>>();
 
     public static readonly Exception[] EMPTY_THROWABLES = Array.Empty<Exception>();
 }

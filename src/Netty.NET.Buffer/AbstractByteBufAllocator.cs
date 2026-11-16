@@ -16,6 +16,7 @@
 
 using System;
 using Netty.NET.Common;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -139,5 +140,6 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
      */
     protected abstract ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity);
 
-    public override string ToString() => $"{GetType().Name}(directByDefault: {DirectByDefault.ToString().ToLowerInvariant()})";
+    public override string ToString() =>
+        StringUtil.SimpleClassName(this) + "(directByDefault: " + (DirectByDefault ? "true" : "false") + ')';
 }

@@ -91,7 +91,7 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         return _group.ShutdownGracefullyAsync(quietPeriod, timeout);
     }
 
-    public Task Termination => _group.Termination;
+    public Task TerminationFuture => _group.TerminationFuture;
     public Task StopAsync() => _group.StopAsync();
 
     //@SuppressWarnings("deprecation")

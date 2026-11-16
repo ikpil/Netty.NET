@@ -9,12 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
 // Supplemental tests of the original AbstractNioByteChannel/NioSocketChannel write quantum.
-// DoWrite0/DoWriteInternal/DoWriteBytes and their mapped identifiers retain the Java names.
+// The probe stands in for SocketChannel.write(ByteBuffer)/write(ByteBuffer[], int, int) of NioSocketChannel.doWrite.
 #pragma warning disable xUnit1031 // Drive the manual event loop on its owning thread.
 #pragma warning disable xUnit1051 // Native borrows and cleanup have independent lifetimes.
 public class SocketWriteSpinCountContractTest
@@ -31,11 +32,11 @@ public class SocketWriteSpinCountContractTest
         Assert.Equal(writeSpinCount, fixture.Channel.Calls);
         Assert.Equal(writeSpinCount, buf.ReaderIndex);
         Assert.False(write.IsCompleted);
-        Assert.Equal(1, buf.ReferenceCount);
+        Assert.Equal(1, buf.RefCnt);
         fixture.PumpUntil(() => write.IsCompleted);
         write.GetAwaiter().GetResult();
         Assert.Equal(6, fixture.Channel.Calls);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, fixture.Receive(6));
     }
 
@@ -67,27 +68,9 @@ public class SocketWriteSpinCountContractTest
         Assert.Equal(writeSpinCount, fixture.Channel.Calls);
         fixture.PumpUntil(() => writes.All(write => write.IsCompleted));
         Assert.All(writes, write => Assert.True(write.IsCompletedSuccessfully));
-        Assert.All(buffers, buf => Assert.Equal(0, buf.ReferenceCount));
+        Assert.All(buffers, buf => Assert.Equal(0, buf.RefCnt));
         Assert.Equal(3, fixture.Channel.Calls);
         Assert.Equal(new byte[] { 1, 2, 3 }, fixture.Receive(3));
-    }
-
-    [Theory]
-    [InlineData(1, 3)]
-    [InlineData(3, 1)]
-    public void ConfigIsSnapshottedAtTheStartOfTheWritePass(int writeSpinCount, int nextWriteSpinCount)
-    {
-        using var fixture = new Fixture(writeSpinCount);
-        fixture.Channel.BeforeWrite = () =>
-        {
-            if (fixture.Channel.Calls == 1) fixture.Channel.Config.SetWriteSpinCount(nextWriteSpinCount);
-        };
-        var write = fixture.Channel.WriteAndFlushAsync(Unpooled.Buffer(6).WriteZero(6));
-        Assert.Equal(writeSpinCount, fixture.Channel.Calls);
-        fixture.Loop.RunNow(-1);
-        Assert.Equal(writeSpinCount + nextWriteSpinCount, fixture.Channel.Calls);
-        fixture.PumpUntil(() => write.IsCompleted);
-        write.GetAwaiter().GetResult();
     }
 
     [Theory]
@@ -108,75 +91,18 @@ public class SocketWriteSpinCountContractTest
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, fixture.Receive(4));
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(2)]
-    public void InvalidNativeResultsFailTheWriteAndReleaseItsBuffer(int localFlushedAmount)
+    [Fact]
+    public void NativeFailuresPreserveTheOriginalException()
     {
         using var fixture = new Fixture(1);
-        fixture.Channel.Write = _ => Task.FromResult(localFlushedAmount);
+        var error = new IOException("Native scalar send failed.");
+        fixture.Channel.Failure = error;
         var buf = Unpooled.Buffer(1).WriteByte(1);
         var write = fixture.Channel.WriteAndFlushAsync(buf);
         fixture.PumpUntil(() => write.IsCompleted);
-        var error = Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
-        Assert.Contains("invalid scalar write length", error.Message);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Same(error, Assert.Throws<IOException>(() => write.GetAwaiter().GetResult()));
+        Assert.Equal(0, buf.RefCnt);
         Assert.False(fixture.Channel.IsOpen);
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void NativeFailuresPreserveTheOriginalExceptionAndBorrowLifetime(bool pending)
-    {
-        using var fixture = new Fixture(1);
-        var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var error = new IOException("Native scalar send failed.");
-        fixture.Channel.Write = _ => pending ? completion.Task : Task.FromException<int>(error);
-        var buf = Unpooled.Buffer(1).WriteByte(1);
-        try
-        {
-            var write = fixture.Channel.WriteAndFlushAsync(buf);
-            if (pending)
-            {
-                Assert.False(write.IsCompleted);
-                Assert.Equal(2, buf.ReferenceCount);
-                completion.SetException(error);
-            }
-            fixture.PumpUntil(() => write.IsCompleted);
-            Assert.Same(error, Assert.Throws<IOException>(() => write.GetAwaiter().GetResult()));
-            Assert.Equal(0, buf.ReferenceCount);
-        }
-        finally { completion.TrySetException(error); }
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ClosingKeepsTheBorrowUntilTheNativeProducerReturns(bool stop)
-    {
-        using var fixture = new Fixture(1);
-        var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-        fixture.Channel.Write = _ => completion.Task;
-        var buf = Unpooled.Buffer(1).WriteByte(1);
-        var write = fixture.Channel.WriteAndFlushAsync(buf);
-        try
-        {
-            Assert.Equal(2, buf.ReferenceCount);
-            if (stop) ManualIoEventLoopSourceTest.Terminate(fixture.Loop);
-            else
-            {
-                var close = fixture.Channel.CloseAsync();
-                fixture.PumpUntil(() => close.IsCompleted);
-                close.GetAwaiter().GetResult();
-            }
-            Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
-            Assert.Equal(1, buf.ReferenceCount);
-            completion.SetResult(1);
-            Assert.True(SpinWait.SpinUntil(() => buf.ReferenceCount == 0, TimeSpan.FromSeconds(3)));
-        }
-        finally { completion.TrySetResult(1); }
     }
 
     [Fact]
@@ -187,9 +113,9 @@ public class SocketWriteSpinCountContractTest
         var buf = Unpooled.Buffer(3).WriteZero(3);
         var write = fixture.Channel.WriteAndFlushAsync(buf);
         fixture.PumpUntil(() => write.IsCompleted);
-        Assert.Throws<IOException>(() => write.GetAwaiter().GetResult());
+        Assert.ThrowsAny<ClosedChannelException>(() => write.GetAwaiter().GetResult());
         Assert.Equal(1, fixture.Channel.Calls);
-        Assert.Equal(0, buf.ReferenceCount);
+        Assert.Equal(0, buf.RefCnt);
         Assert.Equal(new byte[] { 0 }, fixture.Receive(1));
     }
 
@@ -200,7 +126,7 @@ public class SocketWriteSpinCountContractTest
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread);
+        internal readonly ManualIoEventLoop Loop = new(Thread.CurrentThread, NioIoHandler.NewFactory());
         internal readonly Probe Channel;
         private readonly Socket _peer;
         internal Fixture(int writeSpinCount)
@@ -241,25 +167,30 @@ public class SocketWriteSpinCountContractTest
         public void Dispose() { ManualIoEventLoopSourceTest.Terminate(Loop); _peer.Dispose(); }
     }
 
-    private sealed class Probe(Socket socket) : TcpSocketChannel(socket)
+    // Accepts one byte per non-blocking write call, or the first two buffers of one gathered call.
+    private sealed class Probe(Socket socket) : NioSocketChannel(socket)
     {
         internal int Calls;
         internal bool Gather;
-        internal Action BeforeWrite;
-        internal Func<ByteBuf, Task<int>> Write;
-        internal override bool SupportsGatheringWrites => true;
-        internal override Task<int> TryGatherWriteAsync() => Gather ? base.TryGatherWriteAsync() : null;
-        protected override Task<int> DoWriteBytes(ByteBuf buf)
+        internal Exception Failure;
+
+        internal override int WriteSocket(ReadOnlyMemory<byte> buffer)
         {
             Calls++;
-            BeforeWrite?.Invoke();
-            return Write?.Invoke(buf) ?? Task.FromResult(Socket.Send(buf.ReadableSequence.First.Span[..1], SocketFlags.None));
+            if (Failure != null) throw Failure;
+            return JavaChannel().Send(buffer[..1].Span, SocketFlags.None);
         }
-        internal override Task<int> SendGatheredAsync(IList<ArraySegment<byte>> segments)
+
+        internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length)
         {
             Calls++;
-            Gather = false;
-            return Task.FromResult(Socket.Send(segments.Take(2).ToList(), SocketFlags.None));
+            if (Failure != null) throw Failure;
+            if (Gather)
+            {
+                Gather = false;
+                return base.WriteSocket(buffers, offset, Math.Min(2, length));
+            }
+            return JavaChannel().Send(buffers[offset][..1].Span, SocketFlags.None);
         }
     }
 }

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Netty.NET.Common.Internal;
@@ -29,6 +30,9 @@ public static class ObjectUtil
     private static readonly long LONG_ZERO = 0L;
     private static readonly int INT_ZERO = 0;
     private static readonly short SHORT_ZERO = 0;
+
+    // CLR: numbers are rendered as Java string concatenation does (Integer/Long/Short.toString and
+    // Double/Float.toString), not with the current culture.
 
     public static T RequireNonNull<T>(T obj, string message) where T : class
     {
@@ -117,7 +121,7 @@ public static class ObjectUtil
         if (value == null)
         {
             throw new ArgumentException(
-                "Array index " + index + " of parameter '" + name + "' must not be null");
+                "Array index " + index.ToString(CultureInfo.InvariantCulture) + " of parameter '" + name + "' must not be null");
         }
 
         return value;
@@ -131,7 +135,7 @@ public static class ObjectUtil
     {
         if (i <= INT_ZERO)
         {
-            throw new ArgumentException(name + " : " + i + " (expected: > 0)");
+            throw new ArgumentException(name + " : " + i.ToString(CultureInfo.InvariantCulture) + " (expected: > 0)");
         }
 
         return i;
@@ -141,7 +145,7 @@ public static class ObjectUtil
     {
         if (span.Ticks <= INT_ZERO)
         {
-            throw new ArgumentException(name + " : " + span.Ticks + " (expected: > 0)");
+            throw new ArgumentException(name + " : " + span.Ticks.ToString(CultureInfo.InvariantCulture) + " (expected: > 0)");
         }
 
         return span;
@@ -156,7 +160,7 @@ public static class ObjectUtil
     {
         if (l <= LONG_ZERO)
         {
-            throw new ArgumentException(name + " : " + l + " (expected: > 0)");
+            throw new ArgumentException(name + " : " + l.ToString(CultureInfo.InvariantCulture) + " (expected: > 0)");
         }
 
         return l;
@@ -170,7 +174,7 @@ public static class ObjectUtil
     {
         if (d <= DOUBLE_ZERO)
         {
-            throw new ArgumentException(name + " : " + d + " (expected: > 0)");
+            throw new ArgumentException(name + " : " + JdkDecimal.DoubleToString(d) + " (expected: > 0)");
         }
 
         return d;
@@ -184,7 +188,7 @@ public static class ObjectUtil
     {
         if (f <= FLOAT_ZERO)
         {
-            throw new ArgumentException(name + " : " + f + " (expected: > 0)");
+            throw new ArgumentException(name + " : " + JdkDecimal.FloatToString(f) + " (expected: > 0)");
         }
 
         return f;
@@ -198,7 +202,7 @@ public static class ObjectUtil
     {
         if (s <= SHORT_ZERO)
         {
-            throw new ArgumentException(name + " : " + s + " (expected: > 0)");
+            throw new ArgumentException(name + " : " + s.ToString(CultureInfo.InvariantCulture) + " (expected: > 0)");
         }
 
         return s;
@@ -222,7 +226,7 @@ public static class ObjectUtil
     {
         if (i < INT_ZERO)
         {
-            throw new ArgumentException(name + " : " + i + " (expected: >= 0)");
+            throw new ArgumentException(name + " : " + i.ToString(CultureInfo.InvariantCulture) + " (expected: >= 0)");
         }
 
         return i;
@@ -236,7 +240,7 @@ public static class ObjectUtil
     {
         if (l < LONG_ZERO)
         {
-            throw new ArgumentException(name + " : " + l + " (expected: >= 0)");
+            throw new ArgumentException(name + " : " + l.ToString(CultureInfo.InvariantCulture) + " (expected: >= 0)");
         }
 
         return l;
@@ -250,7 +254,7 @@ public static class ObjectUtil
     {
         if (d < DOUBLE_ZERO)
         {
-            throw new ArgumentException(name + " : " + d + " (expected: >= 0)");
+            throw new ArgumentException(name + " : " + JdkDecimal.DoubleToString(d) + " (expected: >= 0)");
         }
 
         return d;
@@ -264,7 +268,7 @@ public static class ObjectUtil
     {
         if (f < FLOAT_ZERO)
         {
-            throw new ArgumentException(name + " : " + f + " (expected: >= 0)");
+            throw new ArgumentException(name + " : " + JdkDecimal.FloatToString(f) + " (expected: >= 0)");
         }
 
         return f;
@@ -278,7 +282,7 @@ public static class ObjectUtil
     {
         if (i < start || i > end)
         {
-            throw new ArgumentException(name + ": " + i + " (expected: " + start + "-" + end + ")");
+            throw new ArgumentException(name + ": " + i.ToString(CultureInfo.InvariantCulture) + " (expected: " + start.ToString(CultureInfo.InvariantCulture) + "-" + end.ToString(CultureInfo.InvariantCulture) + ")");
         }
 
         return i;
@@ -292,7 +296,7 @@ public static class ObjectUtil
     {
         if (l < start || l > end)
         {
-            throw new ArgumentException(name + ": " + l + " (expected: " + start + "-" + end + ")");
+            throw new ArgumentException(name + ": " + l.ToString(CultureInfo.InvariantCulture) + " (expected: " + start.ToString(CultureInfo.InvariantCulture) + "-" + end.ToString(CultureInfo.InvariantCulture) + ")");
         }
 
         return l;
@@ -302,11 +306,15 @@ public static class ObjectUtil
      * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double CheckInRange(double value, double start, double end, string name)
+    public static double CheckInRange(double d, double start, double end, string name)
     {
-        if (value < start || value > end)
-            throw new ArgumentException(name + ": " + value + " (expected: " + start + "-" + end + ")");
-        return value;
+        if (d < start || d > end)
+        {
+            throw new ArgumentException(name + ": " + JdkDecimal.DoubleToString(d) + " (expected: "
+                    + JdkDecimal.DoubleToString(start) + "-" + JdkDecimal.DoubleToString(end) + ")");
+        }
+
+        return d;
     }
 
     /**

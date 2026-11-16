@@ -76,7 +76,7 @@ public class ByteBufInputStreamTest : IDisposable
         Assert.Equal(5, input.ReaderIndex);
         Assert.Equal(ReferenceEquals(input, owner) ? 5 : 1, owner.ReaderIndex);
         stream.Reset(); Assert.Equal(3, stream.Available); Assert.Equal(2, stream.ReadByte());
-        stream.Dispose(); Assert.Equal(0, owner.ReferenceCount);
+        stream.Dispose(); Assert.Equal(0, owner.RefCnt);
     }
 
     [Theory]
@@ -123,7 +123,7 @@ public class ByteBufInputStreamTest : IDisposable
             for (int i = 0; i < 3; i++) Assert.Equal(-1, input.ReadByte());
             Assert.Equal(3, first.ReaderIndex);
         }
-        Assert.Equal(0, first.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
 
         // case2
         ByteBuf second = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
@@ -133,7 +133,7 @@ public class ByteBufInputStreamTest : IDisposable
             Assert.NotEqual(5, input.ReadByte()); Assert.Equal(-1, input.ReadByte());
             Assert.Equal(4, second.ReaderIndex);
         }
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, second.RefCnt);
 
         // case1
         ByteBuf noLine = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
@@ -141,7 +141,7 @@ public class ByteBufInputStreamTest : IDisposable
         {
             Assert.Null(input.ReadLine()); Assert.Equal(0, noLine.ReaderIndex);
         }
-        Assert.Equal(0, noLine.ReferenceCount);
+        Assert.Equal(0, noLine.RefCnt);
 
         ByteBuf line = Owner(kind, Encoding.ASCII.GetBytes("AB\nCEF"));
         using (var input = new ByteBufInputStream(line, 4, true))
@@ -149,7 +149,7 @@ public class ByteBufInputStreamTest : IDisposable
             Assert.Equal("AB", input.ReadLine()); Assert.Equal("C", input.ReadLine());
             Assert.Null(input.ReadLine()); Assert.Equal(4, line.ReaderIndex);
         }
-        Assert.Equal(0, line.ReferenceCount);
+        Assert.Equal(0, line.RefCnt);
 
         // case1
         ByteBuf noByte = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
@@ -158,7 +158,7 @@ public class ByteBufInputStreamTest : IDisposable
             Assert.Throws<EndOfStreamException>(() => input.ReadBoolean());
             Assert.Equal(0, noByte.ReaderIndex);
         }
-        Assert.Equal(0, noByte.ReferenceCount);
+        Assert.Equal(0, noByte.RefCnt);
     }
 
     [Theory]
@@ -226,9 +226,9 @@ public class ByteBufInputStreamTest : IDisposable
     {
         ByteBuf buffer = Unpooled.CopyInt(1); buffer.Retain();
         var stream = new ByteBufInputStream(buffer, releaseOnDispose);
-        Assert.Equal(2, buffer.ReferenceCount);
+        Assert.Equal(2, buffer.RefCnt);
         await stream.DisposeAsync(); stream.Dispose(); stream.Close();
-        Assert.Equal(releaseOnDispose ? 1 : 2, buffer.ReferenceCount);
+        Assert.Equal(releaseOnDispose ? 1 : 2, buffer.RefCnt);
         Assert.False(stream.CanRead);
         Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
         Assert.Throws<ObjectDisposedException>(() => stream.Read(new byte[0]));
@@ -236,7 +236,7 @@ public class ByteBufInputStreamTest : IDisposable
         Assert.Throws<ObjectDisposedException>(() => stream.Mark());
         Assert.Throws<ObjectDisposedException>(() => stream.Reset());
         Assert.Throws<ObjectDisposedException>(() => stream.Skip(0));
-        buffer.Release(buffer.ReferenceCount);
+        buffer.Release(buffer.RefCnt);
     }
 
     [Fact]
@@ -247,11 +247,11 @@ public class ByteBufInputStreamTest : IDisposable
         Assert.Throws<ArgumentNullException>(() => new ByteBufInputStream(null, 0, true));
         ByteBuf buffer = Unpooled.CopyInt(1);
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer.RetainedSlice(), -1, true));
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer.RetainedSlice(), 5, true));
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer, -1));
-        Assert.Equal(1, buffer.ReferenceCount); buffer.Release();
+        Assert.Equal(1, buffer.RefCnt); buffer.Release();
         Assert.Throws<IllegalReferenceCountException>(() => new ByteBufInputStream(buffer));
     }
 

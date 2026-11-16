@@ -27,20 +27,20 @@ internal sealed class EmptyByteBuf : ByteBuf
     private readonly IByteBufAllocator _allocator;
     internal EmptyByteBuf(IByteBufAllocator allocator) : base(0)
     { ArgumentNullException.ThrowIfNull(allocator); _allocator = allocator; }
-    public override IByteBufAllocator Allocator => _allocator;
+    public override IByteBufAllocator Alloc() => _allocator;
     // The CLR buffer API uses explicit LE accessors; its default byte order is always BE.
     public override string ToString() => "EmptyByteBufBE";
     protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
     public override bool IsContiguous => true;
     public override bool IsDirect => true;
-    public override bool CanRead(int byteCount) => false;
-    public override bool CanWrite(int byteCount) => false;
+    public override bool IsReadable(int size) => false;
+    public override bool IsWritable(int size) => false;
     public override int Capacity
     {
         get => 0;
         set => throw new NotSupportedException("The empty buffer's capacity cannot change.");
     }
-    public override int ReferenceCount => 1;
+    public override int RefCnt => 1;
     // Original EmptyByteBuf ignores ownership counts, including nonpositive values.
     // There is no owned allocation or lifetime transition to mutate.
     public override ByteBuf Retain(int increment = 1) => this;

@@ -39,7 +39,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
         _length = initialCapacity;
     }
 
-    public override IByteBufAllocator Allocator => _arena.Parent;
+    public override IByteBufAllocator Alloc() => _arena.Parent;
     public override bool IsContiguous => true;
     public override ByteBuf RetainedSlice() => RetainedSlice(ReaderIndex, ReadableBytes);
     public override ByteBuf RetainedSlice(int index, int length)

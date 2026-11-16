@@ -71,8 +71,8 @@ public class ByteBufTextSearchDispatchTest
 
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Assert.True(_owner.Release());
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Assert.True(_owner.Release());
+            Assert.Equal(0, Root.RefCnt);
             Assert.Equal(1, Inner.Closes);
             Assert.Equal(_outerTracked ? 1 : 0, Outer.Closes);
             Assert.Equal(0, Native.ReservedBytes);
@@ -93,11 +93,11 @@ public class ByteBufTextSearchDispatchTest
         1 => buffer.BytesBefore(66),
         2 => buffer.BytesBefore(3, 66),
         3 => buffer.BytesBefore(2, 4, 66),
-        4 => buffer.GetString(encoding),
-        5 => buffer.GetString(2, 3, encoding),
+        4 => buffer.ToString(encoding),
+        5 => buffer.ToString(2, 3, encoding),
         6 => buffer.ReadString(3, encoding),
-        7 => buffer.SetString(2, "한Z", encoding),
-        _ => buffer.WriteString("한Z", encoding)
+        7 => buffer.SetCharSequence(2, "한Z", encoding),
+        _ => buffer.WriteCharSequence("한Z", encoding)
     };
 
     [Theory]
@@ -157,15 +157,15 @@ public class ByteBufTextSearchDispatchTest
             before = storage.Inner.Records;
             Assert.Throws<EncoderFallbackException>(() =>
             {
-                if (operation == 7) buffer.SetString(2, "\ud800", strict);
-                else buffer.WriteString("\ud800", strict);
+                if (operation == 7) buffer.SetCharSequence(2, "\ud800", strict);
+                else buffer.WriteCharSequence("\ud800", strict);
             });
             Assert.Equal(before + 1, storage.Inner.Records);
             Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
         }
         Assert.Equal(0, storage.Outer.Records);
         Assert.Equal(0, storage.Inner.Closes);
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
         storage.Root.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
         storage.Dispose(); before = storage.Inner.Records;
@@ -199,11 +199,11 @@ public class ByteBufTextSearchDispatchTest
         public override int BytesBefore(byte value) => o.Visit(1, value: value);
         public override int BytesBefore(int length, byte value) => o.Visit(2, length: length, value: value);
         public override int BytesBefore(int index, int length, byte value) => o.Visit(3, index, length, value);
-        public override string GetString(Encoding encoding) => o.Visit(4, encoding: encoding).ToString();
-        public override string GetString(int index, int length, Encoding encoding) => o.Visit(5, index, length, encoding: encoding).ToString();
-        public override string ReadString(int length, Encoding encoding) => o.Visit(6, length: length, encoding: encoding).ToString();
-        public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding) => o.Visit(7, index, encoding: encoding, text: text);
-        public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => o.Visit(8, encoding: encoding, text: text);
+        public override string ToString(Encoding charset) => o.Visit(4, encoding: charset).ToString();
+        public override string ToString(int index, int length, Encoding charset) => o.Visit(5, index, length, encoding: charset).ToString();
+        public override string ReadString(int length, Encoding charset) => o.Visit(6, length: length, encoding: charset).ToString();
+        public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(7, index, encoding: charset, text: sequence);
+        public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(8, encoding: charset, text: sequence);
     }
 
     private sealed class ObservedComposite(Observation o) : CompositeByteBuf
@@ -212,11 +212,11 @@ public class ByteBufTextSearchDispatchTest
         public override int BytesBefore(byte value) => o.Visit(1, value: value);
         public override int BytesBefore(int length, byte value) => o.Visit(2, length: length, value: value);
         public override int BytesBefore(int index, int length, byte value) => o.Visit(3, index, length, value);
-        public override string GetString(Encoding encoding) => o.Visit(4, encoding: encoding).ToString();
-        public override string GetString(int index, int length, Encoding encoding) => o.Visit(5, index, length, encoding: encoding).ToString();
-        public override string ReadString(int length, Encoding encoding) => o.Visit(6, length: length, encoding: encoding).ToString();
-        public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding) => o.Visit(7, index, encoding: encoding, text: text);
-        public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => o.Visit(8, encoding: encoding, text: text);
+        public override string ToString(Encoding charset) => o.Visit(4, encoding: charset).ToString();
+        public override string ToString(int index, int length, Encoding charset) => o.Visit(5, index, length, encoding: charset).ToString();
+        public override string ReadString(int length, Encoding charset) => o.Visit(6, length: length, encoding: charset).ToString();
+        public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(7, index, encoding: charset, text: sequence);
+        public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(8, encoding: charset, text: sequence);
     }
 
     public static IEnumerable<object[]> Overrides()

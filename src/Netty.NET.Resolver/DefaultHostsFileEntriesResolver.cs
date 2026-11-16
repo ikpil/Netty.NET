@@ -46,19 +46,16 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
     public DefaultHostsFileEntriesResolver() : this(HostsFileEntriesProvider.Parser(), DefaultRefreshInterval) { }
 
     // for testing purpose only
-    internal DefaultHostsFileEntriesResolver(HostsFileEntriesProvider.IParser hostsFileParser, long refreshIntervalNanos)
+    internal DefaultHostsFileEntriesResolver(HostsFileEntriesProvider.IParser hostsFileParser, long refreshInterval)
     {
-        ArgumentNullException.ThrowIfNull(hostsFileParser);
-        ArgumentOutOfRangeException.ThrowIfNegative(refreshIntervalNanos);
         _hostsFileParser = hostsFileParser;
-        _refreshInterval = refreshIntervalNanos;
+        _refreshInterval = ObjectUtil.CheckPositiveOrZero(refreshInterval, "refreshInterval");
         _entries = ParseEntries(hostsFileParser);
     }
 
     public IPAddress Address(string inetHost, ResolvedAddressTypes resolvedAddressTypes)
     {
-        var addresses = Addresses(inetHost, resolvedAddressTypes);
-        return addresses != null && addresses.Count != 0 ? addresses[0] : null;
+        return FirstAddress(Addresses(inetHost, resolvedAddressTypes));
     }
 
     /**
@@ -73,33 +70,53 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
     {
         string normalized = Normalize(inetHost);
         EnsureHostsFileEntriesAreFresh();
-        var entries = Volatile.Read(ref _entries);
-        entries.Ipv4Entries().TryGetValue(normalized, out var ipv4);
-        entries.Ipv6Entries().TryGetValue(normalized, out var ipv6);
-        return resolvedAddressTypes switch
+        // CLR: read both families from one published snapshot.
+        HostsFileEntriesProvider entries = Volatile.Read(ref _entries);
+        IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> inet4Entries = entries.Ipv4Entries();
+        IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> inet6Entries = entries.Ipv6Entries();
+        switch (resolvedAddressTypes)
         {
-            ResolvedAddressTypes.Ipv4Only => ipv4,
-            ResolvedAddressTypes.Ipv6Only => ipv6,
-            ResolvedAddressTypes.Ipv4Preferred => ipv4 != null ? AllAddresses(ipv4, ipv6) : ipv6,
-            ResolvedAddressTypes.Ipv6Preferred => ipv6 != null ? AllAddresses(ipv6, ipv4) : ipv4,
-            _ => throw new ArgumentOutOfRangeException(nameof(resolvedAddressTypes))
-        };
+            case ResolvedAddressTypes.Ipv4Only:
+                return inet4Entries.GetValueOrDefault(normalized);
+            case ResolvedAddressTypes.Ipv6Only:
+                return inet6Entries.GetValueOrDefault(normalized);
+            case ResolvedAddressTypes.Ipv4Preferred:
+                IReadOnlyList<IPAddress> allInet4Addresses = inet4Entries.GetValueOrDefault(normalized);
+                return allInet4Addresses != null ? AllAddresses(allInet4Addresses, inet6Entries.GetValueOrDefault(normalized)) :
+                        inet6Entries.GetValueOrDefault(normalized);
+            case ResolvedAddressTypes.Ipv6Preferred:
+                IReadOnlyList<IPAddress> allInet6Addresses = inet6Entries.GetValueOrDefault(normalized);
+                return allInet6Addresses != null ? AllAddresses(allInet6Addresses, inet4Entries.GetValueOrDefault(normalized)) :
+                        inet4Entries.GetValueOrDefault(normalized);
+            default:
+                throw new ArgumentException("Unknown ResolvedAddressTypes " + resolvedAddressTypes);
+        }
     }
 
     private void EnsureHostsFileEntriesAreFresh()
     {
-        if (_refreshInterval == 0)
+        long interval = _refreshInterval;
+        if (interval == 0)
+        {
             return;
+        }
         long last = Volatile.Read(ref _lastRefresh);
-        long now = Ticker.SystemTicker().NanoTime();
-        if (unchecked(now - last) > _refreshInterval && Interlocked.CompareExchange(ref _lastRefresh, now, last) == last)
-            Volatile.Write(ref _entries, ParseEntries(_hostsFileParser));
+        long currentTime = Ticker.SystemTicker().NanoTime();
+        if (unchecked(currentTime - last) > interval)
+        {
+            if (Interlocked.CompareExchange(ref _lastRefresh, currentTime, last) == last)
+            {
+                Volatile.Write(ref _entries, ParseEntries(_hostsFileParser));
+            }
+        }
     }
 
     // package-private for testing purposes
     internal string Normalize(string inetHost)
     {
         ArgumentNullException.ThrowIfNull(inetHost);
+        // CLR: ToLowerInvariant equals toLowerCase(Locale.ENGLISH) for ASCII host names; for non-ASCII input Java also
+        // applies special casing (for example U+0130 and final sigma) that the CLR simple case mapping does not.
         return inetHost.ToLowerInvariant();
     }
 
@@ -112,6 +129,11 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
         return result;
     }
 
+    private static IPAddress FirstAddress(IReadOnlyList<IPAddress> addresses)
+    {
+        return addresses != null && addresses.Count != 0 ? addresses[0] : null;
+    }
+
     private static HostsFileEntriesProvider ParseEntries(HostsFileEntriesProvider.IParser parser)
     {
         if (OperatingSystem.IsWindows())
@@ -119,8 +141,8 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
             // Ony windows there seems to be no standard for the encoding used for the hosts file, so let us
             // try multiple until we either were able to parse it or there is none left and so we return an
             // empty instance.
-            // CLR: try both UTF-16 byte orders explicitly; Java UTF_16 recognizes either BOM.
-            return parser.ParseSilently(Encoding.Default, Encoding.Unicode, Encoding.BigEndianUnicode, Encoding.UTF8);
+            // CLR: CharsetUtil.UTF_8 keeps a BOM as U+FEFF, which a preamble-less UTF8Encoding reproduces.
+            return parser.ParseSilently(Encoding.Default, HostsFileEntriesProvider.UTF_16, new UTF8Encoding(false));
         }
         return parser.ParseSilently();
     }

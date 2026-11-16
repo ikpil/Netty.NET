@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
+using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
@@ -38,7 +39,7 @@ public class LinuxReusePortSourceTest
     private static async Task AssertDuplicateBindFails(bool tcp)
     {
         RequireReusePort();
-        var loop = new DefaultEventLoopGroup(1);
+        var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
         try
         {
@@ -59,7 +60,7 @@ public class LinuxReusePortSourceTest
         RequireReusePort();
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(9));
-        var loop = new DefaultEventLoopGroup(2);
+        var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         try
         {
             var firstHandler = new AcceptHandler();
@@ -88,7 +89,7 @@ public class LinuxReusePortSourceTest
         RequireReusePort();
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(9));
-        var loop = new DefaultEventLoopGroup(2);
+        var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         try
         {
             var firstHandler = new DatagramHandler();
@@ -114,11 +115,11 @@ public class LinuxReusePortSourceTest
         finally { await loop.StopAsync(); }
     }
 
-    private static ServerBootstrap NewServer(DefaultEventLoopGroup loop) =>
-        new ServerBootstrap().Group(loop).ChannelFactory(static () => new TcpServerSocketChannel(AddressFamily.InterNetwork));
+    private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup loop) =>
+        new ServerBootstrap().Group(loop).ChannelFactory(static () => new NioServerSocketChannel(AddressFamily.InterNetwork));
 
-    private static Bootstrap NewDatagram(DefaultEventLoopGroup loop) =>
-        new Bootstrap().Group(loop).ChannelFactory(static () => new DatagramChannel());
+    private static Bootstrap NewDatagram(MultiThreadIoEventLoopGroup loop) =>
+        new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel());
 
     private static void RequireReusePort()
     {
@@ -137,10 +138,10 @@ public class LinuxReusePortSourceTest
     private sealed class AcceptHandler : ChannelInboundHandlerAdapter
     {
         internal volatile bool Accepted;
-        public override void ChannelActive(ChannelHandlerContext context)
+        public override void ChannelActive(IChannelHandlerContext ctx)
         {
             Accepted = true;
-            _ = context.CloseAsync();
+            _ = ctx.CloseAsync();
         }
     }
 
@@ -148,6 +149,6 @@ public class LinuxReusePortSourceTest
     private sealed class DatagramHandler : SimpleChannelInboundHandler<DatagramPacket>
     {
         internal volatile bool Received;
-        protected override void ChannelRead0(ChannelHandlerContext context, DatagramPacket message) => Received = true;
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg) => Received = true;
     }
 }

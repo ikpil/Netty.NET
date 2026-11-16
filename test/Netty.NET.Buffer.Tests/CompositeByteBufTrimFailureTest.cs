@@ -98,8 +98,8 @@ public class CompositeByteBufTrimFailureTest
                 Assert.Equal(capacity, owner.Capacity); Assert.Equal(tails + 1, root.NumComponents);
                 Assert.Equal((2, capacity - 1), (owner.ReaderIndex, owner.WriterIndex));
                 Assert.Equal(before, ByteBufUtil.GetBytes(root, 0, capacity)); Assert.Same(first, root.ComponentSlice(0));
-                Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, raw.ReferenceCount);
-                Assert.All(trailing, b => Assert.Equal(1, b.ReferenceCount));
+                Assert.Equal(1, first.RefCnt); Assert.Equal(1, raw.RefCnt);
+                Assert.All(trailing, b => Assert.Equal(1, b.RefCnt));
                 Assert.Empty(releases);
                 owner.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
                 owner.SetIndex(2, capacity - 1);
@@ -108,19 +108,19 @@ public class CompositeByteBufTrimFailureTest
             if (mode != 0) { observation.Mode = 0; owner.Capacity = 7; Assert.Equal(2, observation.Calls); }
             Assert.Equal((7, 1, 2, 7), (owner.Capacity, root.NumComponents, owner.ReaderIndex, owner.WriterIndex));
             Assert.Equal(before.AsSpan(0, 7).ToArray(), ByteBufUtil.GetBytes(owner, 0, 7));
-            Assert.Equal(7, root.ComponentSlice(0).Capacity); Assert.All(trailing, b => Assert.Equal(0, b.ReferenceCount));
+            Assert.Equal(7, root.ComponentSlice(0).Capacity); Assert.All(trailing, b => Assert.Equal(0, b.RefCnt));
             Assert.Equal(tails == 2 ? new[] { 1, 0 } : tails == 1 ? new[] { 0 } : Array.Empty<int>(), releases);
-            Assert.Equal(1, first.ReferenceCount); Assert.Equal(1, raw.ReferenceCount);
+            Assert.Equal(1, first.RefCnt); Assert.Equal(1, raw.RefCnt);
             owner.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
         }
         finally
         {
-            if (owner.ReferenceCount > 0) owner.Release();
-            if (first.ReferenceCount > 0) first.Release();
-            foreach (ByteBuf b in trailing) if (b.ReferenceCount > 0) b.Release();
+            if (owner.RefCnt > 0) owner.Release();
+            if (first.RefCnt > 0) first.Release();
+            foreach (ByteBuf b in trailing) if (b.RefCnt > 0) b.Release();
             (allocator as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
         }
-        Assert.Equal(0, child.ReferenceCount); Assert.Equal(0, raw.ReferenceCount);
+        Assert.Equal(0, child.RefCnt); Assert.Equal(0, raw.RefCnt);
         Assert.Equal(facade >= 2 ? 1 : 0, tracker.Closes);
     }
 }

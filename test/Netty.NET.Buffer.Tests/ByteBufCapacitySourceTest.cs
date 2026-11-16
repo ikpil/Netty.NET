@@ -49,8 +49,8 @@ public class ByteBufCapacitySourceTest
         }
         public void Dispose()
         {
-            if (Root.ReferenceCount > 0) Root.Release();
-            Assert.Equal(0, Root.ReferenceCount);
+            if (Root.RefCnt > 0) Root.Release();
+            Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -105,13 +105,13 @@ public class ByteBufCapacitySourceTest
             bool retained = scenario == CapacityCase.RetainedSlice;
             ByteBuf slice = retained ? buffer.RetainedSlice(buffer.ReaderIndex + 1, 3)
                 : buffer.Slice(buffer.ReaderIndex + 1, 3);
-            int rootCount = buffer.ReferenceCount, sliceCount = slice.ReferenceCount;
+            int rootCount = buffer.RefCnt, sliceCount = slice.RefCnt;
             try
             {
                 Assert.Throws<NotSupportedException>(() => slice.Capacity = 10);
                 Assert.Equal(3, slice.Capacity); Assert.Equal(3, slice.MaxCapacity);
                 Assert.Equal(8, buffer.Capacity);
-                Assert.Equal(rootCount, buffer.ReferenceCount); Assert.Equal(sliceCount, slice.ReferenceCount);
+                Assert.Equal(rootCount, buffer.RefCnt); Assert.Equal(sliceCount, slice.RefCnt);
             }
             finally { if (retained) slice.Release(); }
         }
@@ -134,16 +134,16 @@ public class ByteBufCapacitySourceTest
         {
             string content1 = "hello", content2 = "world";
             buffer.SetIndex(0, 0);
-            buffer.WriteString(content1, Encoding.ASCII);
+            buffer.WriteCharSequence(content1, Encoding.ASCII);
             buffer.MarkWriterIndex();
             buffer.SkipBytes(content1.Length);
-            buffer.WriteString(content2, Encoding.ASCII);
+            buffer.WriteCharSequence(content2, Encoding.ASCII);
             buffer.SkipBytes(content2.Length);
             Assert.True(buffer.ReaderIndex <= buffer.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ResetWriterIndex());
             Assert.Equal(10, buffer.ReaderIndex); Assert.Equal(10, buffer.WriterIndex);
             Assert.Equal(Encoding.ASCII.GetBytes(content1 + content2), ByteBufUtil.GetBytes(buffer, 0, 10));
         }
-        Assert.Equal(1, buffer.ReferenceCount);
+        Assert.Equal(1, buffer.RefCnt);
     }
 }

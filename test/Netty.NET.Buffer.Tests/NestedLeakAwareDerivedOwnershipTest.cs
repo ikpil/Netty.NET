@@ -66,7 +66,7 @@ public class NestedLeakAwareDerivedOwnershipTest
                 0 => parent.RetainedSlice(3, 8), 1 => parent.RetainedSlice(),
                 2 => parent.RetainedDuplicate(), _ => parent.ReadRetainedSlice(8)
             };
-            Assert.Equal(2, root.ReferenceCount); Assert.Equal(pooled ? 1 : 2, child.ReferenceCount);
+            Assert.Equal(2, root.RefCnt); Assert.Equal(pooled ? 1 : 2, child.RefCnt);
             Assert.All(trackers, t => Assert.Equal(0, t.Closes));
             IResourceLeakTracker<ByteBuf> childTracker = AllocatorLeakDetectionTest.Tracker(child);
             if (pooled) Assert.All(trackers, t => Assert.NotSame(t, childTracker));
@@ -77,7 +77,7 @@ public class NestedLeakAwareDerivedOwnershipTest
             if (parentFirst)
             {
                 Assert.False(parent.Release()); parentReleased = true;
-                Assert.Equal(1, root.ReferenceCount); Assert.Equal(1, child.ReferenceCount);
+                Assert.Equal(1, root.RefCnt); Assert.Equal(1, child.RefCnt);
                 Assert.All(trackers, t => Assert.Equal(0, t.Closes));
                 records = trackers.ConvertAll(t => t.Records).ToArray();
                 Assert.Equal(expected, child.GetByte(child.ReaderIndex));
@@ -87,18 +87,18 @@ public class NestedLeakAwareDerivedOwnershipTest
             else
             {
                 Assert.Equal(pooled, child.Release()); childReleased = true;
-                Assert.Equal(1, root.ReferenceCount); Assert.Equal(pooled ? 0 : 1, child.ReferenceCount);
+                Assert.Equal(1, root.RefCnt); Assert.Equal(pooled ? 0 : 1, child.RefCnt);
                 Assert.All(trackers, t => Assert.Equal(0, t.Closes));
                 Assert.Equal(factory == 3 ? 10 : 2, root.ReaderIndex);
                 Assert.True(parent.Release()); parentReleased = true;
             }
-            Assert.Equal(0, root.ReferenceCount); Assert.Equal(0, child.ReferenceCount);
+            Assert.Equal(0, root.RefCnt); Assert.Equal(0, child.RefCnt);
             Assert.All(trackers, t => Assert.Equal(1, t.Closes));
         }
         finally
         {
-            if (!childReleased && child is { ReferenceCount: > 0 }) child.Release();
-            if (!parentReleased && parent.ReferenceCount > 0) parent.Release();
+            if (!childReleased && child is { RefCnt: > 0 }) child.Release();
+            if (!parentReleased && parent.RefCnt > 0) parent.Release();
             (allocator as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
         }
     }

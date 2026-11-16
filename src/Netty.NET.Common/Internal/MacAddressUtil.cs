@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Collections.Generic;
 using System.Net;
@@ -38,7 +39,7 @@ public static class MacAddressUtil
      */
     public static byte[] BestAvailableMac()
     {
-        return BestAvailableMac(NetUtil.NetworkInterfaces);
+        return BestAvailableMac(NetUtil.NETWORK_INTERFACES);
     }
 
     internal static byte[] BestAvailableMac(IReadOnlyList<NetworkInterface> interfaces)
@@ -46,7 +47,7 @@ public static class MacAddressUtil
         ArgumentNullException.ThrowIfNull(interfaces);
         // Find the best MAC address available.
         byte[] bestMacAddr = EmptyArrays.EMPTY_BYTES;
-        IPAddress bestInetAddr = IPAddress.Loopback;
+        IPAddress bestInetAddr = NetUtil.LOCALHOST4;
 
         // Retrieve the list of available network interfaces.
         // Each native snapshot object is a candidate; provider value equality cannot merge peers.
@@ -153,7 +154,7 @@ public static class MacAddressUtil
      */
     public static byte[] DefaultMachineId()
     {
-        return DefaultMachineId(NetUtil.NetworkInterfaces);
+        return DefaultMachineId(NetUtil.NETWORK_INTERFACES);
     }
 
     internal static byte[] DefaultMachineId(IReadOnlyList<NetworkInterface> interfaces)
@@ -206,7 +207,7 @@ public static class MacAddressUtil
             if (value[sIndex] != separator)
             {
                 throw new ArgumentException("expected separator '" + separator + " but got '" +
-                                            value[sIndex] + "' at index: " + sIndex);
+                                            value[sIndex] + "' at index: " + sIndex.ToString(CultureInfo.InvariantCulture));
             }
         }
 

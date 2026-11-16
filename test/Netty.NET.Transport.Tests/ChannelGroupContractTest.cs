@@ -103,7 +103,7 @@ public class ChannelGroupContractTest
         var excluded = new EmbeddedChannel(DefaultChannelId.NewInstance());
         var server = new Mock<IServerChannel>();
         server.SetupGet(channel => channel.Id).Returns(DefaultChannelId.NewInstance());
-        server.SetupGet(channel => channel.CloseCompletion).Returns(new TaskCompletionSource().Task);
+        server.SetupGet(channel => channel.CloseFuture).Returns(new TaskCompletionSource().Task);
         foreach (IChannel channel in new IChannel[] { first, second, excluded, server.Object }) group.Add(channel);
         ByteBuf content = Unpooled.WrappedBuffer(new byte[] { 9, 1, 2 });
         content.ReaderIndex = 1;
@@ -129,11 +129,11 @@ public class ChannelGroupContractTest
                 Assert.Equal(1, firstView.ReadByte());
                 Assert.Equal(1, secondView.ReaderIndex);
                 Assert.Equal(1, content.ReaderIndex);
-                Assert.Equal(2, content.ReferenceCount);
+                Assert.Equal(2, content.RefCnt);
                 Assert.Null(excluded.ReadOutbound());
             }
             finally { ReferenceCountUtil.Release(firstMessage); ReferenceCountUtil.Release(secondMessage); }
-            Assert.Equal(0, content.ReferenceCount);
+            Assert.Equal(0, content.RefCnt);
             server.Verify(channel => channel.WriteAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
             server.Verify(channel => channel.WriteAndFlushAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
             server.Verify(channel => channel.Flush(), Times.Never);
@@ -155,7 +155,7 @@ public class ChannelGroupContractTest
             Task write = group.WriteAndFlushAsync(buffer, _ => false);
             Assert.True(write.IsCompletedSuccessfully);
             await write;
-            Assert.Equal(0, buffer.ReferenceCount);
+            Assert.Equal(0, buffer.RefCnt);
             Assert.Null(channel.ReadOutbound());
         }
         finally { channel.FinishAndReleaseAll(); }
@@ -171,7 +171,7 @@ public class ChannelGroupContractTest
         var child = Channel(Task.CompletedTask, operation);
         var server = new Mock<IServerChannel>();
         server.SetupGet(channel => channel.Id).Returns(DefaultChannelId.NewInstance());
-        server.SetupGet(channel => channel.CloseCompletion).Returns(new TaskCompletionSource().Task);
+        server.SetupGet(channel => channel.CloseFuture).Returns(new TaskCompletionSource().Task);
         var group = new DefaultChannelGroup();
         group.Add(child.Object);
         group.Add(server.Object);
@@ -354,7 +354,7 @@ public class ChannelGroupContractTest
     {
         var channel = new Mock<IChannel>();
         channel.SetupGet(value => value.Id).Returns(DefaultChannelId.NewInstance());
-        channel.SetupGet(value => value.CloseCompletion).Returns(kind == "closeFuture" ? operation : new TaskCompletionSource().Task);
+        channel.SetupGet(value => value.CloseFuture).Returns(kind == "closeFuture" ? operation : new TaskCompletionSource().Task);
         channel.Setup(value => value.WriteAsync(It.IsAny<object>(), It.IsAny<CancellationToken>())).Returns(operation);
         channel.Setup(value => value.WriteAndFlushAsync(It.IsAny<object>(), It.IsAny<CancellationToken>())).Returns(operation);
         channel.Setup(value => value.CloseAsync(It.IsAny<CancellationToken>())).Returns(operation);

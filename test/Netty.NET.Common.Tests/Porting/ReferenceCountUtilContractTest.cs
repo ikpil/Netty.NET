@@ -50,7 +50,7 @@ public class ReferenceCountUtilContractTest : IDisposable
         internal object Hint;
         internal Exception Failure;
         internal int Count = 4;
-        public int ReferenceCount => Count;
+        public int RefCnt => Count;
         public IReferenceCounted Retain() { Increment = 1; return Result ?? this; }
         public IReferenceCounted Retain(int increment) { Increment = increment; return Result ?? this; }
         public IReferenceCounted Touch() { Hint = null; return Result ?? this; }
@@ -130,17 +130,17 @@ public class ReferenceCountUtilContractTest : IDisposable
         {
             Assert.True(queued.Wait(TimeSpan.FromSeconds(5)));
             Assert.Null(error);
-            Assert.Equal(1, first.ReferenceCount);
-            Assert.Equal(3, second.ReferenceCount);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(3, second.RefCnt);
             Assert.Equal(0, first.Deallocations);
         }
         finally { stop.Set(); Assert.True(caller.Join(TimeSpan.FromSeconds(5))); }
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
-        Assert.Equal(0, first.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
         Assert.Equal(1, first.Deallocations);
         Assert.NotSame(caller, first.Deallocator);
         Assert.Contains("threadDeathWatcher", first.Deallocator.Name);
-        Assert.Equal(1, second.ReferenceCount);
+        Assert.Equal(1, second.RefCnt);
         Assert.Equal(0, second.Deallocations);
         Assert.True(second.Release());
     }

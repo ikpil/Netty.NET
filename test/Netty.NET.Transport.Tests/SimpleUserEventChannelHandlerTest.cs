@@ -40,7 +40,7 @@ public class SimpleUserEventChannelHandlerTest
         channel.Pipeline.FireUserEventTriggered(fooEvent);
         Assert.Equal(1, fooEventCatcher.caughtEvents.Count);
         Assert.Equal(0, allEventCatcher.caughtEvents.Count);
-        Assert.Equal(0, fooEvent.ReferenceCount);
+        Assert.Equal(0, fooEvent.RefCnt);
         Assert.False(channel.Finish());
     }
     [Fact]
@@ -58,11 +58,11 @@ public class SimpleUserEventChannelHandlerTest
     private sealed class FooEventCatcher : SimpleUserEventChannelHandler<FooEvent>
     {
         public readonly List<FooEvent> caughtEvents = new();
-        protected override void EventReceived(ChannelHandlerContext context, FooEvent evt) => caughtEvents.Add(evt);
+        protected override void EventReceived(IChannelHandlerContext ctx, FooEvent evt) => caughtEvents.Add(evt);
     }
     private sealed class AllEventCatcher : ChannelInboundHandlerAdapter
     {
         public readonly List<object> caughtEvents = new();
-        public override void UserEventTriggered(ChannelHandlerContext context, object evt) => caughtEvents.Add(evt);
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => caughtEvents.Add(evt);
     }
 }

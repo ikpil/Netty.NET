@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Netty.NET.Common;
 
@@ -22,24 +23,20 @@ public static class Arrays
         return dest;
     }
 
-    public static T[] CopyOfRange<T>(T[] array, int start, int end) where T : struct
+    // java.util.Arrays.copyOfRange: from must lie in [0, original.length] (ArrayIndexOutOfBoundsException, here
+    // ArgumentOutOfRangeException from Arraycopy), from > to is an IllegalArgumentException, and a to beyond
+    // original.length pads the copy with default values.
+    public static T[] CopyOfRange<T>(T[] original, int from, int to) where T : struct
     {
-        if (array == null)
-            throw new ArgumentNullException(nameof(array));
-
-        if (start < 0 || start > array.Length)
-            throw new ArgumentOutOfRangeException(nameof(start), "start index out of range");
-
-        if (end < start)
-            throw new ArgumentException("end index must not be less than start index");
-
-        if (end > array.Length)
-            throw new ArgumentOutOfRangeException(nameof(end), "end index out of range");
-
-        int length = end - start;
-        T[] result = new T[length];
-        Array.Copy(array, start, result, 0, length);
-        return result;
+        ArgumentNullException.ThrowIfNull(original);
+        int newLength = to - from;
+        if (newLength < 0)
+        {
+            throw new ArgumentException(from.ToString(CultureInfo.InvariantCulture) + " > " + to.ToString(CultureInfo.InvariantCulture));
+        }
+        T[] copy = new T[newLength];
+        Arraycopy(original, from, copy, 0, Math.Min(original.Length - from, newLength));
+        return copy;
     }
 
     public static void Arraycopy<T>(T[] source, int sourceIndex, T[] destination, int destinationIndex, int length)
@@ -48,12 +45,13 @@ public static class Arrays
             throw new ArgumentNullException(nameof(source));
         if (destination == null)
             throw new ArgumentNullException(nameof(destination));
+        // System.arraycopy reports every range violation as ArrayIndexOutOfBoundsException.
         if (sourceIndex < 0 || destinationIndex < 0 || length < 0)
-            throw new ArgumentOutOfRangeException("Indices and length must be non-negative");
-        if (sourceIndex + length > source.Length)
-            throw new ArgumentException("Source array is not long enough.");
-        if (destinationIndex + length > destination.Length)
-            throw new ArgumentException("Destination array is not long enough.");
+            throw new ArgumentOutOfRangeException(nameof(length), "Indices and length must be non-negative");
+        if (length > source.Length - sourceIndex)
+            throw new ArgumentOutOfRangeException(nameof(sourceIndex), "Source array is not long enough.");
+        if (length > destination.Length - destinationIndex)
+            throw new ArgumentOutOfRangeException(nameof(destinationIndex), "Destination array is not long enough.");
 
         Array.Copy(source, sourceIndex, destination, destinationIndex, length);
     }

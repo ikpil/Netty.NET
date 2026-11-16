@@ -26,8 +26,8 @@ public class CoalescingBufferQueueContractTest
         var failure = Assert.Throws<InvalidOperationException>(() => queue.ReleaseAndFailAll(writeError));
         Assert.Same(callbackError, failure.InnerException);
         Assert.Same(writeError, producer.Task.Exception.InnerException);
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
         Assert.True(queue.IsEmpty);
         Assert.Equal(0, queue.ReadableBytes);
         Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
@@ -51,8 +51,8 @@ public class CoalescingBufferQueueContractTest
         aggregate.SetResult();
         Assert.True(producer.Task.IsCompletedSuccessfully);
         Assert.True(queue.IsEmpty);
-        Assert.Equal(0, first.ReferenceCount);
-        Assert.Equal(0, second.ReferenceCount);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
         Assert.False(channel.Finish());
     }
     [Fact]
@@ -78,14 +78,14 @@ public class CoalescingBufferQueueContractTest
         await Assert.ThrowsAsync<RejectedExecutionException>(() => producer.Task);
         Assert.Same(message, channel.ReadOutbound());
         message.Release();
-        Assert.Equal(0, message.ReferenceCount);
+        Assert.Equal(0, message.RefCnt);
         Assert.False(channel.Finish());
     }
     private sealed class DelayedChannel : EmbeddedChannel
     {
         internal readonly TaskCompletionSource AllowWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        protected override async Task DoWrite(object message)
-        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(message).ConfigureAwait(false); }
+        protected override async Task DoWrite(object msg)
+        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(msg).ConfigureAwait(false); }
     }
     private sealed class EmptyHandler : ChannelHandlerAdapter { }
     private sealed class RejectableExecutor : AbstractEventExecutor
@@ -95,7 +95,7 @@ public class CoalescingBufferQueueContractTest
         internal void Stop() => _stopped = true;
         public override bool InEventLoop(Thread thread) => !_stopped && ReferenceEquals(thread, _owner);
         public override void Execute(Action task) { if (_stopped) throw new RejectedExecutionException(); task(); }
-        public override Task Termination => Task.CompletedTask;
+        public override Task TerminationFuture => Task.CompletedTask;
         public override bool IsShuttingDown() => _stopped;
         public override bool IsShutdown() => _stopped;
         public override bool IsTerminated() => _stopped;

@@ -36,12 +36,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     private int _deallocatedComponentCount;
     private readonly bool _direct;
     private readonly IByteBufAllocator _bufferAllocator;
-    public override IByteBufAllocator Allocator => _bufferAllocator;
+    public override IByteBufAllocator Alloc() => _bufferAllocator;
 
     public override string ToString()
     {
         string result = base.ToString();
-        int count = ReferenceCount == 0 ? _deallocatedComponentCount : NumComponents;
+        int count = RefCnt == 0 ? _deallocatedComponentCount : NumComponents;
         return FormattableString.Invariant($"{result[..^1]}, components={count})");
     }
 
@@ -71,7 +71,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         _components = wrapped._components;
         _direct = wrapped._direct;
-        _bufferAllocator = wrapped.Allocator;
+        _bufferAllocator = wrapped.Alloc();
         MaxNumComponents = wrapped.MaxNumComponents;
     }
 
@@ -584,7 +584,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     }
 
     private ByteBuf AllocateBuffer(int capacity)
-        => _direct ? Allocator.DirectBuffer(capacity, MaxCapacity) : Allocator.HeapBuffer(capacity, MaxCapacity);
+        => _direct ? Alloc().DirectBuffer(capacity, MaxCapacity) : Alloc().HeapBuffer(capacity, MaxCapacity);
     private void CheckComponentRange(int index, int count)
     {
         EnsureAccessible();

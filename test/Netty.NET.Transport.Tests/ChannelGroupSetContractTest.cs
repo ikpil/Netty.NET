@@ -18,7 +18,7 @@ public class ChannelGroupSetContractTest
     {
         var mock = server ? new Mock<IServerChannel>().As<IChannel>() : new Mock<IChannel>();
         mock.SetupGet(c => c.Id).Returns(DefaultChannelId.NewInstance());
-        mock.SetupGet(c => c.CloseCompletion).Returns(close ?? new TaskCompletionSource().Task);
+        mock.SetupGet(c => c.CloseFuture).Returns(close ?? new TaskCompletionSource().Task);
         mock.Setup(c => c.CloseAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         return mock.Object;
     }

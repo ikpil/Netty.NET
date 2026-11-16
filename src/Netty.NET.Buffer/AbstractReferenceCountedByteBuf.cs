@@ -24,7 +24,7 @@ namespace Netty.NET.Buffer;
 public abstract class AbstractReferenceCountedByteBuf : ByteBuf
 {
     // this is setting the ref cnt to the initial value
-    private int _referenceCount = 1;
+    private int _refCnt = 1;
     protected AbstractReferenceCountedByteBuf(int maxCapacity) : base(maxCapacity) { }
     // Transparent composite wrappers share indices but delegate reference operations.
     private protected AbstractReferenceCountedByteBuf(ByteBuf indexOwner) : base(indexOwner) { }
@@ -32,23 +32,23 @@ public abstract class AbstractReferenceCountedByteBuf : ByteBuf
     // a best-effort guard.
     // CLR: retain the existing common counter's volatile observational read.
     // It is still an accessibility guard, not an ownership acquisition.
-    public override int ReferenceCount => ReferenceCountUpdater.GetCount(ref _referenceCount);
+    public override int RefCnt => ReferenceCountUpdater.GetCount(ref _refCnt);
 /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly
      */
-    protected void SetReferenceCount(int count) => ReferenceCountUpdater.SetCount(ref _referenceCount, count);
+    protected void SetReferenceCount(int count) => ReferenceCountUpdater.SetCount(ref _refCnt, count);
 /**
      * An unsafe operation intended for use by a subclass that resets the reference count of the buffer to 1
      */
-    protected void ResetReferenceCount() => ReferenceCountUpdater.Reset(ref _referenceCount);
+    protected void ResetReferenceCount() => ReferenceCountUpdater.Reset(ref _refCnt);
     public override ByteBuf Retain(int increment = 1)
     {
-        ReferenceCountUpdater.Retain(ref _referenceCount, increment);
+        ReferenceCountUpdater.Retain(ref _refCnt, increment);
         return this;
     }
     public override bool Release(int decrement = 1)
     {
-        bool final = ReferenceCountUpdater.Release(ref _referenceCount, decrement);
+        bool final = ReferenceCountUpdater.Release(ref _refCnt, decrement);
         if (final) Deallocate();
         return final;
     }

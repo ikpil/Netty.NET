@@ -155,7 +155,9 @@ internal static class NetUtilInitializations
         if (loopbackIface != null)
         {
             // Found the loopback interface with an INET address.
-            logger.Debug($"Loopback interface: {loopbackIface.Name} ({loopbackIface.Description}, {loopbackAddr})");
+            logger.Debug(
+                    "Loopback interface: {} ({}, {})",
+                    loopbackIface.Name, loopbackIface.Description, loopbackAddr);
         }
         else
         {
@@ -167,7 +169,7 @@ internal static class NetUtilInitializations
                 {
                     if (isAddressAssigned(localhost6))
                     {
-                        logger.Debug($"Using hard-coded IPv6 localhost address: {localhost6}");
+                        logger.Debug("Using hard-coded IPv6 localhost address: {}", localhost6);
                         loopbackAddr = localhost6;
                     }
                 }
@@ -179,7 +181,7 @@ internal static class NetUtilInitializations
                 {
                     if (loopbackAddr == null)
                     {
-                        logger.Debug($"Using hard-coded IPv4 localhost address: {localhost4}");
+                        logger.Debug("Using hard-coded IPv4 localhost address: {}", localhost4);
                         loopbackAddr = localhost4;
                     }
                 }
