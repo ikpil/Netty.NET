@@ -1470,7 +1470,7 @@
         "scope": "Original comments are at the corresponding C# declarations; comments of deprecated or JVM-only Java members carry per-comment dispositions."
       },
       "review": {
-        "scope": "Added live parent/child configuration views with independent read-only ordered option and typed attribute snapshots; clone state remains isolated. Source volatile builder-field visibility is retained. ServerBootstrapAcceptor follows the source: child handler first, options (failure force-closes), attributes, extension warnings, registration failure force-closes and logs without a parent exception; exceptionCaught pauses AutoRead and schedules enableAutoReadTask after one second (#1328), then forwards. init(Channel) follows the source order and names (currentChildGroup/Handler/Options/Attrs, p, ch, pipeline, handler read at initChannel time, serverChannel) and warns with the source postInitializeServerListenerChannel message. group(group) delegates to group(group, group), which reports \"group set already\"/\"childGroup set already\" and checkNotNull(childGroup); validate() warns and falls back when childGroup is unset. CLR: the anonymous ChannelInitializer and Runnable are lambdas. 2026-11-16: ServerBootstrap derives from AbstractBootstrap and binds through its Java-shaped initAndRegister/doBind/doBind0. The deprecated childGroup() (use config()) is not ported.",
+        "scope": "Added live parent/child configuration views with independent read-only ordered option and typed attribute snapshots; clone state remains isolated. Source volatile builder-field visibility is retained. ServerBootstrapAcceptor follows the source: child handler first, options (failure force-closes), attributes, extension warnings, registration failure force-closes and logs without a parent exception; exceptionCaught pauses AutoRead and schedules enableAutoReadTask after one second (#1328), then forwards. init(Channel) follows the source order and names (currentChildGroup/Handler/Options/Attrs, p, ch, pipeline, handler read at initChannel time, serverChannel) and warns with the source postInitializeServerListenerChannel message. group(group) delegates to group(group, group), which reports \"group set already\"/\"childGroup set already\" and checkNotNull(childGroup); validate() warns and falls back when childGroup is unset. CLR: the anonymous ChannelInitializer and Runnable are lambdas. 2026-11-16: ServerBootstrap derives from AbstractBootstrap and binds through its Java-shaped initAndRegister/doBind/doBind0. The deprecated childGroup() (use config()) is not ported. 2026-11-18: AbstractBootstrap.bind(int inetPort), used by the testsuite AbstractSingleThreadEventLoopTest, was missing on ServerBootstrap; BindAsync(int) now binds the wildcard IPEndPoint(IPAddress.Any, inetPort) like Bootstrap.BindAsync(int). bind(String, int) and bind(InetAddress, int) remain absent on both bootstraps.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs",
           "test/Netty.NET.Transport.Tests/BootstrapCompletionSourceTest.cs",
@@ -1478,7 +1478,8 @@
           "test/Netty.NET.Transport.Tests/ChannelEventOrderContractTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapInitContractTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs"
         ]
       },
       "publicNameReview": {
@@ -7933,11 +7934,12 @@
         "scope": "Original comments at the corresponding CLR declarations (2026-11-16)."
       },
       "review": {
-        "scope": "Constructors including the supportSuspension and task/tail-queue forms, executeAfterEventLoopIteration/removeAfterEventLoopIterationTask, tail-task draining, registeredChannels() = -1 and registeredChannelsIterator() unsupported as in Java. CLR-only reserved close completions keep an offloaded native close admitted during shutdown.",
+        "scope": "Constructors including the supportSuspension and task/tail-queue forms, executeAfterEventLoopIteration/removeAfterEventLoopIterationTask, tail-task draining, registeredChannels() = -1 and registeredChannelsIterator() unsupported as in Java. CLR-only reserved close completions keep an offloaded native close admitted during shutdown. registeredChannelsIterator() returns IEnumerable<IChannel>, following IEventExecutorGroup.Iterator() for EventExecutorGroup.iterator(); the protected ChannelsReadOnlyIterator has no CLR type because only the deprecated-not-ported NioEventLoop and the unported epoll/kqueue loops use it (testsuite AbstractSingleThreadEventLoopTest records the remove() test as CLR-inapplicable).",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
           "test/Netty.NET.Transport.Tests/SingleThreadEventLoopSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketLingerCloseContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketLingerCloseContractTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs"
         ]
       },
       "publicNameReview": {
@@ -15157,21 +15159,23 @@
   "summary": {
     "inventoryEntries": 274,
     "reviewedImplementationFiles": 159,
-    "portedOriginalFixtures": 88,
-    "portedOriginalMethods": 487,
+    "portedOriginalFixtures": 92,
+    "portedOriginalMethods": 503,
     "supplementalClrCases": 570,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
-    "countsBasis": "Current Transport entries plus explicitly selected testsuite and native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
-    "testsuiteSources": 41,
-    "sourceDisabledMethodsMapped": 8,
+    "countsBasis": "Current Transport entries, every pinned testsuite file (testsuiteEntries, or testsuiteDeferredEntries while it needs an unported module) and the selected native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
+    "testsuiteSources": 49,
+    "sourceDisabledMethodsMapped": 9,
     "nativeTestSources": 13,
-    "mappedInheritedScenarios": 16,
+    "mappedInheritedScenarios": 50,
     "reviewedImplementationFilesBasis": "Count of core Transport implementation entries with status clr-adapted, including explicitly reviewed CLR role aliases; not a count of distinct C# files. Recomputed from entries to remove earlier incremental-count drift.",
     "notPortedEntries": {
       "deprecated-not-ported": 27,
-      "jvm-only-replaced": 25
+      "jvm-only-replaced": 29
     },
-    "inProgressImplementationEntries": []
+    "inProgressImplementationEntries": [],
+    "testsuiteDeferredSources": 17,
+    "testsuiteDeferredDeclaredTests": 28
   },
   "clrDecisions": [
     {
@@ -22642,6 +22646,69 @@
         "newMappedOriginalMethods": 0,
         "checker": "AbstractChannelHandlerContext and EmbeddedChannel are reviewed (3 and 4 per-comment dispositions), DefaultChannelPipeline preserves all 61 comments; their 98 comments no longer await review. Verified with the ChannelOutboundBuffer/LocalChannel partial counts taken from the working tree, because that concurrent port hands its manifest changes back separately."
       }
+    },
+    {
+      "checkpoint": "2026-11-18-testsuite-event-loop",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "transportDebug": {
+          "total": 1126,
+          "passed": 1027,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows); the 24 new results (19 passed, 5 skipped) passed five consecutive focused runs."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "newMappedOriginalMethods": 13,
+        "newInheritedScenarios": 22,
+        "newClrNotApplicableMethods": 1,
+        "checker": "Four testsuite sources that need only already-ported modules were outside the 41 selected sources and are now entries: AbstractSingleThreadEventLoopTest (11 mapped, testChannelsIteratorRemoveThrows CLR-inapplicable), DefaultEventLoopTest (1 mapped + 11 inherited), NioEventLoopTest (11 inherited on the MultiThreadIoEventLoopGroup/NioIoHandler replacement) and ServerSocketSuspendTest (its @Disabled test mapped as a skipped [Fact]); all 14 original comments are preserved. ServerBootstrap gained AbstractBootstrap.bind(int). summary.portedOriginalMethods and mappedInheritedScenarios were recomputed from the checker (503 and 50; the previous 487 and 16 had drifted) and notPortedEntries.jvm-only-replaced corrected to 26. Four deliberately broken copies (dropped CLR-inapplicable method, wrong comment count, missing inherited body, unmarked disabled body) were rejected. The remaining 21 testsuite files are still not inventoried: 15 need codec/handler/pkitesting, SCTP or UDT, 5 are package-info.java, and util/TestUtils.java is ported only as TestUtils.testMethodName without a manifest entry."
+      }
+    },
+    {
+      "checkpoint": "2026-11-18-testsuite-inventory",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "transportDebug": {
+          "total": 1126,
+          "passed": 1027,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows)."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "checker": "The checker now inventories all 66 pinned testsuite files: 49 testsuiteEntries and 17 testsuiteDeferredEntries (28 declared JUnit tests) that need codec-base, codec-http, handler, pkitesting, transport-sctp or transport-udt. Blockers are recomputed from io.netty imports resolved against the pinned module sources, same-package deferred types and whole-package package-info rules; a deferred file needing only ported modules fails, and the one ported entry importing an unported module (SocketChannelNotYetConnectedTest, codec-base ByteToMessageDecoder) records its CLR stand-in. util/TestUtils.java is recorded (isSctpSupported ported, Javadoc of testMethodName added, 2 JVM-only comment dispositions) and three package-info summaries are jvm-only-replaced documentation entries mapped in docs/transport-porting.md. Eight deliberately broken copies (unrecorded file, wrong blocker, ported-only deferred file, missing same-package reference, missing stand-in, wrong declared tests, wrong import evidence, missing TestUtils disposition) were rejected."
+      }
     }
   ],
   "nextWork": [
@@ -24124,7 +24191,16 @@
         "preservedCount": 2,
         "unreviewedCount": 0,
         "scope": "Both original comments are at the corresponding statements."
-      }
+      },
+      "unportedImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.ByteToMessageDecoder"
+          ],
+          "clr": "readMustBePendingUntilChannelIsActive uses an anonymous ByteToMessageDecoder; SocketChannelNotYetConnectedSourceTest emulates it with the named handler ReadFortyTwo, which keeps the cumulation, the manual read() continuation of channelReadComplete and the handlerRemoved release. Replace it with the ported ByteToMessageDecoder when codec-base is ported."
+        }
+      ]
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketChannelEOFTest.java",
@@ -24751,6 +24827,1095 @@
         "unreviewedCount": 0,
         "scope": "All original comments are kept at the corresponding CLR handler statements."
       }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+      "sha256": "8cae822f57bea4a9f0bedc85a8f0214c39b5eb11ed739a953a26dcfa51318b8b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testChannelsRegistered",
+          "clrMethod": "TestChannelsRegistered",
+          "adaptation": "One [Fact] (5 s Timeout) on the abstract base. registeredChannels(loop) is SubmitAsync(RegisteredChannels) bounded by WaitAsync(1 s); counting runs only when it is not -1, with the 50 ms polling loop. register/deregister syncUninterruptibly().isSuccess() await the Task and assert IsCompletedSuccessfully; the group is shut down fire-and-forget as in the source."
+        },
+        {
+          "upstreamMethod": "shutdownBeforeStart",
+          "clrMethod": "ShutdownBeforeStart",
+          "adaptation": "One [Fact]: awaitTermination(2 ms) is false before start, the deprecated shutdown() (an [Obsolete] interface member, CS0612/CS0618 suppressed like @SuppressWarnings(\"deprecation\")) then awaitTermination(200 ms) is true."
+        },
+        {
+          "upstreamMethod": "shutdownGracefullyZeroQuietBeforeStart",
+          "clrMethod": "ShutdownGracefullyZeroQuietBeforeStart",
+          "adaptation": "One [Fact]: shutdownGracefully(0, 2 s).await(200) is ShutdownGracefullyAsync(Zero, 2 s) winning Task.WhenAny against a 200 ms delay, i.e. completed (successfully or not) within 200 ms as Future.await(long) reports."
+        },
+        {
+          "upstreamMethod": "testShutdownGracefullyNoQuietPeriod",
+          "clrMethod": "TestShutdownGracefullyNoQuietPeriod",
+          "adaptation": "One [Fact] (5 s Timeout): ServerBootstrap.Group(loop).Channel(ServerChannelClass()) with an empty ChannelInboundHandlerAdapter child handler binds LocalAddress(typeof(AbstractSingleThreadEventLoopTest)) for LocalServerChannel and BindAsync(0) otherwise; the channel is left open, shutdownGracefully(0, 1 min) must terminate within awaitTermination(600 ms), succeed, and report isShutdown/isTerminated."
+        },
+        {
+          "upstreamMethod": "shutdownGracefullyBeforeStart",
+          "clrMethod": "ShutdownGracefullyBeforeStart",
+          "adaptation": "One [Fact]: shutdownGracefully(200 ms, 1000 ms).await(500) through Task.WhenAny against a 500 ms delay."
+        },
+        {
+          "upstreamMethod": "gracefulShutdownAfterStart",
+          "clrMethod": "GracefulShutdownAfterStart",
+          "adaptation": "One [Fact]: a CountdownEvent (CountDownLatch) proves the loop thread started, shutdownGracefully(200 ms, 3000 ms) then awaitTermination(500 ms) and RejectedExecutionException from execute. CLR: the source leaves the other children of the group open; the port shuts the group down after the assertions so each I/O child releases its NioIoHandler selector sockets."
+        },
+        {
+          "upstreamMethod": "testChannelsIteratorEmpty",
+          "clrMethod": "TestChannelsIteratorEmpty",
+          "adaptation": "One [Fact] (3 s Timeout); assumeTrue(supportsChannelIteration()) is Assert.SkipUnless. Inside runBlockingOn the IEnumerable<IChannel> enumerator's MoveNext()/Current carry hasNext()/next(); next() past the end (NoSuchElementException) is MoveNext() returning false again, the documented IEnumerator end-of-sequence contract (Current is undefined there). Skipped by both concrete CLR fixtures because no ported event loop supports iteration."
+        },
+        {
+          "upstreamMethod": "testChannelsIterator",
+          "clrMethod": "TestChannelsIterator",
+          "adaptation": "One [Fact] (3 s Timeout), skipped by assumption like testChannelsIteratorEmpty. Registers two channels, checks registeredChannels() == 2, then inside runBlockingOn reads both channels through MoveNext()/Current, empties the HashSet<IChannel>(4) of expected channels and checks the end of the sequence twice."
+        },
+        {
+          "upstreamMethod": "schedulingAndCancellingTasks",
+          "clrMethod": "SchedulingAndCancellingTasks",
+          "adaptation": "One [Fact]: 5000 scheduleAtFixedRate(runnable, 1 ms, 1 ms) Tasks, each with the CancellationTokenSource that stands for ScheduledFuture.cancel(false); after 500 a random one (Random.Shared for PlatformDependent.threadLocalRandom()) is cancelled per iteration, then all are cancelled, awaited without rethrowing (Task.WhenAny for Future.await()) and every non-cancelled Task is awaited (sync())."
+        },
+        {
+          "upstreamMethod": "testAutoScalingEventLoopGroupCanScaleDownAndBeUsed",
+          "clrMethod": "TestAutoScalingEventLoopGroupCanScaleDownAndBeUsed",
+          "adaptation": "One [Fact] (30 s Timeout) on the auto-scaling group from AUTO_SCALING_CHOOSER_FACTORY (min 1, max 2, 100 ms window as SCALING_WINDOW_UNIT * SCALING_WINDOW_SECONDS, thresholds 0.2/0.9, ramp 2/2, patience 1). startAllExecutors uses a CountdownEvent; both executors start active, then the group must scale down to one within 5 s (Stopwatch timestamps for System.nanoTime(), 100 ms polling). assertEquals(..., message) keeps its message through a local AssertEquals."
+        },
+        {
+          "upstreamMethod": "testSubmittingTaskWakesUpSuspendedExecutor",
+          "clrMethod": "TestSubmittingTaskWakesUpSuspendedExecutor",
+          "adaptation": "One [Fact] (30 s Timeout): scale down to one active executor within 10 s, find the suspended executor through IEventExecutorGroup.Iterator(), submit empty tasks until it is no longer suspended (at most 11 submissions) and require both executors active again. Each submitted task is waited for with a blocking Task.Wait, as future.sync() blocks: an awaited continuation could start after the 100 ms scaling window under full-suite load, when the other idle executor is already suspended again (seen once on 2026-11-18 as expected <2> but was <1>)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 12,
+        "mappedCount": 11,
+        "reviewedCount": 12,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testChannelsIteratorRemoveThrows",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "SingleThreadEventLoop.registeredChannelsIterator() returns a read-only java.util.Iterator<Channel> whose remove() throws UnsupportedOperationException (ChannelsReadOnlyIterator); the test calls registeredChannelsIterator().remove() on the event loop when supportsChannelIteration() is true.",
+            "reason": "The CLR registeredChannelsIterator() returns IEnumerable<IChannel>, like IEventExecutorGroup.Iterator() for EventExecutorGroup.iterator(). Its IEnumerator<IChannel> has MoveNext/Current/Reset/Dispose and no remove member (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerator-1), so the sequence is read-only by its type and there is no call to assert. The test would also be skipped by both concrete CLR fixtures: only the deprecated-not-ported NioEventLoop and the unported epoll/kqueue loops override registeredChannelsIterator() in the pinned sources.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+              "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs"
+            ]
+          }
+        ]
+      },
+      "review": {
+        "scope": "Ported 2026-11-18 as the abstract xUnit class AbstractSingleThreadEventLoopTest (Java name; no CLR collision) in the sequential io.netty.testsuite.transport collection, so its 100 ms auto-scaling windows run without other testsuite classes in parallel, as JUnit runs the source testsuite. Eleven of the twelve declared tests are [Fact]s executed by DefaultEventLoopTest and NioEventLoopTest; testChannelsIteratorRemoveThrows is CLR-inapplicable (no remove on IEnumerator). The abstract hooks keep their names: SupportsChannelIteration() (default false), NewEventLoopGroup(), NewAutoScalingEventLoopGroup(), NewChannel() and ServerChannelClass(), which returns a Type annotated for the parameterless constructor that ServerBootstrap.Channel(Type) instantiates. Constants keep their names and values; TimeUnit SCALING_WINDOW_UNIT is the one-millisecond TimeSpan. Helpers keep their names: checkNumRegisteredChannels, registeredChannels (SubmitAsync + WaitAsync(1 s)), countActiveExecutors and startAllExecutors over IEventExecutorGroup.Iterator(), runBlockingOn (TaskCompletionSource for newPromise(); the cause is rethrown as is because C# has no checked exceptions), NOOP and assertRejection. Timed [Fact]s pass TestContext.Current.CancellationToken at their awaits (xUnit1069).",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs",
+          "test/Netty.NET.Transport.Tests/DefaultEventLoopTest.cs",
+          "test/Netty.NET.Transport.Tests/NioEventLoopTest.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadIoEventLoop.cs",
+          "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs",
+          "src/Netty.NET.Common/Concurrent/IEventExecutorGroup.cs",
+          "src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs",
+          "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs",
+          "test/Netty.NET.Transport.Tests/AbstractTestsuiteTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 9,
+        "preservedCount": 9,
+        "unreviewedCount": 0,
+        "scope": "The license and all eight line comments are at the corresponding CLR statements; CLR adaptations carry // CLR: comments."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/DefaultEventLoopTest.java",
+      "sha256": "57da648b430be2a98919ef29ee9527f8c1b67ae463e9ff67504ead3599c069af",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/DefaultEventLoopTest.cs",
+        "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testChannelsIteratorNotSupported",
+          "clrMethod": "TestChannelsIteratorNotSupported",
+          "adaptation": "One [Fact] (3 s Timeout): a LocalChannel is registered on a DefaultEventLoop, then registeredChannelsIterator() must throw UnsupportedOperationException, which is NotSupportedException in the CLR port (https://learn.microsoft.com/en-us/dotnet/api/system.notsupportedexception)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "inheritedCaseMappings": [
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testChannelsRegistered",
+          "clrMethod": "TestChannelsRegistered",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "shutdownBeforeStart",
+          "clrMethod": "ShutdownBeforeStart",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "shutdownGracefullyZeroQuietBeforeStart",
+          "clrMethod": "ShutdownGracefullyZeroQuietBeforeStart",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testShutdownGracefullyNoQuietPeriod",
+          "clrMethod": "TestShutdownGracefullyNoQuietPeriod",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "shutdownGracefullyBeforeStart",
+          "clrMethod": "ShutdownGracefullyBeforeStart",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "gracefulShutdownAfterStart",
+          "clrMethod": "GracefulShutdownAfterStart",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testChannelsIteratorEmpty",
+          "clrMethod": "TestChannelsIteratorEmpty",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop. Skipped here by assumption because SupportsChannelIteration() is false."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testChannelsIterator",
+          "clrMethod": "TestChannelsIterator",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop. Skipped here by assumption because SupportsChannelIteration() is false."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "schedulingAndCancellingTasks",
+          "clrMethod": "SchedulingAndCancellingTasks",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testAutoScalingEventLoopGroupCanScaleDownAndBeUsed",
+          "clrMethod": "TestAutoScalingEventLoopGroupCanScaleDownAndBeUsed",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testSubmittingTaskWakesUpSuspendedExecutor",
+          "clrMethod": "TestSubmittingTaskWakesUpSuspendedExecutor",
+          "adaptation": "Runs the inherited body on DefaultEventLoopGroup with LocalChannel/LocalServerChannel; the auto-scaling group is AutoScalingDefaultEventLoopGroup with SuspendableDefaultEventLoop."
+        }
+      ],
+      "review": {
+        "scope": "Concrete fixture DefaultEventLoopTest : AbstractSingleThreadEventLoopTest (Java name). newEventLoopGroup() is new DefaultEventLoopGroup(), newChannel() a LocalChannel and serverChannelClass() LocalServerChannel; supportsChannelIteration() keeps the inherited false. The private nested SuspendableDefaultEventLoop and AutoScalingDefaultEventLoopGroup keep their names and bodies: the loop calls SingleThreadEventLoop(parent, executor, true, true, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) and its run() loop of takeTask/runTask/updateLastExecutionTime/canSuspend/confirmShutdown; the group calls MultithreadEventLoopGroup(nThreads, null executor, chooserFactory) and its newChild returns the loop. Executor is the Action<Action> delegate of the CLR port.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/DefaultEventLoopTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs",
+          "src/Netty.NET.Transport/Channels/DefaultEventLoopGroup.cs",
+          "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
+          "src/Netty.NET.Transport/Channels/MultithreadEventLoopGroup.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+          "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
+          "src/Netty.NET.Transport/Channels/Local/LocalServerChannel.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "The license and both suspension comments in SuspendableDefaultEventLoop.run() are kept."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/NioEventLoopTest.java",
+      "sha256": "96d2630a862271caa2f5724c85b9670eec0e73b6f274986968783cc09c1e4e9d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/NioEventLoopTest.cs",
+        "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": []
+      },
+      "inheritedCaseMappings": [
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testChannelsRegistered",
+          "clrMethod": "TestChannelsRegistered",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "shutdownBeforeStart",
+          "clrMethod": "ShutdownBeforeStart",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "shutdownGracefullyZeroQuietBeforeStart",
+          "clrMethod": "ShutdownGracefullyZeroQuietBeforeStart",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testShutdownGracefullyNoQuietPeriod",
+          "clrMethod": "TestShutdownGracefullyNoQuietPeriod",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "shutdownGracefullyBeforeStart",
+          "clrMethod": "ShutdownGracefullyBeforeStart",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "gracefulShutdownAfterStart",
+          "clrMethod": "GracefulShutdownAfterStart",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testChannelsIteratorEmpty",
+          "clrMethod": "TestChannelsIteratorEmpty",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE). Skipped here by assumption because SupportsChannelIteration() is false."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testChannelsIterator",
+          "clrMethod": "TestChannelsIterator",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE). Skipped here by assumption because SupportsChannelIteration() is false."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "schedulingAndCancellingTasks",
+          "clrMethod": "SchedulingAndCancellingTasks",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testAutoScalingEventLoopGroupCanScaleDownAndBeUsed",
+          "clrMethod": "TestAutoScalingEventLoopGroupCanScaleDownAndBeUsed",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        },
+        {
+          "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/AbstractSingleThreadEventLoopTest.java",
+          "upstreamMethod": "testSubmittingTaskWakesUpSuspendedExecutor",
+          "clrMethod": "TestSubmittingTaskWakesUpSuspendedExecutor",
+          "adaptation": "Runs the inherited body on MultiThreadIoEventLoopGroup with NioIoHandler.NewFactory() (the @deprecated replacement of NioEventLoopGroup) with NioSocketChannel/NioServerSocketChannel; the auto-scaling group passes AUTO_SCALING_CHOOSER_FACTORY and NioIoHandler.NewFactory(DefaultSelectStrategyFactory.INSTANCE)."
+        }
+      ],
+      "review": {
+        "scope": "Concrete fixture NioEventLoopTest : AbstractSingleThreadEventLoopTest. The Java name is kept: the transport module's io.netty.channel.nio.NioEventLoopTest is ported as NioEventLoopSourceTest, so the two same-named sources do not collide in the single CLR test namespace. The source uses NioEventLoopGroup and NioEventLoop, both deprecated-not-ported; each group is replaced by what the @deprecated tag names, MultiThreadIoEventLoopGroup with NioIoHandler.newFactory(), whose children are SingleThreadIoEventLoop. SelectorProvider.provider() is JVM-only, so NioIoHandler.NewFactory takes the DefaultSelectStrategyFactory alone. supportsChannelIteration() returns false instead of true: the source's true relies on NioEventLoop's selection-key iterator, while the replacement SingleThreadIoEventLoop does not override registeredChannelsIterator() in the pinned source (SingleThreadEventLoop throws UnsupportedOperationException) and the CLR port matches it. registeredChannels() is -1 there too, so testChannelsRegistered registers and deregisters without counting; NioEventLoopSourceTest.TestChannelsRegistered counts through NioIoHandler.numRegistered().",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/NioEventLoopTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSingleThreadEventLoopTest.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadIoEventLoop.cs",
+          "src/Netty.NET.Transport/Channels/SingleThreadEventLoop.cs",
+          "src/Netty.NET.Transport/Channels/MultiThreadIoEventLoopGroup.cs",
+          "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+          "src/Netty.NET.Transport/Channels/DefaultSelectStrategyFactory.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/NioServerSocketChannel.cs",
+          "test/Netty.NET.Transport.Tests/NioLifecycleSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The license header is kept verbatim; the source has no other comments."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/ServerSocketSuspendTest.java",
+      "sha256": "0355d36997f4e9a93061625a332244daed3f958de3e0475e50fd89594dcea5b5",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/ServerSocketSuspendTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSuspendAndResumeAccept",
+          "clrMethod": "TestSuspendAndResumeAccept",
+          "adaptation": "Ported as a [Fact] whose Skip carries the source's @Disabled(\"Need to investigate why it fails on osx\"), so it is mapped but not executed. The body (TestSuspendAndResumeAccept0, xUnit1024) runs through AbstractServerSocketTest.Run: SO_BACKLOG 1, AUTO_READ false, the @Sharable AcceptedChannelCounter child handler (CountdownEvent for CountDownLatch), ten java.net.Socket peers as stream Sockets connected with a 10000 ms CancellationTokenSource (SocketUtils.connect / Socket.connect timeout), setAutoRead(true), the latch, and both elapsed-time assertions against TIMEOUT in nanoseconds (Stopwatch ticks x 100); the source's sockets list is not cleared between the two blocks, as in the source."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "review": {
+        "scope": "ServerSocketSuspendTest : AbstractServerSocketTest (Java name). Its only test is @Disabled in the source and is mapped as a skipped [Fact]; constants NUM_CHANNELS and TIMEOUT and the nested AcceptedChannelCounter keep their names.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/ServerSocketSuspendTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractServerSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractTestsuiteTest.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/NioServerSocketChannel.cs"
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The license header is kept verbatim; the source has no other comments."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/util/TestUtils.java",
+      "sha256": "112c122f5a103bd974c08f4a47ea314f5821e9215886a9a2fb3a951ce85e5e2d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/TestUtils.cs"
+      ],
+      "review": {
+        "scope": "Recorded 2026-11-18 (it was ported earlier only as testMethodName, without a manifest entry or its Javadoc). Kind implementation: a utility class of the testsuite main sources with no tests. isSctpSupported() and testMethodName(TestInfo) are ported with all their comments. isSctpSupported keeps the os.name list (OperatingSystem.IsLinux() for the JDK's \"Linux\", RuntimeInformation.OSDescription otherwise) and opens a one-to-one SCTP socket (SOCK_STREAM, protocol 132) through ConstructorInfo.Invoke, which wraps a constructor exception in TargetInvocationException as Method.invoke wraps one in InvocationTargetException, so the result is true only when the socket opens, as in the source; UnsupportedOperationException is NotSupportedException and a socket IOException is SocketException. Not ported, JVM-only: the HotSpotDiagnosticMXBean fields and static initializer, dump/dumpHeap/dumpThreads/timestamp (HotSpotDiagnosticMXBean.dumpHeap and ThreadMXBean.dumpAllThreads) and compressHeapDumps (tukaani XZOutputStream); a .NET process dump is collected from outside the process with dotnet-dump, and the ported SocketGatheringWriteSourceTest records that it does not call dump/compressHeapDumps. The private constructor of the final class is the C# static class.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/TestUtils.cs",
+          "test/Netty.NET.Transport.Tests/AbstractTestsuiteTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractComboTestsuiteTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs"
+        ]
+      },
+      "comments": {
+        "status": "reviewed",
+        "uniqueCount": 10,
+        "preservedCount": 8,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "Retrieve the hotspot MXBean and its class if available.",
+            "disposition": "jvm-only-replaced",
+            "member": "static {",
+            "javaApi": "ManagementFactory",
+            "reason": "Documents the static initializer that looks up com.sun.management.HotSpotDiagnosticMXBean through ManagementFactory, a JVM-only management API that only the JVM-only heap dump uses.",
+            "clr": "No in-process counterpart: a .NET process dump is collected from outside the process with dotnet-dump; the initializer and its fields are not ported.",
+            "evidence": [
+              "https://docs.oracle.com/en/java/javase/21/docs/api/jdk.management/com/sun/management/HotSpotDiagnosticMXBean.html",
+              "https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dump",
+              "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs"
+            ]
+          },
+          {
+            "sourceComment": "Delete the uncompressed dump in favor of the compressed one.",
+            "disposition": "jvm-only-replaced",
+            "member": "public static void compressHeapDumps()",
+            "javaApi": "XZOutputStream",
+            "reason": "Documents compressHeapDumps(), which xz-compresses the *.hprof files written by the JVM-only HotSpotDiagnosticMXBean.dumpHeap with the tukaani XZOutputStream.",
+            "clr": "Not ported with dump(); no CLR test writes .hprof files, and SocketGatheringWriteSourceTest records that its @AfterAll compression step is not ported.",
+            "evidence": [
+              "https://tukaani.org/xz/java.html",
+              "https://docs.oracle.com/en/java/javase/21/docs/api/jdk.management/com/sun/management/HotSpotDiagnosticMXBean.html",
+              "test/Netty.NET.Transport.Tests/SocketGatheringWriteSourceTest.cs"
+            ]
+          }
+        ],
+        "scope": "Eight original comments are at the corresponding CLR statements; the two comments inside JVM-only members carry per-comment dispositions."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/package-info.java",
+      "sha256": "fedfb03788f94990e3c8b7351cd7d8dcf146a4c92a2593ecee42a9ec5b85d26f",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-18",
+        "sourceContract": "Documentation-only package descriptor of io.netty.testsuite.transport (no types or annotations).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace (Microsoft Learn: XML documentation comments; C# specification annex D), and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Transport.Tests holds the ported types of io.netty.testsuite.transport; the package summary is kept verbatim in this entry and mapped in docs/transport-porting.md (package documentation table)."
+        },
+        "evidence": {
+          "files": [
+            "test/Netty.NET.Transport.Tests/AbstractTestsuiteTest.cs",
+            "docs/transport-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "disposition": "per-comment",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2012 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "Common test suite classes.",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/transport-porting.md maps it to Netty.NET.Transport.Tests."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/package-info.java",
+      "sha256": "64904dcb7864658405cfbff214357438c5d8753fc54801ea1507f4e4e62870ff",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-18",
+        "sourceContract": "Documentation-only package descriptor of io.netty.testsuite.transport.socket (no types or annotations).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace (Microsoft Learn: XML documentation comments; C# specification annex D), and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Transport.Tests holds the ported types of io.netty.testsuite.transport.socket; the package summary is kept verbatim in this entry and mapped in docs/transport-porting.md (package documentation table)."
+        },
+        "evidence": {
+          "files": [
+            "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+            "docs/transport-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "disposition": "per-comment",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2012 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "Test suite classes for socket",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/transport-porting.md maps it to Netty.NET.Transport.Tests."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/util/package-info.java",
+      "sha256": "58fb2499284a320a3dbec00b6b7c6cfb7a50ac43d779ede51e56c232f7e535a3",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-18",
+        "sourceContract": "Documentation-only package descriptor of io.netty.testsuite.util (no types or annotations).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace (Microsoft Learn: XML documentation comments; C# specification annex D), and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Transport.Tests holds the ported types of io.netty.testsuite.util; the package summary is kept verbatim in this entry and mapped in docs/transport-porting.md (package documentation table)."
+        },
+        "evidence": {
+          "files": [
+            "test/Netty.NET.Transport.Tests/TestUtils.cs",
+            "docs/transport-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "disposition": "per-comment",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2012 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "Utility classes that help testing a network application.",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/transport-porting.md maps it to Netty.NET.Transport.Tests."
+          }
+        ]
+      }
+    }
+  ],
+  "testsuiteDeferredEntries": [
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/AbstractSctpTest.java",
+      "sha256": "62a796aa8da471dd5f0b8bd9dcc3fca96ff01aa240b4e514ae0037f6b19545cc",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "transport-sctp"
+      ],
+      "blockingImports": [],
+      "via": [
+        "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpTestPermutation.java"
+      ],
+      "declaredTests": [],
+      "reason": "Imports only ported modules but names same-package deferred types (SctpTestPermutation) that need transport-sctp; it is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpEchoTest.java",
+      "sha256": "2a77dcf36c63d522109fba1477d7eddfabfb91bae007de1a6f221576066615a3",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "transport-sctp"
+      ],
+      "blockingImports": [
+        {
+          "module": "transport-sctp",
+          "imports": [
+            "io.netty.channel.sctp.SctpChannel",
+            "io.netty.handler.codec.sctp.SctpInboundByteStreamHandler",
+            "io.netty.handler.codec.sctp.SctpMessageCompletionHandler",
+            "io.netty.handler.codec.sctp.SctpOutboundByteStreamHandler"
+          ]
+        }
+      ],
+      "via": [
+        "testsuite/src/main/java/io/netty/testsuite/transport/sctp/AbstractSctpTest.java"
+      ],
+      "declaredTests": [
+        "testSimpleEcho",
+        "testSimpleEchoUnordered"
+      ],
+      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpTestPermutation.java",
+      "sha256": "1944af1d3643a30fac64fe8a66901898990ad8431b5347da17b186a9f932b555",
+      "hashMode": "utf8-lf",
+      "kind": "test-helper",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "transport-sctp"
+      ],
+      "blockingImports": [
+        {
+          "module": "transport-sctp",
+          "imports": [
+            "io.netty.channel.sctp.nio.NioSctpChannel",
+            "io.netty.channel.sctp.nio.NioSctpServerChannel",
+            "io.netty.channel.sctp.oio.OioSctpChannel",
+            "io.netty.channel.sctp.oio.OioSctpServerChannel"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [],
+      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/package-info.java",
+      "sha256": "6e12a4fba1baad29e0b7ea5e07219d7699bd3508ace9844bb18b2459f1122174",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "transport-sctp"
+      ],
+      "blockingImports": [],
+      "via": [],
+      "declaredTests": [],
+      "reason": "Package summary of a package whose every other source is deferred; it is recorded with that package when transport-sctp is ported."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketFixedLengthEchoTest.java",
+      "sha256": "ea1cc39b0d4d0137832ff0ccb1d3f7309543001909ce4873258071376481e2e2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.FixedLengthFrameDecoder"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testFixedLengthEcho",
+        "testFixedLengthEchoNotAutoRead"
+      ],
+      "reason": "Imports types of codec-base, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketObjectEchoTest.java",
+      "sha256": "3532bddd3bda70ee55fc91409d259bf44e271513e8add51b019e8d993334bf37",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.serialization.ClassResolvers",
+            "io.netty.handler.codec.serialization.ObjectDecoder",
+            "io.netty.handler.codec.serialization.ObjectEncoder"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testObjectEcho",
+        "testObjectEchoNotAutoRead"
+      ],
+      "reason": "Imports types of codec-base, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSpdyEchoTest.java",
+      "sha256": "5669c67344a465d7c4ff1ae95b2be79c1e2d671376168f2dcee71a42b9d8a2fc",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-http"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-http",
+          "imports": [
+            "io.netty.handler.codec.spdy.SpdyFrameCodec",
+            "io.netty.handler.codec.spdy.SpdyVersion"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testSpdyEcho",
+        "testSpdyEchoNotAutoRead"
+      ],
+      "reason": "Imports types of codec-http, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslClientRenegotiateTest.java",
+      "sha256": "e83460df04e38da482001f5b6d78b926259a7ab553b4e8cd7a74598402ce0609",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base",
+        "handler",
+        "pkitesting"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.DecoderException"
+          ]
+        },
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.ssl.JdkSslClientContext",
+            "io.netty.handler.ssl.OpenSsl",
+            "io.netty.handler.ssl.OpenSslServerContext",
+            "io.netty.handler.ssl.SslContext",
+            "io.netty.handler.ssl.SslHandler",
+            "io.netty.handler.ssl.SslHandshakeCompletionEvent"
+          ]
+        },
+        {
+          "module": "pkitesting",
+          "imports": [
+            "io.netty.pkitesting.CertificateBuilder",
+            "io.netty.pkitesting.X509Bundle"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testSslRenegotiationRejected"
+      ],
+      "reason": "Imports types of codec-base, handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslEchoTest.java",
+      "sha256": "1f306056074f1bd878c9b38c6bc73492e910713654363f2a2cdbdcda4a650a7b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "handler",
+        "pkitesting"
+      ],
+      "blockingImports": [
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.ssl.OpenSsl",
+            "io.netty.handler.ssl.OpenSslContext",
+            "io.netty.handler.ssl.SslContext",
+            "io.netty.handler.ssl.SslContextBuilder",
+            "io.netty.handler.ssl.SslHandler",
+            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
+            "io.netty.handler.ssl.SslProvider",
+            "io.netty.handler.stream.ChunkedWriteHandler"
+          ]
+        },
+        {
+          "module": "pkitesting",
+          "imports": [
+            "io.netty.pkitesting.CertificateBuilder",
+            "io.netty.pkitesting.X509Bundle"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testSslEcho"
+      ],
+      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslGreetingTest.java",
+      "sha256": "25cab6601531dc2f3049eba54fed23f0b6262b8ebc6e0ceac33f65359a87da9a",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "handler",
+        "pkitesting"
+      ],
+      "blockingImports": [
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.logging.LogLevel",
+            "io.netty.handler.logging.LoggingHandler",
+            "io.netty.handler.ssl.OpenSsl",
+            "io.netty.handler.ssl.SslContext",
+            "io.netty.handler.ssl.SslContextBuilder",
+            "io.netty.handler.ssl.SslHandler",
+            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
+            "io.netty.handler.ssl.SslProvider"
+          ]
+        },
+        {
+          "module": "pkitesting",
+          "imports": [
+            "io.netty.pkitesting.CertificateBuilder",
+            "io.netty.pkitesting.X509Bundle"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testSslGreeting"
+      ],
+      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslLargeCertificateTest.java",
+      "sha256": "d09423f6d98ca3a26a11ac2a8fc14b8287072535a75037a27a2760816c806ab7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "handler",
+        "pkitesting"
+      ],
+      "blockingImports": [
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.ssl.ClientAuth",
+            "io.netty.handler.ssl.OpenSsl",
+            "io.netty.handler.ssl.OpenSslContextOption",
+            "io.netty.handler.ssl.SslContext",
+            "io.netty.handler.ssl.SslContextBuilder",
+            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
+            "io.netty.handler.ssl.SslProvider"
+          ]
+        },
+        {
+          "module": "pkitesting",
+          "imports": [
+            "io.netty.pkitesting.CertificateBuilder",
+            "io.netty.pkitesting.X509Bundle"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "resumptionWithLargeCertificates"
+      ],
+      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslSessionReuseTest.java",
+      "sha256": "e1ae7b311d7009f2e9954c55a37e9092f7c743491c4d0222f2227e750f74b5fd",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "handler",
+        "pkitesting"
+      ],
+      "blockingImports": [
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.ssl.ResumableX509ExtendedTrustManager",
+            "io.netty.handler.ssl.SslContext",
+            "io.netty.handler.ssl.SslContextBuilder",
+            "io.netty.handler.ssl.SslHandler",
+            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
+            "io.netty.handler.ssl.SslProvider"
+          ]
+        },
+        {
+          "module": "pkitesting",
+          "imports": [
+            "io.netty.pkitesting.CertificateBuilder",
+            "io.netty.pkitesting.X509Bundle"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testSslSessionReuse",
+        "testSslSessionTrustManagerResumption"
+      ],
+      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketStartTlsTest.java",
+      "sha256": "72c5e06f86e01c268d90c55ad567b6de31d522e2bf33e045d82e73e906b05ba6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base",
+        "handler",
+        "pkitesting"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.LineBasedFrameDecoder",
+            "io.netty.handler.codec.string.StringDecoder",
+            "io.netty.handler.codec.string.StringEncoder"
+          ]
+        },
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.logging.LogLevel",
+            "io.netty.handler.logging.LoggingHandler",
+            "io.netty.handler.ssl.OpenSsl",
+            "io.netty.handler.ssl.SslContext",
+            "io.netty.handler.ssl.SslContextBuilder",
+            "io.netty.handler.ssl.SslHandler",
+            "io.netty.handler.ssl.SslProvider"
+          ]
+        },
+        {
+          "module": "pkitesting",
+          "imports": [
+            "io.netty.pkitesting.CertificateBuilder",
+            "io.netty.pkitesting.X509Bundle"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testStartTls",
+        "testStartTlsNotAutoRead"
+      ],
+      "reason": "Imports types of codec-base, handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketStringEchoTest.java",
+      "sha256": "3398fd24ba75feeb92d6b15cb1551dfe2b715ada1eeef92394996f1414f70ba9",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.DelimiterBasedFrameDecoder",
+            "io.netty.handler.codec.Delimiters",
+            "io.netty.handler.codec.string.StringDecoder",
+            "io.netty.handler.codec.string.StringEncoder"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testStringEcho",
+        "testStringEchoNotAutoRead"
+      ],
+      "reason": "Imports types of codec-base, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/TrafficShapingHandlerTest.java",
+      "sha256": "d8c3aa8f9936daab3e79adcbf8b34d29cd694b3ffb859db1a4e723fdda6dbecd",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "handler"
+      ],
+      "blockingImports": [
+        {
+          "module": "handler",
+          "imports": [
+            "io.netty.handler.traffic.AbstractTrafficShapingHandler",
+            "io.netty.handler.traffic.ChannelTrafficShapingHandler",
+            "io.netty.handler.traffic.GlobalTrafficShapingHandler",
+            "io.netty.handler.traffic.TrafficCounter"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "testAutoReadGlobalTrafficShapping",
+        "testAutoReadTrafficShapping",
+        "testNoTrafficShapping",
+        "testRead1TrafficShapping",
+        "testReadGlobalTrafficShapping",
+        "testReadTrafficShapping",
+        "testWrite1TrafficShapping",
+        "testWriteGlobalTrafficShapping",
+        "testWriteTrafficShapping"
+      ],
+      "reason": "Imports types of handler, which is not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with that module."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/UDTClientServerConnectionTest.java",
+      "sha256": "15858a9b20bf31c1ced762d5665ea9212d216b03a4a514505007b70a356d06eb",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base",
+        "transport-udt"
+      ],
+      "blockingImports": [
+        {
+          "module": "codec-base",
+          "imports": [
+            "io.netty.handler.codec.DelimiterBasedFrameDecoder",
+            "io.netty.handler.codec.Delimiters",
+            "io.netty.handler.codec.string.StringDecoder",
+            "io.netty.handler.codec.string.StringEncoder"
+          ]
+        },
+        {
+          "module": "transport-udt",
+          "imports": [
+            "io.netty.channel.udt.UdtChannel",
+            "io.netty.channel.udt.nio.NioUdtProvider"
+          ]
+        }
+      ],
+      "via": [],
+      "declaredTests": [
+        "connection"
+      ],
+      "reason": "Imports types of codec-base and transport-udt, which are not ported yet (Netty.NET ports common, buffer, resolver and transport); the source is ported with those modules."
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/package-info.java",
+      "sha256": "c2fd51bb8269fbd15f90b537dd274a0de23758e60796cb123e9bb8438b26c91c",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "deferred-to-module",
+      "implementation": [],
+      "blockedBy": [
+        "codec-base",
+        "transport-udt"
+      ],
+      "blockingImports": [],
+      "via": [],
+      "declaredTests": [],
+      "reason": "Package summary of a package whose every other source is deferred; it is recorded with that package when codec-base and transport-udt are ported."
     }
   ],
   "nativeTestEntries": [
@@ -25651,9 +26816,24 @@
     "checker": "tools/Test-TransportPortingManifest.ps1 recomputes the Java @Deprecated annotation, @deprecated tag texts, family linkage, replacement names, comment inventory/hash and declared JUnit methods from the pinned source.",
     "counts": {
       "deprecated-not-ported": 27,
-      "jvm-only-replaced": 26
+      "jvm-only-replaced": 29
     },
     "document": "docs/transport-porting.md#not-ported-transport-sources"
+  },
+  "testsuiteInventoryPolicy": {
+    "date": "2026-11-18",
+    "portedModules": [
+      "common",
+      "buffer",
+      "resolver",
+      "transport"
+    ],
+    "rule": "Every pinned testsuite file is recorded exactly once: in testsuiteEntries when it is ported or dispositioned, or in testsuiteDeferredEntries when it needs a module that is not ported. A deferred file names its blocking modules, the io.netty imports that resolve to them in the pinned module sources (nested types resolve to their compilation unit), the deferred same-package types it names (no import is needed inside a package; their blockers carry over) and its declared JUnit tests; a deferred package-info.java takes the blockers of its whole package, which must be deferred. A deferred file that needs only ported modules is a porting gap. A ported testsuite entry may import a type of an unported module only when unportedImports records that exact import with its CLR stand-in, which is replaced when the module is ported.",
+    "statuses": {
+      "deferred-to-module": "Not ported yet because the source needs a Netty module that is not ported; ported together with that module. Not an owner not-port decision."
+    },
+    "checker": "tools/Test-TransportPortingManifest.ps1 lists testsuite/src, resolves every io.netty import against the pinned */src/main/java sources and recomputes blockers, same-package references, declared tests and kinds, and checks the unportedImports records of ported entries.",
+    "document": "docs/transport-porting.md#testsuite-inventory-2026-11-18"
   },
   "commentDispositionPolicy": {
     "date": "2026-11-16",

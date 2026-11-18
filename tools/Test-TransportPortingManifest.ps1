@@ -492,4 +492,152 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
         $inheritedMappedCount += $inherited.Count
     }
 }
-Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) selected testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods and $replacedCommentCount BCL wrapper comments reviewed separately, $partialCommentCount original comments still awaiting review in partial entries, $deprecatedCommentCount deprecated-member and $jvmOnlyCommentCount JVM-only-API original comments of ported entries with per-comment dispositions. $deprecatedNotPortedCount deprecated-not-ported and $jvmOnlyReplacedCount JVM-only-replaced entries carry owner dispositions for $notPortedCommentCount original comments and $notPortedMethodCount declared test methods. Pending entries remain unreviewed."
+
+# Testsuite inventory (2026-11-18). Every pinned testsuite file is a testsuite entry or a deferred entry, exactly once.
+# A deferred file must need a module that is not ported: a module its own io.netty imports resolve to in the pinned
+# module sources, a module needed by a deferred file of its package whose type it names, or, for package-info.java, a
+# module the rest of its package needs. A deferred file that needs only ported modules is a porting gap, and a ported
+# testsuite entry must not import an unported module.
+$testsuiteDeferred = @($manifest.testsuiteDeferredEntries | Where-Object { $null -ne $_ })
+$portedModules = @($manifest.testsuiteInventoryPolicy.portedModules | Where-Object { $null -ne $_ })
+if ($portedModules.Count -eq 0) { throw 'Missing testsuite inventory policy.' }
+foreach ($module in $portedModules) {
+    if (-not (Test-Path (Join-Path $UpstreamRoot "$module/src/main/java") -PathType Container)) { throw "Unknown ported module: $module" }
+}
+$upstreamFull = (Resolve-Path $UpstreamRoot).Path
+$testsuiteFiles = @(Get-ChildItem (Join-Path $UpstreamRoot 'testsuite/src') -Recurse -File |
+    ForEach-Object { $_.FullName.Substring($upstreamFull.Length + 1).Replace('\', '/') } | Sort-Object)
+$recordedTestsuite = @(@($testsuiteEntries | ForEach-Object { $_.upstream }) + @($testsuiteDeferred | ForEach-Object { $_.upstream }))
+if (@($recordedTestsuite | Select-Object -Unique).Count -ne $recordedTestsuite.Count) { throw 'Testsuite source recorded twice.' }
+if (Compare-Object $testsuiteFiles @($recordedTestsuite | Sort-Object) -CaseSensitive) { throw 'Testsuite inventory changed.' }
+# Index of every pinned main-source compilation unit and package by its Java name.
+$typeModules = New-Object System.Collections.Hashtable ([StringComparer]::Ordinal)
+$packageModules = New-Object System.Collections.Hashtable ([StringComparer]::Ordinal)
+foreach ($moduleDirectory in (Get-ChildItem $UpstreamRoot -Directory)) {
+    $javaRoot = Join-Path $moduleDirectory.FullName 'src/main/java'
+    if (-not (Test-Path $javaRoot -PathType Container)) { continue }
+    foreach ($file in [IO.Directory]::EnumerateFiles($javaRoot, '*.java', [IO.SearchOption]::AllDirectories)) {
+        $typeName = $file.Substring($javaRoot.Length + 1).Replace('\', '/')
+        $typeName = $typeName.Substring(0, $typeName.Length - 5).Replace('/', '.')
+        $packageName = ''
+        if ($typeName.Contains('.')) { $packageName = $typeName.Substring(0, $typeName.LastIndexOf('.')) }
+        foreach ($pair in @(@($typeModules, $typeName), @($packageModules, $packageName))) {
+            if (-not $pair[0].ContainsKey($pair[1])) { $pair[0][$pair[1]] = @() }
+            if ($moduleDirectory.Name -cnotin $pair[0][$pair[1]]) { $pair[0][$pair[1]] += $moduleDirectory.Name }
+        }
+    }
+}
+function Get-UnportedImports([string]$masked, [string]$upstream) {
+    # Unported module -> io.netty imports of the source that resolve to it (nested types to their compilation unit).
+    $result = New-Object System.Collections.Hashtable ([StringComparer]::Ordinal)
+    $pattern = '(?m)^[ \t]*import[ \t]+(?<static>static[ \t]+)?(?<name>io\.netty\.[\w.]+?)(?<all>\.\*)?[ \t]*;'
+    foreach ($import in [regex]::Matches($masked, $pattern)) {
+        $name = $import.Groups['name'].Value
+        $modules = $null
+        if ($import.Groups['all'].Success -and -not $import.Groups['static'].Success) {
+            $modules = $packageModules[$name]
+        } else {
+            $lookup = $name
+            if ($import.Groups['static'].Success -and -not $import.Groups['all'].Success) {
+                $lookup = $name.Substring(0, $name.LastIndexOf('.'))
+            }
+            while (-not $modules -and $lookup.Contains('.')) {
+                $modules = $typeModules[$lookup]
+                if (-not $modules) { $lookup = $lookup.Substring(0, $lookup.LastIndexOf('.')) }
+            }
+        }
+        $modules = @($modules | Where-Object { $null -ne $_ })
+        if ($modules.Count -ne 1) { throw "Cannot resolve the module of import $name in $upstream" }
+        if ($modules[0] -cin $portedModules -or $modules[0] -ceq 'testsuite') { continue }
+        if (-not $result.ContainsKey($modules[0])) { $result[$modules[0]] = @() }
+        $result[$modules[0]] += $name + $(if ($import.Groups['all'].Success) { '.*' } else { '' })
+    }
+    $result
+}
+$standInImportCount = 0
+foreach ($entry in $testsuiteEntries) {
+    # A ported source may use an unported module's type only through a recorded CLR stand-in, revisited with that module.
+    $source = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $entry.upstream)))
+    $unported = Get-UnportedImports (Get-MaskedJava $source) $entry.upstream
+    $computedImports = @($unported.Keys | ForEach-Object { $module = $_; $unported[$module] | ForEach-Object { "${module}: $_" } } | Sort-Object -Unique)
+    $records = @($entry.unportedImports | Where-Object { $null -ne $_ })
+    $recordedImports = @($records | ForEach-Object { $module = $_.module; $_.imports | ForEach-Object { "${module}: $_" } } | Sort-Object -Unique)
+    if ([string]::Join("`n", $computedImports) -cne [string]::Join("`n", $recordedImports)) {
+        throw "Unported-module imports of a ported testsuite source must be recorded exactly: $($entry.upstream)"
+    }
+    foreach ($record in $records) {
+        if (-not $record.clr) { throw "An unported-module import needs its CLR stand-in: $($entry.upstream)" }
+    }
+    $standInImportCount += $computedImports.Count
+}
+$deferredFacts = New-Object System.Collections.Hashtable ([StringComparer]::Ordinal)
+foreach ($entry in $testsuiteDeferred) {
+    $source = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $entry.upstream))).Replace("`r`n", "`n")
+    if ($entry.hashMode -cne 'utf8-lf' -or (Get-TextSha256 $source) -cne $entry.sha256) { throw "Original source changed: $($entry.upstream)" }
+    if ($entry.status -cne 'deferred-to-module' -or -not $entry.reason -or @($entry.implementation).Count -ne 0) {
+        throw "Incomplete deferred testsuite entry: $($entry.upstream)"
+    }
+    $masked = Get-MaskedJava $source
+    $unported = Get-UnportedImports $masked $entry.upstream
+    $computedImports = @($unported.Keys | ForEach-Object { $module = $_; $unported[$module] | ForEach-Object { "${module}: $_" } } | Sort-Object -Unique)
+    $recordedImports = @($entry.blockingImports | Where-Object { $null -ne $_ } |
+        ForEach-Object { $module = $_.module; $_.imports | ForEach-Object { "${module}: $_" } } | Sort-Object -Unique)
+    if ([string]::Join("`n", $computedImports) -cne [string]::Join("`n", $recordedImports)) {
+        throw "Deferred blocking imports differ from the source: $($entry.upstream)"
+    }
+    $blockers = New-Object System.Collections.Hashtable ([StringComparer]::Ordinal)
+    foreach ($module in $unported.Keys) { $blockers[$module] = $true }
+    $deferredFacts[$entry.upstream] = @{
+        entry = $entry; source = $source; masked = $masked; blockers = $blockers; via = @()
+        directory = $entry.upstream.Substring(0, $entry.upstream.LastIndexOf('/'))
+    }
+}
+foreach ($upstream in @($deferredFacts.Keys)) {
+    # Deferred files of the same package whose type this file names (no import is needed inside a package).
+    $fact = $deferredFacts[$upstream]
+    $via = @($deferredFacts.Keys | Where-Object {
+        $_ -cne $upstream -and -not $_.EndsWith('/package-info.java') -and $deferredFacts[$_].directory -ceq $fact.directory -and
+        $fact.masked -cmatch ('(?<![\w$])' + [regex]::Escape([IO.Path]::GetFileNameWithoutExtension($_)) + '(?![\w$])')
+    } | Sort-Object)
+    if ([string]::Join("`n", $via) -cne [string]::Join("`n", @($fact.entry.via | Where-Object { $null -ne $_ } | Sort-Object))) {
+        throw "Deferred same-package references differ from the source: $upstream"
+    }
+    $fact.via = $via
+}
+do {
+    $changed = $false
+    foreach ($fact in $deferredFacts.Values) {
+        foreach ($other in $fact.via) {
+            foreach ($module in @($deferredFacts[$other].blockers.Keys)) {
+                if (-not $fact.blockers.ContainsKey($module)) { $fact.blockers[$module] = $true; $changed = $true }
+            }
+        }
+    }
+} while ($changed)
+foreach ($fact in $deferredFacts.Values) {
+    if (-not $fact.entry.upstream.EndsWith('/package-info.java')) { continue }
+    foreach ($other in @($testsuiteFiles | Where-Object {
+            $_ -cne $fact.entry.upstream -and $_.Substring(0, $_.LastIndexOf('/')) -ceq $fact.directory })) {
+        if (-not $deferredFacts.ContainsKey($other)) { throw "A deferred package-info needs its whole package deferred: $($fact.entry.upstream)" }
+        foreach ($module in @($deferredFacts[$other].blockers.Keys)) { $fact.blockers[$module] = $true }
+    }
+}
+$deferredTestCount = 0
+foreach ($fact in $deferredFacts.Values) {
+    $entry = $fact.entry
+    $blockers = @($fact.blockers.Keys | Sort-Object)
+    if ($blockers.Count -eq 0) { throw "Testsuite source needs only ported modules and must be ported: $($entry.upstream)" }
+    if ([string]::Join(',', $blockers) -cne [string]::Join(',', @($entry.blockedBy | Sort-Object))) {
+        throw "Recorded blocking modules differ from the source: $($entry.upstream)"
+    }
+    $tests = @(Get-DeclaredJavaTests $fact.source | Sort-Object)
+    if ([string]::Join(',', $tests) -cne [string]::Join(',', @($entry.declaredTests | Where-Object { $null -ne $_ } | Sort-Object))) {
+        throw "Deferred declared tests differ from the source: $($entry.upstream)"
+    }
+    $expectedKind = 'test-helper'
+    if ($entry.upstream.EndsWith('/package-info.java')) { $expectedKind = 'documentation' } elseif ($tests.Count) { $expectedKind = 'test' }
+    if ($entry.kind -cne $expectedKind) { throw "Unexpected deferred testsuite kind: $($entry.upstream)" }
+    $deferredTestCount += $tests.Count
+}
+Write-Output "Testsuite inventory verified: $($testsuiteFiles.Count) pinned testsuite files = $($testsuiteEntries.Count) entries + $($testsuiteDeferred.Count) deferred to unported modules ($deferredTestCount declared tests); $standInImportCount unported-module imports of ported entries have recorded CLR stand-ins."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods and $replacedCommentCount BCL wrapper comments reviewed separately, $partialCommentCount original comments still awaiting review in partial entries, $deprecatedCommentCount deprecated-member and $jvmOnlyCommentCount JVM-only-API original comments of ported entries with per-comment dispositions. $deprecatedNotPortedCount deprecated-not-ported and $jvmOnlyReplacedCount JVM-only-replaced entries carry owner dispositions for $notPortedCommentCount original comments and $notPortedMethodCount declared test methods. Pending entries remain unreviewed."

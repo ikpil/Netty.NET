@@ -299,6 +299,13 @@ public class ServerBootstrap : AbstractBootstrap
     /**
      * Create a new {@link Channel} and bind it.
      */
+    // CLR: AbstractBootstrap.bind(int) binds new InetSocketAddress(inetPort), the wildcard address; as in
+    // Bootstrap.BindAsync(int), the wildcard is IPAddress.Any.
+    public Task<IChannel> BindAsync(int inetPort, CancellationToken cancellationToken = default)
+        => BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    /**
+     * Create a new {@link Channel} and bind it.
+     */
     public Task<IChannel> BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
     {
         Validate();

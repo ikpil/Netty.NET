@@ -84,6 +84,10 @@ documentation was ported earlier as a source comment in `Channels/Pool/IChannelP
 | `io.netty.channel.socket.nio` | `Netty.NET.Transport.Channels.Sockets` | NIO-based socket channel API implementation - recommended for a large number of connections (>= 1000). |
 | `io.netty.channel.socket` | `Netty.NET.Transport.Channels.Sockets` | Abstract TCP and UDP socket interfaces which extend the core channel API. |
 | `io.netty.channel.oio`, `io.netty.channel.socket.oio` | not ported (deprecated) | Old blocking I/O based (socket) channel API implementation - recommended for a small number of connections (< 1000). |
+| `io.netty.testsuite.transport` | `Netty.NET.Transport.Tests` | Common test suite classes. |
+| `io.netty.testsuite.transport.socket` | `Netty.NET.Transport.Tests` | Test suite classes for socket |
+| `io.netty.testsuite.util` | `Netty.NET.Transport.Tests` | Utility classes that help testing a network application. |
+| `io.netty.testsuite.transport.sctp`, `io.netty.testsuite.transport.udt` | deferred with their packages (see Testsuite inventory) | Test suite classes for sctp transport; Test suite classes for UDT. |
 
 The connection-count recommendations compare Java NIO with blocking OIO. The CLR
 port has only the non-blocking transport, so they guide no CLR choice.
@@ -340,3 +344,26 @@ comment is at its code except seven per-comment dispositions: `ensurePromiseUseC
 
 Supplemental cases: `ContextPipelineEmbeddedAlignmentContractTest` (15). `JavaStringConversionContractTest` expects
 `EmbeddedChannel+EmbeddedChannelPipeline{...}` (the JVM prints `EmbeddedChannel$EmbeddedChannelPipeline{...}`).
+
+## Testsuite inventory (2026-11-18)
+
+The `testsuite` module is ported only where it needs nothing but ported modules (common, buffer,
+resolver, transport). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
+transport-only sources (`AbstractSingleThreadEventLoopTest`, `DefaultEventLoopTest`, `NioEventLoopTest`,
+`ServerSocketSuspendTest`) were missed. The manifest now records every pinned testsuite file, and the checker
+enforces it:
+
+- `testsuiteEntries` (49): ported sources, plus `util/TestUtils.java` (JVM-only heap/thread dump and xz
+  compression members recorded per comment) and three `package-info.java` summaries mapped in the table above.
+- `testsuiteDeferredEntries` (17, with 28 declared JUnit tests): sources that need a module that is not ported
+  yet: `codec-base`, `codec-http`, `handler`, `pkitesting`, `transport-sctp` or `transport-udt`. They are ported
+  with that module; this is not a decision against porting them.
+
+`tools/Test-TransportPortingManifest.ps1` lists `testsuite/src` and requires each file to be recorded exactly once.
+For a deferred file it resolves every `io.netty` import against the pinned `*/src/main/java` sources (nested
+types resolve to their compilation unit) and recomputes the blocking modules, same-package deferred types it names
+(their blockers carry over, as `AbstractSctpTest` needs `transport-sctp` through `SctpTestPermutation`), its
+declared tests and its kind; a deferred `package-info.java` takes the blockers of its whole package. A deferred
+file that needs only ported modules fails the check as a porting gap. A ported testsuite entry may import a type
+of an unported module only through a recorded CLR stand-in (`unportedImports`): `SocketChannelNotYetConnectedTest`
+emulates codec-base's `ByteToMessageDecoder` until codec-base is ported.
