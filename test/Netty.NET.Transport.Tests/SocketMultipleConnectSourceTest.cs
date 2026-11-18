@@ -44,7 +44,7 @@ public class SocketMultipleConnectSourceTest : AbstractSocketTest
         try
         {
             sb.ChildHandler(new ChannelInboundHandlerAdapter());
-            sc = await sb.BindAsync(new IPEndPoint(NetUtil.LOCALHOST, 0));
+            sc = await sb.BindAsync(NetUtil.LOCALHOST, 0);
 
             cb.Handler(new ChannelInboundHandlerAdapter());
             cc = await cb.RegisterAsync();

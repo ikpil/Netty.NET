@@ -19,9 +19,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Net;
+using System.Net.Sockets;
 using System.Collections.Generic;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
+using Netty.NET.Resolver;
 using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Bootstrapping;
@@ -56,6 +59,40 @@ public abstract class AbstractBootstrap
             .Append('(').Append(Config).Append(')');
         return buf.ToString();
     }
+
+    // CLR: SocketUtils.socketAddress(hostname, port), used by localAddress(String, int) and bind(String, int), is
+    // new InetSocketAddress(hostname, port). That constructor rejects a null host, looks the host up with
+    // InetAddress.getByName and keeps the address unresolved when the lookup throws UnknownHostException.
+    // SocketUtils is replaced by native socket operations (docs/common-clr-design.md); the InetAddress.getByName rules
+    // (literals, BSD-form rejection, java.net.preferIPv6Addresses order) are ported in DefaultNameResolver, which the
+    // source also resolves through SocketUtils.addressByName, so the lookup goes through it. Like getByName it blocks
+    // the caller. An unresolved InetSocketAddress is a DnsEndPoint here, as in NioDatagramChannel.
+    internal static EndPoint SocketAddress(string hostname, int port)
+    {
+        if (hostname == null)
+        {
+            throw new ArgumentException("hostname can't be null");
+        }
+        IPAddress addr;
+        try
+        {
+            addr = new DefaultNameResolver(ImmediateEventExecutor.INSTANCE).ResolveAsync(hostname).GetAwaiter().GetResult();
+        }
+        // CLR: DefaultNameResolver reports UnknownHostException as SocketException. Dns.GetHostAddressesAsync rejects a
+        // name longer than 255 characters with ArgumentOutOfRangeException and an invalid address with
+        // ArgumentException (https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync); the JDK
+        // reports both as UnknownHostException.
+        catch (Exception e) when (e is SocketException || e is ArgumentException)
+        {
+            return new DnsEndPoint(hostname, port);
+        }
+        return new IPEndPoint(addr, port);
+    }
+
+    // CLR: new InetSocketAddress(addr, port) binds the wildcard address InetAddress.anyLocalAddress() when addr is null;
+    // as in BindAsync(int), the wildcard is IPAddress.Any (0.0.0.0, the JDK default while java.net.preferIPv6Addresses
+    // is false).
+    internal static IPEndPoint InetSocketAddress(IPAddress addr, int port) => new IPEndPoint(addr ?? IPAddress.Any, port);
 
     // CLR: the registration Task replaces the ChannelFuture returned by initAndRegister(). A Task has no channel()
     // accessor, so the created channel is returned through 'channel' (null when the factory failed; the faulted Task

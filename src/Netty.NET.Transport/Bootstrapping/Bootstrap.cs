@@ -144,16 +144,33 @@ public class Bootstrap : AbstractBootstrap
      */
     public Bootstrap RemoteAddress(string inetHost, int inetPort) => RemoteAddress(new DnsEndPoint(inetHost, inetPort));
     /**
-     * The {@link SocketAddress} which is used to bind the local "end" to.
+     * @see #remoteAddress(SocketAddress)
      */
+    public Bootstrap RemoteAddress(IPAddress inetHost, int inetPort) =>
+        RemoteAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
     /**
-     * @see #localAddress(SocketAddress)
+     * The {@link SocketAddress} which is used to bind the local "end" to.
      */
     public Bootstrap LocalAddress(EndPoint localAddress)
     {
         _local = localAddress;
         return this;
     }
+    /**
+     * @see #localAddress(SocketAddress)
+     */
+    // CLR: new InetSocketAddress(inetPort) is the wildcard address; as in BindAsync(int), the wildcard is IPAddress.Any.
+    public Bootstrap LocalAddress(int inetPort) => LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
+    /**
+     * @see #localAddress(SocketAddress)
+     */
+    public Bootstrap LocalAddress(string inetHost, int inetPort) =>
+        LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
+    /**
+     * @see #localAddress(SocketAddress)
+     */
+    public Bootstrap LocalAddress(IPAddress inetHost, int inetPort) =>
+        LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
@@ -331,7 +348,7 @@ public class Bootstrap : AbstractBootstrap
      * Connect a {@link Channel} to the remote peer.
      */
     public Task<IChannel> ConnectAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default) =>
-        ConnectAsync(new IPEndPoint(inetHost, inetPort), cancellationToken);
+        ConnectAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -524,6 +541,16 @@ public class Bootstrap : AbstractBootstrap
      */
     public Task<IChannel> BindAsync(int inetPort, CancellationToken cancellationToken = default)
         => BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    /**
+     * Create a new {@link Channel} and bind it.
+     */
+    public Task<IChannel> BindAsync(string inetHost, int inetPort, CancellationToken cancellationToken = default)
+        => BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
+    /**
+     * Create a new {@link Channel} and bind it.
+     */
+    public Task<IChannel> BindAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default)
+        => BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
     /**
      * Create a new {@link Channel} and bind it.
      */

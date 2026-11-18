@@ -8,6 +8,8 @@ using Netty.NET.Resolver;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Local;
+using Netty.NET.Transport.Channels.Nio;
+using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -97,5 +99,67 @@ public class BootstrapConfigurationContractTest
             Assert.Equal("ServerBootstrapConfig()", new ServerBootstrap().Config.ToString());
         }
         finally { await parent.StopAsync(); await child.StopAsync(); }
+    }
+    // CLR: the (InetAddress, int) overloads build new InetSocketAddress(inetHost, inetPort), whose null address is the
+    // wildcard, and localAddress/bind(String, int) build SocketUtils.socketAddress(inetHost, inetPort), which looks the
+    // host up at once and keeps it unresolved (a DnsEndPoint here) when the lookup fails.
+    [Fact]
+    public void AddressOverloadsBuildTheSourceSocketAddresses()
+    {
+        var server = new ServerBootstrap();
+        Assert.Equal(new IPEndPoint(IPAddress.Any, 8080), server.LocalAddress(8080).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Loopback, 8081), server.LocalAddress(IPAddress.Loopback, 8081).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Any, 8082), server.LocalAddress((IPAddress)null, 8082).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Loopback, 8083), server.LocalAddress("127.0.0.1", 8083).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.IPv6Loopback, 8084), server.LocalAddress("[::1]", 8084).Config.LocalAddress);
+        var resolved = Assert.IsType<IPEndPoint>(server.LocalAddress("localhost", 8085).Config.LocalAddress);
+        Assert.True(IPAddress.IsLoopback(resolved.Address));
+        Assert.Equal(8085, resolved.Port);
+        // RFC 6761 reserves .invalid, so the lookup fails and the address stays unresolved.
+        var unresolved = Assert.IsType<DnsEndPoint>(server.LocalAddress("netty.invalid", 8086).Config.LocalAddress);
+        Assert.Equal("netty.invalid", unresolved.Host);
+        Assert.Equal(8086, unresolved.Port);
+        Assert.Equal("hostname can't be null", Assert.Throws<ArgumentException>(() => server.LocalAddress((string)null, 1)).Message);
+
+        var client = new Bootstrap();
+        Assert.Equal(new IPEndPoint(IPAddress.Any, 9080), client.LocalAddress(9080).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Loopback, 9081), client.LocalAddress("127.0.0.1", 9081).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Loopback, 9082), client.LocalAddress(IPAddress.Loopback, 9082).Config.LocalAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Loopback, 9083), client.RemoteAddress(IPAddress.Loopback, 9083).Config.RemoteAddress);
+        Assert.Equal(new IPEndPoint(IPAddress.Any, 9084), client.RemoteAddress((IPAddress)null, 9084).Config.RemoteAddress);
+        // remoteAddress(String, int) stays unresolved (InetSocketAddress.createUnresolved) for the resolver.
+        Assert.IsType<DnsEndPoint>(client.RemoteAddress("127.0.0.1", 9085).Config.RemoteAddress);
+    }
+    [Fact]
+    public async Task BindByHostOrAddressBindsTheResolvedAddressAndAnUnresolvedHostFails()
+    {
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var token = TestContext.Current.CancellationToken;
+        var channels = new List<IChannel>();
+        try
+        {
+            ServerBootstrap NewServer() =>
+                new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>().ChildHandler(new ChannelInboundHandlerAdapter());
+            channels.Add(await NewServer().BindAsync("127.0.0.1", 0, token));
+            channels.Add(await NewServer().BindAsync(IPAddress.Loopback, 0, token));
+            Bootstrap NewClient() =>
+                new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new ChannelInboundHandlerAdapter());
+            channels.Add(await NewClient().BindAsync("127.0.0.1", 0, token));
+            channels.Add(await NewClient().BindAsync(IPAddress.Loopback, 0, token));
+            foreach (IChannel channel in channels)
+            {
+                var local = Assert.IsType<IPEndPoint>(channel.LocalAddress);
+                Assert.Equal(IPAddress.Loopback, local.Address);
+                Assert.NotEqual(0, local.Port);
+            }
+            // The JDK refuses to bind an unresolved address (UnresolvedAddressException, an IllegalArgumentException).
+            Task<IChannel> unresolved = NewServer().BindAsync("netty.invalid", 0, token);
+            Assert.IsAssignableFrom<ArgumentException>(await Record.ExceptionAsync(() => unresolved));
+        }
+        finally
+        {
+            foreach (IChannel channel in channels) { await channel.CloseAsync(); }
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 }

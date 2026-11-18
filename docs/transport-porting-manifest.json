@@ -1091,7 +1091,7 @@
         "scope": "Original comments are at the corresponding C# declarations; comments of deprecated or JVM-only Java members carry per-comment dispositions."
       },
       "review": {
-        "scope": "channel(Class<? extends C> channelClass) maps to Channel(Type channelClass) with its original comment and checkNotNull(channelClass, \"channelClass\"), creating a ReflectiveChannelFactory; the generic Channel<T>() uses the same path, so constructor failures become ChannelException as in the source. Package-private static members now live in internal static class AbstractBootstrap: CLOSE_ON_SET_OPTION_FAILURE (io.netty.bootstrap.closeOnSetOptionFailure, default true), setChannelOptions/setChannelOption with the source unknown-option and failure warnings and conditional rethrow, setAttributes and getInitializerExtensions. initAndRegister closes forcibly when init fails and closes or force-closes when registration fails; validate/group/channelFactory/handler/option/attr/bind use the source messages and parameter names; toString is simpleClassName(this)(config()). CLR: no self-typed generic base, so both bootstraps keep their own builder members; the faulted Task replaces the GlobalEventExecutor failed promise and FailedChannel; ClassLoader selection has no counterpart. 2026-11-16: AbstractBootstrap is now the public abstract base of Bootstrap and ServerBootstrap (internal constructor for the package-private one, abstract Config, toString); initAndRegister, doBind and doBind0 follow the Java structure with Tasks: initAndRegister returns the registration Task (closing on an immediate registration failure), doBind takes the isDone fast path or a continuation, and doBind0 runs channel.bind on the event loop with CLOSE_ON_FAILURE. CLR: the builder members stay on the subclasses (no self-typed generic parameter); a rejected event-loop task fails the promise. Promise-executor and ClassLoader comments carry dispositions.",
+        "scope": "channel(Class<? extends C> channelClass) maps to Channel(Type channelClass) with its original comment and checkNotNull(channelClass, \"channelClass\"), creating a ReflectiveChannelFactory; the generic Channel<T>() uses the same path, so constructor failures become ChannelException as in the source. Package-private static members now live in internal static class AbstractBootstrap: CLOSE_ON_SET_OPTION_FAILURE (io.netty.bootstrap.closeOnSetOptionFailure, default true), setChannelOptions/setChannelOption with the source unknown-option and failure warnings and conditional rethrow, setAttributes and getInitializerExtensions. initAndRegister closes forcibly when init fails and closes or force-closes when registration fails; validate/group/channelFactory/handler/option/attr/bind use the source messages and parameter names; toString is simpleClassName(this)(config()). CLR: no self-typed generic base, so both bootstraps keep their own builder members; the faulted Task replaces the GlobalEventExecutor failed promise and FailedChannel; ClassLoader selection has no counterpart. 2026-11-16: AbstractBootstrap is now the public abstract base of Bootstrap and ServerBootstrap (internal constructor for the package-private one, abstract Config, toString); initAndRegister, doBind and doBind0 follow the Java structure with Tasks: initAndRegister returns the registration Task (closing on an immediate registration failure), doBind takes the isDone fast path or a continuation, and doBind0 runs channel.bind on the event loop with CLOSE_ON_FAILURE. CLR: the builder members stay on the subclasses (no self-typed generic parameter); a rejected event-loop task fails the promise. Promise-executor and ClassLoader comments carry dispositions. 2026-11-18: the address overloads are complete on both bootstraps. localAddress(int) and bind(int) use the wildcard IPEndPoint(IPAddress.Any, port); localAddress/bind(InetAddress, int) build new InetSocketAddress(inetHost, inetPort) through AbstractBootstrap.InetSocketAddress, whose null address is the wildcard as in the source; localAddress/bind(String, int) build SocketUtils.socketAddress(inetHost, inetPort) through AbstractBootstrap.SocketAddress. CLR: Common replaces SocketUtils with native socket operations, so SocketAddress rejects a null host with the InetSocketAddress message (\"hostname can't be null\"), looks the host up synchronously through DefaultNameResolver (the ported InetAddress.getByName literal and ordering rules, which the source DefaultNameResolver also reaches through SocketUtils.addressByName) and keeps a failed lookup unresolved as a DnsEndPoint. A NIO bind rejects that DnsEndPoint with an ArgumentException, as the JDK rejects an unresolved address with UnresolvedAddressException (an IllegalArgumentException). BootstrapConfigurationContractTest covers the built addresses and NIO server and datagram binds by host and by address.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs",
           "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs",
@@ -1099,7 +1099,10 @@
           "test/Netty.NET.Transport.Tests/ReflectiveChannelFactoryContractTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapInitContractTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "src/Netty.NET.Transport/Bootstrapping/AbstractBootstrap.cs",
+          "src/Netty.NET.Resolver/DefaultNameResolver.cs",
+          "test/Netty.NET.Transport.Tests/BootstrapConfigurationContractTest.cs"
         ]
       },
       "publicNameReview": {
@@ -1190,14 +1193,15 @@
         "scope": "Original comments are at the corresponding C# declarations; comments of deprecated or JVM-only Java members carry per-comment dispositions."
       },
       "review": {
-        "scope": "Added live Config, default/disabled/custom resolver identity, nullable resolver reset to the default and clone preservation. Reified resolver identity and typed resolution delegate are published together as one immutable snapshot. Source volatile builder-field visibility is retained for live readers. init(Channel) adds the handler, sets options and attributes, then runs postInitializeClientChannel with the source warning. connect(remoteAddress) uses the configured localAddress and connect(remote, local) the given one, both via DoResolveAndConnectAsync after checkNotNull(remoteAddress) and validate(); connect(String/IPAddress, int) overloads exist; remoteAddress/localAddress accept null as in the source. 2026-11-16: the connect path follows the Java structure with Tasks: doResolveAndConnect (isDone fast path or registration continuation), doResolveAndConnect0 (CLOSE_ON_FAILURE on the promise, disabled resolver, unsupported/resolved address, immediate success/failure, otherwise a continuation) and doConnect on the event loop. ExternalAddressResolver holds the configured resolver group and adapts its typed resolver. CLR: cancelling the token while resolution is pending cancels the promise (closing the channel) without waiting for the resolver; an already cancelled token fails before a channel is created.",
+        "scope": "Added live Config, default/disabled/custom resolver identity, nullable resolver reset to the default and clone preservation. Reified resolver identity and typed resolution delegate are published together as one immutable snapshot. Source volatile builder-field visibility is retained for live readers. init(Channel) adds the handler, sets options and attributes, then runs postInitializeClientChannel with the source warning. connect(remoteAddress) uses the configured localAddress and connect(remote, local) the given one, both via DoResolveAndConnectAsync after checkNotNull(remoteAddress) and validate(); connect(String/IPAddress, int) overloads exist; remoteAddress/localAddress accept null as in the source. 2026-11-16: the connect path follows the Java structure with Tasks: doResolveAndConnect (isDone fast path or registration continuation), doResolveAndConnect0 (CLOSE_ON_FAILURE on the promise, disabled resolver, unsupported/resolved address, immediate success/failure, otherwise a continuation) and doConnect on the event loop. ExternalAddressResolver holds the configured resolver group and adapts its typed resolver. CLR: cancelling the token while resolution is pending cancels the promise (closing the channel) without waiting for the resolver; an already cancelled token fails before a channel is created. 2026-11-18: remoteAddress(InetAddress, int) was missing and now builds new InetSocketAddress(inetHost, inetPort); connect(InetAddress, int) goes through the same AbstractBootstrap.InetSocketAddress, so a null address is the wildcard as in the source instead of an ArgumentNullException. The localAddress and bind overloads are recorded on AbstractBootstrap.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs",
           "test/Netty.NET.Transport.Tests/BootstrapCompletionSourceTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapConfigurationContractTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapInitContractTest.cs",
           "test/Netty.NET.Transport.Tests/BootstrapSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs"
+          "test/Netty.NET.Transport.Tests/BootstrapResolutionSourceTest.cs",
+          "src/Netty.NET.Transport/Bootstrapping/AbstractBootstrap.cs"
         ]
       }
     },
@@ -1470,7 +1474,7 @@
         "scope": "Original comments are at the corresponding C# declarations; comments of deprecated or JVM-only Java members carry per-comment dispositions."
       },
       "review": {
-        "scope": "Added live parent/child configuration views with independent read-only ordered option and typed attribute snapshots; clone state remains isolated. Source volatile builder-field visibility is retained. ServerBootstrapAcceptor follows the source: child handler first, options (failure force-closes), attributes, extension warnings, registration failure force-closes and logs without a parent exception; exceptionCaught pauses AutoRead and schedules enableAutoReadTask after one second (#1328), then forwards. init(Channel) follows the source order and names (currentChildGroup/Handler/Options/Attrs, p, ch, pipeline, handler read at initChannel time, serverChannel) and warns with the source postInitializeServerListenerChannel message. group(group) delegates to group(group, group), which reports \"group set already\"/\"childGroup set already\" and checkNotNull(childGroup); validate() warns and falls back when childGroup is unset. CLR: the anonymous ChannelInitializer and Runnable are lambdas. 2026-11-16: ServerBootstrap derives from AbstractBootstrap and binds through its Java-shaped initAndRegister/doBind/doBind0. The deprecated childGroup() (use config()) is not ported. 2026-11-18: AbstractBootstrap.bind(int inetPort), used by the testsuite AbstractSingleThreadEventLoopTest, was missing on ServerBootstrap; BindAsync(int) now binds the wildcard IPEndPoint(IPAddress.Any, inetPort) like Bootstrap.BindAsync(int). bind(String, int) and bind(InetAddress, int) remain absent on both bootstraps.",
+        "scope": "Added live parent/child configuration views with independent read-only ordered option and typed attribute snapshots; clone state remains isolated. Source volatile builder-field visibility is retained. ServerBootstrapAcceptor follows the source: child handler first, options (failure force-closes), attributes, extension warnings, registration failure force-closes and logs without a parent exception; exceptionCaught pauses AutoRead and schedules enableAutoReadTask after one second (#1328), then forwards. init(Channel) follows the source order and names (currentChildGroup/Handler/Options/Attrs, p, ch, pipeline, handler read at initChannel time, serverChannel) and warns with the source postInitializeServerListenerChannel message. group(group) delegates to group(group, group), which reports \"group set already\"/\"childGroup set already\" and checkNotNull(childGroup); validate() warns and falls back when childGroup is unset. CLR: the anonymous ChannelInitializer and Runnable are lambdas. 2026-11-16: ServerBootstrap derives from AbstractBootstrap and binds through its Java-shaped initAndRegister/doBind/doBind0. The deprecated childGroup() (use config()) is not ported. 2026-11-18: AbstractBootstrap.bind(int inetPort), used by the testsuite AbstractSingleThreadEventLoopTest, was missing on ServerBootstrap; BindAsync(int) now binds the wildcard IPEndPoint(IPAddress.Any, inetPort) like Bootstrap.BindAsync(int). The same day bind(String, int), bind(InetAddress, int), localAddress(int), localAddress(String, int) and localAddress(InetAddress, int) were added to both bootstraps (see AbstractBootstrap).",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs",
           "test/Netty.NET.Transport.Tests/BootstrapCompletionSourceTest.cs",
@@ -22709,6 +22713,36 @@
         },
         "checker": "The checker now inventories all 66 pinned testsuite files: 49 testsuiteEntries and 17 testsuiteDeferredEntries (28 declared JUnit tests) that need codec-base, codec-http, handler, pkitesting, transport-sctp or transport-udt. Blockers are recomputed from io.netty imports resolved against the pinned module sources, same-package deferred types and whole-package package-info rules; a deferred file needing only ported modules fails, and the one ported entry importing an unported module (SocketChannelNotYetConnectedTest, codec-base ByteToMessageDecoder) records its CLR stand-in. util/TestUtils.java is recorded (isSctpSupported ported, Javadoc of testMethodName added, 2 JVM-only comment dispositions) and three package-info summaries are jvm-only-replaced documentation entries mapped in docs/transport-porting.md. Eight deliberately broken copies (unrecorded file, wrong blocker, ported-only deferred file, missing same-package reference, missing stand-in, wrong declared tests, wrong import evidence, missing TestUtils disposition) were rejected."
       }
+    },
+    {
+      "checkpoint": "2026-11-18-bootstrap-address-overloads",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "transportDebug": {
+          "total": 1128,
+          "passed": 1029,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows)."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "checker": "A signature comparison of the public AbstractBootstrap, Bootstrap and ServerBootstrap methods found the address overloads bind(String, int), bind(InetAddress, int), localAddress(int), localAddress(String, int), localAddress(InetAddress, int) and Bootstrap.remoteAddress(InetAddress, int) missing; the name-based publicNameReview could not see them because another overload carried each name. They are ported on both bootstraps (SocketUtils.socketAddress through DefaultNameResolver with an unresolved DnsEndPoint on lookup failure; new InetSocketAddress(null, port) as the wildcard, also for connect(InetAddress, int)), SocketMultipleConnectSourceTest binds with the source bind(NetUtil.LOCALHOST, 0) again, and two BootstrapConfigurationContractTest cases cover the built addresses and NIO binds. The stray root files manifest.tmp.json and Check-Tmp.ps1 were removed. All five checkers pass."
+      }
     }
   ],
   "nextWork": [
@@ -23719,13 +23753,14 @@
         "unreviewedMethods": []
       },
       "review": {
-        "scope": "The single source declaration and its newFactories() filter run through the ported harness with both original allocators.",
+        "scope": "The single source declaration and its newFactories() filter run through the ported harness with both original allocators. 2026-11-18: the server binds with sb.BindAsync(NetUtil.LOCALHOST, 0), the source bind(InetAddress, int), instead of an explicit IPEndPoint now that the overload exists.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SocketMultipleConnectSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SocketTestPermutation.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "src/Netty.NET.Transport/Channels/Nio/AbstractNioByteChannel.cs",
-          "src/Netty.NET.Transport/Channels/MultiThreadIoEventLoopGroup.cs"
+          "src/Netty.NET.Transport/Channels/MultiThreadIoEventLoopGroup.cs",
+          "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs"
         ]
       },
       "comments": {

@@ -157,14 +157,26 @@ public class ServerBootstrap : AbstractBootstrap
     /**
      * The {@link SocketAddress} which is used to bind the local "end" to.
      */
-    /**
-     * @see #localAddress(SocketAddress)
-     */
     public ServerBootstrap LocalAddress(EndPoint localAddress)
     {
         _local = localAddress;
         return this;
     }
+    /**
+     * @see #localAddress(SocketAddress)
+     */
+    // CLR: new InetSocketAddress(inetPort) is the wildcard address; as in BindAsync(int), the wildcard is IPAddress.Any.
+    public ServerBootstrap LocalAddress(int inetPort) => LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
+    /**
+     * @see #localAddress(SocketAddress)
+     */
+    public ServerBootstrap LocalAddress(string inetHost, int inetPort) =>
+        LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
+    /**
+     * @see #localAddress(SocketAddress)
+     */
+    public ServerBootstrap LocalAddress(IPAddress inetHost, int inetPort) =>
+        LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
@@ -303,6 +315,16 @@ public class ServerBootstrap : AbstractBootstrap
     // Bootstrap.BindAsync(int), the wildcard is IPAddress.Any.
     public Task<IChannel> BindAsync(int inetPort, CancellationToken cancellationToken = default)
         => BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    /**
+     * Create a new {@link Channel} and bind it.
+     */
+    public Task<IChannel> BindAsync(string inetHost, int inetPort, CancellationToken cancellationToken = default)
+        => BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
+    /**
+     * Create a new {@link Channel} and bind it.
+     */
+    public Task<IChannel> BindAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default)
+        => BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
     /**
      * Create a new {@link Channel} and bind it.
      */
