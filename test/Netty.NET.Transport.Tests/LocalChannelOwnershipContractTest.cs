@@ -386,6 +386,9 @@ public class LocalChannelOwnershipContractTest
     {
         private int _retains;
         internal int Deallocations;
+        // Since 2026-11-19 AbstractReferenceCounted.Retain() updates the count directly, as the Java retain() does,
+        // instead of calling Retain(1); doWrite retains with Retain(), so it is routed to the counting override.
+        public override IReferenceCounted Retain() => Retain(1);
         public override IReferenceCounted Retain(int increment)
         {
             base.Retain(increment);

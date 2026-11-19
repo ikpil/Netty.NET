@@ -36,9 +36,10 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
         ReferenceCountUpdater.SetCount(ref _refCnt, refCnt);
     }
 
-    public IReferenceCounted Retain()
+    public virtual IReferenceCounted Retain()
     {
-        return Retain(1);
+        ReferenceCountUpdater.Retain(ref _refCnt, 1);
+        return this;
     }
 
     public virtual IReferenceCounted Retain(int increment)
@@ -47,19 +48,24 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
         return this;
     }
 
-    public IReferenceCounted Touch()
+    public virtual IReferenceCounted Touch()
     {
         return Touch(null);
     }
 
     public abstract IReferenceCounted Touch(object hint);
 
-    public bool Release()
+    public virtual bool Release()
     {
-        return Release(1);
+        if (ReferenceCountUpdater.Release(ref _refCnt, 1))
+        {
+            Deallocate();
+            return true;
+        }
+        return false;
     }
 
-    public bool Release(int decrement)
+    public virtual bool Release(int decrement)
     {
         if (ReferenceCountUpdater.Release(ref _refCnt, decrement))
         {

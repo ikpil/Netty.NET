@@ -7251,8 +7251,9 @@ Double/Float.toString, which never depend on a locale; C# concatenation uses the
 current culture (for example U+061C before '-' in ar-SA, U+2212 in sv-SE and a
 decimal comma in de-DE). ObjectUtil, AdaptiveCalculator, AdaptiveRecvByteBufAllocator,
 AppendableCharSequence and the Arrays.copyOfRange counterpart therefore format
-integers with the invariant culture and doubles/floats through the internal
-JdkDecimal helper. JdkDecimal follows the JDK 19+ Double.toString specification
+integers with the invariant culture and doubles/floats through the
+JdkDecimal helper (public in Netty.NET.Common.Internal since 2026-11-18, because
+codec-base CharSequenceValueConverter.convertDouble/convertFloat return the same Java text). JdkDecimal follows the JDK 19+ Double.toString specification
 (JDK-4511638): the shortest decimal that rounds to the value, the closest of length
 one or two when the shortest has one digit (Double.MIN_VALUE is "4.9E-324"), plain
 notation in [10^-3, 10^7) with at least one fractional digit and "d.dddE[-]n"
@@ -8832,3 +8833,84 @@ AbstractChannelHandlerContext, DefaultChannelPipeline and EmbeddedChannel follow
   ([lock statement](https://learn.microsoft.com/dotnet/csharp/language-reference/statements/lock)).
 - `EmbeddedChannel.builder()` cannot be declared next to the nested `Builder` type
   ([CS0102](https://learn.microsoft.com/dotnet/csharp/misc/cs0102)); `new EmbeddedChannel.Builder()` replaces it.
+
+## Shared helpers and overridable members for the codec modules (2026-11-19)
+
+- `Netty.NET.Common.Internal.IDN` is the one counterpart of `java.net.IDN.toASCII(String)`/`toUnicode(String)` for
+  codec-dns (`AbstractDnsRecord`) and codec-socks (`SocksCmdRequest`, `SocksCmdResponse`,
+  `DefaultSocks4CommandRequest`, `DefaultSocks5CommandRequest`, `DefaultSocks5CommandResponse`). Owner decision
+  2026-11-19: one shared helper instead of a copy per module, public in the Internal namespace like `JdkDecimal`.
+  It keeps the OpenJDK label loop ([IDN.java](https://raw.githubusercontent.com/openjdk/jdk17u/master/src/java.base/share/classes/java/net/IDN.java)):
+  "." for a root label, "" stays "", a trailing dot stays, all-ASCII labels skip Nameprep/Punycode
+  ([RFC 3490 section 4.1](https://www.rfc-editor.org/rfc/rfc3490#section-4.1)) and are only checked for 1..63
+  characters. Only non-ASCII labels go through `System.Globalization.IdnMapping`, whose `GetAscii` rejects "", a
+  leading separator and control characters
+  ([IdnMapping.GetAscii](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.idnmapping.getascii?view=net-10.0)).
+  IdnMapping follows IDNA2008/UTS #46 where Java uses IDNA2003, so a non-ASCII label such as "faß" can convert
+  differently; the host names of the ported codec tests convert identically.
+- `AbstractReferenceCounted.Retain()`, `Touch()`, `Release()` and `Release(int)` are virtual: the Java methods are not
+  final, and the codec messages (`AbstractDnsMessage`, the memcache messages, redis `ArrayRedisMessage`,
+  `HAProxyMessage`) override them, narrowing the return type with C# covariant returns where Java does. As in Java
+  (`RefCnt.retain(refCnt)`, `handleRelease(RefCnt.release(refCnt))`), `Retain()` and `Release()` update the count
+  directly instead of calling the virtual `Retain(1)`/`Release(1)`, so an override of the int overloads (leak
+  recording in `HAProxyMessage`) runs once per call.
+
+## Primitive collections kept as Dictionary (2026-11-19)
+
+`io.netty.util.collection` is not in `common/src/main/java`. Three templates in `common/src/main/templates`
+(`KCollections`, `KObjectHashMap`, `KObjectMap`) and one in `common/src/test/templates` (`KObjectHashMapTest`) are
+expanded by `common/src/main/script/codegen.groovy` during the Maven `generate-sources` phase into
+`target/generated-sources` for the keys byte, char, short, int and long. That gives 15 main classes
+(`IntObjectHashMap`, `LongObjectMap`, `CharCollections`, ...) and 5 test classes with 175 tests, none of them
+committed. The manifest scope listed only the two Java roots, so these files had no entry until 2026-11-19.
+
+- **Why Java has them.** "Type arguments may be either reference types or wildcards"
+  ([JLS 4.5.1](https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1)), so `Map<Integer, V>` boxes
+  every key. The generated maps keep the keys in a primitive array with open addressing.
+- **Why the CLR does not need them.** "When a generic type is first constructed with a value type as a parameter,
+  the runtime creates a specialized generic type with the supplied parameter or parameters substituted in the
+  appropriate locations in the CIL"
+  ([Generics in the runtime](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time)).
+  `Dictionary<int, V>` therefore stores its keys unboxed.
+- **Owner decision.** The owner asked why a primitive map is needed when the BCL type exists and chose to keep
+  `Dictionary<TKey, TValue>`. The manifest records the three main templates and the script as `clr-replacement` and
+  the test template as `not-applicable`.
+- **Mapping at the ported users** (codec-dns `DnsRecordType`, codec-mqtt `MqttProperties`, codec-redis
+  `FixedRedisMessagePool`, all private fields):
+
+  | Java | C# |
+  | --- | --- |
+  | `get(key)`, null when missing | `TryGetValue`/`GetValueOrDefault` (the indexer throws `KeyNotFoundException`) |
+  | `put(key, value)` with unused result | indexer setter |
+  | `values()`, `size()`, `isEmpty()` | `Values`, `Count`, `Count == 0` |
+  | `new LongObjectHashMap<>(n, 1.0f)` | `new Dictionary<long, V>(n)` |
+  | `emptyMap()`, `unmodifiableMap(map)` (no ported user) | `ReadOnlyDictionary<TKey, TValue>.Empty`, `new ReadOnlyDictionary<TKey, TValue>(map)` |
+
+  [ReadOnlyDictionary](https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel.readonlydictionary-2)
+  is "a wrapper around the specified dictionary". Its `IDictionary<TKey,TValue>.Add` "Throws a NotSupportedException
+  exception in all cases", the counterpart of `UnsupportedOperationException`. Java's `EmptyMap.remove` returns null
+  and its `clear()` does nothing, while the read-only wrapper throws.
+- **Observable difference.** The generated maps iterate in hash-slot order (`hashCode(key) & mask`, linear probing),
+  while for `Dictionary` "The order in which the items are returned is undefined"
+  ([Dictionary<TKey,TValue>](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2)).
+  Among the ported modules only codec-mqtt shows it. `MqttEncoder` writes the MQTT 5 properties in `listAll()` order,
+  which is `props.values()` order, so the property order can differ from the JVM's. Both orders are valid encodings.
+- **To revisit with codec-http2.** `public final class Http2Settings extends CharObjectHashMap<Long>` and overrides
+  `keyToString(char)`, and `DefaultHttp2FrameWriter` writes the SETTINGS parameters in `settings.entries()` order. The
+  base type and that order need their own decision when http2 is ported. The other pinned users (codec-classes-quic,
+  codec-http, codec-http3, handler, resolver-dns, the epoll/io_uring/kqueue transports, transport-sctp) will be mapped
+  with their modules.
+- **Inventory gate.** The scope is now all of `common/src` (287 files).
+  `tools/Update-CommonPortingManifest.ps1` inventories every file under it, not only `*.java`. That brought in the
+  previously missing entries:
+  - `common/src/main/java/module-info.yml`: `clr-replacement` (the assembly plus `InternalsVisibleTo`), as in the
+    other manifests.
+  - Nine resources, all `not-applicable`:
+    - GraalVM `native-image.properties` (build-time or run-time class initialization) and `reflect-config.json`
+      (reflection metadata for `Unsafe`, `ByteBuffer.alignedSlice` and `RuntimeMXBean`, JDK members the CLR
+      port does not use).
+    - The ServiceLoader file that registers the not-applicable `Hidden$NettyBlockHoundIntegration`.
+    - `logback-test.xml`; the C# tests log through the TraceSource default factory.
+    - The five ELF x86-64 `libtest*.so` fixtures of the not-applicable `NativeLibraryLoaderTest`.
+  `tools/Test-CommonCommentCoverage.ps1 -Check` fails when a pinned file under the scope has no entry, when an entry
+  is outside the scope, or when an entry is listed twice.

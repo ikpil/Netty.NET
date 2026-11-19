@@ -4,7 +4,11 @@ Baseline: `64cc10f38ea5f5bd7eae48507817c66680d0afdc` in `../netty`.
 Scope: buffer implementation/tests and common changes required by real buffer consumers.
 The common backlog stays open; unrelated common API polishing is not a buffer prerequisite.
 
-`buffer-porting-manifest.json` inventories every original Java source/test file.
+`buffer-porting-manifest.json` inventories every pinned file under `buffer/src` (163 files). Until 2026-11-19 it
+listed only the Java files; `module-info.yml`, the GraalVM `native-image.properties` and `reflect-config.json` and
+the test `junit-platform.properties` are now `metadata` entries with status `jvm-only-replaced` (assembly and
+`InternalsVisibleTo`; run-time static constructors; `Interlocked` ref fields and `DynamicallyAccessedMembers`;
+xUnit's default class-level parallelism). `-Check` rejects a stale inventory and an incomplete metadata record.
 Regenerate with `pwsh tools/Update-BufferPortingManifest.ps1`; existing decisions
 are retained. Partial source/API and test coverage is explicitly in-progress.
 No throwing placeholder API or artificial skipped test is used to represent

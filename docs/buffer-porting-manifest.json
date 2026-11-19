@@ -1,8 +1,7 @@
 {
   "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
   "scope": [
-    "buffer/src/main/java",
-    "buffer/src/test/java"
+    "buffer/src"
   ],
   "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer. Comment preservedCount includes verbatim referenceComments for JVM-only directives/group labels or superseded compatibility APIs; preservedInImplementationCount/preservedAsReferenceCount distinguish code from archived references where present.",
   "completionPlan": {
@@ -33606,6 +33605,118 @@
       "referenceCommentsDecision": "Original package JavaDoc is preserved verbatim here. Existing CLR namespace types provide the actual consumer API; no empty runtime type is introduced just to host Java package metadata."
     },
     {
+      "upstream": "buffer/src/main/java/module-info.yml",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "evidence": [
+        "Pinned file read 2026-11-19: input to the module-info Maven plugin for the JPMS module io.netty.buffer; requires io.netty.common and, static (optional), jdk.jfr.",
+        "Inventory 2026-11-19: tools/Update-BufferPortingManifest.ps1 inventoried only *.java under the two Java roots, so this file had no entry; the scope is now all of buffer/src, non-Java files are metadata entries, and -Check rejects a stale inventory and an incomplete metadata disposition."
+      ],
+      "adaptation": "Not ported as a file: the assembly Netty.NET.Buffer is the module. Its project references Netty.NET.Common, InternalsVisibleTo opens internals to Netty.NET.Buffer.Tests only, and the optional JFR events are the BufferAllocatorEventSource EventSource (AbstractAllocatorEvent entry).",
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Input to the io.github.dmlloyd.module-info Maven plugin that generates the JPMS module descriptor of io.netty.buffer: requires io.netty.common and static jdk.jfr.",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. JPMS module declarations have no .NET counterpart beyond assembly metadata; Transport, Resolver, Common and the codec modules map their module-info.yml the same way.",
+        "replacement": {
+          "clr": "Netty.NET.Buffer.csproj ProjectReferences Netty.NET.Common; the assembly is the deployment and visibility unit, InternalsVisibleTo (Properties/AssemblyInfo.cs) opens internals only to Netty.NET.Buffer.Tests, and BufferAllocatorEventSource replaces the optional jdk.jfr events.",
+          "noClrCounterpart": [
+            "JPMS requires/exports checking: .NET assemblies have no module descriptor; public/internal accessibility and InternalsVisibleTo form the boundary."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Buffer/Netty.NET.Buffer.csproj",
+            "src/Netty.NET.Buffer/Properties/AssemblyInfo.cs",
+            "src/Netty.NET.Buffer/BufferAllocatorEventSource.cs"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.7",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/",
+            "https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items#projectreference",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/friend"
+          ]
+        }
+      }
+    },
+    {
+      "upstream": "buffer/src/main/resources/META-INF/native-image/io.netty/netty-buffer/native-image.properties",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "evidence": [
+        "Pinned file read 2026-11-19: Args = --initialize-at-run-time=io.netty.buffer.PooledByteBufAllocator, AdaptiveByteBufAllocator, ByteBufAllocator, ByteBufUtil, AbstractReferenceCountedByteBuf (classes whose static defaults depend on run-time system properties and platform probes).",
+        "GraalVM: the builder \"will also automatically pick up all configuration options provided in the\" META-INF/native-image/ directory (https://www.graalvm.org/latest/reference-manual/native-image/overview/BuildConfiguration/); \"Native Image supports class initialization at build time\", while \"The semantics of Java requires that a class is initialized the first time it is accessed at runtime.\" (https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/ClassInitialization/).",
+        ".NET Native AOT: the app \"has been ahead-of-time (AOT) compiled to native code\"; it lists \"No dynamic loading\", \"No runtime code generation\" and \"Requires trimming\" as limitations (https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/). No NativeAOT validation of this module is claimed beyond the existing Netty.NET.Transport.NativeAot.Tests project. A C# static constructor \"is called automatically before the first instance is created or any static members are referenced\" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors).",
+        "Inventory 2026-11-19: tools/Update-BufferPortingManifest.ps1 inventoried only *.java under the two Java roots, so this file had no entry; the scope is now all of buffer/src, non-Java files are metadata entries, and -Check rejects a stale inventory and an incomplete metadata disposition."
+      ],
+      "adaptation": "Not ported: GraalVM build arguments choosing run-time class initialization. The C# type initializers of these classes already run at run time under the CLR rule; Native AOT has no per-type initialization option to configure.",
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "GraalVM native-image.properties: Args --initialize-at-run-time for PooledByteBufAllocator, AdaptiveByteBufAllocator, ByteBufAllocator, ByteBufUtil and AbstractReferenceCountedByteBuf.",
+        "reason": "Owner decision 2026-11-16: GraalVM native-image metadata is replaced by .NET NativeAOT, whose deployment documentation describes no build-time class initialization option; C# static constructors run before first use at run time.",
+        "replacement": {
+          "clr": "The static constructors/static field initializers of PooledByteBufAllocator, AdaptiveByteBufAllocator, IByteBufAllocator, ByteBufUtil and AbstractReferenceCountedByteBuf run at run time before first use.",
+          "noClrCounterpart": [
+            "A build-time class initialization switch of an ahead-of-time compiler."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+            "src/Netty.NET.Buffer/ByteBufUtil.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/overview/BuildConfiguration/",
+            "https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/ClassInitialization/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors"
+          ]
+        }
+      }
+    },
+    {
+      "upstream": "buffer/src/main/resources/META-INF/native-image/io.netty/netty-buffer/reflect-config.json",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "evidence": [
+        "Pinned file read 2026-11-19: reflection metadata for the shaded jctools queue index fields (BaseMpscLinkedArrayQueue producerLimit/consumerIndex/producerIndex, MpmcArrayQueue consumerIndex/producerIndex), AbstractReferenceCountedByteBuf.refCnt, AdaptivePoolingAllocator$Chunk.refCnt and $Magazine.nextInLine (field updaters/Unsafe offsets), and queryAllDeclaredMethods for AbstractByteBufAllocator and ReferenceCountUtil (ResourceLeakDetector.addExclusions reads their declared methods).",
+        "GraalVM: \"the native-image builder requires reachability metadata\" because \"determining dynamically-accessed application elements via static analysis is infeasible\" (https://www.graalvm.org/latest/reference-manual/native-image/metadata/).",
+        "CLR: the reference counts are updated through ref fields with Interlocked (ReferenceCountUpdater; \"Provides atomic operations for variables that are shared by multiple threads.\", https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked), so no field is looked up by name; the jctools queues are replaced in Common (PlatformDependent entry). ResourceLeakDetector.AddExclusions takes a Type annotated [DynamicallyAccessedMembers(PublicMethods | NonPublicMethods)] (\"Indicates that certain members on a specified Type are accessed dynamically, for example, through System.Reflection.\", https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute), which keeps the methods it reads under trimming.",
+        ".NET Native AOT: the app \"has been ahead-of-time (AOT) compiled to native code\"; it lists \"No dynamic loading\", \"No runtime code generation\" and \"Requires trimming\" as limitations (https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/). No NativeAOT validation of this module is claimed beyond the existing Netty.NET.Transport.NativeAot.Tests project.",
+        "Inventory 2026-11-19: tools/Update-BufferPortingManifest.ps1 inventoried only *.java under the two Java roots, so this file had no entry; the scope is now all of buffer/src, non-Java files are metadata entries, and -Check rejects a stale inventory and an incomplete metadata disposition."
+      ],
+      "adaptation": "Not ported: Native AOT reads no reflection JSON. Field-updater reflection has no CLR counterpart (ref fields + Interlocked), and the one reflective read that remains, ResourceLeakDetector.AddExclusions, declares its members with DynamicallyAccessedMembers.",
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "GraalVM reflection metadata: jctools queue index fields, refCnt of AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator$Chunk, AdaptivePoolingAllocator$Magazine.nextInLine, and all declared methods of AbstractByteBufAllocator and ReferenceCountUtil.",
+        "reason": "Owner decision 2026-11-16: GraalVM native-image metadata is replaced by .NET NativeAOT, which does not read a reflection JSON manifest; trimming keeps members declared by DynamicallyAccessedMembers annotations.",
+        "replacement": {
+          "clr": "ReferenceCountUpdater over ref int fields with Interlocked (AbstractReferenceCountedByteBuf, AdaptivePoolingAllocator.Chunk) and Interlocked/Volatile on the Magazine fields; [DynamicallyAccessedMembers] on the Type parameter of ResourceLeakDetector.AddExclusions, called by AbstractByteBufAllocator and ReferenceCountUtil.",
+          "noClrCounterpart": [
+            "A reflection metadata JSON file read by an ahead-of-time compiler.",
+            "Field lookup by name for atomic field updaters."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Buffer/AbstractReferenceCountedByteBuf.cs",
+            "src/Netty.NET.Buffer/AbstractByteBufAllocator.cs",
+            "src/Netty.NET.Common/ResourceLeakDetector.cs",
+            "src/Netty.NET.Common/ReferenceCountUtil.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked",
+            "https://www.rfc-editor.org/rfc/rfc8259"
+          ]
+        }
+      }
+    },
+    {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractAdaptiveByteBufTest.java",
       "kind": "test",
       "status": "verified",
@@ -55202,6 +55313,41 @@
           "adaptation": "Same-name CLR test (2026-11-14 one-to-one test-name decision); its body review is this verified entry's existing evidence. Recorded 2026-11-16 so the declared-method partition is explicit."
         }
       ]
+    },
+    {
+      "upstream": "buffer/src/test/resources/junit-platform.properties",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "evidence": [
+        "Pinned file read 2026-11-19: after the license header, junit.jupiter.execution.parallel.enabled = true and junit.jupiter.execution.parallel.mode.default = concurrent for the buffer tests.",
+        "JUnit 5 user guide (5.10.0; the pinned pom uses junit 5.14.3): \"To enable parallel execution, set the junit.jupiter.execution.parallel.enabled configuration parameter to true\"; CONCURRENT means \"Execute concurrently unless a resource lock forces execution in the same thread.\"; parameters come from \"a file named junit-platform.properties in the root of the class path\" (https://docs.junit.org/5.10.0/user-guide/#writing-tests-parallel-execution, https://docs.junit.org/5.10.0/user-guide/#running-tests-config-params).",
+        "xUnit.net: \"By default, there is a test collection per test class. This means that tests in a test class will not be run in parallel against one another, but tests in different test classes will be.\"; \"The default mode for all v2 and v3 projects is collections.\" (https://xunit.net/docs/running-tests-in-parallel). Netty.NET.Buffer.Tests has no xunit.runner.json, so the defaults apply; AdaptiveByteBufAllocatorGrowthTest opts out with DisableParallelization = true.",
+        "Inventory 2026-11-19: tools/Update-BufferPortingManifest.ps1 inventoried only *.java under the two Java roots, so this file had no entry; the scope is now all of buffer/src, non-Java files are metadata entries, and -Check rejects a stale inventory and an incomplete metadata disposition."
+      ],
+      "adaptation": "Not ported as a file: the C# buffer tests run under the xUnit v3 default, test classes in parallel and the methods of one class sequentially. Difference: JUnit concurrent mode also runs methods of the same class concurrently, so the C# run is less parallel than the JVM run; it never runs more in parallel.",
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "JUnit Platform configuration: junit.jupiter.execution.parallel.enabled = true, junit.jupiter.execution.parallel.mode.default = concurrent.",
+        "reason": "The JUnit Platform configuration file has no xUnit counterpart; xUnit v3 parallelizes test collections (one per class) by default, which the C# test project keeps.",
+        "replacement": {
+          "clr": "xUnit v3 default parallelization (ParallelMode.Collections, a collection per test class) in Netty.NET.Buffer.Tests; collections that must not run in parallel declare CollectionDefinition(DisableParallelization = true).",
+          "noClrCounterpart": [
+            "Concurrent execution of the methods of one test class (JUnit CONCURRENT mode)."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "test/Netty.NET.Buffer.Tests/Netty.NET.Buffer.Tests.csproj",
+            "test/Netty.NET.Buffer.Tests/AdaptiveByteBufAllocatorGrowthTest.cs"
+          ],
+          "urls": [
+            "https://docs.junit.org/5.10.0/user-guide/#writing-tests-parallel-execution",
+            "https://docs.junit.org/5.10.0/user-guide/#running-tests-config-params",
+            "https://xunit.net/docs/running-tests-in-parallel"
+          ]
+        }
+      }
     }
   ]
 }

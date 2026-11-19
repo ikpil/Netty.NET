@@ -1,8 +1,7 @@
 {
   "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
   "scope": [
-    "common/src/main/java",
-    "common/src/test/java"
+    "common/src"
   ],
   "statusMeaning": "verified records the stated behavioral review and tests, not completion of the native API/backend redesign; clr-replacement records a CLR framework substitution; not-applicable records an upstream implementation/test with no CLR purpose; deprecated-not-ported records an upstream @Deprecated type that is not ported by owner decision, with its deprecation text and replacement; candidates alone imply nothing",
   "entries": [
@@ -6751,6 +6750,289 @@
       }
     },
     {
+      "upstream": "common/src/main/java/module-info.yml",
+      "kind": "source",
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Netty.NET.Common.csproj",
+        "src/Netty.NET.Common/Properties/AssemblyInfo.cs"
+      ],
+      "evidence": [
+        "Pinned file read 2026-11-19: input to the module-info Maven plugin for the JPMS module io.netty.common; requires jdk.unsupported and java.logging, static (optional) jdk.jfr, commons-logging, log4j, log4j2, jetbrains annotations and slf4j, and exports io.netty.util.internal, io.netty.util.internal.logging and io.netty.util.internal.svm explicitly because the plugin skips packages named internal. Update-CommonPortingManifest.ps1 inventoried only *.java files, so this file had no entry; the codec manifests record their module-info.yml the same way (codec-dns-porting-manifest.json).",
+        "JLS 7.7 module declarations: https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.7; assemblies: https://learn.microsoft.com/en-us/dotnet/standard/assembly/; friend assemblies: https://learn.microsoft.com/en-us/dotnet/standard/assembly/friend.",
+        "Inventory gate added the same day: tools/Test-CommonCommentCoverage.ps1 -Check now fails when a pinned file under the manifest scope has no entry or an entry is outside it; the scope gained common/src/main/script, common/src/main/templates and common/src/test/templates, which had never been inventoried because the scope listed only the two java roots."
+      ],
+      "adaptation": "JPMS module declarations have no .NET counterpart beyond assembly metadata. The assembly Netty.NET.Common (Netty.NET.Common.csproj, no project references) is the deployment and visibility unit: the Internal namespaces are public as the exported io.netty.util.internal packages are, and InternalsVisibleTo (Properties/AssemblyInfo.cs) opens internals only to Netty.NET.Common.Tests. The optional logging/JFR/annotation modules have no assembly reference; their CLR replacements are recorded on the logging and JFR entries.",
+      "comments": {
+        "upstreamCount": 1,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/resources/META-INF/native-image/io.netty/netty-common/native-image.properties",
+      "kind": "source",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [
+        "Pinned file read 2026-11-19: Args = --initialize-at-run-time for io.netty.util.AbstractReferenceCounted, concurrent.GlobalEventExecutor, ImmediateEventExecutor, ScheduledFutureTask, SystemTicker, internal.ThreadLocalRandom and the four NetUtilSubstitutions lazy holders (localhost4, localhost6, localhost, network interfaces), and --initialize-at-build-time for io.netty.util.internal.CleanerJava25; its note says graalvm-reachability-metadata overrides the file.",
+        "GraalVM: the builder \"will also automatically pick up all configuration options provided in the\" META-INF/native-image/ directory (https://www.graalvm.org/latest/reference-manual/native-image/overview/BuildConfiguration/). Class initialization: \"Native Image supports class initialization at build time: it can initialize classes when it builds an executable\", while \"The semantics of Java requires that a class is initialized the first time it is accessed at runtime.\" (https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/ClassInitialization/).",
+        ".NET Native AOT: an app that \"has been ahead-of-time (AOT) compiled to native code\"; its listed limitations are \"No dynamic loading\", \"No runtime code generation\" and \"Requires trimming\" (https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/). No NativeAOT validation of Common is claimed. A C# static constructor \"is called automatically before the first instance is created or any static members are referenced\" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "GraalVM native-image build arguments that choose build-time or run-time class initialization. The Native AOT deployment documentation describes no per-type initialization option, and the C# type initializers of the listed classes keep the CLR rule (run before the first instance or static member access), the counterpart of the run-time initialization the file asks for. NetUtilSubstitutions and CleanerJava25 are themselves not-applicable entries of this manifest.",
+      "comments": {
+        "upstreamCount": 1,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/resources/META-INF/native-image/io.netty/netty-common/reflect-config.json",
+      "kind": "source",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [
+        "Pinned file read 2026-11-19: reflection metadata for java.nio.ByteBuffer.alignedSlice(int), the java.nio.DirectByteBuffer constructors, sun.misc.Unsafe (all declared fields, public methods), jdk.internal.misc.Unsafe memory methods (copyMemory, allocateMemory, get/put*, addressSize, ...), ManagementFactory.getRuntimeMXBean() and RuntimeMXBean.getInputArguments(), each conditioned on typeReachable: the JDK members PlatformDependent/PlatformDependent0 reach by reflection.",
+        "GraalVM: \"the native-image builder requires reachability metadata\" because \"determining dynamically-accessed application elements via static analysis is infeasible\" (https://www.graalvm.org/latest/reference-manual/native-image/metadata/).",
+        ".NET Native AOT: an app that \"has been ahead-of-time (AOT) compiled to native code\"; its listed limitations are \"No dynamic loading\", \"No runtime code generation\" and \"Requires trimming\" (https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/). No NativeAOT validation of Common is claimed.",
+        "The Common port has no reflective access to these JDK members: Unsafe and the ByteBuffer hierarchy are replaced by Memory/Span, NativeMemory and SafeHandle (CleanerJava25 and PlatformDependent0 entries, docs/common-native-memory.md); a search of src/Netty.NET.Common finds no getInputArguments, ManagementFactory or alignedSlice counterpart.",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "GraalVM reflection metadata for JDK internals the CLR port does not use. Native AOT does not read a reflection JSON file; where Netty.NET needs reflection to survive trimming it uses DynamicallyAccessedMembers annotations (codec-base reflect-config entry, docs/codec-base-porting-manifest.json).",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/resources/META-INF/services/reactor.blockhound.integration.BlockHoundIntegration",
+      "kind": "source",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned file read 2026-11-19: after the license header it registers the single provider io.netty.util.internal.Hidden$NettyBlockHoundIntegration.",
+        "Java ServiceLoader: a provider is \"identified by placing a provider-configuration file in the resource directory META-INF/services\"; \"The name of the provider-configuration file is the fully qualified binary name of the service.\" and it \"contains a list of fully qualified binary names of service providers, one per line.\" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ServiceLoader.html).",
+        "common/src/main/java/io/netty/util/internal/Hidden.java is not-applicable in this manifest: BlockHound is a JVM bytecode instrumentor with no CLR counterpart, so there is no NettyBlockHoundIntegration to register.",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "ServiceLoader registration of the not-applicable Hidden.NettyBlockHoundIntegration; .NET has no ServiceLoader provider file and no BlockHound, so nothing is registered.",
+      "comments": {
+        "upstreamCount": 1,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/script/codegen.groovy",
+      "kind": "source",
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [
+        "Pinned script and common/pom.xml read 2026-11-19: groovy-maven-plugin runs it in the generate-sources phase; it copies every *.template of collection.template.dir (src/main/templates) and collection.template.test.dir (src/test/templates) to target/generated-sources/collections/java and target/generated-test-sources/collections/java (not committed), once per key type byte/char/short/int/long, replacing @K@ (Byte..Long), @k@ (the primitive), @O@ (Byte, Character, Short, Integer, Long), @KEY_NUMBER_METHOD@ (byteValue..longValue) and @HASH_CODE@ ((int) (key ^ (key >>> 32)) for long, (int) key otherwise), and renaming K*.template to <Key>*.java: 15 main classes and 5 test classes.",
+        "Java needs these maps because \"Type arguments may be either reference types or wildcards\" (JLS 4.5.1, https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), so Map<Integer, V> boxes every key; \"When a generic type is first constructed with a value type as a parameter, the runtime creates a specialized generic type with the supplied parameter or parameters substituted in the appropriate locations in the CIL\" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time), so Dictionary<int, V>, Dictionary<long, V> and Dictionary<char, V> store their keys unboxed.",
+        "Owner decision 2026-11-19: keep Dictionary. The owner first chose Dictionary with the difference recorded while porting the codec modules, then, asked whether to port io.netty.util.collection, asked why a primitive map is needed when the BCL type exists and chose to keep Dictionary.",
+        "Inventory gate added the same day: tools/Test-CommonCommentCoverage.ps1 -Check now fails when a pinned file under the manifest scope has no entry or an entry is outside it; the scope gained common/src/main/script, common/src/main/templates and common/src/test/templates, which had never been inventoried because the scope listed only the two java roots."
+      ],
+      "adaptation": "No code is generated. The script exists to specialize the maps for primitive keys, which Java generics cannot take; a CLR generic type constructed with a value type is specialized by the runtime, so the ported modules use Dictionary<TKey, TValue> with the value-type key (see the three template entries).",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/templates/io/netty/util/collection/KCollections.template",
+      "kind": "source",
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [
+        "Pinned template read 2026-11-19: generates ByteCollections..LongCollections with emptyMap() (a shared EmptyMap whose put throws UnsupportedOperationException) and unmodifiableMap(map) (a view whose mutators throw UnsupportedOperationException and whose entries() iterator wraps each PrimitiveEntry). No ported module uses it; the pinned users are codec-http2 WeightedFairQueueByteDistributor and handler JdkDelegatingPrivateKeyMethod.",
+        "ReadOnlyDictionary<TKey,TValue>: \"Represents a read-only, generic collection of key/value pairs.\"; its constructor \"Initializes a new instance of the ReadOnlyDictionary<TKey,TValue> class that is a wrapper around the specified dictionary.\"; IDictionary<TKey,TValue>.Add \"Throws a NotSupportedException exception in all cases.\"; Empty: \"Gets an empty ReadOnlyDictionary<TKey,TValue>.\" \"The returned instance is immutable and will always be empty.\" (https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel.readonlydictionary-2, .../readonlydictionary-2.empty).",
+        "Java needs these maps because \"Type arguments may be either reference types or wildcards\" (JLS 4.5.1, https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), so Map<Integer, V> boxes every key; \"When a generic type is first constructed with a value type as a parameter, the runtime creates a specialized generic type with the supplied parameter or parameters substituted in the appropriate locations in the CIL\" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time), so Dictionary<int, V>, Dictionary<long, V> and Dictionary<char, V> store their keys unboxed.",
+        "Owner decision 2026-11-19: keep Dictionary. The owner first chose Dictionary with the difference recorded while porting the codec modules, then, asked whether to port io.netty.util.collection, asked why a primitive map is needed when the BCL type exists and chose to keep Dictionary.",
+        "Inventory gate added the same day: tools/Test-CommonCommentCoverage.ps1 -Check now fails when a pinned file under the manifest scope has no entry or an entry is outside it; the scope gained common/src/main/script, common/src/main/templates and common/src/test/templates, which had never been inventoried because the scope listed only the two java roots."
+      ],
+      "adaptation": "With the maps replaced by Dictionary<TKey, TValue>, emptyMap() corresponds to ReadOnlyDictionary<TKey, TValue>.Empty and unmodifiableMap(map) to new ReadOnlyDictionary<TKey, TValue>(map), a live read-only wrapper whose mutators throw NotSupportedException (the CLR counterpart of UnsupportedOperationException, docs/codec-base-porting.md). Differences: Java EmptyMap.remove returns null and clear() does nothing, while the read-only wrapper throws; there is no PrimitiveEntry wrapper. The users are ported with their modules.",
+      "comments": {
+        "upstreamCount": 9,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 9
+      }
+    },
+    {
+      "upstream": "common/src/main/templates/io/netty/util/collection/KObjectHashMap.template",
+      "kind": "source",
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsRecordType.cs",
+        "src/Netty.NET.Handler.Codec.Mqtt/MqttProperties.cs",
+        "src/Netty.NET.Handler.Codec.Redis/FixedRedisMessagePool.cs"
+      ],
+      "evidence": [
+        "Pinned template read 2026-11-19: generates ByteObjectHashMap..LongObjectHashMap, open-addressing maps (linear probing, power-of-two capacity, NULL_VALUE placeholder so null means a free slot, compaction on remove by Knuth 6.4 Algorithm R, rehash when size > capacity * loadFactor) that implement the generated map interface, with toString() as {key=value, ...}, a protected keyToString(key) hook, and hashCode()/equals() over keys and values.",
+        "Java needs these maps because \"Type arguments may be either reference types or wildcards\" (JLS 4.5.1, https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), so Map<Integer, V> boxes every key; \"When a generic type is first constructed with a value type as a parameter, the runtime creates a specialized generic type with the supplied parameter or parameters substituted in the appropriate locations in the CIL\" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time), so Dictionary<int, V>, Dictionary<long, V> and Dictionary<char, V> store their keys unboxed.",
+        "Observable difference: the generated maps iterate in hash-slot order (open addressing, linear probing, index = hashCode(key) & mask), while for Dictionary \"The order in which the items are returned is undefined.\" (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2). Neither order is a documented contract of the Java API. In the ported modules only codec-mqtt shows it: MqttProperties.listAll() returns props.values(), so MqttEncoder writes the MQTT 5 properties in a different order than the JVM (both orders are valid MQTT 5 encodings).",
+        "Owner decision 2026-11-19: keep Dictionary. The owner first chose Dictionary with the difference recorded while porting the codec modules, then, asked whether to port io.netty.util.collection, asked why a primitive map is needed when the BCL type exists and chose to keep Dictionary.",
+        "Revisit when codec-http2 is ported: public final class Http2Settings extends CharObjectHashMap<Long> and overrides keyToString(char), and DefaultHttp2FrameWriter writes the SETTINGS parameters in settings.entries() order, so its base type and that order need their own decision then. Other pinned users (not ported yet): codec-classes-quic, codec-http, codec-http3, handler, resolver-dns, transport-classes-epoll/io_uring/kqueue, transport-sctp, microbench.",
+        "Ported users: codec-dns DnsRecordType.BY_TYPE is Dictionary<int, DnsRecordType>; codec-mqtt MqttProperties.props is Dictionary<int, MqttProperty>; codec-redis FixedRedisMessagePool longToIntegers/longToByteBufs are Dictionary<long, V>. All are private fields; codec-dns 80, codec-mqtt 122 and codec-redis 38 tests pass (2026-11-19 checkpoints in their manifests).",
+        "Inventory gate added the same day: tools/Test-CommonCommentCoverage.ps1 -Check now fails when a pinned file under the manifest scope has no entry or an entry is outside it; the scope gained common/src/main/script, common/src/main/templates and common/src/test/templates, which had never been inventoried because the scope listed only the two java roots."
+      ],
+      "adaptation": "Replaced by Dictionary<TKey, TValue> with the value-type key at each use; no Netty.NET.Common type is generated. get(key) returning null for a missing key is TryGetValue/GetValueOrDefault, because the Dictionary indexer throws KeyNotFoundException; put(key, value), whose previous value no ported user reads, is the indexer setter; values() is Values; size()/isEmpty() are Count/Count == 0; the (initialCapacity, loadFactor) constructor of codec-redis is Dictionary(capacity). No ported user calls remove, entries(), toString() or keyToString(). Iteration order differs as recorded in the evidence.",
+      "comments": {
+        "upstreamCount": 67,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 67
+      }
+    },
+    {
+      "upstream": "common/src/main/templates/io/netty/util/collection/KObjectMap.template",
+      "kind": "source",
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsRecordType.cs",
+        "src/Netty.NET.Handler.Codec.Mqtt/MqttProperties.cs",
+        "src/Netty.NET.Handler.Codec.Redis/FixedRedisMessagePool.cs"
+      ],
+      "evidence": [
+        "Pinned template read 2026-11-19: generates the interfaces ByteObjectMap..LongObjectMap extending Map<Byte..Long, V> with get/put/remove/containsKey(primitive), entries() and the nested PrimitiveEntry (key(), value(), setValue(V)).",
+        "Java needs these maps because \"Type arguments may be either reference types or wildcards\" (JLS 4.5.1, https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), so Map<Integer, V> boxes every key; \"When a generic type is first constructed with a value type as a parameter, the runtime creates a specialized generic type with the supplied parameter or parameters substituted in the appropriate locations in the CIL\" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time), so Dictionary<int, V>, Dictionary<long, V> and Dictionary<char, V> store their keys unboxed.",
+        "Owner decision 2026-11-19: keep Dictionary. The owner first chose Dictionary with the difference recorded while porting the codec modules, then, asked whether to port io.netty.util.collection, asked why a primitive map is needed when the BCL type exists and chose to keep Dictionary.",
+        "Revisit when codec-http2 is ported: public final class Http2Settings extends CharObjectHashMap<Long> and overrides keyToString(char), and DefaultHttp2FrameWriter writes the SETTINGS parameters in settings.entries() order, so its base type and that order need their own decision then. Other pinned users (not ported yet): codec-classes-quic, codec-http, codec-http3, handler, resolver-dns, transport-classes-epoll/io_uring/kqueue, transport-sctp, microbench.",
+        "Inventory gate added the same day: tools/Test-CommonCommentCoverage.ps1 -Check now fails when a pinned file under the manifest scope has no entry or an entry is outside it; the scope gained common/src/main/script, common/src/main/templates and common/src/test/templates, which had never been inventoried because the scope listed only the two java roots."
+      ],
+      "adaptation": "IDictionary<TKey, TValue>/Dictionary<TKey, TValue> with the value-type key take the place of the interface, following the owner decision of 2026-11-16 that Java collection interfaces become BCL interfaces; get/put/remove/containsKey(primitive) are the typed TryGetValue/indexer/Remove/ContainsKey, and entries()/PrimitiveEntry is the KeyValuePair<TKey, TValue> enumeration.",
+      "comments": {
+        "upstreamCount": 11,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 11
+      }
+    },
+    {
+      "upstream": "common/src/test/data/NativeLibraryLoader/1/META-INF/native/libtest1.so",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-jvm-test-exclusions.md"
+      ],
+      "evidence": [
+        "Pinned blob 02de1f2a043a56bb751eef3fbbdcaaa35bbbce1f (6816 bytes) read 2026-11-19: an ELF 64-bit little-endian x86-64 shared library (header 7F 45 4C 46 02 01 01, e_machine 0x3E). NativeLibraryLoaderTest builds two URLClassLoaders over src/test/data/NativeLibraryLoader/1 and /2 and expects \"Multiple resources found for 'META-INF/native/lib<name>.so'\" when both trees hold the same library (libtest1.so differs between the trees, libtest3.so is identical, libtest2.so exists only in tree 1).",
+        "common/src/test/java/io/netty/util/internal/NativeLibraryLoaderTest.java and common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java are not-applicable in this manifest (JNI ClassLoader loading, META-INF/native extraction and duplicate checks); CLR native loading is covered by NativeLibraryUtilContractTest (docs/common-jvm-test-exclusions.md).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "Binary fixture of the not-applicable NativeLibraryLoaderTest; with that test not ported there is nothing that loads it, so it is not copied into the C# test project.",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/data/NativeLibraryLoader/1/META-INF/native/libtest2.so",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-jvm-test-exclusions.md"
+      ],
+      "evidence": [
+        "Pinned blob 02de1f2a043a56bb751eef3fbbdcaaa35bbbce1f (6816 bytes) read 2026-11-19: an ELF 64-bit little-endian x86-64 shared library (header 7F 45 4C 46 02 01 01, e_machine 0x3E). NativeLibraryLoaderTest builds two URLClassLoaders over src/test/data/NativeLibraryLoader/1 and /2 and expects \"Multiple resources found for 'META-INF/native/lib<name>.so'\" when both trees hold the same library (libtest1.so differs between the trees, libtest3.so is identical, libtest2.so exists only in tree 1).",
+        "common/src/test/java/io/netty/util/internal/NativeLibraryLoaderTest.java and common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java are not-applicable in this manifest (JNI ClassLoader loading, META-INF/native extraction and duplicate checks); CLR native loading is covered by NativeLibraryUtilContractTest (docs/common-jvm-test-exclusions.md).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "Binary fixture of the not-applicable NativeLibraryLoaderTest; with that test not ported there is nothing that loads it, so it is not copied into the C# test project.",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/data/NativeLibraryLoader/1/META-INF/native/libtest3.so",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-jvm-test-exclusions.md"
+      ],
+      "evidence": [
+        "Pinned blob 02de1f2a043a56bb751eef3fbbdcaaa35bbbce1f (6816 bytes) read 2026-11-19: an ELF 64-bit little-endian x86-64 shared library (header 7F 45 4C 46 02 01 01, e_machine 0x3E). NativeLibraryLoaderTest builds two URLClassLoaders over src/test/data/NativeLibraryLoader/1 and /2 and expects \"Multiple resources found for 'META-INF/native/lib<name>.so'\" when both trees hold the same library (libtest1.so differs between the trees, libtest3.so is identical, libtest2.so exists only in tree 1).",
+        "common/src/test/java/io/netty/util/internal/NativeLibraryLoaderTest.java and common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java are not-applicable in this manifest (JNI ClassLoader loading, META-INF/native extraction and duplicate checks); CLR native loading is covered by NativeLibraryUtilContractTest (docs/common-jvm-test-exclusions.md).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "Binary fixture of the not-applicable NativeLibraryLoaderTest; with that test not ported there is nothing that loads it, so it is not copied into the C# test project.",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/data/NativeLibraryLoader/2/META-INF/native/libtest1.so",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-jvm-test-exclusions.md"
+      ],
+      "evidence": [
+        "Pinned blob 2f9f2802a2c13a7fb7dbd603e284b0d90e9da85e (6818 bytes) read 2026-11-19: an ELF 64-bit little-endian x86-64 shared library (header 7F 45 4C 46 02 01 01, e_machine 0x3E). NativeLibraryLoaderTest builds two URLClassLoaders over src/test/data/NativeLibraryLoader/1 and /2 and expects \"Multiple resources found for 'META-INF/native/lib<name>.so'\" when both trees hold the same library (libtest1.so differs between the trees, libtest3.so is identical, libtest2.so exists only in tree 1).",
+        "common/src/test/java/io/netty/util/internal/NativeLibraryLoaderTest.java and common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java are not-applicable in this manifest (JNI ClassLoader loading, META-INF/native extraction and duplicate checks); CLR native loading is covered by NativeLibraryUtilContractTest (docs/common-jvm-test-exclusions.md).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "Binary fixture of the not-applicable NativeLibraryLoaderTest; with that test not ported there is nothing that loads it, so it is not copied into the C# test project.",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/data/NativeLibraryLoader/2/META-INF/native/libtest3.so",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-jvm-test-exclusions.md"
+      ],
+      "evidence": [
+        "Pinned blob 02de1f2a043a56bb751eef3fbbdcaaa35bbbce1f (6816 bytes) read 2026-11-19: an ELF 64-bit little-endian x86-64 shared library (header 7F 45 4C 46 02 01 01, e_machine 0x3E). NativeLibraryLoaderTest builds two URLClassLoaders over src/test/data/NativeLibraryLoader/1 and /2 and expects \"Multiple resources found for 'META-INF/native/lib<name>.so'\" when both trees hold the same library (libtest1.so differs between the trees, libtest3.so is identical, libtest2.so exists only in tree 1).",
+        "common/src/test/java/io/netty/util/internal/NativeLibraryLoaderTest.java and common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java are not-applicable in this manifest (JNI ClassLoader loading, META-INF/native extraction and duplicate checks); CLR native loading is covered by NativeLibraryUtilContractTest (docs/common-jvm-test-exclusions.md).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "Binary fixture of the not-applicable NativeLibraryLoaderTest; with that test not ported there is nothing that loads it, so it is not copied into the C# test project.",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
       "upstream": "common/src/test/java/io/netty/util/AbstractReferenceCountedTest.java",
       "kind": "test",
       "status": "verified",
@@ -8363,6 +8645,48 @@
         "required": false,
         "preservedCount": 1,
         "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/resources/logback-test.xml",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/Logging/InternalLoggerFactory.cs",
+        "src/Netty.NET.Common/Internal/Logging/InternalDefaultLoggerFactory.cs"
+      ],
+      "evidence": [
+        "Pinned file read 2026-11-19: logback configuration for the Common tests: a console appender with the pattern %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n, root level ${logLevel:-info}, org.apache.directory and org.apache.mina OFF, io.netty.handler.pcap INFO, and trace for the Epoll/KQueue/IoUring native transport loggers.",
+        "Logback \"will try to locate the configuration file \\\"logback-test.xml\\\" on the classpath.\" (https://logback.qos.ch/manual/configuration.html); it is the SLF4J backend of the JVM test run.",
+        "InternalLoggerFactory.NewDefaultFactory uses InternalDefaultLoggerFactory over System.Diagnostics.TraceSource, which \"Provides a set of methods and properties that enable applications to trace the execution of code and associate trace messages with their source.\" (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource); the SLF4J/Log4J provider tests are not-applicable (docs/common-jvm-test-exclusions.md).",
+        "Inventory 2026-11-19: the manifest scope was widened from the Java roots, templates and codegen script to all of common/src, so the resources and test data are inventoried; tools/Test-CommonCommentCoverage.ps1 -Check fails when a pinned file under the scope has no entry."
+      ],
+      "adaptation": "JVM logging-backend configuration for the test classpath. The C# tests log through the TraceSource default factory and set no log levels; the loggers the file tunes belong to other modules (handler pcap, the native transports, the apacheds/mina test servers), none of which runs in the Common tests.",
+      "comments": {
+        "upstreamCount": 0,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/templates/io/netty/util/collection/KObjectHashMapTest.template",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [
+        "Pinned template read 2026-11-19: 35 @Test methods (iteratorRemoveShouldNotNPE, put/remove/containsValue with primitive and boxed keys, noFreeSlotsShouldRehash, mapShouldSupportHashingConflicts, hashcodeEqualsTest, fuzzTest against java.util.HashMap, valuesIteratorRemove, ...), expanded by codegen.groovy into ByteObjectHashMapTest..LongObjectHashMapTest (175 tests).",
+        "Owner decision 2026-11-19: keep Dictionary. The owner first chose Dictionary with the difference recorded while porting the codec modules, then, asked whether to port io.netty.util.collection, asked why a primitive map is needed when the BCL type exists and chose to keep Dictionary.",
+        "Inventory gate added the same day: tools/Test-CommonCommentCoverage.ps1 -Check now fails when a pinned file under the manifest scope has no entry or an entry is outside it; the scope gained common/src/main/script, common/src/main/templates and common/src/test/templates, which had never been inventoried because the scope listed only the two java roots."
+      ],
+      "adaptation": "The tests exercise the generated open-addressing maps (rehash, probing conflicts, iterator removal, NULL_VALUE handling, hashCode/equals). Those classes are replaced by the BCL Dictionary<TKey, TValue>, so there is no Netty.NET type for them to test; the ported users are covered by their module tests.",
+      "comments": {
+        "upstreamCount": 37,
+        "required": false,
+        "preservedCount": 0,
+        "missingCount": 37
       }
     }
   ]

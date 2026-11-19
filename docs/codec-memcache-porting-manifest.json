@@ -1,0 +1,1466 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "codec-memcache",
+  "scope": [
+    "codec-memcache/src/main/java",
+    "codec-memcache/src/main/resources",
+    "codec-memcache/src/test/java"
+  ],
+  "objective": "Port netty-codec-memcache (io.netty.handler.codec.memcache and its binary package (memcache binary protocol)) with its original tests: Java names (case and the Async suffix may differ), the original structure and every original comment, and an explicit evidence-backed record for each CLR adaptation and each unit that is not ported.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-19",
+    "ownerDecisions": [
+      "Project, folder and assembly names are the namespace root of the module (owner decision 2026-11-19, see docs/codec-base-porting.md): each codec module takes the namespace of its main package, and the tests use <project>.Tests like the other test projects.",
+      "Owner decisions 2026-11-19 for the codec modules that only need codec-base: one project per Maven module; codec-socks is Netty.NET.Handler.Codec.Socks (its Maven and JPMS name) and holds the socks and socksx namespaces; haproxy is HAProxy (the casing of the Java types in that package); socksx, v4 and v5 are Socksx, V4 and V5."
+    ],
+    "evidence": [
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-namespaces",
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-assemblies-and-dlls",
+      "docs/codec-memcache-porting.md"
+    ]
+  },
+  "statusMeaning": {
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry. For tests, some original methods are CLR-inapplicable with recorded evidence.",
+    "deprecated-not-ported": "@Deprecated Java unit (or a helper serving one) that is not ported; the deprecation facts, reason, replacement and every original comment/test are recorded.",
+    "jvm-only-replaced": "JVM-only metadata or documentation unit replaced by its recorded CLR counterpart.",
+    "pending": "Not yet reviewed."
+  },
+  "summary": {
+    "pinnedFiles": 45,
+    "byStatus": {
+      "clr-adapted": 32,
+      "jvm-only-replaced": 5,
+      "verified": 8
+    },
+    "mainJavaSources": 34,
+    "testJavaSources": 9,
+    "declaredOriginalTests": 30,
+    "mappedOriginalTests": 29,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 1,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/AbstractMemcacheObject.java",
+      "sha256": "ca046acd9446305539f12d64d9658273998787f7f698b71614646dd6b211fdc0",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObject.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Extends the Common AbstractReferenceCounted; the decoderResult field initializer reaches DecoderResult.SUCCESS through global:: because the simple name DecoderResult is the decoderResult() method inside the class.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObject.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/AbstractMemcacheObjectAggregator.java",
+      "sha256": "af99597756fd5a6fbbb218a48877ae4bdd6f04ccb6bdc4ff1d9e017e14d99f8f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObjectAggregator.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "MessageAggregator<IMemcacheObject, H, IMemcacheContent, IFullMemcacheMessage> with typeof(IMemcacheObject) for MemcacheObject.class (docs/codec-base-porting.md, Type matching); UnsupportedOperationException is NotSupportedException. The Javadoc-only imports of the binary package are not needed.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObjectAggregator.cs",
+          "docs/codec-base-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/AbstractMemcacheObjectDecoder.java",
+      "sha256": "8db84d0d230d47767062fa2a42531e7e1b320f52de47e1c9a491b036d4a3912b",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObjectDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Empty abstract ByteToMessageDecoder subclass as in the source.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObjectDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/AbstractMemcacheObjectEncoder.java",
+      "sha256": "3eccc7dba171c9bb2c09daf2d4e03a3c1df3dd722a7f0e89c21b0fc7d03aaa39",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObjectEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "MessageToMessageEncoder<object> with typeof(object) for Object.class; the M type parameter is constrained to IMemcacheMessage. FileRegion is the Transport IFileRegion (count() is Count()), IllegalStateException is InvalidOperationException, List<Object> out is IList<object> @out (docs/codec-base-porting.md).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/AbstractMemcacheObjectEncoder.cs",
+          "docs/codec-base-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/DefaultLastMemcacheContent.java",
+      "sha256": "3af826c33397ccbbce1eb31a4c62b08164a4d00ad246a7085b066c7106ee6b10",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/DefaultLastMemcacheContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Java covariant return overrides of retain()/retain(int)/touch()/touch(Object) (virtual or abstract in the Common AbstractReferenceCounted, like Java) and of the holder methods are C# covariant override returns. Only the IByteBufHolder members, which the shared interface re-declares with its own return type, are explicit implementations forwarding to the public members, as Transport DatagramPacket does; the module interfaces declare no narrowing members (owner decision 2026-11-19). content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). The overrides narrow the DefaultMemcacheContent returns to ILastMemcacheContent.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/DefaultLastMemcacheContent.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/DefaultMemcacheContent.java",
+      "sha256": "1be58725eb253f59b6c110f9f77a5479050650f37d647a30ddbff30dc96d053b",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/DefaultMemcacheContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Java covariant return overrides of retain()/retain(int)/touch()/touch(Object) (virtual or abstract in the Common AbstractReferenceCounted, like Java) and of the holder methods are C# covariant override returns. Only the IByteBufHolder members, which the shared interface re-declares with its own return type, are explicit implementations forwarding to the public members, as Transport DatagramPacket does; the module interfaces declare no narrowing members (owner decision 2026-11-19). content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). copy()/duplicate()/retainedDuplicate()/replace(ByteBuf) are virtual because DefaultLastMemcacheContent overrides them; toString() renders the ByteBuf and DecoderResult ToString().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/DefaultMemcacheContent.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation",
+          "docs/buffer-porting.md",
+          "src/Netty.NET.Common/AbstractReferenceCounted.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/FullMemcacheMessage.java",
+      "sha256": "e276db5e7d67c459db01de16e4b5e7c378685d365ed50b75093008017b18bfa5",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/IFullMemcacheMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. Its two parents both bring retain()/touch(); IByteBufHolder hides the IReferenceCounted members, so the inherited calls stay unambiguous.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/IFullMemcacheMessage.cs",
+          "docs/transport-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/LastMemcacheContent.java",
+      "sha256": "7c7c83ef08212e4a8a466ee99666714a640b7bf1dc86d91f7035b348741720e8",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/ILastMemcacheContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. The interface constant EMPTY_LAST_CONTENT is a static readonly field of the interface and its anonymous class is the private nested class EmptyLastMemcacheContent (C# interfaces may declare static fields and nested types); it implements the IByteBufHolder and IReferenceCounted members, which those shared interfaces re-declare with other return types, explicitly. setDecoderResult throws NotSupportedException(\"read only\") for UnsupportedOperationException, and DecoderResult.SUCCESS is reached through global:: because the simple name DecoderResult is the method there.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/ILastMemcacheContent.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/MemcacheContent.java",
+      "sha256": "4893e716027c50ee35f46510dfdf3e5e21818734260d7f60ce0aef0b0a1fba8d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/IMemcacheContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/IMemcacheContent.cs",
+          "docs/buffer-porting.md",
+          "docs/transport-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/MemcacheMessage.java",
+      "sha256": "58c49a2095f1475bff415ee2893551b236bce921c0461d7a9727468605ff1c03",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/IMemcacheMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. ReferenceCounted is IReferenceCounted.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/IMemcacheMessage.cs",
+          "docs/transport-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/MemcacheObject.java",
+      "sha256": "e863817549f9fcea73d07a656c1f5a9a6eb395a277969246fcb0640ac6c38a28",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/IMemcacheObject.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface IMemcacheObject : IDecoderResultProvider (codec-base); @UnstableApi is [UnstableApi].",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/IMemcacheObject.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/AbstractBinaryMemcacheDecoder.java",
+      "sha256": "ae349e9d20864744fc2ce24a0fcba8735d3e27ced71a276da9b95c3ac0fca5c1",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/AbstractBinaryMemcacheDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 21,
+        "preservedCount": 21,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The switch falls through from READ_HEADER to READ_CONTENT in the source; C# forbids fall-through, so each section ends with goto case to the next state, keeping the order and the per-state try/catch. throw new Error(...) is UnreachableException (as codec-base LengthFieldPrepender). The numbers of the CorruptedFrameException messages use the invariant culture; (totalBodyLength & 0xFFFFFFFFL) keeps the unsigned value. extrasLength() & 0xFF of the System.Byte value equals the Java unsigned conversion, so no sign handling is needed. The package-private enum State is internal; M has the IBinaryMemcacheMessage constraint.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/AbstractBinaryMemcacheDecoder.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring",
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/AbstractBinaryMemcacheEncoder.java",
+      "sha256": "f7f5f8c63be6057a91bf45275b2287ef171be770596430403fc1c08c93e9290e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/AbstractBinaryMemcacheEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sign: the initial capacity MINIMUM_HEADER_SIZE + extrasLength() + keyLength() sign-extends the Java byte, so the System.Byte extrasLength is read as (sbyte), keeping the Java capacity (and its failure for a negative capacity). M is constrained to IBinaryMemcacheMessage.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/AbstractBinaryMemcacheEncoder.cs",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.6",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/AbstractBinaryMemcacheMessage.java",
+      "sha256": "b2b4cb192ee796247c207e9b39c2e68b631f7bb5651baf081852814b728c4a21",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/AbstractBinaryMemcacheMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Java covariant return overrides of retain()/retain(int)/touch()/touch(Object) (virtual or abstract in the Common AbstractReferenceCounted, like Java) and of the holder methods are C# covariant override returns. Only the IByteBufHolder members, which the shared interface re-declares with its own return type, are explicit implementations forwarding to the public members, as Transport DatagramPacket does; the module interfaces declare no narrowing members (owner decision 2026-11-19). content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). Sign: the constructor sum keyLength + extrasLength and the setExtras() update (short oldExtrasLength = extrasLength; totalBodyLength + extrasLength - oldExtrasLength) promote the signed Java byte by sign extension, so the System.Byte extrasLength is read as (sbyte) there to keep the Java totals for extras of 128..255 bytes. The literal 0 of the length conditionals is cast to short/byte because C# types c ? 0 : (short) x as int. The package-private setExtrasLength/setKeyLength/copyMeta are internal.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/AbstractBinaryMemcacheMessage.cs",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.6",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheClientCodec.java",
+      "sha256": "d864a1b199be0663edf8a3c51679e3a442143dce900bc761818dbcd6ce5565d4",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheClientCodec.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The inner classes Encoder and Decoder read the enclosing codec fields; C# nested classes have no enclosing instance, so the codec is passed to their constructors. AtomicLong is the Common Netty.NET.Common.Concurrent.AtomicLong (incrementAndGet/decrementAndGet/get); init(...) is Init(...); the count in the PrematureChannelClosureException message uses the invariant culture; DEFAULT_MAX_CHUNK_SIZE is reached through AbstractBinaryMemcacheDecoder<IBinaryMemcacheResponse>.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheClientCodec.cs",
+          "src/Netty.NET.Common/Concurrent/AtomicLong.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/nested-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheMessage.java",
+      "sha256": "ea3ed7c1f8c6a731f5642f7048df97ae89766b9d52151bb95ad4c91832725556",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/IBinaryMemcacheMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 22,
+        "preservedCount": 22,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. The Java byte members (magic, opcode, extrasLength, dataType) are System.Byte, as ByteBuf.readByte() (owner decision); keyLength is short as in Java.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/IBinaryMemcacheMessage.cs",
+          "docs/transport-porting.md",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheObjectAggregator.java",
+      "sha256": "348da8ffb0e548fe44405d344a71d0e3d008b393dd92370ea77547c2be4c626e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheObjectAggregator.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "throw new Error(...) is UnreachableException (as codec-base LengthFieldPrepender) with StringUtil.ClassName; the internal setKeyLength/setExtrasLength are reachable in the assembly as in the Java package.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheObjectAggregator.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheOpcodes.java",
+      "sha256": "8cc8d483ba0d9eb0d14ecad612dda65087863b4060c1af50ef908c4461e7e3bb",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheOpcodes.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class with the private constructor (and its comment); the static final byte opcodes are System.Byte constants (owner decision for protocol bytes); every opcode is below 0x80, so the values equal the Java ones.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheOpcodes.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheRequest.java",
+      "sha256": "be69a780b7a00faa396aa25b25243b76ebdcf7fef0b0385f421b460d3f4e4f52",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/IBinaryMemcacheRequest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/IBinaryMemcacheRequest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheRequestDecoder.java",
+      "sha256": "e201bb897e4e853ecb619abb68c3d862d43b0cef6319e846e2874d1745ef2ec4",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheRequestDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source header layout; readByte() returns System.Byte (owner decision) and the package-private setKeyLength/setExtrasLength are internal.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheRequestDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheRequestEncoder.java",
+      "sha256": "401e0734be25e617dc635a4a17fe59fdd799909ba4562f609e9353576b39593c",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheRequestEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source header layout; writeByte(int) receives the System.Byte value zero-extended, which writes the same low eight bits as the sign-extended Java byte.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheRequestEncoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheResponse.java",
+      "sha256": "db482194b1477eca1641d0f09905e9decc7abc99568a73e52a80ea3be6fbd6ae",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/IBinaryMemcacheResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/IBinaryMemcacheResponse.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheResponseDecoder.java",
+      "sha256": "c82769ecfba702bb3454d8b491371077f466d322ddf945c9d8c6ba30fe8737ec",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheResponseDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source header layout; readByte() returns System.Byte (owner decision) and the package-private setKeyLength/setExtrasLength are internal.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheResponseDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheResponseEncoder.java",
+      "sha256": "271ad11e677b635000705c6fecf07b3cc72717c90192d728a1510728eda91bf4",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheResponseEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source header layout; writeByte(int) receives the System.Byte value zero-extended, which writes the same low eight bits as the sign-extended Java byte.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheResponseEncoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheResponseStatus.java",
+      "sha256": "c3844caa493dee366b8ecd5b816b499cd4ac99ee2e6c498d22a4bf1155cd9e2d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheResponseStatus.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class with the private constructor (and its comment); the static final short statuses are short constants with the same values.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheResponseStatus.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheServerCodec.java",
+      "sha256": "1a80b3c9eb70451a63e524ad15e40b511d763b8e34d095f8ff13e7f825e273cc",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheServerCodec.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "CombinedChannelDuplexHandler<BinaryMemcacheRequestDecoder, BinaryMemcacheResponseEncoder>; the static DEFAULT_MAX_CHUNK_SIZE of the generic AbstractBinaryMemcacheDecoder is reached through AbstractBinaryMemcacheDecoder<IBinaryMemcacheRequest>.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/BinaryMemcacheServerCodec.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/DefaultBinaryMemcacheRequest.java",
+      "sha256": "3109197568e76840ecf60d705873d2207ced2eb96152f4f21c7b307579b5e01f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultBinaryMemcacheRequest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Covariant overrides as in AbstractBinaryMemcacheMessage. REQUEST_MAGIC_BYTE = (byte) 0x80 is the System.Byte constant 0x80 (128; the Java value is -128): the same bits are written and read, and no code prints or compares it with an int. copyMeta is internal.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultBinaryMemcacheRequest.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/DefaultBinaryMemcacheResponse.java",
+      "sha256": "7305fe4c887ba59d0ecd4a9f330c4cf5a5c3afe6a3f2ab20c5a91efdcef3db9e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultBinaryMemcacheResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Covariant overrides as in AbstractBinaryMemcacheMessage. RESPONSE_MAGIC_BYTE = (byte) 0x81 is the System.Byte constant 0x81 (129; the Java value is -127): the same bits are written and read, and no code prints or compares it with an int. copyMeta is internal.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultBinaryMemcacheResponse.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/DefaultFullBinaryMemcacheRequest.java",
+      "sha256": "e869cdc48dda7ffd21eec93cb2b235b026281a29e25d3ebaa6b08ad7b90f6d44",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultFullBinaryMemcacheRequest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Java covariant return overrides of retain()/retain(int)/touch()/touch(Object) (virtual or abstract in the Common AbstractReferenceCounted, like Java) and of the holder methods are C# covariant override returns. Only the IByteBufHolder members, which the shared interface re-declares with its own return type, are explicit implementations forwarding to the public members, as Transport DatagramPacket does; the module interfaces declare no narrowing members (owner decision 2026-11-19). content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). Sign: the constructor sum keyLength() + extrasLength() + content.readableBytes() reads the System.Byte extrasLength as (sbyte), keeping the Java total. copy()/duplicate()/retainedDuplicate()/replace() keep the Java return type IFullBinaryMemcacheRequest/Response; the eight IByteBufHolder members are the only explicit implementations.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultFullBinaryMemcacheRequest.cs",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.6",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/DefaultFullBinaryMemcacheResponse.java",
+      "sha256": "75d40d2a4058dc0f62b8825f6f69fb02117d2b6560298f4608b2d8347d274cf9",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultFullBinaryMemcacheResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Java covariant return overrides of retain()/retain(int)/touch()/touch(Object) (virtual or abstract in the Common AbstractReferenceCounted, like Java) and of the holder methods are C# covariant override returns. Only the IByteBufHolder members, which the shared interface re-declares with its own return type, are explicit implementations forwarding to the public members, as Transport DatagramPacket does; the module interfaces declare no narrowing members (owner decision 2026-11-19). content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). Sign: the constructor sum keyLength() + extrasLength() + content.readableBytes() reads the System.Byte extrasLength as (sbyte), keeping the Java total. copy()/duplicate()/retainedDuplicate()/replace() keep the Java return type IFullBinaryMemcacheRequest/Response; the eight IByteBufHolder members are the only explicit implementations.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/DefaultFullBinaryMemcacheResponse.cs",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.6",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/FullBinaryMemcacheRequest.java",
+      "sha256": "f166fa165370034a185d417ee34c490aef90740a956f1aeb16e3252aae0ac704",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/IFullBinaryMemcacheRequest.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. No member is declared; IByteBufHolder hides the IReferenceCounted retain()/touch(), so the inherited calls stay unambiguous.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/IFullBinaryMemcacheRequest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/FullBinaryMemcacheResponse.java",
+      "sha256": "59fd3c450e99f4d91922851abac8f9734d4273cfa5dea266a14a5c772efdbfc0",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Memcache/Binary/IFullBinaryMemcacheResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The source re-declares the inherited ReferenceCounted/ByteBufHolder methods only to narrow the return type; these are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions), and the comments of such re-declarations stay at their place followed by a CLR line. @UnstableApi is the Common [UnstableApi] attribute. No member is declared; IByteBufHolder hides the IReferenceCounted retain()/touch(), so the inherited calls stay unambiguous.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Memcache/Binary/IFullBinaryMemcacheResponse.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/binary/package-info.java",
+      "sha256": "429a94a772f73988b5691d68a31460d216f8134c38159f2c69377cc17c2c57fe",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Documentation-only package descriptor (io.netty.handler.codec.memcache.binary).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Handler.Codec.Memcache.Binary holds the ported types; the package summary (\"Implementations and Interfaces for the Memcache Binary protocol.\") is kept verbatim in this entry and mapped in docs/codec-memcache-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/codec-memcache-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2013 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "Implementations and Interfaces for the Memcache Binary protocol.",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/codec-memcache-porting.md maps it to Netty.NET.Handler.Codec.Memcache.Binary."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/io/netty/handler/codec/memcache/package-info.java",
+      "sha256": "52b95fa5ce11aebc535809bcee8cdf9d4017d0ba2c292f06397004eb45ae1fd7",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Documentation-only package descriptor (io.netty.handler.codec.memcache).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Handler.Codec.Memcache holds the ported types; the package summary (\"Common superset of ascii and binary classes.\") is kept verbatim in this entry and mapped in docs/codec-memcache-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/codec-memcache-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2013 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "Common superset of ascii and binary classes.",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/codec-memcache-porting.md maps it to Netty.NET.Handler.Codec.Memcache."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/java/module-info.yml",
+      "sha256": "26e6f07ca8b87168d21345708ac6c9829487d9dc79fc7f460d013a0f3905e430",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Input to the io.github.dmlloyd.module-info Maven plugin that generates the JPMS module descriptor of io.netty.codec.memcache: requires io.netty.common, io.netty.buffer, io.netty.transport, io.netty.codec.",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. JPMS module declarations have no .NET counterpart beyond assembly metadata; Transport, Resolver and codec-base map their module-info.yml to the project file the same way.",
+        "replacement": {
+          "clr": "Netty.NET.Handler.Codec.Memcache.csproj references Netty.NET.Handler.Codec (which brings Transport, Resolver, Buffer and Common); the assembly is the deployment and visibility unit, and InternalsVisibleTo opens internals only to Netty.NET.Handler.Codec.Memcache.Tests.",
+          "noClrCounterpart": [
+            "JPMS requires/exports checking: .NET assemblies have no module descriptor; public/internal accessibility and InternalsVisibleTo form the boundary."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Handler.Codec.Memcache/Netty.NET.Handler.Codec.Memcache.csproj",
+            "src/Netty.NET.Handler.Codec/Netty.NET.Handler.Codec.csproj"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.7",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/",
+            "https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items#projectreference",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/friend"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "---------------------------------------------------------------------------- Copyright 2024 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. ----------------------------------------------------------------------------",
+            "reason": "Apache license header of the YAML metadata file, which has no CLR file."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/main/resources/META-INF/native-image/io.netty/netty-codec-memcache/generated/handlers/reflect-config.json",
+      "sha256": "c9834297d5f30c160b23aa022f43507d11f3e28fa18dd91db76d2117f37bd35f",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Generated GraalVM native-image reflection metadata: one record per codec-memcache ChannelHandler (name, condition.typeReachable, queryAllPublicMethods) so native images keep the handler methods that ChannelHandlerMask inspects.",
+        "reason": "Owner decision 2026-11-16: GraalVM native-image metadata is replaced by .NET NativeAOT, which does not read a reflection JSON manifest; trimming keeps members declared by DynamicallyAccessedMembers annotations, which IChannelHandler and ChannelHandlerAdapter carry for every handler subtype.",
+        "replacement": {
+          "clr": "[DynamicallyAccessedMembers(PublicMethods | NonPublicMethods)] on IChannelHandler and ChannelHandlerAdapter (Transport) keeps the callback metadata of the codec handlers.",
+          "noClrCounterpart": [
+            "A reflection metadata JSON file read by an ahead-of-time compiler."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0",
+            "https://www.rfc-editor.org/rfc/rfc8259"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none",
+        "reason": "JSON text has no comment token in the RFC 8259 grammar."
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheDecoderTest.java",
+      "sha256": "db603b4fdb51ad7e4ecebebec5781f69914cfb6d7596cb5178484b1a7be27612",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheDecoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "shouldDecodeRequestWithSimpleValue",
+          "clrMethod": "ShouldDecodeRequestWithSimpleValue",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldDecodeRequestWithChunkedContent",
+          "clrMethod": "ShouldDecodeRequestWithChunkedContent",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldHandleNonUniformNetworkBatches",
+          "clrMethod": "ShouldHandleNonUniformNetworkBatches",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldHandleTwoMessagesInOneBatch",
+          "clrMethod": "ShouldHandleTwoMessagesInOneBatch",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldDecodeSeparatedValues",
+          "clrMethod": "ShouldDecodeSeparatedValues",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldRetainCurrentMessageWhenSendingItOut",
+          "clrMethod": "ShouldRetainCurrentMessageWhenSendingItOut",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldDecodeExtrasWithLengthAboveSignedByteRange",
+          "clrMethod": "ShouldDecodeExtrasWithLengthAboveSignedByteRange",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldDecodeKeyWithLengthAboveSignedShortRange",
+          "clrMethod": "ShouldDecodeKeyWithLengthAboveSignedShortRange",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldRejectExtrasAndKeyLongerThanTotalBody",
+          "clrMethod": "ShouldRejectExtrasAndKeyLongerThanTotalBody",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldRejectTotalBodyLengthAboveIntegerMaxValue",
+          "clrMethod": "ShouldRejectTotalBodyLengthAboveIntegerMaxValue",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldNotOverflowValueLengthForLargeTotalBodyLength",
+          "clrMethod": "ShouldNotOverflowValueLengthForLargeTotalBodyLength",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        },
+        {
+          "upstreamMethod": "shouldStopDecodingPermanentlyAfterRejectingAHeader",
+          "clrMethod": "ShouldStopDecodingPermanentlyAfterRejectingAHeader",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 12,
+        "mappedCount": 12,
+        "reviewedCount": 12,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 38,
+        "preservedCount": 38,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; @ParameterizedTest @ValueSource(booleans) is a [Theory] with [InlineData(false)] and [InlineData(true)]; substring(7, 9) is Substring(7, 9 - 7); the int literal 0x80000000 is unchecked((int) 0x80000000) (a C# hex literal above int.MaxValue is a uint); the char literals of the byte[] values are cast to byte and the (byte) 0x80/0x81 bytes are the System.Byte values with the same bits.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheEncoderTest.java",
+      "sha256": "6cffb47e497f73c105bbb234b0567c3ce6da96a006106c2a10d8cab088426e78",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheEncoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "shouldEncodeDefaultHeader",
+          "clrMethod": "ShouldEncodeDefaultHeader",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86."
+        },
+        {
+          "upstreamMethod": "shouldEncodeCustomHeader",
+          "clrMethod": "ShouldEncodeCustomHeader",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86."
+        },
+        {
+          "upstreamMethod": "shouldEncodeExtras",
+          "clrMethod": "ShouldEncodeExtras",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86."
+        },
+        {
+          "upstreamMethod": "shouldEncodeKey",
+          "clrMethod": "ShouldEncodeKey",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86."
+        },
+        {
+          "upstreamMethod": "shouldEncodeContent",
+          "clrMethod": "ShouldEncodeContent",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86."
+        },
+        {
+          "upstreamMethod": "shouldFailWithoutLastContent",
+          "clrMethod": "ShouldFailWithoutLastContent",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 6,
+        "reviewedCount": 6,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows with an anonymous Executable is Assert.Throws<EncoderException> with a lambda (the exact type is thrown). Sign: (byte) 0x80 and (byte) 0xAA compare equal to ReadByte() as System.Byte 128 and 170, the same bits as the Java -128 and -86.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheEncoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheMessageTest.java",
+      "sha256": "bfc32ebdb83f76d0bbf1b925f4dfb640360abbac8851ea97dd17046c40f10e2b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheMessageTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSetLengths",
+          "clrMethod": "TestSetLengths",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertEquals(int, byte/short) compares the widened values, all below 128."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertEquals(int, byte/short) compares the widened values, all below 128.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheMessageTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/BinaryMemcacheObjectAggregatorTest.java",
+      "sha256": "98e035c298da104de31bef02d2f5769c9eb781c8d37141f17c81905bac9cb282",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheObjectAggregatorTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "shouldAggregateChunksOnDecode",
+          "clrMethod": "ShouldAggregateChunksOnDecode",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). outboundMessages().size() is OutboundMessages().Count."
+        },
+        {
+          "upstreamMethod": "shouldRetainByteBufWhenAggregating",
+          "clrMethod": "ShouldRetainByteBufWhenAggregating",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). outboundMessages().size() is OutboundMessages().Count."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). outboundMessages().size() is OutboundMessages().Count.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/BinaryMemcacheObjectAggregatorTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/DefaultFullBinaryMemcacheRequestTest.java",
+      "sha256": "8adffcbb1abc3287c2c70c27bafd03a85b775ec714a090bb694425d100bae461",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/DefaultFullBinaryMemcacheRequestTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "fullCopy",
+          "clrMethod": "FullCopy",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java."
+        },
+        {
+          "upstreamMethod": "fullDuplicate",
+          "clrMethod": "FullDuplicate",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java."
+        },
+        {
+          "upstreamMethod": "fullReplace",
+          "clrMethod": "FullReplace",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/DefaultFullBinaryMemcacheRequestTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/DefaultFullBinaryMemcacheResponseTest.java",
+      "sha256": "b36d454fa5a5ff616a6e18d13cff873519f186dcb9f47eddd481f06f82b8f510",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/DefaultFullBinaryMemcacheResponseTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "fullCopy",
+          "clrMethod": "FullCopy",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java."
+        },
+        {
+          "upstreamMethod": "fullDuplicate",
+          "clrMethod": "FullDuplicate",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java."
+        },
+        {
+          "upstreamMethod": "fullReplace",
+          "clrMethod": "FullReplace",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The package-private setters are internal (InternalsVisibleTo the test assembly); assertEquals of ByteBufs uses ByteBuf.Equals as in Java.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/DefaultFullBinaryMemcacheResponseTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/FullMemcacheMessageRequestTest.java",
+      "sha256": "6552a2ff4702e3c2f418993481d9ab8fa5656807ba823c526c3aa55d2c48ecf7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/FullMemcacheMessageRequestTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testEncodeDecode",
+          "clrMethod": "TestEncodeDecode",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). String.getBytes(UTF_8) is Encoding.UTF8.GetBytes."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). String.getBytes(UTF_8) is Encoding.UTF8.GetBytes.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/FullMemcacheMessageRequestTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/FullMemcacheMessageResponseTest.java",
+      "sha256": "2520089ab0084b977da56ed740dc21939a178f822c7c6b5c67f94a5c7fbbbc73",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/FullMemcacheMessageResponseTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testEncodeDecode",
+          "clrMethod": "TestEncodeDecode",
+          "adaptation": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). String.getBytes(UTF_8) is Encoding.UTF8.GetBytes."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions in namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary; CharsetUtil.UTF_8 is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). String.getBytes(UTF_8) is Encoding.UTF8.GetBytes.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Memcache.Tests/Binary/FullMemcacheMessageResponseTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-memcache/src/test/java/io/netty/handler/codec/memcache/binary/NativeImageHandlerMetadataTest.java",
+      "sha256": "5a2616292e98a6049f7a08a9edeee8b80f2f6dbbb8c1902671a4e0f552d520da",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Runs ChannelHandlerMetadataUtil.generateMetadata(io.netty.handler.codec.memcache), which scans the package(s) for ChannelHandler subtypes and compares them with the committed GraalVM reflect-config.json.",
+        "reason": "Owner decision 2026-11-16 (as for the Transport ChannelHandlerMetadataUtil): GraalVM reflection JSON, Java package scanning and JVM type names are not consumed by the CLR; NativeAOT keeps handler metadata through DynamicallyAccessedMembers.",
+        "replacement": {
+          "clr": "IChannelHandler/ChannelHandlerAdapter DynamicallyAccessedMembers annotations; the Transport NativeAOT scenarios exercise handler dispatch under trimming.",
+          "noClrCounterpart": [
+            "Generating or comparing a reflect-config.json metadata file."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2022 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          }
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "collectAndCompareMetadata",
+            "disposition": "jvm-only-replaced",
+            "reason": "GraalVM reflection metadata generation and comparison has no CLR counterpart (see the entry reason).",
+            "sourceContract": "Generate the codec handler reflection records and compare them with the committed JSON.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+              "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "validationHistory": [
+    {
+      "checkpoint": "2026-11-19-port",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0
+        },
+        "moduleDebug": {
+          "total": 35,
+          "passed": 35,
+          "failed": 0,
+          "skipped": 0
+        },
+        "transportDebug": {
+          "total": 1132,
+          "passed": 1033,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows), run alone. In one full-solution run (all test projects in parallel) DefaultEventLoopTest.TestSubmittingTaskWakesUpSuspendedExecutor, ChannelInitializerTest.TestChannelInitializerEventExecutor and SingleThreadEventLoopSourceTest.ScheduleLaggyTaskAtFixedRateA also failed under load; the next two Transport runs were clean apart from the baseline."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module codec-memcache verifies every pinned codec-memcache file with no pending entry; the generic mutation run (inventory, hash, comment count, unmapped and missing tests, not-ported test dispositions, JSON comment disposition, missing target, removed C# comment, renamed C# test; the @deprecated-tags case applies only to deprecated-not-ported entries) rejected every applicable broken copy and restored the manifest byte-identical. Owner decisions 2026-11-19: return-type-narrowing interface re-declarations are inherited, not repeated. Shared changes the same day: AbstractReferenceCounted Retain()/Touch()/Release()/Release(int) are virtual and Retain()/Release() update the count directly as the Java retain()/release() do; ByteToMessageDecoder.IsSingleDecode() is virtual; java.net.IDN is the shared Netty.NET.Common.Internal.IDN."
+      }
+    }
+  ]
+}

@@ -1,0 +1,1802 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "codec-dns",
+  "scope": [
+    "codec-dns/src/main/java",
+    "codec-dns/src/main/resources",
+    "codec-dns/src/test/java"
+  ],
+  "objective": "Port netty-codec-dns (io.netty.handler.codec.dns (DNS message codec: records, queries, responses, TCP/UDP encoders and decoders)) with its original tests: Java names (case and the Async suffix may differ), the original structure and every original comment, and an explicit evidence-backed record for each CLR adaptation and each unit that is not ported.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-19",
+    "ownerDecisions": [
+      "Project, folder and assembly names are the namespace root of the module (owner decision 2026-11-19, see docs/codec-base-porting.md): each codec module takes the namespace of its main package, and the tests use <project>.Tests like the other test projects.",
+      "Owner decisions 2026-11-19 for the codec modules that only need codec-base: one project per Maven module; codec-socks is Netty.NET.Handler.Codec.Socks (its Maven and JPMS name) and holds the socks and socksx namespaces; haproxy is HAProxy (the casing of the Java types in that package); socksx, v4 and v5 are Socksx, V4 and V5."
+    ],
+    "evidence": [
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-namespaces",
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-assemblies-and-dlls",
+      "docs/codec-dns-porting.md"
+    ]
+  },
+  "statusMeaning": {
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry. For tests, some original methods are CLR-inapplicable with recorded evidence.",
+    "deprecated-not-ported": "@Deprecated Java unit (or a helper serving one) that is not ported; the deprecation facts, reason, replacement and every original comment/test are recorded.",
+    "jvm-only-replaced": "JVM-only metadata or documentation unit replaced by its recorded CLR counterpart.",
+    "pending": "Not yet reviewed."
+  },
+  "summary": {
+    "pinnedFiles": 53,
+    "byStatus": {
+      "clr-adapted": 40,
+      "jvm-only-replaced": 4,
+      "verified": 9
+    },
+    "mainJavaSources": 41,
+    "testJavaSources": 10,
+    "declaredOriginalTests": 67,
+    "mappedOriginalTests": 66,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 1,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/AbstractDnsMessage.java",
+      "sha256": "dab639c6cc4c5ff8b31f9a239159fb6ccdbbe81c133281374d2f209094ea99dc",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/AbstractDnsMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Non-final methods are virtual; the narrowed retain()/retain(int)/touch()/touch(Object) are C# 9 covariant overrides of the virtual AbstractReferenceCounted members of Common. The leak tracker is created first in the constructor because a C# instance field initializer cannot reference the instance being created (C# specification 15.5.6.3). Records are List<IDnsRecord>; List.set/remove return values are read before the indexer write/RemoveAt. A source IndexOutOfBoundsException is ArgumentOutOfRangeException(null, source text) and java.lang.Error for an impossible section number is UnreachableException (as codec-base's LengthFieldPrepender). The erased unchecked cast of castRecord is a checked C# cast (InvalidCastException at the call for a mismatched T). checkQuestion names IDnsQuestion (the CLR simple name) in its message; checkNotNull(section) has no counterpart because a C# enum value cannot be null; assert is Debug.Assert. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/AbstractDnsMessage.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsQueryTest.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsResponseTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/AbstractDnsOptPseudoRrRecord.java",
+      "sha256": "4a2bee974917593405ee2bb144c1f7bac78a426c17a9a4bcbe09ebaf20bfea0f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/AbstractDnsOptPseudoRrRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source bit packing; the package-private final toStringBuilder() is internal and non-virtual; the (int) and (short) narrowings are unchecked. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/AbstractDnsOptPseudoRrRecord.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsOptPseudoRrRecordTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/AbstractDnsRecord.java",
+      "sha256": "40ba5458a5e40831a47063ec89aab2d25620278a3935f67d56810247f5c5934d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/AbstractDnsRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 11,
+        "preservedCount": 11,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Accessors stay virtual methods. IDN.toASCII(name) is the shared Netty.NET.Common.Internal.IDN.ToASCII (owner decision 2026-11-19, shared with codec-socks), which keeps the OpenJDK label loop (root label \".\", \"\" stays \"\", ASCII labels unchanged, empty-label and 63-character checks) and passes only non-ASCII labels to IdnMapping; failures are ArgumentException. equalsIgnoreCase is StringComparison.OrdinalIgnoreCase; hashCode() uses ToLowerInvariant (Java toLowerCase() uses the default locale) and string.GetHashCode(), which differs from the Java String.hashCode() value and between runs but is equal for equal names. The (short) dnsClass narrowing is unchecked. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/AbstractDnsRecord.cs",
+          "src/Netty.NET.Common/Internal/IDN.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsRecordTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DatagramDnsQuery.java",
+      "sha256": "282184c2f37b15f18efb0435ddadba90357d1c4c73f579d1352f9b58723c42e3",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DatagramDnsQuery.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "AddressedEnvelope<M, InetSocketAddress> is the Transport IAddressedEnvelope<M, IPEndPoint>, whose content(), sender() and recipient() are the Content, Sender and Recipient properties of that port; AddressedEnvelope<?, SocketAddress> in equals() is IAddressedEnvelope<object, EndPoint>, which the covariant out parameters match for every reference content type. The Java overrides that narrow the return type are C# 9 covariant overrides (\"an overriding method can declare a more derived return type\", Microsoft Learn, Covariance and Contravariance in Generics). The NullPointerException for two null addresses is ArgumentNullException, as in DefaultAddressedEnvelope.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DatagramDnsQuery.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DatagramDnsQueryDecoder.java",
+      "sha256": "b3ec30fde20f725c2da6ce404db817535712a01f020c825c06a69d21762da3e3",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DatagramDnsQueryDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "@ChannelHandler.Sharable is [Sharable], List<Object> out is IList<object> @out and in is @in; Class<?> arguments are Type (docs/codec-base-porting.md, Shared CLR adaptations); throws Exception has no counterpart. The anonymous DnsQueryFactory is the named nested class DatagramDnsQueryFactory capturing the packet; packet.content()/sender()/recipient() are the DatagramPacket properties of the Transport port.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DatagramDnsQueryDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DatagramDnsQueryEncoder.java",
+      "sha256": "df138de258c414c8a1f1100d1ce57e7a1c37238d5fed02c4819585df4997f4a8",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DatagramDnsQueryEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "@ChannelHandler.Sharable is [Sharable], List<Object> out is IList<object> @out and in is @in; Class<?> arguments are Type (docs/codec-base-porting.md, Shared CLR adaptations); throws Exception has no counterpart. The message type AddressedEnvelope<DnsQuery, InetSocketAddress> is IAddressedEnvelope<IDnsQuery, IPEndPoint>; the reified matcher (Type.IsInstanceOfType) follows the covariant out parameters, so a DatagramDnsQuery matches, while the Java matcher compares the erased AddressedEnvelope class.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DatagramDnsQueryEncoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsQueryTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DatagramDnsResponse.java",
+      "sha256": "b30b2ca9ede6c52e7edda2a6b8b3c98dd16de716625d60f908d9f329d3de28fc",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DatagramDnsResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "AddressedEnvelope<M, InetSocketAddress> is the Transport IAddressedEnvelope<M, IPEndPoint>, whose content(), sender() and recipient() are the Content, Sender and Recipient properties of that port; AddressedEnvelope<?, SocketAddress> in equals() is IAddressedEnvelope<object, EndPoint>, which the covariant out parameters match for every reference content type. The Java overrides that narrow the return type are C# 9 covariant overrides (\"an overriding method can declare a more derived return type\", Microsoft Learn, Covariance and Contravariance in Generics). The NullPointerException for two null addresses is ArgumentNullException, as in DefaultAddressedEnvelope.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DatagramDnsResponse.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DatagramDnsResponseDecoder.java",
+      "sha256": "34adec0224237e81cd5eaf23b506272ae20fe83977100fdccde54ebeda16a5b5",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DatagramDnsResponseDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "@ChannelHandler.Sharable is [Sharable], List<Object> out is IList<object> @out and in is @in; Class<?> arguments are Type (docs/codec-base-porting.md, Shared CLR adaptations); throws Exception has no counterpart. The anonymous DnsResponseDecoder subclass is the named nested class DatagramResponseDecoder. catch (IndexOutOfBoundsException) is catch (ArgumentOutOfRangeException), the exception ByteBuf reads past the readable bytes throw in the Buffer port (docs/buffer-porting.md).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DatagramDnsResponseDecoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsResponseTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DatagramDnsResponseEncoder.java",
+      "sha256": "9c8633f1b244f6c1bd1d5b2dbc73824472740330ae93b0ccf8d10d1621542f15",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DatagramDnsResponseEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "@ChannelHandler.Sharable is [Sharable], List<Object> out is IList<object> @out and in is @in; Class<?> arguments are Type (docs/codec-base-porting.md, Shared CLR adaptations); throws Exception has no counterpart. The message type is IAddressedEnvelope<IDnsResponse, IPEndPoint>, matched through the covariant out parameters; checkNotNull throws ArgumentNullException.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DatagramDnsResponseEncoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsOptEcsRecord.java",
+      "sha256": "55ee45a8f0cbd7fbdeb2be1a83783017ca966b77cf98c9958f849a82cd3b9aca",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsOptEcsRecord.cs"
+      ],
+      "comments": {
+        "status": "reviewed",
+        "uniqueCount": 6,
+        "preservedCount": 5,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "notApplicable": [
+          {
+            "sourceComment": "Creates a new instance. @param maxPayloadSize the suggested max payload size in bytes @param protocolFamily the {@link InternetProtocolFamily} to use. This should be the same as the one used to send the query. @deprecated use {@link DefaultDnsOptEcsRecord#DefaultDnsOptEcsRecord(int, SocketProtocolFamily)}",
+            "disposition": "deprecated-not-ported",
+            "member": "public DefaultDnsOptEcsRecord(int maxPayloadSize, InternetProtocolFamily protocolFamily)",
+            "reason": "Owner decision 2026-11-16: a @Deprecated member whose @deprecated text names a replacement is not ported. The tag reads \"use DefaultDnsOptEcsRecord#DefaultDnsOptEcsRecord(int, SocketProtocolFamily)\".",
+            "clr": "DefaultDnsOptEcsRecord(int maxPayloadSize, SocketProtocolFamily socketProtocolFamily) is ported; InternetProtocolFamily.ToSocketProtocolFamily() of the Transport port converts an existing value."
+          }
+        ]
+      },
+      "review": {
+        "scope": "The @Deprecated constructor DefaultDnsOptEcsRecord(int, InternetProtocolFamily) is not ported because its @deprecated tag names the replacement DefaultDnsOptEcsRecord(int, SocketProtocolFamily) (owner decision 2026-11-16); its Javadoc is recorded below. SocketProtocolFamily is the Transport enum (Inet, Inet6, Unix) and InetAddress.getAddress() of NetUtil.LOCALHOST4/6 is GetAddressBytes(). clone() is Array.Clone(). toString() prints Arrays.toString(byte[]) with every element reinterpreted as sbyte, because Java prints the signed byte (192 prints as -64). Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsOptEcsRecord.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/SocketProtocolFamily.cs",
+          "src/Netty.NET.Transport/Channels/Sockets/InternetProtocolFamily.cs",
+          "docs/codec-dns-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsPtrRecord.java",
+      "sha256": "bb8bbb13842233a9996bc74180976bbe2e898cbc7abf73da76091fec43516f26",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsPtrRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "hostname() is a virtual method; name().isEmpty() is Name().Length == 0; checkNotNull throws ArgumentNullException. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsPtrRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsQuery.java",
+      "sha256": "102f80749b1ad7452091006745ac69698c6106f44cfa361644bd2036373a42c0",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsQuery.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The Java overrides that narrow the return type are C# 9 covariant overrides (\"an overriding method can declare a more derived return type\", Microsoft Learn, Covariance and Contravariance in Generics). toString() is ToString().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsQuery.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsQuestion.java",
+      "sha256": "70d23fa6a927c0fe31c8293417b07ad84386cd2fc922c8cdbbe6fa223f7edc73",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsQuestion.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source class; toString() is ToString().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsQuestion.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsRawRecord.java",
+      "sha256": "916fa957137c43287e86bb8796a265c4caf3b2be5440a2243fed100ae8e76895",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsRawRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "content() and refCnt() are the IByteBufHolder.Content and IReferenceCounted.RefCnt properties of the Buffer port (docs/buffer-porting.md, Buffer holders and conversion). The public members keep the DnsRawRecord return type and the IByteBufHolder/IReferenceCounted members with wider return types are explicit implementations, as in Transport's DatagramPacket. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsRawRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsRecordDecoder.java",
+      "sha256": "130f1df132498e05bcb36473417589a82883ab5c4360bf5e61f52a1123c56b58",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsRecordDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 12,
+        "preservedCount": 12,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The protected constructor, decodeRecord(String, ...) and decodeName0 are protected internal, since Java protected also grants the package access that IDnsRecordDecoder.DEFAULT and the tests use (as codec-base's LineBasedFrameDecoder.Decode). The final decodeQuestion/decodeRecord are non-virtual; T : IDnsRecord with default(T) for \"not enough data\" and a checked cast of the decoded record. readUnsignedShort()/readUnsignedInt() return ushort/uint, widened to int/long. ROOT is an internal const. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsRecordDecoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsRecordEncoder.java",
+      "sha256": "b3d6a902d8eb77694916cd81df922ffb43b001a5257efa26dca043090d29c0b1",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsRecordEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 18,
+        "preservedCount": 18,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The protected constructor and encodeName are protected internal (package access used by IDnsRecordEncoder.DEFAULT and the tests); calculateEcsAddressLength is internal. Byte.SIZE - 1 is sizeof(byte) * 8 - 1; Class<?>[] is Type[] for UnsupportedMessageTypeException(object, params Type[]); writeBytes(byte[], int, int) is WriteBytes(ReadOnlySpan<byte>) over the array range; the (int) TTL narrowing is unchecked; the padWithZeros masks select the same bits of the unsigned address byte. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsRecordEncoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordEncoderTest.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsOptPseudoRrRecordTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DefaultDnsResponse.java",
+      "sha256": "e411327326271e036d87425c48ec19a0e361be1821f82952b492abb6d2cda225",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DefaultDnsResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The Java overrides that narrow the return type are C# 9 covariant overrides (\"an overriding method can declare a more derived return type\", Microsoft Learn, Covariance and Contravariance in Generics). The response accessors are virtual; checkNotNull throws ArgumentNullException.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DefaultDnsResponse.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsCodecUtil.java",
+      "sha256": "471e313d7457a680a3918f4070d70c1aead5595430a8c70bca731366bcbbc997",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsCodecUtil.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 25,
+        "preservedCount": 25,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Internal static class with internal constants. name.split(\"\\\\.\") keeps the Java String.split rule that trailing empty strings are removed (and that a name without a dot is one element) through a private Split helper, because string.Split keeps them (\"netty.io..\" encodes as netty.io in both). readUnsignedByte() is ReadByte() (unsigned System.Byte), readerIndex(int) is the ReaderIndex setter, CharsetUtil.UTF_8 is Encoding.UTF8, IllegalArgumentException is ArgumentException and catch (Throwable) with rethrow is catch (Exception) with throw. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsCodecUtil.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsCodecUtilTest.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordEncoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsMessage.java",
+      "sha256": "84e2106cf30ea126c6781be30fdd0222af01a6fe6f65b3216b426e85a8b8a715",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 21,
+        "preservedCount": 21,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix over IReferenceCounted. <T extends DnsRecord> T recordAt/setRecord/removeRecord keep the type parameter as T : IDnsRecord; Java infers T from the assignment, C# only from arguments (\"it cannot infer the type parameters only from a constraint or return value\", Microsoft Learn), so callers write RecordAt<IDnsQuestion>(section). The Java re-declarations that only narrow a return type are inherited unchanged from the base interface, the Transport/Common rule \"C# 9 covariant returns cover class overrides only\" (docs/transport-porting.md); the implementing classes keep the narrowed return types. (touch/retain re-declarations).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsMessage.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsMessageUtil.java",
+      "sha256": "5cdf269c9ef65150b1b178797da1f16773333d54143caaa6163153981a9e41b3",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsMessageUtil.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The package-private final utility class is an internal static class; the nested DnsQueryFactory is the internal interface IDnsQueryFactory. An AddressedEnvelope check is IAddressedEnvelope<object, EndPoint>; an address is printed by EndPoint.ToString() (\"192.168.1.2:80\" for IPEndPoint) instead of Java's InetSocketAddress.toString() (\"host/literal:port\"), as in Transport's DefaultAddressedEnvelope.ToString(). setCharAt is the StringBuilder indexer. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsMessageUtil.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsOpCode.java",
+      "sha256": "367645fcd092826f31e4aee76240f364808bd275899312117bd9fd5938d81057",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsOpCode.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Value class with static readonly constants; Comparable is IComparable<DnsOpCode>. The Java byte opcode is the unsigned System.Byte (owner rule for ByteBuf bytes), so the sign-dependent results keep the Java value through an sbyte reinterpretation: hashCode() returns the signed byte widened to int and compareTo() subtracts the signed bytes (opcodes 128..255 hash negative and sort first, as in Java). toString() uses byteValue & 0xFF, the unsigned value itself. The (byte) narrowing of the constructor is unchecked. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsOpCode.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsOptEcsRecord.java",
+      "sha256": "94ee37ecef1534c9720ae36732f64fcf2f7f46b65e7da4b09856d07bd03b445a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsOptEcsRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; byte[] address() returns the unsigned System.Byte octets of ADDRESS (RFC 7871 section 6), the element type of ByteBuf and IPAddress.GetAddressBytes().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsOptEcsRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsOptPseudoRecord.java",
+      "sha256": "4733eb6dd3ff295f938fe8d3905efd82ef25bf7629035ac4180d350951593a14",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsOptPseudoRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; extendedRcode()/version()/flags() are ExtendedRcode()/Version()/Flags().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsOptPseudoRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsPtrRecord.java",
+      "sha256": "b3588da1e87dadf93584594904d4b6a0edc29e2ebd56ce8d683349e9408d9222",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsPtrRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; hostname() is Hostname().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsPtrRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsQuery.java",
+      "sha256": "1f6e0b9b29120d7787e270b9c0a9a5e0e6fc84c1796f77a0c5682ae696b3a5fb",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsQuery.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; every member of the Java interface re-declares an IDnsMessage member to narrow the return type to DnsQuery, so the C# interface body is empty. The Java re-declarations that only narrow a return type are inherited unchanged from the base interface, the Transport/Common rule \"C# 9 covariant returns cover class overrides only\" (docs/transport-porting.md); the implementing classes keep the narrowed return types.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsQuery.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsQueryEncoder.java",
+      "sha256": "ff2a6cb649df02104c987ada61a5df195acc5207f7e568ac6996a157f2aeab13",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsQueryEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Package-private final class and members are internal; recordAt states its type argument; throws Exception has no counterpart.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsQueryEncoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsQuestion.java",
+      "sha256": "59290a0a8b84b10c78fa2d76d7d7d867371f64fa184c69e1feddc8092b8c7b71",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsQuestion.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix. The documented re-declaration of timeToLive() (\"An unused property\") is kept as \"new long TimeToLive()\", which the single public TimeToLive() of DefaultDnsQuestion satisfies together with IDnsRecord.TimeToLive().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsQuestion.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsRawRecord.java",
+      "sha256": "8f821c5f2ccf3319f5b7b10b1697449d4487384ad9d8f15e388b05a2910954ed",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsRawRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix over IDnsRecord and the Buffer port's IByteBufHolder (content() is the Content property there). The Java re-declarations that only narrow a return type are inherited unchanged from the base interface, the Transport/Common rule \"C# 9 covariant returns cover class overrides only\" (docs/transport-porting.md); the implementing classes keep the narrowed return types. The body is empty because every Java member is such a narrowing.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsRawRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsRecord.java",
+      "sha256": "0bb4a15fb982cea0d36768fbbc10a5e2c2dc749d29d2767f7874860c170e6d9a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsRecord.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 12,
+        "preservedCount": 12,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; name()/type()/dnsClass()/timeToLive() stay methods (Name(), Type(), DnsClass(), TimeToLive()). The CLASS_* interface fields are C# interface constants; C# classes do not inherit static interface members, so AbstractDnsRecord, DefaultDnsRawRecord, DnsMessageUtil and the tests name them through IDnsRecord.CLASS_IN.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsRecord.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsRecordDecoder.java",
+      "sha256": "31b51709bdb28fb25e4cbf8a8f1ed977d628f346e59d6716f27aa8e70d72a082",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsRecordDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; the interface field DEFAULT is a static readonly interface field (C# interfaces may declare static fields); <T extends DnsRecord> is T : IDnsRecord; throws Exception has no counterpart.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsRecordDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsRecordEncoder.java",
+      "sha256": "72332720d0afd1059edcfbcc042629b061fcbd252b3357772a9bdb768ca4e7c4",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsRecordEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; DEFAULT is a static readonly interface field; throws Exception has no counterpart.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsRecordEncoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsRecordType.java",
+      "sha256": "7821021fe276623b94ccad09dc822c217426c6d672e52da1dd14eae8313aa6c2",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsRecordType.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 52,
+        "preservedCount": 52,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Value class with static readonly constants; Comparable is IComparable<DnsRecordType>. IntObjectHashMap is Dictionary<int, DnsRecordType> (io.netty.util.collection exists because a Java type argument cannot be a primitive type, JLS 4.5.1; .NET specializes value-type type arguments, Microsoft Learn \"Generics in the runtime\"; owner decision 2026-11-19 keeps Dictionary instead of porting io.netty.util.collection, recorded in docs/common-porting-manifest.json); HashMap<String, DnsRecordType> is Dictionary<string, DnsRecordType>, read with GetValueOrDefault. The static initializer is the static constructor. valueOf(String) skips the lookup for a null name (HashMap allows a null key, Dictionary does not) and spells null as \"null\" in the message as Java concatenation does. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsRecordType.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsResponse.java",
+      "sha256": "f269258348fc40ec58f5fe5437c54d277e216a74ddcf051ba010de5b972265d8",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/IDnsResponse.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; the response flags and RCODE accessors stay methods returning IDnsResponse. The Java re-declarations that only narrow a return type are inherited unchanged from the base interface, the Transport/Common rule \"C# 9 covariant returns cover class overrides only\" (docs/transport-porting.md); the implementing classes keep the narrowed return types.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/IDnsResponse.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsResponseCode.java",
+      "sha256": "2d9452779ebd61c1578437ac4407411d32435727857513a4d230c269db2d4296",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsResponseCode.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 23,
+        "preservedCount": 23,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Value class with static readonly constants; Comparable is IComparable<DnsResponseCode>; IllegalArgumentException is ArgumentException and checkNotNull throws ArgumentNullException. Numbers in text and messages use the invariant culture (Int32.ToString() otherwise uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsResponseCode.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsResponseDecoder.java",
+      "sha256": "c617a7f50f8c75eddd907af5dec142c1740a7f169d1f3083052ffdd792bb1cb3",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsResponseDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Package-private abstract class is internal; <A extends SocketAddress> is A : EndPoint; the final decode is internal and non-virtual; readUnsignedShort() returns ushort, widened to int.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsResponseDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/DnsSection.java",
+      "sha256": "cfb9927987100ea480e84bb75553037f8f99c94dd3b5cbcd28f3e17b8a770574",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/DnsSection.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Simple Java enum, a C# enum with the same constant names and order (ordinal() is the int value).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/DnsSection.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/TcpDnsQueryDecoder.java",
+      "sha256": "3d5333acd758cc361ae8c42b7ac80ac5fa3e85ef11bf5cf075f30edf949cfbd8",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/TcpDnsQueryDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "decode(ctx, in) overrides LengthFieldBasedFrameDecoder.Decode(IChannelHandlerContext, ByteBuf) of codec-base; the anonymous DnsQueryFactory is the named nested class TcpDnsQueryFactory; checkNotNull throws ArgumentNullException.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/TcpDnsQueryDecoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/TcpDnsTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/TcpDnsQueryEncoder.java",
+      "sha256": "89626b63a5f8476f1feca9fb8d3eec54cc0b8cc780e78433c3fc3686cd0cf05d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/TcpDnsQueryEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "@ChannelHandler.Sharable is [Sharable], List<Object> out is IList<object> @out and in is @in; Class<?> arguments are Type (docs/codec-base-porting.md, Shared CLR adaptations); throws Exception has no counterpart. writerIndex(int) is the WriterIndex setter; allocateBuffer overrides MessageToByteEncoder.AllocateBuffer.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/TcpDnsQueryEncoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/TcpDnsTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/TcpDnsResponseDecoder.java",
+      "sha256": "0a6022a76e729235350deafa62030a2b8342f2916bb9aa86d3891346f9d288a6",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/TcpDnsResponseDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The anonymous DnsResponseDecoder<SocketAddress> is the named nested class TcpResponseDecoder over EndPoint (ctx.channel().remoteAddress() is ctx.Channel.RemoteAddress); decode and extractFrame override the codec-base LengthFieldBasedFrameDecoder members.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/TcpDnsResponseDecoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/TcpDnsTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/TcpDnsResponseEncoder.java",
+      "sha256": "5c734283c27fcd965f061bae169922b4d5562327e16b380b28bdaca45591e155",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Dns/TcpDnsResponseEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "@ChannelHandler.Sharable is [Sharable], List<Object> out is IList<object> @out and in is @in; Class<?> arguments are Type (docs/codec-base-porting.md, Shared CLR adaptations); throws Exception has no counterpart. writerIndex(int) is the WriterIndex setter.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Dns/TcpDnsResponseEncoder.cs",
+          "test/Netty.NET.Handler.Codec.Dns.Tests/TcpDnsTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/io/netty/handler/codec/dns/package-info.java",
+      "sha256": "bd1c5c2afb32f3e6bb551007ce2c05f97259957612101eead907c276653318b9",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Documentation-only package descriptor (io.netty.handler.codec.dns).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Handler.Codec.Dns holds the ported types; the package summary (\"DNS codec.\") is kept verbatim in this entry and mapped in docs/codec-dns-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/codec-dns-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2015 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "DNS codec.",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/codec-dns-porting.md maps it to Netty.NET.Handler.Codec.Dns."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/java/module-info.yml",
+      "sha256": "c81813b9b0c5c1ed2f1b25fad805c6ed18db6862704db05c80f466861304b6f4",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Input to the io.github.dmlloyd.module-info Maven plugin that generates the JPMS module descriptor of io.netty.codec.dns: requires io.netty.buffer, io.netty.transport, io.netty.codec, io.netty.common.",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. JPMS module declarations have no .NET counterpart beyond assembly metadata; Transport, Resolver and codec-base map their module-info.yml to the project file the same way.",
+        "replacement": {
+          "clr": "Netty.NET.Handler.Codec.Dns.csproj references Netty.NET.Handler.Codec (which brings Transport, Resolver, Buffer and Common); the assembly is the deployment and visibility unit, and InternalsVisibleTo opens internals only to Netty.NET.Handler.Codec.Dns.Tests.",
+          "noClrCounterpart": [
+            "JPMS requires/exports checking: .NET assemblies have no module descriptor; public/internal accessibility and InternalsVisibleTo form the boundary."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Handler.Codec.Dns/Netty.NET.Handler.Codec.Dns.csproj",
+            "src/Netty.NET.Handler.Codec/Netty.NET.Handler.Codec.csproj"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.7",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/",
+            "https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items#projectreference",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/friend"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "---------------------------------------------------------------------------- Copyright 2024 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. ----------------------------------------------------------------------------",
+            "reason": "Apache license header of the YAML metadata file, which has no CLR file."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/main/resources/META-INF/native-image/io.netty/netty-codec-dns/generated/handlers/reflect-config.json",
+      "sha256": "6539fefaa9d31c7696e8d29f988ef900639661218ee8d3afc572c2672ac4160a",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Generated GraalVM native-image reflection metadata: one record per codec-dns ChannelHandler (name, condition.typeReachable, queryAllPublicMethods) so native images keep the handler methods that ChannelHandlerMask inspects.",
+        "reason": "Owner decision 2026-11-16: GraalVM native-image metadata is replaced by .NET NativeAOT, which does not read a reflection JSON manifest; trimming keeps members declared by DynamicallyAccessedMembers annotations, which IChannelHandler and ChannelHandlerAdapter carry for every handler subtype.",
+        "replacement": {
+          "clr": "[DynamicallyAccessedMembers(PublicMethods | NonPublicMethods)] on IChannelHandler and ChannelHandlerAdapter (Transport) keeps the callback metadata of the codec handlers.",
+          "noClrCounterpart": [
+            "A reflection metadata JSON file read by an ahead-of-time compiler."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0",
+            "https://www.rfc-editor.org/rfc/rfc8259"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none",
+        "reason": "JSON text has no comment token in the RFC 8259 grammar."
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/AbstractDnsOptPseudoRrRecordTest.java",
+      "sha256": "47d39b1d38585297ea51245baa14d700cc24e10a4a27336f0e71eaf1d609928d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsOptPseudoRrRecordTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testFlagsCanCarryDo",
+          "clrMethod": "TestFlagsCanCarryDo",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testFlagsIsNotTruncatedToEightBits",
+          "clrMethod": "TestFlagsIsNotTruncatedToEightBits",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testFlagsCanCarryBitsOtherThanDo",
+          "clrMethod": "TestFlagsCanCarryBitsOtherThanDo",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testTtlLayoutIsExtendedRcodeVersionFlags",
+          "clrMethod": "TestTtlLayoutIsExtendedRcodeVersionFlags",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testAllFieldsAtMaximum",
+          "clrMethod": "TestAllFieldsAtMaximum",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testFlagsDoNotLeakIntoExtendedRcodeOrVersion",
+          "clrMethod": "TestFlagsDoNotLeakIntoExtendedRcodeOrVersion",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testExtendedRcodeAndVersionDoNotLeakIntoFlags",
+          "clrMethod": "TestExtendedRcodeAndVersionDoNotLeakIntoFlags",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testOutOfRangeValuesAreTruncatedToTheirFieldWidth",
+          "clrMethod": "TestOutOfRangeValuesAreTruncatedToTheirFieldWidth",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testPreExistingConstructorsKeepTtlUnchanged",
+          "clrMethod": "TestPreExistingConstructorsKeepTtlUnchanged",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testDoIsEncodedOnTheWire",
+          "clrMethod": "TestDoIsEncodedOnTheWire",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        },
+        {
+          "upstreamMethod": "testExtendedRcodeVersionAndFlagsAreEncodedOnTheWire",
+          "clrMethod": "TestExtendedRcodeVersionAndFlagsAreEncodedOnTheWire",
+          "adaptation": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 11,
+        "mappedCount": 11,
+        "reviewedCount": 11,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 17,
+        "preservedCount": 17,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios and assertions; the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord; readUnsignedByte() is ReadByte() (unsigned System.Byte) and readUnsignedShort() returns ushort.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsOptPseudoRrRecordTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/AbstractDnsRecordTest.java",
+      "sha256": "d645c11d7bd629bc88051173ed84bf2224f0cb22f6f00493a44310838266bbfb",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsRecordTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testValidDomainName",
+          "clrMethod": "TestValidDomainName",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        },
+        {
+          "upstreamMethod": "testValidDomainNameUmlaut",
+          "clrMethod": "TestValidDomainNameUmlaut",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        },
+        {
+          "upstreamMethod": "testValidDomainNameTrailingDot",
+          "clrMethod": "TestValidDomainNameTrailingDot",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        },
+        {
+          "upstreamMethod": "testValidDomainNameUmlautTrailingDot",
+          "clrMethod": "TestValidDomainNameUmlautTrailingDot",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        },
+        {
+          "upstreamMethod": "testValidDomainNameLength",
+          "clrMethod": "TestValidDomainNameLength",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        },
+        {
+          "upstreamMethod": "testValidDomainNameUmlautLength",
+          "clrMethod": "TestValidDomainNameUmlautLength",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        },
+        {
+          "upstreamMethod": "testEqualsAndHashCodeIgnoreCase",
+          "clrMethod": "TestEqualsAndHashCodeIgnoreCase",
+          "adaptation": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 7,
+        "mappedCount": 7,
+        "reviewedCount": 7,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios; the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the Executable instances are lambdas and IllegalArgumentException is ArgumentException (the IDN emulation throws it for the 64-character labels).",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/AbstractDnsRecordTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/DefaultDnsRecordDecoderTest.java",
+      "sha256": "48e1d007a266360ef7d1d6526775822047ccace6f4d4d273f1380720585ab38d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordDecoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testDecodeName",
+          "clrMethod": "TestDecodeName",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeNameWithoutTerminator",
+          "clrMethod": "TestDecodeNameWithoutTerminator",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeNameWithExtraTerminator",
+          "clrMethod": "TestDecodeNameWithExtraTerminator",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeEmptyName",
+          "clrMethod": "TestDecodeEmptyName",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeEmptyNameFromEmptyBuffer",
+          "clrMethod": "TestDecodeEmptyNameFromEmptyBuffer",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeEmptyNameFromExtraZeroes",
+          "clrMethod": "TestDecodeEmptyNameFromExtraZeroes",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodePtrRecord",
+          "clrMethod": "TestDecodePtrRecord",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testdecompressCompressPointer",
+          "clrMethod": "TestdecompressCompressPointer",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testdecompressNestedCompressionPointer",
+          "clrMethod": "TestdecompressNestedCompressionPointer",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeCompressionRDataPointer",
+          "clrMethod": "TestDecodeCompressionRDataPointer",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeCompressionRDataPointerMX",
+          "clrMethod": "TestDecodeCompressionRDataPointerMX",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testDecodeMessageCompression",
+          "clrMethod": "TestDecodeMessageCompression",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testTruncatedPacket",
+          "clrMethod": "TestTruncatedPacket",
+          "adaptation": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 13,
+        "mappedCount": 13,
+        "reviewedCount": 13,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 14,
+        "preservedCount": 14,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios and assertions; char literals in the byte[] initializers are cast to byte; content() is Content; the protected decodeName0/decodeRecord(String, ...) are reached through their protected internal C# declarations; decodeRecord(ByteBuf) states <IDnsRecord>. The JUnit message overloads use AssertM. The private helper testDecodeName(String, ByteBuf) is TestDecodeName0 because xUnit1024 forbids a helper overload with a test name.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/DefaultDnsRecordEncoderTest.java",
+      "sha256": "36c089c9edeb5af03a83ca0dfb83109703fd71bc34b5d6840f6fd538c2c6849d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordEncoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testEncodePtr",
+          "clrMethod": "TestEncodePtr",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testEncodeName",
+          "clrMethod": "TestEncodeName",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testEncodeNameWithoutTerminator",
+          "clrMethod": "TestEncodeNameWithoutTerminator",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testEncodeNameWithExtraTerminator",
+          "clrMethod": "TestEncodeNameWithExtraTerminator",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testEncodeEmptyName",
+          "clrMethod": "TestEncodeEmptyName",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testEncodeRootName",
+          "clrMethod": "TestEncodeRootName",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testOptEcsRecordIpv4",
+          "clrMethod": "TestOptEcsRecordIpv4",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        },
+        {
+          "upstreamMethod": "testOptEcsRecordIpv6",
+          "clrMethod": "TestOptEcsRecordIpv6",
+          "adaptation": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 8,
+        "mappedCount": 8,
+        "reviewedCount": 8,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios and assertions; SocketUtils.addressByName is IPAddress.Parse and getAddress() is GetAddressBytes(); Inet4Address is AddressFamily.InterNetwork; ThreadLocalRandom is Random.Shared; Byte.SIZE is 8 and Byte.MAX_VALUE is sbyte.MaxValue (127; byte.MaxValue would be 255); getUnsignedInt (uint) is compared as long. The private helper testEncodeName(byte[], String) is TestEncodeName0 because xUnit1024 forbids a helper overload with a test name.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DefaultDnsRecordEncoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/DnsCodecUtilTest.java",
+      "sha256": "8763de6dc3fa768bfd608a5908b679358cafaa1c81b8b615b427e320cc30ac84",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/DnsCodecUtilTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "calculateMaxNameLengthIsBoundedRegardlessOfRemainingBytes",
+          "clrMethod": "CalculateMaxNameLengthIsBoundedRegardlessOfRemainingBytes",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectTooLongLabelWhileDecoding",
+          "clrMethod": "RejectTooLongLabelWhileDecoding",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectTooLongDomainNameWhileDecoding",
+          "clrMethod": "RejectTooLongDomainNameWhileDecoding",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "acceptMaxCompressionPointers",
+          "clrMethod": "AcceptMaxCompressionPointers",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectTooManyCompressionPointers",
+          "clrMethod": "RejectTooManyCompressionPointers",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectCompressionPointerLoop",
+          "clrMethod": "RejectCompressionPointerLoop",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectTooLongLabelWhileEncoding",
+          "clrMethod": "RejectTooLongLabelWhileEncoding",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectEmptyLabelWhileEncoding",
+          "clrMethod": "RejectEmptyLabelWhileEncoding",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        },
+        {
+          "upstreamMethod": "rejectTooLongDomainNameWhileEncoding",
+          "clrMethod": "RejectTooLongDomainNameWhileEncoding",
+          "adaptation": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 9,
+        "mappedCount": 9,
+        "reviewedCount": 9,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 11,
+        "preservedCount": 11,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios; the package-private JUnit methods are public xUnit facts; readerIndex(int) is the ReaderIndex setter and IllegalArgumentException is ArgumentException.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsCodecUtilTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/DnsQueryTest.java",
+      "sha256": "a7370a95ffffca6001c49daaf968622dbe96034d803fc229d21b161f58b71d58",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/DnsQueryTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testEncodeAndDecodeQuery",
+          "clrMethod": "TestEncodeAndDecodeQuery",
+          "adaptation": "Source scenarios; @ParameterizedTest/@MethodSource are [Theory]/[MemberData] over IEnumerable<object[]> rows with the same values (5 opcodes, 11 opcode/flag rows); SocketUtils.socketAddress is an IPEndPoint and new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0); readInbound/readOutbound state their type argument and channel.alloc() is IChannel.Alloc()."
+        },
+        {
+          "upstreamMethod": "testOpCodeSurvivesEncodeAndDecode",
+          "clrMethod": "TestOpCodeSurvivesEncodeAndDecode",
+          "adaptation": "Source scenarios; @ParameterizedTest/@MethodSource are [Theory]/[MemberData] over IEnumerable<object[]> rows with the same values (5 opcodes, 11 opcode/flag rows); SocketUtils.socketAddress is an IPEndPoint and new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0); readInbound/readOutbound state their type argument and channel.alloc() is IChannel.Alloc()."
+        },
+        {
+          "upstreamMethod": "testOpCodeIsEncodedIntoBits14To11",
+          "clrMethod": "TestOpCodeIsEncodedIntoBits14To11",
+          "adaptation": "Source scenarios; @ParameterizedTest/@MethodSource are [Theory]/[MemberData] over IEnumerable<object[]> rows with the same values (5 opcodes, 11 opcode/flag rows); SocketUtils.socketAddress is an IPEndPoint and new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0); readInbound/readOutbound state their type argument and channel.alloc() is IChannel.Alloc()."
+        },
+        {
+          "upstreamMethod": "rejectTooManyRecordsInQuery",
+          "clrMethod": "RejectTooManyRecordsInQuery",
+          "adaptation": "Source scenarios; @ParameterizedTest/@MethodSource are [Theory]/[MemberData] over IEnumerable<object[]> rows with the same values (5 opcodes, 11 opcode/flag rows); SocketUtils.socketAddress is an IPEndPoint and new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0); readInbound/readOutbound state their type argument and channel.alloc() is IChannel.Alloc()."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 4,
+        "reviewedCount": 4,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios; @ParameterizedTest/@MethodSource are [Theory]/[MemberData] over IEnumerable<object[]> rows with the same values (5 opcodes, 11 opcode/flag rows); SocketUtils.socketAddress is an IPEndPoint and new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0); readInbound/readOutbound state their type argument and channel.alloc() is IChannel.Alloc().",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsQueryTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/DnsRecordTypeTest.java",
+      "sha256": "ea2f7b0b96fac4919116f6304fcdab9c97dbce4f30587525b146be954facda23",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/DnsRecordTypeTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSanity",
+          "clrMethod": "TestSanity",
+          "adaptation": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM."
+        },
+        {
+          "upstreamMethod": "testHashCode",
+          "clrMethod": "TestHashCode",
+          "adaptation": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM."
+        },
+        {
+          "upstreamMethod": "testEquals",
+          "clrMethod": "TestEquals",
+          "adaptation": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM."
+        },
+        {
+          "upstreamMethod": "testFind",
+          "clrMethod": "TestFind",
+          "adaptation": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM."
+        },
+        {
+          "upstreamMethod": "testCodePointsMatchIanaRegistry",
+          "clrMethod": "TestCodePointsMatchIanaRegistry",
+          "adaptation": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM."
+        },
+        {
+          "upstreamMethod": "testUnregisteredCodePointDecodesAsUnknown",
+          "clrMethod": "TestUnregisteredCodePointDecodesAsUnknown",
+          "adaptation": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 6,
+        "reviewedCount": 6,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source assertions; Class.getFields() is Type.GetFields() (public fields) filtered by FieldInfo.IsStatic and the field type; the JUnit message overloads use AssertM.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsRecordTypeTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/DnsResponseTest.java",
+      "sha256": "8a4e00cbbc21d7b2ce799c847ff9deb6b9efbaed9c345507ce9f2fa924a7ce09",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/DnsResponseTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "readResponseTest",
+          "clrMethod": "ReadResponseTest",
+          "adaptation": "Source packets and assertions; the signed Java byte literals are sbyte arrays reinterpreted as the unsigned System.Byte arrays ByteBuf takes; AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>; assertInstanceOf is Assert.IsAssignableFrom; the Executable instances are lambdas; new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0)."
+        },
+        {
+          "upstreamMethod": "readMalformedResponseTest",
+          "clrMethod": "ReadMalformedResponseTest",
+          "adaptation": "Source packets and assertions; the signed Java byte literals are sbyte arrays reinterpreted as the unsigned System.Byte arrays ByteBuf takes; AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>; assertInstanceOf is Assert.IsAssignableFrom; the Executable instances are lambdas; new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0)."
+        },
+        {
+          "upstreamMethod": "readIncompleteResponseTest",
+          "clrMethod": "ReadIncompleteResponseTest",
+          "adaptation": "Source packets and assertions; the signed Java byte literals are sbyte arrays reinterpreted as the unsigned System.Byte arrays ByteBuf takes; AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>; assertInstanceOf is Assert.IsAssignableFrom; the Executable instances are lambdas; new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0)."
+        },
+        {
+          "upstreamMethod": "rejectTooManyRecordsInResponse",
+          "clrMethod": "RejectTooManyRecordsInResponse",
+          "adaptation": "Source packets and assertions; the signed Java byte literals are sbyte arrays reinterpreted as the unsigned System.Byte arrays ByteBuf takes; AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>; assertInstanceOf is Assert.IsAssignableFrom; the Executable instances are lambdas; new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0)."
+        },
+        {
+          "upstreamMethod": "acceptMaxRecordsInResponse",
+          "clrMethod": "AcceptMaxRecordsInResponse",
+          "adaptation": "Source packets and assertions; the signed Java byte literals are sbyte arrays reinterpreted as the unsigned System.Byte arrays ByteBuf takes; AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>; assertInstanceOf is Assert.IsAssignableFrom; the Executable instances are lambdas; new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 5,
+        "reviewedCount": 5,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source packets and assertions; the signed Java byte literals are sbyte arrays reinterpreted as the unsigned System.Byte arrays ByteBuf takes; AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>; assertInstanceOf is Assert.IsAssignableFrom; the Executable instances are lambdas; new InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0).",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/DnsResponseTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/NativeImageHandlerMetadataTest.java",
+      "sha256": "dc0bfdc5e4a488d4029bbbc29c947b7738f4e04cf12e2e9928ed3f5bfc3db599",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Runs ChannelHandlerMetadataUtil.generateMetadata(io.netty.handler.codec.dns), which scans the package(s) for ChannelHandler subtypes and compares them with the committed GraalVM reflect-config.json.",
+        "reason": "Owner decision 2026-11-16 (as for the Transport ChannelHandlerMetadataUtil): GraalVM reflection JSON, Java package scanning and JVM type names are not consumed by the CLR; NativeAOT keeps handler metadata through DynamicallyAccessedMembers.",
+        "replacement": {
+          "clr": "IChannelHandler/ChannelHandlerAdapter DynamicallyAccessedMembers annotations; the Transport NativeAOT scenarios exercise handler dispatch under trimming.",
+          "noClrCounterpart": [
+            "Generating or comparing a reflect-config.json metadata file."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2022 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          }
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "collectAndCompareMetadata",
+            "disposition": "jvm-only-replaced",
+            "reason": "GraalVM reflection metadata generation and comparison has no CLR counterpart (see the entry reason).",
+            "sourceContract": "Generate the codec handler reflection records and compare them with the committed JSON.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+              "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-dns/src/test/java/io/netty/handler/codec/dns/TcpDnsTest.java",
+      "sha256": "c33b7c6468b07373865e0986310f7a403710613b743f41da074951b42e3471ad",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Dns.Tests/TcpDnsTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testQueryDecode",
+          "clrMethod": "TestQueryDecode",
+          "adaptation": "Source scenarios; SplittableRandom.nextInt is Random.Shared.Next; recordAt states its type argument; content() and refCnt() are the Content and RefCnt properties."
+        },
+        {
+          "upstreamMethod": "testDecoderLeak",
+          "clrMethod": "TestDecoderLeak",
+          "adaptation": "Source scenarios; SplittableRandom.nextInt is Random.Shared.Next; recordAt states its type argument; content() and refCnt() are the Content and RefCnt properties."
+        },
+        {
+          "upstreamMethod": "testResponseEncode",
+          "clrMethod": "TestResponseEncode",
+          "adaptation": "Source scenarios; SplittableRandom.nextInt is Random.Shared.Next; recordAt states its type argument; content() and refCnt() are the Content and RefCnt properties."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios; SplittableRandom.nextInt is Random.Shared.Next; recordAt states its type argument; content() and refCnt() are the Content and RefCnt properties.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Dns.Tests/TcpDnsTest.cs"
+        ]
+      }
+    }
+  ],
+  "validationHistory": [
+    {
+      "checkpoint": "2026-11-19-port",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0
+        },
+        "moduleDebug": {
+          "total": 80,
+          "passed": 80,
+          "failed": 0,
+          "skipped": 0
+        },
+        "transportDebug": {
+          "total": 1132,
+          "passed": 1033,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows), run alone. In one full-solution run (all test projects in parallel) DefaultEventLoopTest.TestSubmittingTaskWakesUpSuspendedExecutor, ChannelInitializerTest.TestChannelInitializerEventExecutor and SingleThreadEventLoopSourceTest.ScheduleLaggyTaskAtFixedRateA also failed under load; the next two Transport runs were clean apart from the baseline."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module codec-dns verifies every pinned codec-dns file with no pending entry; the generic mutation run (inventory, hash, comment count, unmapped and missing tests, not-ported test dispositions, JSON comment disposition, missing target, removed C# comment, renamed C# test; the @deprecated-tags case applies only to deprecated-not-ported entries) rejected every applicable broken copy and restored the manifest byte-identical. Owner decisions 2026-11-19: return-type-narrowing interface re-declarations are inherited, not repeated. Shared changes the same day: AbstractReferenceCounted Retain()/Touch()/Release()/Release(int) are virtual and Retain()/Release() update the count directly as the Java retain()/release() do; ByteToMessageDecoder.IsSingleDecode() is virtual; java.net.IDN is the shared Netty.NET.Common.Internal.IDN."
+      }
+    }
+  ]
+}

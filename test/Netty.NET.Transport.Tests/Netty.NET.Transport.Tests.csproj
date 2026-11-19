@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Netty.NET.Transport\Netty.NET.Transport.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
   </ItemGroup>
 </Project>

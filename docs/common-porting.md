@@ -1,7 +1,11 @@
 # Netty common port
 
 Upstream: `64cc10f38ea5f5bd7eae48507817c66680d0afdc` (local `../netty`).
-Scope: `common/src/main/java` and `common/src/test/java` at that commit.
+Scope: `common/src/main/java` and `common/src/test/java` at that commit until 2026-11-19, and since then all of
+`common/src`: also the `io.netty.util.collection` templates and their generator `codegen.groovy` (the owner kept
+`Dictionary` instead of porting those collections; see
+[Primitive collections kept as Dictionary](common-clr-design.md#primitive-collections-kept-as-dictionary-2026-11-19)),
+the GraalVM and ServiceLoader resources, `logback-test.xml` and the NativeLibraryLoader test libraries.
 
 ## Verification
 
@@ -22,7 +26,8 @@ project import were removed after all portable tests built by default. Older
 PortingBatch commands below and in the manifest are historical verification
 records. Full-suite success does not establish completion of the native API port.
 
-`common-porting-manifest.json` inventories all upstream Java source/test files.
+`common-porting-manifest.json` inventories every upstream file under the scope (287 files: Java sources and
+tests, `module-info.yml`, the collection templates, the codegen script, resources and test data).
 Candidate paths are filename matches, not a claim of equivalent behavior.
 Pending entries must be reviewed; justified replacements must state the CLR
 behavior and the original contract being preserved.
@@ -40,7 +45,8 @@ provenance is tokenized within each Java/C# code fence; prose quotes cannot
 swallow archived comments as source strings. Passing this
 check does not establish behavioral compatibility or correct comment placement;
 both still require review. Add `-Check` to gate the manifest: it fails unless every
-entry has a finished, evidence-backed disposition (see the 2026-11-16 closure review).
+entry has a finished, evidence-backed disposition (see the 2026-11-16 closure review) and, since 2026-11-19,
+unless the entries match the pinned files under the scope one to one.
 
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 

@@ -6,6 +6,15 @@ The transport port is in progress; its [source and test manifest](docs/transport
 records channel dependencies, Channel/Pipeline, event loops, Embedded/Local channels,
 Bootstrap/Resolver integration and native TCP/UDP work, with original test mappings
 and explicit remaining implementation, test and comment review. Transport is not complete.
+The codec-base port (namespace `Netty.NET.Handler.Codec`) covers the decoder/encoder bases, frame decoders,
+ReplayingDecoder, Headers and the base64/bytes/json/string codecs with their original tests; see
+[codec-base porting](docs/codec-base-porting.md).
+The codec modules that need only codec-base are ported the same way, each as its own project
+(`Netty.NET.Handler.Codec.<Name>`): [dns](docs/codec-dns-porting.md), [haproxy](docs/codec-haproxy-porting.md),
+[memcache](docs/codec-memcache-porting.md), [mqtt](docs/codec-mqtt-porting.md), [redis](docs/codec-redis-porting.md),
+[smtp](docs/codec-smtp-porting.md), [socks](docs/codec-socks-porting.md) and [stomp](docs/codec-stomp-porting.md).
+Check every codec manifest with `powershell -NoProfile -File tools/Test-CodecPortingManifest.ps1`
+(or one with `-Module codec-dns`).
 The resolver port implements the basic OS-backed resolver module; see its
 [source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).
 It uses Task/CancellationToken, DnsEndPoint/IPEndPoint and IDisposable; executor-affine

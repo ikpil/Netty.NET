@@ -1,0 +1,1132 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "codec-stomp",
+  "scope": [
+    "codec-stomp/src/main/java",
+    "codec-stomp/src/main/resources",
+    "codec-stomp/src/test/java"
+  ],
+  "objective": "Port netty-codec-stomp (io.netty.handler.codec.stomp (STOMP codec)) with its original tests: Java names (case and the Async suffix may differ), the original structure and every original comment, and an explicit evidence-backed record for each CLR adaptation and each unit that is not ported.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-19",
+    "ownerDecisions": [
+      "Project, folder and assembly names are the namespace root of the module (owner decision 2026-11-19, see docs/codec-base-porting.md): each codec module takes the namespace of its main package, and the tests use <project>.Tests like the other test projects.",
+      "Owner decisions 2026-11-19 for the codec modules that only need codec-base: one project per Maven module; codec-socks is Netty.NET.Handler.Codec.Socks (its Maven and JPMS name) and holds the socks and socksx namespaces; haproxy is HAProxy (the casing of the Java types in that package); socksx, v4 and v5 are Socksx, V4 and V5."
+    ],
+    "evidence": [
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-namespaces",
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-assemblies-and-dlls",
+      "docs/codec-stomp-porting.md"
+    ]
+  },
+  "statusMeaning": {
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry. For tests, some original methods are CLR-inapplicable with recorded evidence.",
+    "deprecated-not-ported": "@Deprecated Java unit (or a helper serving one) that is not ported; the deprecation facts, reason, replacement and every original comment/test are recorded.",
+    "jvm-only-replaced": "JVM-only metadata or documentation unit replaced by its recorded CLR counterpart.",
+    "pending": "Not yet reviewed."
+  },
+  "summary": {
+    "pinnedFiles": 27,
+    "byStatus": {
+      "clr-adapted": 16,
+      "jvm-only-replaced": 4,
+      "verified": 7
+    },
+    "mainJavaSources": 17,
+    "testJavaSources": 8,
+    "declaredOriginalTests": 49,
+    "mappedOriginalTests": 48,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 1,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/DefaultLastStompContentSubframe.java",
+      "sha256": "6ca151e95dc4b7440a1aa4b3f79b99f37c21e24edc3c782f829dc62234baf341",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/DefaultLastStompContentSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Covariant override returns of the virtual DefaultByteBufHolder members; retain() narrows to DefaultLastStompContentSubframe as in the source.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/DefaultLastStompContentSubframe.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/DefaultStompContentSubframe.java",
+      "sha256": "f79c342feb33f987aa72463cf09b72aec62d4d2f865974a77914b708b897acec",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/DefaultStompContentSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The overrides of the virtual DefaultByteBufHolder members are C# covariant override returns; the decoderResult field initializer reaches DecoderResult.SUCCESS through global:: because the simple name DecoderResult is the decoderResult() method inside the class.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/DefaultStompContentSubframe.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/DefaultStompFrame.java",
+      "sha256": "a0d502f0c9d795581029db960270b57f862189ae33cb92774be718bece950a5b",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/DefaultStompFrame.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "content()/refCnt() are the IByteBufHolder/IReferenceCounted Content/RefCnt properties (docs/buffer-porting.md). The class implements the holder and reference-count members on its content directly, as the source; the module interfaces declare no narrowing members (owner decision 2026-11-19), so only the IByteBufHolder and IReferenceCounted members, which those shared interfaces re-declare with other return types, are explicit implementations forwarding to the public IStompFrame members (12), as Transport DatagramPacket does. The package-private constructor is internal; CharsetUtil.UTF_8 is Encoding.UTF8.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/DefaultStompFrame.cs",
+          "docs/buffer-porting.md",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation",
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/DefaultStompFrameTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/DefaultStompHeaders.java",
+      "sha256": "0fdcee9a425e94a118390b831eb1091c7a28ee74df84fceeab7943733e3a0e3a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/DefaultStompHeaders.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "DefaultHeaders<ICharSequence, ICharSequence, IStompHeaders>; the static imports CASE_SENSITIVE_HASHER and CASE_INSENSITIVE_HASHER are AsciiString.CASE_SENSITIVE_HASHER/CASE_INSENSITIVE_HASHER; contains(name, value) overrides the virtual DefaultHeaders.Contains(K, V); copy() is a covariant override of the virtual DefaultHeaders.Copy() and calls the protected AddImpl as in the source.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/DefaultStompHeaders.cs",
+          "src/Netty.NET.Handler.Codec/DefaultHeaders.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/DefaultStompHeadersSubframe.java",
+      "sha256": "c8d50fb92fd9e45905d9e4b26bfaecb511cd0d69b1e8b9281da415e94a864b89",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/DefaultStompHeadersSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The protected fields stay protected (command and headers readonly as final); the package-private constructor is internal; checkNotNull(command) is gone because StompCommand is a C# enum (a value type that cannot be null); DecoderResult.SUCCESS is reached through global::.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/DefaultStompHeadersSubframe.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/LastStompContentSubframe.java",
+      "sha256": "8bb56555d1822db464cb22ee44fc43ef45a9591c08867efb9dfa07385eaa1492",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/ILastStompContentSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface; the narrowing re-declarations are inherited, not repeated (owner decision 2026-11-19, docs/transport-porting.md, Decisions). EMPTY_LAST_CONTENT is a static readonly field of the interface and its anonymous class is the private nested class EmptyLastStompContentSubframe (C# interfaces may declare static fields and nested types), which implements the IByteBufHolder and IReferenceCounted members, re-declared by those shared interfaces with other return types, explicitly as Transport DatagramPacket does; setDecoderResult throws NotSupportedException(\"read only\") and DecoderResult.SUCCESS is reached through global:: because the simple name DecoderResult is the method there.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/ILastStompContentSubframe.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompCommand.java",
+      "sha256": "70834977b7817c248a6371ae4f47f428a624ce31781d42938197a526656d4c64",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/StompCommand.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Simple Java enum: a C# enum with the same constants in the same order; name()/toString() is Enum.ToString().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/StompCommand.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompConstants.java",
+      "sha256": "699db77ba236adda3488345ae9a49c3c465856d05b0f4072885049ca207abb53",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/StompConstants.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Internal sealed class with the private constructor; the static final byte constants are System.Byte constants (owner decision for protocol bytes), all below 0x80, so the values equal the Java ones.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/StompConstants.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompContentSubframe.java",
+      "sha256": "d039ed483706e062a80e4ff7efef1f7f2c35f8c163524c3296122a52b7962789",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/IStompContentSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; ByteBufHolder is IByteBufHolder, and the holder methods the source re-declares only to narrow the return type are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions). content()/refCnt() are the IByteBufHolder/IReferenceCounted Content/RefCnt properties (docs/buffer-porting.md).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/IStompContentSubframe.cs",
+          "docs/buffer-porting.md",
+          "docs/transport-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompFrame.java",
+      "sha256": "91e954bcdd6fa9382789a8d051b02bc56a7245e7979f5cac29121ac74e1d71ce",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/IStompFrame.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface without members: the narrowing re-declarations are inherited, not repeated (owner decision 2026-11-19, docs/transport-porting.md, Decisions); callers that hold an IStompFrame and need the narrow copy() result cast it (DefaultStompFrameTest).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/IStompFrame.cs",
+          "docs/transport-porting.md",
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/DefaultStompFrameTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompHeaders.java",
+      "sha256": "3920ddff78655c43f8e40d3d1819172f733bc6ec8d0ca6c5c5ea6b2d63782e3d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/IStompHeaders.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface IStompHeaders : IHeaders<ICharSequence, ICharSequence, IStompHeaders> (codec-base IHeaders; CharSequence is the Common ICharSequence). The AsciiString constants are static readonly fields of the interface created with AsciiString.Cached; List<String> is IList<string> and Iterator<Entry<String, String>> is IIterator<IEntry<string, string>> (docs/codec-base-porting.md, Headers).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/IStompHeaders.cs",
+          "docs/codec-base-porting.md",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompHeadersSubframe.java",
+      "sha256": "38655a1a5a2f688271a7fb39c807e7089f20115ca453e20b2fd111d4ae3a7fa3",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/IStompHeadersSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; command()/headers() are Command()/Headers().",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/IStompHeadersSubframe.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompSubframe.java",
+      "sha256": "2231a50f0405f35951fbc325979d2d9660f9bebe96da1dfdcdc8d92ea91377e7",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/IStompSubframe.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface IStompSubframe : IDecoderResultProvider (codec-base).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/IStompSubframe.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompSubframeAggregator.java",
+      "sha256": "ec5c947b9d8f6fb29d786cb9649bba239fa74c4894b2a6f5c98ccd5b7a32defc",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/StompSubframeAggregator.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "MessageAggregator<IStompSubframe, IStompHeadersSubframe, IStompContentSubframe, IStompFrame> with typeof(IStompSubframe); UnsupportedOperationException is NotSupportedException; headers().getLong(...) and headers().set(Headers) are the IHeaders GetLong/Set<T2>.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/StompSubframeAggregator.cs",
+          "docs/codec-base-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompSubframeDecoder.java",
+      "sha256": "62bb5de8ada67e451a23b17eea2848d4d5832544d5dfd401439c94d1a9ad7c03",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/StompSubframeDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 15,
+        "preservedCount": 15,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "ReplayingDecoder<StompSubframeDecoder.State>. The @Deprecated enum State names no replacement (\"this should never be used by an user!\"), so it is ported with [Obsolete(\"this should never be used by an user!\")] (owner decision 2026-11-16); because C# reports every use of an obsolete member while javac exempts uses within the same outermost class (JLS 9.6.4.6), CS0618 is disabled for this file with that reason. The nested type State hides the inherited ReplayingDecoder.State() methods in C#, so it is declared new and state() is base.State(). Signal is an Exception here but a java.lang.Error in the source, so both catch (Exception) blocks filter when (e is not Signal) and REPLAY reaches ReplayingDecoder (docs/codec-base-porting.md, Signals). The C# ReplayingDecoderByteBuf view reads WriterIndex as int.MaxValue while not terminated (a recorded codec-base difference) where the Java view returns the cumulation writer index, so in.writerIndex() is InternalBuffer().WriterIndex. ByteBufUtil.readBytes(alloc, in, n) is in.ReadBytes(n): the Buffer port's ByteBufUtil.ReadBytes reads exactly length bytes through ReadBytes(ByteBuf, int) (docs/buffer-porting.md, Allocator-returning utilities), which the view rejects (as the Java view does), while Java ByteBufUtil.readBytes calls readBytes(ByteBuf); the view's ReadBytes(int) copies into a buffer of the cumulation allocator after the replay check. Owner-revisit item (2026-11-19). StompCommand.valueOf(String) checks the exact name with Enum.IsDefined before Enum.Parse (which also accepts numbers and lists). ByteProcessor is Func<byte, bool> through the virtual Process method group of Utf8LineParser/HeaderParser. Sign: the INITIAL BRANCH nextByte >= 0 reads the System.Byte as (sbyte), and skipNullCharacter prints the unexpected byte as (sbyte); the masks & 0x3F/0xE0/0x1F/0x0F give the same bits. The char compound assignment casts its int operand. StringUtil.isNullOrEmpty is string.IsNullOrEmpty; the header name/value Strings are added as StringCharSequence; IllegalArgumentException/IllegalStateException are ArgumentException/InvalidOperationException; switch fall-through is goto case; numbers in messages use the invariant culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/StompSubframeDecoder.cs",
+          "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Deprecated.html",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.obsoleteattribute?view=net-10.0",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-9.html#jls-9.6.4.6",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs0618",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier",
+          "docs/codec-base-porting.md",
+          "src/Netty.NET.Handler.Codec/ReplayingDecoderByteBuf.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.enum.parse",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.enum.isdefined",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.string.isnullorempty",
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeDecoderTest.cs",
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompCommandDecodeTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/StompSubframeEncoder.java",
+      "sha256": "a42e6d715e4f8ed5cc09fe220b7e3abf862b7562d6fec4c6b8393e1e8b3d4b10",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Stomp/StompSubframeEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 9,
+        "preservedCount": 9,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "MessageToMessageEncoder<IStompSubframe> with typeof(IStompSubframe). The anonymous FastThreadLocal and the anonymous access-order LinkedHashMap with removeEldestEntry are the nested classes EscapeHeaderKeyCacheThreadLocal and EscapeHeaderKeyCache over the Common FastThreadLocal/LinkedHashMap; the Common LinkedHashMap has no removeEldestEntry hook, so EscapeHeaderKeyCache.Put inserts and then removes the eldest entry when removeEldestEntry returns true (as LinkedHashMap.put does), get is TryGetValue (which moves the key in access order), and DEFAULT_LOAD_FACTOR has no counterpart. PlatformDependent.throwException(e) is throw; in the catch. ByteBufUtil.writeUtf8(ByteBuf, CharSequence) has no ICharSequence overload in the Buffer port, so the private WriteUtf8 picks the AsciiString overload for an AsciiString and the ReadOnlySpan<char> overload for the other sequences, as the Java method dispatches on AsciiString. IllegalArgumentException is ArgumentException; numbers in messages use the invariant culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Stomp/StompSubframeEncoder.cs",
+          "src/Netty.NET.Common/Collections/LinkedHashMap.cs",
+          "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/LinkedHashMap.html",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/exception-handling-statements",
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeEncoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/io/netty/handler/codec/stomp/package-info.java",
+      "sha256": "be3a0765a4d3b4b7b6daef37f0811fe57c0585f6cc28a4e3195f2f33d83f32f9",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Documentation-only package descriptor (io.netty.handler.codec.stomp).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Handler.Codec.Stomp holds the ported types; the package summary (\"<a href=\"https://en.wikipedia.org/wiki/Streaming_Text_Oriented_Messaging_Protocol\">STOMP</a> codec\") is kept verbatim in this entry and mapped in docs/codec-stomp-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/codec-stomp-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2014 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "<a href=\"https://en.wikipedia.org/wiki/Streaming_Text_Oriented_Messaging_Protocol\">STOMP</a> codec",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/codec-stomp-porting.md maps it to Netty.NET.Handler.Codec.Stomp."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/java/module-info.yml",
+      "sha256": "26e6f07ca8b87168d21345708ac6c9829487d9dc79fc7f460d013a0f3905e430",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Input to the io.github.dmlloyd.module-info Maven plugin that generates the JPMS module descriptor of io.netty.codec.stomp: requires io.netty.common, io.netty.buffer, io.netty.transport, io.netty.codec.",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. JPMS module declarations have no .NET counterpart beyond assembly metadata; Transport, Resolver and codec-base map their module-info.yml to the project file the same way.",
+        "replacement": {
+          "clr": "Netty.NET.Handler.Codec.Stomp.csproj references Netty.NET.Handler.Codec (which brings Transport, Resolver, Buffer and Common); the assembly is the deployment and visibility unit, and InternalsVisibleTo opens internals only to Netty.NET.Handler.Codec.Stomp.Tests.",
+          "noClrCounterpart": [
+            "JPMS requires/exports checking: .NET assemblies have no module descriptor; public/internal accessibility and InternalsVisibleTo form the boundary."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Handler.Codec.Stomp/Netty.NET.Handler.Codec.Stomp.csproj",
+            "src/Netty.NET.Handler.Codec/Netty.NET.Handler.Codec.csproj"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.7",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/",
+            "https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items#projectreference",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/friend"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "---------------------------------------------------------------------------- Copyright 2024 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. ----------------------------------------------------------------------------",
+            "reason": "Apache license header of the YAML metadata file, which has no CLR file."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/main/resources/META-INF/native-image/io.netty/netty-codec-stomp/generated/handlers/reflect-config.json",
+      "sha256": "4a50afcb01fd9ab6087c69504e6e93bc91369a5778486b1340afbca9ddcaeea2",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Generated GraalVM native-image reflection metadata: one record per codec-stomp ChannelHandler (name, condition.typeReachable, queryAllPublicMethods) so native images keep the handler methods that ChannelHandlerMask inspects.",
+        "reason": "Owner decision 2026-11-16: GraalVM native-image metadata is replaced by .NET NativeAOT, which does not read a reflection JSON manifest; trimming keeps members declared by DynamicallyAccessedMembers annotations, which IChannelHandler and ChannelHandlerAdapter carry for every handler subtype.",
+        "replacement": {
+          "clr": "[DynamicallyAccessedMembers(PublicMethods | NonPublicMethods)] on IChannelHandler and ChannelHandlerAdapter (Transport) keeps the callback metadata of the codec handlers.",
+          "noClrCounterpart": [
+            "A reflection metadata JSON file read by an ahead-of-time compiler."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0",
+            "https://www.rfc-editor.org/rfc/rfc8259"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none",
+        "reason": "JSON text has no comment token in the RFC 8259 grammar."
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/DefaultStompFrameTest.java",
+      "sha256": "369a7759a8c1d23cad99b1e6d84f8a59134073202273598d76216278927031ca",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/DefaultStompFrameTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testStompFrameCopy",
+          "clrMethod": "TestStompFrameCopy",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions. IStompFrame inherits copy() from IByteBufHolder (owner decision 2026-11-19), so sourceFrame.copy() is cast to IStompFrame."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions. IStompFrame inherits copy() from IByteBufHolder (owner decision 2026-11-19), so sourceFrame.copy() is cast to IStompFrame.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/DefaultStompFrameTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/NativeImageHandlerMetadataTest.java",
+      "sha256": "7008c284791ae7b651103663a02c80824994158d895d44a79f2b1dcafae6c096",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Runs ChannelHandlerMetadataUtil.generateMetadata(io.netty.handler.codec.stomp), which scans the package(s) for ChannelHandler subtypes and compares them with the committed GraalVM reflect-config.json.",
+        "reason": "Owner decision 2026-11-16 (as for the Transport ChannelHandlerMetadataUtil): GraalVM reflection JSON, Java package scanning and JVM type names are not consumed by the CLR; NativeAOT keeps handler metadata through DynamicallyAccessedMembers.",
+        "replacement": {
+          "clr": "IChannelHandler/ChannelHandlerAdapter DynamicallyAccessedMembers annotations; the Transport NativeAOT scenarios exercise handler dispatch under trimming.",
+          "noClrCounterpart": [
+            "Generating or comparing a reflect-config.json metadata file."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2022 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          }
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "collectAndCompareMetadata",
+            "disposition": "jvm-only-replaced",
+            "reason": "GraalVM reflection metadata generation and comparison has no CLR counterpart (see the entry reason).",
+            "sourceContract": "Generate the codec handler reflection records and compare them with the committed JSON.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+              "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/StompCommandDecodeTest.java",
+      "sha256": "19696fb9ba4ee67edf3e7b874b26d5d205cf38eb98dace582cf9b0543e8b2cb4",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/StompCommandDecodeTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testDecodeCommand",
+          "clrMethod": "TestDecodeCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). @ParameterizedTest @MethodSource(\"stompCommands\") is a [Theory] with [MemberData(nameof(StompCommands))] over the public static data method; String.format(\"%s\\n\\n\\0\", ...) is string.Format with {0} in the invariant culture."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). @ParameterizedTest @MethodSource(\"stompCommands\") is a [Theory] with [MemberData(nameof(StompCommands))] over the public static data method; String.format(\"%s\\n\\n\\0\", ...) is string.Format with {0} in the invariant culture.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompCommandDecodeTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/StompHeadersTest.java",
+      "sha256": "85ef44f15ed732649399a4f70cf5a6299661bfd6801cf49c6cf11c4c8f6fc44b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/StompHeadersTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testHeadersCaseSensitive",
+          "clrMethod": "TestHeadersCaseSensitive",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompHeadersTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/StompSubframeAggregatorTest.java",
+      "sha256": "6f40dd64fe1c74aab5e5bbe82741e46e017dd47e492eb7a5485a1bc48c298295",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeAggregatorTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSingleFrameDecoding",
+          "clrMethod": "TestSingleFrameDecoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        },
+        {
+          "upstreamMethod": "testSingleFrameWithBodyAndContentLength",
+          "clrMethod": "TestSingleFrameWithBodyAndContentLength",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        },
+        {
+          "upstreamMethod": "testSingleFrameWithBodyAndNoContentLength",
+          "clrMethod": "TestSingleFrameWithBodyAndNoContentLength",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        },
+        {
+          "upstreamMethod": "testSingleFrameWithSplitBodyAndNoContentLength",
+          "clrMethod": "TestSingleFrameWithSplitBodyAndNoContentLength",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        },
+        {
+          "upstreamMethod": "testSingleFrameChunked",
+          "clrMethod": "TestSingleFrameChunked",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        },
+        {
+          "upstreamMethod": "testMultipleFramesDecoding",
+          "clrMethod": "TestMultipleFramesDecoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        },
+        {
+          "upstreamMethod": "testTooLongFrameException",
+          "clrMethod": "TestTooLongFrameException",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 7,
+        "mappedCount": 7,
+        "reviewedCount": 7,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). The anonymous Executable is a lambda for Assert.Throws<TooLongFrameException> (the exact type).",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeAggregatorTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/StompSubframeDecoderTest.java",
+      "sha256": "10f8db8be8eae135123cc23dc033edf48349b0d62963b40624360736c8025e74",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeDecoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSingleFrameDecoding",
+          "clrMethod": "TestSingleFrameDecoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testSingleFrameWithBodyAndContentLength",
+          "clrMethod": "TestSingleFrameWithBodyAndContentLength",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testSingleFrameWithBodyWithoutContentLength",
+          "clrMethod": "TestSingleFrameWithBodyWithoutContentLength",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testSingleFrameChunked",
+          "clrMethod": "TestSingleFrameChunked",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testFrameChunkedIncomplete",
+          "clrMethod": "TestFrameChunkedIncomplete",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testMultipleFramesDecoding",
+          "clrMethod": "TestMultipleFramesDecoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testValidateHeadersDecodingDisabled",
+          "clrMethod": "TestValidateHeadersDecodingDisabled",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testValidateHeadersDecodingEnabled",
+          "clrMethod": "TestValidateHeadersDecodingEnabled",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testNotValidFrameWithEmptyHeaderName",
+          "clrMethod": "TestNotValidFrameWithEmptyHeaderName",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testUtf8FrameDecoding",
+          "clrMethod": "TestUtf8FrameDecoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testFrameWithContentLengthAndWithoutNullEnding",
+          "clrMethod": "TestFrameWithContentLengthAndWithoutNullEnding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testUnescapeHeaders",
+          "clrMethod": "TestUnescapeHeaders",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testNotUnescapeHeadersForConnectCommand",
+          "clrMethod": "TestNotUnescapeHeadersForConnectCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testNotUnescapeHeadersForConnectedCommand",
+          "clrMethod": "TestNotUnescapeHeadersForConnectedCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testHeartbeatOnlyDoesNotThrowException",
+          "clrMethod": "TestHeartbeatOnlyDoesNotThrowException",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testMultipleHeartbeatsDoNotThrowException",
+          "clrMethod": "TestMultipleHeartbeatsDoNotThrowException",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testCarriageReturnLineFeedHeartbeat",
+          "clrMethod": "TestCarriageReturnLineFeedHeartbeat",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testHeartbeatFollowedByFrame",
+          "clrMethod": "TestHeartbeatFollowedByFrame",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testHeartbeatBetweenFrames",
+          "clrMethod": "TestHeartbeatBetweenFrames",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testHeartbeatSentSeparatelyThenFrame",
+          "clrMethod": "TestHeartbeatSentSeparatelyThenFrame",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testInvalidEscapeHeadersSequence",
+          "clrMethod": "TestInvalidEscapeHeadersSequence",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testCRResetsUtf8DecodeState",
+          "clrMethod": "TestCRResetsUtf8DecodeState",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testMaxNumHeadersEnforced",
+          "clrMethod": "TestMaxNumHeadersEnforced",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testMaxNumHeadersEnforcedForInvalidHeaders",
+          "clrMethod": "TestMaxNumHeadersEnforcedForInvalidHeaders",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testContentLengthExceedingIntegerMaxValueIsRejected",
+          "clrMethod": "TestContentLengthExceedingIntegerMaxValueIsRejected",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testContentLengthEqualToIntegerMaxValueIsAccepted",
+          "clrMethod": "TestContentLengthEqualToIntegerMaxValueIsAccepted",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testMaxNumHeadersNotExceededWhenHeadersSplitAcrossReads",
+          "clrMethod": "TestMaxNumHeadersNotExceededWhenHeadersSplitAcrossReads",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        },
+        {
+          "upstreamMethod": "testMaxNumHeadersEnforcedWhenHeadersSplitAcrossReads",
+          "clrMethod": "TestMaxNumHeadersEnforcedWhenHeadersSplitAcrossReads",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 28,
+        "mappedCount": 28,
+        "reviewedCount": 28,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 39,
+        "preservedCount": 39,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The private Of(string) helper wraps them, as codec-base DefaultHeadersTest. assertInstanceOf is Assert.IsAssignableFrom; the assertion with a message uses XunitAssertMessages.AssertM; @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value; xUnit2013 is suppressed because assertEquals(n, size()) keeps the source assertions.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/StompSubframeEncoderTest.java",
+      "sha256": "3e289b9e668425bcf3e18beff752ae1d27bbf9f228387df22b07817ab165665b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeEncoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testFrameAndContentEncoding",
+          "clrMethod": "TestFrameAndContentEncoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "testUtf8FrameEncoding",
+          "clrMethod": "TestUtf8FrameEncoding",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "testOneBufferForStompFrameWithEmptyContent",
+          "clrMethod": "TestOneBufferForStompFrameWithEmptyContent",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "testEscapeStompHeaders",
+          "clrMethod": "TestEscapeStompHeaders",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "mustRejectNulCharacterInHeaders",
+          "clrMethod": "MustRejectNulCharacterInHeaders",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "mustRejectEmptyHeaderNames",
+          "clrMethod": "MustRejectEmptyHeaderNames",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "testNotEscapeStompHeadersForConnectCommand",
+          "clrMethod": "TestNotEscapeStompHeadersForConnectCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "mustRejectIllegalCharsInConnectCommandHeaders",
+          "clrMethod": "MustRejectIllegalCharsInConnectCommandHeaders",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "testNotEscapeStompHeadersForConnectedCommand",
+          "clrMethod": "TestNotEscapeStompHeadersForConnectedCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        },
+        {
+          "upstreamMethod": "mustRejectIllegalCharsInConnectedCommandHeaders",
+          "clrMethod": "MustRejectIllegalCharsInConnectedCommandHeaders",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 10,
+        "mappedCount": 10,
+        "reviewedCount": 10,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, String.getBytes() is Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes; @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). Java Strings passed as CharSequence header names/values are the Common StringCharSequence (C# string is not an ICharSequence; StringCharSequence.Equals matches String.equals), as codec-base DefaultHeadersTest wraps String literals. The AssertJ chain isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>, Exception.GetBaseException() with Assert.IsAssignableFrom<ArgumentException>, and Assert.Contains on the thrown exception message (the Java detail text cause.toString()); @ValueSource(chars) is one [InlineData] per char.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompSubframeEncoderTest.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.exception.getbaseexception"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-stomp/src/test/java/io/netty/handler/codec/stomp/StompTestConstants.java",
+      "sha256": "317649c26c78f64600e3ef06b82facd70d930787910a61853ac41b43bd168bbf",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Stomp.Tests/StompTestConstants.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Test constants without test methods: the String constants are static readonly fields (a C# constant expression cannot concatenate the char operands) and the Java octal escape \\1 is \\u0001.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Stomp.Tests/StompTestConstants.cs"
+        ]
+      }
+    }
+  ],
+  "validationHistory": [
+    {
+      "checkpoint": "2026-11-19-port",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0
+        },
+        "moduleDebug": {
+          "total": 72,
+          "passed": 72,
+          "failed": 0,
+          "skipped": 0
+        },
+        "transportDebug": {
+          "total": 1132,
+          "passed": 1033,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows), run alone. In one full-solution run (all test projects in parallel) DefaultEventLoopTest.TestSubmittingTaskWakesUpSuspendedExecutor, ChannelInitializerTest.TestChannelInitializerEventExecutor and SingleThreadEventLoopSourceTest.ScheduleLaggyTaskAtFixedRateA also failed under load; the next two Transport runs were clean apart from the baseline."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module codec-stomp verifies every pinned codec-stomp file with no pending entry; the generic mutation run (inventory, hash, comment count, unmapped and missing tests, not-ported test dispositions, JSON comment disposition, missing target, removed C# comment, renamed C# test; the @deprecated-tags case applies only to deprecated-not-ported entries) rejected every applicable broken copy and restored the manifest byte-identical. Owner decisions 2026-11-19: return-type-narrowing interface re-declarations are inherited, not repeated. Shared changes the same day: AbstractReferenceCounted Retain()/Touch()/Release()/Release(int) are virtual and Retain()/Release() update the count directly as the Java retain()/release() do; ByteToMessageDecoder.IsSingleDecode() is virtual; java.net.IDN is the shared Netty.NET.Common.Internal.IDN."
+      }
+    }
+  ]
+}

@@ -88,7 +88,26 @@ if ($Check) {
     # every entry needs evidence; verified needs an implementation and every original comment;
     # replacements/exclusions need their reason (adaptation); deprecated-not-ported needs the
     # @Deprecated text and the replacement. The scoped -Name filter applies here too.
-    $problems = @(foreach ($result in $results) {
+    # Inventory: every pinned file under the manifest scope has exactly one entry and every entry is such a file.
+    # Since 2026-11-19 the scope is all of common/src (sources, templates, codegen script, resources, test data).
+    $inventoryProblems = @()
+    if (-not $Name) {
+        $pinned = @(git -C $UpstreamRoot ls-tree -r --name-only $manifest.baseline -- @($manifest.scope))
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot list the pinned upstream scope.' }
+        $pinnedSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$pinned, [StringComparer]::Ordinal)
+        $listed = @($manifest.entries | ForEach-Object { $_.upstream })
+        $listedSet = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        $inventoryProblems = @(
+            foreach ($path in $listed) {
+                if (-not $listedSet.Add($path)) { "${path}: listed more than once" }
+                if (-not $pinnedSet.Contains($path)) { "${path}: entry is not a pinned file under the manifest scope" }
+            }
+            foreach ($path in $pinned) {
+                if (-not $listedSet.Contains($path)) { "${path}: pinned file under the manifest scope has no entry" }
+            }
+        )
+    }
+    $problems = @($inventoryProblems) + @(foreach ($result in $results) {
         $entry = $manifest.entries | Where-Object upstream -eq $result.upstream
         $id = $entry.upstream
         if ($entry.status -notin $finishedStatuses) { "${id}: status '$($entry.status)' is not a finished disposition"; continue }

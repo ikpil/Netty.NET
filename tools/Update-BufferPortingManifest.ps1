@@ -249,6 +249,20 @@ function Assert-EvidenceFiles($Paths, $Urls, [string]$Context) {
     }
 }
 
+function Assert-MetadataDisposition($Entry) {
+    # Non-Java units (2026-11-19 inventory of all of buffer/src): JPMS, GraalVM and JUnit metadata that the CLR
+    # replaces as a whole. Each needs the source contract, the reason, the CLR replacement and existing evidence.
+    if ($Entry.upstream.EndsWith('.java')) { throw "Java files are sources or tests, not metadata: $($Entry.upstream)" }
+    $decision = $Entry.notPorted
+    if ($Entry.status -cne 'jvm-only-replaced' -or @($Entry.implementation).Count -ne 0 -or -not $decision -or
+            -not $decision.decisionDate -or -not $decision.sourceContract -or -not $decision.reason -or
+            -not $decision.replacement.clr -or @($Entry.evidence | Where-Object { "$_".Trim() }).Count -eq 0 -or
+            -not "$($Entry.adaptation)".Trim()) {
+        throw "Incomplete metadata disposition: $($Entry.upstream)"
+    }
+    Assert-EvidenceFiles $decision.evidence.files $decision.evidence.urls $Entry.upstream
+}
+
 function Assert-ClrTestTarget($Target, $Implementation, [string]$Context) {
     if ($null -ne $Implementation -and $Target.path -notin $Implementation) { throw "Unregistered test target $($Target.path) ($Context)." }
     $targetPath = Join-Path $repositoryRoot $Target.path
@@ -352,14 +366,16 @@ if (-not $Baseline) { $Baseline = '64cc10f38ea5f5bd7eae48507817c66680d0afdc' }
 if ($Check -and (-not $existing -or $Baseline -ne $existing.baseline)) {
     throw 'Check requires an existing manifest with the same baseline.'
 }
-$upstreamFiles = @(git -C $UpstreamRoot ls-tree -r --name-only $Baseline -- buffer/src/main/java buffer/src/test/java)
+# Since 2026-11-19 every pinned file under buffer/src is inventoried, not only *.java: module-info.yml, the GraalVM
+# native-image resources and junit-platform.properties are 'metadata' entries.
+$scope = @('buffer/src')
+$upstreamFiles = @(git -C $UpstreamRoot ls-tree -r --name-only $Baseline -- $scope)
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read the pinned upstream commit.' }
 $entries = foreach ($path in $upstreamFiles) {
-    if (-not $path.EndsWith('.java')) { continue }
     if ($previous.ContainsKey($path)) { $previous[$path]; continue }
     [ordered]@{
         upstream = $path
-        kind = if ($path.StartsWith('buffer/src/test/')) { 'test' } else { 'source' }
+        kind = if (-not $path.EndsWith('.java')) { 'metadata' } elseif ($path.StartsWith('buffer/src/test/')) { 'test' } else { 'source' }
         status = 'pending'
         implementation = @()
         evidence = @()
@@ -389,7 +405,13 @@ foreach ($name in $baseFixtures) {
 }
 $finished = @{ 'verified' = 0; 'deprecated-not-ported' = 0; 'jvm-only-replaced' = 0 }
 $open = @()
+$metadataCount = 0
 foreach ($entry in $entries) {
+    if ($entry.kind -ceq 'metadata') {
+        if ($entry.status -cnotin @('pending', 'in-progress')) { Assert-MetadataDisposition $entry; ++$metadataCount }
+        else { $open += [IO.Path]::GetFileName($entry.upstream) }
+        continue
+    } elseif (-not $entry.upstream.EndsWith('.java')) { throw "Non-Java file must be a metadata entry: $($entry.upstream)" }
     if ($entry.kind -ne 'test') {
         if ($entry.status -cin $notPortedStatuses -or $entry.notPorted -or $entry.notPortedMethods) {
             throw "Not-ported test dispositions apply to test entries only: $($entry.upstream)"
@@ -405,7 +427,8 @@ foreach ($entry in $entries) {
 }
 Write-Output ("Test dispositions: $($finished['verified']) verified fixtures with complete declared-method partitions, " +
     "$($finished['deprecated-not-ported']) deprecated-not-ported and $($finished['jvm-only-replaced']) JVM-only-replaced fixtures, " +
-    "$notPortedMethodTotal not-ported declared methods; $($open.Count) test entries pending/in-progress$(if ($open.Count) { ': ' + ($open -join ', ') }).")
+    "$notPortedMethodTotal not-ported declared methods; $metadataCount JVM-only-replaced metadata files; " +
+    "$($open.Count) test/metadata entries pending/in-progress$(if ($open.Count) { ': ' + ($open -join ', ') }).")
 if ($Check) {
     $expected = @($entries | ForEach-Object { $_.upstream })
     $actual = @($existing.entries | ForEach-Object { $_.upstream })
@@ -415,10 +438,10 @@ if ($Check) {
 }
 [ordered]@{
     baseline = $Baseline
-    scope = @('buffer/src/main/java', 'buffer/src/test/java')
+    scope = $scope
     statusMeaning = if ($existing.statusMeaning) { $existing.statusMeaning } else {
         'pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer.'
     }
     entries = @($entries)
 } | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $manifestPath -Encoding utf8
-Write-Output "Inventoried $(@($entries).Count) upstream Java files."
+Write-Output "Inventoried $(@($entries).Count) upstream files."

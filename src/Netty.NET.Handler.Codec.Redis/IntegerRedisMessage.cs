@@ -1,0 +1,61 @@
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at:
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+using System.Globalization;
+using System.Text;
+using Netty.NET.Common.Internal;
+
+namespace Netty.NET.Handler.Codec.Redis;
+
+/**
+ * Integers of <a href="https://redis.io/topics/protocol">RESP</a>.
+ */
+// CLR: the value in toString() uses the invariant culture, because StringBuilder.Append(Int64) formats with the current
+// culture (https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder.append).
+[UnstableApi]
+public sealed class IntegerRedisMessage : IRedisMessage
+{
+
+    private readonly long value;
+
+    /**
+     * Creates a {@link IntegerRedisMessage} for the given {@code content}.
+     *
+     * @param value the message content.
+     */
+    public IntegerRedisMessage(long value)
+    {
+        this.value = value;
+    }
+
+    /**
+     * Get long value of this {@link IntegerRedisMessage}.
+     *
+     * @return long value
+     */
+    public long Value()
+    {
+        return value;
+    }
+
+    public override string ToString()
+    {
+        return new StringBuilder(StringUtil.SimpleClassName(this))
+                .Append('[')
+                .Append("value=")
+                .Append(value.ToString(CultureInfo.InvariantCulture))
+                .Append(']').ToString();
+    }
+}

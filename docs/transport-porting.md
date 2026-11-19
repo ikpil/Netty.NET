@@ -3,7 +3,9 @@
 The inventory, original test mappings and comment accounting live in
 [transport-porting-manifest.json](transport-porting-manifest.json). Check them with
 `tools/Test-TransportPortingManifest.ps1` (pwsh) against the pinned Netty
-`64cc10f38ea5f5bd7eae48507817c66680d0afdc` checkout.
+`64cc10f38ea5f5bd7eae48507817c66680d0afdc` checkout. The inventory is every pinned file under `transport/src`
+(277 since 2026-11-19, when the two GraalVM `reflect-config.json` files and the test ServiceLoader file joined the
+Java sources and `module-info.yml`).
 
 ## Not-ported Transport sources
 
@@ -62,6 +64,9 @@ The checker reports 27 `deprecated-not-ported` and 25 `jvm-only-replaced` entrie
 | `SelectorProviderUtil`, `NioChannelOption` | JVM-only | `new Socket(AddressFamily, SocketType, ProtocolType)`; named options through `Socket.Get/SetSocketOption` and `Get/SetRawSocketOption`. There is no arbitrary-option wrapper |
 | `nativeimage/ChannelHandlerMetadataUtil` | JVM-only | `DynamicallyAccessedMembers` on handler types and the NativeAOT scenario executable |
 | `module-info.yml` | JVM-only | `Netty.NET.Transport.csproj` project references and `InternalsVisibleTo` |
+| `META-INF/native-image/.../reflect-config.json` | JVM-only | `DynamicallyAccessedMembers(PublicParameterlessConstructor)` on `Channel<T>()`/`Channel(Type)` for the reflective channel constructors; `NioIoHandler` selects with `Socket.Select` (no `SelectorImpl` fields); `DefaultChannelId` reads `Environment.ProcessId` instead of the JMX bean |
+| `META-INF/native-image/.../generated/handlers/reflect-config.json` | JVM-only | `DynamicallyAccessedMembers` on `IChannelHandler`/`ChannelHandlerAdapter`, as for codec-base |
+| test `META-INF/services/io.netty.bootstrap.ChannelInitializerExtension` | JVM-only | explicit `ChannelInitializerExtensions.Register` of `SourceInitializerExtension` in the bootstrap tests instead of ServiceLoader discovery |
 
 ### Package documentation
 
@@ -348,16 +353,16 @@ Supplemental cases: `ContextPipelineEmbeddedAlignmentContractTest` (15). `JavaSt
 ## Testsuite inventory (2026-11-18)
 
 The `testsuite` module is ported only where it needs nothing but ported modules (common, buffer,
-resolver, transport). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
+resolver, transport, since 2026-11-18 codec-base, and since 2026-11-19 the codec modules that need only codec-base). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
 transport-only sources (`AbstractSingleThreadEventLoopTest`, `DefaultEventLoopTest`, `NioEventLoopTest`,
 `ServerSocketSuspendTest`) were missed. The manifest now records every pinned testsuite file, and the checker
 enforces it:
 
-- `testsuiteEntries` (49): ported sources, plus `util/TestUtils.java` (JVM-only heap/thread dump and xz
+- `testsuiteEntries` (52): ported sources, plus `util/TestUtils.java` (JVM-only heap/thread dump and xz
   compression members recorded per comment) and three `package-info.java` summaries mapped in the table above.
-- `testsuiteDeferredEntries` (17, with 28 declared JUnit tests): sources that need a module that is not ported
-  yet: `codec-base`, `codec-http`, `handler`, `pkitesting`, `transport-sctp` or `transport-udt`. They are ported
-  with that module; this is not a decision against porting them.
+- `testsuiteDeferredEntries` (14, with 22 declared JUnit tests): sources that need a module that is not ported
+  yet: `codec-http`, `handler`, `pkitesting`, `transport-sctp` or `transport-udt`. They are ported with that
+  module; this is not a decision against porting them.
 
 `tools/Test-TransportPortingManifest.ps1` lists `testsuite/src` and requires each file to be recorded exactly once.
 For a deferred file it resolves every `io.netty` import against the pinned `*/src/main/java` sources (nested
@@ -365,5 +370,15 @@ types resolve to their compilation unit) and recomputes the blocking modules, sa
 (their blockers carry over, as `AbstractSctpTest` needs `transport-sctp` through `SctpTestPermutation`), its
 declared tests and its kind; a deferred `package-info.java` takes the blockers of its whole package. A deferred
 file that needs only ported modules fails the check as a porting gap. A ported testsuite entry may import a type
-of an unported module only through a recorded CLR stand-in (`unportedImports`): `SocketChannelNotYetConnectedTest`
-emulates codec-base's `ByteToMessageDecoder` until codec-base is ported.
+of an unported module only through a recorded CLR stand-in (`unportedImports`); none remains.
+
+Codec-base was ported on 2026-11-18 ([codec-base-porting.md](codec-base-porting.md)), so it joined the ported
+modules: `SocketFixedLengthEchoTest` and `SocketStringEchoTest` are ported, `SocketObjectEchoTest` is
+`deprecated-not-ported` with the codec-base serialization package (its family owner `ObjectEncoder` is recorded in
+the codec-base manifest, which the checker also reads), `SocketChannelNotYetConnectedTest` uses the real
+`ByteToMessageDecoder` instead of its stand-in, and codec-base no longer blocks the TLS and UDT fixtures.
+
+On 2026-11-19 codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and
+codec-stomp were ported (one manifest each, checked by `tools/Test-CodecPortingManifest.ps1`) and joined the ported
+modules. No testsuite file imports them, so the testsuite entries and the 14 deferred files are unchanged; only the
+module list in the deferred reasons changed.

@@ -4,6 +4,11 @@ $ErrorActionPreference = 'Stop'
 $repositoryRoot = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content (Join-Path $repositoryRoot 'docs/transport-porting-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $head = git -C $UpstreamRoot rev-parse HEAD
+$codecBaseManifest = Join-Path $repositoryRoot 'docs/codec-base-porting-manifest.json'
+$codecBaseEntries = @()
+if (Test-Path $codecBaseManifest -PathType Leaf) {
+    $codecBaseEntries = @((Get-Content $codecBaseManifest -Raw -Encoding UTF8 | ConvertFrom-Json).entries)
+}
 if ($LASTEXITCODE -ne 0 -or $head -ne $manifest.baseline) { throw 'Unexpected upstream baseline.' }
 
 function Get-NormalizedComments([string]$source) {
@@ -161,10 +166,12 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
 }
 
 $expected = @($manifest.entries | ForEach-Object { $_.upstream } | Sort-Object)
+# Every pinned file of transport/src (since 2026-11-19 also the GraalVM resources and the test ServiceLoader file),
+# as the codec checker does for its modules.
 $actual = @(Get-ChildItem (Join-Path $UpstreamRoot 'transport/src') -Recurse -File |
-    Where-Object { $_.Extension -eq '.java' -or $_.Name -in @('module-info.yml', 'hosts-unicode') } |
     ForEach-Object { $_.FullName.Substring((Resolve-Path $UpstreamRoot).Path.Length + 1).Replace('\', '/') } | Sort-Object)
-if (Compare-Object $expected $actual) { throw 'Transport inventory changed.' }
+if (@($expected | Select-Object -Unique).Count -ne $expected.Count) { throw 'Duplicate transport inventory entry.' }
+if (Compare-Object $expected $actual -CaseSensitive) { throw 'Transport inventory changed.' }
 
 $mappedCount = 0
 $inheritedMappedCount = 0
@@ -249,7 +256,8 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
             $masked = Get-MaskedJava $source
             $tags = @(Get-DeprecatedTags $source)
             $annotated = $typeName -cne 'package-info' -and (Test-DeprecatedType $masked $typeName)
-        } elseif (-not $path.EndsWith('.yml')) { throw "Unsupported not-ported source: $($entry.upstream)" }
+        } elseif (-not $path.EndsWith('.yml') -and -not $path.EndsWith('.json') -and
+            $entry.upstream -cnotmatch '/META-INF/services/[^/]+$') { throw "Unsupported not-ported source: $($entry.upstream)" }
         $deprecation = $decision.deprecation
         if ($deprecation) {
             if ($deprecation.annotated -isnot [bool] -or $deprecation.annotated -ne $annotated -or
@@ -265,7 +273,9 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
             if (-not $annotated) {
                 # A unit without its own @Deprecated type must serve a recorded @Deprecated public type.
                 $family = $deprecation.family
-                $owner = @($manifest.entries | Where-Object { $family -and $_.upstream -ceq $family.upstream })
+                # A testsuite fixture may serve a deprecated type of another ported module; codec-base records its own
+                # deprecated units (2026-11-18: SocketObjectEchoTest and the codec-base serialization package).
+                $owner = @(@($manifest.entries) + $codecBaseEntries | Where-Object { $family -and $_.upstream -ceq $family.upstream })
                 if (-not $family -or -not $family.type -or -not $family.relation -or $owner.Count -ne 1 -or
                     $owner[0].status -cne 'deprecated-not-ported' -or
                     $family.type -cne [IO.Path]::GetFileNameWithoutExtension($family.upstream)) {
@@ -301,8 +311,13 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
             }
         }
         if ($isJava) { $comments = @(Get-NormalizedComments $source | Select-Object -Unique) }
+        elseif ($path.EndsWith('.json')) { $comments = @() }
+        # module-info.yml and ServiceLoader provider files ("The comment character is '#'") use '#' lines.
         else { $comments = @(Get-NormalizedYamlComments $source | Select-Object -Unique) }
         $record = $entry.comments
+        if ($path.EndsWith('.json') -and $record.disposition -cne 'none') {
+            throw "Comment-free JSON metadata must use comment disposition none: $($entry.upstream)"
+        }
         if ($record.status -cne 'not-ported' -or $record.uniqueCount -ne $comments.Count -or $record.preservedCount -ne 0 -or
             $record.unreviewedCount -ne 0 -or $record.notApplicableCount -ne $comments.Count) {
             throw "Incorrect not-ported comment accounting: $($entry.upstream)"
@@ -312,6 +327,11 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
             if (-not $record.reason -or $record.PSObject.Properties.Name -contains 'notApplicable' -or
                 $record.sha256 -cne (Get-TextSha256 ([string]::Join("`n", $comments)))) {
                 throw "Whole-file comment disposition does not pin the original comments: $($entry.upstream)"
+            }
+        } elseif ($record.disposition -ceq 'none') {
+            # JSON (RFC 8259 has no comment token) or a '#'-comment file without a comment: nothing to keep.
+            if ($isJava -or $comments.Count -ne 0 -or -not $record.reason) {
+                throw "Only comment-free non-Java metadata uses disposition none: $($entry.upstream)"
             }
         } elseif ($record.disposition -ceq 'per-comment') {
             $dispositions = @($record.notApplicable | Where-Object { $null -ne $_ })

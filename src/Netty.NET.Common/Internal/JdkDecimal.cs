@@ -32,7 +32,9 @@ namespace Netty.NET.Common.Internal;
 //   that candidate whenever it round-trips.
 // - Magnitudes in [10^-3, 10^7) use plain notation with at least one fractional digit; others use computerized
 //   scientific notation "d.dddE[-]n".
-internal static class JdkDecimal
+// Public in the Internal namespace (like the io.netty.util.internal helpers) because codec-base renders header values
+// with it: CharSequenceValueConverter.convertDouble/convertFloat return Double.toString/Float.toString.
+public static class JdkDecimal
 {
     public static string DoubleToString(double v)
     {

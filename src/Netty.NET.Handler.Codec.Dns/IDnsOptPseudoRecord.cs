@@ -1,0 +1,50 @@
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+namespace Netty.NET.Handler.Codec.Dns;
+
+/**
+ * An <a href="https://tools.ietf.org/html/rfc6891#section-6.1">OPT RR</a> record.
+ * <p>
+ * This is used for <a href="https://tools.ietf.org/html/rfc6891#section-6.1.3">Extension
+ * Mechanisms for DNS (EDNS(0))</a>.
+ */
+// CLR: interface with the I prefix.
+public interface IDnsOptPseudoRecord : IDnsRecord
+{
+
+    /**
+     * Returns the {@code EXTENDED-RCODE} which is encoded into {@link DnsOptPseudoRecord#timeToLive()}.
+     */
+    int ExtendedRcode();
+
+    /**
+     * Returns the {@code VERSION} which is encoded into {@link DnsOptPseudoRecord#timeToLive()}.
+     */
+    int Version();
+
+    /**
+     * Returns the 16-bit {@code flags} field which is encoded into the lower 16 bits of
+     * {@link DnsOptPseudoRecord#timeToLive()}, as laid out by
+     * <a href="https://tools.ietf.org/html/rfc6891#section-6.1.3">RFC 6891</a>.
+     * <p>
+     * {@code DO}, defined by <a href="https://tools.ietf.org/html/rfc3225#section-3">RFC 3225</a>, is the
+     * most significant bit of that field, so {@code (flags() & 0x8000) != 0} tests for {@code DNSSEC OK}.
+     * Further bits are assigned by the IANA {@code EDNS Header Flags} registry; the remaining bits are
+     * {@code Z}, which senders set to zero and receivers ignore.
+     */
+    int Flags();
+}

@@ -1,0 +1,1221 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "codec-redis",
+  "scope": [
+    "codec-redis/src/main/java",
+    "codec-redis/src/main/resources",
+    "codec-redis/src/test/java"
+  ],
+  "objective": "Port netty-codec-redis (io.netty.handler.codec.redis (RESP codec)) with its original tests: Java names (case and the Async suffix may differ), the original structure and every original comment, and an explicit evidence-backed record for each CLR adaptation and each unit that is not ported.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-19",
+    "ownerDecisions": [
+      "Project, folder and assembly names are the namespace root of the module (owner decision 2026-11-19, see docs/codec-base-porting.md): each codec module takes the namespace of its main package, and the tests use <project>.Tests like the other test projects.",
+      "Owner decisions 2026-11-19 for the codec modules that only need codec-base: one project per Maven module; codec-socks is Netty.NET.Handler.Codec.Socks (its Maven and JPMS name) and holds the socks and socksx namespaces; haproxy is HAProxy (the casing of the Java types in that package); socksx, v4 and v5 are Socksx, V4 and V5."
+    ],
+    "evidence": [
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-namespaces",
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-assemblies-and-dlls",
+      "docs/codec-redis-porting.md"
+    ]
+  },
+  "statusMeaning": {
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry. For tests, some original methods are CLR-inapplicable with recorded evidence.",
+    "deprecated-not-ported": "@Deprecated Java unit (or a helper serving one) that is not ported; the deprecation facts, reason, replacement and every original comment/test are recorded.",
+    "jvm-only-replaced": "JVM-only metadata or documentation unit replaced by its recorded CLR counterpart.",
+    "pending": "Not yet reviewed."
+  },
+  "summary": {
+    "pinnedFiles": 33,
+    "byStatus": {
+      "clr-adapted": 24,
+      "jvm-only-replaced": 4,
+      "verified": 5
+    },
+    "mainJavaSources": 25,
+    "testJavaSources": 6,
+    "declaredOriginalTests": 39,
+    "mappedOriginalTests": 38,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 1,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/AbstractStringRedisMessage.java",
+      "sha256": "5910b8b59e70bb299870231ae00a069b0fb40bc544ab84b8dcc4dc9ddba2c5c6",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/AbstractStringRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "content() is the method Content() (not a holder); the package-private constructor is internal; toString() keeps the StringBuilder shape. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/AbstractStringRedisMessage.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/ArrayHeaderRedisMessage.java",
+      "sha256": "103707008ccd017068f5c8bbc6bcf8fa172ddf99b06f144db2f4c1a11882486f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/ArrayHeaderRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "length() is Length(); RedisConstants is internal. Numbers in messages and toString() use the invariant culture, because Java decimal text does not depend on a culture while Int32/Int64.ToString() and StringBuilder.Append(Int64) use the current culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/ArrayHeaderRedisMessage.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder.append"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/ArrayRedisMessage.java",
+      "sha256": "8183c52d053a51ba777a15045ff2b872e8c5cfda9bb3e236eefaaa5a922ea9bd",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/ArrayRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "List<RedisMessage> is IList<IRedisMessage> and Collections.emptyList() is Array.Empty<IRedisMessage>() (an IList that rejects changes). touch(Object) is a covariant override of the Common AbstractReferenceCounted.Touch(object). NULL_INSTANCE and EMPTY_INSTANCE (anonymous subclasses, here the nested classes NullArrayRedisMessage and EmptyArrayRedisMessage) override retain()/retain(int)/touch()/touch(Object) with covariant returns and release()/release(int) to return false, as in the source; these AbstractReferenceCounted members are virtual in Common, as in Java. The child count in toString() uses the invariant culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/ArrayRedisMessage.cs",
+          "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.array.empty",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisEncoderTest.cs",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/BulkStringHeaderRedisMessage.java",
+      "sha256": "d27a123b01c82678a46477bb23f1f6f844d8e4151ecdcd6fe840621597aabd58",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/BulkStringHeaderRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Numbers in messages and toString() use the invariant culture, because Java decimal text does not depend on a culture while Int32/Int64.ToString() and StringBuilder.Append(Int64) use the current culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/BulkStringHeaderRedisMessage.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/BulkStringRedisContent.java",
+      "sha256": "94b1cfd78fcd274a80f2f2e7f492355afc9b3d82900f5da81a3d58c6228efa7a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/IBulkStringRedisContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; ByteBufHolder is IByteBufHolder (content() is the Content property, docs/buffer-porting.md). The holder methods the source re-declares only to narrow the return type are inherited, not repeated (owner decision 2026-11-19, the rule of docs/transport-porting.md, Decisions). @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/IBulkStringRedisContent.cs",
+          "docs/buffer-porting.md",
+          "docs/transport-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/DefaultBulkStringRedisContent.java",
+      "sha256": "6471d800cd7a5a66ac0778fc6f22866ce1b96cc3b164e57caf3bfc4d5d468140",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/DefaultBulkStringRedisContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The overrides of the virtual DefaultByteBufHolder members (copy, duplicate, retainedDuplicate, replace, retain, touch) are C# covariant override returns; content() is the Content property; no explicit bridges are needed because the DefaultByteBufHolder members implement IByteBufHolder/IReferenceCounted.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/DefaultBulkStringRedisContent.cs",
+          "src/Netty.NET.Buffer/DefaultByteBufHolder.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/DefaultLastBulkStringRedisContent.java",
+      "sha256": "b2da1676eed5b0f01b90c54606ae8331c7b32f9eb0f06b082b49d521176ec7e6",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/DefaultLastBulkStringRedisContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class; covariant override returns narrowing to ILastBulkStringRedisContent.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/DefaultLastBulkStringRedisContent.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/ErrorRedisMessage.java",
+      "sha256": "b7b68762f875c1cbe009910aeeadb884d692e5aff33a1104c8a40d4166c8c993",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/ErrorRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class as the final source class. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/ErrorRedisMessage.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/FixedRedisMessagePool.java",
+      "sha256": "80ff55c2b5825af1712590c8cdf89e0854ba514376c1dec9526946f64c1cde6a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/FixedRedisMessagePool.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "HashMap is Dictionary (GetValueOrDefault returns null as HashMap.get; a null string/ByteBuf key returns null, because HashMap permits a null key and Dictionary throws ArgumentNullException). LongObjectMap/LongObjectHashMap (io.netty.util.collection; owner decision 2026-11-19 keeps Dictionary, recorded in docs/common-porting-manifest.json) is Dictionary<long, V>: Java needs the primitive map because type arguments must be reference types (JLS 4.5.1), while the CLR specializes Dictionary<long, V> for the long key without boxing. The simple enum RedisReplyKey is a C# enum (name() is ToString(), values() is Enum.GetValues<RedisReplyKey>(), sorted by value and so in declaration order); RedisErrorKey, a Java enum with a constructor, field and toString(), is a sealed class with static readonly instances and a Values() method in declaration order. new String(buffer.array()) decodes the same bytes with ToString(Encoding.Default), because ByteBuf.array() has no C# counterpart; value.name().getBytes(UTF_8) is Encoding.UTF8.GetBytes.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/FixedRedisMessagePool.cs",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time",
+          "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/HashMap.html",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.trygetvalue",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.enum.tostring",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.enum.getvalues",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html#jls-8.9",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/FixedRedisMessagePoolTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/FullBulkStringRedisMessage.java",
+      "sha256": "37e430317a762104a1fac8d708b4409b61c8c4a2fdbdd476222dd9733640f1c6",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/FullBulkStringRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Covariant overrides of the virtual DefaultByteBufHolder members, including content()/refCnt() as the Content/RefCnt properties and release()/release(int) in NULL_INSTANCE/EMPTY_INSTANCE, whose anonymous classes are the nested classes NullFullBulkStringRedisMessage and EmptyFullBulkStringRedisMessage. The module interfaces declare no narrowing members (owner decision 2026-11-19), so DefaultByteBufHolder implements all holder members and no explicit implementation is needed. DefaultByteBufHolder.Equals requires the exact runtime class, so the two predefined instances stay unequal.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/FullBulkStringRedisMessage.cs",
+          "src/Netty.NET.Buffer/DefaultByteBufHolder.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override",
+          "docs/transport-porting.md",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/InlineCommandRedisMessage.java",
+      "sha256": "029cab8aadd9f1452ff4bbb54e51049f63fe8fd498fe43b7cba462b17ff85b8c",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/InlineCommandRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class as the final source class. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/InlineCommandRedisMessage.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/IntegerRedisMessage.java",
+      "sha256": "ce9fd187d12c0d48e8f17c0ae290442e3b1a6743af99b87c284711a2a3166395",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/IntegerRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class; value() is Value(); toString() appends the value with the invariant culture (StringBuilder.Append(Int64) uses the current culture).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/IntegerRedisMessage.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder.append"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/LastBulkStringRedisContent.java",
+      "sha256": "80daceb5dac96dc6ab420c545086e57be8690e3717574ef93044096454076648",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/ILastBulkStringRedisContent.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; the narrowing re-declarations are inherited, not repeated (owner decision 2026-11-19, docs/transport-porting.md, Decisions). EMPTY_LAST_CONTENT is a static readonly field of the interface and its anonymous class is the private nested class EmptyLastBulkStringRedisContent (C# interfaces may declare static fields and nested types), which implements the IByteBufHolder and IReferenceCounted members, re-declared by those shared interfaces with other return types, explicitly as Transport DatagramPacket does.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/ILastBulkStringRedisContent.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation",
+          "docs/transport-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisArrayAggregator.java",
+      "sha256": "86ac806e539657530f83b48e67568183ed6f9a3e2d7cba9c340912709b381564",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisArrayAggregator.cs"
+      ],
+      "comments": {
+        "status": "reviewed",
+        "uniqueCount": 21,
+        "preservedCount": 19,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "notApplicable": [
+          {
+            "sourceComment": "Create a new instance that will aggregate an {@link ArrayHeaderRedisMessage} and its subsequent elements into an {@link ArrayRedisMessage}. <p> This constructor specifies a maximum number of elements of 1.000.000, but this default can be increased with the {@value RedisConstants#PROP_REDIS_MAX_ARRAY_LENGTH} system property. @deprecated Use {@link #RedisArrayAggregator(int, int)} instead to define a max size of the array to aggregate.",
+            "disposition": "deprecated-not-ported",
+            "member": "public RedisArrayAggregator()",
+            "reason": "@Deprecated constructor whose @deprecated text names the replacement (\"Use {@link #RedisArrayAggregator(int, int)} instead to define a max size of the array to aggregate.\"); owner decision 2026-11-16 does not port such members.",
+            "clr": "RedisArrayAggregator(int maxElements, int maxNestedArrayDepth); the deprecated constructor passed (RedisConstants.REDIS_MAX_ARRAY_LENGTH, 1024), which the ported tests use."
+          },
+          {
+            "sourceComment": "Let's impose some limit at least by default.",
+            "disposition": "deprecated-not-ported",
+            "member": "public RedisArrayAggregator()",
+            "reason": "@Deprecated constructor whose @deprecated text names the replacement (\"Use {@link #RedisArrayAggregator(int, int)} instead to define a max size of the array to aggregate.\"); owner decision 2026-11-16 does not port such members.",
+            "clr": "RedisArrayAggregator(int maxElements, int maxNestedArrayDepth); the deprecated constructor passed (RedisConstants.REDIS_MAX_ARRAY_LENGTH, 1024), which the ported tests use."
+          }
+        ]
+      },
+      "review": {
+        "scope": "The @Deprecated no-argument constructor names its replacement (\"Use RedisArrayAggregator(int, int) instead\"), so it is not ported (owner decision 2026-11-16), nor the private DEFAULT_MAX_ARRAY_LENGTH that only it used; its Javadoc and body comment are recorded as omitted. The ArrayDeque used as a stack (push/pop/peek) is Stack<T>; the release order of releaseAndClearDepths() does not matter. The private fields of the nested AggregateState are internal, because C# does not open a nested class's private members to the enclosing class. Numbers in messages and toString() use the invariant culture, because Java decimal text does not depend on a culture while Int32/Int64.ToString() and StringBuilder.Append(Int64) use the current culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisArrayAggregator.cs",
+          "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Deprecated.html",
+          "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayDeque.html",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.stack-1",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisArrayAggregatorTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisBulkStringAggregator.java",
+      "sha256": "a2bd7359cbf70362ffd2449e6bc285c7477de82632fdadaee041db25dff01d8a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisBulkStringAggregator.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "MessageAggregator<IRedisMessage, BulkStringHeaderRedisMessage, IBulkStringRedisContent, FullBulkStringRedisMessage> with typeof(IRedisMessage); UnsupportedOperationException is NotSupportedException.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisBulkStringAggregator.cs",
+          "docs/codec-base-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisCodecException.java",
+      "sha256": "9f7049115a5fab3d277748347ee1de7bb44ecb4f1d226eb570e043efaf4c093e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisCodecException.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed CodecException; Throwable is Exception and the cause-only constructor keeps the Java detail message through CodecException; serialVersionUID has no counterpart.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisCodecException.cs",
+          "docs/codec-base-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisCodecUtil.java",
+      "sha256": "075538bf866cb56d753c1c985525b74c46f58ffca976acbcc31a30723989fc99",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisCodecUtil.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Internal sealed class with the private constructor; Long.toString is the invariant-culture text and US_ASCII is Encoding.ASCII; PlatformDependent.BIG_ENDIAN_NATIVE_ORDER is the Common field. The (byte) casts of shortToBytes keep the same bits as System.Byte; the only sign-dependent use (the delimiter text) is in RedisDecoder.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisCodecUtil.cs",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisConstants.java",
+      "sha256": "127c4e3061dc43336ff148bd934ad705a3177c822872cf6d818c24e2869f0f94",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisConstants.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Internal sealed class with the private constructor; compile-time constants are const, NULL_SHORT/EOL_SHORT and REDIS_MAX_ARRAY_LENGTH (SystemPropertyUtil.GetInt of the Common port) are static readonly.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisConstants.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisDecoder.java",
+      "sha256": "545080183552e1cad615c578b58740ac8355d625ae6477605e6c7c3641a8588b",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisDecoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 21,
+        "preservedCount": 21,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The private enum State is a C# enum. RedisMessageType constants are static readonly instances, not compile-time constants, so the switch statements on a RedisMessageType are if/else chains comparing by reference. ByteProcessor is Func<byte, bool>, passed as the ToPositiveLongProcessor.Process method group. Sign: readEndOfLine prints the delimiter bytes as Java signed bytes ((sbyte) of the System.Byte values) and ToPositiveLongProcessor prints the rejected byte as (sbyte); a byte of 0x80..0xFF is rejected in both languages (above '9' unsigned, below '0' signed). catch (RedisCodecException e) { ...; throw e; } is throw; (same exception object). Numbers in messages and toString() use the invariant culture, because Java decimal text does not depend on a culture while Int32/Int64.ToString() and StringBuilder.Append(Int64) use the current culture.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisDecoder.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.2.1",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements",
+          "https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisEncoder.java",
+      "sha256": "86b9b184796e1da578983e654d0842e2c1b92778c0a87b360d07d6c4478f844a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisEncoder.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "MessageToMessageEncoder<IRedisMessage> with typeof(IRedisMessage); ByteBufAllocator is IByteBufAllocator (ioBuffer is IoBuffer); ByteBufUtil.utf8MaxBytes/writeUtf8 take the string as ReadOnlySpan<char>; content() of the holders is the Content property. catch (CodecException e) { throw e; } is throw;.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisEncoder.cs",
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisEncoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisMessage.java",
+      "sha256": "a55fa4303a25b3054d5f9b5f21c5a508cbcc53bd58cc9a9d8075ab8e0d3f95aa",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/IRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Marker interface with the I prefix. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/IRedisMessage.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisMessagePool.java",
+      "sha256": "43cb5b9ff83a4ea5076a4a4344fd0aec9e35f3148485237e8a8c0c81715c1a94",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/IRedisMessagePool.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Interface with the I prefix; getX(...) keep their Java names as GetX(...). @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/IRedisMessagePool.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/RedisMessageType.java",
+      "sha256": "12c1a050e1a67f30235530d9ca9abe8f284344b332ea9e4e63710db1869d75f0",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/RedisMessageType.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Java enum with constructor, fields and methods: a sealed class with static readonly instances (C# enums cannot declare methods; JLS 8.9), whose ToString() returns the constant name. Byte is byte? (null for INLINE_COMMAND) and byteValue() is .Value; the prefixes are ASCII, so their System.Byte values equal the Java bytes, and the private valueOf(byte) switch uses (byte) char constants. readerIndex(int) is the ReaderIndex setter. The implicit values()/valueOf(String) are not added (no caller).",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/RedisMessageType.cs",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html#jls-8.9",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/SimpleStringRedisMessage.java",
+      "sha256": "23bccdbc6d3b6173670d7f1eabd851c0ec370839a7d8fbf921cf3173e6f82658",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "src/Netty.NET.Handler.Codec.Redis/SimpleStringRedisMessage.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Sealed class as the final source class. @UnstableApi is the Common [UnstableApi] attribute.",
+        "sourceEvidence": [
+          "src/Netty.NET.Handler.Codec.Redis/SimpleStringRedisMessage.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/io/netty/handler/codec/redis/package-info.java",
+      "sha256": "1fc43bab423eaa31082c65c8dbca3cd4fbe4b400c501b7cd202f4a2a6209a406",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Documentation-only package descriptor (io.netty.handler.codec.redis).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Handler.Codec.Redis holds the ported types; the package summary (\"Encoder, decoder for Redis.\") is kept verbatim in this entry and mapped in docs/codec-redis-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/codec-redis-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2016 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "Encoder, decoder for Redis.",
+            "reason": "Package summary, kept verbatim here. C# namespaces cannot carry documentation comments; docs/codec-redis-porting.md maps it to Netty.NET.Handler.Codec.Redis."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/java/module-info.yml",
+      "sha256": "26e6f07ca8b87168d21345708ac6c9829487d9dc79fc7f460d013a0f3905e430",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Input to the io.github.dmlloyd.module-info Maven plugin that generates the JPMS module descriptor of io.netty.codec.redis: requires io.netty.common, io.netty.buffer, io.netty.transport, io.netty.codec.",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. JPMS module declarations have no .NET counterpart beyond assembly metadata; Transport, Resolver and codec-base map their module-info.yml to the project file the same way.",
+        "replacement": {
+          "clr": "Netty.NET.Handler.Codec.Redis.csproj references Netty.NET.Handler.Codec (which brings Transport, Resolver, Buffer and Common); the assembly is the deployment and visibility unit, and InternalsVisibleTo opens internals only to Netty.NET.Handler.Codec.Redis.Tests.",
+          "noClrCounterpart": [
+            "JPMS requires/exports checking: .NET assemblies have no module descriptor; public/internal accessibility and InternalsVisibleTo form the boundary."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Handler.Codec.Redis/Netty.NET.Handler.Codec.Redis.csproj",
+            "src/Netty.NET.Handler.Codec/Netty.NET.Handler.Codec.csproj"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.7",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/",
+            "https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items#projectreference",
+            "https://learn.microsoft.com/en-us/dotnet/standard/assembly/friend"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "---------------------------------------------------------------------------- Copyright 2024 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. ----------------------------------------------------------------------------",
+            "reason": "Apache license header of the YAML metadata file, which has no CLR file."
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/main/resources/META-INF/native-image/io.netty/netty-codec-redis/generated/handlers/reflect-config.json",
+      "sha256": "0f6f68b053ea4ceaa60175c2c05379967777e1497ed868335f5e262308fc8454",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Generated GraalVM native-image reflection metadata: one record per codec-redis ChannelHandler (name, condition.typeReachable, queryAllPublicMethods) so native images keep the handler methods that ChannelHandlerMask inspects.",
+        "reason": "Owner decision 2026-11-16: GraalVM native-image metadata is replaced by .NET NativeAOT, which does not read a reflection JSON manifest; trimming keeps members declared by DynamicallyAccessedMembers annotations, which IChannelHandler and ChannelHandlerAdapter carry for every handler subtype.",
+        "replacement": {
+          "clr": "[DynamicallyAccessedMembers(PublicMethods | NonPublicMethods)] on IChannelHandler and ChannelHandlerAdapter (Transport) keeps the callback metadata of the codec handlers.",
+          "noClrCounterpart": [
+            "A reflection metadata JSON file read by an ahead-of-time compiler."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerAdapter.cs",
+            "src/Netty.NET.Transport/Channels/ChannelHandlerMask.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0",
+            "https://www.rfc-editor.org/rfc/rfc8259"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none",
+        "reason": "JSON text has no comment token in the RFC 8259 grammar."
+      }
+    },
+    {
+      "upstream": "codec-redis/src/test/java/io/netty/handler/codec/redis/FixedRedisMessagePoolTest.java",
+      "sha256": "b931aef1f4303d8782da686d2e3fadab4e2c6777ac85e9eef37c5f7aa5d43fd5",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Redis.Tests/FixedRedisMessagePoolTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "shouldGetSameMessageObject",
+          "clrMethod": "ShouldGetSameMessageObject",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). xUnit2000 is suppressed with a reason because assertEquals(fromStr.content(), \"OK\") keeps the source argument order."
+        },
+        {
+          "upstreamMethod": "shouldReturnNullByNotExistKey",
+          "clrMethod": "ShouldReturnNullByNotExistKey",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). xUnit2000 is suppressed with a reason because assertEquals(fromStr.content(), \"OK\") keeps the source argument order."
+        },
+        {
+          "upstreamMethod": "shouldReturnDifferentMessage",
+          "clrMethod": "ShouldReturnDifferentMessage",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). xUnit2000 is suppressed with a reason because assertEquals(fromStr.content(), \"OK\") keeps the source argument order."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). xUnit2000 is suppressed with a reason because assertEquals(fromStr.content(), \"OK\") keeps the source argument order.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Redis.Tests/FixedRedisMessagePoolTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/test/java/io/netty/handler/codec/redis/NativeImageHandlerMetadataTest.java",
+      "sha256": "170b34f98651571aeec08883e0b054ad1d27366a48d83a0bd7736f472909948a",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-19",
+        "sourceContract": "Runs ChannelHandlerMetadataUtil.generateMetadata(io.netty.handler.codec.redis), which scans the package(s) for ChannelHandler subtypes and compares them with the committed GraalVM reflect-config.json.",
+        "reason": "Owner decision 2026-11-16 (as for the Transport ChannelHandlerMetadataUtil): GraalVM reflection JSON, Java package scanning and JVM type names are not consumed by the CLR; NativeAOT keeps handler metadata through DynamicallyAccessedMembers.",
+        "replacement": {
+          "clr": "IChannelHandler/ChannelHandlerAdapter DynamicallyAccessedMembers annotations; the Transport NativeAOT scenarios exercise handler dispatch under trimming.",
+          "noClrCounterpart": [
+            "Generating or comparing a reflect-config.json metadata file."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+            "test/Netty.NET.Transport.Tests/NativeAotContractScenarios.cs",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://www.graalvm.org/latest/reference-manual/native-image/metadata/",
+            "https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2022 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          }
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "collectAndCompareMetadata",
+            "disposition": "jvm-only-replaced",
+            "reason": "GraalVM reflection metadata generation and comparison has no CLR counterpart (see the entry reason).",
+            "sourceContract": "Generate the codec handler reflection records and compare them with the committed JSON.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/IChannelHandler.cs",
+              "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/test/java/io/netty/handler/codec/redis/RedisArrayAggregatorTest.java",
+      "sha256": "12e91e363c38e107f714813d332c58e5c0408d878a9eccea0e2ecf8b472ad633",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Redis.Tests/RedisArrayAggregatorTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testLimitNested",
+          "clrMethod": "TestLimitNested",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows(CodecException.class, ...) is Assert.ThrowsAny<CodecException> because JUnit accepts subtypes and the CodecException arrives wrapped in a DecoderException; PrematureChannelClosureException stays Assert.Throws. pipeline().remove(Class) is Pipeline.Remove<T>()."
+        },
+        {
+          "upstreamMethod": "testTotalPendingElementBudgetAcrossNestedArrays",
+          "clrMethod": "TestTotalPendingElementBudgetAcrossNestedArrays",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows(CodecException.class, ...) is Assert.ThrowsAny<CodecException> because JUnit accepts subtypes and the CodecException arrives wrapped in a DecoderException; PrematureChannelClosureException stays Assert.Throws. pipeline().remove(Class) is Pipeline.Remove<T>()."
+        },
+        {
+          "upstreamMethod": "testPendingElementBudgetIsReclaimedOnceArrayCompletes",
+          "clrMethod": "TestPendingElementBudgetIsReclaimedOnceArrayCompletes",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows(CodecException.class, ...) is Assert.ThrowsAny<CodecException> because JUnit accepts subtypes and the CodecException arrives wrapped in a DecoderException; PrematureChannelClosureException stays Assert.Throws. pipeline().remove(Class) is Pipeline.Remove<T>()."
+        },
+        {
+          "upstreamMethod": "testDoesNotLeakOnClose",
+          "clrMethod": "TestDoesNotLeakOnClose",
+          "adaptation": "The test checks that a pending element is released on close; it constructs the aggregator with the replacement RedisArrayAggregator(RedisConstants.REDIS_MAX_ARRAY_LENGTH, 1024), the arguments of the deprecated no-argument constructor, which is not ported."
+        },
+        {
+          "upstreamMethod": "testDoesNotLeakOnRemoval",
+          "clrMethod": "TestDoesNotLeakOnRemoval",
+          "adaptation": "The test checks that a pending element is released on handler removal; it constructs the aggregator with the replacement RedisArrayAggregator(RedisConstants.REDIS_MAX_ARRAY_LENGTH, 1024), the arguments of the deprecated no-argument constructor, which is not ported; pipeline().remove(Class) is Pipeline.Remove<T>()."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 5,
+        "reviewedCount": 5,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 11,
+        "preservedCount": 11,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertThrows(CodecException.class, ...) is Assert.ThrowsAny<CodecException> because JUnit accepts subtypes and the CodecException arrives wrapped in a DecoderException; PrematureChannelClosureException stays Assert.Throws. pipeline().remove(Class) is Pipeline.Remove<T>().",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisArrayAggregatorTest.cs",
+          "https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/Assertions.html",
+          "https://raw.githubusercontent.com/xunit/assert.xunit/main/ExceptionAsserts.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/test/java/io/netty/handler/codec/redis/RedisCodecTestUtil.java",
+      "sha256": "83d2ac252ad0ed015f2b4aa462f3c48469120c69ba6148835527e787016d61a2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Redis.Tests/RedisCodecTestUtil.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Test helper without test methods: internal sealed class with the private constructor; Long.toString is the invariant-culture text, UTF_8 is Encoding.UTF8 and new String(byte[]) is Encoding.Default.GetString.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisCodecTestUtil.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/test/java/io/netty/handler/codec/redis/RedisDecoderTest.java",
+      "sha256": "55f2b15b0e7493886e62d5afa0b9d0b733cba447bebf82e89d639fe9621e706e",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Redis.Tests/RedisDecoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "splitEOLDoesNotInfiniteLoop",
+          "clrMethod": "SplitEOLDoesNotInfiniteLoop",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldNotDecodeInlineCommandByDefault",
+          "clrMethod": "ShouldNotDecodeInlineCommandByDefault",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeInlineCommand",
+          "clrMethod": "ShouldDecodeInlineCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeSimpleString",
+          "clrMethod": "ShouldDecodeSimpleString",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeTwoSimpleStrings",
+          "clrMethod": "ShouldDecodeTwoSimpleStrings",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeError",
+          "clrMethod": "ShouldDecodeError",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeInteger",
+          "clrMethod": "ShouldDecodeInteger",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeBulkString",
+          "clrMethod": "ShouldDecodeBulkString",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeEmptyBulkString",
+          "clrMethod": "ShouldDecodeEmptyBulkString",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeNullBulkString",
+          "clrMethod": "ShouldDecodeNullBulkString",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeSimpleArray",
+          "clrMethod": "ShouldDecodeSimpleArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldDecodeNestedArray",
+          "clrMethod": "ShouldDecodeNestedArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldErrorOnTooLargeArray",
+          "clrMethod": "ShouldErrorOnTooLargeArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldErrorOnDoubleReleaseArrayReferenceCounted",
+          "clrMethod": "ShouldErrorOnDoubleReleaseArrayReferenceCounted",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldErrorOnReleaseArrayChildReferenceCounted",
+          "clrMethod": "ShouldErrorOnReleaseArrayChildReferenceCounted",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldErrorOnReleasecontentOfArrayChildReferenceCounted",
+          "clrMethod": "ShouldErrorOnReleasecontentOfArrayChildReferenceCounted",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "testPredefinedMessagesNotEqual",
+          "clrMethod": "TestPredefinedMessagesNotEqual",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "shouldLimitIntegerTo64IntSigned",
+          "clrMethod": "ShouldLimitIntegerTo64IntSigned",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "testPositiveLongWithCr",
+          "clrMethod": "TestPositiveLongWithCr",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        },
+        {
+          "upstreamMethod": "testGiantPayloadEndingWithCrBypassesLengthCheck",
+          "clrMethod": "TestGiantPayloadEndingWithCrBypassesLengthCheck",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 20,
+        "mappedCount": 20,
+        "reviewedCount": 20,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 9,
+        "preservedCount": 9,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executables are lambdas; the AssertJ chain of shouldErrorOnTooLargeArray is Assert.ThrowsAny<DecoderException>, Exception.GetBaseException() for rootCause(), Assert.IsAssignableFrom<CodecException> and Assert.Contains; Integer.toString is the invariant-culture text.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisDecoderTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-redis/src/test/java/io/netty/handler/codec/redis/RedisEncoderTest.java",
+      "sha256": "6d16047b47b4ca978ab329954179bfe5b315896aaf03b77f8df31c1f832e70fd",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Redis.Tests/RedisEncoderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "shouldEncodeInlineCommand",
+          "clrMethod": "ShouldEncodeInlineCommand",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeSimpleString",
+          "clrMethod": "ShouldEncodeSimpleString",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeError",
+          "clrMethod": "ShouldEncodeError",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeInteger",
+          "clrMethod": "ShouldEncodeInteger",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeBulkStringContent",
+          "clrMethod": "ShouldEncodeBulkStringContent",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeFullBulkString",
+          "clrMethod": "ShouldEncodeFullBulkString",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeSimpleArray",
+          "clrMethod": "ShouldEncodeSimpleArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeNullArray",
+          "clrMethod": "ShouldEncodeNullArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeEmptyArray",
+          "clrMethod": "ShouldEncodeEmptyArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        },
+        {
+          "upstreamMethod": "shouldEncodeNestedArray",
+          "clrMethod": "ShouldEncodeNestedArray",
+          "adaptation": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 10,
+        "mappedCount": 10,
+        "reviewedCount": 10,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Source scenarios, inputs and assertions; readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), the RedisCodecTestUtil helpers are imported with using static, and @BeforeEach/@AfterEach are the constructor and Dispose() (xUnit creates one instance per test). assertArrayEquals is Assert.Equal on byte arrays; ArrayList is List.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Redis.Tests/RedisEncoderTest.cs"
+        ]
+      }
+    }
+  ],
+  "validationHistory": [
+    {
+      "checkpoint": "2026-11-19-port",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0
+        },
+        "moduleDebug": {
+          "total": 38,
+          "passed": 38,
+          "failed": 0,
+          "skipped": 0
+        },
+        "transportDebug": {
+          "total": 1132,
+          "passed": 1033,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline (Domain* fixtures and domain rows), run alone. In one full-solution run (all test projects in parallel) DefaultEventLoopTest.TestSubmittingTaskWakesUpSuspendedExecutor, ChannelInitializerTest.TestChannelInitializerEventExecutor and SingleThreadEventLoopSourceTest.ScheduleLaggyTaskAtFixedRateA also failed under load; the next two Transport runs were clean apart from the baseline."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module codec-redis verifies every pinned codec-redis file with no pending entry; the generic mutation run (inventory, hash, comment count, unmapped and missing tests, not-ported test dispositions, JSON comment disposition, missing target, removed C# comment, renamed C# test; the @deprecated-tags case applies only to deprecated-not-ported entries) rejected every applicable broken copy and restored the manifest byte-identical. Owner decisions 2026-11-19: return-type-narrowing interface re-declarations are inherited, not repeated. Shared changes the same day: AbstractReferenceCounted Retain()/Touch()/Release()/Release(int) are virtual and Retain()/Release() update the count directly as the Java retain()/release() do; ByteToMessageDecoder.IsSingleDecode() is virtual; java.net.IDN is the shared Netty.NET.Common.Internal.IDN."
+      }
+    }
+  ]
+}

@@ -15,12 +15,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
+using Netty.NET.Handler.Codec;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Nio;
@@ -122,50 +124,20 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
         }
     }
 
-    // CLR: the codec module (ByteToMessageDecoder) is not part of this port, so this named handler carries the
-    // source's anonymous decoder: handlerAdded asserts the inactive channel and requests a read, inbound bytes
-    // accumulate as ByteToMessageDecoder's cumulation does, decode asserts at most Integer.BYTES (sizeof(int)) readable
-    // bytes and the integer 42, a manual-read channel requests another read while a partial integer is buffered
-    // (ByteToMessageDecoder.channelReadComplete), and handlerRemoved releases the cumulation. A failed assertion
-    // faults the latch instead of being wrapped in a DecoderException, so the test fails without waiting for its
-    // Timeout.
-    private sealed class ReadFortyTwo(TaskCompletionSource readLatch) : ChannelInboundHandlerAdapter
+    // CLR: the source's anonymous ByteToMessageDecoder as a named class (codec-base is ported since 2026-11-18): handlerAdded
+    // asserts the inactive channel and requests a read, and decode asserts at most Integer.BYTES (sizeof(int)) readable
+    // bytes and the integer 42. A failed assertion reaches ExceptionCaught (wrapped in a DecoderException when it comes
+    // from decode), which faults the latch so the test fails without waiting for its Timeout; the source has no
+    // exceptionCaught override and waits for its @Timeout instead.
+    private sealed class ReadFortyTwo(TaskCompletionSource readLatch) : ByteToMessageDecoder
     {
-        private readonly ByteBuf cumulation = Unpooled.Buffer(sizeof(int));
-
         public override void HandlerAdded(IChannelHandlerContext ctx)
         {
-            try
-            {
-                Assert.False(ctx.Channel.IsActive);
-            }
-            catch (Exception error)
-            {
-                readLatch.TrySetException(error);
-                throw;
-            }
+            Assert.False(ctx.Channel.IsActive);
             ctx.Read();
         }
 
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        {
-            try
-            {
-                ByteBuf @in = (ByteBuf) msg;
-                cumulation.WriteBytes(@in, @in.ReadableBytes);
-                Decode(ctx, cumulation);
-            }
-            catch (Exception error)
-            {
-                readLatch.TrySetException(error);
-            }
-            finally
-            {
-                ReferenceCountUtil.Release(msg);
-            }
-        }
-
-        private void Decode(IChannelHandlerContext ctx, ByteBuf @in)
+        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
         {
             Assert.True(@in.ReadableBytes <= sizeof(int));
             if (@in.ReadableBytes == sizeof(int))
@@ -175,23 +147,9 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
             }
         }
 
-        public override void ChannelReadComplete(IChannelHandlerContext ctx)
-        {
-            if (!readLatch.Task.IsCompleted && cumulation.ReadableBytes > 0 && !ctx.Channel.Config.IsAutoRead())
-            {
-                ctx.Read();
-            }
-            ctx.FireChannelReadComplete();
-        }
-
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             readLatch.TrySetException(cause);
-        }
-
-        public override void HandlerRemoved(IChannelHandlerContext ctx)
-        {
-            cumulation.Release();
         }
     }
 }

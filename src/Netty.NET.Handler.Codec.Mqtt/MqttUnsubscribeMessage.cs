@@ -1,0 +1,57 @@
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+namespace Netty.NET.Handler.Codec.Mqtt;
+
+/**
+ * See <a href="https://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html#unsubscribe">
+ *     MQTTV3.1/unsubscribe</a>
+ */
+// CLR: VariableHeader() and Payload() narrow the return types with covariant overrides, as the Java overrides do
+// (https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/override).
+public sealed class MqttUnsubscribeMessage : MqttMessage
+{
+    public MqttUnsubscribeMessage(
+            MqttFixedHeader mqttFixedHeader,
+            MqttMessageIdAndPropertiesVariableHeader variableHeader,
+            MqttUnsubscribePayload payload)
+        : base(mqttFixedHeader, variableHeader, payload)
+    {
+    }
+
+    public MqttUnsubscribeMessage(
+            MqttFixedHeader mqttFixedHeader,
+            MqttMessageIdVariableHeader variableHeader,
+            MqttUnsubscribePayload payload)
+        : this(mqttFixedHeader, variableHeader.WithDefaultEmptyProperties(), payload)
+    {
+    }
+
+    public override MqttMessageIdVariableHeader VariableHeader()
+    {
+        return (MqttMessageIdVariableHeader) base.VariableHeader();
+    }
+
+    public MqttMessageIdAndPropertiesVariableHeader IdAndPropertiesVariableHeader()
+    {
+        return (MqttMessageIdAndPropertiesVariableHeader) base.VariableHeader();
+    }
+
+    public override MqttUnsubscribePayload Payload()
+    {
+        return (MqttUnsubscribePayload) base.Payload();
+    }
+}
