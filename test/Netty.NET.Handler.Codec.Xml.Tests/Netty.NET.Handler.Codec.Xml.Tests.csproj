@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="Moq" Version="4.21.0" />
+    <PackageReference Include="Xunit.v3.AssertMessages" Version="4.0.0" />
+    <PackageReference Include="xunit.v3" Version="4.0.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Xml\Netty.NET.Handler.Codec.Xml.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- codec-xml/src/test/resources/io/netty/handler/codec/xml/sample-0N.xml, copied byte for byte; the logical names
+         keep the class-path resource paths. -->
+    <EmbeddedResource Include="Resources\sample-01.xml" LogicalName="io/netty/handler/codec/xml/sample-01.xml" />
+    <EmbeddedResource Include="Resources\sample-02.xml" LogicalName="io/netty/handler/codec/xml/sample-02.xml" />
+    <EmbeddedResource Include="Resources\sample-03.xml" LogicalName="io/netty/handler/codec/xml/sample-03.xml" />
+    <EmbeddedResource Include="Resources\sample-04.xml" LogicalName="io/netty/handler/codec/xml/sample-04.xml" />
+    <EmbeddedResource Include="Resources\sample-05.xml" LogicalName="io/netty/handler/codec/xml/sample-05.xml" />
+    <EmbeddedResource Include="Resources\sample-06.xml" LogicalName="io/netty/handler/codec/xml/sample-06.xml" />
+  </ItemGroup>
+</Project>

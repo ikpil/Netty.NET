@@ -22997,6 +22997,223 @@
         "platform": "Windows",
         "checker": "The inventory is now every pinned file under transport/src (scope transport/src): the checker no longer filters to *.java and module-info.yml, rejects duplicate entries and compares case-sensitively. Three metadata entries were added as jvm-only-replaced: the GraalVM reflect-config.json and generated/handlers/reflect-config.json (JSON, comment disposition none) and the test META-INF/services/io.netty.bootstrap.ChannelInitializerExtension (no \"#\" comment, disposition none). Not-ported entries may now be .json and META-INF/services files besides .java and .yml. Six deliberately broken copies (missing services entry, no replacement.clr, JSON with per-comment disposition, wrong sha256, none without reason, duplicate entry) were rejected and the manifest restored byte-identical. No source or test code changed, so the suites were not rerun."
       }
+    },
+    {
+      "checkpoint": "2026-11-23-codec-compression",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0
+        },
+        "transportDebug": {
+          "total": 1132,
+          "passed": 1033,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "All failures are the known Windows-host AF_UNIX baseline, run alone. In the full-solution run (all test projects in parallel) DefaultEventLoopTest.TestSubmittingTaskWakesUpSuspendedExecutor and ChannelInitializerTest.TestChannelInitializerEventExecutor also failed under load, as on 2026-11-19."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "codecDebug": {
+          "codec-base": {
+            "total": 352,
+            "passed": 352,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-dns": {
+            "total": 80,
+            "passed": 80,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-haproxy": {
+            "total": 66,
+            "passed": 66,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-memcache": {
+            "total": 35,
+            "passed": 35,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-mqtt": {
+            "total": 122,
+            "passed": 122,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-redis": {
+            "total": 38,
+            "passed": 38,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-smtp": {
+            "total": 40,
+            "passed": 40,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-socks": {
+            "total": 81,
+            "passed": 81,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-stomp": {
+            "total": 72,
+            "passed": 72,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-compression": {
+            "total": 348,
+            "passed": 330,
+            "failed": 0,
+            "skipped": 18
+          }
+        },
+        "checker": "codec-compression joined testsuiteInventoryPolicy.portedModules; no testsuite file imports it, so the 52 entries and 14 deferred files are unchanged and only the module list in 11 deferred reasons changed. The Transport checker passes under Windows PowerShell 5.1."
+      }
+    },
+    {
+      "checkpoint": "2026-11-23-codec-xml-protobuf-handler",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0
+        },
+        "transportDebug": {
+          "total": 1132,
+          "passed": 1033,
+          "failed": 20,
+          "skipped": 79,
+          "failedNote": "Run alone: only the known Windows-host AF_UNIX baseline. In the full-solution run (all test projects in parallel) one more Transport timing test and four Common timing tests failed under load; Common run alone passed 3228/3228 (14 skipped)."
+        },
+        "common": {
+          "passed": 3228,
+          "failed": 0,
+          "skipped": 14
+        },
+        "buffer": {
+          "passed": 36232,
+          "failed": 0,
+          "skipped": 9
+        },
+        "resolver": {
+          "passed": 82,
+          "failed": 0,
+          "skipped": 0
+        },
+        "codecDebug": {
+          "codec-base": {
+            "total": 352,
+            "passed": 352,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-compression": {
+            "total": 348,
+            "passed": 330,
+            "failed": 0,
+            "skipped": 18
+          },
+          "codec-dns": {
+            "total": 80,
+            "passed": 80,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-haproxy": {
+            "total": 66,
+            "passed": 66,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-memcache": {
+            "total": 35,
+            "passed": 35,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-mqtt": {
+            "total": 122,
+            "passed": 122,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-protobuf": {
+            "total": 16,
+            "passed": 16,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-redis": {
+            "total": 38,
+            "passed": 38,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-smtp": {
+            "total": 40,
+            "passed": 40,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-socks": {
+            "total": 81,
+            "passed": 81,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-stomp": {
+            "total": 72,
+            "passed": 72,
+            "failed": 0,
+            "skipped": 0
+          },
+          "codec-xml": {
+            "total": 32,
+            "passed": 32,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        "handlerDebug": {
+          "total": 152,
+          "passed": 151,
+          "failed": 0,
+          "skipped": 1,
+          "skippedNote": "FileRegionThrottleTest.testGlobalWriteThrottle is @Disabled in Java and Skip in C#."
+        },
+        "checker": "codec-protobuf and codec-xml joined testsuiteInventoryPolicy.portedModules (codec-marshalling has no project and handler is partial while ssl is pending, so neither is listed); no testsuite file imports them, so the 52 entries and 14 deferred files are unchanged and only the module list in 11 deferred reasons changed. TrafficShapingHandlerTest is blocked only by handler, whose traffic package is now ported."
+      }
+    },
+    {
+      "checkpoint": "2026-11-24-pkitesting",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "checker": "pkitesting joined testsuiteInventoryPolicy.portedModules. The six SocketSsl* testsuite files (SocketSslClientRenegotiateTest, SocketSslEchoTest, SocketSslGreetingTest, SocketSslLargeCertificateTest, SocketSslSessionReuseTest, SocketStartTlsTest) stay deferred, now blocked by handler only (io.netty.handler.ssl is pending): their pkitesting blocker and imports were removed, as the checker recomputes them. The module list in 11 deferred reasons changed. The Transport checker passes under Windows PowerShell 5.1."
+      }
     }
   ],
   "nextWork": [
@@ -25883,7 +26100,7 @@
         "testSimpleEcho",
         "testSimpleEchoUnordered"
       ],
-      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with that module."
+      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with that module."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpTestPermutation.java",
@@ -25908,7 +26125,7 @@
       ],
       "via": [],
       "declaredTests": [],
-      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with that module."
+      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with that module."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/package-info.java",
@@ -25949,7 +26166,7 @@
         "testSpdyEcho",
         "testSpdyEchoNotAutoRead"
       ],
-      "reason": "Imports types of codec-http, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with that module."
+      "reason": "Imports types of codec-http, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with that module."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslClientRenegotiateTest.java",
@@ -25959,8 +26176,7 @@
       "status": "deferred-to-module",
       "implementation": [],
       "blockedBy": [
-        "handler",
-        "pkitesting"
+        "handler"
       ],
       "blockingImports": [
         {
@@ -25973,20 +26189,13 @@
             "io.netty.handler.ssl.SslHandler",
             "io.netty.handler.ssl.SslHandshakeCompletionEvent"
           ]
-        },
-        {
-          "module": "pkitesting",
-          "imports": [
-            "io.netty.pkitesting.CertificateBuilder",
-            "io.netty.pkitesting.X509Bundle"
-          ]
         }
       ],
       "via": [],
       "declaredTests": [
         "testSslRenegotiationRejected"
       ],
-      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslEchoTest.java",
@@ -25996,8 +26205,7 @@
       "status": "deferred-to-module",
       "implementation": [],
       "blockedBy": [
-        "handler",
-        "pkitesting"
+        "handler"
       ],
       "blockingImports": [
         {
@@ -26012,20 +26220,13 @@
             "io.netty.handler.ssl.SslProvider",
             "io.netty.handler.stream.ChunkedWriteHandler"
           ]
-        },
-        {
-          "module": "pkitesting",
-          "imports": [
-            "io.netty.pkitesting.CertificateBuilder",
-            "io.netty.pkitesting.X509Bundle"
-          ]
         }
       ],
       "via": [],
       "declaredTests": [
         "testSslEcho"
       ],
-      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslGreetingTest.java",
@@ -26035,8 +26236,7 @@
       "status": "deferred-to-module",
       "implementation": [],
       "blockedBy": [
-        "handler",
-        "pkitesting"
+        "handler"
       ],
       "blockingImports": [
         {
@@ -26051,20 +26251,13 @@
             "io.netty.handler.ssl.SslHandshakeCompletionEvent",
             "io.netty.handler.ssl.SslProvider"
           ]
-        },
-        {
-          "module": "pkitesting",
-          "imports": [
-            "io.netty.pkitesting.CertificateBuilder",
-            "io.netty.pkitesting.X509Bundle"
-          ]
         }
       ],
       "via": [],
       "declaredTests": [
         "testSslGreeting"
       ],
-      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslLargeCertificateTest.java",
@@ -26074,8 +26267,7 @@
       "status": "deferred-to-module",
       "implementation": [],
       "blockedBy": [
-        "handler",
-        "pkitesting"
+        "handler"
       ],
       "blockingImports": [
         {
@@ -26089,20 +26281,13 @@
             "io.netty.handler.ssl.SslHandshakeCompletionEvent",
             "io.netty.handler.ssl.SslProvider"
           ]
-        },
-        {
-          "module": "pkitesting",
-          "imports": [
-            "io.netty.pkitesting.CertificateBuilder",
-            "io.netty.pkitesting.X509Bundle"
-          ]
         }
       ],
       "via": [],
       "declaredTests": [
         "resumptionWithLargeCertificates"
       ],
-      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslSessionReuseTest.java",
@@ -26112,8 +26297,7 @@
       "status": "deferred-to-module",
       "implementation": [],
       "blockedBy": [
-        "handler",
-        "pkitesting"
+        "handler"
       ],
       "blockingImports": [
         {
@@ -26126,13 +26310,6 @@
             "io.netty.handler.ssl.SslHandshakeCompletionEvent",
             "io.netty.handler.ssl.SslProvider"
           ]
-        },
-        {
-          "module": "pkitesting",
-          "imports": [
-            "io.netty.pkitesting.CertificateBuilder",
-            "io.netty.pkitesting.X509Bundle"
-          ]
         }
       ],
       "via": [],
@@ -26140,7 +26317,7 @@
         "testSslSessionReuse",
         "testSslSessionTrustManagerResumption"
       ],
-      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketStartTlsTest.java",
@@ -26150,8 +26327,7 @@
       "status": "deferred-to-module",
       "implementation": [],
       "blockedBy": [
-        "handler",
-        "pkitesting"
+        "handler"
       ],
       "blockingImports": [
         {
@@ -26165,13 +26341,6 @@
             "io.netty.handler.ssl.SslHandler",
             "io.netty.handler.ssl.SslProvider"
           ]
-        },
-        {
-          "module": "pkitesting",
-          "imports": [
-            "io.netty.pkitesting.CertificateBuilder",
-            "io.netty.pkitesting.X509Bundle"
-          ]
         }
       ],
       "via": [],
@@ -26179,7 +26348,7 @@
         "testStartTls",
         "testStartTlsNotAutoRead"
       ],
-      "reason": "Imports types of handler and pkitesting, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/TrafficShapingHandlerTest.java",
@@ -26214,7 +26383,7 @@
         "testWriteGlobalTrafficShapping",
         "testWriteTrafficShapping"
       ],
-      "reason": "Imports types of handler, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with that module."
+      "reason": "Imports types of handler. handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/UDTClientServerConnectionTest.java",
@@ -26239,7 +26408,7 @@
       "declaredTests": [
         "connection"
       ],
-      "reason": "Imports types of codec-base and transport-udt, which are not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis, codec-smtp, codec-socks and codec-stomp); the source is ported with those modules."
+      "reason": "Imports types of codec-base, which is ported, and transport-udt, which is not (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with transport-udt."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/package-info.java",
@@ -27167,14 +27336,18 @@
       "resolver",
       "transport",
       "codec-base",
+      "codec-compression",
       "codec-dns",
       "codec-haproxy",
       "codec-memcache",
       "codec-mqtt",
+      "codec-protobuf",
       "codec-redis",
       "codec-smtp",
       "codec-socks",
-      "codec-stomp"
+      "codec-stomp",
+      "codec-xml",
+      "pkitesting"
     ],
     "rule": "Every pinned testsuite file is recorded exactly once: in testsuiteEntries when it is ported or dispositioned, or in testsuiteDeferredEntries when it needs a module that is not ported. A deferred file names its blocking modules, the io.netty imports that resolve to them in the pinned module sources (nested types resolve to their compilation unit), the deferred same-package types it names (no import is needed inside a package; their blockers carry over) and its declared JUnit tests; a deferred package-info.java takes the blockers of its whole package, which must be deferred. A deferred file that needs only ported modules is a porting gap. A ported testsuite entry may import a type of an unported module only when unportedImports records that exact import with its CLR stand-in, which is replaced when the module is ported.",
     "statuses": {

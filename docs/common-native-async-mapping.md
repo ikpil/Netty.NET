@@ -52,6 +52,8 @@ even if the token was requested; cancellation is represented by the returned Tas
 Canceling Task.WaitAsync cancels only that caller's wait. A future handler port
 must decide separately whether disconnect/timeout should request producer
 cancellation; the pinned handler does not automatically cancel its mapping.
+The handler port of 2026-11-24 keeps the pinned behaviour: SniHandler calls
+MapAsync(hostname) without a cancellation token (docs/handler-porting.md, SSL).
 
 Task carries no Netty executor affinity. Invoke mapping and mutate handler-owned
 state on the chosen executor. For a synchronous completion callback, keep an

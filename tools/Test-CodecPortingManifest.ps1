@@ -1,7 +1,9 @@
 param(
-    # Every ported codec Maven module; each has docs/<module>-porting-manifest.json.
+    # Every recorded codec Maven module plus pkitesting and handler; each has docs/<module>-porting-manifest.json
+    # (codec-marshalling is recorded without a C# project). handler has no pending entry since its ssl port (2026-11-24).
     [string[]]$Module = @('codec-base', 'codec-dns', 'codec-haproxy', 'codec-memcache', 'codec-mqtt', 'codec-redis',
-        'codec-smtp', 'codec-socks', 'codec-stomp'),
+        'codec-smtp', 'codec-socks', 'codec-stomp', 'codec-compression', 'codec-xml', 'codec-protobuf',
+        'codec-marshalling', 'pkitesting', 'handler'),
     [string]$UpstreamRoot = (Join-Path $PSScriptRoot '../../netty'),
     [switch]$AllowPending)
 
@@ -122,11 +124,13 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
     # A per-comment disposition names the Java member the comment documents (Javadoc/line comment directly before it,
     # trailing it on the same line, or inside its body). The member must be @Deprecated, or its code must use the
     # named JVM-only API; anything else is ported code whose comment belongs in the C# source.
-    if ($disposition.disposition -cnotin @('deprecated-not-ported', 'jvm-only-replaced') -or -not $disposition.member -or
+    if ($disposition.disposition -cnotin @('deprecated-not-ported', 'jvm-only-replaced', 'library-not-ported') -or -not $disposition.member -or
         -not $disposition.reason -or -not $disposition.clr) {
         throw "Comment disposition needs disposition, member, reason and clr: $($disposition.sourceComment)"
     }
-    $jvmOnly = $disposition.disposition -ceq 'jvm-only-replaced'
+    # library-not-ported (2026-11-23): the member's code uses a type of a third-party Java library (or of a recorded
+    # library-not-ported unit) that is not ported; it needs the same API token and evidence as a JVM-only member.
+    $jvmOnly = $disposition.disposition -cin @('jvm-only-replaced', 'library-not-ported')
     if ($jvmOnly) {
         if (-not $disposition.javaApi -or $disposition.javaApi -cnotmatch '^[\w.$]+$' -or @($disposition.evidence).Count -eq 0) {
             throw "JVM-only comment disposition needs the JVM API token and evidence: $($disposition.sourceComment)"
@@ -189,7 +193,9 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
     $jvmOnlyReplacedCount = 0
     $notPortedCommentCount = 0
     $notPortedMethodCount = 0
-    $notPortedStatuses = @('deprecated-not-ported', 'jvm-only-replaced')
+    $libraryNotPortedCount = 0
+    $libraryCommentCount = 0
+    $notPortedStatuses = @('deprecated-not-ported', 'jvm-only-replaced', 'library-not-ported')
     $testsuiteEntries = @()
     foreach ($entry in @($manifest.entries)) {
         $path = Join-Path $UpstreamRoot $entry.upstream
@@ -246,7 +252,9 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                 $masked = Get-MaskedJava $source
                 $tags = @(Get-DeprecatedTags $source)
                 $annotated = $typeName -cne 'package-info' -and (Test-DeprecatedType $masked $typeName)
-            } elseif (-not $path.EndsWith('.yml') -and -not $path.EndsWith('.json')) { throw "Unsupported not-ported source: $($entry.upstream)" }
+            } elseif (-not $path.EndsWith('.yml') -and -not $path.EndsWith('.json') -and -not $path.EndsWith('.properties')) {
+                throw "Unsupported not-ported source: $($entry.upstream)"
+            }
             $deprecation = $decision.deprecation
             if ($deprecation) {
                 if ($deprecation.annotated -isnot [bool] -or $deprecation.annotated -ne $annotated -or
@@ -254,7 +262,11 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                     [string]::Join("`n", @($deprecation.tags)) -cne [string]::Join("`n", $tags)) {
                     throw "Recorded @Deprecated/@deprecated facts differ from the Java source: $($entry.upstream)"
                 }
-            } elseif ($annotated -or $tags.Count) { throw "Unrecorded Java deprecation: $($entry.upstream)" }
+            } elseif (($annotated -or $tags.Count) -and $entry.status -cne 'library-not-ported') {
+                # A library-not-ported unit is left out as a whole because of its library, so the @Deprecated
+                # members it may have (LzfEncoder, JZlibDecoder) need no deprecation record of their own.
+                throw "Unrecorded Java deprecation: $($entry.upstream)"
+            }
             if ($entry.status -ceq 'deprecated-not-ported') {
                 $deprecatedNotPortedCount++
                 if (-not $deprecation) { throw "Deprecated disposition without deprecation facts: $($entry.upstream)" }
@@ -274,8 +286,10 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                     if (-not (Test-DeprecatedType $familyMasked $family.type)) {
                         throw "Deprecated family type is not annotated @Deprecated: $($family.upstream)"
                     }
-                    $samePackage = $entry.upstream.Substring(0, $entry.upstream.LastIndexOf('/')) -ceq
-                        $family.upstream.Substring(0, $family.upstream.LastIndexOf('/'))
+                    # The Java package of a path, whatever its source root (2026-11-24: a test in src/test/java shares
+                    # the package of the unit it tests in src/main/java).
+                    $javaPackageOf = { param([string]$path) ($path.Substring(0, $path.LastIndexOf('/'))) -creplace '/src/(main|test)/java/', '/src/java/' }
+                    $samePackage = (& $javaPackageOf $entry.upstream) -ceq (& $javaPackageOf $family.upstream)
                     $linked = ($masked -cmatch ('\b' + [regex]::Escape($family.type) + '\b')) -or
                         ($typeName -and $typeName -cne 'package-info' -and
                             $familyMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b')) -or
@@ -287,12 +301,15 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                         $via = @($manifest.entries | Where-Object { $_.upstream -ceq $family.via })
                         if ($via.Count -ne 1 -or $via[0].status -cne 'deprecated-not-ported' -or
                             $via[0].notPorted.deprecation.family.upstream -cne $family.upstream -or -not $samePackage -or
-                            $family.via.Substring(0, $family.via.LastIndexOf('/')) -cne $entry.upstream.Substring(0, $entry.upstream.LastIndexOf('/'))) {
+                            (& $javaPackageOf $family.via) -cne (& $javaPackageOf $entry.upstream)) {
                             throw "Invalid deprecated family path: $($entry.upstream)"
                         }
                         $viaMasked = Get-MaskedJava ([Text.Encoding]::UTF8.GetString(
                             [IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $family.via))).Replace("`r`n", "`n"))
-                        $linked = $typeName -and $viaMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b')
+                        $viaType = [IO.Path]::GetFileNameWithoutExtension($family.via)
+                        # The via entry names this type, or (a test of the via helper) this test names the via type.
+                        $linked = $typeName -and ($viaMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b') -or
+                            ($entry.kind -ceq 'test' -and $masked -cmatch ('\b' + [regex]::Escape($viaType) + '\b')))
                     }
                     if (-not $linked) { throw "Deprecated family is not referenced by code: $($entry.upstream)" }
                     if (-not $tags.Count) { $nameSource = @(Get-DeprecatedTags $familySource) }
@@ -304,6 +321,46 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                 }
                 foreach ($name in $names) {
                     if (-not $name -or -not $tagText.Contains($name)) { throw "Replacement name is not in the @deprecated text: $name" }
+                }
+            } elseif ($entry.status -ceq 'library-not-ported') {
+                # Owner decision 2026-11-23 (codec-compression): a unit that needs a third-party Java library with no BCL
+                # counterpart is recorded, not ported. It imports one of the library's recorded packages, or it serves a
+                # recorded library-not-ported unit of the same library that does (family), linked by code in either
+                # direction as for deprecated families.
+                $libraryNotPortedCount++
+                $library = $decision.library
+                if (-not $isJava -or -not $library -or -not $library.name -or -not $library.maven -or
+                    @($library.javaPackages | Where-Object { $_ }).Count -eq 0) {
+                    throw "Library-not-ported entry needs a Java source, the library name, Maven coordinates and Java packages: $($entry.upstream)"
+                }
+                if ($decision.replacement.upstreamNames -or $decision.replacement.upstreamNamesAbsent -or $deprecation) {
+                    throw "Library-not-ported entries record no deprecation facts: $($entry.upstream)"
+                }
+                $importsLibrary = {
+                    # An import of a recorded package, or (2026-11-24, handler ssl) a string literal naming a class of
+                    # it for reflection (Class.forName("org.conscrypt.Conscrypt")).
+                    param([string]$javaSource)
+                    @($library.javaPackages | Where-Object {
+                        $javaSource -cmatch ('(?m)^import\s+(?:static\s+)?' + [regex]::Escape($_) + '\.') -or
+                        $javaSource -cmatch ('"' + [regex]::Escape($_) + '\.[A-Za-z]')
+                    }).Count -gt 0
+                }
+                if ($library.family) {
+                    $owner = @($manifest.entries | Where-Object { $_.upstream -ceq $library.family })
+                    if ($owner.Count -ne 1 -or $owner[0].status -cne 'library-not-ported' -or
+                        $owner[0].notPorted.library.name -cne $library.name -or $owner[0].notPorted.library.family) {
+                        throw "Missing library family owner: $($entry.upstream)"
+                    }
+                    $ownerSource = [Text.Encoding]::UTF8.GetString(
+                        [IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $library.family))).Replace("`r`n", "`n")
+                    if (-not (& $importsLibrary $ownerSource)) { throw "Library family owner does not import the library: $($library.family)" }
+                    $familyType = [IO.Path]::GetFileNameWithoutExtension($library.family)
+                    $ownerMasked = Get-MaskedJava $ownerSource
+                    $linked = ($masked -cmatch ('\b' + [regex]::Escape($familyType) + '\b')) -or
+                        ($ownerMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b'))
+                    if (-not $linked) { throw "Library family is not referenced by code: $($entry.upstream)" }
+                } elseif (-not (& $importsLibrary $source)) {
+                    throw "Library-not-ported unit does not import the recorded library: $($entry.upstream)"
                 }
             } else {
                 $jvmOnlyReplacedCount++
@@ -375,7 +432,9 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                 $maskedSource = Get-MaskedJava $source
                 foreach ($disposition in $dispositions) { Test-CommentDisposition $source $maskedSource $disposition }
                 foreach ($disposition in $dispositions) {
-                    if ($disposition.disposition -ceq 'deprecated-not-ported') { $deprecatedCommentCount++ } else { $jvmOnlyCommentCount++ }
+                    if ($disposition.disposition -ceq 'deprecated-not-ported') { $deprecatedCommentCount++ }
+                    elseif ($disposition.disposition -ceq 'library-not-ported') { $libraryCommentCount++ }
+                    else { $jvmOnlyCommentCount++ }
                 }
             } elseif ($missing.Count) {
                 throw "Missing original comment in $($entry.upstream): $($missing[0])"
@@ -493,6 +552,6 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
     $byStatus = @($entries | Group-Object status | Sort-Object Name | ForEach-Object { "$($_.Count) $($_.Name)" })
     Write-Output ("$($moduleName) manifest verified: $($entries.Count) pinned files (" + [string]::Join(', ', $byStatus) + "), " +
         "$mappedCount mapped original tests, $notApplicableCount CLR-inapplicable and $notPortedMethodCount not-ported original tests, " +
-        "$deprecatedCommentCount deprecated-member and $jvmOnlyCommentCount JVM-only-API comment dispositions; " +
-        "$deprecatedNotPortedCount deprecated-not-ported and $jvmOnlyReplacedCount JVM-only-replaced entries carry $notPortedCommentCount original comments.")
+        "$deprecatedCommentCount deprecated-member, $jvmOnlyCommentCount JVM-only-API and $libraryCommentCount library-not-ported comment dispositions; " +
+        "$deprecatedNotPortedCount deprecated-not-ported, $jvmOnlyReplacedCount JVM-only-replaced and $libraryNotPortedCount library-not-ported entries carry $notPortedCommentCount original comments.")
 }

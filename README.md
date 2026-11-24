@@ -12,8 +12,20 @@ ReplayingDecoder, Headers and the base64/bytes/json/string codecs with their ori
 The codec modules that need only codec-base are ported the same way, each as its own project
 (`Netty.NET.Handler.Codec.<Name>`): [dns](docs/codec-dns-porting.md), [haproxy](docs/codec-haproxy-porting.md),
 [memcache](docs/codec-memcache-porting.md), [mqtt](docs/codec-mqtt-porting.md), [redis](docs/codec-redis-porting.md),
-[smtp](docs/codec-smtp-porting.md), [socks](docs/codec-socks-porting.md) and [stomp](docs/codec-stomp-porting.md).
-Check every codec manifest with `powershell -NoProfile -File tools/Test-CodecPortingManifest.ps1`
+[smtp](docs/codec-smtp-porting.md), [socks](docs/codec-socks-porting.md), [stomp](docs/codec-stomp-porting.md) and
+[compression](docs/codec-compression-porting.md) (Snappy, FastLz, Bzip2, zlib/gzip on the BCL streams and Brotli on
+the BCL encoder; the Lz4, Lzf, Lzma, JZlib and Zstd codecs need Java libraries without a .NET 10 BCL counterpart and
+are recorded as not ported), [xml](docs/codec-xml-porting.md) (XmlFrameDecoder; XmlDecoder needs aalto-xml) and
+[protobuf](docs/codec-protobuf-porting.md) (the varint32 framing; the message codecs need protobuf-java).
+[codec-marshalling](docs/codec-marshalling-porting.md) needs JBoss Marshalling in every file and is recorded in its
+manifest without a C# project.
+The handler port (`Netty.NET.Handler`) covers all of netty-handler: address, flow, flush, ipfilter, logging, pcap,
+stream, timeout, traffic and io.netty.handler.ssl, whose SslHandler runs on `System.Net.Security.SslStream` with the
+BCL authentication options in place of SSLEngine (design: [handler-ssl-design.md](docs/handler-ssl-design.md)); the
+OpenSSL (netty-tcnative), Bouncy Castle and Conscrypt units are recorded as library-not-ported; see
+[handler porting](docs/handler-porting.md) (`tools/Test-CodecPortingManifest.ps1 -Module handler`). Its test-support
+module [pkitesting](docs/pkitesting-porting.md) (`Netty.NET.PkiTesting`) is ported on the BCL certificate APIs.
+Check every codec, pkitesting and handler manifest with `powershell -NoProfile -File tools/Test-CodecPortingManifest.ps1`
 (or one with `-Module codec-dns`).
 The resolver port implements the basic OS-backed resolver module; see its
 [source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).

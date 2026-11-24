@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Compression.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Owner decision 2026-11-23: java.util.zip.Checksum/CRC32/Adler32 are System.IO.Hashing's
+         NonCryptographicHashAlgorithm/Crc32/Adler32 (Microsoft, MIT). -->
+    <PackageReference Include="System.IO.Hashing" Version="11.0.0" />
+  </ItemGroup>
+</Project>

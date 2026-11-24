@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="Moq" Version="4.21.0" />
+    <PackageReference Include="Xunit.v3.AssertMessages" Version="4.0.0" />
+    <PackageReference Include="xunit.v3" Version="4.0.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Owner decision 2026-11-23: an independent bzip2 implementation for the cross-checks that the Java tests run
+         against commons-compress (test only). -->
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Compression\Netty.NET.Handler.Codec.Compression.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- codec-compression/src/test/resources/multiple.gz, copied byte for byte. -->
+    <EmbeddedResource Include="Resources\multiple.gz" LogicalName="multiple.gz" />
+  </ItemGroup>
+</Project>

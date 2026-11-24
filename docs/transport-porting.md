@@ -352,17 +352,20 @@ Supplemental cases: `ContextPipelineEmbeddedAlignmentContractTest` (15). `JavaSt
 
 ## Testsuite inventory (2026-11-18)
 
-The `testsuite` module is ported only where it needs nothing but ported modules (common, buffer,
-resolver, transport, since 2026-11-18 codec-base, and since 2026-11-19 the codec modules that need only codec-base). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
+The `testsuite` module is ported only where it needs nothing but the modules in the manifest's
+`testsuiteInventoryPolicy.portedModules` (common, buffer, resolver, transport, since 2026-11-18 codec-base, since
+2026-11-19 the codec modules that need only codec-base, since 2026-11-23 codec-compression, codec-protobuf and
+codec-xml, and since 2026-11-24 pkitesting). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
 transport-only sources (`AbstractSingleThreadEventLoopTest`, `DefaultEventLoopTest`, `NioEventLoopTest`,
 `ServerSocketSuspendTest`) were missed. The manifest now records every pinned testsuite file, and the checker
 enforces it:
 
 - `testsuiteEntries` (52): ported sources, plus `util/TestUtils.java` (JVM-only heap/thread dump and xz
   compression members recorded per comment) and three `package-info.java` summaries mapped in the table above.
-- `testsuiteDeferredEntries` (14, with 22 declared JUnit tests): sources that need a module that is not ported
-  yet: `codec-http`, `handler`, `pkitesting`, `transport-sctp` or `transport-udt`. They are ported with that
-  module; this is not a decision against porting them.
+- `testsuiteDeferredEntries` (14, with 22 declared JUnit tests): sources that need a module that is not in the
+  testsuite's ported modules: `codec-http`, `transport-sctp` or `transport-udt`, which are not ported yet, or
+  `handler`, which is ported (2026-11-24, ssl included) but joins the testsuite's ported modules in the next testsuite
+  step. They are ported with that module or step; this is not a decision against porting them.
 
 `tools/Test-TransportPortingManifest.ps1` lists `testsuite/src` and requires each file to be recorded exactly once.
 For a deferred file it resolves every `io.netty` import against the pinned `*/src/main/java` sources (nested
@@ -382,3 +385,13 @@ On 2026-11-19 codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-redis,
 codec-stomp were ported (one manifest each, checked by `tools/Test-CodecPortingManifest.ps1`) and joined the ported
 modules. No testsuite file imports them, so the testsuite entries and the 14 deferred files are unchanged; only the
 module list in the deferred reasons changed.
+
+On 2026-11-23 codec-compression, codec-protobuf and codec-xml joined the ported modules (codec-marshalling has no
+project); no testsuite file imports them, so again only the module list in the deferred reasons changed. On
+2026-11-24 pkitesting joined them, so the six TLS sources `SocketSslClientRenegotiateTest`, `SocketSslEchoTest`,
+`SocketSslGreetingTest`, `SocketSslLargeCertificateTest`, `SocketSslSessionReuseTest` and `SocketStartTlsTest` lost
+their pkitesting blocker and imports (the checker recomputes them). The same day the handler module was completed with
+`io.netty.handler.ssl` ([handler-porting.md](handler-porting.md)), so handler is ported. The seven sources it blocks,
+those six and `TrafficShapingHandlerTest`, stay deferred until the next testsuite step ports them and adds handler to
+`testsuiteInventoryPolicy.portedModules`; their recorded reason says so. The other seven deferred files need
+`codec-http` (`SocketSpdyEchoTest`), `transport-sctp` (four files) or `transport-udt` (two files).
