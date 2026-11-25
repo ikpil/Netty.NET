@@ -1,0 +1,314 @@
+/*
+ * Copyright 2023 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+using System;
+using static Netty.NET.Common.Internal.ObjectUtil;
+
+namespace Netty.NET.Handler.Codec.Http;
+
+
+/**
+ * A configuration object for specifying the behaviour of {@link HttpObjectDecoder} and its subclasses.
+ * <p>
+ * The {@link HttpDecoderConfig} objects are mutable to reduce allocation,
+ * but also {@link Cloneable} in case a defensive copy is needed.
+ */
+// CLR: Cloneable is ICloneable; clone() returns HttpDecoderConfig through MemberwiseClone() (Object.clone()'s
+// shallow field copy) and ICloneable.Clone() is implemented explicitly; CloneNotSupportedException cannot occur and
+// its AssertionError branch has no counterpart. HttpHeadersFactory is IHttpHeadersFactory.
+public sealed class HttpDecoderConfig : ICloneable
+{
+    private int maxChunkSize = HttpObjectDecoder.DEFAULT_MAX_CHUNK_SIZE;
+    private bool chunkedSupported = HttpObjectDecoder.DEFAULT_CHUNKED_SUPPORTED;
+    private bool allowPartialChunks = HttpObjectDecoder.DEFAULT_ALLOW_PARTIAL_CHUNKS;
+    private IHttpHeadersFactory headersFactory = DefaultHttpHeadersFactory.HeadersFactory();
+    private IHttpHeadersFactory trailersFactory = DefaultHttpHeadersFactory.TrailersFactory();
+    private bool allowDuplicateContentLengths = HttpObjectDecoder.DEFAULT_ALLOW_DUPLICATE_CONTENT_LENGTHS;
+    private int maxInitialLineLength = HttpObjectDecoder.DEFAULT_MAX_INITIAL_LINE_LENGTH;
+    private int maxHeaderSize = HttpObjectDecoder.DEFAULT_MAX_HEADER_SIZE;
+    private int initialBufferSize = HttpObjectDecoder.DEFAULT_INITIAL_BUFFER_SIZE;
+    private bool strictLineParsing = HttpObjectDecoder.DEFAULT_STRICT_LINE_PARSING;
+    private bool useRfc9112TransferEncoding = HttpObjectDecoder.RFC9112_TRANSFER_ENCODING;
+
+    public int GetInitialBufferSize()
+    {
+        return initialBufferSize;
+    }
+
+    /**
+     * Set the initial size of the temporary buffer used when parsing the lines of the HTTP headers.
+     *
+     * @param initialBufferSize The buffer size in bytes.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetInitialBufferSize(int initialBufferSize)
+    {
+        CheckPositive(initialBufferSize, "initialBufferSize");
+        this.initialBufferSize = initialBufferSize;
+        return this;
+    }
+
+    public int GetMaxInitialLineLength()
+    {
+        return maxInitialLineLength;
+    }
+
+    /**
+     * Set the maximum length of the first line of the HTTP header.
+     * This limits how much memory Netty will use when parsed the initial HTTP header line.
+     * You would typically set this to the same value as {@link #setMaxHeaderSize(int)}.
+     *
+     * @param maxInitialLineLength The maximum length, in bytes.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetMaxInitialLineLength(int maxInitialLineLength)
+    {
+        CheckPositive(maxInitialLineLength, "maxInitialLineLength");
+        this.maxInitialLineLength = maxInitialLineLength;
+        return this;
+    }
+
+    public int GetMaxHeaderSize()
+    {
+        return maxHeaderSize;
+    }
+
+    /**
+     * Set the maximum line length of header lines.
+     * This limits how much memory Netty will use when parsing HTTP header key-value pairs.
+     * The limit applies to the sum of all the headers, so it applies equally to many short header-lines,
+     * or fewer but longer header lines.
+     * <p>
+     * You would typically set this to the same value as {@link #setMaxInitialLineLength(int)}.
+     *
+     * @param maxHeaderSize The maximum length, in bytes.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetMaxHeaderSize(int maxHeaderSize)
+    {
+        CheckPositive(maxHeaderSize, "maxHeaderSize");
+        this.maxHeaderSize = maxHeaderSize;
+        return this;
+    }
+
+    public int GetMaxChunkSize()
+    {
+        return maxChunkSize;
+    }
+
+    /**
+     * Set the maximum chunk size.
+     * HTTP requests and responses can be quite large, in which case it's better to process the data as a stream of
+     * chunks.
+     * This sets the limit, in bytes, at which Netty will send a chunk down the pipeline.
+     *
+     * @param maxChunkSize The maximum chunk size, in bytes.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetMaxChunkSize(int maxChunkSize)
+    {
+        CheckPositive(maxChunkSize, "maxChunkSize");
+        this.maxChunkSize = maxChunkSize;
+        return this;
+    }
+
+    public bool IsChunkedSupported()
+    {
+        return chunkedSupported;
+    }
+
+    /**
+     * Set whether {@code Transfer-Encoding: Chunked} should be supported.
+     *
+     * @param chunkedSupported if {@code false}, then a {@code Transfer-Encoding: Chunked} header will produce an error,
+     * instead of a stream of chunks.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetChunkedSupported(bool chunkedSupported)
+    {
+        this.chunkedSupported = chunkedSupported;
+        return this;
+    }
+
+    public bool IsAllowPartialChunks()
+    {
+        return allowPartialChunks;
+    }
+
+    /**
+     * Set whether chunks can be split into multiple messages, if their chunk size exceeds the size of the input buffer.
+     *
+     * @param allowPartialChunks set to {@code false} to only allow sending whole chunks down the pipeline.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetAllowPartialChunks(bool allowPartialChunks)
+    {
+        this.allowPartialChunks = allowPartialChunks;
+        return this;
+    }
+
+    public IHttpHeadersFactory GetHeadersFactory()
+    {
+        return headersFactory;
+    }
+
+    /**
+     * Set the {@link HttpHeadersFactory} to use when creating new HTTP headers objects.
+     * The default headers factory is {@link DefaultHttpHeadersFactory#headersFactory()}.
+     * <p>
+     * For the purpose of {@link #clone()}, it is assumed that the factory is either immutable, or can otherwise be
+     * shared across different decoders and decoder configs.
+     *
+     * @param headersFactory The header factory to use.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetHeadersFactory(IHttpHeadersFactory headersFactory)
+    {
+        CheckNotNull(headersFactory, "headersFactory");
+        this.headersFactory = headersFactory;
+        return this;
+    }
+
+    public bool IsAllowDuplicateContentLengths()
+    {
+        return allowDuplicateContentLengths;
+    }
+
+    /**
+     * Set whether more than one {@code Content-Length} header is allowed.
+     * You usually want to disallow this (which is the default) as multiple {@code Content-Length} headers can indicate
+     * a request- or response-splitting attack.
+     *
+     * @param allowDuplicateContentLengths set to {@code true} to allow multiple content length headers.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetAllowDuplicateContentLengths(bool allowDuplicateContentLengths)
+    {
+        this.allowDuplicateContentLengths = allowDuplicateContentLengths;
+        return this;
+    }
+
+    /**
+     * Set whether header validation should be enabled or not.
+     * This works by changing the configured {@linkplain #setHeadersFactory(HttpHeadersFactory) header factory}
+     * and {@linkplain #setTrailersFactory(HttpHeadersFactory) trailer factory}.
+     * <p>
+     * You usually want header validation enabled (which is the default) in order to prevent request-/response-splitting
+     * attacks.
+     *
+     * @param validateHeaders set to {@code false} to disable header validation.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetValidateHeaders(bool validateHeaders)
+    {
+        DefaultHttpHeadersFactory noValidation = DefaultHttpHeadersFactory.HeadersFactory().WithValidation(false);
+        headersFactory = validateHeaders ? DefaultHttpHeadersFactory.HeadersFactory() : noValidation;
+        trailersFactory = validateHeaders ? DefaultHttpHeadersFactory.TrailersFactory() : noValidation;
+        return this;
+    }
+
+    public IHttpHeadersFactory GetTrailersFactory()
+    {
+        return trailersFactory;
+    }
+
+    /**
+     * Set the {@link HttpHeadersFactory} used to create HTTP trailers.
+     * This differs from {@link #setHeadersFactory(HttpHeadersFactory)} in that trailers have different validation
+     * requirements.
+     * The default trailer factory is {@link DefaultHttpHeadersFactory#headersFactory()}.
+     * <p>
+     * For the purpose of {@link #clone()}, it is assumed that the factory is either immutable, or can otherwise be
+     * shared across different decoders and decoder configs.
+     *
+     * @param trailersFactory The headers factory to use for creating trailers.
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetTrailersFactory(IHttpHeadersFactory trailersFactory)
+    {
+        CheckNotNull(trailersFactory, "trailersFactory");
+        this.trailersFactory = trailersFactory;
+        return this;
+    }
+
+    public bool IsStrictLineParsing()
+    {
+        return strictLineParsing;
+    }
+
+    /**
+     * The RFC 9112 specification for the HTTP protocol says that the initial start-line, and the following header
+     * field-lines, must be separated by a Carriage Return (CR) and Line Feed (LF) octet pair, but also offers that
+     * implementations "MAY" accept just a Line Feed octet as a separator.
+     * <p>
+     * Parsing leniencies can increase compatibility with a wider range of implementations, but can also cause
+     * security vulnerabilities, when multiple systems disagree on the meaning of leniently parsed messages.
+     * <p>
+     * When <em>strict line parsing</em> is enabled ({@code true}), then Netty will enforce that start- and header
+     * field-lines MUST be separated by a CR LF octet pair, and will produce messages with failed
+     * {@link io.netty.handler.codec.DecoderResult}s.
+     * Additionally, Netty will enforce that only CR LF characters precede the initial line, if any.
+     * <p>
+     * When <em>strict line parsing</em> is disabled ({@code false}), then Netty will accept lone LF octets as line
+     * separators for the start- and header field-lines.
+     * Additionally, Netty will ignore any ISO control and line separator characters prior to the initial line.
+     * <p>
+     * See <a href="https://datatracker.ietf.org/doc/html/rfc9112#name-message-format">RFC 9112 Section 2.1</a> and
+     * <a href="https://datatracker.ietf.org/doc/html/rfc9112#section-2.2-6">RFC 9112 Section 2.2</a>.
+     * @param strictLineParsing Whether <em>strict line parsing</em> should be enabled ({@code true}),
+     * or not ({@code false}).
+     * @return This decoder config.
+     */
+    public HttpDecoderConfig SetStrictLineParsing(bool strictLineParsing)
+    {
+        this.strictLineParsing = strictLineParsing;
+        return this;
+    }
+
+    public bool IsUseRfc9112TransferEncoding()
+    {
+        return useRfc9112TransferEncoding;
+    }
+
+    /**
+     * The RFC 9112 specification is more strict than RFC 7230 with regards to having {@code Transfer-Encoding} and
+     * {@code Content-Length} headers in the same HTTP message. Senders are now forbidden from including both headers
+     * in the same message, while servers may reject such requests. When this setting is set to {@code true}, which
+     * is the default, then such messages will be <em>rejected.</em>
+     * <p>
+     * When this setting is set to {@code false}, it restores the RFC 7230 behavior of instead removing any
+     * {@code Content-Length} headers when {@code Transfer-Encoding} headers are present.
+     * @param useRfc9112TransferEncoding Whether to reject messages with both {@code Transfer-Encoding} and
+     *                                   {@code Content-Length} headers.
+     * @return This decoder config.
+     * @see HttpObjectDecoder#handleTransferEncodingChunkedWithContentLength(HttpMessage)
+     */
+    public HttpDecoderConfig SetUseRfc9112TransferEncoding(bool useRfc9112TransferEncoding)
+    {
+        this.useRfc9112TransferEncoding = useRfc9112TransferEncoding;
+        return this;
+    }
+
+    public HttpDecoderConfig Clone()
+    {
+        return (HttpDecoderConfig) MemberwiseClone();
+    }
+
+    object ICloneable.Clone()
+    {
+        return Clone();
+    }
+}

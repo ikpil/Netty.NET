@@ -20,7 +20,7 @@ function Get-DeclaredJavaTests([string]$Source) {
     # braces inside their parentheses; they are not test method bodies.
     $declarations = '(?m)^[ \t]*(?<annotations>(?:@[\w.]+(?:[ \t]*\([^();]*\))?[ \t\r\n]*)+)' +
         '(?:(?:public|protected|private|static|final|synchronized|abstract)[ \t]+)*' +
-        'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]+throws[^{;]+)?[ \t\r\n]*\{'
+        'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]*throws[^{;]+)?[ \t\r\n]*\{'
     $names = [Collections.Generic.List[string]]::new()
     foreach ($declaration in [regex]::Matches($masked, $declarations)) {
         # JUnit runs @Test, @ParameterizedTest and @RepeatedTest methods; each declaration needs one decision.

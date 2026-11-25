@@ -34,6 +34,11 @@ namespace Netty.NET.Resolver;
 // CLR: use the OS resolver through System.Net.Dns asynchronously instead of blocking the caller thread.
 // SocketUtils.addressByName/allAddressesByName (InetAddress.getByName/getAllByName) are replaced by the private
 // helpers below, which keep the JDK literal and ordering rules that Dns.GetHostAddresses does not share.
+// UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25; it was SocketException with
+// SocketError.HostNotFound before). Dns.GetHostAddressesAsync reports a failed lookup with a SocketException ("An error
+// is encountered when resolving hostNameOrAddress", https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync),
+// where getAllByName throws UnknownHostException; that SocketException becomes the cause of an UnknownHostException
+// whose message is the host name.
 public class DefaultNameResolver : InetNameResolver
 {
     // CLR: InetAddress orders lookup results by java.net.preferIPv6Addresses: "false" (default) puts IPv4 first,
@@ -94,7 +99,7 @@ public class DefaultNameResolver : InetNameResolver
                 // name; IPAddress.TryParse would accept them, and Dns would return the parsed address.
                 if (addr == null && IPAddress.TryParse(host, out var bsd) && bsd.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    throw new SocketException((int)SocketError.HostNotFound, hostname);
+                    throw new UnknownHostException(hostname);
                 }
             }
             if (addr == null)
@@ -120,10 +125,18 @@ public class DefaultNameResolver : InetNameResolver
             // We were expecting an IPv6 Literal, but got something else
             throw InvalidIPv6LiteralException(host, true);
         }
-        IPAddress[] addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+        IPAddress[] addresses;
+        try
+        {
+            addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+        }
+        catch (SocketException e)
+        {
+            throw new UnknownHostException(hostname, e);
+        }
         if (addresses.Length == 0)
         {
-            throw new SocketException((int)SocketError.HostNotFound, hostname);
+            throw new UnknownHostException(hostname);
         }
         return PREFER_IPV6_ADDRESSES switch
         {
@@ -133,10 +146,10 @@ public class DefaultNameResolver : InetNameResolver
         };
     }
 
-    // CLR: UnknownHostException(host + ": invalid IPv6 address literal") maps to SocketException(HostNotFound).
-    private static SocketException InvalidIPv6LiteralException(string host, bool wrapInBrackets)
+    // CLR: UnknownHostException(host + ": invalid IPv6 address literal").
+    private static UnknownHostException InvalidIPv6LiteralException(string host, bool wrapInBrackets)
     {
-        return new SocketException((int)SocketError.HostNotFound,
+        return new UnknownHostException(
                 (wrapInBrackets ? "[" + host + "]" : host) + ": invalid IPv6 address literal");
     }
 

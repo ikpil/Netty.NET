@@ -65,10 +65,14 @@ public class ReferenceCountDiagnosticsContractTest
         Assert.Null(messageOnly.InnerException);
         Assert.Equal("explicit failure", withCause.Message);
         Assert.Same(cause, withCause.InnerException);
+        // IllegalStateException(Throwable) has the detail message (cause==null ? null : cause.toString()) (owner decision
+        // 2026-11-24: ThrowableUtil.ThrowableToString); a null cause keeps the null-message default.
         var causeOnly = new IllegalReferenceCountException(cause);
         Assert.Same(cause, causeOnly.InnerException);
-        Assert.Equal(new IllegalReferenceCountException((string)null).Message, causeOnly.Message);
+        Assert.Equal("System.InvalidOperationException: original failure", causeOnly.Message);
         Assert.Null(new IllegalReferenceCountException((Exception)null).InnerException);
+        Assert.Equal(new IllegalReferenceCountException((string)null).Message,
+                new IllegalReferenceCountException((Exception)null).Message);
         Assert.NotNull(new IllegalReferenceCountException().Message);
     }
 

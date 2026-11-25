@@ -17,13 +17,14 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Hashing;
 
 namespace Netty.NET.Handler.Codec.Compression;
 
 // CLR: CLR-only internal stand-in for java.util.zip.Deflater
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/zip/Deflater.html), named after the JDK type so
-// that JdkZlibEncoder keeps the Java call shape (setInput, deflate with SYNC_FLUSH, needsInput, finish, finished,
-// getTotalIn, end) and its constants. Owner decision 2026-11-23: the solution stays on .NET 10 and java.util.zip is
+// that JdkZlibEncoder and codec-http's SPDY header block encoder (InternalsVisibleTo) keep the Java call shape (setInput,
+// setDictionary, deflate with SYNC_FLUSH, needsInput, finish, finished, getTotalIn, end) and its constants. Owner decision 2026-11-23: the solution stays on .NET 10 and java.util.zip is
 // replaced by the BCL System.IO.Compression streams. The stand-in writes through a raw DeflateStream (nowrap) or a
 // ZLibStream (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibstream?view=net-10.0) into the
 // private Sink, from which deflate() copies the compressed bytes.
@@ -48,7 +49,30 @@ namespace Netty.NET.Handler.Codec.Compression;
 //   "header += 31 - (header % 31)", https://raw.githubusercontent.com/madler/zlib/v1.3.1/deflate.c).
 // - Input is written in chunks of at most MAX_WRITE bytes and only while the Sink is empty, so the Sink holds about one
 //   chunk of output, as zlib's pending buffer does; getTotalIn() counts the written bytes.
-// - setDictionary throws NotSupportedException: the BCL streams have no dictionary API.
+// - Preset dictionaries (owner decision 2026-11-24): the BCL streams have no dictionary API, so setDictionary writes
+//   the dictionary through a raw DeflateStream, sync-flushes it and drops that output: the compressor then holds the
+//   dictionary as history, which RFC 1950 describes as "a sequence of bytes which are initially fed to the compressor
+//   without producing any compressed output" (section 2.2), and the sync flush ends that output on a byte boundary
+//   before the first block of the data. Only the last 32 KiB are written, as zlib's deflateSetDictionary "use[s] the
+//   tail" when the dictionary would fill the window (deflate.c), and a backward distance is at most 32,768 (RFC 1951,
+//   section 3.2.5, https://www.rfc-editor.org/rfc/rfc1951). With the zlib wrapper the stand-in writes what zlib's
+//   deflate() writes itself (deflate.c): the header with PRESET_DICT (FDICT, 0x20) when the dictionary is not empty
+//   ("if (s->strstart != 0) header |= PRESET_DICT") followed by the Adler-32 of the whole dictionary (DICTID, most
+//   significant byte first; deflateSetDictionary computes it over all dictionary bytes, and several calls before the
+//   first deflate() continue it), and on finish the ADLER32 trailer, "a checksum value of the uncompressed data
+//   (excluding any dictionary data)" (RFC 1950), computed with System.IO.Hashing.Adler32
+//   (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp); zlib restarts its check
+//   after the header ("strm->adler = adler32(0L, Z_NULL, 0)"). An empty dictionary changes nothing, as in zlib. As in
+//   zlib's deflateSetDictionary ("if (wrap == 2 || (wrap == 1 && s->status != INIT_STATE) || s->lookahead) return
+//   Z_STREAM_ERROR"), the zlib wrapper takes a dictionary only before the first deflate(); Java throws
+//   IllegalArgumentException for Z_STREAM_ERROR (checkSetDictionaryResult in Deflater.c,
+//   https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/native/libzip/Deflater.c), here
+//   ArgumentException (docs/codec-base-porting.md). zlib also lets a raw deflater take a dictionary between deflate()
+//   calls; the stand-in accepts it only before the first input byte (NotSupportedException afterwards), because the
+//   dictionary written later would be compressed into the data. getTotalIn() does not count the dictionary, as Java's
+//   bytesRead counts only the input of deflate() (Deflater.java,
+//   https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/util/zip/Deflater.java).
+//   Streams without a dictionary are written by the ZLibStream/DeflateStream exactly as before.
 // - The compressed bytes can differ from Java's zlib (.NET uses zlib-ng); the format and the inflated data are the same.
 internal sealed class Deflater
 {
@@ -58,6 +82,10 @@ internal sealed class Deflater
     internal const int SYNC_FLUSH = 2;
 
     private const int MAX_WRITE = 64 * 1024;
+    // The largest backward distance of RFC 1951, the part of a dictionary that can be referenced.
+    private const int WINDOW_SIZE = 32768;
+    // FDICT in the zlib header (zlib's PRESET_DICT).
+    private const int PRESET_DICT = 0x20;
 
     private readonly int level;
     private readonly bool nowrap;
@@ -70,7 +98,12 @@ internal sealed class Deflater
     private bool finish;
     private bool closed;
     private bool finished;
+    private bool started;
     private long bytesRead;
+    private bool hasDictionary;
+    // The zlib wrapper with a preset dictionary: the Adler-32 of the dictionary (DICTID) and of the input (trailer).
+    private Adler32 dictionaryAdler;
+    private Adler32 adler;
 
     internal Deflater(int level) : this(level, false)
     {
@@ -98,8 +131,35 @@ internal sealed class Deflater
 
     internal void SetDictionary(byte[] dictionary)
     {
-        throw new NotSupportedException(
-                "preset dictionaries are not supported: System.IO.Compression has no dictionary API");
+        if (!nowrap && started)
+        {
+            throw new ArgumentException("the zlib wrapper takes a preset dictionary only before the first deflate()");
+        }
+        if (bytesRead > 0 || stream == null)
+        {
+            throw new NotSupportedException("a raw deflater takes a preset dictionary only before its first input byte");
+        }
+        if (dictionary.Length == 0)
+        {
+            return;
+        }
+        if (!hasDictionary)
+        {
+            hasDictionary = true;
+            if (!nowrap)
+            {
+                // The ZLibStream received no byte and writes nothing when it is disposed.
+                stream.Dispose();
+                stream = new DeflateStream(sink, new ZLibCompressionOptions { CompressionLevel = level }, true);
+                dictionaryAdler = new Adler32();
+                adler = new Adler32();
+            }
+        }
+        dictionaryAdler?.Append(dictionary);
+        int length = Math.Min(dictionary.Length, WINDOW_SIZE);
+        stream.Write(dictionary, dictionary.Length - length, length);
+        stream.Flush();
+        sink.Clear();
     }
 
     internal bool NeedsInput()
@@ -124,6 +184,16 @@ internal sealed class Deflater
 
     internal int Deflate(byte[] b, int off, int len, int flush)
     {
+        if (!started)
+        {
+            started = true;
+            if (dictionaryAdler != null)
+            {
+                // The zlib header with FDICT and DICTID, which the raw stream does not write.
+                WriteHeader(PRESET_DICT);
+                WriteInt(dictionaryAdler.GetCurrentHashAsUInt32());
+            }
+        }
         int n = 0;
         for (;;)
         {
@@ -136,6 +206,7 @@ internal sealed class Deflater
             {
                 int chunk = Math.Min(inputLength, MAX_WRITE);
                 stream.Write(input, inputOffset, chunk);
+                adler?.Append(new ReadOnlySpan<byte>(input, inputOffset, chunk));
                 inputOffset += chunk;
                 inputLength -= chunk;
                 bytesRead += chunk;
@@ -164,15 +235,16 @@ internal sealed class Deflater
         stream.Dispose();
         stream = null;
         closed = true;
-        if (bytesRead == 0)
+        if (adler != null)
+        {
+            // The raw stream received the dictionary and wrote the final block; the ADLER32 trailer follows.
+            WriteInt(adler.GetCurrentHashAsUInt32());
+        }
+        else if (bytesRead == 0 && !hasDictionary)
         {
             if (!nowrap)
             {
-                int header = (DEFLATED + ((15 - 8) << 4)) << 8;
-                int levelFlags = level == DEFAULT_COMPRESSION || level == 6 ? 2 : level < 2 ? 0 : level < 6 ? 1 : 3;
-                header |= levelFlags << 6;
-                header += 31 - header % 31;
-                sink.Write(new[] { (byte) (header >> 8), (byte) header });
+                WriteHeader(0);
             }
             sink.Write(new byte[] { 0x03, 0x00 });
             if (!nowrap)
@@ -180,6 +252,23 @@ internal sealed class Deflater
                 sink.Write(new byte[] { 0, 0, 0, 1 });
             }
         }
+    }
+
+    // The zlib header as zlib's deflate() writes it: CMF 0x78, FLEVEL from the level, the given flags and FCHECK.
+    private void WriteHeader(int flags)
+    {
+        int header = (DEFLATED + ((15 - 8) << 4)) << 8;
+        int levelFlags = level == DEFAULT_COMPRESSION || level == 6 ? 2 : level < 2 ? 0 : level < 6 ? 1 : 3;
+        header |= levelFlags << 6;
+        header |= flags;
+        header += 31 - header % 31;
+        sink.Write(new[] { (byte) (header >> 8), (byte) header });
+    }
+
+    // An Adler-32 value, most significant byte first (RFC 1950).
+    private void WriteInt(uint value)
+    {
+        sink.Write(new[] { (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value });
     }
 
     internal void End()
@@ -200,6 +289,11 @@ internal sealed class Deflater
         private int writeIndex;
 
         internal int Available => writeIndex - readIndex;
+
+        internal void Clear()
+        {
+            readIndex = writeIndex = 0;
+        }
 
         internal int Take(byte[] b, int off, int len)
         {

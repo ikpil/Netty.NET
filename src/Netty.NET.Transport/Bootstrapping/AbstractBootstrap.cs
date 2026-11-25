@@ -78,11 +78,12 @@ public abstract class AbstractBootstrap
         {
             addr = new DefaultNameResolver(ImmediateEventExecutor.INSTANCE).ResolveAsync(hostname).GetAwaiter().GetResult();
         }
-        // CLR: DefaultNameResolver reports UnknownHostException as SocketException. Dns.GetHostAddressesAsync rejects a
-        // name longer than 255 characters with ArgumentOutOfRangeException and an invalid address with
-        // ArgumentException (https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync); the JDK
-        // reports both as UnknownHostException.
-        catch (Exception e) when (e is SocketException || e is ArgumentException)
+        // CLR: DefaultNameResolver reports UnknownHostException as Common's UnknownHostException (owner decision
+        // 2026-11-25). Dns.GetHostAddressesAsync rejects a name longer than 255 characters with
+        // ArgumentOutOfRangeException and an invalid address with ArgumentException
+        // (https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync); the JDK reports both as
+        // UnknownHostException.
+        catch (Exception e) when (e is UnknownHostException || e is ArgumentException)
         {
             return new DnsEndPoint(hostname, port);
         }

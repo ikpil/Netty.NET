@@ -17,5 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Netty.NET.Transport\Netty.NET.Transport.csproj" />
     <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler\Netty.NET.Handler.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Http\Netty.NET.Handler.Codec.Http.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.PkiTesting\Netty.NET.PkiTesting.csproj" />
   </ItemGroup>
 </Project>

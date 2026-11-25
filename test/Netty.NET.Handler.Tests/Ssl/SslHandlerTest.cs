@@ -754,10 +754,10 @@ public class SslHandlerTest
             this.latch2 = latch2;
         }
 
-        // CLR: the ChannelFutureListener runs on IdleStateHandler.ExecutorTaskScheduler(ctx), which runs it at once on
-        // the event loop as DefaultPromise.notifyListeners() does (docs/handler-porting.md, "Listener timing"), so the
-        // failed write is queued before the SslCloseCompletionEvent of the later channelInactive, as in Java; a
-        // thread-pool continuation raced with that event (measured).
+        // CLR: the ChannelFutureListener runs on Common's EventExecutorTaskScheduler over ctx.Executor, which runs it
+        // at once on the event loop as DefaultPromise.notifyListeners() does (docs/handler-porting.md, "Listener
+        // timing"), so the failed write is queued before the SslCloseCompletionEvent of the later channelInactive, as
+        // in Java; a thread-pool continuation raced with that event (measured).
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             ByteBuf buf = ctx.Alloc().Buffer(10);
@@ -767,7 +767,7 @@ public class SslHandlerTest
                 events.Add(future);
                 CountDown(latch);
             }, CancellationToken.None, TaskContinuationOptions.None,
-                    new Netty.NET.Handler.Timeout.IdleStateHandler.ExecutorTaskScheduler(ctx));
+                    new EventExecutorTaskScheduler(() => ctx.Executor));
         }
 
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)

@@ -59,7 +59,9 @@ Custom/native memory without an exposed array is copied before its owner may be
 disposed; the tests dispose a custom MemoryManager and verify independent bytes.
 
 CharsetUtil is now replaced by native Encoding and caller-selected fallbacks;
-the unused utility and thread-local codec caches are removed. Java UTF-16 emits
+the unused utility and thread-local codec caches are removed (since 2026-11-24 the
+class holds only the CLR-only ForName(string), the Charset.forName counterpart that
+codec-http uses; see common-clr-design.md). Java UTF-16 emits
 a BOM and detects byte order; CLR raw GetBytes/GetString require explicit framing
 and byte order. Java UTF-8 malformed-input replacement is '?' versus CLR U+FFFD;
 CLR single-byte '?' fallback replaces an unmappable surrogate pair twice versus

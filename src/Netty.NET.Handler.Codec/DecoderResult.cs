@@ -77,8 +77,8 @@ public class DecoderResult
                 return "success";
             }
 
-            // CLR: cause().toString() is the Java Throwable text (see CodecException.ThrowableToString).
-            string cause = CodecException.ThrowableToString(Cause());
+            // CLR: cause().toString() is the Java Throwable text, Common's ThrowableUtil.ThrowableToString.
+            string cause = ThrowableUtil.ThrowableToString(Cause());
             return new StringBuilder(cause.Length + 17)
                 .Append("failure(")
                 .Append(cause)

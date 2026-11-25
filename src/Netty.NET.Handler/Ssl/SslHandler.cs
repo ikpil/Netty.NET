@@ -145,8 +145,8 @@ namespace Netty.NET.Handler.Ssl;
 // TCNATIVE/CONSCRYPT branches serve the library-not-ported OpenSSL/Conscrypt engines; its JDK branch (heap buffers,
 // MERGE_CUMULATOR, one record per unwrap) is the behaviour kept here. ChannelFuture/ChannelPromise/Future/Promise are
 // Task/TaskCompletionSource (docs/transport-porting.md, docs/handler-porting.md "Task promises"); listeners that touch
-// this handler run on Netty.NET.Handler.Timeout.IdleStateHandler.ExecutorTaskScheduler(ctx) (at once on the event loop,
-// else through Execute: DefaultPromise.notifyListeners), and ScheduledFuture is the CancellationTokenSource of
+// this handler run on Common's EventExecutorTaskScheduler over ctx.Executor (at once on the event loop, else through
+// Execute: DefaultPromise.notifyListeners), and ScheduledFuture is the CancellationTokenSource of
 // ctx.Executor.ScheduleAsync, as AbstractSniHandler does. SSLException/SSLHandshakeException are AuthenticationException
 // (ssl design decision 3); (long, TimeUnit) pairs are TimeSpan (docs/common-clr-design.md, "Monotonic time and duration
 // conversion"); Java's checked "throws" clauses have no counterpart.
@@ -2028,7 +2028,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     {
         this.ctx = ctx;
         // CLR: the scheduler of the listeners that DefaultPromise would notify on ctx.executor().
-        listenerScheduler = new Netty.NET.Handler.Timeout.IdleStateHandler.ExecutorTaskScheduler(ctx);
+        listenerScheduler = new EventExecutorTaskScheduler(() => ctx.Executor);
         IChannel channel = ctx.Channel;
         pendingUnencryptedWrites = new PendingWritesQueue(this, channel, 16, wantsDirectBuffer);
 
@@ -2423,7 +2423,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 
     // ---- CLR-only helpers -----------------------------------------------------------------------------------------
 
-    private Netty.NET.Handler.Timeout.IdleStateHandler.ExecutorTaskScheduler listenerScheduler;
+    private EventExecutorTaskScheduler listenerScheduler;
 
     // CLR: ctx.newPromise() for the promises of this handler (aggregate write promises, the close_notify flush): their
     // continuations (the queued writes' producers) run at once, as DefaultPromise notifies on the event loop.
@@ -2439,19 +2439,20 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
-    // CLR: future.addListener(listener) on this handler's state: a continuation on ExecutorTaskScheduler(ctx), which runs
-    // it at once on the event loop and otherwise hands it to the executor (DefaultPromise.notifyListeners policy).
+    // CLR: future.addListener(listener) on this handler's state: a continuation on listenerScheduler (Common's
+    // EventExecutorTaskScheduler over ctx.Executor), which runs it at once on the event loop and otherwise hands it to
+    // the executor (DefaultPromise.notifyListeners policy).
     private void AddListener(Task future, Action<Task> listener)
     {
         _ = future.ContinueWith(listener, CancellationToken.None, TaskContinuationOptions.None, listenerScheduler);
     }
 
     // CLR: ctx.write(msg, promise) / PromiseNotifier.cascade(future, promise): the outcome of the Task is copied into
-    // the producer with TrySetFromTask (docs/common-task-composition.md). The continuation runs on
-    // ExecutorTaskScheduler(ctx): the Transport completes its operation Tasks with RunContinuationsAsynchronously, which
-    // queues the continuation to its scheduler from the completing thread, and this scheduler runs it at once on the
-    // event loop, as DefaultPromise notifies a ChannelPromise there; TaskScheduler.Default would complete the producers
-    // on a thread-pool thread.
+    // the producer with TrySetFromTask (docs/common-task-composition.md). The continuation runs on listenerScheduler
+    // (Common's EventExecutorTaskScheduler over ctx.Executor): the Transport completes its operation Tasks with
+    // RunContinuationsAsynchronously, which queues the continuation to its scheduler from the completing thread, and
+    // this scheduler runs it at once on the event loop, as DefaultPromise notifies a ChannelPromise there;
+    // TaskScheduler.Default would complete the producers on a thread-pool thread.
     private void Cascade(Task future, TaskCompletionSource promise)
     {
         if (future.IsCompleted)
@@ -2534,8 +2535,8 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     // https://raw.githubusercontent.com/dotnet/runtime/main/src/libraries/System.Private.CoreLib/src/System/Threading/Tasks/TaskContinuation.cs).
     // RunEngine therefore clears a SynchronizationContext for the call
     // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.synchronizationcontext.setsynchronizationcontext?view=net-10.0)
-    // and, inside a Task of another scheduler (e.g. a listener on ExecutorTaskScheduler), runs the call in a Task on the
-    // default scheduler with Task.RunSynchronously, "on the TaskScheduler provided"
+    // and, inside a Task of another scheduler (e.g. a listener on EventExecutorTaskScheduler), runs the call in a Task
+    // on the default scheduler with Task.RunSynchronously, "on the TaskScheduler provided"
     // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.runsynchronously?view=net-10.0).
 
     private enum Status

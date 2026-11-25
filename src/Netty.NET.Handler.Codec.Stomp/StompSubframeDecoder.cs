@@ -22,6 +22,7 @@ using Netty.NET.Common;
 using Netty.NET.Common.Internal;
 using Netty.NET.Handler.Codec;
 using Netty.NET.Transport.Channels;
+using static Netty.NET.Buffer.ByteBufUtil;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Stomp;
@@ -65,12 +66,10 @@ namespace Netty.NET.Handler.Codec.Stomp;
 // docs/codec-base-porting-manifest.json), so in.writerIndex() is the cumulation's InternalBuffer().WriterIndex. The
 // switch sections that fall through end with goto case
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements).
-// ByteBufUtil.readBytes(ctx.alloc(), in, length) reads through in.readBytes(ByteBuf dst), but the Buffer port's
-// ByteBufUtil.ReadBytes reads exactly length bytes through ReadBytes(ByteBuf, int) (docs/buffer-porting.md,
-// Allocator-returning utilities), which the ReplayingDecoderByteBuf view rejects as the Java view does; the view's
-// supported ReadBytes(int) copies the same bytes into a new buffer of the cumulation's allocator after the replay check,
-// so no buffer is allocated for a replayed read. Owner-revisit item (2026-11-19): the Buffer decision stays, so this
-// call stays until it is revisited.
+// The static import ByteBufUtil.* is using static ByteBufUtil: ReadBytes(ctx.Alloc(), in, length) reads through
+// in.ReadBytes(ByteBuf dst), which the ReplayingDecoderByteBuf view supports, when the allocator returns exactly length
+// writable bytes (src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs; the owner-revisit item of 2026-11-19, done
+// 2026-11-24).
 public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
 {
 
@@ -185,7 +184,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                         {
                             toRead = remainingLength;
                         }
-                        ByteBuf chunkBuffer = @in.ReadBytes(toRead);
+                        ByteBuf chunkBuffer = ReadBytes(ctx.Alloc(), @in, toRead);
                         if ((alreadyReadChunkSize += toRead) >= contentLength)
                         {
                             lastContent = new DefaultLastStompContentSubframe(chunkBuffer);
@@ -215,7 +214,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                             {
                                 toRead = InternalBuffer().WriterIndex - @in.ReaderIndex;
                             }
-                            ByteBuf chunkBuffer = @in.ReadBytes(toRead);
+                            ByteBuf chunkBuffer = ReadBytes(ctx.Alloc(), @in, toRead);
                             alreadyReadChunkSize += toRead;
                             if (nulIndex > 0)
                             {

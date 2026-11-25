@@ -202,7 +202,7 @@ public class LocalChannel : AbstractChannel
         => throw new NotSupportedException();
 
     // CLR: AbstractUnsafe.connect(...) is folded into AbstractChannel; LocalUnsafe.connect(...) overrides it.
-    internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
+    protected internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
         => _unsafe.Connect(remote, local, cancellationToken);
 
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)

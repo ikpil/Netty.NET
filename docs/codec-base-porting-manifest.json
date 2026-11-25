@@ -175,9 +175,10 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "RuntimeException is Exception (as ChannelException). The cause-only constructor uses the Java detail message (cause == null ? null : cause.toString()); internal ThrowableToString builds Throwable.toString() (class name, \": \" and the message) because Exception.ToString() appends the inner exception and the stack trace. serialVersionUID has no counterpart.",
+        "scope": "RuntimeException is Exception (as ChannelException). The cause-only constructor uses the Java detail message (cause == null ? null : cause.toString()), built by Common's ThrowableUtil.ThrowableToString (Throwable.toString(): class name, \": \" and the message; a CLR-only helper, owner decision 2026-11-24, that replaced the internal CodecException.ThrowableToString) because Exception.ToString() appends the inner exception and the stack trace. serialVersionUID has no counterpart.",
         "sourceEvidence": [
-          "src/Netty.NET.Handler.Codec/CodecException.cs"
+          "src/Netty.NET.Handler.Codec/CodecException.cs",
+          "src/Netty.NET.Common/Internal/ThrowableUtil.cs"
         ]
       }
     },
@@ -334,7 +335,7 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "Signal (an Exception in Netty.NET.Common) marks UNFINISHED and SUCCESS exactly as in the source; cause() is Cause(); toString() prints the Java Throwable text of the cause through CodecException.ThrowableToString.",
+        "scope": "Signal (an Exception in Netty.NET.Common) marks UNFINISHED and SUCCESS exactly as in the source; cause() is Cause(); toString() prints the Java Throwable text of the cause through Common's ThrowableUtil.ThrowableToString.",
         "sourceEvidence": [
           "src/Netty.NET.Handler.Codec/DecoderResult.cs"
         ]
@@ -378,10 +379,14 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "Generic DefaultHeaders<K, V, T> plus a non-generic static DefaultHeaders holding HASH_CODE_SEED, INameValidator<K> and IValueValidator<V>, so the Java spelling DefaultHeaders.NameValidator stays DefaultHeaders.INameValidator<K>; NOT_NULL and NO_VALIDATION are interface statics (one per closed type). HashingStrategy is IEqualityComparer<K>, JAVA_HASHER is EqualityComparer<T>.Default and BiPredicate is Func<V, V, bool>. Non-final members are virtual and Java protected (subclass and package) is protected internal. The nested class ValueIterator is ValueIterator_ because the public method ValueIterator(K) keeps its Java name (CS0102). catch (IllegalArgumentException) is an exception filter that accepts ArgumentException (excluding ArgumentNullException/ArgumentOutOfRangeException), FormatException and OverflowException, the CLR parse failures. Empty/singleton lists are ReadOnlyCollection<V>, the empty name set is ImmutableHashSet<K>.Empty and LinkedHashSet is the Common LinkedHashSet; IEquatable<T> keeps xUnit equality on the source equals().",
+        "scope": "Generic DefaultHeaders<K, V, T> plus a non-generic static DefaultHeaders holding HASH_CODE_SEED, INameValidator<K> and IValueValidator<V>, so the Java spelling DefaultHeaders.NameValidator stays DefaultHeaders.INameValidator<K>; NOT_NULL and NO_VALIDATION are interface statics (one per closed type). HashingStrategy is IEqualityComparer<K>, JAVA_HASHER is EqualityComparer<T>.Default and BiPredicate is Func<V, V, bool>. Non-final members are virtual and Java protected (subclass and package) is protected internal. The nested class ValueIterator is ValueIterator_ because the public method ValueIterator(K) keeps its Java name (CS0102). catch (IllegalArgumentException) is an exception filter that accepts ArgumentException (excluding ArgumentNullException/ArgumentOutOfRangeException), FormatException and OverflowException, the CLR parse failures. Empty/singleton lists are ReadOnlyCollection<V>, the empty name set is ImmutableHashSet<K>.Empty and LinkedHashSet is the Common LinkedHashSet; IEquatable<T> keeps xUnit equality on the source equals(). thisT() is Java's unchecked (T) this, which performs no run-time check because the erasure of DefaultHeaders is a subtype of the erasure of T (JLS 4.6, 5.1.6.2, 5.1.6.3, 5.5), so the exact DefaultHeaders<K, V, T> that copy() creates fails only where a caller uses a this-returning result as a T (JLS 4.12.2); a C# cast would throw InvalidCastException at once, so ThisT() is the type-test pattern \"this is T t ? t : default\" (2026-11-24): a T returns itself, any other instance returns null, which works while the result is ignored and fails where it is used (NullReferenceException in place of ClassCastException; measured: Add on a copy of DefaultHeadersImpl returns null and adds the entry, a chained Add throws NullReferenceException).",
         "sourceEvidence": [
           "src/Netty.NET.Handler.Codec/DefaultHeaders.cs",
-          "test/Netty.NET.Handler.Codec.Tests/DefaultHeadersTest.cs"
+          "test/Netty.NET.Handler.Codec.Tests/DefaultHeadersTest.cs",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.5",
+          "https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.12.2",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/type-testing-and-cast#cast-expression",
+          "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns#declaration-and-type-patterns"
         ]
       }
     },
@@ -401,7 +406,7 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "Source class; the validator types are referenced as DefaultHeaders.INameValidator/IValueValidator.",
+        "scope": "Source class; the validator types are referenced as DefaultHeaders.INameValidator/IValueValidator. copy() is the inherited DefaultHeaders.Copy(), whose result is not a DefaultHeadersImpl, as in Java (see DefaultHeaders, ThisT).",
         "sourceEvidence": [
           "src/Netty.NET.Handler.Codec/DefaultHeadersImpl.cs"
         ]
@@ -648,7 +653,7 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "IllegalStateException is InvalidOperationException (as IllegalReferenceCountException); the cause-only constructor keeps the Java cause.toString() detail message; serialVersionUID has no counterpart.",
+        "scope": "IllegalStateException is InvalidOperationException (as IllegalReferenceCountException); the cause-only constructor keeps the Java cause.toString() detail message (Common's ThrowableUtil.ThrowableToString); serialVersionUID has no counterpart.",
         "sourceEvidence": [
           "src/Netty.NET.Handler.Codec/MessageAggregationException.cs"
         ]

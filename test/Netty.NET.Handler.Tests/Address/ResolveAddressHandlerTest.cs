@@ -26,13 +26,14 @@ using Netty.NET.Resolver;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Local;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Tests.Address;
 
 // CLR: the static @BeforeAll createEventLoop()/@AfterAll destroyEventLoop() run from a class fixture, which xUnit
 // creates "Just before the first test" and cleans up "once all the tests have finished ... by calling Dispose"
 // (https://xunit.net/docs/shared-context), as SocketEchoSourceTest does in Transport. UUID.randomUUID() is
-// Guid.NewGuid(), UnknownHostException is SocketException(HostNotFound) (as DefaultNameResolver reports it) and
+// Guid.NewGuid(), UnknownHostException is Common's UnknownHostException (as DefaultNameResolver reports it) and
 // AddressResolverGroup<SocketAddress> is AddressResolverGroup<EndPoint>, so the handler is
 // ResolveAddressHandler<EndPoint> (see ResolveAddressHandler.cs). Promise<SocketAddress> is the Task<EndPoint> that
 // doResolve returns. sb.bind(...).syncUninterruptibly().channel() is the awaited bind Task<IChannel>;
@@ -46,7 +47,7 @@ public class ResolveAddressHandlerTest : IClassFixture<ResolveAddressHandlerTest
 
     private static readonly LocalAddress UNRESOLVED = new LocalAddress("unresolved-" + Guid.NewGuid());
     private static readonly LocalAddress RESOLVED = new LocalAddress("resolved-" + Guid.NewGuid());
-    private static readonly Exception ERROR = new SocketException((int) SocketError.HostNotFound);
+    private static readonly Exception ERROR = new UnknownHostException();
 
     private static IEventLoopGroup group;
 

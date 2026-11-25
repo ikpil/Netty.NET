@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- codec-http needs codec-compression (HttpContentCompressor/Decompressor, the zlib stand-ins of SPDY) and handler
+         (io.netty.handler.ssl and io.netty.handler.stream), which brings codec-base. -->
+    <ProjectReference Include="..\Netty.NET.Handler.Codec.Compression\Netty.NET.Handler.Codec.Compression.csproj" />
+    <ProjectReference Include="..\Netty.NET.Handler\Netty.NET.Handler.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http.Tests" />
+  </ItemGroup>
+</Project>

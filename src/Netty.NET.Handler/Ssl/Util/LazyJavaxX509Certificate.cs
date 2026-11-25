@@ -69,7 +69,7 @@ public sealed class LazyJavaxX509Certificate : X509Certificate
     }
 
     // CLR: X509Certificate.getInstance(bytes) wrapped in an IllegalStateException, whose message is the cause's
-    // toString() (class name, ": ", message).
+    // toString() (class name, ": ", message; Common's ThrowableUtil.ThrowableToString).
     private static X509Certificate2 Unwrap(byte[] bytes)
     {
         try
@@ -78,7 +78,7 @@ public sealed class LazyJavaxX509Certificate : X509Certificate
         }
         catch (CryptographicException e)
         {
-            throw new InvalidOperationException(e.GetType().FullName + ": " + e.Message, e);
+            throw new InvalidOperationException(ThrowableUtil.ThrowableToString(e), e);
         }
     }
 

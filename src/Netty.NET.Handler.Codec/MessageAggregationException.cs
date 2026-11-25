@@ -15,6 +15,7 @@
  */
 
 using System;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec;
 
@@ -35,8 +36,9 @@ public class MessageAggregationException : InvalidOperationException
     {
     }
 
-    // CLR: IllegalStateException(Throwable) uses cause.toString() as the detail message.
-    public MessageAggregationException(Exception cause) : base(CodecException.ThrowableToString(cause), cause)
+    // CLR: IllegalStateException(Throwable) uses cause.toString() as the detail message (Common's
+    // ThrowableUtil.ThrowableToString).
+    public MessageAggregationException(Exception cause) : base(ThrowableUtil.ThrowableToString(cause), cause)
     {
     }
 }

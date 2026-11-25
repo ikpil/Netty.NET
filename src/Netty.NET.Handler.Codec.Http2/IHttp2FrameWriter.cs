@@ -1,0 +1,236 @@
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at:
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+using System;
+using System.Threading.Tasks;
+using Netty.NET.Buffer;
+using Netty.NET.Transport.Channels;
+
+namespace Netty.NET.Handler.Codec.Http2;
+
+/**
+ * A writer responsible for marshaling HTTP/2 frames to the channel. All of the write methods in
+ * this interface write to the context, but DO NOT FLUSH. To perform a flush, you must separately
+ * call {@link ChannelHandlerContext#flush()}.
+ */
+// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Task-returning methods take the Async
+// suffix and return the promise's Task (docs/codec-http-porting.md, Shared CLR adaptations; owner rule 2).
+// CLR: Closeable keeps close() as Close() and implements IDisposable.Dispose() with it (docs/handler-porting.md:
+// "Closeable keeps close() as Close() and implements IDisposable.Dispose() with it").
+// CLR: the nested interface Configuration takes the I prefix.
+public interface IHttp2FrameWriter : IHttp2DataWriter, IDisposable
+{
+    /**
+     * Configuration specific to {@link Http2FrameWriter}
+     */
+    public interface IConfiguration
+    {
+        /**
+         * Get the {@link Http2HeadersEncoder.Configuration} for this {@link Http2FrameWriter}
+         */
+        IHttp2HeadersEncoder.IConfiguration HeadersConfiguration();
+
+        /**
+         * Get the {@link Http2FrameSizePolicy} for this {@link Http2FrameWriter}
+         */
+        IHttp2FrameSizePolicy FrameSizePolicy();
+    }
+
+    /**
+     * Writes a HEADERS frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param streamId the stream for which to send the frame.
+     * @param headers the headers to be sent.
+     * @param padding additional bytes that should be added to obscure the true content size. Must be between 0 and
+     *                256 (inclusive).
+     * @param endStream indicates if this is the last frame to be sent for the stream.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     * <a href="https://tools.ietf.org/html/rfc7540#section-10.5.1">Section 10.5.1</a> states the following:
+     * <pre>
+     * The header block MUST be processed to ensure a consistent connection state, unless the connection is closed.
+     * </pre>
+     * If this call has modified the HPACK header state you <strong>MUST</strong> throw a connection error.
+     * <p>
+     * If this call has <strong>NOT</strong> modified the HPACK header state you are free to throw a stream error.
+     */
+    Task WriteHeadersAsync(IChannelHandlerContext ctx, int streamId, IHttp2Headers headers,
+                               int padding, bool endStream, TaskCompletionSource promise);
+
+    /**
+     * Writes a HEADERS frame with priority specified to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param streamId the stream for which to send the frame.
+     * @param headers the headers to be sent.
+     * @param streamDependency the stream on which this stream should depend, or 0 if it should
+     *            depend on the connection.
+     * @param weight the weight for this stream.
+     * @param exclusive whether this stream should be the exclusive dependant of its parent.
+     * @param padding additional bytes that should be added to obscure the true content size. Must be between 0 and
+     *                256 (inclusive).
+     * @param endStream indicates if this is the last frame to be sent for the stream.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     * <a href="https://tools.ietf.org/html/rfc7540#section-10.5.1">Section 10.5.1</a> states the following:
+     * <pre>
+     * The header block MUST be processed to ensure a consistent connection state, unless the connection is closed.
+     * </pre>
+     * If this call has modified the HPACK header state you <strong>MUST</strong> throw a connection error.
+     * <p>
+     * If this call has <strong>NOT</strong> modified the HPACK header state you are free to throw a stream error.
+     */
+    Task WriteHeadersAsync(IChannelHandlerContext ctx, int streamId, IHttp2Headers headers,
+                               int streamDependency, short weight, bool exclusive, int padding, bool endStream,
+                               TaskCompletionSource promise);
+
+    /**
+     * Writes a PRIORITY frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param streamId the stream for which to send the frame.
+     * @param streamDependency the stream on which this stream should depend, or 0 if it should
+     *            depend on the connection.
+     * @param weight the weight for this stream.
+     * @param exclusive whether this stream should be the exclusive dependant of its parent.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WritePriorityAsync(IChannelHandlerContext ctx, int streamId, int streamDependency,
+            short weight, bool exclusive, TaskCompletionSource promise);
+
+    /**
+     * Writes a RST_STREAM frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param streamId the stream for which to send the frame.
+     * @param errorCode the error code indicating the nature of the failure.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WriteRstStreamAsync(IChannelHandlerContext ctx, int streamId, long errorCode,
+            TaskCompletionSource promise);
+
+    /**
+     * Writes a SETTINGS frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param settings the settings to be sent.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WriteSettingsAsync(IChannelHandlerContext ctx, Http2Settings settings,
+            TaskCompletionSource promise);
+
+    /**
+     * Writes a SETTINGS acknowledgment to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WriteSettingsAckAsync(IChannelHandlerContext ctx, TaskCompletionSource promise);
+
+    /**
+     * Writes a PING frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param ack indicates whether this is an ack of a PING frame previously received from the
+     *            remote endpoint.
+     * @param data the payload of the frame.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WritePingAsync(IChannelHandlerContext ctx, bool ack, long data,
+            TaskCompletionSource promise);
+
+    /**
+     * Writes a PUSH_PROMISE frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param streamId the stream for which to send the frame.
+     * @param promisedStreamId the ID of the promised stream.
+     * @param headers the headers to be sent.
+     * @param padding additional bytes that should be added to obscure the true content size. Must be between 0 and
+     *                256 (inclusive).
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     * <a href="https://tools.ietf.org/html/rfc7540#section-10.5.1">Section 10.5.1</a> states the following:
+     * <pre>
+     * The header block MUST be processed to ensure a consistent connection state, unless the connection is closed.
+     * </pre>
+     * If this call has modified the HPACK header state you <strong>MUST</strong> throw a connection error.
+     * <p>
+     * If this call has <strong>NOT</strong> modified the HPACK header state you are free to throw a stream error.
+     */
+    Task WritePushPromiseAsync(IChannelHandlerContext ctx, int streamId, int promisedStreamId,
+                                   IHttp2Headers headers, int padding, TaskCompletionSource promise);
+
+    /**
+     * Writes a GO_AWAY frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param lastStreamId the last known stream of this endpoint.
+     * @param errorCode the error code, if the connection was abnormally terminated.
+     * @param debugData application-defined debug data. This will be released by this method.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WriteGoAwayAsync(IChannelHandlerContext ctx, int lastStreamId, long errorCode,
+            ByteBuf debugData, TaskCompletionSource promise);
+
+    /**
+     * Writes a WINDOW_UPDATE frame to the remote endpoint.
+     *
+     * @param ctx the context to use for writing.
+     * @param streamId the stream for which to send the frame.
+     * @param windowSizeIncrement the number of bytes by which the local inbound flow control window
+     *            is increasing.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WriteWindowUpdateAsync(IChannelHandlerContext ctx, int streamId,
+            int windowSizeIncrement, TaskCompletionSource promise);
+
+    /**
+     * Generic write method for any HTTP/2 frame. This allows writing of non-standard frames.
+     *
+     * @param ctx the context to use for writing.
+     * @param frameType the frame type identifier.
+     * @param streamId the stream for which to send the frame.
+     * @param flags the flags to write for this frame.
+     * @param payload the payload to write for this frame. This will be released by this method.
+     * @param promise the promise for the write.
+     * @return the future for the write.
+     */
+    Task WriteFrameAsync(IChannelHandlerContext ctx, byte frameType, int streamId,
+            Http2Flags flags, ByteBuf payload, TaskCompletionSource promise);
+
+    /**
+     * Get the configuration related elements for this {@link Http2FrameWriter}
+     */
+    IConfiguration Configuration();
+
+    /**
+     * Closes this writer and frees any allocated resources.
+     */
+    void Close();
+
+    void IDisposable.Dispose()
+    {
+        Close();
+    }
+}

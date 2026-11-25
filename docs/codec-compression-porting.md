@@ -48,10 +48,20 @@ run for every subclass and theories run once per data row: 330 pass and 18 are s
   .NET 11 adds `DeflateDecoder`
   ([page](https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.deflatedecoder?view=net-11.0), net-11.0
   only), which reports the consumed bytes and could remove the one-byte feeding after a move to .NET 11.
+- **zlib preset dictionaries (2026-11-24).** The BCL `DeflateStream`/`ZLibStream` have no dictionary API, so the
+  dictionary is implemented on them in the `Inflater`/`Deflater` stand-ins. The inflater puts the dictionary into the
+  window of a raw `DeflateStream` as a non-compressed block ([RFC 1951](https://www.rfc-editor.org/rfc/rfc1951) 3.2.4)
+  and drops those bytes from its output; the deflater compresses the dictionary, sync-flushes, keeps only what follows
+  and writes the zlib header with `FDICT` and the dictionary's Adler-32
+  ([RFC 1950](https://www.rfc-editor.org/rfc/rfc1950) 2.2) itself. JdkZlibEncoder/JdkZlibDecoder/JdkZlibDecompressor and
+  ZlibCodecFactory take dictionaries as in Java. A ZLIB stream with a dictionary is fed one byte per `Read` after the
+  dictionary (see [Inflater](#inflater)); streams without one keep the feeding above. codec-http's SPDY header block
+  codec uses the same stand-ins through `InternalsVisibleTo` ([codec-http-porting.md](codec-http-porting.md)).
 - **Libraries without a BCL counterpart.** Units that need lz4-java, compress-lzf, lzma-java, jzlib or zstd-jni are
   `library-not-ported`; no third-party .NET library is added for them. The .NET 10 `System.IO.Compression` namespace
   has Brotli, Deflate, GZip and ZLib types but no LZ4, LZF or LZMA type and no zlib dictionary API
-  ([System.IO.Compression](https://learn.microsoft.com/en-us/dotnet/api/system.io.compression?view=net-10.0)).
+  ([System.IO.Compression](https://learn.microsoft.com/en-us/dotnet/api/system.io.compression?view=net-10.0)) (preset
+  dictionaries are implemented in the stand-ins, see [zlib, deflate and gzip](#zlib-deflate-and-gzip)).
   `ZstandardStream`/`ZstandardEncoder`/`ZstandardDecoder` exist only from .NET 11
   ([ZstandardStream](https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zstandardstream); the API page
   lists net-11.0 only). ZlibCodecFactory, Snappy, FastLz, Bzip2 and Brotli remain available.
@@ -77,7 +87,8 @@ run for every subclass and theories run once per data row: 330 pass and 18 are s
 ## Namespaces and assembly
 
 The package files sit at the project root. The project references `Netty.NET.Handler.Codec` (codec-base) and
-`System.IO.Hashing`, and `InternalsVisibleTo` opens internals to the test assembly only.
+`System.IO.Hashing`. `InternalsVisibleTo` opens internals to the test assembly and, since 2026-11-24, to
+`Netty.NET.Handler.Codec.Http`, whose SPDY header block codec uses the internal `Deflater`/`Inflater` stand-ins.
 
 | Java package | C# namespace | Original package summary |
 | --- | --- | --- |
@@ -362,16 +373,36 @@ private feed stream that `SetInput` fills.
   skips them, where Java leaves them in the cumulation, which ByteToMessageDecoder forwards when the handler is removed;
   JdkZlibDecompressor's `consumeInput()` advances past them. The decoder or decompressor is finished then; no original
   test observes it.
-- **Preset dictionaries.** The BCL streams have no dictionary API, and ZLibStream reports zlib's `Z_NEED_DICT` as an
-  unexpected `ZLibException`. The feed hands the two zlib header bytes to the ZLibStream on their own and checks the
-  FDICT flag of a valid header ([RFC 1950](https://www.rfc-editor.org/rfc/rfc1950), 2.2).
-  - `needsDictionary()` becomes true once the header is seen; zlib would first read the four DICTID bytes too.
-  - Without a configured dictionary, Netty's `DecompressionException("decompression failure, unable to set dictionary
-    as non was specified")` is thrown as in Java.
-  - With one, `setDictionary` throws `NotSupportedException`. JdkZlibDecoder surfaces it as a `DecoderException`
-    (ByteToMessageDecoder wraps exceptions that are not DecoderExceptions); JdkZlibDecompressor throws it unwrapped.
-  - The constructors and builder methods that take a dictionary stay (public Java API). Streams without FDICT decode
-    normally with a dictionary configured.
+- **Preset dictionaries.** The BCL streams have no dictionary API and `ZLibStream` reports zlib's `Z_NEED_DICT` as an
+  unexpected `ZLibException`, so the stand-in implements the dictionary on the BCL streams. RFC 1950 2.2: "If FDICT is
+  set, a DICT dictionary identifier is present immediately after the FLG byte", and the trailer is the Adler-32 of "the
+  uncompressed data (excluding any dictionary data)".
+  - The feed hands the two zlib header bytes to the `ZLibStream` on their own and checks `FDICT` in a valid header
+    (CM 8, CINFO up to 7, FCHECK). With `FDICT` it stops feeding the `ZLibStream`, reads the four DICTID bytes itself
+    and then reports `needsDictionary()`, as zlib returns `Z_NEED_DICT` after its DICTID state having consumed six
+    bytes ([inflate.c](https://raw.githubusercontent.com/madler/zlib/v1.3.1/inflate.c)); `getRemaining()` matches.
+  - `setDictionary` follows zlib's `inflateSetDictionary`: with the zlib wrapper only while the dictionary is needed
+    (`Z_STREAM_ERROR` otherwise), and the dictionary's Adler-32 must equal DICTID (`Z_DATA_ERROR` otherwise). Java
+    throws `IllegalArgumentException` for both (`checkSetDictionaryResult` in
+    [Inflater.c](https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/native/libzip/Inflater.c)),
+    here `ArgumentException`; `needsDictionary()` stays true after a wrong dictionary, because Java clears `needDict`
+    only after the native call returned
+    ([Inflater.java](https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/util/zip/Inflater.java)).
+  - The dictionary goes into the window of a raw `DeflateStream` as one non-compressed block (BFINAL 0, BTYPE 00, LEN,
+    NLEN; RFC 1951 3.2.4), whose output `setDictionary` reads and drops. Only the last 32 KiB are used: a backward
+    distance is "drawn from (1..32,768)" (RFC 1951 3.2.5), and zlib's `updatewindow` keeps only the last window size.
+  - The raw stream cannot check the zlib trailer, so the stand-in computes the Adler-32 of the inflated data with
+    `System.IO.Hashing.Adler32` ([page](https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp))
+    and reads the four trailer bytes itself. Fed whole buffers, `DeflateStream` would keep the trailer in its own
+    buffer at the end, so after the dictionary the deflate data is fed one byte per `Read`, as for GZIP; the end, the
+    trailer check and `getRemaining()` are then exact. A mismatch throws `InvalidDataException("incorrect data
+    check")`, zlib's message, again on later calls (zlib stays in its BAD state).
+  - In nowrap mode zlib accepts a dictionary at any time and amends the window; the stand-in accepts it only before
+    the first input byte (the stored block cannot be placed later) and throws `NotSupportedException` afterwards.
+    `needsDictionary()` is never true in nowrap mode, as in zlib.
+  - Streams without `FDICT` take the `ZLibStream` path unchanged (same feeding, same speed).
+  - **Throughput** (scratch Debug build, 1 MB of output, three runs): a dictionary stream inflates at 16-29 MB/s, the
+    one-byte-per-Read speed (exact ZLIB 19-28 MB/s), against 250-420 MB/s for the same data without a dictionary.
 - **Strict validation.** The `System.IO.Compression.UseStrictValidation` AppContext switch (off by default,
   `s_useStrictValidation` in DeflateStream.cs) makes DeflateStream throw `InvalidDataException("Found truncated data
   while decoding.")` when its source returns 0 before the end. The stand-in treats that exception, thrown right after
@@ -400,8 +431,23 @@ The stand-in writes through a raw `DeflateStream` or a `ZLibStream` into a priva
   and `testGZIPCompressOnly(null)` need it.
 - Input is written in chunks of at most 64 KiB while the sink is empty, so the sink holds about one chunk of output.
   `getTotalIn()` counts the written bytes.
-- `setDictionary` throws `NotSupportedException`, so `JdkZlibEncoder(byte[])`, `JdkZlibEncoder(int, byte[])` and
-  `ZlibCodecFactory.NewZlibEncoder(byte[])`/`(int, byte[])` throw `NotSupportedException`.
+- **Preset dictionaries.** `setDictionary` writes the last 32 KiB of the dictionary (zlib's `deflateSetDictionary`
+  "use[s] the tail"; [deflate.c](https://raw.githubusercontent.com/madler/zlib/v1.3.1/deflate.c)) through a raw
+  `DeflateStream`, sync-flushes and drops that output, so the compressor holds the dictionary as history, the bytes
+  RFC 1950 describes as "initially fed to the compressor without producing any compressed output"; the sync flush ends
+  that output on a byte boundary. With the zlib wrapper the stand-in writes what zlib's `deflate()` writes: the header
+  with `PRESET_DICT` (FDICT, 0x20) when the dictionary is not empty (`if (s->strstart != 0) header |= PRESET_DICT`)
+  and the Adler-32 of the whole dictionary (DICTID; several calls before the first `deflate()` continue it), and on
+  finish the Adler-32 of the input only. An empty dictionary changes nothing, as in zlib.
+  - As in `deflateSetDictionary` (`Z_STREAM_ERROR` when `wrap == 1 && s->status != INIT_STATE`), the zlib wrapper
+    takes a dictionary only before the first `deflate()`; Java throws `IllegalArgumentException`
+    ([Deflater.c](https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/native/libzip/Deflater.c)),
+    here `ArgumentException`. zlib lets a raw deflater take one between `deflate()` calls; the stand-in accepts it only
+    before the first input byte (a dictionary written later would be compressed into the data), `NotSupportedException`
+    afterwards.
+  - `getTotalIn()` does not count the dictionary, as Java's `bytesRead`
+    ([Deflater.java](https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/util/zip/Deflater.java)).
+  - Deflate throughput is the same with and without a dictionary (32-45 MB/s of input in the scratch Debug build).
 - Compressed bytes can differ from Java's zlib (.NET uses zlib-ng). No test of this family compares compressed bytes;
   all compare inflated data.
 
@@ -416,6 +462,13 @@ The stand-in writes through a raw `DeflateStream` or a `ZLibStream` into a priva
   `prepareDecompressBuffer` and `decompressionBufferExhausted` are virtual.
 - `JdkZlibDecompressor` has `Status_()` and `Builder_()`; the Builder constructor and the fields the outer class reads
   are `internal`.
+- **Dictionaries.** `JdkZlibEncoder(byte[])`, `JdkZlibEncoder(int, byte[])`, `JdkZlibDecoder(byte[], int)`,
+  `JdkZlibDecompressor.Builder.Dictionary(byte[])` and `ZlibCodecFactory.NewZlibEncoder(byte[])`/`(int, byte[])`/
+  `(int, int, int, byte[])`/`NewZlibDecoder(byte[], int)` work as in Java; the code is the Java code. A wrong dictionary
+  surfaces from JdkZlibDecoder as a `DecoderException` wrapping the `ArgumentException` (ByteToMessageDecoder wraps
+  exceptions that are not DecoderExceptions, as Java does for `IllegalArgumentException`); without a dictionary Netty's
+  `DecompressionException("decompression failure, unable to set dictionary as non was specified")` is thrown as
+  before.
 - `(int) Math.ceil(...)` in `allocateBuffer` saturates in Java and, since .NET 9, in C#
   ([page](https://learn.microsoft.com/en-us/dotnet/core/compatibility/jit/9.0/fp-to-integer)).
 - **ZlibCodecFactory.** jzlib is not ported, so the `Class.forName` probe always takes its ClassNotFoundException
@@ -574,7 +627,7 @@ The other byte uses keep the source code:
 | `ZlibCodecFactory.newZlibDecoder()`, `(ZlibWrapper)`, `(byte[])` (members) | 3 comments recorded as `deprecated-not-ported` | Replaced by `NewZlibDecoder(..., int maxAllocation)`. |
 | `StandardCompressionOptions.brotli(Encoder.Parameters)` (member) | comment recorded as `deprecated-not-ported` | `@deprecated Use {@link #brotli(int, int, BrotliMode)}`, which is ported. |
 | `package-info.java` | `jvm-only-replaced` | C# namespaces cannot carry documentation comments; the summary is in the namespace table above. |
-| `module-info.yml` | `jvm-only-replaced` | JPMS module descriptor (it also requires the optional zstd-jni, lzma-java, jzlib, lz4, brotli4j and compress-lzf modules); `Netty.NET.Handler.Codec.Compression.csproj` references codec-base, and `InternalsVisibleTo` opens internals to the test assembly only. |
+| `module-info.yml` | `jvm-only-replaced` | JPMS module descriptor (it also requires the optional zstd-jni, lzma-java, jzlib, lz4, brotli4j and compress-lzf modules); `Netty.NET.Handler.Codec.Compression.csproj` references codec-base, and `InternalsVisibleTo` opens internals to the test assembly (and, since 2026-11-24, to `Netty.NET.Handler.Codec.Http` for the zlib stand-ins). |
 | `META-INF/native-image/.../reflect-config.json` | `jvm-only-replaced` | GraalVM reflection metadata; NativeAOT keeps handler metadata through the `DynamicallyAccessedMembers` annotations on `IChannelHandler`/`ChannelHandlerAdapter`. |
 | `META-INF/native-image/.../native-image.properties` | `jvm-only-replaced` | `--initialize-at-run-time` for `BrotliDecoder`, whose static initializer probes brotli4j ([build configuration](https://www.graalvm.org/latest/reference-manual/native-image/overview/BuildConfiguration/), [class initialization](https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/ClassInitialization/)). The BCL decoder needs no probe, the NativeAOT deployment documentation describes no build-time class initialization option ([Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)), and C# static constructors run before first use at run time ([static constructors](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors)). |
 
@@ -637,7 +690,9 @@ uses for custom window sizes, memory levels and preset dictionaries. System.IO.C
 on .NET 10 sets only the compression level and strategy
 ([ZLibCompressionOptions.cs](https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/ZLibCompressionOptions.cs),
 [CompressionLevel](https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibcompressionoptions.compressionlevel?view=net-10.0)).
-ZlibCodecFactory creates the Jdk codecs and throws `NotSupportedException` where it would create a JZlib codec.
+Preset dictionaries do not need jzlib: the Jdk codecs take them through the stand-ins (2026-11-24, see
+[zlib, deflate and gzip](#zlib-deflate-and-gzip)). ZlibCodecFactory creates the Jdk codecs and throws
+`NotSupportedException` where it would create a JZlib codec (see [Codecs](#codecs)).
 
 | Unit | Status | Reason |
 | --- | --- | --- |
@@ -816,6 +871,29 @@ solution stays on .NET 10.
   it.
 - `assertDoesNotThrow(x::close)` is `Assert.Null(Record.Exception(x.Close))`, which "Returns the exception that was
   thrown by the code; null, otherwise" ([Record](https://raw.githubusercontent.com/xunit/assert.xunit/main/Record.cs)).
+- **Preset dictionaries (2026-11-24).** No codec-compression test uses a preset dictionary (`grep -rn -i dictionary`
+  over `codec-compression/src/test` of the pinned commit finds none), and no test was recorded CLR-inapplicable or
+  adapted because of the dictionary, so no test changed. All 348 test cases of the module ran in a scratch build of the
+  whole project: 330 passed, 18 skipped (the assumptions of the parameterized JdkZlibDecompressorTest, as before), 0
+  failed. Scratch interop tests (not in the repository, 196 tests, all passing) checked the stand-ins against the
+  reference zlib, CPython 3.14 `zlib` with `zdict`:
+  - Decode: 22 CPython streams (zlib and raw; sync-flushed and finished; levels 0, 1, 6, 9; dictionaries of 1, 693,
+    1,423 (`SPDY_DICT`) and 50,089 bytes; empty data; 1 MB of data) decode byte for byte through the stand-in, fed whole
+    and in random pieces of 1, 1-7 and 1-63 bytes, with and without exactRemaining; `getRemaining()` is 0 at the end
+    and 5 for a stream followed by 5 bytes; a corrupted trailer is "incorrect data check"; a wrong dictionary is
+    `ArgumentException` with `needsDictionary()` still true.
+  - Encode: 165 streams written by the stand-in Deflater (4 dictionaries x zlib/raw x sync/finished x levels -1, 0, 1,
+    6, 9 x data/empty; two `setDictionary` calls before the first `deflate()`; the SPDY header block encoder loop at
+    levels 0, 1, 6, 9; JdkZlibEncoder at levels 1, 6, 9) all decode with CPython's `decompressobj(zdict=...)`, with
+    `eof` and no unused data for finished streams; every zlib stream carries FDICT and DICTID = `zlib.adler32(dict)` and
+    fails without the dictionary.
+  - SPDY: CPython's level-1 stream with `SPDY_DICT` starts with `78 3f e3 c6 a7 c2`, the `zlibHeader` of codec-http's
+    `SpdyHeaderBlockZlibDecoderTest`. Replays of its cases through the stand-in Inflater with the decoder's loop
+    (`testHeaderBlock`, `testHeaderBlockMultipleDecodes` one byte per decode, `testLargeHeaderName`,
+    `testHeaderBlockExtraData`, `testHeaderBlockInvalidDictionary`, `testHeaderBlockInvalidDeflateBlock`,
+    `testHeaderBlockAtDecompressionCapIsAccepted`) give the Java results (invalid data is `InvalidDataException`, the
+    wrong dictionary `ArgumentException`, `getRemaining()` 0 after each block); codec-http's own tests pass
+    ([codec-http-porting.md](codec-http-porting.md)).
 
 ## Owner review items
 
@@ -825,10 +903,26 @@ solution stays on .NET 10.
   first two differ from an unsigned reading only for invalid input. See [Byte values](#byte-values).
 - **BrotliMode is not applied.** The BCL encoder has no mode parameter, so `BrotliOptions` keeps TEXT/FONT/GENERIC but
   every stream is encoded as `BROTLI_MODE_GENERIC`; the output is valid and may differ in size from brotli4j's.
-- **Preset dictionaries are unsupported.** `JdkZlibEncoder(byte[])`, `JdkZlibEncoder(int, byte[])` and
-  `ZlibCodecFactory.NewZlibEncoder(byte[])`/`(int, byte[])` throw `NotSupportedException`. A decoder or decompressor
-  with a dictionary throws `NotSupportedException` (wrapped in a `DecoderException` by JdkZlibDecoder) when a stream
-  sets FDICT; streams without FDICT decode normally.
+- **Preset dictionary streams decode one byte per Read.** After the dictionary the stand-in feeds the deflate data one
+  byte per `Read` so that it can read and check the zlib trailer itself (16-29 MB/s against 250-420 MB/s without a
+  dictionary in the scratch Debug build). SPDY header blocks are small; JdkZlibDecoder/JdkZlibDecompressor with a
+  dictionary pay it for every stream that sets FDICT. A faster variant (a `ZLibStream` fed a synthetic header and a
+  prefix that makes its own check equal the data's Adler-32) was not chosen: corrupt streams that reference bytes
+  before the dictionary would then decode the prefix instead of failing with "invalid distance too far back".
+- **Raw (nowrap) dictionaries only before the first byte.** zlib accepts a dictionary on a raw inflater/deflater at any
+  time and amends the window; the stand-ins throw `NotSupportedException` after the first input byte. No Netty code
+  sets a dictionary on a raw inflater/deflater.
+- **getAdler() is not part of the stand-ins.** Java's `Inflater.getAdler()` returns DICTID while `needsDictionary()` is
+  true and the running Adler-32 of the output otherwise; no Netty code calls `getAdler()` (pinned commit), and a full
+  implementation would add an Adler-32 pass to the streams without a dictionary, so it was not added.
+- **Messages.** Java's `IllegalArgumentException` from `setDictionary` carries zlib's `strm->msg`, which
+  `inflateSetDictionary`/`deflateSetDictionary` do not set (null); the stand-ins' messages say what failed.
+- **For codec-http (SPDY).** `SpdyHeaderBlockZlibDecoder` treats `getRemaining() != 0` after the inflate loop as an
+  invalid header block. With FDICT streams (every SPDY stream) `getRemaining()` is exact. A header block without FDICT
+  (only `testHeaderBlockAtDecompressionCapIsAccepted` makes one) would go through the whole-buffer `ZLibStream` path,
+  where bytes after the end of the zlib stream count as consumed, so the decoder uses `new Inflater(false, true)`
+  (exactRemaining), which makes that case exact too, at the one-byte speed
+  ([codec-http-porting.md](codec-http-porting.md), SPDY).
 - **ZlibCodecFactory's JZlib branches** (`io.netty.noJdkZlibEncoder`/`noJdkZlibDecoder`, or a window size or memory
   level other than 15/8) throw `NotSupportedException`, where a JVM without jzlib fails with `NoClassDefFoundError`;
   `isSupportingWindowSizeAndMemLevel()` is false.

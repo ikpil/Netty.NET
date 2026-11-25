@@ -1346,9 +1346,23 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         return previous;
     }
 
+    // CLR: (T) this is an unchecked cast in Java: "A narrowing reference conversion from a type S to a type variable T
+    // is unchecked" (JLS 5.1.6.2). The erasure of DefaultHeaders is a subtype of the erasure of T, its bound Headers
+    // (JLS 4.6), so the conversion is completely unchecked and "no run time check is performed" (JLS 5.1.6.3 and 5.5,
+    // https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.5). A DefaultHeaders that is not a T, such as
+    // the exact DefaultHeaders<K, V, T> of copy(), therefore returns itself from its this-returning methods, and the
+    // ClassCastException occurs only where a caller reads the result as a T (heap pollution, JLS 4.12.2,
+    // https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.12.2). A C# cast checks at once: "At run time,
+    // an explicit conversion might not succeed and a cast expression might throw an exception"
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/type-testing-and-cast#cast-expression),
+    // so (T) (object) this would throw InvalidCastException even for an ignored result. The declaration pattern
+    // matches when "the run-time type of an expression result derives from type T"
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns#declaration-and-type-patterns),
+    // so every T instance returns itself; any other instance returns null, which works while the result is ignored and
+    // fails where a caller uses it (NullReferenceException in place of ClassCastException).
     private T ThisT()
     {
-        return (T) (object) this;
+        return this is T t ? t : default;
     }
 
     // CLR: catch (IllegalArgumentException e) is a filtered catch. ArgumentNullException and

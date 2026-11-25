@@ -20,6 +20,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Buffer;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 using Netty.NET.Handler.Codec;
@@ -31,10 +32,11 @@ namespace Netty.NET.Handler.Ssl;
  * {@link ByteToMessageDecoder} which allows to be notified once a full {@code ClientHello} was received.
  */
 // CLR: Future<T> is Task<T> (docs/common-task-composition.md): isDone() is IsCompleted, and the FutureListener is a
-// continuation on IdleStateHandler.ExecutorTaskScheduler over ctx's executor, which runs it at once when the lookup
+// continuation on Common's EventExecutorTaskScheduler over ctx's executor, which runs it at once when the lookup
 // completes on the event loop and otherwise hands it to the executor, the policy of DefaultPromise.notifyListeners()
-// (src/Netty.NET.Handler/Timeout/IdleStateHandler.cs). The outbound operations take the CancellationToken and return the
-// Task that replace the ChannelPromise, as in codec-base DatagramPacketEncoder; SocketAddress is EndPoint.
+// (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs). The outbound operations take the CancellationToken
+// and return the Task that replace the ChannelPromise, as in codec-base DatagramPacketEncoder; SocketAddress is
+// EndPoint.
 // List<Object> out is IList<object> @out. catch (Throwable) is catch (Exception), so the catch (Throwable) clauses that
 // follow a catch (Exception) have no counterpart, and PlatformDependent.throwException(cause) is throw;
 // (src/Netty.NET.Handler/IpFilter/AbstractRemoteAddressFilter.cs). getUnsignedByte is GetByte, the unsigned System.Byte
@@ -344,7 +346,7 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                         }
                     }
                 }, CancellationToken.None, TaskContinuationOptions.None,
-                        new Netty.NET.Handler.Timeout.IdleStateHandler.ExecutorTaskScheduler(ctx));
+                        new EventExecutorTaskScheduler(() => ctx.Executor));
 
                 // Ownership was transferred to the FutureListener.
                 clientHello = null;

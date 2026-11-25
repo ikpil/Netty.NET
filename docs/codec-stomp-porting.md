@@ -74,7 +74,8 @@ every codec module (see [codec-base-porting.md](codec-base-porting.md)).
 
 ## The decoder on ReplayingDecoder
 
-`StompSubframeDecoder` is a `ReplayingDecoder<StompSubframeDecoder.State>`. Four adaptations keep its Java behaviour:
+`StompSubframeDecoder` is a `ReplayingDecoder<StompSubframeDecoder.State>`. Three adaptations keep its Java behaviour,
+and the decoder reads its chunks as Java does:
 
 - **Signal.** `Signal` is an `Exception` in the Common port but a `java.lang.Error` in Java, which `catch (Exception)`
   does not catch. Both `catch (Exception)` blocks therefore filter `when (e is not Signal)`, so `REPLAY` reaches
@@ -83,12 +84,13 @@ every codec module (see [codec-base-porting.md](codec-base-porting.md)).
 - **Writer index.** The C# `ReplayingDecoderByteBuf` view reads `WriterIndex` as `int.MaxValue` while not
   terminated, a recorded codec-base difference. The Java view returns the cumulation's writer index, so
   `in.writerIndex()` is `InternalBuffer().WriterIndex`, which the NUL search and the chunk length need.
-- **readBytes (owner-revisit item, 2026-11-19).** Java's `ByteBufUtil.readBytes(alloc, in, n)` reads through
-  `in.readBytes(ByteBuf)`. The Buffer port's `ByteBufUtil.ReadBytes` reads exactly `length` bytes through
-  `ReadBytes(ByteBuf, int)`, a recorded Buffer decision ([buffer-porting.md](buffer-porting.md), Allocator-returning
-  utilities). The view rejects that overload, as the Java view does. The decoder therefore calls the view's
-  `ReadBytes(int)`, which copies the same bytes into a buffer of the cumulation's allocator after the replay check.
-  This stays until the owner revisits it.
+- **readBytes (owner-revisit item of 2026-11-19, done 2026-11-24).** Java's `ByteBufUtil.readBytes(ctx.alloc(), in,
+  n)` (static import `ByteBufUtil.*`, `using static ByteBufUtil` here) reads through `in.readBytes(ByteBuf)`, which
+  the view supports. The Buffer port's `ByteBufUtil.ReadBytes` now takes that path when the allocator returns exactly
+  `n` writable bytes, which every Netty.NET allocator does, and keeps its exact-length `ReadBytes(ByteBuf, int)` read,
+  which the view rejects as the Java view does, for other allocators ([buffer-porting.md](buffer-porting.md),
+  Allocator-returning utilities). The decoder therefore calls `ReadBytes(ctx.Alloc(), in, n)` as in Java; until
+  2026-11-24 it called the view's `ReadBytes(int)`.
 - **State.** The nested type `State` hides the inherited `ReplayingDecoder.State()` methods in C#, so it is declared
   `new` and the decoder calls `base.State()`.
 

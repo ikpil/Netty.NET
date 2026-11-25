@@ -39,11 +39,12 @@ namespace Netty.NET.Handler.Codec.Compression;
 // DeflateStream/ZLibStream, and DataFormatException is the InvalidDataException those streams throw. The GZIP wrapper
 // creates it with exactRemaining (one byte per Read), so that getRemaining() is exact at the end of the deflate body and
 // consumeInput() leaves the trailer in the buffer; ZLIB and NONE feed whole buffers, so after the end of such a stream the
-// bytes the BCL stream read past it count as consumed (the decompressor is COMPLETE then). Preset dictionaries: with no
-// dictionary a stream with the zlib FDICT flag fails with Netty's DecompressionException; with one,
-// Inflater.SetDictionary throws NotSupportedException (the BCL streams have no dictionary API). java.util.zip.CRC32 is
-// System.IO.Hashing.Crc32 (owner decision 2026-11-23), wrapped by ByteBufChecksum.WrapChecksum; Deflater.DEFLATED is
-// the stand-in Deflater's constant. Objects.requireNonNull(wrapper) has no counterpart because ZlibWrapper is a C# enum
+// bytes the BCL stream read past it count as consumed (the decompressor is COMPLETE then). The BCL streams have no
+// dictionary API; the stand-in implements needsDictionary/setDictionary on them (owner decision 2026-11-24, see
+// Inflater.cs), so a stream with the zlib FDICT flag decodes with the configured dictionary as in Java (after the
+// dictionary the stand-in reads the deflate data one byte per Read). java.util.zip.CRC32 is System.IO.Hashing.Crc32
+// (owner decision 2026-11-23), wrapped by ByteBufChecksum.WrapChecksum; Deflater.DEFLATED is the stand-in Deflater's
+// constant. Objects.requireNonNull(wrapper) has no counterpart because ZlibWrapper is a C# enum
 // (a value type). The Buffer port has no hasArray()/array()/arrayOffset(); borrowed memory and MemoryMarshal.TryGetArray
 // replace them (docs/buffer-porting.md, Array extraction), see TryGetArray and ArrayOf below. readUnsignedByte() is
 // ReadByte(), which is unsigned in the Buffer port (owner decision). C# switch sections cannot fall through, so each
@@ -654,7 +655,6 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
          * @param dictionary The dictionary
          * @return This builder
          */
-        // CLR: a stream that needs the dictionary fails with NotSupportedException (see the class comment).
         public Builder Dictionary(byte[] dictionary)
         {
             this.dictionary = dictionary;

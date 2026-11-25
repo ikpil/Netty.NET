@@ -50,7 +50,10 @@ public class IllegalReferenceCountException : InvalidOperationException
     {
     }
 
-    public IllegalReferenceCountException(Exception cause) : base(null, cause)
+    // CLR: IllegalStateException(Throwable) has "a detail message of (cause==null ? null : cause.toString())"
+    // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/IllegalStateException.html), the Java
+    // text that ThrowableUtil.ThrowableToString builds (owner decision 2026-11-24).
+    public IllegalReferenceCountException(Exception cause) : base(Internal.ThrowableUtil.ThrowableToString(cause), cause)
     {
     }
 }

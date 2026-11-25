@@ -32,7 +32,7 @@ function Get-DeclaredJavaTests([string]$source) {
     })
     $declarations = '(?m)^[ \t]*(?<annotations>(?:@[\w.]+(?:[ \t]*\([^();]*\))?[ \t\r\n]*)+)' +
         '(?:(?:public|protected|private|static|final|synchronized|abstract)[ \t]+)*' +
-        'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]+throws[^{;]+)?[ \t\r\n]*\{'
+        'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]*throws[^{;]+)?[ \t\r\n]*\{'
     $names = @([regex]::Matches($masked, $declarations) | Where-Object {
         $_.Groups['annotations'].Value -match '@(?:Test|ParameterizedTest|RepeatedIfExceptionsTest)\b'
     } | ForEach-Object { $_.Groups['name'].Value })

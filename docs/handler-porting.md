@@ -198,12 +198,16 @@ resources next to the test assembly.
   asynchronously" ([TaskCreationOptions](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcreationoptions)),
   so a `ContinueWith(..., ExecuteSynchronously, TaskScheduler.Default)` continuation of a Task that completes later runs
   on a thread-pool thread after the operation completed. The port uses three listener policies:
-  - `IdleStateHandler` and `WriteTimeoutHandler` attach their listeners with `IdleStateHandler.ExecutorTaskScheduler`,
-    a `TaskScheduler` over `ctx.Executor`. The completing thread queues the continuation to it
-    ([TaskScheduler.QueueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskscheduler)), and it
-    runs the continuation at once on the event loop or hands it to `Execute`, the `notifyListeners()` policy. With
+  - `IdleStateHandler`, `WriteTimeoutHandler`, `SslHandler` and `SslClientHelloHandler` (so also `AbstractSniHandler`)
+    attach their listeners with Common's public, CLR-only `Netty.NET.Common.Concurrent.EventExecutorTaskScheduler`
+    (`src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs`, owner decision 2026-11-24), a `TaskScheduler`
+    over `ctx.Executor`: `new EventExecutorTaskScheduler(() => ctx.Executor)`, which reads the executor when a
+    continuation is queued (Common cannot see `IChannelHandlerContext`). The completing thread queues the continuation
+    to it ([TaskScheduler.QueueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskscheduler)), and
+    it runs the continuation at once on the event loop or hands it to `Execute`, the `notifyListeners()` policy. With
     `TaskScheduler.Default`, `IdleStateHandlerTest.testWriterNotIdle`, `testAllNotIdle`, `testObserveWriterIdle` and
-    `testObserveAllIdle` failed in every run.
+    `testObserveAllIdle` failed in every run. codec-http's listener continuations use the same scheduler, which
+    replaced the earlier internal `IdleStateHandler.ExecutorTaskScheduler` and the private copies in codec-http.
   - `ChunkedWriteHandler` attaches a continuation on `TaskScheduler.Default` that runs the listener at once when it
     runs on the event loop and otherwise through `executor.Execute`, logging a rejected submission
     ([common-native-progress.md](common-native-progress.md)). Only a write that is not done yet gets a listener; when
@@ -241,7 +245,7 @@ resources next to the test assembly.
     filters and the pcap handler see the addresses the JDK would.
   - `SocketUtils.addressByName` (`InetAddress.getByName`) is the `DefaultNameResolver` lookup that Transport's
     `AbstractBootstrap` uses for the same call (JDK literal rules, an IPv4-mapped literal becomes IPv4,
-    `UnknownHostException` is `SocketException`).
+    `UnknownHostException` is Common's `UnknownHostException`, owner decision 2026-11-25).
   - An address prints as `EndPoint.ToString()` (`0.0.0.0:80`), not as Java's `0.0.0.0/0.0.0.0:80`
     ([IPEndPoint.ToString](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipendpoint.tostring?view=net-10.0),
     [InetSocketAddress](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html)),
@@ -349,7 +353,7 @@ resources next to the test assembly.
 
 - **LoggingHandler** logs through Common's `InternalLoggerFactory` (see Logging above). `level()` and `byteBufFormat()`
   are the methods `Level()` and `ByteBufFormat()`, and the format methods are protected virtual. An exception argument
-  is rendered as `Throwable.toString()` (class name, `": "`, message;
+  is rendered as `Throwable.toString()` with Common's `ThrowableUtil.ThrowableToString` (class name, `": "`, message;
   [Throwable.toString](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html#toString())),
   because `Exception.ToString()` also appends inner exceptions and the stack trace
   ([Exception.ToString](https://learn.microsoft.com/en-us/dotnet/api/system.exception.tostring?view=net-10.0)). Address
@@ -449,8 +453,8 @@ resources next to the test assembly.
   - `schedule(ctx, task, delay, unit)`, visible for testing, is the internal virtual `Schedule(ctx, Action, TimeSpan)`
     returning the `CancellationTokenSource` of the scheduled work. The ticker is `ctx.Executor.Ticker()`, as in Java
     (the EmbeddedChannel frozen clock in the tests).
-  - The write listener uses `ExecutorTaskScheduler` (see Listener timing); the listener field is assigned in the
-    constructor, because a field initializer cannot reference the instance (CS0236).
+  - The write listener runs on Common's `EventExecutorTaskScheduler` (see Listener timing); the listener field is
+    assigned in the constructor, because a field initializer cannot reference the instance (CS0236).
   - The outbound buffer's `current()`, `totalPendingWriteBytes()` and `currentProgress()` are the `Current`,
     `TotalPendingWriteBytes` and `CurrentProgress` properties (see Channel internals). The abstract `Runnable`
     `AbstractIdleTask` and its subclasses are nested classes with `Run()` that reach the handler through an explicit
@@ -460,8 +464,9 @@ resources next to the test assembly.
   `scheduleTimeout` runs right after the write is handed to the next handler instead of right before it; a write that
   has already completed cancels the timeout through its listener at once, as a listener added to a completed Java
   promise runs at once. `scheduledFuture.isDone()` is the scheduled Task's `IsCompleted` (a rejected schedule completes
-  it at once). The listener is `OperationComplete(Task)` as a continuation on `ExecutorTaskScheduler`, and
-  `operationComplete` keeps the hand-off to the executor of [netty issue 11053](https://github.com/netty/netty/issues/11053).
+  it at once). The listener is `OperationComplete(Task)` as a continuation on Common's `EventExecutorTaskScheduler`,
+  and `operationComplete` keeps the hand-off to the executor of
+  [netty issue 11053](https://github.com/netty/netty/issues/11053).
 - **ReadTimeoutHandler.** `ReadTimeoutHandler(long, TimeUnit)` is `ReadTimeoutHandler(TimeSpan)`; the final
   `channelIdle` is a sealed override.
 - **Exceptions.** `TimeoutException` extends the Transport `ChannelException`; its package-private constructors are
@@ -562,7 +567,7 @@ timeouts, `startTls`, the wrap data size). Only the `SSLEngine` calls are replac
 | `applicationProtocol()` | `NegotiatedApplicationProtocol` decoded as UTF-8 (the encoding of `SslApplicationProtocol(string)`), null when empty | [SslApplicationProtocol.cs](https://raw.githubusercontent.com/dotnet/runtime/main/src/libraries/System.Net.Security/src/System/Net/Security/SslApplicationProtocol.cs) |
 | `engine()` | not public (ssl design decision 2): internal `Engine()` returns the handler's `SslStream`, and internal `ClientOptions()`/`ServerOptions()` the options (lead decision 4); `SniHandler`/`OptionalSslHandler` dispose the SslStream of a handler that never joined a pipeline, which is safe before `handlerAdded` (measured) | |
 | `renegotiate()` | server: `NegotiateClientCertificateAsync` after cancelling the outstanding read (it completes at once when the client certificate is already known); client: `NotSupportedException`, which fails the new handshake promise and closes, as a failing `beginHandshake()` does | [NegotiateClientCertificateAsync](https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream.negotiateclientcertificateasync?view=net-10.0), [SslStream.IO.cs](https://raw.githubusercontent.com/dotnet/runtime/main/src/libraries/System.Net.Security/src/System/Net/Security/SslStream.IO.cs) |
-| `Promise`, `ChannelPromise`, `Future` | `TaskCompletionSource`/`Task`; the handshake and close futures use `RunContinuationsAsynchronously`; the handler's own promises complete producers inline; cascades and listeners run on `IdleStateHandler.ExecutorTaskScheduler(ctx)`, so write Tasks complete on the event loop when the transport write completes. `closeOutbound()` and `closeOutbound(ChannelPromise)` fold into `Task CloseOutbound()`, and `renegotiate(Promise<Channel>)` is `Renegotiate(TaskCompletionSource<IChannel>)` | [Task promises and Listener timing](#shared-clr-adaptations) |
+| `Promise`, `ChannelPromise`, `Future` | `TaskCompletionSource`/`Task`; the handshake and close futures use `RunContinuationsAsynchronously`; the handler's own promises complete producers inline; cascades and listeners run on Common's `EventExecutorTaskScheduler(() => ctx.Executor)`, so write Tasks complete on the event loop when the transport write completes. `closeOutbound()` and `closeOutbound(ChannelPromise)` fold into `Task CloseOutbound()`, and `renegotiate(Promise<Channel>)` is `Renegotiate(TaskCompletionSource<IChannel>)` | [Task promises and Listener timing](#shared-clr-adaptations) |
 | `(long, TimeUnit)` | `TimeSpan` (`SetHandshakeTimeout`, `SetCloseNotifyFlushTimeout`, `SetCloseNotifyReadTimeout`); `toMillis` truncates the ticks | [common-clr-design.md](common-clr-design.md) |
 | `volatile long` | `long` with `Volatile.Read/Write` | [Volatile](https://learn.microsoft.com/en-us/dotnet/api/system.threading.volatile?view=net-10.0) |
 | `ignoreException` | an `IOException`, or a `SocketException` whose `SocketErrorCode` is `ConnectionReset`/`ConnectionAborted`, in place of the `StackTraceElement` and class-loader walk | [SocketError](https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketerror?view=net-10.0) |
@@ -573,7 +578,7 @@ timeouts, `startTls`, the wrap data size). Only the `SSLEngine` calls are replac
 
 | Java (JSSE/JCA) | C# | Where / evidence |
 | --- | --- | --- |
-| `SSLException`, `SSLHandshakeException` | `AuthenticationException` for both (a handshake failure is not told apart by type). It derives from `SystemException`, not `IOException`, so Java `catch (IOException)` paths no longer see SSL errors. `SSLException(Throwable)` gets the message `cause.toString()` through `(string, Exception)`. | `NotSslRecordException`, `SslClosedEngineException`, `SslHandshakeTimeoutException`, `StacklessSSLHandshakeException`, `SslUtils.ToSSLHandshakeException`; [AuthenticationException](https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.authenticationexception?view=net-10.0), [SSLException](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/javax/net/ssl/SSLException.html) |
+| `SSLException`, `SSLHandshakeException` | `AuthenticationException` for both (a handshake failure is not told apart by type). It derives from `SystemException`, not `IOException`, so Java `catch (IOException)` paths no longer see SSL errors. `SSLException(Throwable)` gets the message `cause.toString()` (Common's `ThrowableUtil.ThrowableToString`) through `(string, Exception)`; `SslCompletionEvent`/`SniCompletionEvent.toString()`, `SslContext.toX509Certificates` and the lazy certificates' `IllegalStateException` use the same text. | `NotSslRecordException`, `SslClosedEngineException`, `SslHandshakeTimeoutException`, `StacklessSSLHandshakeException`, `SslUtils.ToSSLHandshakeException`; [AuthenticationException](https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.authenticationexception?view=net-10.0), [SSLException](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/javax/net/ssl/SSLException.html) |
 | `CertificateException`, `KeyException`, `GeneralSecurityException`, `InvalidKeySpecException` | `CryptographicException` (as pkitesting's `Algorithms`) | `PemReader`, `PseudoRandomFunction`, `SslContext`, `FingerprintTrustManagerFactory` |
 | `SSLContext` (key and trust managers, `SecureRandom`, session context) | the trust and key material fields of `JdkSslContext`; the `SecureRandom` and the session cache size and timeout have no option | [handler-ssl-design.md](handler-ssl-design.md), Known differences |
 | `SSLEngine` created per connection by `SslContext.newEngine` | fresh `SslClientAuthenticationOptions`/`SslServerAuthenticationOptions` built by `SslContext.NewHandler(alloc, startTls)` and `NewHandler(alloc, peerHost, peerPort, startTls)`, which `JdkSslContext` overrides | ssl design decision 2; [SslClientAuthenticationOptions](https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslclientauthenticationoptions?view=net-10.0), [SslServerAuthenticationOptions](https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslserverauthenticationoptions?view=net-10.0) |
@@ -613,9 +618,9 @@ timeouts, `startTls`, the wrap data size). Only the `SSLEngine` calls are replac
 - **NIO buffers.** `ByteBuffer[]` (`getEncryptedPacketLength(ByteBuffer[], int)`) is `ReadOnlyMemory<byte>[]`
   (position to limit), read big-endian with `BinaryPrimitives`; `ByteBuf.ReadableMemory` is `nioBuffer()`.
 - **Listeners and timeouts.** `Future<T>` with `addListener` in `SslClientHelloHandler` and `AbstractSniHandler` is
-  `Task<T>` with a continuation on `IdleStateHandler.ExecutorTaskScheduler(ctx)`; the `cause()` of a cancelled Task is
-  a `TaskCanceledException`. The `ScheduledFuture` of the handshake timeout is a `CancellationTokenSource` passed to
-  `ScheduleAsync`, as in `IdleStateHandler`.
+  `Task<T>` with a continuation on Common's `EventExecutorTaskScheduler(() => ctx.Executor)`; the `cause()` of a
+  cancelled Task is a `TaskCanceledException`. The `ScheduledFuture` of the handshake timeout is a
+  `CancellationTokenSource` passed to `ScheduleAsync`, as in `IdleStateHandler`.
 - **SNI host name.** `ByteBuf.toString(i, n, US_ASCII)`, whose fast path decodes Latin-1, is `Encoding.Latin1`, so
   octets above 127 decode as Java decodes them (`AbstractSniHandler.ExtractSniHostname`).
 - **Mappings.** `Mapping`/`AsyncMapping` are `Func<string, SslContext>` and `IAsyncMapping<string, SslContext>`
@@ -997,8 +1002,8 @@ JVM-only members of ported units (77 recorded comments):
 - **Listener timing.** A connect listener that writes "before fireChannelActive is called" is a first handler that
   writes from `channelActive` before passing the event on (the Transport's connect Task continues asynchronously). A
   `ChannelFutureListener` whose order against later events matters (`testHandshakeFailBeforeWritePromise`) is a
-  continuation on the internal `IdleStateHandler.ExecutorTaskScheduler(ctx)` (reached through `InternalsVisibleTo`); a
-  thread-pool continuation raced with the close event (measured).
+  continuation on Common's public `EventExecutorTaskScheduler(() => ctx.Executor)`; a thread-pool continuation raced
+  with the close event (measured).
 - **Sockets.** `new InetSocketAddress(0)` with a connect to `sc.localAddress()` is a wildcard `IPEndPoint` with a
   connect to the loopback address (see Socket tests above); `SSLEngineTest` binds `IPv6Any` where the OS supports IPv6,
   because `IPAddress.Any` on the dual-mode socket accepts IPv4 only.
@@ -1104,12 +1109,12 @@ lead decision 5 fixed.
   therefore retries the channel for the same address for up to 10 seconds before the source's assertion.
 - **LoggingHandler address text.** Addresses print as `0.0.0.0:80` (`IPEndPoint.ToString()`), where Java prints
   `0.0.0.0/0.0.0.0:80`; three `LoggingHandlerTest` expectations use the C# form.
-- **Listener policies.** `IdleStateHandler.ExecutorTaskScheduler` runs write listeners inline when the completing thread
+- **Listener policies.** Common's `EventExecutorTaskScheduler` runs write listeners inline when the completing thread
   is the event loop, because the Transport write Tasks use `RunContinuationsAsynchronously` and a
   `TaskScheduler.Default` continuation made four idle-state tests fail. `ChunkedWriteHandler` checks the event loop
   inside a `TaskScheduler.Default` continuation instead, so its listeners for writes that complete later run as later
-  event-loop tasks. Both stand in for `DefaultPromise.notifyListeners()` and could share one Common helper (see the
-  shared-API requests below).
+  event-loop tasks. Both stand in for `DefaultPromise.notifyListeners()`; the scheduler is now the one Common helper
+  (see the shared-API requests below), and `ChunkedWriteHandler` keeps its own policy.
 - **WriteTimeoutHandler schedules after the write.** The timeout is scheduled right after the write is handed on,
   where Java schedules it right before, because the promise is the Task that `ctx.WriteAsync` returns.
 - **protected internal widening (CS0507).** `submitWrite`, `checkWaitReadTime`, `informReadOperation` and
@@ -1128,11 +1133,19 @@ lead decision 5 fixed.
   negative DTLS version shorts, through unchecked casts that write and compare the same values; no sign is observable
   (see [Byte values](#byte-values)).
 - **Shared-API requests** (the port works around each without copying shared code):
-  - A Common continuation helper with `DefaultPromise.notifyListeners()` semantics (at once on the event loop, otherwise
-    through `execute`, logging a rejected submission), for `IdleStateHandler`, `WriteTimeoutHandler`,
-    `ChunkedWriteHandler` and the other listener continuations. ssl adds users: `SslHandler`, `SslClientHelloHandler`
-    and `AbstractSniHandler` attach their listeners with `IdleStateHandler.ExecutorTaskScheduler(ctx)`, and
-    `SslHandlerTest` reaches that internal scheduler through `InternalsVisibleTo`.
+  - Done 2026-11-24 (owner decision): the `Throwable.toString()` text that `SslCompletionEvent` (its internal
+    `ThrowableToString`), `SniCompletionEvent`, `NotSslRecordException`, `SslContext`, `LazyX509Certificate`,
+    `LazyJavaxX509Certificate` and `LoggingHandler` built inline is Common's public, CLR-only
+    `Netty.NET.Common.Internal.ThrowableUtil.ThrowableToString(Exception)`, shared with codec-base and codec-http.
+  - Done 2026-11-24 (owner decision): a Common continuation helper with `DefaultPromise.notifyListeners()` timing (at
+    once on the event loop, otherwise through `execute`) is the public, CLR-only
+    `Netty.NET.Common.Concurrent.EventExecutorTaskScheduler(Func<IEventExecutor>)`. It replaced the internal
+    `IdleStateHandler.ExecutorTaskScheduler` (used by `IdleStateHandler`, `WriteTimeoutHandler`, `SslHandler`,
+    `SslClientHelloHandler`/`AbstractSniHandler` and, through `InternalsVisibleTo`, `SslHandlerTest`) and the private
+    copies in codec-http (`HttpServerCodec`, `HttpServerKeepAliveHandler`, `HttpServerExpectContinueHandler`,
+    `CorsHandler`, `SpdySessionHandler`, `WebSocketProtocolHandler`, `WebSocketServerExtensionHandler`), with the same
+    behaviour. `ChunkedWriteHandler` (which logs a rejected submission) and the plain `TaskScheduler.Default`
+    continuations listed under Listener timing keep their policies.
   - A public `ChannelOutboundBuffer.IsClosed`, so the traffic handlers can test the closed buffer instead of
     `IsOpen`.
   - An overridable `EmbeddedChannel` `doWrite(ChannelOutboundBuffer)` hook, for

@@ -49,8 +49,10 @@ public class ChannelException : Exception
     /**
      * Creates a new exception.
      */
-    // CLR: RuntimeException(Throwable) accepts a null cause; the message is the cause's message.
-    public ChannelException(Exception cause) : base(cause?.Message, cause)
+    // CLR: RuntimeException(Throwable) has "a detail message of (cause==null ? null : cause.toString())"
+    // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/RuntimeException.html), the Java text that
+    // ThrowableUtil.ThrowableToString builds (owner decision 2026-11-24).
+    public ChannelException(Exception cause) : base(ThrowableUtil.ThrowableToString(cause), cause)
     {
     }
 

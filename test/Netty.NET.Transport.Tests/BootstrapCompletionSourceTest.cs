@@ -25,6 +25,7 @@ using Netty.NET.Resolver;
 using Netty.NET.Transport.Bootstrapping;
 using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Local;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -124,8 +125,7 @@ public class BootstrapCompletionSourceTest
             // Connect to the server using the asynchronous resolver.
             var future = bootstrapA.ConnectAsync(local);
             // Should fail with the UnknownHostException.
-            var failure = await Assert.ThrowsAsync<SocketException>(() => future.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
-            Assert.Equal(SocketError.HostNotFound, failure.SocketErrorCode);
+            await Assert.ThrowsAsync<UnknownHostException>(() => future.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
         }
@@ -176,13 +176,13 @@ public class BootstrapCompletionSourceTest
             protected override Task<EndPoint> DoResolveAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<EndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
-                Executor.Execute(() => { if (success) producer.SetResult(address); else producer.SetException(new SocketException((int)SocketError.HostNotFound)); });
+                Executor.Execute(() => { if (success) producer.SetResult(address); else producer.SetException(new UnknownHostException(address.ToString())); });
                 return producer.Task;
             }
             protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<IReadOnlyList<EndPoint>>(TaskCreationOptions.RunContinuationsAsynchronously);
-                Executor.Execute(() => { if (success) producer.SetResult(new[] { address }); else producer.SetException(new SocketException((int)SocketError.HostNotFound)); });
+                Executor.Execute(() => { if (success) producer.SetResult(new[] { address }); else producer.SetException(new UnknownHostException(address.ToString())); });
                 return producer.Task;
             }
         }

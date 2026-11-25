@@ -23214,6 +23214,51 @@
         "platform": "Windows",
         "checker": "pkitesting joined testsuiteInventoryPolicy.portedModules. The six SocketSsl* testsuite files (SocketSslClientRenegotiateTest, SocketSslEchoTest, SocketSslGreetingTest, SocketSslLargeCertificateTest, SocketSslSessionReuseTest, SocketStartTlsTest) stay deferred, now blocked by handler only (io.netty.handler.ssl is pending): their pkitesting blocker and imports were removed, as the checker recomputes them. The module list in 11 deferred reasons changed. The Transport checker passes under Windows PowerShell 5.1."
       }
+    },
+    {
+      "checkpoint": "2026-11-24-testsuite-handler",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "checker": "handler joined testsuiteInventoryPolicy.portedModules after its ssl port. The seven sources it blocked moved from testsuiteDeferredEntries to testsuiteEntries: SocketSslEchoTest, SocketSslGreetingTest, SocketSslSessionReuseTest (clr-adapted), SocketStartTlsTest, TrafficShapingHandlerTest (verified), SocketSslLargeCertificateTest and SocketSslClientRenegotiateTest (clr-adapted, their only test CLR-inapplicable: OpenSSL-only subjects). Netty.NET.Transport.Tests references Netty.NET.Handler and Netty.NET.PkiTesting, and Netty.NET.Handler opens its internals to it as to Netty.NET.Handler.Tests (SslHandler.Engine(), SslContext.NewHandler(alloc, startTls)). The module list in the remaining 7 deferred reasons gained handler. The Transport checker passes under Windows PowerShell 5.1.",
+        "testsuiteHandlerClasses": {
+          "runs": 2,
+          "total": 37,
+          "passed": 21,
+          "failed": 0,
+          "skipped": 16,
+          "skippedNote": "The CLIENT_INITIATED and SERVER_INITIATED renegotiation rows of SocketSslEchoTest (8 each): SslStream renegotiates only as a server (client Renegotiate() faults with NotSupportedException), and a server renegotiation fails with \"Received data during renegotiation.\" on TLS 1.2 while the client keeps sending (measured 8 of 8)."
+        },
+        "transportDebug": {
+          "total": 1169,
+          "passed": 1054,
+          "failed": 20,
+          "skipped": 95,
+          "failedNote": "All 20 failures are the known Windows-host AF_UNIX baseline (DomainSocket*, DuplexChannelContractTest(domain: True), ManualIoPhaseContractTest(domain: True), SocketEchoSourceTest.DomainEchoWithAdditionalExecutor); the 37 new testsuite cases add 21 passes and 16 skips to the 2026-11-23 run."
+        }
+      }
+    },
+    {
+      "checkpoint": "2026-11-24-testsuite-codec-http",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "checker": "codec-http joined testsuiteInventoryPolicy.portedModules after its port (docs/codec-http-porting.md). SocketSpdyEchoTest moved from testsuiteDeferredEntries to testsuiteEntries (verified: testSpdyEcho and testSpdyEchoNotAutoRead over SpdyFrameCodec(SPDY_3_1), whose header blocks use the zlib preset dictionary of codec-compression's Deflater/Inflater stand-ins). Netty.NET.Transport.Tests references Netty.NET.Handler.Codec.Http. The module list in the remaining 6 deferred reasons gained codec-http; they need transport-sctp or transport-udt. The Transport checker passes under Windows PowerShell 5.1.",
+        "testsuiteCodecHttpClasses": {
+          "runs": 2,
+          "total": 2,
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "transportDebug": {
+          "total": 1171,
+          "passed": 1056,
+          "failed": 20,
+          "skipped": 95,
+          "failedNote": "All 20 failures are the known Windows-host AF_UNIX baseline; SocketSpdyEchoTest adds 2 passes to the 2026-11-24-testsuite-handler run."
+        }
+      }
     }
   ],
   "nextWork": [
@@ -25797,6 +25842,366 @@
       }
     },
     {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSpdyEchoTest.java",
+      "sha256": "5669c67344a465d7c4ff1ae95b2be79c1e2d671376168f2dcee71a42b9d8a2fc",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketSpdyEchoTest.cs"
+      ],
+      "review": {
+        "scope": "Ported with codec-http (2026-11-24): both declared tests run through AbstractSocketTest.Run (both allocators x the NIO socket combination) with SpdyFrameCodec(SpdyVersion.SPDY_3_1) of Netty.NET.Handler.Codec.Spdy on the server and a raw ByteBuf client, as in the source; the server decodes every frame of createFrames(3), drops the UNKNOWN and NOOP frames (ignoredBytes = 20) and re-encodes the rest byte for byte. The adaptations are syntactic (Random mapping, switch over the SpdyVersion class, ActionChannelInitializer, Task.Delay); no assertion or scenario step is changed.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketSpdyEchoTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractComboTestsuiteTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketTestPermutation.cs",
+          "test/Netty.NET.Transport.Tests/TestsuitePermutation.cs",
+          "src/Netty.NET.Handler.Codec.Http/Spdy/SpdyFrameCodec.cs",
+          "src/Netty.NET.Handler.Codec.Http/Spdy/SpdyFrameDecoder.cs",
+          "src/Netty.NET.Handler.Codec.Http/Spdy/SpdyFrameEncoder.cs",
+          "src/Netty.NET.Handler.Codec.Http/Spdy/SpdyVersion.cs",
+          "test/Netty.NET.Handler.Codec.Http.Tests/Spdy/SpdyFrameDecoderTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSpdyEcho",
+          "clrMethod": "TestSpdyEcho",
+          "adaptation": "[Fact(Timeout = 15000)] with AUTO_READ true. Both allocators x the NIO socket combination through AbstractSocketTest.Run, as in the source. Keeps the 1174-byte createFrames(3) buffer (UNKNOWN, NOOP, DATA, SYN_STREAM, SYN_REPLY, RST_STREAM, SETTINGS, PING, GOAWAY, HEADERS, WINDOW_UPDATE), the server pipeline SpdyFrameCodec(SPDY_3_1) + echo handler, the raw-ByteBuf client that checks every echoed byte against frames.copy() after the 20 ignored bytes, the AUTO_READ child/client options with ctx.read() in channelActive/channelReadComplete, the 50 ms polling loop on the client counter and the IOException-first rethrow order; like the source, the body closes no channel. CLR: the unseeded java.util.Random is an unseeded System.Random and nextInt() is the low 32 bits of NextInt64(), as in codec-http SpdyFrameDecoderTest; switch (version) over the SpdyVersion sealed class is a var pattern with a when case guard (a constant pattern takes only a constant expression) and IllegalArgumentException is ArgumentException; the anonymous ChannelInitializer<SocketChannel> is an ActionChannelInitializer<IChannel>; Thread.sleep(50) is Task.Delay(50); the helper overloads carry a 0 suffix (xUnit1024) and are private (xUnit1013)."
+        },
+        {
+          "upstreamMethod": "testSpdyEchoNotAutoRead",
+          "clrMethod": "TestSpdyEchoNotAutoRead",
+          "adaptation": "[Fact(Timeout = 15000)] with AUTO_READ false. Both allocators x the NIO socket combination through AbstractSocketTest.Run, as in the source. Keeps the 1174-byte createFrames(3) buffer (UNKNOWN, NOOP, DATA, SYN_STREAM, SYN_REPLY, RST_STREAM, SETTINGS, PING, GOAWAY, HEADERS, WINDOW_UPDATE), the server pipeline SpdyFrameCodec(SPDY_3_1) + echo handler, the raw-ByteBuf client that checks every echoed byte against frames.copy() after the 20 ignored bytes, the AUTO_READ child/client options with ctx.read() in channelActive/channelReadComplete, the 50 ms polling loop on the client counter and the IOException-first rethrow order; like the source, the body closes no channel. CLR: the unseeded java.util.Random is an unseeded System.Random and nextInt() is the low 32 bits of NextInt64(), as in codec-http SpdyFrameDecoderTest; switch (version) over the SpdyVersion sealed class is a var pattern with a when case guard (a constant pattern takes only a constant expression) and IllegalArgumentException is ArgumentException; the anonymous ChannelInitializer<SocketChannel> is an ActionChannelInitializer<IChannel>; Thread.sleep(50) is Task.Delay(50); the helper overloads carry a 0 suffix (xUnit1024) and are private (xUnit1013)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 12,
+        "preservedCount": 12,
+        "unreviewedCount": 0,
+        "scope": "Every original comment (license header and the eleven frame labels of createFrames) is kept verbatim at the corresponding CLR code."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslClientRenegotiateTest.java",
+      "sha256": "e83460df04e38da482001f5b6d78b926259a7ab553b4e8cd7a74598402ce0609",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketSslClientRenegotiateTest.cs"
+      ],
+      "review": {
+        "scope": "The only test, testSslRenegotiationRejected, is CLR-inapplicable: an OpenSSL server rejecting a client-initiated renegotiation, which the source runs only with netty-tcnative (@DisabledIf(\"openSslNotAvailable\"); data() has only OpenSslServerContext rows) and which SslStream cannot start as a client. The C# class (an AbstractSocketTest, as in the source) holds no code; its comment keeps the reason and the original comments of the test body.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketSslClientRenegotiateTest.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandler.cs",
+          "docs/handler-porting.md",
+          "docs/handler-ssl-design.md"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testSslRenegotiationRejected",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Enabled only with OpenSSL (@DisabledIf(\"openSslNotAvailable\"), assumeTrue(OpenSsl.isRenegotiationSupported())); for an OpenSslServerContext and a JdkSslClientContext, both engines limited to TLSv1.2, with and without a delegated-task executor, the client restricts its engine to its first enabled cipher suite after the first handshake and calls renegotiate(); the server must fail with a DecoderException caused by SSLHandshakeException, the client's second handshake event must carry ClosedChannelException, and the client must see no other exception.",
+            "reason": "Its subject is the OpenSSL server rejecting a client-initiated renegotiation. OpenSsl and OpenSslServerContext are netty-tcnative (library-not-ported) and JdkSslClientContext is deprecated-not-ported; without OpenSSL the source itself runs nothing (no rows). SslStream renegotiates only as a server (NegotiateClientCertificateAsync), so a client SslHandler.Renegotiate() fails with NotSupportedException and closes without sending a renegotiation request, and the engine protocol and cipher-suite calls need the internal SslHandler.Engine() while SslStream takes them only through its authentication options.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SocketSslClientRenegotiateTest.cs",
+              "src/Netty.NET.Handler/Ssl/SslHandler.cs",
+              "docs/handler-porting.md",
+              "docs/handler-ssl-design.md"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0,
+        "scope": "Every original comment is kept verbatim; the two test-body comments sit in the CLR explanation."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslEchoTest.java",
+      "sha256": "1f306056074f1bd878c9b38c6bc73492e910713654363f2a2cdbdcda4a650a7b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketSslEchoTest.cs"
+      ],
+      "review": {
+        "scope": "Ported with handler ssl on SslStream (2026-11-24): testSslEcho is a [Theory] over data() whose every case runs through AbstractSocketTest.Run (both allocators x the NIO socket combination). data() keeps the JDK server/client pair (OPENSSL is library-not-ported) and drops the delegated-task executor rows (SslHandler(SSLEngine, Executor) and SslContext.newEngine are not ported; SslStream has no delegated tasks): 3 renegotiation types x 8 rows. The 8 NONE rows run; the 8 CLIENT_INITIATED and 8 SERVER_INITIATED rows are generated and skipped with Assert.SkipWhen and the reason (SslStream renegotiates only as a server, and a server renegotiation fails with \"Received data during renegotiation.\" on TLS 1.2 while the client keeps sending, measured 8 of 8). The session cipher-suite assertion and the logStats cipher fields belong to the renegotiation rows, which are skipped: the cipher suites cannot be changed for a renegotiation on SslStream (they are fixed by its authentication options and unsupported on Windows).",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketSslEchoTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractComboTestsuiteTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketTestPermutation.cs",
+          "test/Netty.NET.Transport.Tests/TestsuitePermutation.cs",
+          "test/Netty.NET.Transport.Tests/TestUtils.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandler.cs",
+          "src/Netty.NET.Handler/Ssl/SslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+          "src/Netty.NET.Handler/Ssl/JdkSslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandshakeCompletionEvent.cs",
+          "src/Netty.NET.Handler/Stream/ChunkedWriteHandler.cs",
+          "src/Netty.NET.PkiTesting/CertificateBuilder.cs",
+          "src/Netty.NET.PkiTesting/X509Bundle.cs",
+          "docs/handler-porting.md",
+          "docs/handler-ssl-design.md"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSslEcho",
+          "clrMethod": "TestSslEcho",
+          "adaptation": "[Theory(Timeout = 30000)] with [MemberData(nameof(Data))]; each case runs through the testsuite harness (both allocators x the NIO socket combination). Keeps the 1 MiB seeded payload, the 16 KiB first write after the client handshake future and the handshake-event latch, random 0..64 KiB chunks of randomBufferType buffers (wrapped in a CompositeByteBuf for useCompositeByteBuf), the ChunkedWriteHandler and AUTO_READ rows, SetHandshakeTimeoutMillis(0), per-byte checks on both peers, the 50 ms polling loops, close order, IOException-first rethrow order and the negotiation counters. CLR: data() keeps the JDK pair (OPENSSL library-not-ported) and drops the serverUsesDelegatedTaskExecutor/clientUsesDelegatedTaskExecutor rows and parameters (SslHandler(SSLEngine, Executor) not ported), so no executor is created or awaited; the CLIENT_INITIATED and SERVER_INITIATED rows are skipped with the reason (client renegotiation fails with NotSupportedException; SslStream ReceiveHandshakeFrameAsync rejects application data during a TLS 1.2 renegotiation, measured 8 of 8). setEnabledCipherSuites before renegotiating, the session cipher-suite assertion and the cipher fields of logStats are not ported (cipher suites are fixed by the SslStream authentication options and unsupported on Windows; the rows that assert them are skipped). The static logger hides the harness logger with new; the inner handler classes take the enclosing test through their constructors (CS0236, nested types); @AfterAll compressHeapDumps() is JVM-only (TestUtils); CountDownLatch is a TaskCompletionSource and Thread.sleep(50) Task.Delay(50)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 13,
+        "preservedCount": 13,
+        "unreviewedCount": 0,
+        "scope": "Every original comment is kept verbatim at the corresponding CLR code; the OpenSslContext TODO comment sits in the CLR explanation of the dropped OpenSSL row filter."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslGreetingTest.java",
+      "sha256": "25cab6601531dc2f3049eba54fed23f0b6262b8ebc6e0ceac33f65359a87da9a",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketSslGreetingTest.cs"
+      ],
+      "review": {
+        "scope": "Ported with handler ssl on SslStream (2026-11-24): testSslGreeting is a [Theory] over data() whose case runs through AbstractSocketTest.Run (both allocators x the NIO socket combination); data() keeps the JDK pair (OPENSSL library-not-ported) and only the delegate = false row (newHandler(alloc, Executor) is not ported). The server-side checks that the client is unauthenticated (getPeerCertificates/getPeerCertificateChain/getPeerPrincipal throwing SSLPeerUnverifiedException) are one Assert.Null on the RemoteCertificate of the internal SslHandler.Engine() (SslStream: \"null if no certificate was supplied\"); Netty.NET.Handler opens its internals to Netty.NET.Transport.Tests as to Netty.NET.Handler.Tests.",
+        "sourceEvidence": [
+          "docs/handler-porting.md",
+          "docs/handler-ssl-design.md",
+          "src/Netty.NET.Handler/Logging/LoggingHandler.cs",
+          "src/Netty.NET.Handler/Netty.NET.Handler.csproj",
+          "src/Netty.NET.Handler/Ssl/SslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandler.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandshakeCompletionEvent.cs",
+          "src/Netty.NET.PkiTesting/CertificateBuilder.cs",
+          "src/Netty.NET.PkiTesting/X509Bundle.cs",
+          "test/Netty.NET.Transport.Tests/AbstractComboTestsuiteTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketSslGreetingTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketTestPermutation.cs",
+          "test/Netty.NET.Transport.Tests/TestsuitePermutation.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSslGreeting",
+          "clrMethod": "TestSslGreeting",
+          "adaptation": "[Theory(Timeout = 30000)] with [MemberData(nameof(Data))]; the runner passes the harness fields sb/cb, as the source does, through the testsuite harness (both allocators x the NIO socket combination). Keeps the netty PR 2437 scenario: the server writes one byte 'a' from channelActive, before the TLS handshake completed, through SslHandler + LoggingHandler(TRACE); the client must read exactly that byte; close order and IOException-first rethrow order. CLR: data() keeps the JDK pair (OPENSSL library-not-ported) and only the delegate = false row (newHandler(alloc, Executor) not ported; SslStream has no delegated tasks), so the theory has no delegate parameter and the body no executor or try/finally. The server's SSLSession checks (getPeerCertificates/getPeerPrincipal throw SSLPeerUnverifiedException, getPeerCertificateChain fails) are one Assert.Null on SslStream.RemoteCertificate of the internal SslHandler.Engine() (InternalsVisibleTo Netty.NET.Transport.Tests). CountDownLatch is a TaskCompletionSource."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0,
+        "scope": "Every original comment is kept verbatim; the two comments of the unported SSLSession catch clauses sit in the CLR explanation of those checks."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslLargeCertificateTest.java",
+      "sha256": "d09423f6d98ca3a26a11ac2a8fc14b8287072535a75037a27a2760816c806ab7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketSslLargeCertificateTest.cs"
+      ],
+      "review": {
+        "scope": "The only test, resumptionWithLargeCertificates, is CLR-inapplicable: its subject is the OPENSSL provider's certificate list limit (OpenSslContextOption.MAX_CERTIFICATE_LIST_BYTES), and @EnabledIf(\"supportKeyManagerAndTLS13\") runs it only with netty-tcnative, which is library-not-ported. The C# class holds no code; its comment keeps the reason next to the original license comment.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketSslLargeCertificateTest.cs",
+          "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+          "src/Netty.NET.Handler/Ssl/SslProvider.cs",
+          "docs/handler-porting.md",
+          "docs/handler-ssl-design.md"
+        ]
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "resumptionWithLargeCertificates",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Enabled only when OpenSsl.isAvailable(), OpenSsl.supportsKeyManagerFactory() and SslProvider.isTlsv13Supported(OPENSSL). For each extension size from 16384 - 768 to 16384 bytes, a client certificate (ecp256, issued by a shared root) carrying a random octet-string extension of that size completes a TLSv1.3 handshake with ClientAuth.REQUIRE between SslProvider.OPENSSL contexts that set OpenSslContextOption.MAX_CERTIFICATE_LIST_BYTES = 32768 (key and trust managers from X509Bundle), and the client's \"hello\" is echoed before both channels close.",
+            "reason": "Its subject is the OPENSSL provider's max_cert_list (netty #14811, \"More thorough testing of max_cert_list in OPENSSL provider\"). OpenSsl, OpenSslContextOption and SslProvider.OPENSSL contexts are netty-tcnative, which is library-not-ported (SslContextBuilder.Build() throws NotSupportedException for OPENSSL), so supportKeyManagerAndTLS13() is false as on a JVM without OpenSSL. The JDK provider (SslStream) has no counterpart option: SslServerAuthenticationOptions/SslClientAuthenticationOptions have no certificate list or handshake message size setting.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SocketSslLargeCertificateTest.cs",
+              "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+              "src/Netty.NET.Handler/Ssl/SslProvider.cs",
+              "docs/handler-ssl-design.md"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The single original comment (the license header) is kept verbatim."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslSessionReuseTest.java",
+      "sha256": "e1ae7b311d7009f2e9954c55a37e9092f7c743491c4d0222f2227e750f74b5fd",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketSslSessionReuseTest.cs"
+      ],
+      "review": {
+        "scope": "Ported 2026-11-24 with handler (ssl on SslStream) and pkitesting. testSslSessionReuse is a [Theory] over the jdkOnly() builders ([MemberData], DisableDiscoveryEnumeration, Timeout 30000) through the harness; the session id assertion is kept by reading the ServerHello session ids on the wire (RFC 5246 7.4.1.3), because SslContext.sessionContext() is not ported and SslStream reports no session id; a mutation that gave the second connection another TargetHost made it fail with \"Expected no new sessions\". testSslSessionTrustManagerResumption is CLR-inapplicable (ResumableX509ExtendedTrustManager is jvm-only-replaced; OPENSSL row library-not-ported), so jdkAndOpenSSL(), SessionSettingTrustManager and the anonymous ReadAndDiscardHandler subclass are not ported. ExecutionException is AggregateException.",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/SocketSslSessionReuseTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/TestsuitePermutation.cs",
+          "src/Netty.NET.Handler/Ssl/SslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+          "src/Netty.NET.Handler/Ssl/JdkSslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandler.cs",
+          "src/Netty.NET.PkiTesting/CertificateBuilder.cs",
+          "src/Netty.NET.PkiTesting/X509Bundle.cs",
+          "docs/handler-porting.md",
+          "docs/handler-ssl-design.md"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testSslSessionReuse",
+          "clrMethod": "TestSslSessionReuse",
+          "adaptation": "Source scenario with [Theory(Timeout = 30000)] over jdkOnly(): two client connections from one client context (NewHandler(alloc, host, port)) each write 4 bytes and close, and the client's session ids must not change. Runs as a theory through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). newEngine(...) with setEnabledProtocols({TLSv1, TLSv1.1, TLSv1.2}) and new SslHandler(engine) is the context's NewHandler on contexts built with protocols(protocols) (the body takes the builders); clientCtx.sessionContext().getIds() is a CLR-only ClientSessionContext recording the non-empty ServerHello session ids read before the client SslHandler (RFC 5246 7.4.1.3); SChannel resumes the session (measured: the second ServerHello repeats the 32-byte id), also across the two allocator permutations; ChannelFutureListener.CLOSE is a continuation; ExecutionException is AggregateException."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 1,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testSslSessionTrustManagerResumption",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Over the JDK and OPENSSL builders (jdkAndOpenSSL()), a client trust manager that implements ResumableX509ExtendedTrustManager stores putValue(\"key\", \"value\") in the handshake session from checkServerTrusted on the first connection and in the resumed session from resumeServerTrusted on the second; the client handler reads engine().getSession().getValue(\"key\") on SslHandshakeCompletionEvent SUCCESS and both connections must report \"value\".",
+            "reason": "Its subject is the resumption callback of ResumableX509ExtendedTrustManager and SSLSession values. ResumableX509ExtendedTrustManager is jvm-only-replaced (SslStream exposes no session-resumption signal; the trust decision is one RemoteCertificateValidationCallback), SslStream has no session object holding values (putValue/getValue), and SslHandler.engine() is internal; the OPENSSL row needs netty-tcnative (library-not-ported). The same resumption-callback tests of SSLEngineTest (mustCallResumeTrustedOnSessionResumption) are CLR-inapplicable in the handler port.",
+            "clrEvidence": [
+              "test/Netty.NET.Transport.Tests/SocketSslSessionReuseTest.cs",
+              "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+              "src/Netty.NET.Handler/Ssl/JdkSslContext.cs",
+              "docs/handler-porting-manifest.json",
+              "docs/handler-porting.md"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The license is kept; the CLR comments explain the session id observation and the CLR-inapplicable method."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketStartTlsTest.java",
+      "sha256": "72c5e06f86e01c268d90c55ad567b6de31d522e2bf33e045d82e73e906b05ba6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/SocketStartTlsTest.cs"
+      ],
+      "review": {
+        "scope": "Ported 2026-11-24 with handler (ssl on SslStream, logging) and pkitesting. Both declared tests are [Theory] methods over data() ([MemberData], DisableDiscoveryEnumeration, Timeout 30000) through the harness, with LoggingHandler(TRACE), LineBasedFrameDecoder(64), StringDecoder and StringEncoder, and the handlers on the class-level DefaultEventExecutorGroup(2) (class fixture for @BeforeAll/@AfterAll). data() holds the JDK pair only (OpenSsl is library-not-ported). The server SslHandler new SslHandler(engine, true) and the client SslHandler new SslHandler(engine) are the contexts' NewHandler(alloc, true) and NewHandler(alloc, false) (protected internal; Netty.NET.Handler opens its internals to Netty.NET.Transport.Tests).",
+        "sourceEvidence": [
+          "docs/handler-porting.md",
+          "docs/handler-ssl-design.md",
+          "src/Netty.NET.Handler.Codec/LineBasedFrameDecoder.cs",
+          "src/Netty.NET.Handler/Logging/LoggingHandler.cs",
+          "src/Netty.NET.Handler/Netty.NET.Handler.csproj",
+          "src/Netty.NET.Handler/Ssl/JdkSslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslContext.cs",
+          "src/Netty.NET.Handler/Ssl/SslContextBuilder.cs",
+          "src/Netty.NET.Handler/Ssl/SslHandler.cs",
+          "src/Netty.NET.PkiTesting/CertificateBuilder.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketStartTlsTest.cs"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testStartTls",
+          "clrMethod": "TestStartTls",
+          "adaptation": "Source scenario with [Theory(Timeout = 30000)] over data() (AUTO_READ true): the client asks for StartTLS in plain text, the server installs its startTls SslHandler after \"logger\" and answers in plain text, the client installs its SslHandler and the encrypted request and response follow; the client asserts the handshake future succeeded. Runs as a theory through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The engines are the contexts' NewHandler(PooledByteBufAllocator.Default) with startTls true for the server (new SslHandler(engine, true)) and false for the client; addLast(executor, h) is AddLast(executor, null, h); Thread.sleep(50) is Task.Delay(50); awaitUninterruptibly() suppresses the failure."
+        },
+        {
+          "upstreamMethod": "testStartTlsNotAutoRead",
+          "clrMethod": "TestStartTlsNotAutoRead",
+          "adaptation": "Source scenario with [Theory(Timeout = 30000)] over data() (AUTO_READ false): the client asks for StartTLS in plain text, the server installs its startTls SslHandler after \"logger\" and answers in plain text, the client installs its SslHandler and the encrypted request and response follow; the client asserts the handshake future succeeded. Runs as a theory through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The engines are the contexts' NewHandler(PooledByteBufAllocator.Default) with startTls true for the server (new SslHandler(engine, true)) and false for the client; addLast(executor, h) is AddLast(executor, null, h); Thread.sleep(50) is Task.Delay(50); awaitUninterruptibly() suppresses the failure."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0,
+        "scope": "The license is kept; CLR comments explain the engine, startTls and OpenSSL mappings."
+      }
+    },
+    {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketStringEchoTest.java",
       "sha256": "3398fd24ba75feeb92d6b15cb1551dfe2b715ada1eeef92394996f1414f70ba9",
       "hashMode": "utf8-lf",
@@ -25863,6 +26268,91 @@
         "preservedCount": 8,
         "unreviewedCount": 0,
         "scope": "All eight original comments are kept verbatim; the OIO-only comments sit next to the CLR note that explains the dropped OIO code."
+      }
+    },
+    {
+      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/TrafficShapingHandlerTest.java",
+      "sha256": "d8c3aa8f9936daab3e79adcbf8b34d29cd694b3ffb859db1a4e723fdda6dbecd",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Transport.Tests/TrafficShapingHandlerTest.cs"
+      ],
+      "review": {
+        "scope": "Ported 2026-11-24 with handler (traffic). All nine declared tests are [Fact(Timeout = 10000)] methods through the harness; testTrafficShapping0 keeps the ChannelTrafficShapingHandler/GlobalTrafficShapingHandler choice, the per-step interval assertions of the client and the average bandwidth assertions. The static groups (DefaultEventExecutorGroup(8) twice) are created and shut down by a class fixture; Executors.newScheduledThreadPool(10) is a DefaultEventExecutorGroup(10) scheduling with ScheduleAsync; the promise is a TaskCompletionSource<bool>. This is the testsuite class, not the handler module's TrafficShapingHandlerTest (Netty.NET.Handler.Tests.Traffic).",
+        "sourceEvidence": [
+          "test/Netty.NET.Transport.Tests/TrafficShapingHandlerTest.cs",
+          "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketEchoSourceTest.cs",
+          "src/Netty.NET.Handler/Traffic/AbstractTrafficShapingHandler.cs",
+          "src/Netty.NET.Handler/Traffic/ChannelTrafficShapingHandler.cs",
+          "src/Netty.NET.Handler/Traffic/GlobalTrafficShapingHandler.cs",
+          "src/Netty.NET.Handler/Traffic/TrafficCounter.cs",
+          "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs",
+          "src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs",
+          "docs/handler-porting.md"
+        ]
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAutoReadGlobalTrafficShapping",
+          "clrMethod": "TestAutoReadGlobalTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: GlobalTrafficShapingHandler read limit with the 13-step setAutoRead schedule, then release(). Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testAutoReadTrafficShapping",
+          "clrMethod": "TestAutoReadTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: ChannelTrafficShapingHandler read limit with the 13-step setAutoRead schedule (computeWaitAutoRead intervals, autoRead resets scheduled on the executor). Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testNoTrafficShapping",
+          "clrMethod": "TestNoTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: no shaping handler, messages {1, 2, 1}, no timing assertion. Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testRead1TrafficShapping",
+          "clrMethod": "TestRead1TrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: ChannelTrafficShapingHandler read limit, messages {1, 1, 1}, computeWaitRead intervals and the average bandwidth bounds. Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testReadGlobalTrafficShapping",
+          "clrMethod": "TestReadGlobalTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: GlobalTrafficShapingHandler(groupForGlobal) read limit, messages {1, 2, 1, 1}, computeWaitRead intervals, the bandwidth bounds and release(). Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testReadTrafficShapping",
+          "clrMethod": "TestReadTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: ChannelTrafficShapingHandler read limit on the server, messages {1, 2, 1, 1}, computeWaitRead intervals and the average bandwidth bounds. Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testWrite1TrafficShapping",
+          "clrMethod": "TestWrite1TrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: ChannelTrafficShapingHandler write limit, messages {1, 1, 1}, computeWaitWrite intervals and the average bandwidth bounds. Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testWriteGlobalTrafficShapping",
+          "clrMethod": "TestWriteGlobalTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: GlobalTrafficShapingHandler(groupForGlobal) write limit, messages {1, 2, 1, 1}, computeWaitWrite intervals, the bandwidth bounds and release(). Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        },
+        {
+          "upstreamMethod": "testWriteTrafficShapping",
+          "clrMethod": "TestWriteTrafficShapping",
+          "adaptation": "Source scenario with [Fact(Timeout = 10000)]: ChannelTrafficShapingHandler write limit on the client, messages {1, 2, 1, 1}, computeWaitWrite intervals and the average bandwidth bounds. Runs as a fact through AbstractSocketTest.Run: both harness allocators (pooled and adaptive) x the NIO socket combination on the shared NIO group; OIO permutations are dropped (deprecated-not-ported). The public body testXxx(sb, cb) is a private TestXxx0 (xUnit1024); group.next().newPromise() is a TaskCompletionSource<bool> awaited without rethrowing; Thread.sleep(minimalms) in the body is Task.Delay; messages use invariant numbers and Java's true/false."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 9,
+        "mappedCount": 9,
+        "reviewedCount": 9,
+        "unreviewedMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0,
+        "scope": "Every original comment (license, the testTrafficShapping0 Javadoc and five line comments) is kept at the corresponding code."
       }
     },
     {
@@ -26100,7 +26590,7 @@
         "testSimpleEcho",
         "testSimpleEchoUnordered"
       ],
-      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with that module."
+      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-http, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml, handler and pkitesting); the source is ported with that module."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpTestPermutation.java",
@@ -26125,7 +26615,7 @@
       ],
       "via": [],
       "declaredTests": [],
-      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with that module."
+      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-http, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml, handler and pkitesting); the source is ported with that module."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/package-info.java",
@@ -26141,249 +26631,6 @@
       "via": [],
       "declaredTests": [],
       "reason": "Package summary of a package whose every other source is deferred; it is recorded with that package when transport-sctp is ported."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSpdyEchoTest.java",
-      "sha256": "5669c67344a465d7c4ff1ae95b2be79c1e2d671376168f2dcee71a42b9d8a2fc",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "codec-http"
-      ],
-      "blockingImports": [
-        {
-          "module": "codec-http",
-          "imports": [
-            "io.netty.handler.codec.spdy.SpdyFrameCodec",
-            "io.netty.handler.codec.spdy.SpdyVersion"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testSpdyEcho",
-        "testSpdyEchoNotAutoRead"
-      ],
-      "reason": "Imports types of codec-http, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with that module."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslClientRenegotiateTest.java",
-      "sha256": "e83460df04e38da482001f5b6d78b926259a7ab553b4e8cd7a74598402ce0609",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.ssl.JdkSslClientContext",
-            "io.netty.handler.ssl.OpenSsl",
-            "io.netty.handler.ssl.OpenSslServerContext",
-            "io.netty.handler.ssl.SslContext",
-            "io.netty.handler.ssl.SslHandler",
-            "io.netty.handler.ssl.SslHandshakeCompletionEvent"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testSslRenegotiationRejected"
-      ],
-      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslEchoTest.java",
-      "sha256": "1f306056074f1bd878c9b38c6bc73492e910713654363f2a2cdbdcda4a650a7b",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.ssl.OpenSsl",
-            "io.netty.handler.ssl.OpenSslContext",
-            "io.netty.handler.ssl.SslContext",
-            "io.netty.handler.ssl.SslContextBuilder",
-            "io.netty.handler.ssl.SslHandler",
-            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
-            "io.netty.handler.ssl.SslProvider",
-            "io.netty.handler.stream.ChunkedWriteHandler"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testSslEcho"
-      ],
-      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslGreetingTest.java",
-      "sha256": "25cab6601531dc2f3049eba54fed23f0b6262b8ebc6e0ceac33f65359a87da9a",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.logging.LogLevel",
-            "io.netty.handler.logging.LoggingHandler",
-            "io.netty.handler.ssl.OpenSsl",
-            "io.netty.handler.ssl.SslContext",
-            "io.netty.handler.ssl.SslContextBuilder",
-            "io.netty.handler.ssl.SslHandler",
-            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
-            "io.netty.handler.ssl.SslProvider"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testSslGreeting"
-      ],
-      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslLargeCertificateTest.java",
-      "sha256": "d09423f6d98ca3a26a11ac2a8fc14b8287072535a75037a27a2760816c806ab7",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.ssl.ClientAuth",
-            "io.netty.handler.ssl.OpenSsl",
-            "io.netty.handler.ssl.OpenSslContextOption",
-            "io.netty.handler.ssl.SslContext",
-            "io.netty.handler.ssl.SslContextBuilder",
-            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
-            "io.netty.handler.ssl.SslProvider"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "resumptionWithLargeCertificates"
-      ],
-      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketSslSessionReuseTest.java",
-      "sha256": "e1ae7b311d7009f2e9954c55a37e9092f7c743491c4d0222f2227e750f74b5fd",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.ssl.ResumableX509ExtendedTrustManager",
-            "io.netty.handler.ssl.SslContext",
-            "io.netty.handler.ssl.SslContextBuilder",
-            "io.netty.handler.ssl.SslHandler",
-            "io.netty.handler.ssl.SslHandshakeCompletionEvent",
-            "io.netty.handler.ssl.SslProvider"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testSslSessionReuse",
-        "testSslSessionTrustManagerResumption"
-      ],
-      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/SocketStartTlsTest.java",
-      "sha256": "72c5e06f86e01c268d90c55ad567b6de31d522e2bf33e045d82e73e906b05ba6",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.logging.LogLevel",
-            "io.netty.handler.logging.LoggingHandler",
-            "io.netty.handler.ssl.OpenSsl",
-            "io.netty.handler.ssl.SslContext",
-            "io.netty.handler.ssl.SslContextBuilder",
-            "io.netty.handler.ssl.SslHandler",
-            "io.netty.handler.ssl.SslProvider"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testStartTls",
-        "testStartTlsNotAutoRead"
-      ],
-      "reason": "Imports types of handler (io.netty.handler.ssl). handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
-    },
-    {
-      "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/socket/TrafficShapingHandlerTest.java",
-      "sha256": "d8c3aa8f9936daab3e79adcbf8b34d29cd694b3ffb859db1a4e723fdda6dbecd",
-      "hashMode": "utf8-lf",
-      "kind": "test",
-      "status": "deferred-to-module",
-      "implementation": [],
-      "blockedBy": [
-        "handler"
-      ],
-      "blockingImports": [
-        {
-          "module": "handler",
-          "imports": [
-            "io.netty.handler.traffic.AbstractTrafficShapingHandler",
-            "io.netty.handler.traffic.ChannelTrafficShapingHandler",
-            "io.netty.handler.traffic.GlobalTrafficShapingHandler",
-            "io.netty.handler.traffic.TrafficCounter"
-          ]
-        }
-      ],
-      "via": [],
-      "declaredTests": [
-        "testAutoReadGlobalTrafficShapping",
-        "testAutoReadTrafficShapping",
-        "testNoTrafficShapping",
-        "testRead1TrafficShapping",
-        "testReadGlobalTrafficShapping",
-        "testReadTrafficShapping",
-        "testWrite1TrafficShapping",
-        "testWriteGlobalTrafficShapping",
-        "testWriteTrafficShapping"
-      ],
-      "reason": "Imports types of handler. handler is ported (src/Netty.NET.Handler, docs/handler-porting.md, 2026-11-24, ssl included) but not yet part of the testsuite's ported modules (common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); this testsuite source is ported, and handler added to testsuiteInventoryPolicy.portedModules, in the next testsuite step."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/UDTClientServerConnectionTest.java",
@@ -26408,7 +26655,7 @@
       "declaredTests": [
         "connection"
       ],
-      "reason": "Imports types of codec-base, which is ported, and transport-udt, which is not (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml and pkitesting); the source is ported with transport-udt."
+      "reason": "Imports types of codec-base, which is ported, and transport-udt, which is not (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-http, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml, handler and pkitesting); the source is ported with transport-udt."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/package-info.java",
@@ -27339,6 +27586,7 @@
       "codec-compression",
       "codec-dns",
       "codec-haproxy",
+      "codec-http",
       "codec-memcache",
       "codec-mqtt",
       "codec-protobuf",
@@ -27347,6 +27595,7 @@
       "codec-socks",
       "codec-stomp",
       "codec-xml",
+      "handler",
       "pkitesting"
     ],
     "rule": "Every pinned testsuite file is recorded exactly once: in testsuiteEntries when it is ported or dispositioned, or in testsuiteDeferredEntries when it needs a module that is not ported. A deferred file names its blocking modules, the io.netty imports that resolve to them in the pinned module sources (nested types resolve to their compilation unit), the deferred same-package types it names (no import is needed inside a package; their blockers carry over) and its declared JUnit tests; a deferred package-info.java takes the blockers of its whole package, which must be deferred. A deferred file that needs only ported modules is a porting gap. A ported testsuite entry may import a type of an unported module only when unportedImports records that exact import with its CLR stand-in, which is replaced when the module is ported.",

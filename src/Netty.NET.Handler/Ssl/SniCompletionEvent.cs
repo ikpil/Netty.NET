@@ -50,12 +50,12 @@ public sealed class SniCompletionEvent : SslCompletionEvent
     }
 
     // CLR: getClass().getSimpleName() is StringUtil.SimpleClassName(this); string concatenation of a null hostname gives
-    // "" where Java gives "null", so the null case is written out; the cause is Throwable.toString() (see
-    // SslCompletionEvent.ToString()).
+    // "" where Java gives "null", so the null case is written out; the cause is Throwable.toString() (Common's
+    // ThrowableUtil.ThrowableToString).
     public override string ToString()
     {
         Exception cause = Cause();
         return cause == null ? StringUtil.SimpleClassName(this) + "(SUCCESS='"  + (hostname ?? "null") + "'\")":
-                StringUtil.SimpleClassName(this) +  '(' + ThrowableToString(cause) + ')';
+                StringUtil.SimpleClassName(this) +  '(' + ThrowableUtil.ThrowableToString(cause) + ')';
     }
 }

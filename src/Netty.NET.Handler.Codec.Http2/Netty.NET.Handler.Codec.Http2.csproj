@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- codec-http2 needs codec-http (which brings codec-compression, handler and codec-base). -->
+    <ProjectReference Include="..\Netty.NET.Handler.Codec.Http\Netty.NET.Handler.Codec.Http.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http2.Tests" />
+  </ItemGroup>
+</Project>

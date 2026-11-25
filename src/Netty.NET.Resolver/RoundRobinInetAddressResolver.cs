@@ -21,6 +21,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Resolver;
 
@@ -59,8 +60,8 @@ public class RoundRobinInetAddressResolver : InetNameResolver
             // to support the round robin distribution
             return inetAddresses[RandomIndex(numAddresses)];
         }
-        // CLR: UnknownHostException(inetHost) maps to SocketException(HostNotFound) carrying the host.
-        throw new SocketException((int)SocketError.HostNotFound, inetHost);
+        // CLR: UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25).
+        throw new UnknownHostException(inetHost);
     }
 
     protected override async Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)

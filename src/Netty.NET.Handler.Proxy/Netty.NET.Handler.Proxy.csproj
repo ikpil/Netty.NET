@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- handler-proxy needs codec-http (which brings handler, codec-compression and codec-base) and codec-socks. -->
+    <ProjectReference Include="..\Netty.NET.Handler.Codec.Http\Netty.NET.Handler.Codec.Http.csproj" />
+    <ProjectReference Include="..\Netty.NET.Handler.Codec.Socks\Netty.NET.Handler.Codec.Socks.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Proxy.Tests" />
+  </ItemGroup>
+</Project>

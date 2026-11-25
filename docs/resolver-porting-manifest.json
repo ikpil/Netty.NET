@@ -233,7 +233,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "System.Net.Dns async OS lookup replaces blocking JDK lookup. Null/empty names map to loopback rather than the CLR empty-host machine lookup. SocketUtils.addressByName/allAddressesByName become private helpers that keep InetAddress.getAllByName literal rules, because IPAddress.TryParse and Dns accept forms the JDK does not: IPv4 literals are one to four decimal parts (textToNumericFormatV4; leading zeros are decimal, not octal), BSD hex/octal forms fail with the host name, bracketed literals must be IPv6 without a port, and IPv4-mapped IPv6 literals become IPv4. Lookup results follow java.net.preferIPv6Addresses as InetAddress does: IPv4 first by default, IPv6 first for \"true\", resolver order for \"system\". doResolve no longer delegates to the virtual doResolveAll. UnknownHostException maps to SocketException(HostNotFound) carrying the host text. JDK 21.0.10 and .NET 10 results for each literal were compared by running both runtimes."
+      "decision": "System.Net.Dns async OS lookup replaces blocking JDK lookup. Null/empty names map to loopback rather than the CLR empty-host machine lookup. SocketUtils.addressByName/allAddressesByName become private helpers that keep InetAddress.getAllByName literal rules, because IPAddress.TryParse and Dns accept forms the JDK does not: IPv4 literals are one to four decimal parts (textToNumericFormatV4; leading zeros are decimal, not octal), BSD hex/octal forms fail with the host name, bracketed literals must be IPv6 without a port, and IPv4-mapped IPv6 literals become IPv4. Lookup results follow java.net.preferIPv6Addresses as InetAddress does: IPv4 first by default, IPv6 first for \"true\", resolver order for \"system\". doResolve no longer delegates to the virtual doResolveAll. UnknownHostException maps to Common's UnknownHostException carrying the host text (owner decision 2026-11-25; SocketException(HostNotFound) before), and a SocketException from Dns.GetHostAddressesAsync becomes its cause. JDK 21.0.10 and .NET 10 results for each literal were compared by running both runtimes."
     },
     {
       "upstream": "resolver/src/main/java/io/netty/resolver/HostsFileEntries.java",
@@ -440,7 +440,7 @@
       },
       "hashMode": "utf8-lf",
       "kind": "implementation",
-      "decision": "Random.Shared replaces ThreadLocalRandom; select a random single address, or right-rotate a copy without mutating the delegate list. Empty single lookup fails; empty all lookup succeeds. Delegate is owned and disposed. Locals inetAddresses/numAddresses restored; an empty result fails with SocketException(HostNotFound, inetHost).",
+      "decision": "Random.Shared replaces ThreadLocalRandom; select a random single address, or right-rotate a copy without mutating the delegate list. Empty single lookup fails; empty all lookup succeeds. Delegate is owned and disposed. Locals inetAddresses/numAddresses restored; an empty result fails with Common's UnknownHostException(inetHost) (owner decision 2026-11-25; SocketException(HostNotFound) before).",
       "publicNameReview": {
         "date": "2026-11-16",
         "scope": "Public Java methods/fields of this source file whose name (case/underscore-insensitive, Async allowed) does not occur in the mapped C# files.",

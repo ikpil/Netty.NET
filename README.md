@@ -13,9 +13,10 @@ The codec modules that need only codec-base are ported the same way, each as its
 (`Netty.NET.Handler.Codec.<Name>`): [dns](docs/codec-dns-porting.md), [haproxy](docs/codec-haproxy-porting.md),
 [memcache](docs/codec-memcache-porting.md), [mqtt](docs/codec-mqtt-porting.md), [redis](docs/codec-redis-porting.md),
 [smtp](docs/codec-smtp-porting.md), [socks](docs/codec-socks-porting.md), [stomp](docs/codec-stomp-porting.md) and
-[compression](docs/codec-compression-porting.md) (Snappy, FastLz, Bzip2, zlib/gzip on the BCL streams and Brotli on
-the BCL encoder; the Lz4, Lzf, Lzma, JZlib and Zstd codecs need Java libraries without a .NET 10 BCL counterpart and
-are recorded as not ported), [xml](docs/codec-xml-porting.md) (XmlFrameDecoder; XmlDecoder needs aalto-xml) and
+[compression](docs/codec-compression-porting.md) (Snappy, FastLz, Bzip2, zlib/gzip on the BCL streams, with zlib
+preset dictionaries implemented on them, and Brotli on the BCL encoder; the Lz4, Lzf, Lzma, JZlib and Zstd codecs need
+Java libraries without a .NET 10 BCL counterpart and are recorded as not ported), [xml](docs/codec-xml-porting.md)
+(XmlFrameDecoder; XmlDecoder needs aalto-xml) and
 [protobuf](docs/codec-protobuf-porting.md) (the varint32 framing; the message codecs need protobuf-java).
 [codec-marshalling](docs/codec-marshalling-porting.md) needs JBoss Marshalling in every file and is recorded in its
 manifest without a C# project.
@@ -25,13 +26,29 @@ BCL authentication options in place of SSLEngine (design: [handler-ssl-design.md
 OpenSSL (netty-tcnative), Bouncy Castle and Conscrypt units are recorded as library-not-ported; see
 [handler porting](docs/handler-porting.md) (`tools/Test-CodecPortingManifest.ps1 -Module handler`). Its test-support
 module [pkitesting](docs/pkitesting-porting.md) (`Netty.NET.PkiTesting`) is ported on the BCL certificate APIs.
+The codec-http port (`Netty.NET.Handler.Codec.Http`) covers all of netty-codec-http: HTTP/1.x with its cookie, cors,
+multipart and websocketx packages (with the WebSocket extensions and their deflate compression), RTSP and SPDY,
+whose zlib header blocks use the preset dictionary implemented on the BCL streams; see
+[codec-http porting](docs/codec-http-porting.md) (`tools/Test-CodecPortingManifest.ps1 -Module codec-http`).
+The codec-http2 port (`Netty.NET.Handler.Codec.Http2`) covers all of netty-codec-http2: HPACK, the frame reader and
+writer, connection, flow control, the connection handler and builders, Http2FrameCodec with Http2MultiplexHandler and
+its child stream channels, the cleartext upgrade codecs and the HTTP/1.x conversion and compression adapters; the
+deprecated Http2MultiplexCodec family is recorded as not ported; see
+[codec-http2 porting](docs/codec-http2-porting.md) (`tools/Test-CodecPortingManifest.ps1 -Module codec-http2`).
+The handler-proxy port (`Netty.NET.Handler.Proxy`) covers all of netty-handler-proxy: the HTTP CONNECT, SOCKS4 and
+SOCKS5 proxy handlers with their tests over real NIO sockets; see [handler-proxy porting](docs/handler-proxy-porting.md)
+(`tools/Test-CodecPortingManifest.ps1 -Module handler-proxy`).
+The resolver-dns port (`Netty.NET.Resolver.Dns`) covers all of netty-resolver-dns: the asynchronous DNS resolver with
+its caches, name server address streams and providers, query contexts and TCP fallback; its tests run against a C#
+stand-in of the apacheds DNS server; see [resolver-dns porting](docs/resolver-dns-porting.md)
+(`tools/Test-CodecPortingManifest.ps1 -Module resolver-dns`).
 Check every codec, pkitesting and handler manifest with `powershell -NoProfile -File tools/Test-CodecPortingManifest.ps1`
 (or one with `-Module codec-dns`).
 The resolver port implements the basic OS-backed resolver module; see its
 [source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).
 It uses Task/CancellationToken, DnsEndPoint/IPEndPoint and IDisposable; executor-affine
-consumers dispatch explicitly through Common. The separate resolver-dns module
-is outside the basic resolver port. Check the pinned sources, original
+consumers dispatch explicitly through Common. The resolver-dns module is ported
+separately (see above). Check the pinned sources, original
 test mappings and preserved comments with `powershell -NoProfile -File tools/Test-ResolverPortingManifest.ps1`.
 The common port is in progress. See [porting status](docs/common-porting.md),
 [CLR design decisions](docs/common-clr-design.md),

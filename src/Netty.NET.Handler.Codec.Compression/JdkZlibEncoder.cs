@@ -32,8 +32,10 @@ namespace Netty.NET.Handler.Codec.Compression;
  */
 // CLR: java.util.zip.Deflater is the internal stand-in Deflater (Deflater.cs, owner decision 2026-11-23), which keeps
 // the Java calls and constants over the BCL DeflateStream/ZLibStream; its compressed bytes can differ from Java's zlib,
-// the inflated data are the same. java.util.zip.CRC32 is System.IO.Hashing.Crc32 (owner decision 2026-11-23; written
-// in full because the bzip2 Crc32 of this module shares the namespace): update(b, off, len) is Append over the range
+// the inflated data are the same. The BCL streams have no dictionary API; the stand-in implements setDictionary on them
+// (owner decision 2026-11-24, see Deflater.cs), so the dictionary constructors work as in Java. java.util.zip.CRC32 is
+// System.IO.Hashing.Crc32 (owner decision 2026-11-23; written in full because the bzip2 Crc32 of this module shares the
+// namespace): update(b, off, len) is Append over the range
 // and getValue() is GetCurrentHashAsUInt32(), "the current computed hash value"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32.getcurrenthashasuint32?view=net-10.0-pp).
 // ChannelFuture/ChannelPromise are Task (docs/transport-porting.md, see ZlibEncoder): close() and close(ChannelPromise)
@@ -167,8 +169,6 @@ public class JdkZlibEncoder : ZlibEncoder
      *
      * @throws CompressionException if failed to initialize zlib
      */
-    // CLR: kept as public API, but the BCL streams have no dictionary API, so Deflater.SetDictionary throws
-    // NotSupportedException and so do these two constructors (see Deflater.cs).
     public JdkZlibEncoder(byte[] dictionary) : this(6, dictionary)
     {
     }

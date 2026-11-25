@@ -561,7 +561,9 @@ public class EmbeddedChannel : AbstractChannel
      *
      * @return bufferReadable returns {@code true} if any of the used buffers has something left to read
      */
-    public bool FinishAndReleaseAll()
+    // CLR: virtual because the Java method is public and non-final; codec-http2's CompressorHttp2ConnectionEncoderTest
+    // overrides it to count the calls (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/virtual).
+    public virtual bool FinishAndReleaseAll()
     {
         return Finish(true);
     }
@@ -1228,7 +1230,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override Task BindTransportAsync(EndPoint address, CancellationToken cancellationToken)
+    protected internal override Task BindTransportAsync(EndPoint address, CancellationToken cancellationToken)
     {
         _executingStackCnt++;
         try
@@ -1242,7 +1244,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
+    protected internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
     {
         _executingStackCnt++;
         try
@@ -1256,7 +1258,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override Task DisconnectTransportAsync(CancellationToken cancellationToken)
+    protected internal override Task DisconnectTransportAsync(CancellationToken cancellationToken)
     {
         _executingStackCnt++;
         try
@@ -1270,7 +1272,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override Task Close()
+    protected internal override Task Close()
     {
         _executingStackCnt++;
         try
@@ -1284,7 +1286,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override void CloseForcibly()
+    protected internal override void CloseForcibly()
     {
         _executingStackCnt++;
         try
@@ -1298,7 +1300,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override Task DeregisterTransportAsync()
+    protected internal override Task DeregisterTransportAsync()
     {
         _executingStackCnt++;
         try
@@ -1312,7 +1314,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override void BeginRead()
+    protected internal override void BeginRead()
     {
         _executingStackCnt++;
         try
@@ -1326,7 +1328,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override Task WriteTransportAsync(object msg, CancellationToken cancellationToken)
+    protected internal override Task WriteTransportAsync(object msg, CancellationToken cancellationToken)
     {
         _executingStackCnt++;
         try
@@ -1340,7 +1342,7 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    internal override void FlushTransport()
+    protected internal override void FlushTransport()
     {
         _executingStackCnt++;
         try

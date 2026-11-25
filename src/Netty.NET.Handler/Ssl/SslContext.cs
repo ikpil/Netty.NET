@@ -680,7 +680,8 @@ public abstract class SslContext
     // CLR: CertificateFactory.generateCertificate is X509CertificateLoader.LoadCertificate, which throws
     // CryptographicException (CertificateException) for data that is not a certificate
     // (src/Netty.NET.Handler/Ssl/Util/LazyX509Certificate.cs uses it the same way); the DER bytes are read through the
-    // ByteBufInputStream as in the source. RuntimeException is Exception with Throwable.toString() as its message.
+    // ByteBufInputStream as in the source. RuntimeException is Exception with Throwable.toString() as its message
+// (Common's ThrowableUtil.ThrowableToString).
     private static X509Certificate2[] GetCertificatesFromBuffers(ByteBuf[] certs)
     {
         X509Certificate2[] x509Certs = new X509Certificate2[certs.Length];
@@ -701,7 +702,7 @@ public abstract class SslContext
                 catch (IOException e)
                 {
                     // This is not expected to happen, but re-throw in case it does.
-                    throw new Exception(e.GetType().FullName + ": " + e.Message, e);
+                    throw new Exception(ThrowableUtil.ThrowableToString(e), e);
                 }
             }
         }

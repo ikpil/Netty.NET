@@ -478,13 +478,13 @@ public class LoggingHandler : ChannelDuplexHandler
     // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html#toString()), while
     // Exception.ToString() also appends the inner exception and the stack trace
     // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.tostring?view=net-10.0), so an Exception is
-    // rendered with the Java text (Exception.Message is never null, so ": " is always present), as codec-base
-    // CodecException does for its cause.
+    // rendered with the Java text through Common's ThrowableUtil.ThrowableToString (Exception.Message is never null, so
+    // ": " is always present).
     private static string FormatSimple(IChannelHandlerContext ctx, string eventName, object msg)
     {
         string chStr = ctx.Channel.ToString();
         string msgStr = msg is Exception cause
-                ? cause.GetType().FullName + ": " + cause.Message
+                ? ThrowableUtil.ThrowableToString(cause)
                 : msg?.ToString() ?? "null";
         StringBuilder buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length);
         return buf.Append(chStr).Append(' ').Append(eventName).Append(": ").Append(msgStr).ToString();

@@ -1,9 +1,10 @@
 param(
-    # Every recorded codec Maven module plus pkitesting and handler; each has docs/<module>-porting-manifest.json
-    # (codec-marshalling is recorded without a C# project). handler has no pending entry since its ssl port (2026-11-24).
+    # Every recorded codec Maven module (codec-http since 2026-11-24) plus pkitesting, handler, handler-proxy and
+    # resolver-dns (2026-11-25); each has docs/<module>-porting-manifest.json (codec-marshalling is recorded without a C#
+    # project). handler has no pending entry since its ssl port (2026-11-24).
     [string[]]$Module = @('codec-base', 'codec-dns', 'codec-haproxy', 'codec-memcache', 'codec-mqtt', 'codec-redis',
         'codec-smtp', 'codec-socks', 'codec-stomp', 'codec-compression', 'codec-xml', 'codec-protobuf',
-        'codec-marshalling', 'pkitesting', 'handler'),
+        'codec-marshalling', 'pkitesting', 'handler', 'codec-http', 'codec-http2', 'handler-proxy', 'resolver-dns'),
     [string]$UpstreamRoot = (Join-Path $PSScriptRoot '../../netty'),
     [switch]$AllowPending)
 
@@ -33,11 +34,22 @@ function Get-DeclaredJavaTests([string]$source) {
     })
     $declarations = '(?m)^[ \t]*(?<annotations>(?:@[\w.]+(?:[ \t]*\([^();]*\))?[ \t\r\n]*)+)' +
         '(?:(?:public|protected|private|static|final|synchronized|abstract)[ \t]+)*' +
-        'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]+throws[^{;]+)?[ \t\r\n]*\{'
+        'void[ \t]+(?<name>\w+)[ \t]*\([^;{}]*\)(?:[ \t\r\n]*throws[^{;]+)?[ \t\r\n]*\{'
+    # A JUnit meta-annotation declared in the source (an @interface carrying a test annotation, codec-http
+    # HttpDataTest's @ParameterizedHttpDataTest, 2026-11-24) marks test methods too; its own test annotation is no method.
+    $base = 'Test|ParameterizedTest|RepeatedIfExceptionsTest'
+    $metaPattern = '(?m)^[ \t]*(?<annotations>(?:@[\w.]+(?:[ \t]*\([^();]*\))?[ \t\r\n]*)+?)@interface[ \t]+(?<name>\w+)'
+    $metas = @([regex]::Matches($masked, $metaPattern) | Where-Object { $_.Groups['annotations'].Value -match ('@(?:' + $base + ')\b') })
+    $alternatives = @($base) + @($metas | ForEach-Object { [regex]::Escape($_.Groups['name'].Value) })
+    $alternation = [string]::Join('|', $alternatives)
+    $metaCount = 0
+    foreach ($meta in $metas) {
+        $metaCount += [regex]::Matches($meta.Groups['annotations'].Value, ('(?m)^[ \t]*@(?:' + $base + ')\b')).Count
+    }
     $names = @([regex]::Matches($masked, $declarations) | Where-Object {
-        $_.Groups['annotations'].Value -match '@(?:Test|ParameterizedTest|RepeatedIfExceptionsTest)\b'
+        $_.Groups['annotations'].Value -match ('@(?:' + $alternation + ')\b')
     } | ForEach-Object { $_.Groups['name'].Value })
-    $annotationCount = [regex]::Matches($masked, '(?m)^[ \t]*@(?:Test|ParameterizedTest|RepeatedIfExceptionsTest)\b').Count
+    $annotationCount = [regex]::Matches($masked, ('(?m)^[ \t]*@(?:' + $alternation + ')\b')).Count - $metaCount
     if ($names.Count -ne $annotationCount -or @($names | Select-Object -Unique).Count -ne $names.Count) {
         throw 'Cannot account for every declared JUnit method exactly once.'
     }

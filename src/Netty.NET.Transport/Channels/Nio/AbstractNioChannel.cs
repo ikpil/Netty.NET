@@ -290,7 +290,7 @@ public abstract class AbstractNioChannel : AbstractChannel
 
     // CLR: AbstractNioUnsafe.connect(SocketAddress, SocketAddress, ChannelPromise); the returned Task is the
     // promise and the CancellationToken replaces promise cancellation.
-    internal override Task ConnectTransportAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
+    protected internal override Task ConnectTransportAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
     {
         var promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         // Don't mark the connect promise as uncancellable as in fact we can cancel it as it is using

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Resolver.Tests;
 
@@ -66,7 +67,7 @@ public class ResolverContractTest
         using var resolver = new InetSocketAddressResolver(ImmediateEventExecutor.INSTANCE, new FixedResolver(new[] { Addresses[0] }));
         var endpoint = new DnsEndPoint("example.invalid", 80, AddressFamily.InterNetworkV6);
         Assert.Empty(await resolver.ResolveAllAsync(endpoint));
-        Assert.Equal(SocketError.HostNotFound, (await Assert.ThrowsAsync<SocketException>(() => resolver.ResolveAsync(endpoint))).SocketErrorCode);
+        Assert.Equal("example.invalid", (await Assert.ThrowsAsync<UnknownHostException>(() => resolver.ResolveAsync(endpoint))).Message);
     }
 
     [Fact]
@@ -243,7 +244,7 @@ public class ResolverContractTest
         name.Setup(r => r.ResolveAllAsync("single", default)).ReturnsAsync(new[] { Addresses[0] });
         var resolver = new RoundRobinInetAddressResolver(ImmediateEventExecutor.INSTANCE, name.Object);
         Assert.Same(empty, await resolver.ResolveAllAsync("empty"));
-        Assert.Equal(SocketError.HostNotFound, (await Assert.ThrowsAsync<SocketException>(() => resolver.ResolveAsync("empty"))).SocketErrorCode);
+        Assert.Equal("empty", (await Assert.ThrowsAsync<UnknownHostException>(() => resolver.ResolveAsync("empty"))).Message);
         Assert.Same(Addresses[0], await resolver.ResolveAsync("single"));
         Assert.Same(Addresses[0], Assert.Single(await resolver.ResolveAllAsync("single")));
         resolver.Dispose();

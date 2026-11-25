@@ -73,7 +73,9 @@ Namespaces follow the Java package path:
   `IllegalArgumentException` is `ArgumentException`, `UnsupportedOperationException` is `NotSupportedException`, and
   a source `IndexOutOfBoundsException` is `ArgumentOutOfRangeException` with the source text as message. A cause-only
   constructor keeps the Java detail message `cause.toString()` (class name, `": "`, message), because .NET
-  `Exception.ToString()` adds the stack trace.
+  `Exception.ToString()` adds the stack trace. The text comes from Common's CLR-only
+  `ThrowableUtil.ThrowableToString(Exception)` (owner decision 2026-11-24), which replaced the internal
+  `CodecException.ThrowableToString` and the copies in codec-http and handler.
 - **Signals.** `Signal` (Netty.NET.Common) is an `Exception`, while the Java `Signal` is an `Error` that
   `catch (Exception)` does not catch. `ReplayingDecoder`, `ByteToMessageDecoder` and `MessageToMessageDecoder`
   therefore filter `when (e is not Signal)` where the source catches `Exception`.
@@ -95,6 +97,12 @@ Namespaces follow the Java package path:
     `ByteBuf.getByte`, which the owner mapped to `System.Byte`.
   - `java.util.Date` is `DateTimeOffset` in UTC. `DateFormatter` keeps the source token parser and replaces the
     lenient `GregorianCalendar` with explicit UTC arithmetic (31 Feb becomes 3 Mar).
+  - `thisT()` is Java's unchecked `(T) this`, which is not checked at run time
+    ([JLS 5.5](https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.5)), so the exact
+    `DefaultHeaders<K, V, T>` that `copy()` creates fails only where a caller uses a this-returning result as a `T`.
+    A C# cast would throw `InvalidCastException` at once, so `ThisT()` is `this is T t ? t : default` (2026-11-24): an
+    ignored result works and a used one fails (`NullReferenceException` in place of `ClassCastException`). Measured:
+    `Add` on a copy of a `DefaultHeadersImpl` adds the entry and returns `null`; a chained `Add` throws.
 - **ReplayingDecoder.** C# `ByteBuf` index members are not virtual, so `ReplayingDecoderByteBuf` mirrors the reader
   index of the cumulation. A reader index set through the view is written back at the next checkpoint or decode
   boundary. The remaining differences are listed in the manifest entry.

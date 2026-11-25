@@ -6,5 +6,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
     <InternalsVisibleTo Include="Netty.NET.Handler.Tests" />
+    <InternalsVisibleTo Include="Netty.NET.Transport.Tests" />
   </ItemGroup>
 </Project>

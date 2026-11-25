@@ -6,6 +6,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
     <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Compression.Tests" />
+    <!-- codec-http's SPDY header block codec uses java.util.zip.Deflater/Inflater, whose counterparts are the internal
+         Deflater/Inflater stand-ins of this assembly (owner decision 2026-11-24). -->
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http" />
   </ItemGroup>
   <ItemGroup>
     <!-- Owner decision 2026-11-23: java.util.zip.Checksum/CRC32/Adler32 are System.IO.Hashing's

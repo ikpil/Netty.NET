@@ -27,6 +27,7 @@ using Netty.NET.Transport.Channels;
 using Netty.NET.Transport.Channels.Nio;
 using Netty.NET.Transport.Channels.Local;
 using Netty.NET.Transport.Channels.Sockets;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Transport.Tests;
 
@@ -52,7 +53,7 @@ public class BootstrapResolutionSourceTest
             Assert.False(channel.IsOpen);
             Assert.NotNull(resolver.Producer);
             Assert.False(resolver.Producer.Task.IsCompleted);
-            Assert.True(resolver.Producer.TrySetException(new SocketException((int)SocketError.HostNotFound)));
+            Assert.True(resolver.Producer.TrySetException(new UnknownHostException("late resolver failure")));
             await channel.EventLoop.SubmitAsync(() => { });
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connecting);
             Assert.True(connecting.IsCanceled);
@@ -60,7 +61,7 @@ public class BootstrapResolutionSourceTest
         finally
         {
             cancellation.Cancel();
-            resolver.Producer.TrySetException(new SocketException((int)SocketError.HostNotFound));
+            resolver.Producer.TrySetException(new UnknownHostException("late resolver failure"));
             if (channel != null) await channel.CloseAsync();
             await group.StopAsync();
         }

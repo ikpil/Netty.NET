@@ -1166,6 +1166,24 @@ Null and negative arguments fail before allocation, while readable/lifetime boun
 are checked by the actual transfer even for empty reads. Empty results are ordinary
 owned zero-capacity buffers with a growable maximum, rather than the shared sentinel.
 
+Owner decision 2026-11-24 (the owner-revisit item of 2026-11-19, a shared-API
+request of codec-http and codec-stomp): the exact-length guarantee stays, and
+ReadBytes takes Java's path whenever it gives the same result. When the new buffer
+has exactly length writable bytes it calls ReadBytes(ByteBuf), Java's
+readBytes(dst); otherwise it calls ReadBytes(ByteBuf, int). codec-base's
+ReplayingDecoderByteBuf supports only the first, as Java's does, so the replaying
+decoders (codec-http WebSocket00FrameDecoder, codec-stomp StompSubframeDecoder)
+call ByteBufUtil.ReadBytes as Java does, without their former private copy and
+ReadBytes(int) replacement. For other sources both calls move the same bytes and
+indices; ReadBytes(ByteBuf) first checks that the destination is accessible.
+Measured: 27216 allocations of IByteBufAllocator.Default, Unpooled, Pooled and
+Adaptive (heap and direct preference) and Transport's PreferHeap, through
+Buffer/HeapBuffer/DirectBuffer for 1134 lengths (0..1100 and each power of two
+from 2 KiB to 16 MiB, plus and minus one), all return capacity == WritableBytes ==
+length, so every Netty.NET allocator takes the Java path; the custom
+extra-capacity allocator of ExtraAllocatorCapacityDoesNotCauseOverread takes the
+exact-length path.
+
 UTF8 reserves three bytes per UTF-16 code unit and uses the existing Netty malformed
 surrogate mapping; ASCII uses its one-octet-per-code-unit mapping. Raw AsciiString
 copies every octet unchanged. Its allocator UTF8 overload retains the original

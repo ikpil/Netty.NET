@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- resolver-dns needs codec-dns (which brings codec-base, Transport, Resolver, Buffer and Common) and handler
+         (io.netty.handler.logging.LogLevel for LoggingDnsQueryLifecycleObserver). -->
+    <ProjectReference Include="..\Netty.NET.Handler.Codec.Dns\Netty.NET.Handler.Codec.Dns.csproj" />
+    <ProjectReference Include="..\Netty.NET.Handler\Netty.NET.Handler.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Resolver.Dns.Tests" />
+  </ItemGroup>
+</Project>

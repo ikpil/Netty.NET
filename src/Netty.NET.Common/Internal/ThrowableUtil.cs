@@ -61,6 +61,20 @@ public static class ThrowableUtil
         // ignore as should never happen
         return ObjectUtil.CheckNotNull(cause, "cause").ToString();
     }
+    // CLR: a CLR-only helper (owner decision 2026-11-24) for the text of Throwable.toString(), which is "the name of
+    // the class of this object", ": " and getLocalizedMessage(), or "just the class name" when that is null; it is
+    // also the detail message "(cause==null ? null : cause.toString())" of the Throwable(Throwable) constructors
+    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html#toString()), which the
+    // codecs and handlers keep for their cause-only constructors and their cause texts. Exception.ToString() also
+    // appends "the result of calling ToString on the inner exception" and the stack trace
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.tostring?view=net-10.0), so the Java text is
+    // built here, with Type.FullName for Class.getName(). If no message was supplied, "the system supplies a default
+    // message" (https://learn.microsoft.com/en-us/dotnet/api/system.exception.message?view=net-10.0), so Message is
+    // not null and the ": " part is always present. A null cause gives null, the detail message of the constructors.
+    public static string ThrowableToString(Exception cause)
+    {
+        return cause == null ? null : cause.GetType().FullName + ": " + cause.Message;
+    }
     [Obsolete]
     public static bool HaveSuppressed() => true;
     public static void AddSuppressed(Exception target, Exception suppressed)

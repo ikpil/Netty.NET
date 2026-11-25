@@ -98,6 +98,39 @@ cases initially timed out: pending progress or pending terminal notification, ea
 a direct pool or an ordered NonSticky child. Their NotificationsCompleted Tasks now
 cancel when immediate shutdown removes the drain. A running drain retains its claim.
 
+## Listener continuations: EventExecutorTaskScheduler (2026-11-24)
+
+`Netty.NET.Common.Concurrent.EventExecutorTaskScheduler(Func<IEventExecutor>)` is a
+public, CLR-only TaskScheduler (owner decision 2026-11-24) for handlers that add a
+ChannelFutureListener to an operation Task with `ContinueWith(..., scheduler)` or
+`Unwrap()`. It keeps the timing of `DefaultPromise.notifyListeners()`: the completing
+thread queues the continuation to the scheduler, which runs it at once when that
+thread is the executor's event loop and otherwise hands it to `Execute`. The
+Transport's operation Tasks run their continuations asynchronously, so a
+`TaskScheduler.Default` continuation runs later on a thread-pool thread; measured
+with it, four IdleStateHandler tests, 43 of 49 HttpServerKeepAliveHandler cases and
+several WebSocket protocol and extension handler tests failed. Common cannot see
+Transport's IChannelHandlerContext, so callers pass `() => ctx.Executor`, which is
+read each time a continuation is queued. The MAX_LISTENER_STACK_DEPTH bound of
+notifyListeners() is not applied.
+
+It exists next to ExecutorCompletion because the two answer different needs.
+ExecutorCompletion is ordered, detachable notification of a Task on a fixed
+executor: unique registrations with removal, ordered batches under a bounded inline
+depth, logged callback failures and a NotificationCompleted Task. Task composition
+with ContinueWith and Unwrap instead needs a TaskScheduler that reads the executor
+when a task is queued and whose continuations are ordinary Tasks that fault on their
+own. The scheduler replaced handler's internal `IdleStateHandler.ExecutorTaskScheduler`
+and seven private copies in codec-http; its users are handler's IdleStateHandler,
+WriteTimeoutHandler, SslHandler and SslClientHelloHandler, and codec-http's
+HttpServerCodec, HttpServerKeepAliveHandler, HttpServerExpectContinueHandler,
+CorsHandler, SpdySessionHandler, WebSocketProtocolHandler and
+WebSocketServerExtensionHandler (handler-porting.md, Listener timing;
+codec-http-porting.md, Listener timing). A lambda that captures a method parameter
+makes the compiler allocate its closure on entry to the method, so the five write
+paths that attach a listener in one branch only capture a local copy of ctx declared
+in that branch, and writes without a listener allocate no closure (checked in the IL).
+
 ## Consumer examples and verification
 
 ```csharp

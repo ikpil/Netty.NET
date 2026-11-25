@@ -2921,6 +2921,23 @@ codec caches. Its three test references migrate directly to native encodings;
 the two original encoding loops still execute six configurations and retain
 all assertions/iterations/comments. No Java-shaped replacement utility is added.
 
+Owner decision 2026-11-24 (a shared-API request of codec-http): the class name
+returns for one CLR-only member. src/Netty.NET.Common/CharsetUtil.cs holds only
+CharsetUtil.ForName(string), the counterpart of Charset.forName(String) that the
+codec modules share (codec-http HttpUtil.GetCharset and HttpPostMultipartRequestDecoder).
+It resolves the six standard charsets and their java.base aliases ignoring case
+(UTF-8 is Encoding.UTF8, US-ASCII Encoding.ASCII, ISO-8859-1 Encoding.Latin1,
+UTF-16BE/UTF-16LE UnicodeEncoding without a preamble, UTF-16 the big-endian
+UnicodeEncoding of the UTF-16 row below), applies Java's legal-name rule
+(IllegalCharsetNameException) and passes other names to Encoding.GetEncoding
+(UnsupportedCharsetException); both are ArgumentException, and a null name throws
+ArgumentException("Null charset name") as Java's IllegalArgumentException. The
+constants and codec caches stay removed. Measured on .NET 10.0.8: GetEncoding
+rejects 19 of the 47 Java names and aliases (UTF8, ISO8859_1, UTF_16BE, ...) and
+maps UTF-16, unicode and ISO-10646-UCS-2 to little-endian UTF-16; ForName returns
+the Java charset for all 47 in any case, and the big-endian UTF-16 decodes
+FE FF 00 41 as U+FEFF followed by "A" (no byte-order-mark detection).
+
 The typed CLR configuration is Encoding, EncoderFallback and DecoderFallback.
 One-shot construction uses Encoding.GetByteCount/GetBytes without global mutable
 codec state. Incremental protocol consumers must own an Encoder/Decoder per
@@ -7043,8 +7060,12 @@ returns "refCnt: 0, decrement: -2147483648" for that constructor boundary.
 This arbitrary diagnostic input is not a valid release decrement; retain/release
 validation and ownership state are unchanged. Keep InvalidOperationException
 inheritance, explicit messages and InnerException identity. Native default/null
-messages and cause-only base(null, cause) semantics remain: Java Throwable(cause)
-uses the cause's ToString for its message, whereas CLR supplies its default message.
+messages remain for the no-argument and null-message constructors. Since
+2026-11-24 (owner decision) the cause-only constructor follows Java
+IllegalStateException(Throwable), whose detail message is
+"(cause==null ? null : cause.toString())": the message is
+ThrowableUtil.ThrowableToString(cause), and a null cause keeps the CLR default
+message (ReferenceCountDiagnosticsContractTest asserts both).
 JVM serialVersionUID, stack replacement and suppressed-exception machinery are
 not mechanically ported. No new runtime helper or compatibility facade is added.
 
@@ -8722,6 +8743,12 @@ entries. Per-entry evidence is in the manifest; the summary is in
 - Stack traces: ThrowableUtil.unknownStackTrace writes StackTraceElement's
   "Type.method(Unknown Source)" frame; GlobalEventExecutor's stackless termination
   failure freezes that frame (no fillInStackTrace on the CLR).
+- Throwable text: ThrowableUtil.ThrowableToString(Exception) (CLR-only, owner
+  decision 2026-11-24) returns the Throwable.toString() text, Type.FullName, ": "
+  and Message (null for a null cause), which the codec and handler modules use for
+  cause-only constructors and cause texts, because Exception.ToString() appends the
+  inner exceptions and the stack trace. Message is never null on the CLR, so ": " is
+  always present.
 - Visibility follows Java where nothing outside the package needs more:
   AsciiStringUtil, SingleThreadEventExecutor.offerTask/DEFAULT_MAX_PENDING_EXECUTOR_TASKS,
   PlatformDependent classifier helpers are internal; SingleThreadEventExecutor.wakeup is

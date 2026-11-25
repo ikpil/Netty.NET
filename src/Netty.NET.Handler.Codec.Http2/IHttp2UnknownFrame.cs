@@ -1,0 +1,37 @@
+/*
+ * Copyright 2017 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+using Netty.NET.Buffer;
+
+namespace Netty.NET.Handler.Codec.Http2;
+
+// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md,
+// Buffer holders and conversion). copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(),
+// retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are inherited
+// from IByteBufHolder, not repeated; the classes narrow them with covariant overrides (owner decision
+// 2026-11-19; docs/transport-porting.md, Decisions).
+// CLR: stream(Http2FrameStream) is re-declared only to narrow the return type, so it is inherited from
+// IHttp2StreamFrame, not repeated; the classes narrow it with a covariant override (owner decision 2026-11-19;
+// docs/transport-porting.md, Decisions).
+public interface IHttp2UnknownFrame : IHttp2StreamFrame, IByteBufHolder
+{
+    // CLR: stream() is re-declared with the same type and inherited from IHttp2StreamFrame (a repeated interface
+    // member would hide it, CS0108).
+
+    byte FrameType();
+
+    Http2Flags Flags();
+}

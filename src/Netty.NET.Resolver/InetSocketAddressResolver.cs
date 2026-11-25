@@ -21,6 +21,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Resolver;
 
@@ -56,7 +57,9 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
             IReadOnlyList<IPEndPoint> socketAddresses = await DoResolveAllAsync(endpoint, cancellationToken).ConfigureAwait(false);
             if (socketAddresses.Count == 0)
             {
-                throw new SocketException((int)SocketError.HostNotFound, endpoint.Host);
+                // CLR: Common's UnknownHostException (owner decision 2026-11-25), as DefaultNameResolver reports a host
+                // without addresses.
+                throw new UnknownHostException(endpoint.Host);
             }
             return socketAddresses[0];
         }

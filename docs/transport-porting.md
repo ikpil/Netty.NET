@@ -179,6 +179,42 @@ declarations; the class description of `ChannelPipeline` is ported for the first
   when the factory throws, and the CLR `RegisterAsync`/`BindAsync`/`ConnectAsync` return a
   faulted `Task<IChannel>`, which has no channel accessor. `IsOpen`/`IsActive` became
   virtual on `AbstractChannel` (abstract in Java) for its overrides.
+- Overridable Unsafe (owner decision 2026-11-25). The folded `Channel.Unsafe` operations of
+  `AbstractChannel` (`CloseForcibly`, `BindTransportAsync`, `ConnectTransportAsync`,
+  `DisconnectTransportAsync`, `Close`, `DeregisterTransportAsync`, `WriteTransportAsync`,
+  `FlushTransport`, `BeginRead`) are `protected internal virtual`, and `IsWritable`,
+  `BytesBeforeUnwritable` and `BytesBeforeWritable` are `virtual`. A Java subclass in another
+  package overrides them by returning its own `AbstractUnsafe` from the protected `newUnsafe()`
+  (`AbstractChannel.java`); codec-http2's `AbstractHttp2StreamChannel` overrides them with the code
+  of Java's `Http2ChannelUnsafe`, and computes its writability without a `ChannelOutboundBuffer`.
+  "If you define the derived class in a different assembly from the base class, overridden members
+  have protected access"
+  ([protected internal](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal)),
+  so overrides outside the Transport are `protected override`; Transport's own overrides
+  (`EmbeddedChannel`, `LocalChannel`, `AbstractNioChannel`) are `protected internal override`.
+- Lifecycle checks read `IsActive` (2026-11-25). Java's `AbstractUnsafe` decides register
+  (`if (isActive())` before `fireChannelActive`), bind, disconnect, close and `flush0` with the virtual
+  `isActive()` (`AbstractChannel.java`), as `AbstractNioChannel.connect` does. `AbstractChannel` read its
+  private `_active` flag there, so an `IsActive` override did not change them; the handler-proxy tests'
+  `EmbeddedChannel` subclasses that report an inactive channel then received `ChannelActive` on
+  registration, which Java does not fire. Those points (register, bind, connect, disconnect, close and its
+  deregistration, `flush0`) now read `IsActive`; `BeginRead` keeps the flag, because it holds a read for the
+  CLR socket and 4.2's `beginRead()` has no `isActive()` check ([handler-proxy-porting.md](handler-proxy-porting.md)).
+- `PendingWriteQueue` producers complete with the write (2026-11-25). Java passes the `ChannelPromise` itself to
+  `write(msg, promise)`, so it completes when the write does. The queue's producer of a write that completes later
+  was completed by an awaited continuation, which ran on a thread-pool thread and submitted the completion to the
+  executor; on an `EmbeddedChannel` it then waited for `RunPendingTasks`, and handler-proxy's
+  `testRemoveOnProxyConnectionEventWritesPendingWrites` failed under load. The producer is now completed by a
+  continuation on Common's `EventExecutorTaskScheduler` over the queue's executor, which the completing thread
+  queues before the operation's `TrySetResult` returns and which runs at once on the event loop (otherwise through
+  `Execute`); a rejected hand-off faults that continuation with a `TaskSchedulerException`, without throwing into the
+  completing thread, and the producer fails with the rejection as before (both measured on .NET 10).
+- `UnknownHostException` (owner decision 2026-11-25) is Common's `Netty.NET.Common.Internal.UnknownHostException`
+  (an `IOException`, as `java.net.UnknownHostException` extends `java.io.IOException`), no longer
+  `SocketException(SocketError.HostNotFound)`, which cannot carry the cause that resolver-dns records. Resolver's
+  `DefaultNameResolver` throws it (a `SocketException` from `Dns.GetHostAddressesAsync` becomes its cause), and
+  `AbstractBootstrap.SocketAddress` keeps an address unresolved when it is thrown. `NioDatagramChannel`'s
+  `SocketError.HostNotFound` stands for `UnresolvedAddressException` and is unchanged.
 - TCP_NODELAY: Java's `DefaultSocketChannelConfig` constructor enables it only when
   `PlatformDependent.canEnableTcpNoDelayByDefault()` and ignores any exception.
   `NioSocketChannel`'s constructor (the CLR config is created lazily) now has the same
@@ -318,7 +354,7 @@ Code ported to carry comments (behavior changes have supplemental cases in
 | `ChannelHandlerAdapter`, `DefaultChannelPipeline.checkMultiplicity` | non-volatile `added` flag, per-thread `isSharable` cache, source messages |
 | `SimpleChannelInboundHandler`, `SimpleUserEventChannelHandler` | the four Java constructors, including the `Class` (C# `Type`) overloads |
 | `ChannelInboundHandler`, `ChannelInboundHandlerAdapter` | explicit re-abstraction of `exceptionCaught`; `[Skip]` override in the adapter |
-| `ChannelException`, `EventLoopException` | shared constructor, `newStatic`; `EventLoopException : ChannelException` |
+| `ChannelException`, `EventLoopException` | shared constructor, `newStatic`; `EventLoopException : ChannelException`; the cause-only constructor's message is Java's `cause.toString()` through `ThrowableUtil.ThrowableToString` (2026-11-24, owner decision; also the CLR-only `ConnectTimeoutException(Exception)`) |
 | `EventLoop` | `IEventLoop : IOrderedEventExecutor, IEventLoopGroup` (`next()` returns `this`) |
 | `LocalServerChannel`, `LocalChannelRegistry`, `LocalAddress` | state field, `readInbound`/`serve0` with `incMessagesRead`; source messages; ephemeral `E:` + hash id |
 | `NioDatagramChannel`, `DefaultDatagramChannelConfig`, `AbstractNioChannel` | `filterOutboundMessage` with `newDirectBuffer`, `(DatagramChannel)` constructor, JDK default family (IPv6 dual mode), broadcast warning, buffer-size checks |
@@ -345,7 +381,7 @@ comment is at its code except seven per-comment dispositions: `ensurePromiseUseC
 | pending handler callbacks | `PendingHandlerCallback` list, `callHandlerAddedForAllHandlers`, `invokeHandlerAddedIfNeeded`; a rejecting executor removes the handler (added task) or only marks it removed (removed task) |
 | pipeline mutation | `internalAdd` with `AddStrategy`, `add*0`, `filterName`/`checkDuplicateName` (head and tail names are not reserved), identity `childExecutors`, `tryRemove`/`isLinked`/`atomicRemoveFromHandlerList`, `replace0`, `destroyUp`/`destroyDown`; `lock (_gate)` stands for `synchronized (this)` |
 | pipeline events | every inbound event starts at `HeadContext` (`channelRegistered` runs `invokeHandlerAddedIfNeeded`, `channelUnregistered` destroys a closed pipeline unless an offloaded close is pending); `TailContext` has no `[Skip]`; `onUnhandled*` have the source bodies |
-| `EmbeddedChannel` | `Builder` (public constructor: a `builder()` method cannot share the nested type's name, CS0102), every constructor through the builder, `setup` with a `ChannelInitializer`, `EmbeddedChannelPipeline`, `finish(boolean)`, `cancelRemainingScheduledTasks`, channel-level and folded `EmbeddedUnsafe` wrappers that run the pending tasks, `checkException(promise)` as the returned `Task`, `inboundMessages()`/`outboundMessages()`/`hasPendingTasks()` as methods |
+| `EmbeddedChannel` | `Builder` (public constructor: a `builder()` method cannot share the nested type's name, CS0102), every constructor through the builder, `setup` with a `ChannelInitializer`, `EmbeddedChannelPipeline`, `finish(boolean)`, `cancelRemainingScheduledTasks`, channel-level and folded `EmbeddedUnsafe` wrappers that run the pending tasks, `checkException(promise)` as the returned `Task`, `inboundMessages()`/`outboundMessages()`/`hasPendingTasks()` as methods; `finishAndReleaseAll()` is `virtual` (2026-11-25) because the Java method is public and non-final and codec-http2's `CompressorHttp2ConnectionEncoderTest` overrides it |
 
 Supplemental cases: `ContextPipelineEmbeddedAlignmentContractTest` (15). `JavaStringConversionContractTest` expects
 `EmbeddedChannel+EmbeddedChannelPipeline{...}` (the JVM prints `EmbeddedChannel$EmbeddedChannelPipeline{...}`).
@@ -355,17 +391,15 @@ Supplemental cases: `ContextPipelineEmbeddedAlignmentContractTest` (15). `JavaSt
 The `testsuite` module is ported only where it needs nothing but the modules in the manifest's
 `testsuiteInventoryPolicy.portedModules` (common, buffer, resolver, transport, since 2026-11-18 codec-base, since
 2026-11-19 the codec modules that need only codec-base, since 2026-11-23 codec-compression, codec-protobuf and
-codec-xml, and since 2026-11-24 pkitesting). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
+codec-xml, and since 2026-11-24 pkitesting, handler and codec-http). Until 2026-11-18 the manifest listed hand-selected testsuite sources, so four
 transport-only sources (`AbstractSingleThreadEventLoopTest`, `DefaultEventLoopTest`, `NioEventLoopTest`,
 `ServerSocketSuspendTest`) were missed. The manifest now records every pinned testsuite file, and the checker
 enforces it:
 
-- `testsuiteEntries` (52): ported sources, plus `util/TestUtils.java` (JVM-only heap/thread dump and xz
+- `testsuiteEntries` (60): ported sources, plus `util/TestUtils.java` (JVM-only heap/thread dump and xz
   compression members recorded per comment) and three `package-info.java` summaries mapped in the table above.
-- `testsuiteDeferredEntries` (14, with 22 declared JUnit tests): sources that need a module that is not in the
-  testsuite's ported modules: `codec-http`, `transport-sctp` or `transport-udt`, which are not ported yet, or
-  `handler`, which is ported (2026-11-24, ssl included) but joins the testsuite's ported modules in the next testsuite
-  step. They are ported with that module or step; this is not a decision against porting them.
+- `testsuiteDeferredEntries` (6, with 3 declared JUnit tests): sources that need a module that is not ported yet:
+  `transport-sctp` or `transport-udt`. They are ported with that module; this is not a decision against porting them.
 
 `tools/Test-TransportPortingManifest.ps1` lists `testsuite/src` and requires each file to be recorded exactly once.
 For a deferred file it resolves every `io.netty` import against the pinned `*/src/main/java` sources (nested
@@ -391,7 +425,33 @@ project); no testsuite file imports them, so again only the module list in the d
 2026-11-24 pkitesting joined them, so the six TLS sources `SocketSslClientRenegotiateTest`, `SocketSslEchoTest`,
 `SocketSslGreetingTest`, `SocketSslLargeCertificateTest`, `SocketSslSessionReuseTest` and `SocketStartTlsTest` lost
 their pkitesting blocker and imports (the checker recomputes them). The same day the handler module was completed with
-`io.netty.handler.ssl` ([handler-porting.md](handler-porting.md)), so handler is ported. The seven sources it blocks,
-those six and `TrafficShapingHandlerTest`, stay deferred until the next testsuite step ports them and adds handler to
-`testsuiteInventoryPolicy.portedModules`; their recorded reason says so. The other seven deferred files need
-`codec-http` (`SocketSpdyEchoTest`), `transport-sctp` (four files) or `transport-udt` (two files).
+`io.netty.handler.ssl` ([handler-porting.md](handler-porting.md)) and joined the testsuite's ported modules, so the
+seven sources it blocked, those six and `TrafficShapingHandlerTest`, are ported (testsuite step of 2026-11-24).
+`Netty.NET.Transport.Tests` references `Netty.NET.Handler` and `Netty.NET.PkiTesting`, and `Netty.NET.Handler` opens
+its internals to it as to `Netty.NET.Handler.Tests` (`SslHandler.Engine()`, the SslStream of an `SSLEngine` session,
+and the protected internal `SslContext.NewHandler(alloc, startTls)`, the counterpart of `new SslHandler(newEngine(alloc),
+startTls)`). They follow the ssl port's mappings (docs/handler-porting.md, "SSL tests"):
+
+| Source | Status | C# |
+| --- | --- | --- |
+| `SocketSslEchoTest` | `clr-adapted` | `[Theory]` over the JDK pair (OPENSSL is library-not-ported) without the delegated-task executor rows (`SslHandler(SSLEngine, Executor)` is not ported): 24 rows; the 8 `NONE` rows pass, the 8 `CLIENT_INITIATED` rows are skipped (SslStream renegotiates only as a server) and the 8 `SERVER_INITIATED` rows are skipped (on TLS 1.2 a server renegotiation fails with "Received data during renegotiation." while the client keeps sending, measured 8 of 8, `SslStream.IO.cs` `ReceiveHandshakeFrameAsync`). The cipher-suite change before renegotiating has no SslStream counterpart; `logStats` logs `NegotiatedCipherSuite`, or `SSL_NULL_WITH_NULL_NULL` before the handshake as an `SSLEngine` session reports it. |
+| `SocketSslGreetingTest` | `clr-adapted` | The server writes before the handshake completed; the three `SSLPeerUnverifiedException` checks of the server session are one `Assert.Null(Engine().RemoteCertificate)`. |
+| `SocketSslSessionReuseTest` | `clr-adapted` | `testSslSessionReuse` observes resumption on the wire: a CLR-only handler before the client SslHandler records the non-empty `session_id` of each ServerHello (RFC 5246 7.4.1.3) in place of `sessionContext().getIds()` (SChannel resumed the session, measured). `testSslSessionTrustManagerResumption` is CLR-inapplicable (`ResumableX509ExtendedTrustManager` and SSLSession values are JVM-only). |
+| `SocketStartTlsTest` | `verified` | Both tests over the JDK pair; the server handler is `NewHandler(alloc, true)` and the client's `NewHandler(alloc, false)`. |
+| `TrafficShapingHandlerTest` | `verified` | All nine tests; the scheduled thread pool is a `DefaultEventExecutorGroup(10)`, as in the handler module's own `TrafficShapingHandlerTest`. |
+| `SocketSslLargeCertificateTest` | `clr-adapted` | `resumptionWithLargeCertificates` is CLR-inapplicable: its subject is OpenSSL's `MAX_CERTIFICATE_LIST_BYTES` (enabled only with netty-tcnative). |
+| `SocketSslClientRenegotiateTest` | `clr-adapted` | `testSslRenegotiationRejected` is CLR-inapplicable: it checks that an OpenSSL server rejects a client-initiated renegotiation (`OpenSslServerContext` is library-not-ported, `JdkSslClientContext` deprecated-not-ported, and an SslStream client cannot start a renegotiation). |
+
+The seven classes run 37 cases: 21 pass and 16 are skipped (the renegotiation rows above), identical in two runs.
+
+Later on 2026-11-24 codec-http was ported ([codec-http-porting.md](codec-http-porting.md)) and joined the ported
+modules, so `SocketSpdyEchoTest`, the last source it blocked, is ported (testsuite step of 2026-11-24).
+`Netty.NET.Transport.Tests` references `Netty.NET.Handler.Codec.Http`:
+
+| Source | Status | C# |
+| --- | --- | --- |
+| `SocketSpdyEchoTest` | `verified` | Both tests (`testSpdyEcho`, `testSpdyEchoNotAutoRead`) run through `AbstractSocketTest.Run` (both allocators x the NIO socket combination) with `SpdyFrameCodec(SpdyVersion.SPDY_3_1)` of `Netty.NET.Handler.Codec.Spdy` on the server and a raw `ByteBuf` client, as in the source: the server decodes every frame of `createFrames(3)`, drops the UNKNOWN and NOOP frames (20 ignored bytes) and re-encodes the rest byte for byte. The adaptations are syntactic (the unseeded `java.util.Random` is an unseeded `System.Random`, `switch (version)` over the `SpdyVersion` sealed class is a `when` case guard, the anonymous `ChannelInitializer` is an `ActionChannelInitializer<IChannel>`, `Thread.sleep(50)` is `Task.Delay(50)`); no assertion or scenario step is changed. Both tests pass, identical in two runs. |
+
+The testsuite now has 60 entries and 6 deferred files with 3 declared tests. The remaining deferred files need
+`transport-sctp` (four files: `AbstractSctpTest`, `SctpEchoTest`, `SctpTestPermutation` and the sctp `package-info`)
+or `transport-udt` (two files: `UDTClientServerConnectionTest` and the udt `package-info`).

@@ -95,7 +95,11 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     public IChannelPipeline Pipeline => _pipeline;
     public IByteBufAllocator Alloc() => Config.GetAllocator();
     // CLR: isOpen()/isActive() are abstract in Java; the transport-owned flags are the defaults that transports
-    // override.
+    // override. The lifecycle checks of register, bind, connect, disconnect, close and flush0 read IsActive where the
+    // source calls isActive() (AbstractChannel.AbstractUnsafe, AbstractNioChannel.connect), so an override, such as
+    // the EmbeddedChannel subclass of the handler-proxy tests that reports an inactive channel, decides them as in
+    // Java; the BeginRead check reads the flag, because it holds a read for the CLR socket (4.2's beginRead() has no
+    // isActive() check).
     public virtual bool IsOpen => _open;
     public bool IsRegistered => _registered;
     public virtual bool IsActive => _active;
@@ -164,12 +168,15 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      */
     // CLR: Channel.Unsafe is folded into AbstractChannel (2026-11-16 owner decision); this member is Unsafe.outboundBuffer().
     public ChannelOutboundBuffer OutboundBuffer { get; }
-    public bool IsWritable => _open && !OutboundBuffer.IsClosed && OutboundBuffer.IsWritable;
+    // CLR: IsWritable, BytesBeforeUnwritable and BytesBeforeWritable are virtual (owner decision 2026-11-25) because a
+    // channel whose writes bypass the ChannelOutboundBuffer computes them itself, as Java's AbstractHttp2StreamChannel
+    // does (codec-http2, src/Netty.NET.Handler.Codec.Http2/AbstractHttp2StreamChannel.cs).
+    public virtual bool IsWritable => _open && !OutboundBuffer.IsClosed && OutboundBuffer.IsWritable;
     // isWritable() is currently assuming if there is no outboundBuffer then the channel is not writable.
     // We should be consistent with that here.
     // CLR: a closed ChannelOutboundBuffer stands for the null buffer of a closed channel.
-    public long BytesBeforeUnwritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeUnwritable : 0;
-    public long BytesBeforeWritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeWritable : long.MaxValue;
+    public virtual long BytesBeforeUnwritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeUnwritable : 0;
+    public virtual long BytesBeforeWritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeWritable : long.MaxValue;
     protected virtual IChannelConfig NewConfig() => new DefaultChannelConfig(this);
     /**
      * Returns a new {@link DefaultChannelPipeline} instance.
@@ -232,7 +239,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     Pipeline.FireChannelRegistered();
                     // Only fire a channelActive if the channel has never been registered. This prevents firing
                     // multiple channel actives if the channel is deregistered and re-registered.
-                    if (_active)
+                    if (IsActive)
                     {
                         if (firstRegistration)
                         {
@@ -320,8 +327,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * Closes the {@link Channel} immediately without firing any events.  Probably only useful
      * when registration attempt failed.
      */
-    // CLR: Unsafe.closeForcibly() (Channel.Unsafe is folded into AbstractChannel, 2026-11-16 owner decision).
-    internal virtual void CloseForcibly()
+    // CLR: Unsafe.closeForcibly() (Channel.Unsafe is folded into AbstractChannel, 2026-11-16 owner decision). The folded
+    // Unsafe operations (closeForcibly, bind, connect, disconnect, close, deregister, write, flush, beginRead) are
+    // protected internal virtual (owner decision 2026-11-25): a Java subclass in another package overrides them by
+    // returning its own AbstractUnsafe from the protected newUnsafe() (codec-http2's Http2ChannelUnsafe); "You can
+    // access a protected internal member from the current assembly or from types that are derived from the
+    // containing class", and "If you define the derived class in a different assembly from the base class,
+    // overridden members have protected access" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal).
+    protected internal virtual void CloseForcibly()
     {
         // An offloaded native close already owns disposal; keep its queue and completion ownership intact.
         if (_closePending) return;
@@ -380,7 +393,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * it once its done.
      */
     // CLR: Unsafe.bind(localAddress, promise) (Channel.Unsafe is folded into AbstractChannel, 2026-11-16 owner decision).
-    internal virtual Task BindTransportAsync(EndPoint address, CancellationToken cancellationToken)
+    protected internal virtual Task BindTransportAsync(EndPoint address, CancellationToken cancellationToken)
     {
         // See: https://github.com/netty/netty/issues/576
         if (Config.TryGetOption(ChannelOption.SO_BROADCAST, out bool broadcast) && broadcast &&
@@ -396,10 +409,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     "address (" + address + ") anyway as requested.");
         }
 
-        bool wasActive = _active;
+        bool wasActive = IsActive;
         return Operation(() => DoBindAsync(address, cancellationToken), () =>
         {
-            if (!wasActive && _active)
+            if (!wasActive && IsActive)
             {
                 InvokeLater(() =>
                 {
@@ -418,9 +431,9 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * The {@link ChannelPromise} will get notified once the connect operation was complete.
      */
     // CLR: Unsafe.connect(remoteAddress, localAddress, promise) (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
+    protected internal virtual Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
     {
-        bool wasActive = _active;
+        bool wasActive = IsActive;
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _ = ConnectCoreAsync();
         return completion.Task;
@@ -434,7 +447,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 {
                     EnsureOpen();
                     completion.TrySetResult();
-                    if (!wasActive && _active)
+                    if (!wasActive && IsActive)
                     { Pipeline.FireChannelActive(); if (_readBeforeActive) BeginRead(); }
                 }).ConfigureAwait(false);
             }
@@ -452,17 +465,17 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * operation was complete.
      */
     // CLR: Unsafe.disconnect(promise) (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual Task DisconnectTransportAsync(CancellationToken cancellationToken)
+    protected internal virtual Task DisconnectTransportAsync(CancellationToken cancellationToken)
     {
         if (!Metadata.HasDisconnect())
             return Close();
-        bool wasActive = _active;
+        bool wasActive = IsActive;
         return Operation(() => DoDisconnectAsync(cancellationToken), () =>
         {
             // Reset remoteAddress and localAddress
             remoteAddress = null;
             localAddress = null;
-            if (wasActive && !_active)
+            if (wasActive && !IsActive)
             {
                 InvokeLater(() => Pipeline.FireChannelInactive());
             }
@@ -474,7 +487,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * operation was complete.
      */
     // CLR: Unsafe.close(promise) (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual Task Close()
+    protected internal virtual Task Close()
     {
         if (_closeInitiated || !_open)
         {
@@ -488,7 +501,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return _closeFuture.Task;
         }
         _closeInitiated = true;
-        bool wasActive = _active;
+        bool wasActive = IsActive;
         ChannelOutboundBuffer outboundBuffer = OutboundBuffer;
         // Disallow adding any messages and flushes to outboundBuffer.
         outboundBuffer.BeginOutputShutdown();
@@ -601,7 +614,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             _pipeline.Destroy();
             return;
         }
-        _ = Deregister(wasActive && !_active);
+        _ = Deregister(wasActive && !IsActive);
     }
     /**
      * Prepares to close the {@link Channel}. If this method returns an {@link Executor}, the
@@ -620,7 +633,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * {@link ChannelPromise} once the operation was complete.
      */
     // CLR: Unsafe.deregister(promise) (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual Task DeregisterTransportAsync() => Deregister(false);
+    protected internal virtual Task DeregisterTransportAsync() => Deregister(false);
 
     private Task Deregister(bool fireChannelInactive)
     {
@@ -717,7 +730,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * Schedules a write operation.
      */
     // CLR: Unsafe.write(msg, promise) (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual Task WriteTransportAsync(object msg, CancellationToken cancellationToken)
+    protected internal virtual Task WriteTransportAsync(object msg, CancellationToken cancellationToken)
     {
         if (!_open || OutboundBuffer.IsClosed)
         {
@@ -742,7 +755,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * Flush out all write operations scheduled via {@link #write(Object, ChannelPromise)}.
      */
     // CLR: Unsafe.flush() (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual void FlushTransport()
+    protected internal virtual void FlushTransport()
     {
         if (OutboundBuffer.IsClosed)
             return;
@@ -757,7 +770,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return;
         _writing = true;
         // Mark all pending write requests as failure if the channel is inactive.
-        if (!_active)
+        if (!IsActive)
         {
             try
             {
@@ -860,7 +873,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * {@link ChannelPipeline}.  If there's already a pending read operation, this method does nothing.
      */
     // CLR: Unsafe.beginRead() (Channel.Unsafe is folded into AbstractChannel).
-    internal virtual void BeginRead()
+    protected internal virtual void BeginRead()
     {
         if (!_open)
             return;

@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -133,7 +132,9 @@ public class IdleStateHandler : ChannelDuplexHandler
     // CLR: the ChannelFutureListener is an Action<Task> continuation, assigned in the constructor because a field
     // initializer cannot reference the instance (CS0236).
     private readonly Action<Task> writeListener;
-    // CLR: the TaskScheduler of writeListener, created in handlerAdded with the ticker (see ExecutorTaskScheduler).
+    // CLR: the TaskScheduler of writeListener, created in handlerAdded with the ticker: Common's
+    // EventExecutorTaskScheduler over ctx.Executor, which notifies it as DefaultPromise.notifyListeners() does
+    // (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs).
     private TaskScheduler writeListenerScheduler;
 
     /**
@@ -260,7 +261,7 @@ public class IdleStateHandler : ChannelDuplexHandler
     public override void HandlerAdded(IChannelHandlerContext ctx)
     {
         this.ticker = ctx.Executor.Ticker();
-        writeListenerScheduler = new ExecutorTaskScheduler(ctx);
+        writeListenerScheduler = new EventExecutorTaskScheduler(() => ctx.Executor);
         if (ctx.Channel.IsActive && ctx.Channel.IsRegistered)
         {
             // channelActive() event has been fired already, which means this.channelActive() will
@@ -723,52 +724,6 @@ public class IdleStateHandler : ChannelDuplexHandler
                 // timeout with shorter delay.
                 handler.allIdleTimeout = handler.Schedule(ctx, Run, NanosToTimeSpan(nextDelay));
             }
-        }
-    }
-
-    // CLR: Java notifies a listener at once when its promise completes on the promise's event loop, and otherwise
-    // through executor.execute (DefaultPromise.notifyListeners(),
-    // https://github.com/netty/netty/blob/64cc10f38ea5f5bd7eae48507817c66680d0afdc/common/src/main/java/io/netty/util/concurrent/DefaultPromise.java).
-    // The write Task's producer uses RunContinuationsAsynchronously, which "Forces continuations added to the current
-    // task to be executed asynchronously" (https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcreationoptions),
-    // so a continuation on TaskScheduler.Default would update lastWriteTime later on a thread-pool thread. A continuation
-    // with its own scheduler is queued to that scheduler (QueueTask, "Queues a Task to the scheduler",
-    // https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskscheduler) by the completing thread; this
-    // scheduler runs it there when that thread is the handler's event loop, otherwise it hands it to the executor, the
-    // policy of notifyListeners(). The handler's executor stands for the promise's executor, which is the same event
-    // loop unless the handler runs on its own EventExecutorGroup. WriteTimeoutHandler uses it for its listeners too.
-    // The executor is read from the context when a listener is queued, so a channel that moves to another event loop
-    // notifies on its current one.
-    internal sealed class ExecutorTaskScheduler : TaskScheduler
-    {
-        private readonly IChannelHandlerContext ctx;
-
-        internal ExecutorTaskScheduler(IChannelHandlerContext ctx)
-        {
-            this.ctx = ctx;
-        }
-
-        protected override void QueueTask(Task task)
-        {
-            IEventExecutor executor = ctx.Executor;
-            if (executor.InEventLoop())
-            {
-                TryExecuteTask(task);
-            }
-            else
-            {
-                executor.Execute(() => TryExecuteTask(task));
-            }
-        }
-
-        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
-        {
-            return !taskWasPreviouslyQueued && ctx.Executor.InEventLoop() && TryExecuteTask(task);
-        }
-
-        protected override IEnumerable<Task> GetScheduledTasks()
-        {
-            return [];
         }
     }
 }

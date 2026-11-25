@@ -15,6 +15,7 @@
  */
 
 using System;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec;
 
@@ -50,17 +51,9 @@ public class CodecException : Exception
      * Creates a new instance.
      */
     // CLR: RuntimeException(Throwable) has "a detail message of (cause==null ? null : cause.toString())"
-    // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/RuntimeException.html).
-    public CodecException(Exception cause) : base(ThrowableToString(cause), cause)
+    // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/RuntimeException.html), the text of
+    // Common's ThrowableUtil.ThrowableToString (Exception.ToString() also appends the stack trace).
+    public CodecException(Exception cause) : base(ThrowableUtil.ThrowableToString(cause), cause)
     {
     }
-
-    // CLR: Throwable.toString() is the class name, ": " and getLocalizedMessage(), or just the class name when that is
-    // null (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Throwable.html). Exception.ToString()
-    // also appends the inner exception and the stack trace
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.tostring), so the Java text is built here. When
-    // no message was supplied, Exception.Message is a default text, not null
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.message), so the ": " part is always present.
-    internal static string ThrowableToString(Exception cause) =>
-        cause == null ? null : cause.GetType().FullName + ": " + cause.Message;
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Resolver.Tests;
 
@@ -38,8 +39,7 @@ public class ResolverJdkSemanticsContractTest
     public async Task RejectedLiteralsCarryTheHost(string host, string message)
     {
         using var resolver = new DefaultNameResolver(ImmediateEventExecutor.INSTANCE);
-        var error = await Assert.ThrowsAsync<SocketException>(() => resolver.ResolveAsync(host));
-        Assert.Equal(SocketError.HostNotFound, error.SocketErrorCode);
+        var error = await Assert.ThrowsAsync<UnknownHostException>(() => resolver.ResolveAsync(host));
         Assert.Equal(message, error.Message);
     }
 
@@ -50,7 +50,7 @@ public class ResolverJdkSemanticsContractTest
         name.Setup(r => r.ResolveAllAsync("example.invalid", default))
             .ReturnsAsync(Array.Empty<IPAddress>());
         using var resolver = new RoundRobinInetAddressResolver(ImmediateEventExecutor.INSTANCE, name.Object);
-        var error = await Assert.ThrowsAsync<SocketException>(() => resolver.ResolveAsync("example.invalid"));
+        var error = await Assert.ThrowsAsync<UnknownHostException>(() => resolver.ResolveAsync("example.invalid"));
         Assert.Equal("example.invalid", error.Message);
     }
 

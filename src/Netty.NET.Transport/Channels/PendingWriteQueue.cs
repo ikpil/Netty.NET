@@ -286,7 +286,7 @@ public sealed class PendingWriteQueue
         if (operation.IsCompleted)
             Complete(operation, entry.Producer);
         else
-            _ = CompleteAsync(operation, entry.Producer);
+            CompleteLater(operation, entry.Producer);
         return entry.Producer.Task;
     }
     private static void Complete(Task operation, TaskCompletionSource producer)
@@ -296,19 +296,39 @@ public sealed class PendingWriteQueue
         catch (OperationCanceledException error) when (operation.IsCanceled) { producer.TrySetCanceled(error.CancellationToken); }
         catch (Exception error) { SafeFail(producer, error); }
     }
-    private async Task CompleteAsync(Task operation, TaskCompletionSource producer)
+    // CLR: Java hands the ChannelPromise itself to write(msg, promise), so it completes when the write does. A write
+    // that completes later completes its producer through a continuation on Common's EventExecutorTaskScheduler over
+    // the queue's executor: the completing thread queues it to that scheduler before the operation's TrySetResult
+    // returns, even though the Transport's operation Tasks run their continuations asynchronously, and the scheduler
+    // runs it at once on the event loop and otherwise hands it to the executor (measured on .NET 10; the scheduler's
+    // comment cites TaskCreationOptions and TaskScheduler.QueueTask). An awaited continuation would instead run on a
+    // thread-pool thread and submit the completion, so the producer would complete later than in Java. When the
+    // executor rejects the hand-off, the continuation faults with a TaskSchedulerException whose inner exception is the
+    // rejection, without throwing into the completing thread (measured on .NET 10), and the producer fails with that
+    // rejection, as the earlier submission did.
+    private void CompleteLater(Task operation, TaskCompletionSource producer)
     {
-        try
-        { await operation.ConfigureAwait(false); }
-        catch { /* Inspect the completed task on its owner below. */ }
-        if (_executor.InEventLoop())
-            Complete(operation, producer);
-        else
+        Task completion = operation.ContinueWith(static (op, p) => Complete(op, (TaskCompletionSource) p), producer,
+            CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, CompletionScheduler());
+        if (completion.IsCompleted && !completion.IsFaulted)
+            return;
+        _ = completion.ContinueWith(static (c, p) => SafeFail((TaskCompletionSource) p,
+                c.Exception.InnerException is TaskSchedulerException scheduling && scheduling.InnerException != null
+                    ? scheduling.InnerException
+                    : c.Exception.InnerException), producer,
+            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
+    }
+    // CLR: created with the first write that completes later; the queue's executor does not change.
+    private EventExecutorTaskScheduler _completionScheduler;
+    private EventExecutorTaskScheduler CompletionScheduler()
+    {
+        if (_completionScheduler == null)
         {
-            try
-            { await _executor.SubmitAsync(() => Complete(operation, producer)).ConfigureAwait(false); }
-            catch (Exception error) { SafeFail(producer, error); }
+            IEventExecutor executor = _executor;
+            _completionScheduler = new EventExecutorTaskScheduler(() => executor);
         }
+        return _completionScheduler;
     }
     private static void SafeFail(TaskCompletionSource producer, Exception cause)
     { if (!producer.TrySetException(cause)) Logger.Warn("Failed to mark a producer as failure because it's done already: " + producer.Task, cause); }

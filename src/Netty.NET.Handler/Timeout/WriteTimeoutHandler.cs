@@ -62,10 +62,11 @@ namespace Netty.NET.Handler.Timeout;
 // (docs/codec-base-porting.md, "Outbound operations"), so the timeout is scheduled right after the write is handed to the
 // next handler instead of right before it; a write that has already completed then cancels the timeout through its
 // listener at once, as a listener added to a completed promise runs at once. Future<?> is the CancellationTokenSource of
-// the scheduled work (cancel(false) is Cancel()). The listener is a Task continuation on IdleStateHandler's
-// ExecutorTaskScheduler over ctx.executor(), which notifies it as DefaultPromise.notifyListeners() does (at once on the
-// event loop, otherwise through execute); operationComplete() keeps the Java hand-off to the executor for a listener
-// that runs elsewhere (https://github.com/netty/netty/issues/11053).
+// the scheduled work (cancel(false) is Cancel()). The listener is a Task continuation on Common's
+// EventExecutorTaskScheduler over ctx.executor() (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs), which
+// notifies it as DefaultPromise.notifyListeners() does (at once on the event loop, otherwise through execute);
+// operationComplete() keeps the Java hand-off to the executor for a listener that runs elsewhere
+// (https://github.com/netty/netty/issues/11053).
 public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
 {
     // CLR: TimeUnit.MILLISECONDS.toNanos(1).
@@ -157,8 +158,15 @@ public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
         {
             AddWriteTimeoutTask(task);
 
+            // CLR: the listener scheduler is created once, and its lambda captures a copy of ctx declared in that block,
+            // so the later writes allocate no closure (see EventExecutorTaskScheduler).
+            if (listenerScheduler == null)
+            {
+                IChannelHandlerContext listenerCtx = ctx;
+                listenerScheduler = new EventExecutorTaskScheduler(() => listenerCtx.Executor);
+            }
+
             // Cancel the scheduled timeout if the flush promise is complete.
-            listenerScheduler ??= new IdleStateHandler.ExecutorTaskScheduler(ctx);
             _ = promise.ContinueWith(task.OperationComplete, CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously, listenerScheduler);
         }

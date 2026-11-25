@@ -54,15 +54,12 @@ public abstract class SslCompletionEvent
     }
 
     // CLR: getClass().getSimpleName() is StringUtil.SimpleClassName(this) and the cause is printed with
-    // Throwable.toString() (class name, ": ", message), built as CodecException(Exception) builds it
-    // (src/Netty.NET.Handler.Codec/CodecException.cs); Exception.ToString() would add the stack trace.
+    // Throwable.toString() (class name, ": ", message), Common's ThrowableUtil.ThrowableToString; Exception.ToString()
+    // would add the stack trace.
     public override string ToString()
     {
         Exception cause = Cause();
         return cause == null? StringUtil.SimpleClassName(this) + "(SUCCESS)" :
-                StringUtil.SimpleClassName(this) +  '(' + ThrowableToString(cause) + ')';
+                StringUtil.SimpleClassName(this) +  '(' + ThrowableUtil.ThrowableToString(cause) + ')';
     }
-
-    // CLR: Throwable.toString() of a non-null cause.
-    internal static string ThrowableToString(Exception cause) => cause.GetType().FullName + ": " + cause.Message;
 }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Security.Authentication;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Ssl;
 
@@ -46,11 +47,10 @@ public class NotSslRecordException : AuthenticationException
     }
 
     // CLR: SSLException(Throwable) has "a detail message of (cause==null ? null : cause.toString())"; Throwable.toString()
-    // is the class name, ": " and the message, built as CodecException(Exception) builds it
-    // (src/Netty.NET.Handler.Codec/CodecException.cs). AuthenticationException has no (Exception) constructor, so the
-    // (string, Exception) constructor carries both.
+    // is the class name, ": " and the message, Common's ThrowableUtil.ThrowableToString. AuthenticationException has no
+    // (Exception) constructor, so the (string, Exception) constructor carries both.
     public NotSslRecordException(Exception cause)
-        : base(cause == null ? null : cause.GetType().FullName + ": " + cause.Message, cause)
+        : base(ThrowableUtil.ThrowableToString(cause), cause)
     {
     }
 

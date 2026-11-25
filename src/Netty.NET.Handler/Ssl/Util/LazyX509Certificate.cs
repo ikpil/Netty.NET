@@ -66,7 +66,7 @@ public sealed class LazyX509Certificate : X509Certificate2
     }
 
     // CLR: unwrap() parses through a CertificateFactory and wraps a CertificateException in an IllegalStateException,
-    // whose message is the cause's toString() (class name, ": ", message).
+    // whose message is the cause's toString() (class name, ": ", message; Common's ThrowableUtil.ThrowableToString).
     private static X509Certificate2 Unwrap(byte[] bytes)
     {
         try
@@ -75,7 +75,7 @@ public sealed class LazyX509Certificate : X509Certificate2
         }
         catch (CryptographicException e)
         {
-            throw new InvalidOperationException(e.GetType().FullName + ": " + e.Message, e);
+            throw new InvalidOperationException(ThrowableUtil.ThrowableToString(e), e);
         }
     }
 
