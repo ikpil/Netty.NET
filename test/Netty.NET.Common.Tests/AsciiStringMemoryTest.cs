@@ -50,7 +50,10 @@ public class AsciiStringMemoryTest
     [Fact]
     public void TestSharedMemory()
     {
-        unchecked { ++a[aOffset]; }
+        unchecked
+        {
+            ++a[aOffset];
+        }
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
         AsciiString aAsciiString2 = new AsciiString(a, aOffset, length, false);
         Assert.Equal(aAsciiString, aAsciiString1);
@@ -65,7 +68,10 @@ public class AsciiStringMemoryTest
     public void TestNotSharedMemory()
     {
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
-        unchecked { ++a[aOffset]; }
+        unchecked
+        {
+            ++a[aOffset];
+        }
         Assert.NotEqual(aAsciiString, aAsciiString1);
         int i = aOffset;
         Assert.NotEqual(a[i], aAsciiString1.ByteAt(i - aOffset));

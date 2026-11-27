@@ -146,7 +146,10 @@ public class NativeExecutorTaskContractTest
         var group = new SelectingGroup(first, second);
         using var cancellation = new CancellationTokenSource();
         var calls = new List<int>();
-        Task action = group.SubmitAsync(() => { calls.Add(0); });
+        Task action = group.SubmitAsync(() =>
+        {
+            calls.Add(0);
+        });
         Task<int> value = group.SubmitAsync(() =>
         {
             calls.Add(1);
@@ -289,9 +292,13 @@ public class NativeExecutorTaskContractTest
     [Fact]
     public async Task UnorderedNativeRejectionFaultsEvenWhenTheLegacyHandlerDiscardsWork()
     {
-        var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
+        var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) =>
+        {
+        });
         executor.Shutdown();
-        Task result = executor.SubmitAsync(() => { });
+        Task result = executor.SubmitAsync(() =>
+        {
+        });
         Assert.True(result.IsFaulted);
         await Assert.ThrowsAsync<RejectedExecutionException>(async () => await result);
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
@@ -318,7 +325,10 @@ public class NativeExecutorTaskContractTest
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             int calls = 0;
-            Task queued = executor.SubmitAsync(() => { ++calls; });
+            Task queued = executor.SubmitAsync(() =>
+            {
+                ++calls;
+            });
             Assert.Equal(1, executor.PendingTaskCount);
             Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.Same(executor.TerminationFuture, executor.StopAsync());
@@ -341,7 +351,9 @@ public class NativeExecutorTaskContractTest
         var original = new RejectedExecutionException("temporary full queue");
         var underlying = new QueuedExecutor { Rejection = original };
         IEventExecutor child = new NonStickyEventExecutorGroup(underlying).Next();
-        Task first = child.SubmitAsync(() => { });
+        Task first = child.SubmitAsync(() =>
+        {
+        });
         Assert.Same(original, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await first));
         underlying.Rejection = null;
         Task<int> second = child.SubmitAsync(() => 2);
@@ -366,12 +378,16 @@ public class NativeExecutorTaskContractTest
             }
         };
         IEventExecutor child = new NonStickyEventExecutorGroup(underlying).Next();
-        Task<Task> firstAdmission = Task.Factory.StartNew(() => child.SubmitAsync(() => { }),
+        Task<Task> firstAdmission = Task.Factory.StartNew(() => child.SubmitAsync(() =>
+        {
+        }),
             CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            Task second = child.SubmitAsync(() => { });
+            Task second = child.SubmitAsync(() =>
+            {
+            });
             release.Set();
             Task first = await firstAdmission.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(second.IsFaulted);
@@ -388,10 +404,14 @@ public class NativeExecutorTaskContractTest
     [Fact]
     public async Task NonStickyNativeChildRejectsShutdownEvenWhenThePoolHandlerDiscards()
     {
-        var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
+        var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) =>
+        {
+        });
         IEventExecutor child = new NonStickyEventExecutorGroup(executor).Next();
         executor.Shutdown();
-        Task result = child.SubmitAsync(() => { });
+        Task result = child.SubmitAsync(() =>
+        {
+        });
         Assert.True(result.IsFaulted);
         await Assert.ThrowsAsync<RejectedExecutionException>(async () => await result);
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
@@ -466,8 +486,14 @@ public class NativeExecutorTaskContractTest
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             int calls = 0;
-            Task first = child.SubmitAsync(() => { ++calls; });
-            Task second = child.SubmitAsync(() => { ++calls; });
+            Task first = child.SubmitAsync(() =>
+            {
+                ++calls;
+            });
+            Task second = child.SubmitAsync(() =>
+            {
+                ++calls;
+            });
             Assert.Equal(1, executor.PendingTaskCount);
             Assert.Same(executor.TerminationFuture, executor.StopAsync());
             Assert.Same(executor.TerminationFuture, executor.StopAsync());
@@ -629,7 +655,9 @@ public class NativeExecutorTaskContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new FailingThreadFactory(original));
         try
         {
-            Task result = executor.SubmitAsync(() => { });
+            Task result = executor.SubmitAsync(() =>
+            {
+            });
             Assert.Same(original, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(0, executor.ActiveWorkerCount);
@@ -656,7 +684,10 @@ public class NativeExecutorTaskContractTest
         Assert.Same(value, await result);
 
         int calls = 0;
-        Task action = executor.SubmitAsync(() => { ++calls; });
+        Task action = executor.SubmitAsync(() =>
+        {
+            ++calls;
+        });
         executor.RunNext();
         await action;
         Assert.Equal(1, calls);
@@ -681,7 +712,10 @@ public class NativeExecutorTaskContractTest
         using var cancellation = new CancellationTokenSource();
         var executor = new QueuedExecutor();
         int calls = 0;
-        Task result = executor.SubmitAsync(() => { ++calls; }, cancellation.Token);
+        Task result = executor.SubmitAsync(() =>
+        {
+            ++calls;
+        }, cancellation.Token);
         cancellation.Cancel();
         Assert.True(result.IsCanceled);
         executor.RunNext();

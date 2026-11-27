@@ -769,7 +769,10 @@ public class ExecutorLifecycleContractTest
         var group = new SingleChildGroup(new Child());
         int executed = 0;
         group.Execute(() => ++executed);
-        group.SubmitAsync(() => { ++executed; }).GetAwaiter().GetResult();
+        group.SubmitAsync(() =>
+        {
+            ++executed;
+        }).GetAwaiter().GetResult();
         Assert.Equal(42, group.SubmitAsync(() => 42).GetAwaiter().GetResult());
         Assert.Equal(7, group.SubmitAsync(() => 7).GetAwaiter().GetResult());
         IEventExecutor selected = group.Next();
@@ -816,13 +819,19 @@ public class ExecutorLifecycleContractTest
         var child = new Child();
         var group = new SingleChildGroup(child);
         using var cancellation = new CancellationTokenSource();
-        var runnable = group.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
+        var runnable = group.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1), cancellation.Token);
         var firstWork = child.scheduledSubmission;
         var callable = group.ScheduleAsync(() => 123, TimeSpan.FromDays(2), cancellation.Token);
         var secondWork = child.scheduledSubmission;
-        var rate = group.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromDays(3), TimeSpan.FromDays(1), cancellation.Token);
+        var rate = group.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.FromDays(3), TimeSpan.FromDays(1), cancellation.Token);
         var rateWork = child.scheduledSubmission;
-        var delay = group.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.FromDays(4), TimeSpan.FromDays(1), cancellation.Token);
+        var delay = group.ScheduleWithFixedDelayAsync(() =>
+        {
+        }, TimeSpan.FromDays(4), TimeSpan.FromDays(1), cancellation.Token);
         var delayWork = child.scheduledSubmission;
         Assert.Equal(4, group.selections);
         Assert.Same(firstWork, child.FirstScheduled());
@@ -848,7 +857,9 @@ public class ExecutorLifecycleContractTest
         Assert.Same(child.termination.Task, group.TerminationFuture);
         Assert.Same(child.termination.Task, group.ShutdownGracefullyAsync());
         Assert.Same(child.termination.Task, group.TerminationFuture);
-        var direct = group.SubmitAsync(() => { });
+        var direct = group.SubmitAsync(() =>
+        {
+        });
         Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(child.tasks.Peek()));
         child.Run(child.tasks.Dequeue());
         direct.GetAwaiter().GetResult();
@@ -1090,7 +1101,9 @@ public class ExecutorLifecycleContractTest
         IEventExecutor executor = unordered ? new UnorderedThreadPoolEventExecutor(1) : new DefaultEventExecutor();
         try
         {
-            await executor.SubmitAsync(() => { }).WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.SubmitAsync(() =>
+            {
+            }).WaitAsync(TimeSpan.FromSeconds(5));
             // The pinned termination promises bind their listeners to GlobalEventExecutor,
             // which remains available after the observed executor has stopped accepting work.
             using var observation = new ExecutorCompletion(GlobalEventExecutor.INSTANCE, executor.TerminationFuture);

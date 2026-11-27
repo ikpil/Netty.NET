@@ -25,7 +25,10 @@ public class BootstrapConfigurationContractTest
         {
             var bootstrap = new Bootstrap().Group(group).Handler(new ChannelInboundHandlerAdapter()).ChannelFactory(() => throw exception);
             Task<IChannel> future = null;
-            Assert.Null(Record.Exception(() => { future = bootstrap.ConnectAsync(LocalAddress.ANY); }));
+            Assert.Null(Record.Exception(() =>
+            {
+                future = bootstrap.ConnectAsync(LocalAddress.ANY);
+            }));
             Assert.NotNull(future);
             // Should fail with the RuntimeException.
             Assert.Same(exception, await Assert.ThrowsAsync<InvalidOperationException>(() => future.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)));

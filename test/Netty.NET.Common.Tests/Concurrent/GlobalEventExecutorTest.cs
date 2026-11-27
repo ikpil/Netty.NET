@@ -99,7 +99,9 @@ public class GlobalEventExecutorTest
         // CLR groups preserve Netty thread identity through weak metadata.
         var thread = group.NewThread(() =>
         {
-            Thread t = e._threadFactory.NewThread(() => { });
+            Thread t = e._threadFactory.NewThread(() =>
+            {
+            });
             capturedGroup = ThreadGroup.GetThreadGroup(t);
         });
         thread.Start();

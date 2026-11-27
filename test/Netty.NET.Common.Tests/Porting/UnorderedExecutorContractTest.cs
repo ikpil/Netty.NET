@@ -100,7 +100,9 @@ public class UnorderedExecutorContractTest
             Assert.True(executor.IsShuttingDown());
             Assert.False(executor.IsTerminated());
             Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
-            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
+            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () =>
+            {
+            }));
             release.Signal();
             Assert.Equal(17, work.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
@@ -134,7 +136,9 @@ public class UnorderedExecutorContractTest
             });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 42, TimeSpan.FromMilliseconds(100));
-            var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromDays(1), TimeSpan.FromSeconds(1));
+            var periodic = executor.ScheduleAtFixedRateAsync(() =>
+            {
+            }, TimeSpan.FromDays(1), TimeSpan.FromSeconds(1));
             executor.Shutdown();
             Assert.True(periodic.IsCanceled);
             Assert.False(delayed.IsCompleted);
@@ -320,7 +324,9 @@ public class UnorderedExecutorContractTest
             observed = owner;
         });
         Stop(executor);
-        executor.Execute(static () => { });
+        executor.Execute(static () =>
+        {
+        });
         Assert.NotNull(rejected);
         Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(rejected);
         Assert.Same(executor, observed);
@@ -1032,8 +1038,12 @@ public class UnorderedExecutorContractTest
             Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Action)null));
             Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null));
             Assert.Throws<ArgumentNullException>(() => executor.Execute(null));
-            Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.Zero));
-            Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(-1)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() =>
+            {
+            }, TimeSpan.Zero, TimeSpan.Zero));
+            Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(() =>
+            {
+            }, TimeSpan.Zero, TimeSpan.FromTicks(-1)));
             Assert.Equal(0, executor.PendingTaskCount);
         }
         finally

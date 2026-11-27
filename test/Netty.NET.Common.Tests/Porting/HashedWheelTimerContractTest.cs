@@ -61,7 +61,9 @@ public class HashedWheelTimerContractTest
         worker.Start();
         Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
         Assert.False(fastCleanup);
-        Thread next = factory.NewThread(() => { });
+        Thread next = factory.NewThread(() =>
+        {
+        });
         Assert.EndsWith("-thread-2", next.Name);
     }
 
@@ -73,15 +75,21 @@ public class HashedWheelTimerContractTest
         Assert.Throws<ArgumentNullException>(() => stopped.NewTimeout(null, TimeSpan.Zero));
         for (int i = 0; i < 3; i++)
         {
-            Assert.Throws<InvalidOperationException>(() => stopped.NewTimeout(TimerTask.Create(_ => { }), TimeSpan.Zero));
+            Assert.Throws<InvalidOperationException>(() => stopped.NewTimeout(TimerTask.Create(_ =>
+            {
+            }), TimeSpan.Zero));
             Assert.Equal(0, stopped.PendingTimeouts());
         }
 
-        var deadThread = new Thread(() => { });
+        var deadThread = new Thread(() =>
+        {
+        });
         deadThread.Start();
         Assert.True(deadThread.Join(TimeSpan.FromSeconds(5)));
         using var failed = new HashedWheelTimer(new AnonymousThreadFactory(_ => deadThread));
-        Assert.Throws<ThreadStateException>(() => failed.NewTimeout(TimerTask.Create(_ => { }), TimeSpan.Zero));
+        Assert.Throws<ThreadStateException>(() => failed.NewTimeout(TimerTask.Create(_ =>
+        {
+        }), TimeSpan.Zero));
         Assert.Equal(0, failed.PendingTimeouts());
     }
 

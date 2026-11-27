@@ -28,7 +28,9 @@ namespace Netty.NET.Transport.Tests;
 #pragma warning disable CS0612, CS0618, xUnit1031, xUnit1051 // Original legacy shutdown and blocking scheduling semantics.
 public class SingleThreadEventLoopSourceTest : IAsyncLifetime
 {
-    private static readonly Action Noop = () => { };
+    private static readonly Action Noop = () =>
+    {
+    };
     private readonly LoopA _a = new();
     private readonly LoopB _b = new();
     private readonly LoopC _c = new();
@@ -95,7 +97,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     private static async Task ScheduleTask(IEventLoop loop)
     {
         long start = Stopwatch.GetTimestamp(), end = 0;
-        await loop.ScheduleAsync(() => { end = Stopwatch.GetTimestamp(); }, TimeSpan.FromMilliseconds(500));
+        await loop.ScheduleAsync(() =>
+        {
+            end = Stopwatch.GetTimestamp();
+        }, TimeSpan.FromMilliseconds(500));
         Assert.True(Stopwatch.GetElapsedTime(start, end) >= TimeSpan.FromMilliseconds(500));
     }
 

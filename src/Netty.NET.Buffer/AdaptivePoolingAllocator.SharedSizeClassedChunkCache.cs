@@ -87,18 +87,26 @@ internal sealed partial class AdaptivePoolingAllocator
             _chunkPurgeThreshold = chunkPurgeThreshold;
         }
 
-        public override bool IsEmpty { get {
+        public override bool IsEmpty
+        {
+            get
+            {
                 lock (_sync)
                 {
                     return _queue.Count == 0;
                 }
-            } }
-        internal int Count { get {
+            }
+        }
+        internal int Count
+        {
+            get
+            {
                 lock (_sync)
                 {
                     return _queue.Count;
                 }
-            } }
+            }
+        }
 
         internal override SizeClassedChunk ForcePurge()
         {

@@ -155,7 +155,10 @@ public class DefaultChannelPipelineEventSourceTest
         var context = fixture.Channel.Pipeline.Context(anchor);
         Task[] operations = null;
         if (inEventLoop)
-            await fixture.Channel.EventLoop.SubmitAsync(() => { operations = ExecuteOutboundOperations(context); });
+            await fixture.Channel.EventLoop.SubmitAsync(() =>
+            {
+                operations = ExecuteOutboundOperations(context);
+            });
         else
             operations = ExecuteOutboundOperations(context);
         foreach (string name in new[] { "bind", "connect", "close", "deregister", "read", "write", "flush" })

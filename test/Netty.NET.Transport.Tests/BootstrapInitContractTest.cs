@@ -36,9 +36,15 @@ public class BootstrapInitContractTest
             Assert.Equal("channelFactory set already", Assert.Throws<InvalidOperationException>(
                 () => new Bootstrap().Channel<LocalChannel>().Channel<LocalChannel>()).Message);
             Assert.Equal("localAddress not set", Assert.Throws<InvalidOperationException>(
-                () => { _ = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).BindAsync(); }).Message);
+                () =>
+                {
+                    _ = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).BindAsync();
+                }).Message);
             Assert.Equal("remoteAddress not set", Assert.Throws<InvalidOperationException>(
-                () => { _ = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(); }).Message);
+                () =>
+                {
+                    _ = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).ConnectAsync();
+                }).Message);
             Assert.Equal("handler", Assert.Throws<ArgumentNullException>(() => new Bootstrap().Handler(null)).ParamName);
             Assert.Equal("childHandler", Assert.Throws<ArgumentNullException>(() => new ServerBootstrap().ChildHandler(null)).ParamName);
             Assert.Equal("childGroup", Assert.Throws<ArgumentNullException>(() => new ServerBootstrap().Group(group, null)).ParamName);
@@ -81,7 +87,9 @@ public class BootstrapInitContractTest
             var serverAddress = new LocalAddress(typeof(BootstrapInitContractTest));
             IChannel server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
                 .ChildHandler(new ChannelInboundHandlerAdapter()).BindAsync(serverAddress);
-            await server.EventLoop.SubmitAsync(() => { });
+            await server.EventLoop.SubmitAsync(() =>
+            {
+            });
             Assert.Equal(new[] { "ServerBootstrap+ServerBootstrapAcceptor#0", "DefaultChannelPipeline$TailContext#0" },
                 server.Pipeline.Names());
             var clientAddress = new LocalAddress(typeof(BootstrapInitContractTest));

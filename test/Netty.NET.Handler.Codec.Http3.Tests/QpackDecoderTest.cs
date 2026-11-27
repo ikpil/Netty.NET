@@ -136,7 +136,11 @@ public class QpackDecoderTest
         try
         {
             Assert.ThrowsAny<QpackException>(
-                    () => decoder.Decode(attributes, 0L, @in, @in.ReadableBytes, (n, v) => { }, () => { }));
+                    () => decoder.Decode(attributes, 0L, @in, @in.ReadableBytes, (n, v) =>
+                    {
+                    }, () =>
+                    {
+                    }));
         }
         finally
         {
@@ -149,14 +153,18 @@ public class QpackDecoderTest
     {
         int maxBlockedStreams = 3;
         Setup(128, maxBlockedStreams);
-        Action<ICharSequence, ICharSequence> sink = (n, v) => { };
+        Action<ICharSequence, ICharSequence> sink = (n, v) =>
+        {
+        };
 
         for (long streamId = 0; streamId < maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);
             try
             {
-                Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () => { }),
+                Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () =>
+                {
+                }),
                         "Stream " + streamId + " should be blocked");
             }
             finally
@@ -169,7 +177,9 @@ public class QpackDecoderTest
         try
         {
             Assert.ThrowsAny<QpackException>(
-                    () => decoder.Decode(attributes, 99L, overflow, overflow.ReadableBytes, sink, () => { }));
+                    () => decoder.Decode(attributes, 99L, overflow, overflow.ReadableBytes, sink, () =>
+                    {
+                    }));
         }
         finally
         {
@@ -182,14 +192,18 @@ public class QpackDecoderTest
     {
         int maxBlockedStreams = 2;
         Setup(128, maxBlockedStreams);
-        Action<ICharSequence, ICharSequence> sink = (n, v) => { };
+        Action<ICharSequence, ICharSequence> sink = (n, v) =>
+        {
+        };
 
         for (long streamId = 0; streamId < maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);
             try
             {
-                Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () => { }),
+                Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () =>
+                {
+                }),
                         "Stream " + streamId + " should be blocked");
             }
             finally
@@ -205,7 +219,9 @@ public class QpackDecoderTest
             ByteBuf @in = EncodeBlockingFrame(2);
             try
             {
-                Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () => { }),
+                Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () =>
+                {
+                }),
                         "Stream " + streamId + " should be blocked after counter was released");
             }
             finally
@@ -222,7 +238,9 @@ public class QpackDecoderTest
         Setup(128, maxBlockedStreams);
 
         int abandoned = 0;
-        Action<ICharSequence, ICharSequence> sink = (n, v) => { };
+        Action<ICharSequence, ICharSequence> sink = (n, v) =>
+        {
+        };
         for (long streamId = 0; streamId < maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);

@@ -315,7 +315,9 @@ public class IoLifecycleContractTest
             await second.ConnectAsync((IPEndPoint)server.LocalAddress, TestContext.Current.CancellationToken);
             server.Config.SetAutoRead(true);
             await collector.Error.Task.WaitAsync(TestContext.Current.CancellationToken);
-            await server.EventLoop.SubmitAsync(() => { });
+            await server.EventLoop.SubmitAsync(() =>
+            {
+            });
             Assert.Equal(new[] { "read", "complete", "error" }, collector.Events);
             Assert.Equal(2, server.Attempts);
             server.Read();

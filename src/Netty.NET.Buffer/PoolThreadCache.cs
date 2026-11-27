@@ -291,7 +291,10 @@ internal sealed class PoolThreadCache : IDisposable
             _queue.Dequeue();
             // allocations is not thread-safe which is fine as this is only called from the same thread all time.
             // CLR: the enclosing Monitor also serializes trimming and explicit close.
-            unchecked { ++_allocations; }
+            unchecked
+            {
+                ++_allocations;
+            }
             return allocation;
         }
 

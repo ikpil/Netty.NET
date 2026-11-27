@@ -151,7 +151,9 @@ public class ChannelEventOrderContractTest
                 .ChildHandler(new ChannelInboundHandlerAdapter())
                 .BindAsync(new LocalAddress(typeof(ChannelEventOrderContractTest)));
             // The acceptor is added by a task the initializer queues on the server's event loop.
-            await server.EventLoop.SubmitAsync(() => { });
+            await server.EventLoop.SubmitAsync(() =>
+            {
+            });
             // generateName0: StringUtil.SimpleClassName + "#0" (the JVM spells it ServerBootstrap$ServerBootstrapAcceptor#0).
             Assert.Contains("ServerBootstrap+ServerBootstrapAcceptor#0", server.Pipeline.Names());
             var paused = Stopwatch.StartNew();
@@ -196,7 +198,9 @@ public class ChannelEventOrderContractTest
             {
             } // The accepted peer was closed; the source reports a refused connection.
             await Task.Delay(300, TestContext.Current.CancellationToken);
-            await server.EventLoop.SubmitAsync(() => { });
+            await server.EventLoop.SubmitAsync(() =>
+            {
+            });
             Assert.Empty(Snapshot(events));
             Assert.True(server.Config.IsAutoRead());
             await server.CloseAsync();
@@ -231,7 +235,9 @@ public class ChannelEventOrderContractTest
         while (Array.IndexOf(Snapshot(events), value) < 0)
         {
             Assert.True(watch.Elapsed < TimeSpan.FromSeconds(5), value + " was not observed.");
-            await channel.EventLoop.SubmitAsync(() => { });
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            });
         }
     }
 

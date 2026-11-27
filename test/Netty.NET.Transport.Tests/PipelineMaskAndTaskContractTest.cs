@@ -69,7 +69,9 @@ public class PipelineMaskAndTaskContractTest
             channel.Pipeline.FireUserEventTriggered("event");
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             channel.Pipeline.FireChannelRead("message");
-            await channel.EventLoop.SubmitAsync(() => { });
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            });
             Assert.False(received.Reader.TryPeek(out _));
             release.Set();
             Assert.Equal("event", await received.Reader.ReadAsync(TestContext.Current.CancellationToken));

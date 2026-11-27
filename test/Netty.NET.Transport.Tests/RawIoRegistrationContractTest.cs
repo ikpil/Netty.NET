@@ -88,7 +88,10 @@ public class RawIoRegistrationContractTest
             await Assert.ThrowsAsync<InvalidOperationException>(() => loop.RegisterAsync(handle));
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
             Assert.False(registration.IsValid());
-            Assert.Throws<RejectedExecutionException>(() => { _ = loop.RegisterAsync(handle); });
+            Assert.Throws<RejectedExecutionException>(() =>
+            {
+                _ = loop.RegisterAsync(handle);
+            });
             Assert.Equal(new[] { "registered", "unregistered", "closed" }, handle.Events);
         }
         finally

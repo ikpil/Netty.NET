@@ -114,7 +114,10 @@ public class ExecutorSubmissionContractTest
             ++calls;
             return result;
         });
-        Task empty = executor.SubmitAsync(() => { ++calls; });
+        Task empty = executor.SubmitAsync(() =>
+        {
+            ++calls;
+        });
         executor.Run(executor.Take());
         executor.Run(executor.Take());
         Assert.Same(result, supplied.GetAwaiter().GetResult());

@@ -205,7 +205,9 @@ public class TimeProviderClockContractTest
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(delayed.IsCompleted);
             provider.Advance(86_400_000_000_000L);
-            await executor.SubmitAsync(() => { })
+            await executor.SubmitAsync(() =>
+            {
+            })
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Equal(owner, await delayed.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         }

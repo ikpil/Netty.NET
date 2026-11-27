@@ -178,7 +178,10 @@ public partial class DefaultByteBufAllocatorTest
     {
         using var scope = new Scope("pooled", null);
         scope.Set(PooledConfigurationKeys[2], alignment.ToString(CultureInfo.InvariantCulture));
-        var e = Assert.Throws<TargetInvocationException>(() => { _ = scope.Default; });
+        var e = Assert.Throws<TargetInvocationException>(() =>
+        {
+            _ = scope.Default;
+        });
         Assert.IsType<ArgumentOutOfRangeException>(e.GetBaseException());
     }
 

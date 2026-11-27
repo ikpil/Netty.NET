@@ -154,7 +154,10 @@ public class SocketFileRegionWriteSpinCountContractTest
     public void AProgressObserverCanCloseTheCurrentFileRegion()
     {
         using var fixture = new Fixture(1);
-        fixture.Channel.Config.WriteProgress = new Observer(value => { _ = fixture.Channel.CloseAsync(); });
+        fixture.Channel.Config.WriteProgress = new Observer(value =>
+        {
+            _ = fixture.Channel.CloseAsync();
+        });
         var region = new Region(3);
         var write = fixture.Channel.WriteAndFlushAsync(region);
         fixture.PumpUntil(() => write.IsCompleted);

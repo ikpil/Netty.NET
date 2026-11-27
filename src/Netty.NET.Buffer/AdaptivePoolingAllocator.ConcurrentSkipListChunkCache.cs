@@ -37,18 +37,26 @@ internal sealed partial class AdaptivePoolingAllocator
             _chunkReuseQueue = chunkReuseQueue;
         }
 
-        public bool IsEmpty { get {
+        public bool IsEmpty
+        {
+            get
+            {
                 lock (_sync)
                 {
                     return _count == 0;
                 }
-            } }
-        internal int Count { get {
+            }
+        }
+        internal int Count
+        {
+            get
+            {
                 lock (_sync)
                 {
                     return _count;
                 }
-            } }
+            }
+        }
 
         // CLR: multimap put/remove/iteration helpers over the sorted dictionary.
         private void Put(int key, Chunk chunk)

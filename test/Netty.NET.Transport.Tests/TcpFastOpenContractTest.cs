@@ -177,7 +177,9 @@ public class TcpFastOpenContractTest
             var buffer = Unpooled.Buffer(16).WriteLong(42);
             var write = channel.WriteAsync(buffer, token);
             var connecting = channel.ConnectAsync(server.LocalAddress, cancellationToken: cancellation.Token);
-            await channel.EventLoop.SubmitAsync(() => { }, token);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, token);
             Assert.False(connecting.IsCompleted);
             Assert.Equal(1, LinuxSocketOptions.GetInt(socket, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpenConnect));
             if (cancel)

@@ -293,7 +293,9 @@ public class QueuedActionContractTest
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => result);
             Assert.Equal(transform == 0 ? 0 : 1, owner.PendingTaskCount);
             release.Set();
-            await owner.SubmitAsync(static () => { }, TestContext.Current.CancellationToken)
+            await owner.SubmitAsync(static () =>
+            {
+            }, TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Equal(0, calls);
             Assert.Equal(transform == 2 ? 1 : 0, prefixes);

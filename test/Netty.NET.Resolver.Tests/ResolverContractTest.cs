@@ -82,8 +82,14 @@ public class ResolverContractTest
         Assert.Throws<UnsupportedAddressTypeException>(() => resolver.IsResolved(null));
         // Argument validation must throw before returning a Task, as in AbstractAddressResolver.resolve.
 #pragma warning disable xUnit2014
-        Assert.Throws<ArgumentNullException>(() => { resolver.ResolveAsync(null); });
-        Assert.Throws<ArgumentNullException>(() => { resolver.ResolveAllAsync(null); });
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            resolver.ResolveAsync(null);
+        });
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            resolver.ResolveAllAsync(null);
+        });
 #pragma warning restore xUnit2014
         await Assert.ThrowsAsync<UnsupportedAddressTypeException>(() => resolver.ResolveAsync(unsupported));
         await Assert.ThrowsAsync<UnsupportedAddressTypeException>(() => resolver.ResolveAllAsync(unsupported));

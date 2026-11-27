@@ -303,7 +303,9 @@ public class AutoScalingEventExecutorChooserFactoryTest
             // Simulate a slow trickle of new work (e.g., new connections) by calling next() a few times.
             for (int i = 0; i < 5; i++)
             {
-                group.Next().Execute(static () => { });
+                group.Next().Execute(static () =>
+                {
+                });
                 Thread.Sleep(20);
             }
 

@@ -186,7 +186,9 @@ public class ExecutorCompletionContractTest
             source.SetResult();
         }
         executor.RunAll();
-        using var barrier = observation.Register(_ => { });
+        using var barrier = observation.Register(_ =>
+        {
+        });
         await Drain(executor, barrier.NotificationCompleted);
         Assert.Equal(0, calls);
         await source.Task;
@@ -331,7 +333,9 @@ public class ExecutorCompletionContractTest
         ambient.Value = "producer";
         source.SetResult();
         // Registration against an already-terminal source guarantees a queued drain without timing assumptions.
-        using var barrier = observation.Register(_ => { });
+        using var barrier = observation.Register(_ =>
+        {
+        });
         ambient.Value = "executor";
         if (suppressFlow)
         {
@@ -354,12 +358,16 @@ public class ExecutorCompletionContractTest
     {
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var observation = new ExecutorCompletion(new QueuedExecutor(), source.Task);
-        using var registration = observation.Register(_ => { });
+        using var registration = observation.Register(_ =>
+        {
+        });
         observation.Dispose();
         observation.Dispose();
         Assert.False(source.Task.IsCompleted);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await registration.NotificationCompleted);
-        Assert.Throws<ObjectDisposedException>(() => observation.Register(_ => { }));
+        Assert.Throws<ObjectDisposedException>(() => observation.Register(_ =>
+        {
+        }));
         source.SetResult();
     }
 
@@ -373,7 +381,9 @@ public class ExecutorCompletionContractTest
         using var registration = observation.Register(_ => ++calls);
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await registration.NotificationCompleted));
         Assert.Equal(0, calls);
-        Assert.Throws<ObjectDisposedException>(() => observation.Register(_ => { }));
+        Assert.Throws<ObjectDisposedException>(() => observation.Register(_ =>
+        {
+        }));
     }
 
     [Fact]
@@ -401,11 +411,15 @@ public class ExecutorCompletionContractTest
     [InlineData(true)]
     public async Task RejectedNativeNotificationsCannotBeSilentlyDiscarded(bool orderedChild)
     {
-        var pool = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
+        var pool = new UnorderedThreadPoolEventExecutor(1, (_, _) =>
+        {
+        });
         IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).Next() : pool;
         _ = pool.StopAsync();
         using var observation = new ExecutorCompletion(executor, Task.CompletedTask);
-        using var registration = observation.Register(_ => { });
+        using var registration = observation.Register(_ =>
+        {
+        });
         await Assert.ThrowsAsync<RejectedExecutionException>(async () =>
             await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
         Assert.True(pool.AwaitTermination(TimeSpan.FromSeconds(5)));
@@ -542,7 +556,9 @@ public class ExecutorCompletionContractTest
     private static WeakReference AbandonObservation(Task operation)
     {
         var observation = new ExecutorCompletion(new QueuedExecutor(), operation);
-        observation.Register(_ => { });
+        observation.Register(_ =>
+        {
+        });
         return new WeakReference(observation);
     }
 
@@ -587,7 +603,9 @@ public class ExecutorCompletionContractTest
     {
         var result = new object();
         var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Task notification = KeepNotificationTask(executor, source.Task, _ => { });
+        Task notification = KeepNotificationTask(executor, source.Task, _ =>
+        {
+        });
         source.SetResult(result);
         return (notification, new WeakReference(result));
     }

@@ -174,10 +174,14 @@ public class UnorderedTerminationContractTest
     public void ACompletedLifecycleRejectsNewWorkAndRepeatedStopCannotRestartIt()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
-        var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        var scheduled = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1));
         Assert.Same(executor.TerminationFuture, executor.StopAsync());
         Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
-        Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
+        Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () =>
+        {
+        }));
         Assert.Same(executor.TerminationFuture, executor.StopAsync());
         Assert.True(executor.IsTerminated());
         Assert.Equal(0, executor.PendingTaskCount);

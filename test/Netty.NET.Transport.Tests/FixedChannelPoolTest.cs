@@ -102,12 +102,16 @@ public class FixedChannelPoolTest
             channel = await pool.AcquireAsync();
             using var cancellation = new CancellationTokenSource();
             var cancelledAcquire = pool.AcquireAsync(cancellation.Token);
-            await t.Group.Next().SubmitAsync(() => { });
+            await t.Group.Next().SubmitAsync(() =>
+            {
+            });
             Assert.False(cancelledAcquire.IsCompleted);
             cancellation.Cancel();
             Assert.True(cancelledAcquire.IsCanceled);
             var nextAcquire = pool.AcquireAsync();
-            await t.Group.Next().SubmitAsync(() => { });
+            await t.Group.Next().SubmitAsync(() =>
+            {
+            });
             Assert.False(nextAcquire.IsCompleted);
             await pool.ReleaseAsync(channel);
             var next = await nextAcquire.WaitAsync(TimeSpan.FromSeconds(5));
@@ -266,7 +270,9 @@ public class FixedChannelPoolTest
         var acquire = pool.AcquireAsync();
         var channel = await acquire;
         await pool.CloseAsync();
-        await t.Group.Next().SubmitAsync(() => { /* NOOP */ });
+        await t.Group.Next().SubmitAsync(() =>
+        { /* NOOP */
+        });
         await Assert.ThrowsAsync<InvalidOperationException>(() => pool.ReleaseAsync(channel));
         // Since the pool is closed, the Channel should have been closed as well.
         await channel.CloseFuture;

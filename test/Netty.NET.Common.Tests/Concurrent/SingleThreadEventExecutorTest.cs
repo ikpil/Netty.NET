@@ -280,7 +280,9 @@ public class SingleThreadEventExecutorTest
                 // Only count the requests to start a thread, no thread is ever started.
                 var executor = new CountingExecutor(_ => Interlocked.Increment(ref threadStarts));
                 Volatile.Write(ref executorRef, executor);
-                executor.Execute(static () => { });
+                executor.Execute(static () =>
+                {
+                });
                 Assert.True(SpinWait.SpinUntil(() => Volatile.Read(ref suspended) == i, TimeSpan.FromSeconds(2)));
                 Assert.Equal(1, Volatile.Read(ref threadStarts));
             }
@@ -301,7 +303,9 @@ public class SingleThreadEventExecutorTest
         {
             // Schedule a task which is so far in the future that we are sure it will not run at all.
             using var cancellation = new CancellationTokenSource();
-            var future = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
+            var future = executor.ScheduleAsync(() =>
+            {
+            }, TimeSpan.FromDays(1), cancellation.Token);
             var currentThread = factory.Take();
             // Let's wait until the thread is started
             currentThread.AwaitStarted();
@@ -351,7 +355,9 @@ public class SingleThreadEventExecutorTest
             try
             {
                 using var cancellation = new CancellationTokenSource();
-                var future = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
+                var future = executor.ScheduleAsync(() =>
+                {
+                }, TimeSpan.FromDays(1), cancellation.Token);
                 var currentThread = factory.Take();
                 currentThread.AwaitStarted();
                 currentThread.AwaitRunnableExecution();
@@ -653,7 +659,9 @@ public class SingleThreadEventExecutorTest
             if (result)
             {
                 ++attempts;
-                var submission = this.SubmitAsync(() => { });
+                var submission = this.SubmitAsync(() =>
+                {
+                });
                 if (submission.IsFaulted && submission.Exception.InnerException is RejectedExecutionException)
                 {
                     // ignore, tasks are either accepted or rejected
@@ -676,7 +684,9 @@ public class SingleThreadEventExecutorTest
         try
         {
             // Start the loop
-            executor.SubmitAsync(() => { }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+            executor.SubmitAsync(() =>
+            {
+            }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             // Shutdown without any quiet period
             executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(100))
                 .WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();

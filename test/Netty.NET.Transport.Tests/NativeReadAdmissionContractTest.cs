@@ -33,7 +33,9 @@ public class NativeReadAdmissionContractTest
                 .ConnectAsync(listener.LocalEndpoint, cancellationToken: TestContext.Current.CancellationToken);
             using var peer = await accepting;
             // The connect callback queued the receive before this barrier; no input has been sent yet.
-            await channel.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
             await channel.EventLoop.SubmitAsync(() => channel.Config.SetAutoRead(false), TestContext.Current.CancellationToken);
             await peer.GetStream().WriteAsync(new byte[] { 1, 2, 3 }, TestContext.Current.CancellationToken);
             await Task.Delay(100, TestContext.Current.CancellationToken);
@@ -62,7 +64,9 @@ public class NativeReadAdmissionContractTest
         {
             channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new CapturePacket(received))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
-            await channel.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
             await channel.EventLoop.SubmitAsync(() => channel.Config.SetAutoRead(false), TestContext.Current.CancellationToken);
             using var peer = new UdpClient(AddressFamily.InterNetwork);
             await peer.SendAsync(new byte[] { 4, 5, 6 }, (IPEndPoint)channel.LocalAddress, TestContext.Current.CancellationToken);
@@ -92,7 +96,9 @@ public class NativeReadAdmissionContractTest
             server = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
                 .ChildHandler(new ActionChannelInitializer<IChannel>(channel => accepted.TrySetResult(channel)))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), TestContext.Current.CancellationToken);
-            await server.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+            await server.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
             await server.EventLoop.SubmitAsync(() => server.Config.SetAutoRead(false), TestContext.Current.CancellationToken);
             using var peer = new TcpClient();
             await peer.ConnectAsync((IPEndPoint)server.LocalAddress, TestContext.Current.CancellationToken);
@@ -126,7 +132,9 @@ public class NativeReadAdmissionContractTest
             channel = await new Bootstrap().Group(group).Channel<NioSocketChannel>().Handler(new CaptureBytes(received))
                 .ConnectAsync(listener.LocalEndpoint, cancellationToken: TestContext.Current.CancellationToken);
             using var peer = await accepting;
-            await channel.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
             var oldLoop = channel.EventLoop;
             var next = group.Next();
             if (ReferenceEquals(next, oldLoop))

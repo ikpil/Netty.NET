@@ -83,7 +83,9 @@ public class SocketFileRegionContractTest
         try
         {
             await retried.Task.WaitAsync(TestContext.Current.CancellationToken);
-            await socket.Channel.EventLoop.SubmitAsync(static () => { }, TestContext.Current.CancellationToken);
+            await socket.Channel.EventLoop.SubmitAsync(static () =>
+            {
+            }, TestContext.Current.CancellationToken);
             Assert.False(write.IsCompleted);
             Assert.True(socket.Channel.IsOpen);
         }

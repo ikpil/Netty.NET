@@ -192,7 +192,9 @@ public class ReentrantChannelSourceTest
         try
         {
             client.Pipeline.AddLast(group, "external-writer", new PassWrite());
-            await executor.SubmitAsync(() => { }, token);
+            await executor.SubmitAsync(() =>
+            {
+            }, token);
             if (reject)
             {
                 await group.StopAsync();
@@ -255,7 +257,9 @@ public class ReentrantChannelSourceTest
             var address = new LocalAddress(typeof(ReentrantChannelSourceTest).Name);
             var token = TestContext.Current.CancellationToken;
             await new ServerBootstrap().Group(_servers).Channel<LocalServerChannel>()
-                .ChildHandler(new ActionChannelInitializer<LocalChannel>(_ => { })).BindAsync(address, token);
+                .ChildHandler(new ActionChannelInitializer<LocalChannel>(_ =>
+                {
+                })).BindAsync(address, token);
             return await new Bootstrap().Group(_clients).Channel<LocalChannel>()
                 .Handler(_log).ConnectAsync(address, cancellationToken: token);
         }

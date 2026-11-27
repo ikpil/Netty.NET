@@ -372,7 +372,9 @@ public class HashedWheelTimerTest
 
     private static ITimerTask CreateNoOpTimerTask()
     {
-        return TimerTask.Create(timeout => { });
+        return TimerTask.Create(timeout =>
+        {
+        });
     }
 
     private static ITimerTask CreateCountDownLatchTimerTask(CountdownEvent latch)

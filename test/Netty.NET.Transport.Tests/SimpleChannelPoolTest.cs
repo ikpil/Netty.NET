@@ -247,7 +247,9 @@ public class SimpleChannelPoolTest
             // Let the health check listener run on the EventLoop of the Channel.
             // CLR: an executor barrier alone does not await native asynchronous continuation dispatch.
             await handler.SecondRelease.Task.WaitAsync(Timeout, TestContext.Current.CancellationToken);
-            await channel.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
             Assert.True(acquire.IsCanceled);
             Assert.Equal(2, handler.AcquiredCount);
             Assert.Equal(2, handler.ReleasedCount);

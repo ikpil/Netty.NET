@@ -61,7 +61,10 @@ public class SocketShutdownContractTest
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
         var queued = channel.Alloc().Buffer(1).WriteByte(1);
         Task write = null;
-        await channel.EventLoop.SubmitAsync(() => { write = channel.WriteAsync(queued); });
+        await channel.EventLoop.SubmitAsync(() =>
+        {
+            write = channel.WriteAsync(queued);
+        });
         Assert.False(write.IsCompleted);
         await channel.ShutdownOutputAsync();
         await Assert.ThrowsAsync<ChannelOutputShutdownException>(() => write);
@@ -92,12 +95,16 @@ public class SocketShutdownContractTest
         peer.Client.Shutdown(SocketShutdown.Send);
         channel.Read();
         await handler.Half.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await channel.EventLoop.SubmitAsync(() => { });
+        await channel.EventLoop.SubmitAsync(() =>
+        {
+        });
         Assert.False(handler.Final.Task.IsCompleted);
         channel.Read();
         await handler.Final.Task.WaitAsync(TestContext.Current.CancellationToken);
         channel.Read();
-        await channel.EventLoop.SubmitAsync(() => { });
+        await channel.EventLoop.SubmitAsync(() =>
+        {
+        });
         Assert.Equal(new[] { "readComplete", "half", "readComplete", "final" }, handler.Events);
         Assert.True(handler.AllOnOwner);
         Assert.True(channel.IsOpen);

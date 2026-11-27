@@ -30,7 +30,9 @@ public class LocalTransportContractTest
             var buffer = Unpooled.Buffer(3).WriteBytes(new byte[] { 1, 2, 3 });
             await client.WriteAndFlushAsync(buffer).WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(new byte[] { 1, 2, 3 }, await received.Task.WaitAsync(TimeSpan.FromSeconds(10)));
-            await client.EventLoop.SubmitAsync(() => { });
+            await client.EventLoop.SubmitAsync(() =>
+            {
+            });
         }
         finally
         {

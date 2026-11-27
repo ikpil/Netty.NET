@@ -308,7 +308,9 @@ public class ExecutorProgressContractTest
         var failure = new RejectedExecutionException("notification rejected");
         var executor = new QueuedExecutor { rejection = failure };
         var operation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var reporter = new ExecutorProgress(executor, operation.Task, _ => { });
+        var reporter = new ExecutorProgress(executor, operation.Task, _ =>
+        {
+        });
         Assert.True(reporter.TryReport(1, 2));
         Assert.Same(failure, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await reporter.NotificationsCompleted));
         Assert.False(operation.Task.IsCompleted);
@@ -341,7 +343,9 @@ public class ExecutorProgressContractTest
     {
         var payload = new object();
         var operation = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var reporter = new ExecutorProgress(executor, operation.Task, _ => { });
+        var reporter = new ExecutorProgress(executor, operation.Task, _ =>
+        {
+        });
         operation.SetResult(payload);
         return (reporter.NotificationsCompleted, new WeakReference(payload));
     }
@@ -408,7 +412,9 @@ public class ExecutorProgressContractTest
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static WeakReference AbandonReporter(IEventExecutor executor, Task operation)
     {
-        return new(new ExecutorProgress(executor, operation, _ => { }));
+        return new(new ExecutorProgress(executor, operation, _ =>
+        {
+        }));
     }
 
     [Fact]
@@ -426,7 +432,9 @@ public class ExecutorProgressContractTest
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static Task KeepNotificationTask(QueuedExecutor executor, Task operation, Action<Task> completed)
     {
-        return new ExecutorProgress(executor, operation, _ => { }, completed).NotificationsCompleted;
+        return new ExecutorProgress(executor, operation, _ =>
+        {
+        }, completed).NotificationsCompleted;
     }
 
     [Fact]

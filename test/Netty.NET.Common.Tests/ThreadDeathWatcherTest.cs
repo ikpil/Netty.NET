@@ -115,7 +115,9 @@ public class ThreadDeathWatcherTest
         ThreadGroup capturedGroup = null;
         Thread thread = group.NewThread(() =>
         {
-            Thread child = ThreadDeathWatcher.threadFactory.NewThread(() => { });
+            Thread child = ThreadDeathWatcher.threadFactory.NewThread(() =>
+            {
+            });
             capturedGroup = ThreadGroup.GetThreadGroup(child);
         });
         thread.Start();

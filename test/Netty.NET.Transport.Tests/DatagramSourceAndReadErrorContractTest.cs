@@ -211,7 +211,9 @@ public class DatagramSourceAndReadErrorContractTest
             await sender.SendToAsync(new byte[] { 1 }, SocketFlags.None, channel.LocalAddress, TestContext.Current.CancellationToken);
             Assert.Same(error, await failed.Task.WaitAsync(TestContext.Current.CancellationToken));
             Assert.Equal(1, await received.Reader.ReadAsync(TestContext.Current.CancellationToken));
-            await channel.EventLoop.SubmitAsync(() => { });
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            });
             Assert.Equal(new[] { "complete", "error", "read", "complete" }, events.ToArray());
             Assert.True(channel.IsOpen);
             if (!autoRead)

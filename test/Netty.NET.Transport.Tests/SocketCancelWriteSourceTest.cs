@@ -95,7 +95,9 @@ public class SocketCancelWriteSourceTest : AbstractSocketTest
     {
         using var cancel = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         Task write = channel.WriteAsync(message, cancel.Token);
-        await channel.EventLoop.SubmitAsync(() => { }, cancellation);
+        await channel.EventLoop.SubmitAsync(() =>
+        {
+        }, cancellation);
         Assert.False(write.IsCompleted);
         cancel.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => write);

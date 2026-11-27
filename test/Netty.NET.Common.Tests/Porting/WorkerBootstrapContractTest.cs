@@ -25,7 +25,9 @@ public class WorkerBootstrapContractTest
     public void AFactoryReturningNoNativeThreadFailsSynchronouslyAndClearly()
     {
         var executor = new ThreadPerTaskExecutor(new AnonymousThreadFactory(_ => null));
-        Assert.Contains("thread", Assert.Throws<InvalidOperationException>(() => executor.Execute(() => { })).Message,
+        Assert.Contains("thread", Assert.Throws<InvalidOperationException>(() => executor.Execute(() =>
+        {
+        })).Message,
             StringComparison.OrdinalIgnoreCase);
     }
 
@@ -85,13 +87,17 @@ public class WorkerBootstrapContractTest
     {
         var failure = new InvalidOperationException("creation failed");
         var executor = new ThreadPerTaskExecutor(new AnonymousThreadFactory(_ => throw failure));
-        Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => executor.Execute(() => { })));
+        Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => executor.Execute(() =>
+        {
+        })));
     }
 
     [Fact]
     public void APreviouslyStartedThreadCannotPretendToAcceptAnotherEntry()
     {
-        var thread = new Thread(() => { }) { IsBackground = true };
+        var thread = new Thread(() =>
+        {
+        }) { IsBackground = true };
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         int calls = 0;
@@ -154,7 +160,9 @@ public class WorkerBootstrapContractTest
         Assert.Equal("executor", Assert.Throws<ArgumentNullException>(() =>
             ThreadExecutorMap.Apply((Action<Action>)null, ImmediateEventExecutor.INSTANCE)).ParamName);
         Assert.Equal("eventExecutor", Assert.Throws<ArgumentNullException>(() =>
-            ThreadExecutorMap.Apply((Action<Action>)(_ => { }), null)).ParamName);
+            ThreadExecutorMap.Apply((Action<Action>)(_ =>
+            {
+            }), null)).ParamName);
         int calls = 0;
         var dispatch = ThreadExecutorMap.Apply(_ => calls++, ImmediateEventExecutor.INSTANCE);
         Assert.Equal("command", Assert.Throws<ArgumentNullException>(() => dispatch(null)).ParamName);

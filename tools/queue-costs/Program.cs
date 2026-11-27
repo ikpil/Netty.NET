@@ -141,7 +141,9 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
             for (int i = 0; i < count; ++i)
             {
                 owners[i] = new CancellationTokenSource();
-                tasks[i] = pool.ScheduleAsync(static () => { }, TimeSpan.FromDays(1), owners[i].Token);
+                tasks[i] = pool.ScheduleAsync(static () =>
+                {
+                }, TimeSpan.FromDays(1), owners[i].Token);
             }
             int cancelCount = Math.Min(32, count / 2);
             int[] indices = Enumerable.Range(0, count).ToArray();

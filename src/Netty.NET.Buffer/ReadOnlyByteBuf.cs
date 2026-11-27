@@ -113,7 +113,10 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     public override int Capacity
     {
         get => _parent.Capacity;
-        set { EnsureCanWrite(); }
+        set
+        {
+            EnsureCanWrite();
+        }
     }
     public override ByteBuf Unwrap()
     {

@@ -53,11 +53,15 @@ public class ThreadConstructionContractTest
     public void NativeStackHintsRejectNegativeValuesForBothConstructionModes(int maxStackSize)
     {
         Assert.Equal("maxStackSize", Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new Thread(() => { }, maxStackSize)).ParamName);
+            new Thread(() =>
+            {
+            }, maxStackSize)).ParamName);
         Assert.Equal("maxStackSize", Assert.Throws<ArgumentOutOfRangeException>(() =>
             new FastThreadLocalThread(maxStackSize: maxStackSize)).ParamName);
         Assert.Equal("maxStackSize", Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new FastThreadLocalThread(() => { }, maxStackSize: maxStackSize)).ParamName);
+            new FastThreadLocalThread(() =>
+            {
+            }, maxStackSize: maxStackSize)).ParamName);
     }
 
     private sealed class TrackingLocal : FastThreadLocal<object>

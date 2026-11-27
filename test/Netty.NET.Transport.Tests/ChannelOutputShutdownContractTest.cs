@@ -52,7 +52,9 @@ public class ChannelOutputShutdownContractTest
             Exception firstCause = await Record.ExceptionAsync(() => first.WaitAsync(TimeSpan.FromSeconds(5)));
             Exception secondCause = await Record.ExceptionAsync(() => second.WaitAsync(TimeSpan.FromSeconds(5)));
             Exception thirdCause = await Record.ExceptionAsync(() => unflushed.WaitAsync(TimeSpan.FromSeconds(5)));
-            await loop.SubmitAsync(() => { });
+            await loop.SubmitAsync(() =>
+            {
+            });
             bool autoClosed = autoClose && kind != 2;
             if (autoClosed)
             {

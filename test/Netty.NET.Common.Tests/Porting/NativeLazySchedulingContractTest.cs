@@ -196,7 +196,10 @@ public class NativeLazySchedulingContractTest
         int canceledRuns = 0;
         ambient.Value = "producer";
         Task<string> first = executor.ScheduleAsync(() => ambient.Value, TimeSpan.FromTicks(1), TestContext.Current.CancellationToken);
-        Task canceled = executor.ScheduleAsync(() => { canceledRuns++; }, TimeSpan.FromTicks(1), cancellation.Token);
+        Task canceled = executor.ScheduleAsync(() =>
+        {
+            canceledRuns++;
+        }, TimeSpan.FromTicks(1), cancellation.Token);
         bool wakeup = !before && after;
         string[] expected = before ? ["before:100", "execute"]
             : wakeup ? ["before:100", "lazy", "after:100", "execute"]

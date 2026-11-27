@@ -123,7 +123,9 @@ public class DefaultThreadFactoryTest
             try
             {
                 DefaultThreadFactory factory = callable();
-                Thread t = factory.NewThread(() => { });
+                Thread t = factory.NewThread(() =>
+                {
+                });
                 captured = ThreadGroup.GetThreadGroup(t);
             }
             catch (Exception error)
@@ -148,7 +150,9 @@ public class DefaultThreadFactoryTest
         var first = firstGroup.NewThread(() =>
         {
             factory = new DefaultThreadFactory("sticky", false, ThreadPriority.Normal, null);
-            Thread t = factory.NewThread(() => { });
+            Thread t = factory.NewThread(() =>
+            {
+            });
             firstCaptured = ThreadGroup.GetThreadGroup(t);
         });
         first.Start();
@@ -159,7 +163,9 @@ public class DefaultThreadFactoryTest
         var secondGroup = new ThreadGroup("second");
         var second = secondGroup.NewThread(() =>
         {
-            Thread t = factory.NewThread(() => { });
+            Thread t = factory.NewThread(() =>
+            {
+            });
             secondCaptured = ThreadGroup.GetThreadGroup(t);
         });
         second.Start();

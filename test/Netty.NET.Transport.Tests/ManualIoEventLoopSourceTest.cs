@@ -89,7 +89,9 @@ public class ManualIoEventLoopSourceTest
     public void TestShutdownOutSideOfOwningThread()
     {
         using SemaphoreSlim semaphore = new SemaphoreSlim(0);
-        Thread ownerThread = new Thread(() => { });
+        Thread ownerThread = new Thread(() =>
+        {
+        });
         ManualIoEventLoop eventLoop = new ManualIoEventLoop(ownerThread, new TestIoHandlerFactory(semaphore));
         eventLoop.StopAsync();
         Assert.True(eventLoop.IsShuttingDown());
@@ -100,7 +102,9 @@ public class ManualIoEventLoopSourceTest
     [Fact]
     public void TestCallFromWrongThread()
     {
-        Thread thread = new Thread(() => { });
+        Thread thread = new Thread(() =>
+        {
+        });
         using SemaphoreSlim semaphore = new SemaphoreSlim(0);
         ManualIoEventLoop eventLoop = new ManualIoEventLoop(thread, new TestIoHandlerFactory(semaphore));
 

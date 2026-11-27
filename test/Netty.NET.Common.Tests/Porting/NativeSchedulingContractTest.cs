@@ -88,7 +88,10 @@ public class NativeSchedulingContractTest
             order.Add(2);
             return "text";
         }, TimeSpan.FromTicks(1));
-        Task third = executor.ScheduleAsync(() => { order.Add(3); }, TimeSpan.FromTicks(1));
+        Task third = executor.ScheduleAsync(() =>
+        {
+            order.Add(3);
+        }, TimeSpan.FromTicks(1));
         Assert.Null(executor.Poll());
         executor.Advance(100);
         executor.Poll().Invoke();
@@ -136,7 +139,10 @@ public class NativeSchedulingContractTest
         var executor = new ManualExecutor();
         using var cancellation = new CancellationTokenSource();
         int calls = 0;
-        Task task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.Zero, cancellation.Token);
+        Task task = executor.ScheduleAsync(() =>
+        {
+            ++calls;
+        }, TimeSpan.Zero, cancellation.Token);
         Action due = executor.Poll();
         cancellation.Cancel();
         due();
@@ -161,7 +167,9 @@ public class NativeSchedulingContractTest
     public async Task LargeDeadlinesAndShutdownUseTheQueueRatherThanTimerLimits()
     {
         var executor = new ManualExecutor();
-        Task task = executor.ScheduleAsync(() => { }, TimeSpan.MaxValue);
+        Task task = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.MaxValue);
         Assert.Equal(long.MaxValue, executor.Head.DeadlineNanos());
         Assert.Null(executor.Poll());
         executor.Shutdown();
@@ -172,9 +180,15 @@ public class NativeSchedulingContractTest
     public void PeriodicArgumentErrorsAreSynchronousAndDoNotEnqueue()
     {
         var executor = new ManualExecutor();
-        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromTicks(-1), TimeSpan.FromTicks(1)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.FromTicks(-1), TimeSpan.FromTicks(1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.FromTicks(-1)));
         Assert.Null(executor.Head);
     }
 
@@ -229,10 +243,16 @@ public class NativeSchedulingContractTest
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         int calls = 0;
-        Task canceled = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.Zero, cancellation.Token);
+        Task canceled = executor.ScheduleAsync(() =>
+        {
+            ++calls;
+        }, TimeSpan.Zero, cancellation.Token);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await canceled);
         await Stop(executor);
-        Task rejected = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.Zero);
+        Task rejected = executor.ScheduleAsync(() =>
+        {
+            ++calls;
+        }, TimeSpan.Zero);
         await Assert.ThrowsAsync<RejectedExecutionException>(async () => await rejected);
         Assert.Equal(0, calls);
     }
@@ -288,7 +308,10 @@ public class NativeSchedulingContractTest
         try
         {
             CancellationToken observed = default;
-            await executor.ScheduleAsync(token => { observed = token; }, TimeSpan.Zero, cancellation.Token);
+            await executor.ScheduleAsync(token =>
+            {
+                observed = token;
+            }, TimeSpan.Zero, cancellation.Token);
             Assert.Equal(cancellation.Token, observed);
             Assert.Equal(17, await executor.ScheduleAsync(token => token == cancellation.Token ? 17 : 0, TimeSpan.Zero, cancellation.Token));
             await executor.ScheduleAsync((Func<Task>)(() => Task.CompletedTask), TimeSpan.Zero);
@@ -318,7 +341,9 @@ public class NativeSchedulingContractTest
     {
         var error = new InvalidOperationException("worker start");
         var executor = new UnorderedThreadPoolEventExecutor(1, new FailingFactory(error));
-        Task task = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        Task task = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1));
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await task));
         Assert.Equal(0, executor.PendingTaskCount);
         await Stop(executor);
@@ -385,7 +410,10 @@ public class NativeSchedulingContractTest
             {
                 using var cancellation = new CancellationTokenSource();
                 Task cancel = Task.Run(() => cancellation.Cancel());
-                Task work = executor.ScheduleAsync(() => { Interlocked.Increment(ref calls); }, TimeSpan.FromDays(1), cancellation.Token);
+                Task work = executor.ScheduleAsync(() =>
+                {
+                    Interlocked.Increment(ref calls);
+                }, TimeSpan.FromDays(1), cancellation.Token);
                 await cancel;
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await work);
             }
@@ -423,7 +451,9 @@ public class NativeSchedulingContractTest
                 throw failure;
             }, TimeSpan.Zero, TimeSpan.FromTicks(1));
             Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(async () => await periodic.WaitAsync(TimeSpan.FromSeconds(5))));
-            await executor.ScheduleAsync(() => { }, TimeSpan.Zero);
+            await executor.ScheduleAsync(() =>
+            {
+            }, TimeSpan.Zero);
             Assert.Equal(1, calls);
         }
         finally
@@ -496,7 +526,9 @@ public class NativeSchedulingContractTest
                 return await inner.Task.ConfigureAwait(false);
             }, TimeSpan.Zero);
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await executor.ScheduleAsync(() => { }, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.ScheduleAsync(() =>
+            {
+            }, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(task.IsCompleted);
             inner.SetResult(73);
             Assert.Equal(73, await task.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -554,7 +586,9 @@ public class NativeSchedulingContractTest
             cancellation.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
             release.Set();
-            await executor.ScheduleAsync(() => { }, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.ScheduleAsync(() =>
+            {
+            }, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, calls);
         }
         finally
@@ -568,7 +602,9 @@ public class NativeSchedulingContractTest
     public async Task PoolStopCancelsNativeWorkRemovedFromItsQueue()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
-        Task task = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        Task task = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1));
         _ = executor.StopAsync();
         Assert.True(task.IsCanceled);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
@@ -583,7 +619,9 @@ public class NativeSchedulingContractTest
         try
         {
             Assert.Equal(29, await group.ScheduleAsync(() => 29, TimeSpan.Zero));
-            await Assert.ThrowsAsync<NotSupportedException>(async () => await group.Next().ScheduleAsync(() => { }, TimeSpan.Zero));
+            await Assert.ThrowsAsync<NotSupportedException>(async () => await group.Next().ScheduleAsync(() =>
+            {
+            }, TimeSpan.Zero));
         }
         finally
         {

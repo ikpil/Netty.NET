@@ -114,7 +114,9 @@ public class MultiThreadIoEventLoopGroupSourceTest
             _simulateWorkload.Set(active);
             if (active)
             {
-                Execute(() => { /* NO-OP */ });
+                Execute(() =>
+                { /* NO-OP */
+                });
             }
         }
 

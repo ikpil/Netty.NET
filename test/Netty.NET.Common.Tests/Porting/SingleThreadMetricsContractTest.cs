@@ -298,7 +298,9 @@ public class SingleThreadMetricsContractTest
         Assert.True(executor.IsSuspended());
         Assert.Equal(0, executor.Idle());
         Assert.Equal(0, executor.Busy());
-        executor.Execute(static () => { });
+        executor.Execute(static () =>
+        {
+        });
         Assert.Equal(1, starts);
         Assert.False(executor.IsSuspended());
         Assert.Equal(0, executor.Idle());
@@ -308,7 +310,9 @@ public class SingleThreadMetricsContractTest
     [Fact]
     public void ThreadPropertiesRemainReadableAfterTheNativeThreadStops()
     {
-        var thread = new Thread(() => { }) { IsBackground = true, Priority = ThreadPriority.BelowNormal, Name = "properties" };
+        var thread = new Thread(() =>
+        {
+        }) { IsBackground = true, Priority = ThreadPriority.BelowNormal, Name = "properties" };
         var properties = new SingleThreadEventExecutor.DefaultThreadProperties(thread);
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));

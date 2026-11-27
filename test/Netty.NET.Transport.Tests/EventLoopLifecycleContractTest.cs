@@ -100,8 +100,12 @@ public class EventLoopLifecycleContractTest
                     }
             });
             await started.Task.WaitAsync(TestContext.Current.CancellationToken);
-            Action tail = () => { };
-            loop.Execute(() => { });
+            Action tail = () =>
+            {
+            };
+            loop.Execute(() =>
+            {
+            });
             loop.ExecuteAfterEventLoopIteration(tail);
             SingleThreadEventExecutor parent = loop;
             Assert.Equal(2, parent.PendingTasks());
@@ -160,7 +164,9 @@ public class EventLoopLifecycleContractTest
         {
             loop.ExecuteAfterEventLoopIteration(() => throw new InvalidOperationException("tail failure"));
             loop.ExecuteAfterEventLoopIteration(() => ran.TrySetResult(loop.InEventLoop()));
-            loop.Execute(() => { });
+            loop.Execute(() =>
+            {
+            });
             Assert.True(await ran.Task.WaitAsync(TestContext.Current.CancellationToken));
         }
         finally

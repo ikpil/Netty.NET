@@ -48,7 +48,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private const int ST_SHUTDOWN = 6;
     private const int ST_TERMINATED = 7;
 
-    private static readonly Action NOOP_TASK = static () => { }; // Do nothing.
+    private static readonly Action NOOP_TASK = static () =>
+    {
+    }; // Do nothing.
 
     // Native queue entries retain their exact callback across retries and rollback.
     private static readonly Action WAKEUP_ACTION = WAKEUP_TASK;

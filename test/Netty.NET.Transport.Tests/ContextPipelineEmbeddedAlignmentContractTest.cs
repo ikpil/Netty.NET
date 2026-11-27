@@ -236,12 +236,16 @@ public class ContextPipelineEmbeddedAlignmentContractTest
     public async Task DisconnectWithoutDisconnectSupportCancelsScheduledTasks()
     {
         var channel = new EmbeddedChannel(false);
-        Task future = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        Task future = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1));
         await channel.DisconnectAsync();
         Assert.True(future.IsCanceled);
 
         var disconnectable = new EmbeddedChannel(true);
-        Task kept = disconnectable.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        Task kept = disconnectable.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1));
         await disconnectable.DisconnectAsync();
         Assert.False(kept.IsCompleted);
         Assert.False(disconnectable.Finish());

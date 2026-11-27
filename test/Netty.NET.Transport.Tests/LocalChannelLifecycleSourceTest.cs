@@ -104,7 +104,9 @@ public partial class LocalChannelSourceTest
                     closeLatch.Set();
                 })).BindAsync(TestAddress);
             var cb = new Bootstrap().Group(clients).ChannelFactory(() => client)
-                .Handler(new ActionChannelInitializer<IChannel>(_ => { /* Do nothing */ }));
+                .Handler(new ActionChannelInitializer<IChannel>(_ =>
+                { /* Do nothing */
+                }));
             var future = cb.ConnectAsync(server.LocalAddress);
             await ObserveCompletion(future, TimeSpan.FromMilliseconds(2000));
             Assert.True(future.IsCompleted, "Connection should finish, not time out");
@@ -162,7 +164,10 @@ public partial class LocalChannelSourceTest
             // operation Task before the asynchronous local handshake; executor submission has its own Task.
             IChannel copy = client;
             // Connect to the server
-            await client.EventLoop.SubmitAsync(() => { connect = copy.ConnectAsync(server.LocalAddress); });
+            await client.EventLoop.SubmitAsync(() =>
+            {
+                connect = copy.ConnectAsync(server.LocalAddress);
+            });
             await asserted.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
             await connect;
             Assert.True(connect.IsCompletedSuccessfully);
@@ -285,7 +290,9 @@ public partial class LocalChannelSourceTest
             // Wait until the client found the server and handed the connection to the server's event loop, behind
             // the close.
             await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await client.EventLoop.SubmitAsync(() => { });
+            await client.EventLoop.SubmitAsync(() =>
+            {
+            });
             release.Set();
             await close;
             var error = await Assert.ThrowsAsync<SocketException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));

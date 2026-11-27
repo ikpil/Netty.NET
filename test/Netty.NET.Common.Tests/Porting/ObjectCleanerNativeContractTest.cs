@@ -14,7 +14,9 @@ public class ObjectCleanerNativeContractTest
     public void InvalidInputsDoNotPublishARegistration()
     {
         int before = ObjectCleaner.PendingCount;
-        Assert.Throws<ArgumentNullException>(() => ObjectCleaner.Register(null, () => { }));
+        Assert.Throws<ArgumentNullException>(() => ObjectCleaner.Register(null, () =>
+        {
+        }));
         Assert.Throws<ArgumentNullException>(() => ObjectCleaner.Register(new object(), null));
         Assert.Equal(before, ObjectCleaner.PendingCount);
     }

@@ -54,7 +54,9 @@ public class BootstrapResolutionSourceTest
             Assert.NotNull(resolver.Producer);
             Assert.False(resolver.Producer.Task.IsCompleted);
             Assert.True(resolver.Producer.TrySetException(new UnknownHostException("late resolver failure")));
-            await channel.EventLoop.SubmitAsync(() => { });
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            });
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connecting);
             Assert.True(connecting.IsCanceled);
         }

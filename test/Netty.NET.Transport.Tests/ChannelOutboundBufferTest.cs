@@ -464,7 +464,9 @@ public class ChannelOutboundBufferTest
                 execute.Wait();
             });
             Assert.True(running.Wait(TimeSpan.FromSeconds(5)));
-            executor.Execute(() => { }); // Will not be executed but ensure the pending count is 1.
+            executor.Execute(() =>
+            {
+            }); // Will not be executed but ensure the pending count is 1.
             Assert.Equal(1, executor.PendingTasks());
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             var data = Unpooled.Buffer(128).WriteZero(128);
@@ -496,7 +498,9 @@ public class ChannelOutboundBufferTest
     private static EmbeddedChannel NewRecordingChannel(StringBuilder text)
     {
         return new(new WritabilityHandler(ctx =>
-        { text.Append(ctx.Channel.IsWritable ? "true" : "false").Append(' '); }));
+        {
+            text.Append(ctx.Channel.IsWritable ? "true" : "false").Append(' ');
+        }));
     }
 
     private static void Release(ChannelOutboundBuffer buffer)

@@ -287,7 +287,9 @@ public class UnorderedGracefulShutdownContractTest
             Assert.False(running.IsCompleted);
             Assert.False(termination.IsCompleted);
             Assert.False(executor.AwaitTermination(TimeSpan.Zero));
-            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
+            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () =>
+            {
+            }));
             await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.SubmitAsync(() => 1));
             await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.ScheduleAsync(() => 1, TimeSpan.Zero));
             release.Set();
@@ -437,7 +439,9 @@ public class UnorderedGracefulShutdownContractTest
     public async Task RepeatedStopCannotRestartATerminatedPeriodicPool()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
-        Task repeating = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromDays(1));
+        Task repeating = executor.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.FromDays(1));
         Assert.Same(executor.TerminationFuture, executor.StopAsync());
         try
         {

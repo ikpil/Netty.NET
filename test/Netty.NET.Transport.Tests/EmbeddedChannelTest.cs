@@ -114,7 +114,9 @@ public class EmbeddedChannelTest
     public void TestScheduledCancelled()
     {
         var channel = new EmbeddedChannel(new ChannelInboundHandlerAdapter());
-        Task future = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        Task future = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromDays(1));
         channel.Finish();
         Assert.True(future.IsCanceled);
     }
@@ -439,7 +441,13 @@ public class EmbeddedChannelTest
     {
         bool inactive = false;
         var channel = new EmbeddedChannel(new InboundActions
-        { ExceptionAction = (ctx, cause) => { _ = ctx.CloseAsync(); }, Inactive = _ => inactive = true });
+        {
+            ExceptionAction = (ctx, cause) =>
+            {
+                _ = ctx.CloseAsync();
+            },
+            Inactive = _ => inactive = true
+        });
         channel.Pipeline.FireExceptionCaught(new InvalidOperationException());
         Assert.True(inactive);
     }
@@ -476,8 +484,12 @@ public class EmbeddedChannelTest
     public void TestAdvanceTime()
     {
         var channel = new EmbeddedChannel();
-        Task future10 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(10));
-        Task future20 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(20));
+        Task future10 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(10));
+        Task future20 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(20));
         channel.RunPendingTasks();
         Assert.False(future10.IsCompleted);
         Assert.False(future20.IsCompleted);
@@ -493,12 +505,18 @@ public class EmbeddedChannelTest
         var channel = new EmbeddedChannel();
         channel.FreezeTime();
         // this future will complete after 10min
-        Task future10 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(10));
+        Task future10 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(10));
         // this future will complete after 10min + 1ns
         // Adaptation: one TimeSpan tick is the smallest native CLR scheduling interval (100 ns).
-        Task future101 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(10) + TimeSpan.FromTicks(1));
+        Task future101 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(10) + TimeSpan.FromTicks(1));
         // this future will complete after 20min
-        Task future20 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(20));
+        Task future20 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(20));
         channel.RunPendingTasks();
         Assert.False(future10.IsCompleted);
         Assert.False(future101.IsCompleted);
@@ -520,12 +538,18 @@ public class EmbeddedChannelTest
         MockTicker ticker = Ticker.NewMockTicker();
         var channel = new EmbeddedChannel.Builder().Ticker(ticker).Build();
         // this future will complete after 10min
-        Task future10 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(10));
+        Task future10 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(10));
         // this future will complete after 10min + 1ns
         // Adaptation: one TimeSpan tick retains the original strict next-deadline boundary.
-        Task future101 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(10) + TimeSpan.FromTicks(1));
+        Task future101 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(10) + TimeSpan.FromTicks(1));
         // this future will complete after 20min
-        Task future20 = channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromMinutes(20));
+        Task future20 = channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromMinutes(20));
         channel.RunPendingTasks();
         Assert.False(future10.IsCompleted);
         Assert.False(future101.IsCompleted);
@@ -555,12 +579,16 @@ public class EmbeddedChannelTest
         channel.FreezeTime();
         // simple execute
         Assert.False(channel.HasPendingTasks());
-        channel.EventLoop.Execute(() => { });
+        channel.EventLoop.Execute(() =>
+        {
+        });
         Assert.True(channel.HasPendingTasks());
         channel.RunPendingTasks();
         Assert.False(channel.HasPendingTasks());
         // schedule in the future (note: time is frozen above)
-        channel.EventLoop.ScheduleAsync(() => { }, TimeSpan.FromSeconds(1));
+        channel.EventLoop.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromSeconds(1));
         Assert.False(channel.HasPendingTasks());
         channel.RunPendingTasks();
         Assert.False(channel.HasPendingTasks());

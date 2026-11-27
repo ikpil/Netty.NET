@@ -184,12 +184,16 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
     internal MagazineGroup[] SizeClassedMagazineGroups => _sizeClassedMagazineGroups;
     internal MagazineGroup LargeBufferMagazineGroup => _largeBufferMagazineGroup;
     internal LocalGroups ThreadLocalGroup => _threadLocalGroup;
-    internal int LocalBindingCount { get {
+    internal int LocalBindingCount
+    {
+        get
+        {
             lock (_localBindings)
             {
                 return _localBindings.Count;
             }
-        } }
+        }
+    }
 
     // CLR: lowMemory and the remaining settings are the per-instance replacements listed above.
     internal AdaptivePoolingAllocator(IChunkAllocator chunkAllocator, bool lowMemory,

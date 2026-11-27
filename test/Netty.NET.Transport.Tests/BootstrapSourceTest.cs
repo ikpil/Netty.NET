@@ -120,8 +120,14 @@ public class BootstrapSourceTest
             // Try to connect from each other.
             for (int i = 0; i < 1024; i++)
             {
-                submissions.Add(groupA.Next().SubmitAsync(() => { operations.Add(connect ? bootstrapB.ConnectAsync(LocalAddress.ANY) : bootstrapB.BindAsync(LocalAddress.ANY)); }));
-                submissions.Add(groupB.Next().SubmitAsync(() => { operations.Add(connect ? bootstrapA.ConnectAsync(LocalAddress.ANY) : bootstrapA.BindAsync(LocalAddress.ANY)); }));
+                submissions.Add(groupA.Next().SubmitAsync(() =>
+                {
+                    operations.Add(connect ? bootstrapB.ConnectAsync(LocalAddress.ANY) : bootstrapB.BindAsync(LocalAddress.ANY));
+                }));
+                submissions.Add(groupB.Next().SubmitAsync(() =>
+                {
+                    operations.Add(connect ? bootstrapA.ConnectAsync(LocalAddress.ANY) : bootstrapA.BindAsync(LocalAddress.ANY));
+                }));
             }
 
             foreach (var submission in submissions)

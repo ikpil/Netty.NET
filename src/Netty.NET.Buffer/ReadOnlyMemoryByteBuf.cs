@@ -61,7 +61,10 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
     public override int Capacity
     {
         get => MaxCapacity;
-        set { EnsureCanWrite(); }
+        set
+        {
+            EnsureCanWrite();
+        }
     }
 
     protected override Memory<byte> GetMemoryCore(int index, int length)

@@ -63,7 +63,9 @@ public class UnorderedWorkerFailureContractTest
             {
                 return null;
             }
-            var started = new Thread(() => { }) { IsBackground = true };
+            var started = new Thread(() =>
+            {
+            }) { IsBackground = true };
             started.Start();
             started.Join();
             return started;
@@ -78,7 +80,9 @@ public class UnorderedWorkerFailureContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task<int> queued = executor.SubmitAsync(() => 7);
             Task<int> deadline = executor.ScheduleAsync(() => 8, TimeSpan.FromDays(1));
-            Task repeating = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
+            Task repeating = executor.ScheduleAtFixedRateAsync(() =>
+            {
+            }, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
             IEventExecutor child = new NonStickyEventExecutorGroup(executor).Next();
             Task<int> forwarded = child.SubmitAsync(() => 9);
             using var observation = new ExecutorCompletion(executor, Task.CompletedTask);
@@ -274,7 +278,9 @@ public class UnorderedWorkerFailureContractTest
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            Task queued = executor.SubmitAsync(() => { });
+            Task queued = executor.SubmitAsync(() =>
+            {
+            });
             release.Set();
             if (throwAfterClosing)
             {

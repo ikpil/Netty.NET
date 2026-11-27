@@ -194,7 +194,9 @@ public class NativeExecutorQueueContractTest
         IScheduledWork work = executor.Head;
         long id = work.GetId();
         var ready = new RecordingQueue();
-        Action occupied = static () => { };
+        Action occupied = static () =>
+        {
+        };
         Assert.True(ready.TryEnqueue(occupied));
         Assert.False(executor.Transfer(ready));
         Action callback = ready.LastAttempt;
@@ -238,7 +240,9 @@ public class NativeExecutorQueueContractTest
 
         for (int i = 0; i < 16; i++)
         {
-            executor.Execute(static () => { });
+            executor.Execute(static () =>
+            {
+            });
         }
 
         int calls = 0;

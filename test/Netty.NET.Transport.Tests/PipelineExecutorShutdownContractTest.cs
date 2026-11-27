@@ -73,7 +73,9 @@ public class PipelineExecutorShutdownContractTest
             await executors.StopAsync().WaitAsync(token);
 
             await loop.RegisterAsync(channel).WaitAsync(token);
-            await loop.SubmitAsync(() => { }, token);
+            await loop.SubmitAsync(() =>
+            {
+            }, token);
 
             Assert.Empty(HandlerNames(channel));
             Assert.Empty(log);
@@ -104,13 +106,19 @@ public class PipelineExecutorShutdownContractTest
             channel.Pipeline.AddLast(executors, "h", new Recorder("h", log));
             channel.Pipeline.AddLast("b", new Recorder("b", log));
             await group.RegisterAsync(channel).WaitAsync(token);
-            await channel.EventLoop.SubmitAsync(() => { }, token);
-            await executors.SubmitAsync(() => { }, token);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, token);
+            await executors.SubmitAsync(() =>
+            {
+            }, token);
             await executors.StopAsync().WaitAsync(token);
 
             await channel.CloseAsync().WaitAsync(token);
             await channel.CloseFuture.WaitAsync(token);
-            await channel.EventLoop.SubmitAsync(() => { }, token);
+            await channel.EventLoop.SubmitAsync(() =>
+            {
+            }, token);
 
             Assert.False(group.IsShuttingDown());
             Assert.Equal(new[] { "a", "h", "b" }, HandlerNames(channel));
@@ -140,8 +148,12 @@ public class PipelineExecutorShutdownContractTest
             channel.Pipeline.AddLast("a", new Recorder("a", log));
             channel.Pipeline.AddLast(executors, "h", new Recorder("h", log));
             await loop.RegisterAsync(channel).WaitAsync(token);
-            await loop.SubmitAsync(() => { }, token);
-            await executors.SubmitAsync(() => { }, token);
+            await loop.SubmitAsync(() =>
+            {
+            }, token);
+            await executors.SubmitAsync(() =>
+            {
+            }, token);
             await executors.StopAsync().WaitAsync(token);
 
             await channel.CloseAsync().WaitAsync(token);
@@ -154,7 +166,9 @@ public class PipelineExecutorShutdownContractTest
         }
         finally
         {
-            await loop.StopAsync().ContinueWith(_ => { }, TaskScheduler.Default);
+            await loop.StopAsync().ContinueWith(_ =>
+            {
+            }, TaskScheduler.Default);
         }
     }
 
@@ -176,12 +190,18 @@ public class PipelineExecutorShutdownContractTest
             channel.Pipeline.AddLast(executors, "h", new Recorder("h", log, () =>
             {
                 reachedSeparateExecutor.TrySetResult();
-                loop.TerminationFuture.ContinueWith(_ => { }, TaskScheduler.Default).Wait(token);
+                loop.TerminationFuture.ContinueWith(_ =>
+                {
+                }, TaskScheduler.Default).Wait(token);
             }));
             channel.Pipeline.AddLast("b", new Recorder("b", log));
             await loop.RegisterAsync(channel).WaitAsync(token);
-            await loop.SubmitAsync(() => { }, token);
-            await executors.SubmitAsync(() => { }, token);
+            await loop.SubmitAsync(() =>
+            {
+            }, token);
+            await executors.SubmitAsync(() =>
+            {
+            }, token);
 
             Task shutdown = loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
             await reachedSeparateExecutor.Task.WaitAsync(token);
@@ -199,7 +219,9 @@ public class PipelineExecutorShutdownContractTest
         }
         finally
         {
-            await executors.StopAsync().ContinueWith(_ => { }, TaskScheduler.Default);
+            await executors.StopAsync().ContinueWith(_ =>
+            {
+            }, TaskScheduler.Default);
             await loop.StopAsync();
         }
     }
@@ -219,11 +241,17 @@ public class PipelineExecutorShutdownContractTest
             channel.Pipeline.AddLast(executors, "h", new Recorder("h", log, () => Thread.Sleep(100)));
             channel.Pipeline.AddLast("b", new Recorder("b", log));
             await loop.RegisterAsync(channel).WaitAsync(token);
-            await loop.SubmitAsync(() => { }, token);
-            await executors.SubmitAsync(() => { }, token);
+            await loop.SubmitAsync(() =>
+            {
+            }, token);
+            await executors.SubmitAsync(() =>
+            {
+            }, token);
 
             await loop.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5)).WaitAsync(token);
-            await executors.SubmitAsync(() => { }, token);
+            await executors.SubmitAsync(() =>
+            {
+            }, token);
 
             Assert.False(channel.IsOpen);
             Assert.Empty(HandlerNames(channel));
@@ -248,7 +276,9 @@ public class PipelineExecutorShutdownContractTest
         var loop = new DefaultEventLoop();
         try
         {
-            await loop.SubmitAsync(() => { }, token);
+            await loop.SubmitAsync(() =>
+            {
+            }, token);
             Task shutdown = loop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(5));
             Assert.True(loop.IsShuttingDown());
             var channel = new LocalChannel();

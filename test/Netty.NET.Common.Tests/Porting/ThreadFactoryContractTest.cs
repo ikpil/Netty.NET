@@ -46,7 +46,9 @@ public class ThreadFactoryContractTest
         {
             var group = new ThreadGroup(name);
             Thread child = null;
-            var creator = group.NewThread(() => child = factory.NewThread(() => { }));
+            var creator = group.NewThread(() => child = factory.NewThread(() =>
+            {
+            }));
             creator.Start();
             Assert.True(creator.Join(TimeSpan.FromSeconds(5)));
             Assert.Same(group, ThreadGroup.GetThreadGroup(child));

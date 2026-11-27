@@ -306,7 +306,10 @@ public partial class PooledByteBufAllocator
             }
             // Immediate rejection is propagated to the factory; later scheduler
             // faults are observed without retaining the binding in a continuation.
-            _ = task.ContinueWith(static failed => { _ = failed.Exception; }, CancellationToken.None,
+            _ = task.ContinueWith(static failed =>
+            {
+                _ = failed.Exception;
+            }, CancellationToken.None,
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 

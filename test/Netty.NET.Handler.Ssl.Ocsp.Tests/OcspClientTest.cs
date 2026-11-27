@@ -299,7 +299,9 @@ public class OcspClientTest : AbstractOcspTest
                     targetCert.GetCertificate(), caRoot.GetCertificate(), false,
                     transport, resolver, promise);
 
-            await ((Task) promise.Task).ContinueWith(static _ => { }, TestContext.Current.CancellationToken,
+            await ((Task) promise.Task).ContinueWith(static _ =>
+            {
+            }, TestContext.Current.CancellationToken,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
             Assert.False(promise.Task.IsCompletedSuccessfully);

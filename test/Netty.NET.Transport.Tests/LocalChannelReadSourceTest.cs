@@ -178,10 +178,14 @@ public partial class LocalChannelSourceTest
     private static async Task CheckServerMaxMessagesPerRead(IEventLoopGroup serverGroup, IEventLoopGroup clientGroup, bool autoRead, CancellationToken cancellationToken)
     {
         var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var cb = new Bootstrap().Group(serverGroup).Channel<LocalChannel>().Handler(new ActionChannelInitializer<IChannel>(_ => { /* NOOP */ }));
+        var cb = new Bootstrap().Group(serverGroup).Channel<LocalChannel>().Handler(new ActionChannelInitializer<IChannel>(_ =>
+        { /* NOOP */
+        }));
         var sb = new ServerBootstrap().Group(clientGroup).Channel<LocalServerChannel>()
             .Option(ChannelOption.AUTO_READ, autoRead).Option(ChannelOption.MAX_MESSAGES_PER_READ, 1)
-            .Handler(new ChannelReadHandler(completed, autoRead)).ChildHandler(new ActionChannelInitializer<IChannel>(_ => { /* NOOP */ }));
+            .Handler(new ChannelReadHandler(completed, autoRead)).ChildHandler(new ActionChannelInitializer<IChannel>(_ =>
+            { /* NOOP */
+            }));
         IChannel server = null, client = null;
         try
         {
@@ -223,13 +227,17 @@ public partial class LocalChannelSourceTest
             var client = new LocalChannel();
             clients.Enqueue(client);
             return client;
-        }).Handler(new ActionChannelInitializer<IChannel>(_ => { /* NOOP */ }));
+        }).Handler(new ActionChannelInitializer<IChannel>(_ =>
+        { /* NOOP */
+        }));
         var sb = new ServerBootstrap().Group(groups.Shared).ChannelFactory(() => new QueuedLocalServer(() =>
         {
             if (Interlocked.Decrement(ref remaining) == 0)
                 queued.TrySetResult();
         })).Option(ChannelOption.AUTO_READ, false).Option(ChannelOption.MAX_MESSAGES_PER_READ, maxMessagesPerRead)
-            .Handler(new ReadCompleteCounts(readCompletes.Writer)).ChildHandler(new ActionChannelInitializer<IChannel>(_ => { /* NOOP */ }));
+            .Handler(new ReadCompleteCounts(readCompletes.Writer)).ChildHandler(new ActionChannelInitializer<IChannel>(_ =>
+            { /* NOOP */
+            }));
         IChannel server = null;
         try
         {
@@ -257,10 +265,14 @@ public partial class LocalChannelSourceTest
         await using var groups = new Groups();
         var serverCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var childCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var cb = new Bootstrap().Group(groups.Shared).Channel<LocalChannel>().Handler(new ActionChannelInitializer<IChannel>(_ => { /* NOOP */ }));
+        var cb = new Bootstrap().Group(groups.Shared).Channel<LocalChannel>().Handler(new ActionChannelInitializer<IChannel>(_ =>
+        { /* NOOP */
+        }));
         var sb = new ServerBootstrap().Group(groups.Shared).Channel<LocalServerChannel>()
             .Option(ChannelOption.RECVBUF_ALLOCATOR, new ReadCompleteRecvAllocator(serverCompleted))
-            .ChildHandler(new ActionChannelInitializer<IChannel>(_ => { /* NOOP */ }))
+            .ChildHandler(new ActionChannelInitializer<IChannel>(_ =>
+            { /* NOOP */
+            }))
             .ChildOption(ChannelOption.RECVBUF_ALLOCATOR, new ReadCompleteRecvAllocator(childCompleted));
         IChannel server = null, client = null;
         try

@@ -31,7 +31,9 @@ public class ThreadLocalContractTest : IDisposable
             FastThreadLocalThread.RunWithFastThreadLocal(() =>
             {
                 local.Set("value");
-                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() => { }));
+                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() =>
+                {
+                }));
                 throw cause;
             })));
         Assert.False(FastThreadLocalThread.CurrentThreadHasFastThreadLocal());
@@ -73,7 +75,9 @@ public class ThreadLocalContractTest : IDisposable
             {
                 Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal());
                 Assert.True(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
-                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() => { }));
+                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() =>
+                {
+                }));
                 local.Set(Thread.CurrentThread.Name);
             }
             catch (Exception cause)

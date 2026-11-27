@@ -102,7 +102,9 @@ public class MpscIntQueueContractTest
         Assert.Throws<ArgumentNullException>(() => queue.Drain(0, null));
         Assert.Throws<ArgumentNullException>(() => queue.WeakPeekReduce(0, 42, null));
         Assert.Throws<ArgumentException>(() => queue.Fill(-1, () => 1));
-        Assert.Throws<ArgumentException>(() => queue.Drain(-1, _ => { }));
+        Assert.Throws<ArgumentException>(() => queue.Drain(-1, _ =>
+        {
+        }));
         Assert.Throws<ArgumentException>(() => queue.WeakPeekReduce(-1, 42, (a, b) => a + b));
         Assert.Throws<ArgumentException>(() => queue.Offer(-1));
         Assert.Equal(0, queue.Fill(0, () => throw new InvalidOperationException()));

@@ -228,8 +228,12 @@ public class DynamicProgressContractTest
         var executor = new QueuedExecutor { Rejection = error };
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reporter = new ExecutorProgress(executor, source.Task);
-        using var first = reporter.Register(_ => { });
-        using var second = reporter.Register(null, _ => { });
+        using var first = reporter.Register(_ =>
+        {
+        });
+        using var second = reporter.Register(null, _ =>
+        {
+        });
         reporter.Report(new TransferProgress(1));
         foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
             Assert.Same(error, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await task));
@@ -244,9 +248,13 @@ public class DynamicProgressContractTest
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reporter = new ExecutorProgress(executor, source.Task);
         Assert.Throws<ArgumentNullException>(() => reporter.Register(null));
-        using var early = reporter.Register(_ => { });
+        using var early = reporter.Register(_ =>
+        {
+        });
         source.SetResult();
-        Assert.Throws<InvalidOperationException>(() => reporter.Register(_ => { }));
+        Assert.Throws<InvalidOperationException>(() => reporter.Register(_ =>
+        {
+        }));
         await Drain(executor, reporter.NotificationsCompleted);
         await early.NotificationsCompleted;
         using var completion = new ExecutorCompletion(executor, source.Task);

@@ -80,7 +80,9 @@ public class SocketLingerCloseContractTest
         Assert.Empty(fixture.Events);
         if (immediate)
         {
-            Assert.Throws<Netty.NET.Common.Concurrent.RejectedExecutionException>(() => fixture.Loop.Execute(() => { }));
+            Assert.Throws<Netty.NET.Common.Concurrent.RejectedExecutionException>(() => fixture.Loop.Execute(() =>
+            {
+            }));
         }
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => termination.IsCompleted);

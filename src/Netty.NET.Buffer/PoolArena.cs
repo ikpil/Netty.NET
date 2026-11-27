@@ -165,7 +165,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     private void TrackChunk(PoolChunk chunk)
     {
         _qInit.Add(chunk);
-        unchecked { ++_chunkAllocations; }
+        unchecked
+        {
+            ++_chunkAllocations;
+        }
     }
 
     internal long AllocateHandle(PoolChunk chunk, int sizeIdx, int normalized, out PoolChunk owner)
@@ -231,7 +234,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 offset += PoolChunk.BitmapIdx(handle) * normalized;
             }
             var allocation = new Allocation(this, storage, handle, offset, normalized, cache, fromThreadCache: true);
-            unchecked { _pinnedBytes += normalized; }
+            unchecked
+            {
+                _pinnedBytes += normalized;
+            }
             // Cached handles already count as active arena allocations. A hit
             // only pins bytes again; allocation/deallocation metrics stay unchanged.
             // was able to allocate out of the cache so move on
@@ -296,7 +302,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         ChunkStorage storage = allocation.Storage;
         lock (_sync)
         {
-            unchecked { _pinnedBytes -= allocation.ReservedLength; }
+            unchecked
+            {
+                _pinnedBytes -= allocation.ReservedLength;
+            }
             if (storage.Chunk == null)
             {
                 unchecked
@@ -361,7 +370,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         }
         BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: false);
         _chunks.Remove(chunk);
-        unchecked { ++_chunkDeallocations; }
+        unchecked
+        {
+            ++_chunkDeallocations;
+        }
         if (_disposed)
         {
             if (storage.ActiveAllocations == 0)

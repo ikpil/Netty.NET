@@ -59,7 +59,10 @@ public partial class AdaptiveByteBufKernelTest
                 Assert.Equal(capacity, b.Capacity);
                 Assert.Equal(original, b.AsSpan(0, capacity).ToArray());
                 Assert.NotNull(replacement);
-                Assert.Throws<ObjectDisposedException>(() => { _ = replacement.GetSpan().Length; });
+                Assert.Throws<ObjectDisposedException>(() =>
+                {
+                    _ = replacement.GetSpan().Length;
+                });
             }
             else
             {
@@ -73,7 +76,10 @@ public partial class AdaptiveByteBufKernelTest
                     Array.Fill(expected, (byte)0xA5);
                 }
                 Assert.Equal(expected, b.AsSpan(0, capacity).ToArray());
-                Assert.Throws<ObjectDisposedException>(() => { _ = old.GetSpan().Length; });
+                Assert.Throws<ObjectDisposedException>(() =>
+                {
+                    _ = old.GetSpan().Length;
+                });
             }
             var call = Assert.Single(s.Observation.Calls);
             Assert.Equal(("Span", old.Offset, capacity), (call.Method, call.Index, call.Width));

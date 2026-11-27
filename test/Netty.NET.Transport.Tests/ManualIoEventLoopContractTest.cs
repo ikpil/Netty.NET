@@ -93,8 +93,12 @@ public class ManualIoEventLoopContractTest
             ticker.Advance(2_000_000_001);
             Assert.Equal(0, loop.RunNow());
             Assert.True(termination.IsCompletedSuccessfully);
-            Assert.Throws<RejectedExecutionException>(() => loop.Execute(() => { }));
-            var rejected = loop.ScheduleAsync(() => { }, TimeSpan.Zero, cancellation);
+            Assert.Throws<RejectedExecutionException>(() => loop.Execute(() =>
+            {
+            }));
+            var rejected = loop.ScheduleAsync(() =>
+            {
+            }, TimeSpan.Zero, cancellation);
             Assert.True(rejected.IsFaulted);
             Assert.Throws<RejectedExecutionException>(() => rejected.GetAwaiter().GetResult());
         }

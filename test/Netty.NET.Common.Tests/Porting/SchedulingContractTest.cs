@@ -73,7 +73,10 @@ public class SchedulingContractTest
         {
             int calls = 0;
             using var cancellation = new CancellationTokenSource();
-            var task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.FromSeconds(10), cancellation.Token);
+            var task = executor.ScheduleAsync(() =>
+            {
+                ++calls;
+            }, TimeSpan.FromSeconds(10), cancellation.Token);
             cancellation.Cancel();
             Assert.True(task.IsCanceled);
             using var drained = new CountdownEvent(1);
@@ -226,7 +229,10 @@ public class SchedulingContractTest
         var executor = new ManualExecutor();
         using var token = new CancellationTokenSource();
         int calls = 0;
-        Task task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.FromTicks(1), token.Token);
+        Task task = executor.ScheduleAsync(() =>
+        {
+            ++calls;
+        }, TimeSpan.FromTicks(1), token.Token);
         Assert.False(task.IsCompleted);
         if (cancel)
         {
@@ -252,13 +258,17 @@ public class SchedulingContractTest
     public void SaturatingNanosecondConversionPreservesLargeDeadlines()
     {
         var executor = new ManualExecutor();
-        var task = executor.ScheduleAsync(() => { }, TimeSpan.MaxValue);
+        var task = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.MaxValue);
         Assert.Equal(long.MaxValue, executor.Head.DeadlineNanos());
         Assert.Null(executor.PollDue());
         Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.ToNanos(TimeSpan.MaxValue));
         Assert.Equal(long.MinValue, AbstractScheduledEventExecutor.ToNanos(TimeSpan.MinValue));
         Assert.Equal(9007199254740900L, AbstractScheduledEventExecutor.ToNanos(TimeSpan.FromTicks(90071992547409L)));
-        var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.MaxValue);
+        var periodic = executor.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.MaxValue);
         Assert.False(periodic.IsCompleted);
     }
 
@@ -267,9 +277,13 @@ public class SchedulingContractTest
     {
         var executor = new ManualExecutor();
         using var cancellation = new CancellationTokenSource();
-        var cancelled = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1), cancellation.Token);
+        var cancelled = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromTicks(1), cancellation.Token);
         var canceledWork = executor.Head;
-        var ready = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        var ready = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromTicks(1));
         executor.holdRemoval = true;
         cancellation.Cancel();
         Assert.True(cancelled.IsCanceled);
@@ -290,11 +304,15 @@ public class SchedulingContractTest
     public void FullTransferQueueReturnsTheTaskToTheDeadlineQueue()
     {
         var executor = new ManualExecutor();
-        var ready = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        var ready = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromTicks(1));
         var readyWork = executor.Head;
         executor.Advance(100);
         var queue = new LinkedBlockingQueue<Action>(1);
-        Assert.True(queue.TryEnqueue(static () => { }));
+        Assert.True(queue.TryEnqueue(static () =>
+        {
+        }));
         Assert.False(executor.TransferDue(queue));
         Assert.Same(readyWork.QueueCallback, executor.PollDue());
     }
@@ -304,12 +322,16 @@ public class SchedulingContractTest
     {
         var executor = new ManualExecutor();
         using var cancellation = new CancellationTokenSource();
-        var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
+        var periodic = executor.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         var periodicWork = executor.Head;
         long id = periodicWork.GetId();
         executor.PollDue().Invoke();
         Assert.Equal(id, periodicWork.GetId());
-        var next = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        var next = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromTicks(1));
         executor.Advance(100);
         Assert.Same(periodicWork.QueueCallback, executor.PollDue());
         var nextWork = executor.Head;
@@ -385,7 +407,9 @@ public class SchedulingContractTest
     public void SchedulingHooksSelectImmediateOrLazySubmissionAndOptionalWakeup(bool before, bool after)
     {
         var executor = new HookExecutor { before = before, after = after };
-        var task = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        var task = executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromTicks(1));
         Action issued = Assert.IsType<Action>(executor.submissions[0]);
         executor.RunQueued(issued);
         IScheduledWork work = executor.Head;
@@ -405,10 +429,16 @@ public class SchedulingContractTest
     public void SubclassSchedulingValidationRunsBeforeAnyTaskIsSubmitted()
     {
         var executor = new HookExecutor();
-        Assert.Throws<ArgumentException>(() => executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleAsync(() =>
+        {
+        }, TimeSpan.FromTicks(2)));
         Assert.Throws<ArgumentException>(() => executor.ScheduleAsync(() => 1, TimeSpan.FromTicks(2)));
-        Assert.Throws<ArgumentException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(2)));
-        Assert.Throws<ArgumentException>(() => executor.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleAtFixedRateAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleWithFixedDelayAsync(() =>
+        {
+        }, TimeSpan.Zero, TimeSpan.FromTicks(2)));
         Assert.Empty(executor.submissions);
     }
 }

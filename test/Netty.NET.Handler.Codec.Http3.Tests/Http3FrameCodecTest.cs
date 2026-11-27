@@ -911,7 +911,9 @@ public class Http3FrameCodecTest : IDisposable
         codecExecutor = new DefaultEventExecutor();
         unblockCodecExecutor = new SemaphoreSlim(0);
         SetUp(1, true, int.MaxValue, codecExecutor);
-        await codecExecutor.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+        await codecExecutor.SubmitAsync(() =>
+        {
+        }, TestContext.Current.CancellationToken);
 
         CountdownEvent executorBlocked = new CountdownEvent(1);
         codecExecutor.Execute(() =>

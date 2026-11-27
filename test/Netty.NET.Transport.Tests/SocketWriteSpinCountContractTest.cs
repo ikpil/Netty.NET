@@ -109,7 +109,10 @@ public class SocketWriteSpinCountContractTest
     public void AProgressObserverCanCloseWithoutTouchingAReleasedBuffer()
     {
         using var fixture = new Fixture(1);
-        fixture.Channel.Config.WriteProgress = new Observer(value => { _ = fixture.Channel.CloseAsync(); });
+        fixture.Channel.Config.WriteProgress = new Observer(value =>
+        {
+            _ = fixture.Channel.CloseAsync();
+        });
         var buf = Unpooled.Buffer(3).WriteZero(3);
         var write = fixture.Channel.WriteAndFlushAsync(buf);
         fixture.PumpUntil(() => write.IsCompleted);

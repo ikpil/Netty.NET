@@ -436,7 +436,9 @@ public class PoolThreadCacheSchedulingTest
                     Period, TestContext.Current.CancellationToken);
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             clock.Advance(Period);
-            executor.Execute(static () => { });
+            executor.Execute(static () =>
+            {
+            });
             await barrier.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             var buffers = await executor.SubmitAsync(() => Enumerable.Range(0, 64).Select(_ => Allocate(a, true, 48)).ToArray(),
                     TestContext.Current.CancellationToken)
@@ -478,7 +480,9 @@ public class PoolThreadCacheSchedulingTest
                 var b = Allocate(a, true, 48);
                 firstArena = PooledStorage(b).Allocation.Arena;
                 b.Release();
-                barrier = first.ScheduleAsync(static () => { }, Period, TestContext.Current.CancellationToken);
+                barrier = first.ScheduleAsync(static () =>
+                {
+                }, Period, TestContext.Current.CancellationToken);
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             await second.SubmitAsync(() =>
             {
@@ -491,7 +495,9 @@ public class PoolThreadCacheSchedulingTest
             Assert.Equal(1, secondArena.NumActiveAllocations);
             Assert.Equal(2, a.Metric.NumThreadLocalCaches);
             firstClock.Advance(Period);
-            first.Execute(static () => { });
+            first.Execute(static () =>
+            {
+            });
             await barrier.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.Equal(0, firstArena.NumActiveAllocations);
             Assert.Equal(1, secondArena.NumActiveAllocations);

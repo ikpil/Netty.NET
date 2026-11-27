@@ -229,7 +229,9 @@ public class NativeShutdownHookContractTest
         try
         {
             WeakReference weak = RegisterPayload(executor, remove);
-            await executor.SubmitAsync(() => { }, TestContext.Current.CancellationToken)
+            await executor.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             if (!remove)
             {

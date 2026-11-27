@@ -186,7 +186,9 @@ public class UnorderedActionBoundaryContractTest
             });
             Wait(entered);
             _ = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-            executor.Execute(static () => { });
+            executor.Execute(static () =>
+            {
+            });
             Assert.NotNull(stop);
             Assert.Same(executor.TerminationFuture, stop);
             release.Set();
@@ -205,12 +207,16 @@ public class UnorderedActionBoundaryContractTest
         int policies = 0;
         var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => policies++);
         await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        Task submit = executor.SubmitAsync(static () => { }, TestContext.Current.CancellationToken);
+        Task submit = executor.SubmitAsync(static () =>
+        {
+        }, TestContext.Current.CancellationToken);
         Task<int> schedule = executor.ScheduleAsync(static () => 7, TimeSpan.Zero, TestContext.Current.CancellationToken);
         await Assert.ThrowsAsync<RejectedExecutionException>(() => submit);
         await Assert.ThrowsAsync<RejectedExecutionException>(() => schedule);
         Assert.Equal(0, policies);
-        executor.Execute(static () => { });
+        executor.Execute(static () =>
+        {
+        });
         Assert.Equal(1, policies);
     }
 

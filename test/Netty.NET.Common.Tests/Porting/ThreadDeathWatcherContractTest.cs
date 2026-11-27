@@ -40,8 +40,12 @@ public class ThreadDeathWatcherContractTest : IDisposable
     [Fact]
     public void ValidationRejectsNullAndNonLiveThreadsWhileUnwatchAcceptsUnstartedThreads()
     {
-        Action task = static () => { };
-        var thread = new Thread(() => { });
+        Action task = static () =>
+        {
+        };
+        var thread = new Thread(() =>
+        {
+        });
         Assert.Throws<ArgumentNullException>(() => ThreadDeathWatcher.Watch(null, task));
         Assert.Throws<ArgumentNullException>(() => ThreadDeathWatcher.Watch(thread, null));
         Assert.Throws<ArgumentNullException>(() => ThreadDeathWatcher.Unwatch(null, task));
@@ -236,7 +240,9 @@ public class ThreadDeathWatcherContractTest : IDisposable
     public void InactivityPollsOrBoundsFiniteWaitsAndRejectsNegativeTicks(long ticks)
     {
         using var owner = new LiveThread();
-        ThreadDeathWatcher.Watch(owner.Thread, static () => { });
+        ThreadDeathWatcher.Watch(owner.Thread, static () =>
+        {
+        });
         if (ticks < 0)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)));
@@ -275,7 +281,9 @@ public class ThreadDeathWatcherContractTest : IDisposable
     public void InfiniteInactivityWaitCompletesOrCanBeInterrupted(bool interrupt)
     {
         using var owner = new LiveThread();
-        ThreadDeathWatcher.Watch(owner.Thread, static () => { });
+        ThreadDeathWatcher.Watch(owner.Thread, static () =>
+        {
+        });
         Exception failure = null;
         bool stopped = false;
         var waiter = new Thread(() =>

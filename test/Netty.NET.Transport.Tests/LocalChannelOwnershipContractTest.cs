@@ -163,7 +163,9 @@ public class LocalChannelOwnershipContractTest
             // AbstractUnsafe.close completes closeFuture before its deferred deregistration (#4435) runs on the loop.
             var deadline = Stopwatch.StartNew();
             while (peer.IsRegistered && deadline.Elapsed < TimeSpan.FromSeconds(5))
-                await peer.EventLoop.SubmitAsync(() => { });
+                await peer.EventLoop.SubmitAsync(() =>
+                {
+                });
             Assert.False(peer.IsRegistered);
             // Source ChannelInitializerTest requires registration, read and removal to survive an offloaded
             // initializer. Force HandlerAdded to run only after close so it must receive queued Registered.
@@ -304,10 +306,14 @@ public class LocalChannelOwnershipContractTest
             allowOwnClose.Set();
             await ownCloseStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             // Force all close/read notifications to drain before Retain returns and enqueue can resume.
-            await peer.EventLoop.SubmitAsync(() => { });
+            await peer.EventLoop.SubmitAsync(() =>
+            {
+            });
             allowPublish.Set();
             await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
-            await sender.EventLoop.SubmitAsync(() => { });
+            await sender.EventLoop.SubmitAsync(() =>
+            {
+            });
             Assert.True(peer.inboundBuffer.IsEmpty);
             Assert.Equal(0, message.RefCnt);
             Assert.Equal(1, message.Deallocations);

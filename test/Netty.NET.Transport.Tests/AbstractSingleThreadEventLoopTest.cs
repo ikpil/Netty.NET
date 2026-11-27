@@ -392,7 +392,9 @@ public abstract class AbstractSingleThreadEventLoopTest
             bool isSuspended;
             do
             {
-                Task future = suspendedLoop.SubmitAsync(() => { });
+                Task future = suspendedLoop.SubmitAsync(() =>
+                {
+                });
                 // CLR: future.sync() blocks the test thread, which resumes as soon as the task completes. An awaited
                 // continuation is queued to the thread pool instead, and under full-suite load it can start more than
                 // the 100 ms scaling window later, when the monitor has already suspended the other idle executor.
@@ -464,7 +466,9 @@ public abstract class AbstractSingleThreadEventLoopTest
         await promise.Task;
     }
 
-    private static readonly Action NOOP = () => { };
+    private static readonly Action NOOP = () =>
+    {
+    };
 
     private static void AssertRejection(IEventExecutor loop)
     {

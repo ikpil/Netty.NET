@@ -36,7 +36,9 @@ public class NioEventLoopSourceTest
         using var cancel = new CancellationTokenSource();
         try
         {
-            var future = group.Next().ScheduleAsync(() => { /* NOOP */ }, TimeSpan.MaxValue, cancel.Token);
+            var future = group.Next().ScheduleAsync(() =>
+            { /* NOOP */
+            }, TimeSpan.MaxValue, cancel.Token);
             Assert.NotSame(future, await Task.WhenAny(future, Task.Delay(1000, TestContext.Current.CancellationToken)));
             cancel.Cancel();
             Assert.True(future.IsCanceled);
@@ -51,7 +53,9 @@ public class NioEventLoopSourceTest
     public async Task TestTaskRemovalOnShutdownThrowsNoUnsupportedOperationException()
     {
         Exception error = null;
-        Action task = () => { /* NOOP */ };
+        Action task = () =>
+        { /* NOOP */
+        };
         // Just run often enough to trigger it normally.
         for (int i = 0; i < 250; i++)
         {

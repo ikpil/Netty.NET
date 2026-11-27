@@ -72,7 +72,10 @@ public class SocketHalfClosedContractTest
             else if (ReferenceEquals(evt, ChannelInputShutdownReadComplete.INSTANCE))
             {
                 Interlocked.Increment(ref FinalEvents);
-                _ = ctx.Executor.ScheduleAsync(() => { _ = ctx.CloseAsync(); }, TimeSpan.FromMilliseconds(100));
+                _ = ctx.Executor.ScheduleAsync(() =>
+                {
+                    _ = ctx.CloseAsync();
+                }, TimeSpan.FromMilliseconds(100));
             }
         }
 
@@ -121,7 +124,9 @@ public class SocketHalfClosedContractTest
         var unflushedError = await Record.ExceptionAsync(() => unflushed);
         foreach (var buffer in buffers)
             Assert.Equal(0, buffer.RefCnt);
-        await channel.EventLoop.SubmitAsync(() => { });
+        await channel.EventLoop.SubmitAsync(() =>
+        {
+        });
         bool close = autoClose && error is IOException or SocketException;
         if (close)
         {
@@ -207,11 +212,15 @@ public class SocketHalfClosedContractTest
         await reader.AllData.Task.WaitAsync(TestContext.Current.CancellationToken);
         // Now we need to trigger server half-close
         await (await serverChild.Task).ShutdownOutputAsync();
-        await client.EventLoop.SubmitAsync(() => { });
+        await client.EventLoop.SubmitAsync(() =>
+        {
+        });
         Assert.False(reader.Half.Task.IsCompleted);
         client.Read();
         await reader.Half.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await client.EventLoop.SubmitAsync(() => { });
+        await client.EventLoop.SubmitAsync(() =>
+        {
+        });
         Assert.False(reader.Final.Task.IsCompleted);
         client.Read();
         await reader.Final.Task.WaitAsync(TestContext.Current.CancellationToken);

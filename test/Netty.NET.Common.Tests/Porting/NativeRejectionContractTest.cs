@@ -80,10 +80,14 @@ public class NativeRejectionContractTest
 
             for (int index = 0; index < 16; index++)
             {
-                executor.Execute(static () => { });
+                executor.Execute(static () =>
+                {
+                });
             }
 
-            executor.OnWake = static () => { };
+            executor.OnWake = static () =>
+            {
+            };
             int calls = 0;
             Assert.Throws<RejectedExecutionException>(() => executor.Execute(() => calls++));
             Assert.Equal(3, executor.WakeCalls);
@@ -121,7 +125,9 @@ public class NativeRejectionContractTest
 
             for (int index = 1; index < 16; index++)
             {
-                executor.Execute(static () => { });
+                executor.Execute(static () =>
+                {
+                });
             }
 
             executor.OnWake = () => {
@@ -158,15 +164,21 @@ public class NativeRejectionContractTest
         var executor = new Loop(RejectedExecutionHandlers.Backoff(int.MaxValue, TimeSpan.MaxValue));
         try
         {
-            executor.OnWake = static () => { };
+            executor.OnWake = static () =>
+            {
+            };
             await executor.SubmitAsync(() =>
             {
                 for (int index = 0; index < 16; index++)
                 {
-                    executor.Execute(static () => { });
+                    executor.Execute(static () =>
+                    {
+                    });
                 }
 
-                Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
+                Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () =>
+                {
+                }));
                 Assert.Equal(0, executor.WakeCalls);
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
@@ -201,19 +213,25 @@ public class NativeRejectionContractTest
 
             for (int index = 0; index < 16; index++)
             {
-                executor.Execute(static () => { });
+                executor.Execute(static () =>
+                {
+                });
             }
 
             Thread caller = Thread.CurrentThread;
             if (nativeResult)
             {
-                Task result = executor.SubmitAsync(static () => { }, TestContext.Current.CancellationToken);
+                Task result = executor.SubmitAsync(static () =>
+                {
+                }, TestContext.Current.CancellationToken);
                 Assert.Same(caller, observed);
                 Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => result));
             }
             else
             {
-                Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => executor.Execute(static () => { })));
+                Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => executor.Execute(static () =>
+                {
+                })));
                 Assert.Same(caller, observed);
             }
         }
@@ -255,7 +273,9 @@ public class NativeRejectionContractTest
 
             for (int index = 1; index < 16; index++)
             {
-                executor.Execute(static () => { });
+                executor.Execute(static () =>
+                {
+                });
             }
 
             int calls = 0;
@@ -294,10 +314,14 @@ public class NativeRejectionContractTest
 
             for (int index = 0; index < 16; index++)
             {
-                executor.Execute(static () => { });
+                executor.Execute(static () =>
+                {
+                });
             }
 
-            executor.OnWake = static () => { };
+            executor.OnWake = static () =>
+            {
+            };
             var caller = new Thread(() =>
             {
                 try
@@ -306,7 +330,9 @@ public class NativeRejectionContractTest
                     Exception rejection = null;
                     try
                     {
-                        executor.Execute(static () => { });
+                        executor.Execute(static () =>
+                        {
+                        });
                     }
                     catch (Exception error)
                     {
@@ -357,11 +383,17 @@ public class NativeRejectionContractTest
         try
         {
             Assert.Equal("task", Assert.Throws<ArgumentNullException>(() => executor.OfferTask((Action)null)).ParamName);
-            Assert.True(executor.OfferTask(static () => { }));
+            Assert.True(executor.OfferTask(static () =>
+            {
+            }));
             Assert.Equal(0, starts);
             await Stop(executor);
-            Assert.Throws<RejectedExecutionException>(() => executor.OfferTask(static () => { }));
-            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
+            Assert.Throws<RejectedExecutionException>(() => executor.OfferTask(static () =>
+            {
+            }));
+            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () =>
+            {
+            }));
             Assert.Equal(0, policies);
         }
         finally

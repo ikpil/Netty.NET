@@ -52,8 +52,12 @@ public class LocalCoalescingContractTest
             }, TestContext.Current.CancellationToken);
             resume.Set();
             await first;
-            await sender.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
-            await peer.EventLoop.SubmitAsync(() => { }, TestContext.Current.CancellationToken);
+            await sender.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
+            await peer.EventLoop.SubmitAsync(() =>
+            {
+            }, TestContext.Current.CancellationToken);
             await client.WriteAndFlushAsync(2, TestContext.Current.CancellationToken);
             Assert.Equal(new[] { 1, 2 }, await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         }

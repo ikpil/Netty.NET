@@ -46,7 +46,9 @@ namespace Netty.NET.Common.Concurrent;
 public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChooserFactory
 {
 
-    private static readonly Action NO_OOP_TASK = static () => { };
+    private static readonly Action NO_OOP_TASK = static () =>
+    {
+    };
     private readonly int minChildren;
     private readonly int maxChildren;
     private readonly long utilizationCheckPeriodNanos;
