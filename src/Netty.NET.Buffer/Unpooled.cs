@@ -127,5 +127,9 @@ public static partial class Unpooled
     /**
      * Returns a new big-endian composite buffer with no components.
      */
-    public static CompositeByteBuf CompositeBuffer(int maxNumComponents = 16) => UnpooledByteBufAllocator.Default.CompositeHeapBuffer(maxNumComponents);
+    // CLR: new CompositeByteBuf(ALLOC, false, maxNumComponents) as in the source: the buffer is not passed through the
+    // allocator's compositeHeapBuffer, so it is not leak-tracked (the leak presence detector of testsuite-common
+    // reported HttpDataTest's undisposed MemoryAttribute content while the call went through the allocator, 2026-11-27).
+    public static CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
+        => new CompositeByteBuf(UnpooledByteBufAllocator.Default, false, maxNumComponents);
 }

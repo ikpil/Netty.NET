@@ -90,9 +90,11 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             bool empty = timestamps.IsEmpty;
             timestamps.Enqueue(Stopwatch.GetTimestamp());
             if (!laggy || empty) SleepIgnoringInterrupt(laggy ? 401 : 50);
-            latch.Signal();
+            CountDown(latch);
         }, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), cancel.Token);
-        await Task.Run(() => latch.Wait(TestContext.Current.CancellationToken));
+        // CLR: the test thread waits for the latch as the source does. A Task.Run wait added a thread-pool hop between
+        // the last count down and the cancel, in which another run started under load (measured 2026-11-27).
+        latch.Wait(TestContext.Current.CancellationToken);
         cancel.Cancel();
         Assert.True(periodic.IsCanceled);
         await Task.Delay(300);
@@ -119,6 +121,13 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             }
         }
     }
+    // CLR: CountDownLatch.countDown() does nothing once the count is zero, but CountdownEvent.Signal() throws. A run
+    // after the fifth (a sleep that overslept under load leaves more overdue runs) then faulted the periodic Task, so
+    // it was not canceled (measured 2026-11-27). Only the event loop thread counts down, so the check cannot race.
+    private static void CountDown(CountdownEvent latch)
+    {
+        if (!latch.IsSet) latch.Signal();
+    }
     private static void SleepIgnoringInterrupt(int milliseconds)
     {
         try { Thread.Sleep(milliseconds); }
@@ -135,9 +144,11 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         using var cancel = new CancellationTokenSource();
         var periodic = loop.ScheduleWithFixedDelayAsync(() =>
         {
-            timestamps.Enqueue(Stopwatch.GetTimestamp()); SleepIgnoringInterrupt(51); latch.Signal();
+            timestamps.Enqueue(Stopwatch.GetTimestamp()); SleepIgnoringInterrupt(51); CountDown(latch);
         }, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), cancel.Token);
-        await Task.Run(() => latch.Wait(TestContext.Current.CancellationToken));
+        // CLR: the test thread waits for the latch as the source does. A Task.Run wait added a thread-pool hop between
+        // the last count down and the cancel, in which another run started under load (measured 2026-11-27).
+        latch.Wait(TestContext.Current.CancellationToken);
         cancel.Cancel(); Assert.True(periodic.IsCanceled);
         await Task.Delay(300);
         Assert.Equal(expectedTimeStamps, timestamps.Count);

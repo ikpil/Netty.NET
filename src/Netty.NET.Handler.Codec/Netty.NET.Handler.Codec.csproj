@@ -6,5 +6,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Netty.NET.Transport\Netty.NET.Transport.csproj" />
     <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Tests" />
+    <!-- The codecs that use Java's PromiseCombiner share ExecutorPromiseCombiner, the CLR-only counterpart that completes
+         the combined promise on the executor (HttpObjectEncoder, CompressorHttp2ConnectionEncoder,
+         Http3FrameToHttpObjectCodec; MessageToMessageEncoder here). -->
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http2" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http3" />
   </ItemGroup>
 </Project>

@@ -36,7 +36,9 @@ namespace Netty.NET.Handler.Codec.Http2;
 // and head, so its constructor takes the DefaultHttp2Headers (a C# nested class has no enclosing instance), and the
 // field initializer firstNonPseudo = head is an assignment in the constructor, because a C# field initializer cannot
 // read an instance field (CS0236, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236). The protected
-// members of the base class are protected (they are protected internal in codec-base, another assembly).
+// members of the base class are protected (they are protected internal in codec-base, another assembly), except
+// HeaderEntry.Remove(): codec-base gives this assembly its internals (InternalsVisibleTo, for ExecutorPromiseCombiner),
+// and an override of a protected internal member it can see keeps both modifiers (CS0507).
 // IllegalArgumentException is ArgumentException; Integer.toHexString and the index use the invariant culture.
 public class DefaultHttp2Headers
         : DefaultHeaders<ICharSequence, ICharSequence, IHttp2Headers>, IHttp2Headers
@@ -333,7 +335,7 @@ public class DefaultHttp2Headers
             PointNeighborsToThis();
         }
 
-        protected override void Remove()
+        protected internal override void Remove()
         {
             if (this == headers.firstNonPseudo)
             {

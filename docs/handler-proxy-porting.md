@@ -127,8 +127,10 @@ thread-pool continuation and a submission to the executor, so `testRemoveOnProxy
 
 `netty-testsuite-common` is a test dependency of handler-proxy, but no handler-proxy test refers to it: its
 `LeakPresenceExtension` is registered for every module's tests through the JUnit service file and the
-`-Djunit.jupiter.extensions.autodetection.enabled=true` argument of the parent `pom.xml` (`argLine.leak`). The modules
-ported so far do not port it either; it is an open item for a decision across modules.
+`-Djunit.jupiter.extensions.autodetection.enabled=true` argument of the parent `pom.xml` (`argLine.leak`). It is ported
+as `Netty.NET.Testsuite.Common` and `Netty.NET.Handler.Proxy.Tests` imports `LeakPresenceExtension.props`, so every
+handler-proxy test class runs under the leak presence detector, as in Java (2026-11-27, no leak found; see
+[testsuite-common porting](testsuite-common-porting.md)).
 
 ## Test notes
 

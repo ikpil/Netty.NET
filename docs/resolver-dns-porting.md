@@ -228,14 +228,16 @@ both passed in repeated runs.
   `SocketException(SocketError.HostNotFound)` in Resolver's `DefaultNameResolver` (a `SocketException` from
   `Dns.GetHostAddressesAsync` becomes its cause) and in Transport's `AbstractBootstrap.SocketAddress`; see
   [transport-porting.md](transport-porting.md).
-- **DnsQueryContext.RetryWithTcp** uses `(IPEndPoint) (tcpCh.RemoteAddress ?? nameServerAddr)`. A Java socket that was
-  connected keeps reporting its remote address after it closes
+- **DnsQueryContext.RetryWithTcp** uses `(IPEndPoint) tcpCh.RemoteAddress`, as the source does. Until 2026-11-27 it used
+  `(IPEndPoint) (tcpCh.RemoteAddress ?? nameServerAddr)`: a Java socket that was connected keeps reporting its remote
+  address after it closes
   ([Socket](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Socket.html)), while the Transport's
-  `RemoteAddress` is null when the peer closed the connection before the address was read
+  `RemoteAddress` was null when the peer closed the connection before the address was read
   ([Socket.RemoteEndPoint](https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.remoteendpoint?view=net-10.0)
-  throws once the socket is closed). Without the fallback `testTcpFallbackFailedWhenTimeout` hung on an
-  `ArgumentNullException` inside a discarded continuation. **Open follow-up:** if Transport cached the remote address at
-  connect, this fallback would not be needed.
+  throws once the socket is closed), and `testTcpFallbackFailedWhenTimeout` hung on an `ArgumentNullException` inside a
+  discarded continuation. Transport's `NioSocketChannel` now records the remote address when it is accepted or begins to
+  connect, as the JDK's `SocketChannelImpl` does, so the fallback was removed; see
+  [transport-porting.md](transport-porting.md#niosocketchannel-remote-and-local-addresses-after-close-2026-11-27).
 
 ## Not ported
 
@@ -342,5 +344,5 @@ Members, with their comments recorded in the manifest:
   unresolved and `UnixResolverDnsServerAddressStreamProvider` filters it. The C# name server stream therefore holds that
   address; `UnixResolverDnsServerAddressStreamProviderTest.ipv6Nameserver` passes because, as in the source, it asserts
   the first server only.
-- **Shared-API request (Transport).** Caching the remote address at connect would remove the `RetryWithTcp` fallback
-  (see [Cross-module changes](#cross-module-changes)).
+- **Shared-API request (Transport), resolved 2026-11-27.** Transport now keeps the remote address of a closed TCP
+  channel, and the `RetryWithTcp` fallback is removed (see [Cross-module changes](#cross-module-changes)).

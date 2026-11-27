@@ -24,4 +24,5 @@
          test class; Netty.NET.Common ResourcesUtil.GetFile resolves a name next to the test assembly. -->
     <None Include="Ssl\Resources\*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

@@ -1,0 +1,257 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "testsuite-common",
+  "scope": [
+    "testsuite-common/src/main/java",
+    "testsuite-common/src/main/resources",
+    "testsuite-common/src/test/java"
+  ],
+  "objective": "Port netty-testsuite-common 4.2.19.Final (io.netty.util.test: the JUnit 5 leak presence extension and DisabledForSlowLeakDetection) to the test-support library Netty.NET.Testsuite.Common for xUnit v3, and run the tests of every module whose Java tests depend on it with the extension.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-27",
+    "ownerDecisions": [
+      "io.netty.util maps to Netty.NET.Common, so io.netty.util.test is Netty.NET.Common.Test. The project is Netty.NET.Testsuite.Common under test/ (a test-support library, skipDeploy in its pom) and its tests Netty.NET.Testsuite.Common.Tests."
+    ]
+  },
+  "statusMeaning": {
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "jvm-only-replaced": "JVM-only metadata or documentation unit replaced by its recorded CLR counterpart."
+  },
+  "summary": {
+    "pinnedFiles": 5,
+    "byStatus": {
+      "clr-adapted": 3,
+      "jvm-only-replaced": 2
+    },
+    "mainJavaSources": 3,
+    "testJavaSources": 1,
+    "declaredOriginalTests": 8,
+    "mappedOriginalTests": 8,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "testsuite-common/src/main/java/io/netty/util/test/DisabledForSlowLeakDetection.java",
+      "sha256": "bcbf138b5fad2d2e8d9294c56f841da4885558fc6e311b0e50a1f939427f0b4b",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Testsuite.Common/DisabledForSlowLeakDetection.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The annotation is a static class: an xUnit attribute cannot carry the @DisabledIf condition, so a test (or every test of a class, the annotation's TYPE target) is marked [Fact(Skip = DisabledForSlowLeakDetection.Reason, SkipType = typeof(DisabledForSlowLeakDetection), SkipWhen = nameof(DisabledForSlowLeakDetection.SlowLeakDetection))]; Reason is the text JUnit reports for a @DisabledIf without disabledReason. Helper keeps its detector of the Helper type, and slowLeakDetection() is DETECTOR.IsRecordEnabled(). The four Java users (AdaptiveByteBufAllocatorGrowthTest, AdaptiveByteBufAllocatorTest, codec-compression AbstractIntegrationTest and codec-http HttpContentDecompressorTest) carry the skip condition; with the presence detector it is false and they run.",
+        "sourceEvidence": [
+          "test/Netty.NET.Testsuite.Common/DisabledForSlowLeakDetection.cs",
+          "test/Netty.NET.Buffer.Tests/AdaptiveByteBufAllocatorGrowthTest.cs",
+          "test/Netty.NET.Buffer.Tests/AdaptiveByteBufAllocatorTest.cs",
+          "test/Netty.NET.Handler.Codec.Compression.Tests/AbstractIntegrationTest.cs",
+          "test/Netty.NET.Handler.Codec.Http.Tests/HttpContentDecompressorTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite-common/src/main/java/io/netty/util/test/LeakPresenceExtension.java",
+      "sha256": "99c65f0602339b82e29906164562d7350f5cf61b3a7728e06cc7d405f14350b6",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Testsuite.Common/LeakPresenceExtension.cs",
+        "test/Netty.NET.Testsuite.Common/LeakPresenceTestFramework.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The JUnit callbacks are static members that the CLR-only LeakPresenceTestFramework (an xUnit v3 test framework registered with [assembly: TestFramework], LeakPresenceExtension.props) runs around each test class: BeforeAll before the default class runner (class fixtures, instances, tests, fixture disposal) and AfterAll after it, whose failure is a test collection cleanup failure that names the class scope (the run fails with exit code 1; the message shows with the console logger at normal verbosity). The InheritableThreadLocal is an AsyncLocal that the ExecutionContext carries into the tests, their Tasks, thread-pool work and started threads, so beforeEach and afterEach have no counterpart. The static SCOPE of the generic WithTransferableScope<T> is in a non-generic WithTransferableScope (CLR generic statics exist per constructed type). The custom detector property is the environment variable io.netty.customResourceLeakDetector, set to the assembly-qualified name of the generic definition before any detector exists (framework constructor). Boolean.getBoolean accepts only \"true\". xUnit has no @Nested lifecycle: a nested class is a test class with its own scope; the owner checks stay. With the disabled property the framework is xUnit's own, as the leak profile runs without autodetection. With trackCreationStack the creation stacks (suppressed exceptions) become inner exceptions of the reported failure. Measured 2026-11-27: a constructor-allocated tracker and an unreleased default-allocator buffer each fail the run with \"Possible memory leak detected for resource scope '<class>'\".",
+        "sourceEvidence": [
+          "test/Netty.NET.Testsuite.Common/LeakPresenceExtension.cs",
+          "test/Netty.NET.Testsuite.Common/LeakPresenceTestFramework.cs",
+          "test/Netty.NET.Testsuite.Common/LeakPresenceExtension.props",
+          "src/Netty.NET.Common/LeakPresenceDetector.cs",
+          "src/Netty.NET.Common/DefaultResourceLeakDetectorFactory.cs",
+          "docs/testsuite-common-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite-common/src/main/java/io/netty/util/test/package-info.java",
+      "sha256": "c034bbf71e77aec3612cf8aeae78739efd52a65848770f2ed066c01b4362f5fa",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Documentation-only package descriptor (io.netty.util.test).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Common.Test holds the ported types; the package summary (\"Test utilities for netty-common.\") is kept verbatim in this entry and mapped in docs/testsuite-common-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/testsuite-common-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Package documentation without a C# declaration to attach it to; the summary is kept in this entry and in the module document.",
+        "sha256": "53bb9faa9af5013d08d12c41b2e5365da875774aa1adc8317f832dea861a5d42"
+      }
+    },
+    {
+      "upstream": "testsuite-common/src/main/resources/META-INF/services/org.junit.jupiter.api.extension.Extension",
+      "sha256": "f5885e7f0a93e84da2c94cb3073cf6a0263a7541e11c3df99b5f408b4e2c967c",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "ServiceLoader registration of io.netty.util.test.LeakPresenceExtension as a JUnit Jupiter extension, which JUnit loads for every test class when junit.jupiter.extensions.autodetection.enabled is true (argLine.leak of the parent pom).",
+        "reason": "ServiceLoader files and JUnit extension autodetection are JVM and JUnit mechanisms; xUnit v3 selects the test framework of a test assembly with an assembly attribute.",
+        "replacement": {
+          "clr": "test/Netty.NET.Testsuite.Common/LeakPresenceExtension.props: a test project of a module whose tests depend on testsuite-common imports it; it references the extension and emits [assembly: TestFramework(typeof(LeakPresenceTestFramework))].",
+          "noClrCounterpart": [
+            "Discovery of extensions on the class path (META-INF/services)."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "test/Netty.NET.Testsuite.Common/LeakPresenceExtension.props",
+            "test/Netty.NET.Testsuite.Common/LeakPresenceTestFramework.cs",
+            "docs/testsuite-common-porting.md"
+          ],
+          "urls": [
+            "https://junit.org/junit5/docs/current/user-guide/#extensions-registration-automatic",
+            "https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items#assemblyattribute"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "testsuite-common/src/test/java/io/netty/util/test/LeakPresenceExtensionTest.java",
+      "sha256": "1a3b41bc6592b690c0c2afc6d209552f6580e9b85705d3f08b0f25a1000f6388",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Testsuite.Common.Tests/LeakPresenceExtensionTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "nestedClassLifecycleIsSupported",
+          "clrMethod": "NestedClassLifecycleIsSupported",
+          "adaptation": "EngineTestKit (org.junit.platform.testkit) has no xUnit v3 counterpart, so the test drives the lifecycle JUnit runs for the selected class through the extension members, in a flow without a scope as LeakPresenceTestFramework starts a class, and asserts what the source checks through the events: no failure, the tests run in the class scope, and only the owner closes it (an allocation in the closed scope throws AllocationProhibitedException). The @Nested InnerTest runs inside the outer lifecycle: BeforeAll reuses the outer scope, and AfterAll of the nested class leaves it open."
+        },
+        {
+          "upstreamMethod": "explicitExtensionTestIsSkippedWhenLeakPresenceDetectionIsDisabled",
+          "clrMethod": "ExplicitExtensionTestIsSkippedWhenLeakPresenceDetectionIsDisabled",
+          "adaptation": "The property is the environment variable, set to \"true\" and restored; the skipped container is EvaluateExecutionCondition returning false with the source reason (and true with \"Leak presence detection enabled\" afterwards). @ExtendWith has no counterpart: LeakPresenceTestFramework applies the extension only while the condition is true."
+        },
+        {
+          "upstreamMethod": "inheritedTestClassExecutesParentAndChildTests",
+          "clrMethod": "InheritedTestClassExecutesParentAndChildTests",
+          "adaptation": "EngineTestKit (org.junit.platform.testkit) has no xUnit v3 counterpart, so the test drives the lifecycle JUnit runs for the selected class through the extension members, in a flow without a scope as LeakPresenceTestFramework starts a class, and asserts what the source checks through the events: no failure, the tests run in the class scope, and only the owner closes it (an allocation in the closed scope throws AllocationProhibitedException). The scope belongs to InheritedChildTest, which runs parentTest and childTest; AfterAll for the parent type leaves it open."
+        },
+        {
+          "upstreamMethod": "outerTest",
+          "clrMethod": "OuterTest",
+          "adaptation": "A test of the nested OuterNestedTest, which xUnit runs as a test class of this assembly with its own scope."
+        },
+        {
+          "upstreamMethod": "innerTest",
+          "clrMethod": "InnerTestMethod",
+          "adaptation": "A member cannot have the name of its enclosing type InnerTest (CS0542); xUnit runs the nested class on its own (no @Nested lifecycle)."
+        },
+        {
+          "upstreamMethod": "parentTest",
+          "clrMethod": "ParentTest",
+          "adaptation": "xUnit runs it for InheritedParentTest and, inherited, for InheritedChildTest."
+        },
+        {
+          "upstreamMethod": "childTest",
+          "clrMethod": "ChildTest",
+          "adaptation": "Unchanged empty test."
+        },
+        {
+          "upstreamMethod": "test",
+          "clrMethod": "Test",
+          "adaptation": "@ExtendWith(LeakPresenceExtension.class) has no counterpart; the class runs with the assembly's framework like the others."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 8,
+        "mappedCount": 8,
+        "reviewedCount": 8,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "All 8 declared tests are mapped: the 3 lifecycle tests and the 5 tests of the nested classes, which xUnit runs as classes of this assembly under LeakPresenceTestFramework. CLR supplements: ClassScopeFlowsIntoTestsThreadsAndTasks (the factory returns WithTransferableScope<object>, and the class scope reaches the test, a started thread and a Task), AfterAllWaitsForResourcesToClose, AfterAllReportsALeak (the detector message), ResourceOutsideTestIsRejected (\"Resource created outside test?\") and SlowLeakDetectionIsOffWithThePresenceDetector.",
+        "sourceEvidence": [
+          "test/Netty.NET.Testsuite.Common.Tests/LeakPresenceExtensionTest.cs",
+          "test/Netty.NET.Testsuite.Common/LeakPresenceTestFramework.cs"
+        ]
+      }
+    }
+  ],
+  "validationHistory": [
+    {
+      "checkpoint": "2026-11-27-port",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "solutionBuild": {
+          "errors": 0,
+          "warningsNote": "61 warnings, all pre-existing (obsolete-member CS0612/CS0618 and unused-variable CS0168); none in the new or changed files."
+        },
+        "testsuiteCommon": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "leakPresenceEnabled": "19 test projects pass with the extension: Handler.Codec.{Compression, Dns, HAProxy, Http (9055), Http2 (1547 passed, 3 skipped), Http3 (839), Memcache, Mqtt, Protobuf, Redis, Smtp, Socks, Stomp, Xml}, Handler (434 passed, 28 skipped), Handler.Proxy, Handler.Ssl.Ocsp, Resolver and Resolver.Dns; no collection cleanup failure.",
+        "notEnabled": "Buffer.Tests and Transport.Tests (owner decision 2026-11-27, open items in docs/testsuite-common-porting.md).",
+        "fixes": "QuicEndpointChannel closes from an event-loop shutdown hook (Quic.Tests 183 passed); Unpooled.CompositeBuffer constructs an untracked CompositeByteBuf as in Java (Buffer.Tests 36232 passed, 9 skipped).",
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module testsuite-common passes: 5 pinned files (3 clr-adapted, 2 jvm-only-replaced), 8 mapped original tests. The checker now matches ServiceLoader registrations on the upstream path (Join-Path turned the separators into backslashes, so the /META-INF/services/ pattern never matched)."
+      }
+    }
+  ]
+}

@@ -24,4 +24,5 @@
          getClass().getResource("/file-01.txt") from the class-path root; they are deployed next to the test assembly. -->
     <None Include="Resources\*.txt" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

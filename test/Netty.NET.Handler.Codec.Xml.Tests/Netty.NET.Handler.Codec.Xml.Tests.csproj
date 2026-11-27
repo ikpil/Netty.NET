@@ -28,4 +28,5 @@
     <EmbeddedResource Include="Resources\sample-05.xml" LogicalName="io/netty/handler/codec/xml/sample-05.xml" />
     <EmbeddedResource Include="Resources\sample-06.xml" LogicalName="io/netty/handler/codec/xml/sample-06.xml" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

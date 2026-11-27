@@ -25,4 +25,5 @@
     <!-- codec-compression/src/test/resources/multiple.gz, copied byte for byte. -->
     <EmbeddedResource Include="Resources\multiple.gz" LogicalName="multiple.gz" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

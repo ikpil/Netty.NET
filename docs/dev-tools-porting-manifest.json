@@ -1,0 +1,75 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "dev-tools",
+  "scope": [
+    "dev-tools/src"
+  ],
+  "objective": "Record every pinned file of dev-tools 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (build tooling of the Maven build); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (build tooling of the Maven build). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 1,
+    "byStatus": {
+      "jvm-only-replaced": 1
+    },
+    "mainJavaSources": 0,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "dev-tools/src/main/resources/forbidden/signatures.txt",
+      "sha256": "a2031ed79ff4de9f5d186670f80b0cbd7a3207a76099dfe51d76faa2d6ec437a",
+      "hashMode": "utf8-lf",
+      "kind": "resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "signatures.txt (resource) of dev-tools.",
+        "reason": "Resource of the Maven build tooling (checkstyle/IDE settings); it is not code of the library.",
+        "replacement": {
+          "clr": "None: the .NET build uses MSBuild settings.",
+          "noClrCounterpart": [
+            "Maven build tooling."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    }
+  ],
+  "validationHistory": []
+}

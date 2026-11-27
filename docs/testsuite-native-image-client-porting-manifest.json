@@ -1,0 +1,152 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "testsuite-native-image-client",
+  "scope": [
+    "testsuite-native-image-client/src"
+  ],
+  "objective": "Record every pinned file of testsuite-native-image-client 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (a GraalVM native-image client program); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (a GraalVM native-image client program). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 3,
+    "byStatus": {
+      "jvm-only-replaced": 3
+    },
+    "mainJavaSources": 2,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "testsuite-native-image-client/src/main/java/io/netty/testsuite/svm/client/DnsNativeClient.java",
+      "sha256": "fbc7b06dc7feb909dc826704002b24839ee831e4853ac9d833cc2c543e40f005",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type DnsNativeClient of testsuite-native-image-client: A client that uses netty-dns and gets compiled to a native image.",
+        "reason": "GraalVM native-image client program and its reflection configuration; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image reflection configuration."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image client program.",
+        "sha256": "2243f9f3d30f4c4757df6d26ebb2668e1c55142c7605a1810c3c91af6cee9e0a"
+      }
+    },
+    {
+      "upstream": "testsuite-native-image-client/src/main/java/io/netty/testsuite/svm/client/package-info.java",
+      "sha256": "12e4ed59e734e3725713aad7cf6dda7978ea57145db67aadcc9d007a89900326",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Package documentation of io.netty.testsuite.svm.client.",
+        "reason": "GraalVM native-image client program and its reflection configuration; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image reflection configuration."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image client program.",
+        "sha256": "8245a1702a8d8d8d136649d0d61e5f3078b7f59397929e96ffd507ba9041db9a"
+      }
+    },
+    {
+      "upstream": "testsuite-native-image-client/src/main/resources/reflection-config.json",
+      "sha256": "e1c5263656409c76fee5fcb9c2a0d6860b26b64bc566f316d63c19752d6819a3",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "reflection-config.json (metadata) of testsuite-native-image-client.",
+        "reason": "GraalVM native-image client program and its reflection configuration; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image reflection configuration."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    }
+  ],
+  "validationHistory": []
+}

@@ -200,9 +200,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         lock (_registrationGate)
         {
             if (_registered || _registering)
-                return Task.FromException(new InvalidOperationException("Channel is already registered."));
+                return Task.FromException(new InvalidOperationException("registered to an event loop already"));
             if (!IsCompatible(eventLoop))
-                return Task.FromException(new InvalidOperationException("Incompatible event loop."));
+                return Task.FromException(
+                        new InvalidOperationException("incompatible event loop type: " + eventLoop.GetType().FullName));
             _eventLoop = eventLoop;
             // Clear any cached executors from prior event loop registrations.
             AbstractChannelHandlerContext context = _pipeline.Tail;
@@ -217,10 +218,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         return RegisterCoreAsync();
         async Task RegisterCoreAsync()
         {
+            // CLR: tells the rejected hand-off (the source's catch around eventLoop.execute) from a failure of the
+            // admitted registration task (register0), because both fault the same Task.
+            bool admitted = false;
             try
             {
                 await OnLoopAsync(() =>
                 {
+                    admitted = true;
                     cancellationToken.ThrowIfCancellationRequested();
                     // check if the channel is still open as it could be closed in the mean time when the register
                     // call was outside of the eventLoop
@@ -259,8 +264,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     }
                 }).ConfigureAwait(false);
             }
-            catch
+            catch (Exception e)
             {
+                if (!admitted && e is RejectedExecutionException)
+                {
+                    Logger.Warn(
+                            "Force-closing a channel whose registration task was not accepted by an event loop: {}",
+                            this, e);
+                }
                 // Registration rejection cannot rely on another task being admitted by the rejected executor.
                 // Close the channel directly to avoid FD leak.
                 _registered = false;

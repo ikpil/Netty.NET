@@ -7014,3 +7014,11 @@ two each in SlicedByteBufTest and RetainedSlicedByteBufTest, two in each adaptiv
 UnpooledByteBufAllocatorTest. Both Buffer checkers pass. The manifest now has 49 verified, 7
 deprecated-not-ported, 4 JVM-only-replaced and 6 clr-replacement test entries, and no pending or
 in-progress test entry.
+
+## Unpooled.compositeBuffer without leak tracking (2026-11-27)
+
+`Unpooled.compositeBuffer(int maxNumComponents)` is `new CompositeByteBuf(ALLOC, false, maxNumComponents)` in Java: a
+composite that the leak detector does not track. The port returned a leak-tracked composite from the allocator, which
+the leak presence detector of [testsuite-common](testsuite-common-porting.md) reported in codec-http `HttpDataTest`
+although Java never tracks that buffer. `Unpooled.CompositeBuffer` now constructs the composite as Java does (comment
+`// CLR:` in `src/Netty.NET.Buffer/Unpooled.cs`). Buffer.Tests: 36232 passed, 9 skipped, 0 failed after the change.

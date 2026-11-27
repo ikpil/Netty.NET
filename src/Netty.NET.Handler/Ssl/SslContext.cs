@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Security;
+using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -795,8 +796,25 @@ public abstract class SslContext
             throw new CryptographicException("The key store has no private key entry.");
         }
 
-        return SslStreamCertificateContext.Create(target, additionalCertificates, true);
+        SslStreamCertificateContext context = SslStreamCertificateContext.Create(target, additionalCertificates, true);
+        // CLR: entries of one PKCS #12 load that carry the same private key share one key container, and finalizing any of
+        // them deletes it. A key store can hold the key entry's certificate twice: the handler test resource
+        // rsaValidations-server-keystore.p12 does (two "CN=west.int" entries, both with the key), and so does pkitesting's
+        // key store of a self-signed bundle. When the entry that is not the target was finalized, the SslStream server
+        // failed with SEC_E_UNKNOWN_CREDENTIALS (0x8009030D) in AcquireCredentialsHandle (measured 2026-11-26: 18 of 18
+        // JdkSslEngineTest.TestRSASSAPSS cases with a forced GC.Collect + WaitForPendingFinalizers after loading the key
+        // stores; intermittently in full test runs without, where the handshake raced the finalizer). The loaded entries are
+        // therefore kept as long as the context, as pkitesting's X509Bundle.ToKeyManagerFactory keeps them:
+        // ConditionalWeakTable "automatically removes the key/value entry as soon as no other references to a key exist
+        // outside the table"
+        // (https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.conditionalweaktable-2?view=net-10.0).
+        KEY_STORE_ENTRIES.AddOrUpdate(context, entries);
+        return context;
     }
+
+    // CLR-only: the PKCS #12 entries loaded by BuildKeyManagerFactory, alive while their SslStreamCertificateContext is.
+    private static readonly ConditionalWeakTable<SslStreamCertificateContext, X509Certificate2Collection> KEY_STORE_ENTRIES =
+        new ConditionalWeakTable<SslStreamCertificateContext, X509Certificate2Collection>();
 
     internal static char[] KeyStorePassword(string keyPassword)
     {

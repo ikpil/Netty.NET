@@ -8,6 +8,16 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# 2026-11-27: Windows PowerShell decodes the output of a native command with [Console]::OutputEncoding, the console's
+# OEM code page (949 on a Korean host), not UTF-8. git show prints the pinned sources as UTF-8, so their non-ASCII
+# characters were decoded wrongly, a broken string literal masked the following declarations, and -Check reported
+# "Unknown original test testWriteCharSequence" in AbstractByteBufTest.java. Every git call decodes UTF-8.
+function Invoke-GitUtf8 {
+    $previous = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+    try { @(git @args) } finally { [Console]::OutputEncoding = $previous }
+}
+
 function Get-DeclaredJavaTests([string]$Source) {
     # Mask comments and literals before inspecting annotations. Preserve newlines
     # so declarations cannot be invented by joining unrelated source lines.
@@ -157,7 +167,7 @@ function Assert-ProviderInvocationReview($Entry, [string]$Source, [string[]]$Met
 $pinnedSources = @{}
 function Get-PinnedJava([string]$Path) {
     if (-not $pinnedSources.ContainsKey($Path)) {
-        $text = @(git -C $UpstreamRoot show "${Baseline}:$Path") -join "`n"
+        $text = @(Invoke-GitUtf8 -C $UpstreamRoot show "${Baseline}:$Path") -join "`n"
         if ($LASTEXITCODE -ne 0) { throw "Cannot read pinned source $Path." }
         $pinnedSources[$Path] = $text
     }
@@ -369,7 +379,7 @@ if ($Check -and (-not $existing -or $Baseline -ne $existing.baseline)) {
 # Since 2026-11-19 every pinned file under buffer/src is inventoried, not only *.java: module-info.yml, the GraalVM
 # native-image resources and junit-platform.properties are 'metadata' entries.
 $scope = @('buffer/src')
-$upstreamFiles = @(git -C $UpstreamRoot ls-tree -r --name-only $Baseline -- $scope)
+$upstreamFiles = @(Invoke-GitUtf8 -C $UpstreamRoot ls-tree -r --name-only $Baseline -- $scope)
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read the pinned upstream commit.' }
 $entries = foreach ($path in $upstreamFiles) {
     if ($previous.ContainsKey($path)) { $previous[$path]; continue }
@@ -388,7 +398,7 @@ foreach ($name in $baseFixtures) {
     $path = "buffer/src/test/java/io/netty/buffer/$name.java"
     $entry = $entries | Where-Object upstream -eq $path
     if (-not $entry) { throw "Missing fixture $path." }
-    $source = @(git -C $UpstreamRoot show "${Baseline}:$path") -join "`n"
+    $source = @(Invoke-GitUtf8 -C $UpstreamRoot show "${Baseline}:$path") -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Cannot read pinned fixture $path." }
     $methods = @(Get-DeclaredJavaTests $source)
     $review = Get-TestMethodReview $entry $methods

@@ -151,8 +151,10 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
         return future;
     }
 
-    // CLR: PromiseCombiner is Task.WhenAll (docs/common-task-composition.md). As with ctx.write(msg), each write gets
-    // its own Task and no cancellation token; the combined Task completes when all of them have.
+    // CLR: new PromiseCombiner(ctx.executor()) with add(...) and finish(promise) is ExecutorPromiseCombiner.Combine,
+    // whose returned Task replaces the promise: it completes on the event loop when the last write completes, as the
+    // Java combiner does (a Task.WhenAll of the Transport write Tasks completed later on a thread-pool thread). As with
+    // ctx.write(msg), each write gets its own Task and no cancellation token.
     private static Task WritePromiseCombiner(IChannelHandlerContext ctx, CodecOutputList @out)
     {
         Task[] futures = new Task[@out.Count];
@@ -160,7 +162,7 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
         {
             futures[i] = ctx.WriteAsync(@out.GetUnsafe(i));
         }
-        return Task.WhenAll(futures);
+        return ExecutorPromiseCombiner.Combine(ctx, futures);
     }
 
     /**

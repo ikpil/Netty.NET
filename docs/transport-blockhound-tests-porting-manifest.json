@@ -1,0 +1,425 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "transport-blockhound-tests",
+  "scope": [
+    "transport-blockhound-tests/src"
+  ],
+  "objective": "Record every pinned file of transport-blockhound-tests 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (BlockHound event-loop blocking checks); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (BlockHound event-loop blocking checks). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 4,
+    "byStatus": {
+      "jvm-only-replaced": 3,
+      "library-not-ported": 1
+    },
+    "mainJavaSources": 0,
+    "testJavaSources": 1,
+    "declaredOriginalTests": 25,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 25,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "transport-blockhound-tests/src/test/java/io/netty/util/internal/NettyBlockHoundIntegrationTest.java",
+      "sha256": "0adf5da94a3c95a381276667fe6112562c4e2674f4a97fc3d383d83546cbc8a6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "library-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture NettyBlockHoundIntegrationTest of transport-blockhound-tests.",
+        "reason": "BlockHound (reactor.blockhound) instruments the JVM to detect blocking calls on event loops; it has no CLR counterpart.",
+        "replacement": {
+          "clr": "None in Netty.NET: the tests are left out.",
+          "noClrCounterpart": [
+            "JVM bytecode instrumentation that reports blocking calls on non-blocking threads."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/reactor/BlockHound"
+          ]
+        },
+        "library": {
+          "name": "BlockHound",
+          "maven": "io.projectreactor.tools:blockhound",
+          "javaPackages": [
+            "reactor.blockhound"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 6,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 6,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: BlockHound event-loop blocking checks.",
+        "sha256": "55fe18bb48bc0e6336c5baa4fbd661615264ab006cef4bfa0a7448c84116db57"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 25,
+        "mappedCount": 0,
+        "reviewedCount": 25,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testServiceLoader",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testServiceLoader of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testBlockingCallsInNettyThreads",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testBlockingCallsInNettyThreads of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testGlobalEventExecutorTakeTask",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testGlobalEventExecutorTakeTask of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testSingleThreadEventExecutorTakeTask",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testSingleThreadEventExecutorTakeTask of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testSingleThreadEventExecutorAddTask",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testSingleThreadEventExecutorAddTask of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "permittingBlockingCallsInFastThreadLocalThreadSubclass",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "permittingBlockingCallsInFastThreadLocalThreadSubclass of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHashedWheelTimerStartStop",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHashedWheelTimerStartStop of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithExecutorThatExecuteDirectory",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithExecutorThatExecuteDirectory of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithExecutorThatExecuteDirectoryTLSv13",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithExecutorThatExecuteDirectoryTLSv13 of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithImmediateExecutor",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithImmediateExecutor of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithImmediateExecutorTLSv13",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithImmediateExecutorTLSv13 of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithImmediateEventExecutor",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithImmediateEventExecutor of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithImmediateEventExecutorTLSv13",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithImmediateEventExecutorTLSv13 of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithExecutor",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithExecutor of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHandshakeWithExecutorTLSv13",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHandshakeWithExecutorTLSv13 of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testTrustManagerVerifyJDK",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testTrustManagerVerifyJDK of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testTrustManagerVerifyTLSv13JDK",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testTrustManagerVerifyTLSv13JDK of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testTrustManagerVerifyOpenSSL",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testTrustManagerVerifyOpenSSL of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testTrustManagerVerifyTLSv13OpenSSL",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testTrustManagerVerifyTLSv13OpenSSL of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testSslHandlerWrapAllowsBlockingCalls",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testSslHandlerWrapAllowsBlockingCalls of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "pooledBufferAllocation",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "pooledBufferAllocation of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testUnixResolverDnsServerAddressStreamProvider_Parse",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testUnixResolverDnsServerAddressStreamProvider_Parse of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testHostsFileParser_Parse",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testHostsFileParser_Parse of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testUnixResolverDnsServerAddressStreamProvider_ParseEtcResolverSearchDomainsAndOptions",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testUnixResolverDnsServerAddressStreamProvider_ParseEtcResolverSearchDomainsAndOptions of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testDnsNameResolverAllowsBlockingCalls",
+            "disposition": "library-not-ported",
+            "reason": "The fixture exercises a unit that is not ported: BlockHound event-loop blocking checks.",
+            "sourceContract": "testDnsNameResolverAllowsBlockingCalls of NettyBlockHoundIntegrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-blockhound-tests/src/test/resources/io/netty/util/internal/localhost_server.key",
+      "sha256": "16cbb363f34586adc0ed41b64c1d03cb72e07b47e9dd782621840bc1a2613ba0",
+      "hashMode": "utf8-lf",
+      "kind": "test-resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "localhost_server.key (test-resource) of transport-blockhound-tests.",
+        "reason": "Key and certificate data of the BlockHound tests, which are not ported.",
+        "replacement": {
+          "clr": "None in Netty.NET: the tests are left out.",
+          "noClrCounterpart": [
+            "JVM bytecode instrumentation that reports blocking calls on non-blocking threads."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/reactor/BlockHound"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "transport-blockhound-tests/src/test/resources/io/netty/util/internal/localhost_server.pem",
+      "sha256": "34c65076ae1367a49b089ff4cef5572e7292e69f6c06ed6eb20814bfda46dafb",
+      "hashMode": "utf8-lf",
+      "kind": "test-resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "localhost_server.pem (test-resource) of transport-blockhound-tests.",
+        "reason": "Key and certificate data of the BlockHound tests, which are not ported.",
+        "replacement": {
+          "clr": "None in Netty.NET: the tests are left out.",
+          "noClrCounterpart": [
+            "JVM bytecode instrumentation that reports blocking calls on non-blocking threads."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/reactor/BlockHound"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "transport-blockhound-tests/src/test/resources/io/netty/util/internal/mutual_auth_ca.pem",
+      "sha256": "7bc2c0f614eb5a855d6601c2bf2f1d1379c7479a1d36b6a8f0433c2e596a2cdb",
+      "hashMode": "utf8-lf",
+      "kind": "test-resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "mutual_auth_ca.pem (test-resource) of transport-blockhound-tests.",
+        "reason": "Key and certificate data of the BlockHound tests, which are not ported.",
+        "replacement": {
+          "clr": "None in Netty.NET: the tests are left out.",
+          "noClrCounterpart": [
+            "JVM bytecode instrumentation that reports blocking calls on non-blocking threads."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/reactor/BlockHound"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    }
+  ],
+  "validationHistory": []
+}

@@ -64,9 +64,13 @@ Namespaces follow the Java package path:
   for null), as in `SimpleChannelInboundHandler`. A `Class<? extends I>` constructor argument is a `Type` checked
   against `I` at run time.
 - **Outbound operations.** `write(ctx, msg, promise)` is `Task WriteAsync(ctx, msg, cancellationToken)`; the returned
-  Task replaces the promise. `MessageToMessageEncoder` writes several messages with `Task.WhenAll` in place of
-  `PromiseCombiner` and has no void-promise path. As in the source, messages already encoded are written even when
-  `encode` then fails.
+  Task replaces the promise. `MessageToMessageEncoder` combines the writes of several messages with the CLR-only
+  internal `ExecutorPromiseCombiner` in place of `PromiseCombiner` and has no void-promise path. The combined Task
+  completes on the event loop when the last write completes, as Java's combiner completes the promise on its
+  executor. A `Task.WhenAll` of the Transport write Tasks completed later, on a thread-pool thread
+  ([common-task-composition.md](common-task-composition.md), Executor affinity of a combined write). Its outcome is
+  that of `Task.WhenAll`. codec-http, codec-http2 and codec-http3 share the helper through `InternalsVisibleTo`. As
+  in the source, messages already encoded are written even when `encode` then fails.
 - **Lists.** `List<Object> out` is `IList<object> @out`; `CodecOutputList` implements `IList<object>` over the
   recycled array.
 - **Exceptions.** `RuntimeException` is `Exception`, `IllegalStateException` is `InvalidOperationException`,
@@ -125,7 +129,7 @@ Namespaces follow the Java package path:
 | --- | --- | --- |
 | `serialization/*` (14 sources, `package-info.java`) and its 2 tests | `deprecated-not-ported` | The package is "deprecated with no replacement, because serialization can be a security liability". It implements the Java object serialization protocol, which has no CLR counterpart; `BinaryFormatter` is no longer implemented since .NET 9 ([migration guide](https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-migration-guide/)). Package-private helpers record the deprecated type they serve (`ReferenceMap` via `WeakReferenceMap`). |
 | 5 main and 1 test `package-info.java` | `jvm-only-replaced` | C# namespaces cannot carry documentation comments; the summaries are in the table above. |
-| `module-info.yml` | `jvm-only-replaced` | JPMS module descriptor; `Netty.NET.Handler.Codec.csproj` references Transport, and `InternalsVisibleTo` opens internals to the test assembly only. |
+| `module-info.yml` | `jvm-only-replaced` | JPMS module descriptor; `Netty.NET.Handler.Codec.csproj` references Transport, and `InternalsVisibleTo` opens internals to the test assembly and, for the CLR-only `ExecutorPromiseCombiner` (Outbound operations), to codec-http, codec-http2 and codec-http3. |
 | `META-INF/native-image/.../reflect-config.json` | `jvm-only-replaced` | GraalVM reflection metadata; NativeAOT keeps handler metadata through the `DynamicallyAccessedMembers` annotations on `IChannelHandler`/`ChannelHandlerAdapter`. |
 | `NativeImageHandlerMetadataTest` | `jvm-only-replaced` | Generates and compares that GraalVM JSON. |
 

@@ -1,0 +1,86 @@
+/*
+ * Copyright 2021 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+namespace Netty.NET.Handler.Codec.Http3;
+
+/**
+ * A strategy that determines when to send <a
+ * href="https://www.rfc-editor.org/rfc/rfc9204.html#name-section-acknowledgment">acknowledgment</a> of new table
+ * entries on the QPACK decoder stream.
+ */
+// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations). The static interface
+// method ackEachInsert() is a static interface member, and the anonymous class it returns is the private nested class
+// AckEachInsertStrategy (a new instance per call, as in Java).
+public interface IQpackDecoderStateSyncStrategy
+{
+
+    /**
+     * Callback when an <a
+     * href="https://www.rfc-editor.org/rfc/rfc9204.html#name-encoded-field-section-prefi">
+     * encoded header field section</a> is decoded successfully by the decoder.
+     *
+     * @param requiredInsertCount for the encoded field section.
+     */
+    void SectionAcknowledged(int requiredInsertCount);
+
+    /**
+     * When a header field entry is added to the decoder dynamic table.
+     *
+     * @param insertCount for the entry.
+     * @return {@code true} if an <a
+     * href="https://www.rfc-editor.org/rfc/rfc9204.html#name-insert-count-increment">insert count
+     * increment decoder instruction</a> should be sent.
+     */
+    bool EntryAdded(int insertCount);
+
+    /**
+     * Returns a {@link QpackDecoderStateSyncStrategy} that will acknowledge each entry added via
+     * {@link #entryAdded(int)} unless a prior {@link #sectionAcknowledged(int)} call has implicitly acknowledged the
+     * addition.
+     *
+     * @return A {@link QpackDecoderStateSyncStrategy} that will acknowledge each entry added via
+     * {@link #entryAdded(int)} unless a prior {@link #sectionAcknowledged(int)} call has implicitly acknowledged the
+     * addition.
+     */
+    static IQpackDecoderStateSyncStrategy AckEachInsert()
+    {
+        return new AckEachInsertStrategy();
+    }
+
+    // CLR: the anonymous QpackDecoderStateSyncStrategy of ackEachInsert().
+    private sealed class AckEachInsertStrategy : IQpackDecoderStateSyncStrategy
+    {
+        private int lastCountAcknowledged;
+
+        public void SectionAcknowledged(int requiredInsertCount)
+        {
+            if (lastCountAcknowledged < requiredInsertCount)
+            {
+                lastCountAcknowledged = requiredInsertCount;
+            }
+        }
+
+        public bool EntryAdded(int insertCount)
+        {
+            if (lastCountAcknowledged < insertCount)
+            {
+                lastCountAcknowledged = insertCount;
+                return true;
+            }
+            return false;
+        }
+    }
+}

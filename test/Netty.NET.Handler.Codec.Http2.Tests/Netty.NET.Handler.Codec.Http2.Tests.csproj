@@ -25,4 +25,5 @@
          are deployed next to the test assembly under the same package path. -->
     <None Include="Resources\testdata\*.json" Link="io\netty\handler\codec\http2\testdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

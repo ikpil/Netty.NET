@@ -44,6 +44,31 @@ public class EventLoopLifecycleContractTest
         }
         finally { await loop.StopAsync(); }
     }
+    private sealed class IncompatibleLocalChannel : LocalChannel
+    {
+        protected override bool IsCompatible(IEventLoop loop) => false;
+    }
+    [Fact(Timeout = 10000)]
+    public async Task RegistrationFailuresKeepTheSourceMessages()
+    {
+        var loop = new DefaultEventLoop();
+        try
+        {
+            var channel = new LocalChannel();
+            await loop.RegisterAsync(channel).WaitAsync(TestContext.Current.CancellationToken);
+            // AbstractUnsafe.register: IllegalStateException("registered to an event loop already").
+            var again = await Assert.ThrowsAsync<InvalidOperationException>(() => channel.RegisterAsync(loop));
+            Assert.Equal("registered to an event loop already", again.Message);
+            Assert.True(channel.IsOpen);
+            // AbstractUnsafe.register: IllegalStateException("incompatible event loop type: " + class name).
+            var incompatible = new IncompatibleLocalChannel();
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => incompatible.RegisterAsync(loop));
+            Assert.Equal("incompatible event loop type: " + typeof(DefaultEventLoop).FullName, error.Message);
+            Assert.False(incompatible.IsRegistered);
+            await channel.CloseAsync();
+        }
+        finally { await loop.StopAsync(); }
+    }
     [Fact(Timeout = 10000)]
     public async Task PendingTasksIncludesTheTailQueueThroughTheParentType()
     {

@@ -92,6 +92,42 @@ await executor.SubmitAsync(() => aggregate.TrySetFromTask(all));
 If no separate producer is necessary, return the original Task. A completed Task
 does not need a notifier object merely to serve another reader.
 
+### Executor affinity of a combined write (2026-11-27)
+
+The encoder example above completes where the last write completes. The
+Transport's write Tasks run their continuations asynchronously
+(RunContinuationsAsynchronously), so a Task.WhenAll of them completes on a
+thread-pool thread after the write call has returned, while the Java
+PromiseCombiner completes the aggregate promise on its executor when the last
+future completes. That difference is observable wherever a caller watches the
+combined write on the event loop. A listener on Common's
+EventExecutorTaskScheduler (a close or shutdown-output listener) runs late. An
+EmbeddedChannel write is not complete when WriteAndFlushAsync returns. Measured:
+ten codec-http3 Http3FrameToHttpObjectCodecTest cases,
+codec-base MessageToMessageEncoderTest.TestCombinedWritesCompleteWhenFlushed and
+codec-http HttpResponseEncoderTest.TestChunkedContentWriteCompletesWhenFlushed.
+
+The codecs that use PromiseCombiner therefore combine with codec-base's CLR-only
+`ExecutorPromiseCombiner` (src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs):
+
+- codec-base MessageToMessageEncoder;
+- codec-http HttpObjectEncoder;
+- codec-http2 CompressorHttp2ConnectionEncoder;
+- codec-http3 Http3FrameToHttpObjectCodec.
+
+Each future gets a continuation on EventExecutorTaskScheduler over the
+context's executor. The continuations count the completions there, and the last
+one copies Task.WhenAll of the now completed futures into the promise with
+TrySetFromTask. The outcome rules of this decision (fault precedence, every
+exception kept, input snapshot, an empty batch succeeding) are unchanged; only
+the thread and the time of completion follow Java. codec-http2's buffer promises
+are TaskCompletionSources without RunContinuationsAsynchronously, so its former
+Task.WhenAll already completed on the event loop. It uses the same helper for one
+rule across the codecs.
+
+Transport's PendingWriteQueue.RemoveAndWriteAll still returns Task.WhenAll of
+its writes. Its only Java caller (handler-proxy ProxyHandler) ignores the result.
+
 PendingWriteQueue's original synchronous write calls can revive its queue before
 it drains. The native consumer test collects all revived writes before WhenAll;
 this requirement must remain when transport is implemented.

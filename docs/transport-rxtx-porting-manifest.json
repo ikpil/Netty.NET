@@ -1,0 +1,315 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "transport-rxtx",
+  "scope": [
+    "transport-rxtx/src"
+  ],
+  "objective": "Record every pinned file of transport-rxtx 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (the RXTX transport is deprecated upstream); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (the RXTX transport is deprecated upstream). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 6,
+    "byStatus": {
+      "deprecated-not-ported": 6
+    },
+    "mainJavaSources": 6,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/DefaultRxtxChannelConfig.java",
+      "sha256": "98fcdcedd37c8fdcc2b0bd5eb52e56b30412645c542bf9018c3e8c7f0472e15a",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "deprecated-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type DefaultRxtxChannelConfig of transport-rxtx: Default configuration class for RXTX device connections.",
+        "reason": "The io.netty.channel.rxtx package is @deprecated (\"this transport will be removed in the next major version.\") and needs the RXTX serial-port library; deprecated units are recorded without an [Obsolete] facade (owner decision 2026-11-16).",
+        "replacement": {
+          "clr": "None in Netty.NET: serial ports are the System.IO.Ports package, which is not part of the BCL this port targets.",
+          "noClrCounterpart": [
+            "A serial-port channel."
+          ],
+          "upstreamNamesAbsent": true
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/transport-rxtx/src/main/java/io/netty/channel/rxtx",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.io.ports.serialport?view=net-10.0"
+          ]
+        },
+        "deprecation": {
+          "annotated": true,
+          "tags": [
+            "@deprecated this transport will be removed in the next major version."
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the RXTX transport is deprecated upstream.",
+        "sha256": "cb86795539fc8eaaa40a31aa13e82665b8d71b6648976f28432ebe7d488b2c83"
+      }
+    },
+    {
+      "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/RxtxChannel.java",
+      "sha256": "7be9e2c25004abc9550758f22268f69029a2f9468db3cde6f91cbded219762cf",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "deprecated-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RxtxChannel of transport-rxtx: A channel to a serial device using the RXTX library.",
+        "reason": "The io.netty.channel.rxtx package is @deprecated (\"this transport will be removed in the next major version.\") and needs the RXTX serial-port library; deprecated units are recorded without an [Obsolete] facade (owner decision 2026-11-16).",
+        "replacement": {
+          "clr": "None in Netty.NET: serial ports are the System.IO.Ports package, which is not part of the BCL this port targets.",
+          "noClrCounterpart": [
+            "A serial-port channel."
+          ],
+          "upstreamNamesAbsent": true
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/transport-rxtx/src/main/java/io/netty/channel/rxtx",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.io.ports.serialport?view=net-10.0"
+          ]
+        },
+        "deprecation": {
+          "annotated": true,
+          "tags": [
+            "@deprecated this transport will be removed in the next major version."
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the RXTX transport is deprecated upstream.",
+        "sha256": "951db0cf1d1e5c27767df4f36469ad31a9bc9667a0eda72734d74cb08c0e0a40"
+      }
+    },
+    {
+      "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/RxtxChannelConfig.java",
+      "sha256": "1cb07c876366b1116f54c9774c89b83d76963b380519e3bb06078c770d9ee31f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "deprecated-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RxtxChannelConfig of transport-rxtx: A configuration class for RXTX device connections.",
+        "reason": "The io.netty.channel.rxtx package is @deprecated (\"this transport will be removed in the next major version.\") and needs the RXTX serial-port library; deprecated units are recorded without an [Obsolete] facade (owner decision 2026-11-16).",
+        "replacement": {
+          "clr": "None in Netty.NET: serial ports are the System.IO.Ports package, which is not part of the BCL this port targets.",
+          "noClrCounterpart": [
+            "A serial-port channel."
+          ],
+          "upstreamNamesAbsent": true
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/transport-rxtx/src/main/java/io/netty/channel/rxtx",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.io.ports.serialport?view=net-10.0"
+          ]
+        },
+        "deprecation": {
+          "annotated": true,
+          "tags": [
+            "@deprecated this transport will be removed in the next major version."
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 30,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 30,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the RXTX transport is deprecated upstream.",
+        "sha256": "fcd375181550ffb2592efa420f55c9bf4070d92fae1a74ad4be5359680bea21b"
+      }
+    },
+    {
+      "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/RxtxChannelOption.java",
+      "sha256": "deeb38569e905169a15758d91fb6962933f17e5c17a08a5eca2f2b0ad2d6d43d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "deprecated-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RxtxChannelOption of transport-rxtx: Option for configuring a serial port connection",
+        "reason": "The io.netty.channel.rxtx package is @deprecated (\"this transport will be removed in the next major version.\") and needs the RXTX serial-port library; deprecated units are recorded without an [Obsolete] facade (owner decision 2026-11-16).",
+        "replacement": {
+          "clr": "None in Netty.NET: serial ports are the System.IO.Ports package, which is not part of the BCL this port targets.",
+          "noClrCounterpart": [
+            "A serial-port channel."
+          ],
+          "upstreamNamesAbsent": true
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/transport-rxtx/src/main/java/io/netty/channel/rxtx",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.io.ports.serialport?view=net-10.0"
+          ]
+        },
+        "deprecation": {
+          "annotated": true,
+          "tags": [
+            "@deprecated this transport will be removed in the next major version."
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the RXTX transport is deprecated upstream.",
+        "sha256": "3e601ecab70d4f2a7e917a4fa94ca1a2b9ef881a4ad30fbb3ef4151d48c53fce"
+      }
+    },
+    {
+      "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/RxtxDeviceAddress.java",
+      "sha256": "af872fe8e99093a5981fa7950ef99f697f5ed38a138237f95cc4adc7ecedf846",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "deprecated-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RxtxDeviceAddress of transport-rxtx: A SocketAddress subclass to wrap the serial port address of a RXTX device (e.g.",
+        "reason": "The io.netty.channel.rxtx package is @deprecated (\"this transport will be removed in the next major version.\") and needs the RXTX serial-port library; deprecated units are recorded without an [Obsolete] facade (owner decision 2026-11-16).",
+        "replacement": {
+          "clr": "None in Netty.NET: serial ports are the System.IO.Ports package, which is not part of the BCL this port targets.",
+          "noClrCounterpart": [
+            "A serial-port channel."
+          ],
+          "upstreamNamesAbsent": true
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/transport-rxtx/src/main/java/io/netty/channel/rxtx",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.io.ports.serialport?view=net-10.0"
+          ]
+        },
+        "deprecation": {
+          "annotated": true,
+          "tags": [
+            "@deprecated this transport will be removed in the next major version."
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 4,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 4,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the RXTX transport is deprecated upstream.",
+        "sha256": "bad13bba5aab5d54f320f799130d297d21670262be395a8abe8e0e65745324bd"
+      }
+    },
+    {
+      "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/package-info.java",
+      "sha256": "71213a511a5d844916f49374751aa4f8d54f1d6f257a2dc29f6bdca7377c2de3",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "deprecated-not-ported",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Package documentation of io.netty.channel.rxtx.",
+        "reason": "The io.netty.channel.rxtx package is @deprecated (\"this transport will be removed in the next major version.\") and needs the RXTX serial-port library; deprecated units are recorded without an [Obsolete] facade (owner decision 2026-11-16).",
+        "replacement": {
+          "clr": "None in Netty.NET: serial ports are the System.IO.Ports package, which is not part of the BCL this port targets.",
+          "noClrCounterpart": [
+            "A serial-port channel."
+          ],
+          "upstreamNamesAbsent": true
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/transport-rxtx/src/main/java/io/netty/channel/rxtx",
+            "https://learn.microsoft.com/en-us/dotnet/api/system.io.ports.serialport?view=net-10.0"
+          ]
+        },
+        "deprecation": {
+          "annotated": false,
+          "tags": [
+            "@deprecated this transport will be removed in the next major version."
+          ],
+          "family": {
+            "upstream": "transport-rxtx/src/main/java/io/netty/channel/rxtx/DefaultRxtxChannelConfig.java",
+            "type": "DefaultRxtxChannelConfig",
+            "relation": "package of the deprecated type"
+          }
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the RXTX transport is deprecated upstream.",
+        "sha256": "e7599ea61c7e636a06ccb72fcd70dc5b46f70147c6ecd6a497968d27170a6817"
+      }
+    }
+  ],
+  "validationHistory": []
+}

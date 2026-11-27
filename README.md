@@ -1,11 +1,14 @@
 # Netty.NET
 - https://github.com/netty/netty/commit/64cc10f38ea5f5bd7eae48507817c66680d0afdc
 
-The buffer port has started; see [buffer porting status](docs/buffer-porting.md).
-The transport port is in progress; its [source and test manifest](docs/transport-porting-manifest.json)
+The buffer port records every pinned file of buffer/src with a final status (no entry pending or in progress); see
+[buffer porting status](docs/buffer-porting.md) (`powershell -NoProfile -File tools/Update-BufferPortingManifest.ps1 -Check`).
+The transport port is complete; its [source and test manifest](docs/transport-porting-manifest.json)
 records channel dependencies, Channel/Pipeline, event loops, Embedded/Local channels,
-Bootstrap/Resolver integration and native TCP/UDP work, with original test mappings
-and explicit remaining implementation, test and comment review. Transport is not complete.
+Bootstrap/Resolver integration and native TCP/UDP work, with original test mappings and comment accounting.
+No entry is pending; the remaining items are platform limits and partial NativeAOT coverage
+(see [transport porting](docs/transport-porting.md), "Status"). Check it with
+`powershell -NoProfile -File tools/Test-TransportPortingManifest.ps1`.
 The codec-base port (namespace `Netty.NET.Handler.Codec`) covers the decoder/encoder bases, frame decoders,
 ReplayingDecoder, Headers and the base64/bytes/json/string codecs with their original tests; see
 [codec-base porting](docs/codec-base-porting.md).
@@ -38,12 +41,44 @@ deprecated Http2MultiplexCodec family is recorded as not ported; see
 The handler-proxy port (`Netty.NET.Handler.Proxy`) covers all of netty-handler-proxy: the HTTP CONNECT, SOCKS4 and
 SOCKS5 proxy handlers with their tests over real NIO sockets; see [handler-proxy porting](docs/handler-proxy-porting.md)
 (`tools/Test-CodecPortingManifest.ps1 -Module handler-proxy`).
+The handler-ssl-ocsp port (`Netty.NET.Handler.Ssl.Ocsp`) covers netty-handler-ssl-ocsp: OCSP validation of the server
+certificate after the TLS handshake (`OcspServerCertificateValidator`), with its Bouncy Castle OCSP types replaced by
+`System.Formats.Asn1`; the OpenSSL-only `OcspClientHandler` is recorded as library-not-ported. See
+[handler-ssl-ocsp porting](docs/handler-ssl-ocsp-porting.md) (`tools/Test-CodecPortingManifest.ps1 -Module handler-ssl-ocsp`).
 The resolver-dns port (`Netty.NET.Resolver.Dns`) covers all of netty-resolver-dns: the asynchronous DNS resolver with
 its caches, name server address streams and providers, query contexts and TCP fallback; its tests run against a C#
 stand-in of the apacheds DNS server; see [resolver-dns porting](docs/resolver-dns-porting.md)
 (`tools/Test-CodecPortingManifest.ps1 -Module resolver-dns`).
-Check every codec, pkitesting and handler manifest with `powershell -NoProfile -File tools/Test-CodecPortingManifest.ps1`
-(or one with `-Module codec-dns`).
+The conformance-server modules are ported as executables under `test/`: testsuite-http2 (`Netty.NET.Testsuite.Http2`,
+the Hello World server that h2spec runs against) and testsuite-autobahn (`Netty.NET.Testsuite.Autobahn`, the WebSocket
+echo server for the Autobahn fuzzing client), each with smoke tests on the BCL HTTP and WebSocket clients; see
+[testsuite-http2 porting](docs/testsuite-http2-porting.md) and [testsuite-autobahn porting](docs/testsuite-autobahn-porting.md).
+On 2026-11-26 h2spec ran against the HTTP/2 server. With h2spec 2.2.0, the version of the Java build, the build's
+`excludeSpecs` accept every failure. The newer h2spec 2.6.0 also fails `3.5 - Sends invalid connection preface`, which it
+checks more strictly. The Autobahn fuzzing run needs that external tool and has not been made yet.
+QUIC and HTTP/3 run on `System.Net.Quic` (msquic, Windows and Linux) per [the QUIC design](docs/quic-design.md) and
+its owner decisions of 2026-11-27. The QUIC port (`Netty.NET.Handler.Codec.Quic`) covers the QUIC API of
+codec-classes-quic and implements it on `QuicListener`/`QuicConnection`/`QuicStream`, with `QuicEndpointChannel` in
+place of the datagram channel under the Java codec; the quiche and BoringSSL JNI units are recorded as not ported, and
+the features System.Net.Quic lacks (datagrams, stats, stream priorities, 0-RTT and the like) report
+`NotSupportedException`. See [codec-classes-quic porting](docs/codec-classes-quic-porting.md) and
+[codec-native-quic porting](docs/codec-native-quic-porting.md) (the QUIC tests). The codec-http3 port
+(`Netty.NET.Handler.Codec.Http3`) covers all of netty-codec-http3: frames, QPACK, validation, the connection, control,
+push and request stream handlers and the HTTP/1.x conversion, with its tests, examples and spec-test server; .NET's own
+HTTP/3 client talks to it on loopback. See [codec-http3 porting](docs/codec-http3-porting.md).
+The examples (`example`) are one executable, `Netty.NET.Example`: 25 packages are ported, and objectecho, ocsp, rxtx,
+sctp, udt and worldclock are recorded with the deprecated or library-bound unit they need. Run one by its Java class
+name, for example `dotnet run --project src/Netty.NET.Example -- echo.EchoServer -Dport=8007`; see
+[example porting](docs/example-porting.md).
+The test-support module testsuite-common (`test/Netty.NET.Testsuite.Common`) ports the JUnit leak presence extension
+to xUnit v3: a test project that imports `LeakPresenceExtension.props` fails when a test class leaves a buffer or other
+tracked resource open. It is enabled in the 19 test projects of the Java modules that use it, except Buffer and
+Transport (open items); see [testsuite-common porting](docs/testsuite-common-porting.md).
+The modules without a C# project (deprecated UDT and RXTX transports, the JDK-SCTP transport, the JNI native
+transports and macOS resolver, JMH benchmarks and the JVM-only testsuites and stubs) are recorded file by file in
+their manifests; see [record-only modules](docs/record-only-modules.md).
+Check every codec, pkitesting, handler, QUIC, codec-http3, example, testsuite-common and record-only manifest with
+`powershell -NoProfile -File tools/Test-CodecPortingManifest.ps1` (or one with `-Module codec-dns`).
 The resolver port implements the basic OS-backed resolver module; see its
 [source, test and CLR adaptation manifest](docs/resolver-porting-manifest.json).
 It uses Task/CancellationToken, DnsEndPoint/IPEndPoint and IDisposable; executor-affine

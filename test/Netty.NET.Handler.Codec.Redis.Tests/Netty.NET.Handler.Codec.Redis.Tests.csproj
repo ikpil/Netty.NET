@@ -18,4 +18,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Redis\Netty.NET.Handler.Codec.Redis.csproj" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

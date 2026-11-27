@@ -1,0 +1,175 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "testsuite-autobahn",
+  "scope": [
+    "testsuite-autobahn/src/main/java"
+  ],
+  "objective": "Port netty-testsuite-autobahn 4.2.19.Final (io.netty.testsuite.autobahn: the WebSocket echo server that the Autobahn fuzzingclient runs against) to Netty.NET.Testsuite.Autobahn with the original names, structure and comments, and an explicit evidence-backed record for each CLR adaptation and each unit that is not ported.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "Project, folder and assembly names are the namespace root of the module (owner decision 2026-11-19, see docs/codec-base-porting.md): each module takes the namespace of its main package, and the tests use <project>.Tests like the other test projects.",
+      "2026-11-26: the project is Netty.NET.Testsuite.Autobahn, the namespace root of io.netty.testsuite.autobahn (the 2026-11-19 rule; no new name choice), and its CLR supplemental smoke tests are Netty.NET.Testsuite.Autobahn.Tests. The project is an executable under test/, because the Maven module is a runnable Autobahn fuzzingclient target that is not deployed (skipDeploy in pom.xml)."
+    ],
+    "evidence": [
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-namespaces",
+      "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-assemblies-and-dlls",
+      "docs/testsuite-autobahn-porting.md"
+    ]
+  },
+  "statusMeaning": {
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "jvm-only-replaced": "JVM-only metadata or documentation unit replaced by its recorded CLR counterpart.",
+    "pending": "Not yet reviewed."
+  },
+  "summary": {
+    "pinnedFiles": 4,
+    "byStatus": {
+      "clr-adapted": 3,
+      "jvm-only-replaced": 1
+    },
+    "mainJavaSources": 4,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0,
+    "supplementalClrCases": 6
+  },
+  "supplementalTests": [
+    {
+      "path": "test/Netty.NET.Testsuite.Autobahn.Tests/AutobahnServerSmokeTest.cs",
+      "cases": 6,
+      "scope": "CLR supplemental: the module declares no JUnit test (its build runs the Autobahn fuzzingclient). The cases bind AutobahnServerInitializer on a loopback port with the child allocator AutobahnServer sets and take each branch of AutobahnServerHandler once: text, binary and fragmented echo, ping/pong, the close handshake, a refused method and an unsupported WebSocket version. They are not a conformance run."
+    }
+  ],
+  "entries": [
+    {
+      "upstream": "testsuite-autobahn/src/main/java/io/netty/testsuite/autobahn/AutobahnServer.java",
+      "sha256": "0c1551bb6c8502a599b0359bfeacfdeb96a065d91a9b7d7d088d91a51852dedf",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Testsuite.Autobahn/AutobahnServer.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "run() and main(String[]) block on bind(port).sync() and f.channel().closeFuture().sync(); they are RunAsync() and the async Main, which await the Task<IChannel> of ServerBootstrap.BindAsync (ChannelFuture f; f.channel() is its result) and the channel's CloseFuture. group.shutdownGracefully() is ShutdownGracefullyAsync() with the Task discarded. NioServerSocketChannel.class is Channel<NioServerSocketChannel>() and PooledByteBufAllocator.DEFAULT is PooledByteBufAllocator.Default. System.out.println is Console.WriteLine. Integer.parseInt is int.Parse with an optional sign and the invariant culture, as codec-http's HttpResponseDecoder. The project is an executable (OutputType Exe) whose entry point is this Main.",
+        "sourceEvidence": [
+          "test/Netty.NET.Testsuite.Autobahn/AutobahnServer.cs",
+          "test/Netty.NET.Testsuite.Autobahn/Netty.NET.Testsuite.Autobahn.csproj",
+          "src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs",
+          "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
+          "src/Netty.NET.Handler.Codec.Http/HttpResponseDecoder.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite-autobahn/src/main/java/io/netty/testsuite/autobahn/AutobahnServerHandler.java",
+      "sha256": "28b0e751deef77d1185d1e770cabe022b1fea3df876eea50a018a887082add3f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Testsuite.Autobahn/AutobahnServerHandler.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "java.util.logging (Logger.getLogger, isLoggable(Level.FINE), fine) is Common's InternalLoggerFactory logger, and Level.FINE its debug level (Netty's JdkLogger maps isDebugEnabled() and debug() to Level.FINE). String.format is string.Format with the invariant culture; ctx.channel().hashCode() is GetHashCode() and frame.getClass().getName() the type's FullName. HttpRequest/FullHttpResponse are IHttpRequest/IFullHttpResponse and ctx.alloc() is ctx.Alloc(), as in codec-http. handshake/close are HandshakeAsync/CloseAsync and sendUnsupportedVersionResponse is SendUnsupportedVersionResponseAsync; their Tasks and those of ctx.write are discarded, as Java discards the futures. ChannelFutureListener.CLOSE on the writeAndFlush future of ctx.channel() is a Task continuation that closes that channel on its event loop (EventExecutorTaskScheduler), as codec-http's CorsHandler. IllegalStateException is InvalidOperationException and UnsupportedOperationException NotSupportedException (docs/codec-base-porting.md). Java string concatenation writes a missing Host header as \"null\", which getWebSocketLocation keeps.",
+        "sourceEvidence": [
+          "test/Netty.NET.Testsuite.Autobahn/AutobahnServerHandler.cs",
+          "src/Netty.NET.Common/Internal/Logging/InternalLoggerFactory.cs",
+          "src/Netty.NET.Handler.Codec.Http/WebSocketx/WebSocketServerHandshaker.cs",
+          "src/Netty.NET.Handler.Codec.Http/WebSocketx/WebSocketServerHandshakerFactory.cs",
+          "src/Netty.NET.Handler.Codec.Http/Cors/CorsHandler.cs",
+          "docs/codec-base-porting.md",
+          "test/Netty.NET.Testsuite.Autobahn.Tests/AutobahnServerSmokeTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite-autobahn/src/main/java/io/netty/testsuite/autobahn/AutobahnServerInitializer.java",
+      "sha256": "80760c04d8f8f7a31d29f4fb58ba781f91640e6e26859e1bb29156ae475f680c",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Testsuite.Autobahn/AutobahnServerInitializer.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "ChannelInitializer<ISocketChannel>. The public initChannel(SocketChannel) widens the protected ChannelInitializer.initChannel; a C# override cannot change the accessibility of the virtual method, so it stays protected. The pipeline keeps the handler names encoder, decoder and handler.",
+        "sourceEvidence": [
+          "test/Netty.NET.Testsuite.Autobahn/AutobahnServerInitializer.cs",
+          "src/Netty.NET.Transport/Channels/ChannelInitializer.cs",
+          "test/Netty.NET.Testsuite.Autobahn.Tests/AutobahnServerSmokeTest.cs"
+        ]
+      }
+    },
+    {
+      "upstream": "testsuite-autobahn/src/main/java/io/netty/testsuite/autobahn/package-info.java",
+      "sha256": "a69d58411db1120dab55f6dbb90156d3c6771b14b0338667a523b789f8be67f6",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Documentation-only package descriptor (io.netty.testsuite.autobahn).",
+        "reason": "Owner decision 2026-11-16: JVM-only documentation/metadata units are recorded with their CLR counterpart instead of a placeholder file. C# documentation comments must precede a type or member and cannot be added to a namespace, and no placeholder type is created for package prose.",
+        "replacement": {
+          "clr": "Namespace Netty.NET.Testsuite.Autobahn holds the ported types; the package documentation is kept verbatim in this entry and mapped in docs/testsuite-autobahn-porting.md (namespace table)."
+        },
+        "evidence": {
+          "files": [
+            "docs/testsuite-autobahn-porting.md"
+          ],
+          "urls": [
+            "https://docs.oracle.com/javase/specs/jls/se17/html/jls-7.html#jls-7.4.1",
+            "https://docs.oracle.com/en/java/javase/17/docs/specs/javadoc/doc-comment-spec.html",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/documentation-comments",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/namespace"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "per-comment",
+        "notApplicable": [
+          {
+            "sourceComment": "Copyright 2012 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
+            "reason": "Apache license header of a Java compilation unit that has no corresponding C# file."
+          },
+          {
+            "sourceComment": "This package is intended for use with testing against the Python <a href=\"http://www.tavendo.de/autobahn/testsuite.html\">AutoBahn test suite</a>. Autobahn installation documentation can be found <a href=\"http://autobahn.ws/testsuite/installation\">here</a>. <h3>How to run the tests on Ubuntu.</h3> <p>01. Install <a href=\"https://python.org/\">python</a> (if not already installed). <p>02. Install <a href=\"https://pypi.python.org/pypi/setuptools\">Python Setup Tools</a> if not already installed. <tt>sudo apt-get install python-setuptools</tt> <p>03. Add <tt>ppa:twisted-dev/ppa</tt> to your system's Software Sources <p>04. Install Twisted: <tt>sudo apt-get install python-twisted</tt> <p>05. Install AutoBahn: <tt>sudo easy_install autobahntestsuite</tt>. Test using <tt>wstest --help</tt>. <p>06. Create a directory for test configuration and results: <tt>mkdir autobahn</tt> <tt>cd autobahn</tt>. <p>07. Create <tt>fuzzing_clinet_spec.json</tt> in the above directory {@code { \"options\": {\"failByDrop\": false}, \"outdir\": \"./reports/servers\", \"servers\": [ {\"agent\": \"Netty4\", \"url\": \"ws://localhost:9000\", \"options\": {\"version\": 18}} ], \"cases\": [\"*\"], \"exclude-cases\": [], \"exclude-agent-cases\": {} } } <p>08. Run the <tt>AutobahnServer</tt> located in this package. If you are in Eclipse IDE, right click on <tt>AutobahnServer.java</tt> and select Run As &gt; Java Application. <p>09. Run the Autobahn test <tt>wstest -m fuzzingclient -s fuzzingclient.json</tt>. <p>10. See the results in <tt>./reports/servers/index.html</tt>",
+            "reason": "Package documentation (what the package is for and the steps to install and run the Autobahn fuzzingclient on Ubuntu), kept verbatim here. C# namespaces cannot carry documentation comments; docs/testsuite-autobahn-porting.md maps it to Netty.NET.Testsuite.Autobahn and describes the run with the C# server."
+          }
+        ]
+      }
+    }
+  ],
+  "validationHistory": []
+}

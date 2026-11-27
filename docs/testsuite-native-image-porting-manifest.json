@@ -1,0 +1,230 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "testsuite-native-image",
+  "scope": [
+    "testsuite-native-image/src"
+  ],
+  "objective": "Record every pinned file of testsuite-native-image 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (a GraalVM native-image program); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (a GraalVM native-image program). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 5,
+    "byStatus": {
+      "jvm-only-replaced": 5
+    },
+    "mainJavaSources": 5,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "testsuite-native-image/src/main/java/io/netty/testsuite/svm/HttpNativeClient.java",
+      "sha256": "b7d10b45131bde57ab320974ece6696f333c52a12ce979ad0a52074b74ad7ca4",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type HttpNativeClient of testsuite-native-image.",
+        "reason": "GraalVM native-image test program; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image build-time initialization."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image program.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "testsuite-native-image/src/main/java/io/netty/testsuite/svm/HttpNativeServer.java",
+      "sha256": "23c92abb9c4f6cb610dacbcf4b38344a51d6cd6bc4d831171d3d3ed42377b83d",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type HttpNativeServer of testsuite-native-image: An HTTP server that sends back the content of the received HTTP request in a pretty plaintext form.",
+        "reason": "GraalVM native-image test program; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image build-time initialization."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 6,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 6,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image program.",
+        "sha256": "7cf87f19992f35d87a9cd866c0a8bef1534c94e7f3dcc193ab25c3e572d292a4"
+      }
+    },
+    {
+      "upstream": "testsuite-native-image/src/main/java/io/netty/testsuite/svm/HttpNativeServerHandler.java",
+      "sha256": "1a1286f8e25c6231c2a5e35650975dfbc7223fa4e01b1d7dac88a87606d923c8",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type HttpNativeServerHandler of testsuite-native-image.",
+        "reason": "GraalVM native-image test program; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image build-time initialization."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image program.",
+        "sha256": "cbc21a987a62d2cbc3804f675a2400ca2616deb64e766b3d74eac36f9dd6c036"
+      }
+    },
+    {
+      "upstream": "testsuite-native-image/src/main/java/io/netty/testsuite/svm/HttpNativeServerInitializer.java",
+      "sha256": "f7dabc98dfe35cc8daffb4e0a0ff2b66a6d62f50a54db90567e2a336ac9542ab",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type HttpNativeServerInitializer of testsuite-native-image.",
+        "reason": "GraalVM native-image test program; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image build-time initialization."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image program.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      }
+    },
+    {
+      "upstream": "testsuite-native-image/src/main/java/io/netty/testsuite/svm/package-info.java",
+      "sha256": "d96b58e6f1576ae967b98f694c327f93ffb2e70fc32aebac1e129db1c5121ef0",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Package documentation of io.netty.testsuite.svm.",
+        "reason": "GraalVM native-image test program; NativeAOT replaces native-image for the CLR.",
+        "replacement": {
+          "clr": "NativeAOT: test/Netty.NET.Transport.NativeAot.Tests.",
+          "noClrCounterpart": [
+            "GraalVM native-image build-time initialization."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "test/Netty.NET.Transport.NativeAot.Tests/Program.cs"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a GraalVM native-image program.",
+        "sha256": "789328d58cb8740a0eb9a1f5d2af5dc8ce826c288e43a7b6402934964e8eda6e"
+      }
+    }
+  ],
+  "validationHistory": []
+}

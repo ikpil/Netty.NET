@@ -34,6 +34,16 @@ namespace Netty.NET.Transport.Channels.Sockets;
 public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
 {
     private EndPoint _assignedLocalAddress;
+    // CLR: SocketChannelImpl.remoteAddress, which socket().getRemoteSocketAddress() returns. The JDK records it when
+    // the channel is accepted and when it begins to connect, and close never clears it, so a connected channel keeps
+    // its remote address after it is closed. Socket.RemoteEndPoint throws ObjectDisposedException once the socket is
+    // closed (measured 2026-11-27), so the channel records the address itself.
+    // https://github.com/openjdk/jdk17u/blob/master/src/java.base/share/classes/sun/nio/ch/SocketChannelImpl.java
+    private volatile EndPoint _remoteAddress;
+    // CLR: SocketChannelImpl.localAddress, which socket().getLocalSocketAddress() returns. The JDK records it in the
+    // accepted-channel constructor, in bind and when a connect completes (endConnect, endFinishConnect), and close
+    // never clears it. Socket.LocalEndPoint throws ObjectDisposedException once the socket is closed.
+    private volatile EndPoint _localAddress;
 
     protected override TaskScheduler PrepareToClose()
     {
@@ -136,6 +146,25 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
      */
     public NioSocketChannel(IChannel parent, Socket socket) : base(parent, socket)
     {
+        // CLR: an accepted SocketChannelImpl is constructed with the remote address that accept returned and its local
+        // address. An accepted or caller-connected Socket reports them through RemoteEndPoint and LocalEndPoint; a
+        // caller-bound Socket has its local address. If a read fails, RemoteAddress0 or LocalAddress0 reads it again.
+        if (socket.Connected)
+        {
+            try
+            {
+                _remoteAddress = Normalize(socket.RemoteEndPoint);
+            }
+            catch (SocketException)
+            {
+                // Ignore.
+            }
+        }
+        if (socket.IsBound)
+        {
+            RecordLocalAddress(socket);
+        }
+
         // Enable TCP_NODELAY by default if possible.
         // CLR: DefaultSocketChannelConfig's constructor does this in Java (NioSocketChannel creates its config
         // eagerly). The CLR config is created lazily, so the channel constructor applies it once, before caller or
@@ -154,11 +183,75 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
         }
     }
 
+    protected override EndPoint RemoteAddress0()
+    {
+        // CLR: javaChannel().socket().getRemoteSocketAddress() is the recorded address; a socket whose address was
+        // not recorded (an unresolved DnsEndPoint target, which Java rejects before connecting) reports the live one.
+        return _remoteAddress ?? Normalize(JavaChannel().RemoteEndPoint);
+    }
+
+    protected override EndPoint LocalAddress0()
+    {
+        // CLR: javaChannel().socket().getLocalSocketAddress() is the recorded address; an unbound socket, or one whose
+        // address could not be read, reports the live one.
+        return _localAddress ?? base.LocalAddress0();
+    }
+
+    // CLR: Net.localAddress(fd), which SocketChannelImpl records after bind and after a completed connect. After a
+    // Linux address-only bind (IP_BIND_ADDRESS_NO_PORT) Socket.LocalEndPoint may keep port 0 while the kernel assigns
+    // the port at connect, so a connected socket reads it from getsockname, as LocalAddress does.
+    private void RecordLocalAddress(Socket socket)
+    {
+        try
+        {
+            EndPoint local = Normalize(socket.LocalEndPoint);
+            if (local is IPEndPoint { Port: 0 } && socket.Connected && OperatingSystem.IsLinux())
+            {
+                local = Normalize(LinuxSocketOptions.GetLocalEndpoint(socket));
+            }
+            _localAddress = local;
+        }
+        catch (SocketException)
+        {
+            // Ignore; LocalAddress0 reads the live address.
+        }
+    }
+
+    internal override void Bind(Socket socket, EndPoint localAddress)
+    {
+        base.Bind(socket, localAddress);
+        RecordLocalAddress(socket);
+    }
+
+    protected override void DoFinishConnect()
+    {
+        base.DoFinishConnect();
+        // CLR: endFinishConnect records the local address of the completed connect.
+        RecordLocalAddress(JavaChannel());
+    }
+
     // CLR: TCP_FASTOPEN_CONNECT (Linux) defers the SYN to the first write, so a non-blocking connect completes
     // at once and the gathering doWrite sends the initial data with the SYN.
     // https://man7.org/linux/man-pages/man7/tcp.7.html
     internal override bool Connect(Socket socket, EndPoint remoteAddress)
     {
+        // CLR: SocketChannelImpl.connect(SocketAddress) first runs checkRemote, which replaces a wildcard (any-local)
+        // address with the loopback address of the same family, and beginConnect then records that address as the
+        // remote address before the native connect. Socket.Connect fails a wildcard target on Windows with
+        // WSAEADDRNOTAVAIL (10049, measured 2026-11-27).
+        if (remoteAddress is IPEndPoint target)
+        {
+            if (target.Address.Equals(IPAddress.Any))
+            {
+                remoteAddress = new IPEndPoint(IPAddress.Loopback, target.Port);
+            }
+            else if (target.Address.Equals(IPAddress.IPv6Any))
+            {
+                remoteAddress = new IPEndPoint(IPAddress.IPv6Loopback, target.Port);
+            }
+            _remoteAddress = Normalize(remoteAddress);
+        }
+
         if (OperatingSystem.IsLinux() &&
             Config.TryGetOption(ChannelOption.TCP_FASTOPEN_CONNECT, out bool fastOpen) && fastOpen)
         {
@@ -171,7 +264,13 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
                 // The kernel does not support TCP_FASTOPEN_CONNECT; connect normally.
             }
         }
-        return base.Connect(socket, remoteAddress);
+        bool connected = base.Connect(socket, remoteAddress);
+        if (connected)
+        {
+            // CLR: endConnect records the local address of a connect that completed at once.
+            RecordLocalAddress(socket);
+        }
+        return connected;
     }
 
     protected override void DoWrite(ChannelOutboundBuffer @in)

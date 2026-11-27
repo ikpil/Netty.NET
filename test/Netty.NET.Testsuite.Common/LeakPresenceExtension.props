@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    CLR: the counterpart of a test dependency on netty-testsuite-common. Its service file
+    (META-INF/services/org.junit.jupiter.api.extension.Extension) registers LeakPresenceExtension, and the parent pom's
+    junit.jupiter.extensions.autodetection.enabled (argLine.leak) loads it for every test class of the module. A test
+    project of such a module imports this file: the reference to the extension and the assembly attribute that runs its
+    tests with LeakPresenceTestFramework (docs/testsuite-common-porting.md).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Netty.NET.Testsuite.Common.csproj" />
+    <AssemblyAttribute Include="Xunit.TestFrameworkAttribute">
+      <_Parameter1>typeof(Netty.NET.Common.Test.LeakPresenceTestFramework)</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

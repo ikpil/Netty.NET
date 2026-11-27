@@ -1,0 +1,56 @@
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at:
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+using System;
+using Netty.NET.Handler.Codec.Http;
+using Netty.NET.Handler.Ssl;
+using Netty.NET.Transport.Channels;
+
+namespace Netty.NET.Example.Http2.HelloWorld.Server;
+
+/**
+ * Negotiates with the browser if HTTP2 or HTTP is going to be used. Once decided, the Netty
+ * pipeline is setup with the correct handlers for the selected protocol.
+ */
+// CLR: the protected constructor is also reached from Http2ServerInitializer in the same Java package (Java's protected
+// includes package access), so it is protected internal. IllegalStateException is InvalidOperationException.
+public class Http2OrHttpHandler : ApplicationProtocolNegotiationHandler
+{
+
+    private const int MAX_CONTENT_LENGTH = 1024 * 100;
+
+    protected internal Http2OrHttpHandler()
+        : base(ApplicationProtocolNames.HTTP_1_1)
+    {
+    }
+
+    protected override void ConfigurePipeline(IChannelHandlerContext ctx, string protocol)
+    {
+        if (ApplicationProtocolNames.HTTP_2.Equals(protocol))
+        {
+            ctx.Pipeline.AddLast(new HelloWorldHttp2HandlerBuilder().Build());
+            return;
+        }
+
+        if (ApplicationProtocolNames.HTTP_1_1.Equals(protocol))
+        {
+            ctx.Pipeline.AddLast(new HttpServerCodec(),
+                                   new HttpObjectAggregator(MAX_CONTENT_LENGTH),
+                                   new HelloWorldHttp1Handler("ALPN Negotiation"));
+            return;
+        }
+
+        throw new InvalidOperationException("unknown protocol: " + protocol);
+    }
+}

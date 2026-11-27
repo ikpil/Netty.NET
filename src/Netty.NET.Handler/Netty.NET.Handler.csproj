@@ -7,5 +7,11 @@
     <ProjectReference Include="..\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
     <InternalsVisibleTo Include="Netty.NET.Handler.Tests" />
     <InternalsVisibleTo Include="Netty.NET.Transport.Tests" />
+    <!-- handler-ssl-ocsp reads the peer certificates of SslHandler (SslHandler.PeerCertificates(), the CLR counterpart
+         of engine().getSession().getPeerCertificates()), which waits for an owner naming decision to become public. -->
+    <InternalsVisibleTo Include="Netty.NET.Handler.Ssl.Ocsp" />
+    <!-- The examples read the SslStream of an SslHandler (SslHandler.Engine(), the CLR counterpart of engine(), which
+         waits for the same naming decision): SecureChatServerHandler prints its negotiated cipher suite. -->
+    <InternalsVisibleTo Include="Netty.NET.Example" />
   </ItemGroup>
 </Project>

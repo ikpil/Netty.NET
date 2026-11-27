@@ -1,0 +1,105 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "testsuite-shading",
+  "scope": [
+    "testsuite-shading/src"
+  ],
+  "objective": "Record every pinned file of testsuite-shading 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (the shaded-jar test of the JVM build); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (the shaded-jar test of the JVM build). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 1,
+    "byStatus": {
+      "jvm-only-replaced": 1
+    },
+    "mainJavaSources": 0,
+    "testJavaSources": 1,
+    "declaredOriginalTests": 2,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 2,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "testsuite-shading/src/test/java/io/netty/testsuite/shading/ShadingIT.java",
+      "sha256": "ad8f74470bde7c05bc572393a282b5f2ed1c6fa1308644507a3521c3e7413bf3",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture ShadingIT of testsuite-shading.",
+        "reason": "The test loads the native libraries of a shaded (relocated) Netty jar; jar shading and relocation are Maven build features with no .NET counterpart.",
+        "replacement": {
+          "clr": "None: assemblies are not relocated.",
+          "noClrCounterpart": [
+            "Maven shade relocation of native library names."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the shaded-jar test of the JVM build.",
+        "sha256": "02b10fc114e4070696a18d9dc3678a07b6c92f37c2e711ed96f5956987d332e3"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 0,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testShadingNativeTransport",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the shaded-jar test of the JVM build.",
+            "sourceContract": "testShadingNativeTransport of ShadingIT.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testShadingTcnative",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the shaded-jar test of the JVM build.",
+            "sourceContract": "testShadingTcnative of ShadingIT.",
+            "clrEvidence": [
+              "docs/record-only-modules.md"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "validationHistory": []
+}

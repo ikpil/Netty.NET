@@ -86,14 +86,14 @@ zstd tests of the content codecs and `HttpUtilTest.testFormatHostnameForHttpFrom
 `HttpHeaderDateFormatTest` and `NativeImageHandlerMetadataTest.collectAndCompareMetadata` (JVM-only). 237 comments of
 deprecated members are recorded instead of ported, and the 29 entries that are not ported carry 206 original comments.
 
-The C# run of `Netty.NET.Handler.Codec.Http.Tests` on the real projects executes 9054 test cases: 9054 pass, 0 fail and
+The C# run of `Netty.NET.Handler.Codec.Http.Tests` on the real projects executes 9055 test cases (2026-11-27): 9055 pass, 0 fail and
 0 are skipped. Theories run once per data row and the tests of abstract fixtures run for each derived class, so there
 are more cases than mapped methods. The two exhaustive 2^32 tests of `HttpHeaderValidationUtilTest` run in
 `Parallel.For` slices (see [Core test notes](#core-test-notes)).
 
 | Package | Main files | Test files | Mapped original tests | CLR-inapplicable | Not ported | C# test cases |
 | --- | --- | --- | --- | --- | --- | --- |
-| `http` | 70 ported, 6 deprecated-not-ported | 35 ported (32 verified, 3 clr-adapted), 1 deprecated-not-ported, 1 jvm-only-replaced | 555 of 562 | 4 | 3 | 8383 |
+| `http` | 70 ported, 6 deprecated-not-ported | 35 ported (32 verified, 3 clr-adapted), 1 deprecated-not-ported, 1 jvm-only-replaced | 555 of 562 | 4 | 3 | 8384 (with one CLR supplement) |
 | `http.cookie` | 10 | 4 | 36 | 0 | 0 | 36 |
 | `http.cors` | 3 | 2 | 62 | 0 | 0 | 62 |
 | `http.multipart` | 26 | 14 | 121 | 0 | 0 | 185 |
@@ -102,7 +102,7 @@ are more cases than mapped methods. The two exhaustive 2^32 tests of `HttpHeader
 | `http.websocketx.extensions.compression` | 12 | 9 | 63 | 0 | 0 | 64 (one theory with two rows) |
 | `rtsp` | 7 ported, 7 deprecated-not-ported | 3 | 13 | 0 | 0 | 13 |
 | `spdy` | 47 ported, 1 library-not-ported | 9 (one helper without tests) | 113 | 0 | 0 | 113 |
-| **total** | 239 ported, 13 deprecated-not-ported, 1 library-not-ported | 106 ported, 2 not ported | 1081 of 1088 | 4 | 3 | 9054 |
+| **total** | 239 ported, 13 deprecated-not-ported, 1 library-not-ported | 106 ported, 2 not ported | 1081 of 1088 | 4 | 3 | 9055 |
 
 Each package also has a `package-info.java` recorded as `jvm-only-replaced`. The `http` row includes the deprecated
 cookie API of that package (`ClientCookieEncoder` ported with `[Obsolete]`, six units and `HttpHeaderDateFormatTest`
@@ -115,7 +115,9 @@ The project references `Netty.NET.Handler.Codec.Compression` (the content codecs
 `Netty.NET.Handler` (`io.netty.handler.ssl` and `io.netty.handler.stream`), which bring codec-base, Transport,
 Resolver, Buffer and Common. `InternalsVisibleTo` opens its internals to `Netty.NET.Handler.Codec.Http.Tests` only;
 codec-compression opens its internals to `Netty.NET.Handler.Codec.Http` for the internal `Deflater`/`Inflater`
-stand-ins (owner decision above). The test project also references `Netty.NET.PkiTesting` and Moq, and deploys the three
+stand-ins (owner decision above), and codec-base opens its internals to it for the CLR-only `ExecutorPromiseCombiner`
+that `HttpObjectEncoder` combines its writes with ([codec-base-porting.md](codec-base-porting.md), Outbound
+operations). The test project also references `Netty.NET.PkiTesting` and Moq, and deploys the three
 `file-0N.txt` resources next to the test assembly. `Netty.NET.Transport.Tests` references the project for the
 testsuite's `SocketSpdyEchoTest`.
 
@@ -366,7 +368,7 @@ above.
 | Tests | Methods | Notes |
 | --- | --- | --- |
 | headers, messages, version, method, status, `HttpUtil` and query strings | 219 (218 mapped, 1 CLR-inapplicable) | Deprecated constructors are replaced by their named replacements: `new DefaultHttpHeaders(false)` is `DefaultHttpHeadersFactory.HeadersFactory().WithValidation(false).NewHeaders()`, `new CombinedHttpHeaders(true)` is `HeadersFactory().WithCombiningHeaders(true).NewHeaders()`, `HttpHeaders.EMPTY_HEADERS` is `EmptyHttpHeaders.INSTANCE`, `iterator()` is `IteratorAsString()`, and `KEEP_ALIVE`/`PROXY_CONNECTION` are local `AsciiString` constants with the same names. |
-| `HttpRequestDecoderTest`, `HttpResponseDecoderTest`, `HttpRequestEncoderTest`, `HttpResponseEncoderTest`, `HttpInvalidMessageTest`, `MultipleContentLengthHeadersTest` | 185 (78, 61, 15, 23, 5, 3) | 239 xUnit cases with the theory rows. No test depends on the sign of a Java `byte`, and no behaviour difference from Java was measured. |
+| `HttpRequestDecoderTest`, `HttpResponseDecoderTest`, `HttpRequestEncoderTest`, `HttpResponseEncoderTest`, `HttpInvalidMessageTest`, `MultipleContentLengthHeadersTest` | 185 (78, 61, 15, 23, 5, 3) | 239 xUnit cases with the theory rows, and the CLR supplement `HttpResponseEncoderTest.TestChunkedContentWriteCompletesWhenFlushed`: the three combined writes of a chunk complete when `WriteAndFlushAsync` returns, as Java's `PromiseCombiner` completes on its executor. It failed on every run while `HttpObjectEncoder` returned `Task.WhenAll` of the writes ([common-task-composition.md](common-task-composition.md), Executor affinity of a combined write). No test depends on the sign of a Java `byte`. |
 | `HttpServerCodecTest`, `HttpObjectAggregatorTest`, `HttpClientCodecTest` | 55 (15, 26, 14) | `testServerCloseSocketInputProvidesData` runs over real NIO sockets with `ALLOW_HALF_CLOSURE` and `ShutdownOutputAsync`; the server binds the IPv4 wildcard (as `ServerBootstrap.BindAsync(int)` does) and the client connects to `NetUtil.LOCALHOST4`. The anonymous aggregators are `PostAggregator`/`TextAggregator`. |
 | content encoders and decoders (five classes) | 74 (71 mapped, 3 CLR-inapplicable) | 74 xUnit cases with the four `testZipBomb` rows. |
 | keep-alive, expect-continue, chunked input and upgrade (five classes) | 26 | 71 xUnit cases with the theory rows. |

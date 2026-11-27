@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- testsuite-http2 is a runnable h2spec target (Http2Server.main), not a deployed library (skipDeploy). -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The pom needs common, buffer, transport, handler, codec-http and codec-http2; codec-http2 brings all of them. -->
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Http2\Netty.NET.Handler.Codec.Http2.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Testsuite.Http2.Tests" />
+  </ItemGroup>
+</Project>

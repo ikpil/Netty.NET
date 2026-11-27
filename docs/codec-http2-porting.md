@@ -22,8 +22,9 @@ that is not ported. It fails on a `pending` entry.
   h2 headers and frames, h3 connection and flow control, h4 frame I/O, h5 encoder and decoder, h6 connection handler).
   The conversion group ported the HTTP/1.x adapters, the compression decorators and `Http2SecurityUtil`; the multiplex
   group the child-channel layer and the upgrade codecs.
-- **Not ported.** The separate Maven module `testsuite-http2` (an h2spec conformance server: `HelloWorldHttp2Handler`,
-  `Http2Server` and so on) is outside this module and not ported.
+- **testsuite-http2.** The separate Maven module `testsuite-http2` (an h2spec conformance server: `HelloWorldHttp2Handler`,
+  `Http2Server` and so on) is outside this module; it was ported on 2026-11-26 as `Netty.NET.Testsuite.Http2`, see
+  [testsuite-http2-porting.md](testsuite-http2-porting.md).
 
 ## Owner decisions (2026-11-25)
 
@@ -65,8 +66,9 @@ deprecated-not-ported `Http2MultiplexCodecBuilderTest` and `NativeImageHandlerMe
 constructors and the Javadoc of `Http2StreamChannelBootstrap.open0`. `HttpConversionUtilFuzzTest` declares no JUnit
 method (`@FuzzTest` is not a JUnit `@Test`).
 
-The C# run of `Netty.NET.Handler.Codec.Http2.Tests` executes 1549 test cases (1221 of the base group, 133 of the
-conversion group, 195 of the multiplex group): 1546 pass, 0 fail and 3 are skipped exactly where the source skips them
+The C# run of `Netty.NET.Handler.Codec.Http2.Tests` executes 1550 test cases (2026-11-27; 1222 of the base group with
+the CLR supplement `CompressorHttp2ConnectionEncoderTest.CombinedDataWritesCompleteWhenFlushed`, 133 of the
+conversion group, 195 of the multiplex group): 1547 pass, 0 fail and 3 are skipped exactly where the source skips them
 (two `@Disabled` and one `@DisabledOnOs(WINDOWS)` test of `Http2MultiplexTransportTest`). Theories run once per data
 row and the tests of abstract fixtures run for each derived class, so there are more cases than mapped methods. A
 mutation check (2026-11-25) rejected 14 of 14 applicable mutations (5 were not applicable). The child channel reworked
@@ -94,7 +96,8 @@ The 35 Java interfaces of the base group are counted with the area that uses the
 ## Namespaces and assembly
 
 The project references `Netty.NET.Handler.Codec.Http`, which brings codec-compression, handler, codec-base, Transport,
-Resolver, Buffer and Common. `InternalsVisibleTo` opens its internals to `Netty.NET.Handler.Codec.Http2.Tests` only. The
+Resolver, Buffer and Common. `InternalsVisibleTo` opens its internals to `Netty.NET.Handler.Codec.Http2.Tests` only;
+codec-base opens its internals to this assembly for the CLR-only `ExecutorPromiseCombiner` (see `PromiseCombiner` below). The
 test project also references `Netty.NET.PkiTesting` and Moq, and deploys the 14 HPACK resources from
 `Resources/testdata/` next to the test assembly under the class-path directory `io/netty/handler/codec/http2/testdata/`,
 because `HpackTest` lists that directory (`ResourcesUtil.getFile(HpackTest.class, TEST_DIR).listFiles()`).
@@ -116,7 +119,7 @@ The adaptations below apply across the areas; each area section lists only what 
 | `ctx.newPromise()`, `ctx.voidPromise()`, `promise.unvoid()`, `isVoid()` | internal `Http2CodecUtil.NewPromise()`, the promise itself, `false` | A new `TaskCompletionSource` without `RunContinuationsAsynchronously` (see [Listener timing](#listener-timing)). There is no void promise ([transport-porting.md](transport-porting.md): VoidChannelPromise, "discard the returned Task"), so `unvoid()` is the promise itself and the `isVoid()` branches are left out. |
 | `ctx.write(msg, promise)`, `writeAndFlush(msg, promise)`, `close(promise)`, `future.addListener(l)`, `future.cause()`, `PromiseNotifier.cascade` | internal `Http2CodecUtil.Write`, `WriteAndFlush`, `Close`, `AddListener`, `Cause`, `Cascade` | `Cascade` copies the operation Task into the promise (`TrySetFromTask`, the PromiseNotifier mapping of [common-task-composition.md](common-task-composition.md)). `Cause` is the faulted Task's first inner exception, a `TaskCanceledException` for a canceled Task and null otherwise. The timing is described under [Listener timing](#listener-timing). |
 | `Http2CodecUtil.SimpleChannelPromiseAggregator extends DefaultChannelPromise` | internal sealed class deriving from `TaskCompletionSource` | The completion methods of `TaskCompletionSource` are not virtual, so the overridden `setSuccess/trySuccess/setFailure/tryFailure` are the class's own methods; `newPromise()` returns a child promise whose synchronous continuation calls `TrySuccess()`/`TryFailure(cause)`, and `doneAllocatingPromises()` returns the aggregate promise. |
-| `PromiseCombiner` | `List<Task>` and `Task.WhenAll`, copied into the promise with `Http2CodecUtil.Cascade` | [common-task-composition.md](common-task-composition.md): "Collect `List<Task>` and call `Task.WhenAll` after collection" (`CompressorHttp2ConnectionEncoder.writeData`). |
+| `PromiseCombiner` | `List<Task>` completed into the promise by codec-base's internal `ExecutorPromiseCombiner.Combine(ctx, futures, promise)` | It counts the completions on `ctx.Executor` and completes the promise with the outcome of `Task.WhenAll` when the last one completes, as `new PromiseCombiner(ctx.executor())` does. See [common-task-composition.md](common-task-composition.md), Executor affinity of a combined write (`CompressorHttp2ConnectionEncoder.writeData`). The buffer promises come from `NewPromise()`, so the earlier `Task.WhenAll` + `Cascade` already completed on the event loop; `CompressorHttp2ConnectionEncoderTest.CombinedDataWritesCompleteWhenFlushed` checks it over a real encoder, frame writer and channel. |
 | Outbound handler operations (`write(ctx, msg, promise)`, `bind`, `connect`, `close`, ...) | `WriteAsync(ctx, msg, CancellationToken)`, `BindAsync`, `ConnectAsync`, `CloseAsync(ctx, CancellationToken)`, ... | The returned Task replaces the promise ([codec-base-porting.md](codec-base-porting.md), Outbound operations). A handler that completes a promise itself creates it with `Http2CodecUtil.NewPromise()` and returns its Task (`Http2ConnectionHandler`, `HttpToHttp2ConnectionHandler`). |
 | `String.format(fmt, args)` (104 `%d`, 38 `%s`, 1 `%b` in the package), `String.valueOf` and string concatenation | internal `Http2CodecUtil.Format`, `Http2CodecUtil.ToJavaString` | `Format` keeps the Java text ([Formatter](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Formatter.html): `%s` of null is "null", `%b` of null is "false", `%%` is "a literal '%'"); integers use the invariant culture. `ToJavaString` is the `String.valueOf` text (null, `true`/`false`, invariant numbers) for concatenations and `toString()`. |
 | Enums with fields and methods (`Http2Error`, `Http2Stream.State`, `Http2Headers.PseudoHeaderName`) | sealed classes with static readonly instances | As codec-base `Base64Dialect` and codec-http `HttpStatusClass` ("You can't define a method inside the definition of an enumeration type", [enum](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum)). They are compared by reference, so the Java `switch` statements on a `State` are if/else chains; `ToString()` is the constant name; `PseudoHeaderName.Values()` stands for `values()`. Simple enums (`Http2Exception.ShutdownHint`, `Http2FrameLogger.Direction`, `Http2FrameStreamEvent.Type`, `HpackUtil.IndexType`) are C# enums. |
@@ -213,7 +216,10 @@ library-dependent.
 - **Inner classes.** `Http2HeaderEntry`, `ReadOnlyValueIterator` and `ReadOnlyIterator` read the enclosing instance and
   take it as a constructor parameter. The field initializer `firstNonPseudo = head` is a constructor assignment
   ([CS0236](https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236): "A field initializer cannot reference the
-  non-static field").
+  non-static field"). `Http2HeaderEntry.Remove()` overrides codec-base's `protected internal` member as
+  `protected internal`. codec-base opens its internals to this assembly, and an override of a `protected internal`
+  member it can see keeps both modifiers (CS0507). The other protected codec-base members are overridden as
+  `protected`.
 
 ### HPACK
 

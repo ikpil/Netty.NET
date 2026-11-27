@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- codec-classes-quic needs handler (which brings codec-base, transport, buffer and common); its optional
+         transport-classes-epoll dependency is recorded, not ported (docs/codec-classes-quic-porting.md). The API layer
+         (stage 1) is ported; the msquic-backed implementation on System.Net.Quic (part of the shared framework) is
+         stage 2. -->
+    <ProjectReference Include="..\Netty.NET.Handler\Netty.NET.Handler.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Quic.Tests" />
+    <!-- codec-http3 and its tests are built on this API in the same QUIC stage (docs/quic-design.md, Plan). -->
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http3" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Codec.Http3.Tests" />
+  </ItemGroup>
+</Project>

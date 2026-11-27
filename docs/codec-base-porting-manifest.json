@@ -764,11 +764,13 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "TypeParameterMatcher.find/get are the reified type argument and Type.IsInstanceOfType (as in SimpleChannelInboundHandler; IsInstanceOfType is false for null); a Class<? extends I> constructor argument is a Type checked against I at run time (MessageToByteEncoder.CheckMessageType). WriteAsync writes the encoded messages in the finally block as the source does, also after a failed encode; a single message gets the caller token, several are combined with Task.WhenAll (PromiseCombiner, docs/common-task-composition.md), and there is no void promise, so writeVoidPromise has no counterpart. The internal InvokeEncode forwarder gives DatagramPacketEncoder the package-level call to the protected encode of another instance.",
+        "scope": "TypeParameterMatcher.find/get are the reified type argument and Type.IsInstanceOfType (as in SimpleChannelInboundHandler; IsInstanceOfType is false for null); a Class<? extends I> constructor argument is a Type checked against I at run time (MessageToByteEncoder.CheckMessageType). WriteAsync writes the encoded messages in the finally block as the source does, also after a failed encode; a single message gets the caller token, several are combined by codec-base's CLR-only internal ExecutorPromiseCombiner (src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs), which counts the completions on ctx.Executor through Common's EventExecutorTaskScheduler and completes the promise with the outcome of Task.WhenAll when the last one completes, as new PromiseCombiner(ctx.executor()) does on its executor (docs/common-task-composition.md, Executor affinity of a combined write); a Task.WhenAll of the Transport write Tasks, which run their continuations asynchronously, completed later on a thread-pool thread (measured 2026-11-27), and there is no void promise, so writeVoidPromise has no counterpart. The internal InvokeEncode forwarder gives DatagramPacketEncoder the package-level call to the protected encode of another instance. ExecutorPromiseCombiner is shared with codec-http, codec-http2 and codec-http3 through InternalsVisibleTo in Netty.NET.Handler.Codec.csproj.",
         "sourceEvidence": [
           "src/Netty.NET.Handler.Codec/MessageToMessageEncoder.cs",
           "test/Netty.NET.Handler.Codec.Tests/MessageToMessageEncoderTest.cs",
-          "docs/common-task-composition.md"
+          "docs/common-task-composition.md",
+          "src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs",
+          "src/Netty.NET.Handler.Codec/Netty.NET.Handler.Codec.csproj"
         ]
       }
     },
@@ -3967,7 +3969,7 @@
         {
           "upstreamMethod": "testIntermediateWriteFailures",
           "clrMethod": "TestIntermediateWriteFailures",
-          "adaptation": "Source scenarios; promise.setFailure(cause) is returning a faulted Task, and write.cause() is the exception the completed combined Task rethrows."
+          "adaptation": "Source scenario; promise.setFailure(cause) is returning a faulted Task, and write.cause() is the faulted Task's Exception.InnerException, read right after WriteAndFlushAsync as Java reads it: the combined Task completes on the event loop when the last write completes (ExecutorPromiseCombiner)."
         }
       ],
       "methodReview": {
@@ -3984,9 +3986,10 @@
         "unreviewedCount": 0
       },
       "review": {
-        "scope": "Source scenarios; promise.setFailure(cause) is returning a faulted Task, and write.cause() is the exception the completed combined Task rethrows.",
+        "scope": "Source scenarios; promise.setFailure(cause) is returning a faulted Task, and write.cause() is the faulted Task's Exception.InnerException, read without waiting as Java does. CLR supplement TestCombinedWritesCompleteWhenFlushed: the combined Task of two successful writes has completed when WriteAndFlushAsync returns (it failed on every run while the encoder returned Task.WhenAll of the Transport write Tasks, 2026-11-27).",
         "sourceEvidence": [
-          "test/Netty.NET.Handler.Codec.Tests/MessageToMessageEncoderTest.cs"
+          "test/Netty.NET.Handler.Codec.Tests/MessageToMessageEncoderTest.cs",
+          "src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs"
         ]
       }
     },
@@ -5010,6 +5013,24 @@
           "skipped": 0
         },
         "checker": "tools/Test-CodecPortingManifest.ps1 (generalized from Test-CodecBasePortingManifest.ps1 to take -Module; every ported codec module by default) verifies the 106 pinned codec-base files as before; the module-info.yml entry now names the JPMS module io.netty.codec (codec-base/pom.xml javaModuleName) instead of io.netty.codec.base. The fourteen deliberately broken copies were rejected again and the manifest restored byte-identical. Shared changes the same day: AbstractReferenceCounted Retain()/Touch()/Release()/Release(int) are virtual and Retain()/Release() update the count directly as the Java retain()/release() do; ByteToMessageDecoder.IsSingleDecode() is virtual; java.net.IDN is the shared Netty.NET.Common.Internal.IDN."
+      }
+    },
+    {
+      "checkpoint": "2026-11-27-executor-promise-combiner",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows 10.0.26300",
+        "solutionBuild": {
+          "errors": 0,
+          "warnings": 0
+        },
+        "moduleDebug": {
+          "total": 353,
+          "passed": 353,
+          "failed": 0,
+          "skipped": 0
+        },
+        "note": "Java's PromiseCombiner completes the aggregate promise on its executor; the Task.WhenAll counterpart of MessageToMessageEncoder and codec-http HttpObjectEncoder completed on a thread-pool thread after the write call had returned, because the Transport write Tasks run their continuations asynchronously. codec-base's CLR-only ExecutorPromiseCombiner (shared with codec-http, codec-http2 and codec-http3 through InternalsVisibleTo) counts the completions on the executor and completes the promise with the outcome of Task.WhenAll. TestIntermediateWriteFailures reads write.cause() without waiting, as the source does; the CLR supplement TestCombinedWritesCompleteWhenFlushed failed on every run before the change. The 353 cases are the 352 of the previous checkpoint and that supplement. Dependent runs: codec-http 9055 passed; codec-http2 1547 passed, 3 skipped; codec-http3 810 passed, 29 skipped; 0 failed."
       }
     }
   ]

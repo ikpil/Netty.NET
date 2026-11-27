@@ -1,0 +1,632 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "jfr-stub",
+  "scope": [
+    "jfr-stub/src"
+  ],
+  "objective": "Record every pinned file of jfr-stub 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (compile-time stubs of jdk.jfr); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (compile-time stubs of jdk.jfr). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 16,
+    "byStatus": {
+      "jvm-only-replaced": 16
+    },
+    "mainJavaSources": 16,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/Category.java",
+      "sha256": "e6fc8c98ff45d0fab9a744484d3ad8c9be4c38d431c22e1f290a8019dacd299e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type Category of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/DataAmount.java",
+      "sha256": "2c22fee9c427290eaa90b32918f4df575412081e2516cc8276c7e6028d6e1a79",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type DataAmount of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/Description.java",
+      "sha256": "ec7feb2c71ca44d3261d0800c2232d02702026afd67fdeeb0f0991d0c30ba308",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type Description of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/Enabled.java",
+      "sha256": "4ee81b22163d10ad93f8a20fd505b3fa75eeb09a3d35a7a32eca495ecf3c3b10",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type Enabled of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/Event.java",
+      "sha256": "b6b2daaa37f6e63374c650954cc7f5e8c7dd722de5876f40cf62864eb3fec075",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type Event of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/EventSettings.java",
+      "sha256": "07aca0b49104b603ef40ee9b8c6bd287bbc68216dfbd0c3e1af733ab5c8faa50",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type EventSettings of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/EventType.java",
+      "sha256": "4d2dbbb10ead1c0037b57fe1d32a356edb48f0e61e25443170166db16de20f09",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type EventType of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/FlightRecorder.java",
+      "sha256": "56674ca1ad5468103c605492b5f071e94d0ce3729df47e80cceeb66945c2a0fd",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type FlightRecorder of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/Label.java",
+      "sha256": "ab24f73d28c6b43f8ec612b6e5adfa3aaaff6347e2181637953d13cf8b026f79",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type Label of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/MemoryAddress.java",
+      "sha256": "50026ba045f01ad2628aa2ad3a8a170525d68c224ace56422ad981047b00f697",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type MemoryAddress of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/Name.java",
+      "sha256": "d10e539c9a54aec64e763147c84b542177a5dbf7d0b2fba5919d08f5bff3fb6c",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type Name of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/consumer/RecordedEvent.java",
+      "sha256": "a7c042261ad078856e20381b3aff5b05061944d7fd1b827e2afb381a33fba53e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RecordedEvent of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/consumer/RecordingFile.java",
+      "sha256": "2fb695c7cb8ebe94e8c9cff0ab045a5693aaf9cc102e8c6ef83175144dd6b9f2",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RecordingFile of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/consumer/RecordingStream.java",
+      "sha256": "6086ef7a481e81153a23c8a55f9cd30e574e849e2f8bd09861da90f84ae4d416",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type RecordingStream of jfr-stub.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/consumer/package-info.java",
+      "sha256": "82f2c2ce52e4286c644e0c439222d62eaa8fbaf59018a16737c560e937381635",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Package documentation of jdk.jfr.consumer.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "5a83b6c6b31221fffe4b5c42182fcba1b91ef3ca1d32b5ef0747ba69e923a241"
+      }
+    },
+    {
+      "upstream": "jfr-stub/src/main/java/jdk/jfr/package-info.java",
+      "sha256": "cceafa1b6aba1802c6c23a27a083978a2534790d5452abcda158ce706790955e",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Package documentation of jdk.jfr.",
+        "reason": "Stubs of the JDK Flight Recorder API (jdk.jfr) so that the JVM build compiles on JDKs without JFR; Common records JFR events as JVM-only (docs/common-porting.md).",
+        "replacement": {
+          "clr": "None: JFR events are not ported; .NET event tracing would be EventSource/EventPipe.",
+          "noClrCounterpart": [
+            "The JDK Flight Recorder API."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: compile-time stubs of jdk.jfr.",
+        "sha256": "5a83b6c6b31221fffe4b5c42182fcba1b91ef3ca1d32b5ef0747ba69e923a241"
+      }
+    }
+  ],
+  "validationHistory": []
+}

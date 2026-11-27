@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Netty.NET.Buffer;
 using Netty.NET.Common;
 using Netty.NET.Common.Internal;
@@ -167,6 +168,26 @@ public class HttpResponseEncoderTest
         Assert.Same(Unpooled.EmptyBuffer, buffer);
 
         Assert.False(channel.Finish());
+    }
+
+    // CLR supplement: a chunk of a chunked response is three writes (the chunk size line, the content and CRLF) that
+    // HttpObjectEncoder combines as PromiseCombiner does. The combined Task has completed when WriteAndFlushAsync
+    // returns, as the Java combiner completes the promise on its executor when the last write completes; a Task.WhenAll
+    // of the Transport write Tasks (which run their continuations asynchronously) completed it later on a thread-pool
+    // thread.
+    [Fact]
+    public void TestChunkedContentWriteCompletesWhenFlushed()
+    {
+        EmbeddedChannel channel = new EmbeddedChannel(new HttpResponseEncoder());
+        IHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+        HttpUtil.SetTransferEncodingChunked(response, true);
+        Assert.True(channel.WriteOutbound(response));
+
+        Task write = channel.WriteAndFlushAsync(
+                new DefaultHttpContent(Unpooled.CopiedBuffer("netty rocks", Encoding.ASCII)));
+        Assert.True(write.IsCompletedSuccessfully);
+
+        Assert.True(channel.FinishAndReleaseAll());
     }
 
     [Fact]

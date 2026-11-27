@@ -373,7 +373,18 @@ public class ManualIoEventLoopSourceTest
                 if (context.DeadlineNanos() != -1)
                 {
                     long delay = context.DelayNanos(SystemTimer.NanoTime());
-                    _semaphore.Wait(TimeSpan.FromTicks(Math.Min(delay / 100, TimeSpan.FromDays(1).Ticks)));
+                    // CLR: Semaphore.tryAcquire(delay, NANOSECONDS) returns false only after the whole timeout elapsed.
+                    // SemaphoreSlim.Wait has millisecond resolution and a Windows timed wait can end before the
+                    // high-resolution clock reaches the deadline (testRun failed once at its >= waitTime assertion),
+                    // so wait again for the remainder until a permit arrives or the deadline passed.
+                    long deadline = SystemTimer.NanoTime() + delay;
+                    for (long remaining = delay; remaining > 0; remaining = deadline - SystemTimer.NanoTime())
+                    {
+                        if (_semaphore.Wait(TimeSpan.FromMilliseconds(Math.Ceiling(Math.Min(remaining, TimeSpan.FromDays(1).Ticks * 100L) / 1_000_000d))))
+                        {
+                            break;
+                        }
+                    }
                 }
             }
             return 0;

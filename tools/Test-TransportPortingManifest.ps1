@@ -11,6 +11,32 @@ if (Test-Path $codecBaseManifest -PathType Leaf) {
 }
 if ($LASTEXITCODE -ne 0 -or $head -ne $manifest.baseline) { throw 'Unexpected upstream baseline.' }
 
+$script:bclReferenceTypes = $null
+function Test-BclType([string]$name) {
+    # The host runtime of PowerShell 7 is .NET, where the type resolves directly. Windows PowerShell 5.1 runs on .NET
+    # Framework, which lacks newer BCL types (the non-generic TaskCompletionSource); there, the type is looked up in the
+    # documentation files of the newest .NET 10 reference pack (Microsoft.NETCore.App.Ref), which list each public type
+    # as T:<full name>.
+    if ($null -ne [type]::GetType($name)) { return $true }
+    if ($null -eq $script:bclReferenceTypes) {
+        $script:bclReferenceTypes = New-Object 'System.Collections.Generic.HashSet[string]'
+        $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+        if ($dotnet) {
+            $packs = Join-Path (Split-Path $dotnet.Source -Parent) 'packs/Microsoft.NETCore.App.Ref'
+            $pack = Get-ChildItem $packs -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '10.*' } |
+                Sort-Object { [version]($_.Name -replace '-.*$', '') } | Select-Object -Last 1
+            if ($pack) {
+                foreach ($xml in Get-ChildItem (Join-Path $pack.FullName 'ref/net10.0') -Filter '*.xml') {
+                    foreach ($match in [regex]::Matches([IO.File]::ReadAllText($xml.FullName), 'name="T:([^"]+)"')) {
+                        [void]$script:bclReferenceTypes.Add($match.Groups[1].Value)
+                    }
+                }
+            }
+        }
+    }
+    return $script:bclReferenceTypes.Contains($name)
+}
+
 function Get-NormalizedComments([string]$source) {
     # Skip literals before recognizing comment tokens; URLs inside strings are not comments.
     $tokens = '(?s)"(?:\\.|[^"\\])*"|''(?:\\.|[^''\\])*''|(?<comment>/\*.*?\*/|//[^\r\n]*)'
@@ -379,7 +405,7 @@ foreach ($entry in (@($manifest.entries) + $testsuiteEntries + $nativeTestEntrie
                 if (-not $disposition.reason) { throw 'Missing original-comment replacement reason.' }
             }
             foreach ($clrType in $replacement.clrTypes) {
-                if ($null -eq [type]::GetType($clrType)) { throw "Missing BCL replacement type: $clrType" }
+                if (-not (Test-BclType $clrType)) { throw "Missing BCL replacement type: $clrType" }
             }
             foreach ($evidencePath in $replacement.clrEvidence) {
                 if (-not (Test-Path (Join-Path $repositoryRoot $evidencePath) -PathType Leaf)) {
@@ -659,5 +685,29 @@ foreach ($fact in $deferredFacts.Values) {
     if ($entry.kind -cne $expectedKind) { throw "Unexpected deferred testsuite kind: $($entry.upstream)" }
     $deferredTestCount += $tests.Count
 }
+# The summary is recomputed from the entries (2026-11-26), so its counts cannot drift from the inventory again.
+$allTransportEntries = @($manifest.entries) + $testsuiteEntries + $nativeTestEntries
+$pendingCount = @($allTransportEntries | Where-Object { $_.status -ceq 'pending' }).Count
+$expectedSummary = [ordered]@{
+    inventoryEntries = $manifest.entries.Count
+    pendingEntries = $pendingCount
+    reviewedImplementationFiles = @($manifest.entries | Where-Object { $_.kind -ceq 'implementation' -and $_.status -ceq 'clr-adapted' }).Count
+    portedOriginalFixtures = @($allTransportEntries | Where-Object { $_.kind -ceq 'test' -and $_.status -cin @('verified', 'clr-adapted') }).Count
+    portedOriginalMethods = $mappedCount
+    mappedInheritedScenarios = $inheritedMappedCount
+    testsuiteSources = $testsuiteEntries.Count
+    nativeTestSources = $nativeTestEntries.Count
+    testsuiteDeferredSources = $testsuiteDeferred.Count
+    testsuiteDeferredDeclaredTests = $deferredTestCount
+}
+foreach ($name in $expectedSummary.Keys) {
+    if ($manifest.summary.$name -ne $expectedSummary[$name]) {
+        throw "summary.$name is $($manifest.summary.$name); the entries give $($expectedSummary[$name])."
+    }
+}
+if ($manifest.summary.notPortedEntries.'deprecated-not-ported' -ne $deprecatedNotPortedCount -or
+    $manifest.summary.notPortedEntries.'jvm-only-replaced' -ne $jvmOnlyReplacedCount) {
+    throw "summary.notPortedEntries differs from the entries ($deprecatedNotPortedCount deprecated-not-ported, $jvmOnlyReplacedCount jvm-only-replaced)."
+}
 Write-Output "Testsuite inventory verified: $($testsuiteFiles.Count) pinned testsuite files = $($testsuiteEntries.Count) entries + $($testsuiteDeferred.Count) deferred to unported modules ($deferredTestCount declared tests); $standInImportCount unported-module imports of ported entries have recorded CLR stand-ins."
-Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods and $replacedCommentCount BCL wrapper comments reviewed separately, $partialCommentCount original comments still awaiting review in partial entries, $deprecatedCommentCount deprecated-member and $jvmOnlyCommentCount JVM-only-API original comments of ported entries with per-comment dispositions. $deprecatedNotPortedCount deprecated-not-ported and $jvmOnlyReplacedCount JVM-only-replaced entries carry owner dispositions for $notPortedCommentCount original comments and $notPortedMethodCount declared test methods. Pending entries remain unreviewed."
+Write-Output "Transport manifest verified: $($manifest.entries.Count) Transport inventory entries, $($testsuiteEntries.Count) testsuite sources and $($nativeTestEntries.Count) native test sources, $mappedCount mapped declared methods and $inheritedMappedCount inherited scenarios, $notApplicableCount CLR-inapplicable methods and $replacedCommentCount BCL wrapper comments reviewed separately, $partialCommentCount original comments still awaiting review in partial entries, $deprecatedCommentCount deprecated-member and $jvmOnlyCommentCount JVM-only-API original comments of ported entries with per-comment dispositions. $deprecatedNotPortedCount deprecated-not-ported and $jvmOnlyReplacedCount JVM-only-replaced entries carry owner dispositions for $notPortedCommentCount original comments and $notPortedMethodCount declared test methods. $pendingCount entries are pending review."

@@ -13,9 +13,11 @@
  */
 
 using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using Netty.NET.Buffer;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Transport.Channels;
@@ -142,6 +144,37 @@ public class CompressorHttp2ConnectionEncoderTest
 
         Assert.Same(cause, Http2CodecUtil.Cause(promise.Task));
         AssertClosed(encoder.compressor);
+    }
+
+    // CLR supplement: compressing the last DATA of a stream gives two buffers (the compressed data and the gzip trailer
+    // that Finish() writes), whose writes CompressorHttp2ConnectionEncoder combines as PromiseCombiner does. Over the
+    // real connection encoder, frame writer and channel, the promise has completed when the flush returns, as the Java
+    // combiner completes it on its executor when the last write completes.
+    [Fact]
+    public void CombinedDataWritesCompleteWhenFlushed()
+    {
+        IHttp2Connection connection = new DefaultHttp2Connection(false);
+        CompressorHttp2ConnectionEncoder encoder = new CompressorHttp2ConnectionEncoder(
+                new DefaultHttp2ConnectionEncoder(connection, new DefaultHttp2FrameWriter()));
+        IHttp2ConnectionDecoder decoder = new DefaultHttp2ConnectionDecoder(connection, encoder,
+                new DefaultHttp2FrameReader());
+        Http2ConnectionHandler handler = new Http2ConnectionHandlerBuilder().FrameListener(new Http2FrameAdapter())
+                .Codec(decoder, encoder).Build();
+        EmbeddedChannel channel = new EmbeddedChannel(handler);
+        IChannelHandlerContext ctx = channel.Pipeline.Context(handler);
+
+        IHttp2Headers headers = new DefaultHttp2Headers();
+        headers.Set(CONTENT_ENCODING, GZIP);
+        TaskCompletionSource headersPromise = NewPromise();
+        _ = encoder.WriteHeadersAsync(ctx, STREAM_ID, headers, 0, false, headersPromise);
+        TaskCompletionSource dataPromise = NewPromise();
+        _ = encoder.WriteDataAsync(ctx, STREAM_ID, Unpooled.CopiedBuffer("netty rocks", Encoding.ASCII), 0, true,
+                dataPromise);
+        channel.Flush();
+
+        Assert.True(headersPromise.Task.IsCompletedSuccessfully);
+        Assert.True(dataPromise.Task.IsCompletedSuccessfully);
+        Assert.True(channel.FinishAndReleaseAll());
     }
 
     private static void WriteHeaders(IHttp2ConnectionEncoder encoder, IChannelHandlerContext ctx, int streamId,

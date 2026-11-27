@@ -1,0 +1,3712 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "transport-native-kqueue",
+  "scope": [
+    "transport-native-kqueue/src"
+  ],
+  "objective": "Record every pinned file of transport-native-kqueue 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (the JNI kqueue transport (BSD, macOS) and its tests); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (the JNI kqueue transport (BSD, macOS) and its tests). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 70,
+    "byStatus": {
+      "jvm-only-replaced": 70
+    },
+    "mainJavaSources": 0,
+    "testJavaSources": 65,
+    "declaredOriginalTests": 23,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 23,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "transport-native-kqueue/src/main/c/netty_kqueue_bsdsocket.c",
+      "sha256": "11627af7f57d05ef5b82e6cbc4e785fe5948f34bf75ed13dc0da2f271abb47cb",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "JNI native source netty_kqueue_bsdsocket.c of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 25,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 25,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "f9a7329b8484d9111c8a05976049e4fee3c68bc671eedf9bfca34993766e5962"
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/main/c/netty_kqueue_bsdsocket.h",
+      "sha256": "f881256e2757ea89d73f04e8cd3e31fef9693b28c9ce0311f52045fac4c3908f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "JNI native source netty_kqueue_bsdsocket.h of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "e319066d0f53ec469db42570d4f03dae6ef1d873bf8eeeecac341fd7ef597f7f"
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/main/c/netty_kqueue_eventarray.c",
+      "sha256": "ede4fe43d2a49563fbe353d01671b057d0a8f5b8f2287345e4341a1867550e6e",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "JNI native source netty_kqueue_eventarray.c of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 5,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 5,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "acfcd3a8bcef000b23d58cea34d299d5a16297b90df4fcbb6a742c46877a189f"
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/main/c/netty_kqueue_eventarray.h",
+      "sha256": "b0c93f87af8e93ac7a7e6a01bcf3e7ac215c5c0f88cdb285c73fc868045f226f",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "JNI native source netty_kqueue_eventarray.h of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "e046cb18e9066f9798177c08cb7634adbe7844de8f4166de1b23479a329eff26"
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/main/c/netty_kqueue_native.c",
+      "sha256": "1a854974c3b95307411058ff4d7e044f32bf871ba8f7ef32cdbf473e317137a3",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "JNI native source netty_kqueue_native.c of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 28,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 28,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "1352f10d7756e641b1780e5a14fcc922ec24667b22b47a22e414c6bd7cdb0917"
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueAbstractDomainSocketEchoTest.java",
+      "sha256": "e2244a9af0fc496ca966c8cf902abfbf6a9db353500786f0bef2ba4728a7d5d6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueAbstractDomainSocketEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueChannelConfigTest.java",
+      "sha256": "71d977cb59241b10061df7c74dafc1023d870201b26e3f1e37f9ff1c1e28f3d3",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueChannelConfigTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 4,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 4,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "13937147176393aafaa332c5f63dfa70c33178150c5e9d7380ece7714d9e4cb5"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 0,
+        "reviewedCount": 5,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testOptionGetThrowsChannelException",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testOptionGetThrowsChannelException of KQueueChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testOptionSetThrowsChannelException",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testOptionSetThrowsChannelException of KQueueChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSoLingerNoAssertError",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testSoLingerNoAssertError of KQueueChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testIntegerOption",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testIntegerOption of KQueueChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testRawOption",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testRawOption of KQueueChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueCompositeBufferGatheringWriteTest.java",
+      "sha256": "07ec3b3da3b80ff1269c9f67bd96c6a2d193b8638213a2def5293eb4e5f3a201",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueCompositeBufferGatheringWriteTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "61d13b1bcc7b502bd5a98f302f347c7fcdd2f4184c081e4d49a7d198eb1ed9c9"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDatagramConnectNotExistsTest.java",
+      "sha256": "4497e28b2860f65bfb91dffac41f28d646120e18090394f8abd7d37006902280",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDatagramConnectNotExistsTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDatagramConnectedWriteExceptionTest.java",
+      "sha256": "3b0fb7963f1eee9fd7bd82a086ca529ddb003ab27082d3f157d25436d677ffe0",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDatagramConnectedWriteExceptionTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "1cdf168e6b8a9f8b882242a2dacec8e579c8a0d71057a5db4e6627c27b21df01"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDatagramUnicastIPv6MappedTest.java",
+      "sha256": "d341cc0a8acfe352be48469535a1ddb4c58b850f936b5f12a2842b01a6e215b1",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDatagramUnicastIPv6MappedTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDatagramUnicastIPv6Test.java",
+      "sha256": "223a21f588f8fc56e475061e037ebe4b7b7e60540dd28d6c5cb3d6b5017169eb",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDatagramUnicastIPv6Test of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDatagramUnicastTest.java",
+      "sha256": "5bff2512e8e8747ee4e82f02a976c5ae9d011e6fe2ed1538dd55002bd9b0eec7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDatagramUnicastTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDetectPeerCloseWithoutReadTest.java",
+      "sha256": "f2773748fb7e57ff489944bdda1fa4ab67544154cba8b11aff163c017d04e09c",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDetectPeerCloseWithoutReadTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "61d13b1bcc7b502bd5a98f302f347c7fcdd2f4184c081e4d49a7d198eb1ed9c9"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainDatagramPathTest.java",
+      "sha256": "45cc8c17d9ce847f06d9143a67325fc370fe2fad635c81f220710487371308b0",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainDatagramPathTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 0,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testConnectPathDoesNotExist",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testConnectPathDoesNotExist of KQueueDomainDatagramPathTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testWriteReceiverPathDoesNotExist",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testWriteReceiverPathDoesNotExist of KQueueDomainDatagramPathTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainDatagramUnicastTest.java",
+      "sha256": "f60b750820c5a080d06f71a9fb34ab968f6ce31aaf89e16f9e624e03962bf12a",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainDatagramUnicastTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testBind",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testBind of KQueueDomainDatagramUnicastTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketAddressesTest.java",
+      "sha256": "59c735da4794c437a7aa17afddeaf918d49be1399c1fd361736bc30002970635",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketAddressesTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "ee156d2b9815750fc1652eaacca7f23eca2149792ae01687c328ce6d5c8eeb20"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketDataReadInitialStateTest.java",
+      "sha256": "f309d4c2eeb88ff2fafce14a30c7b885393654861a0c3e764fa20a64513f632b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketDataReadInitialStateTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "88dc868039da9e447236cd71349c712dacdd4b4a652ebaa2196690a24c857991"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketEchoTest.java",
+      "sha256": "56e566ff4b00679210f143c7c32ac297b1ffb1e8de854cf7ccb6f5927216fd71",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketFdTest.java",
+      "sha256": "6dacb3da09ec647263a798c1effb8038ed8a3a589d223aa95bd2a230d856cb8d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketFdTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "ea6e1bc1e37ad6bc6f2e7f4f1836066edd58436e17f4c7d0d1697b1d988e3a35"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testSendRecvFd",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testSendRecvFd of KQueueDomainSocketFdTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketFileRegionTest.java",
+      "sha256": "aecbc48085d6e0608e771ed067956e155ba384eeeecb69227dd25a7a17dfd86f",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketFileRegionTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketFixedLengthEchoTest.java",
+      "sha256": "f635aac42e1e8145674cff3cb8077eb503143cc89df8ecf7f53d2e8fa6a107a6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketFixedLengthEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketGatheringWriteTest.java",
+      "sha256": "978ce0c2e1f3f7855c60b8f1adf831b438a6355e9b52f0fa994679d437253515",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketGatheringWriteTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketObjectEchoTest.java",
+      "sha256": "d395fd24e0c8c8d3d31a3e0f3424168e9b3d7c035bd167cc84abbc1861989485",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketObjectEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketReuseFdTest.java",
+      "sha256": "7f78d679f1279b960eab512da94bdf801e4350b1c06e54bf8475ee8b139ab498",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketReuseFdTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketShutdownOutputByPeerTest.java",
+      "sha256": "4755691ba155b6bb8953147a08cb13f70e9aeb60cda5c07e7ef6474970873153",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketShutdownOutputByPeerTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketSslClientRenegotiateTest.java",
+      "sha256": "742530a7e7e2b90eb33a4d7a7ac55f231c9c09fe9d89262c7abd0c40c5fa9fbb",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketSslClientRenegotiateTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketSslEchoTest.java",
+      "sha256": "bda326e3b1f1812265744bbb3dfd1f0bbde655cbd5524de5a779b8b91bfa7a56",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketSslEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketSslGreetingTest.java",
+      "sha256": "4791784eefd3d9bfa029510a5b9bb6918d490891578b9a2c56157ec241993c12",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketSslGreetingTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketStartTlsTest.java",
+      "sha256": "a71caca8b283f9ef2b1f7271139ea1f5f8527398945bbaa8352690a587d58483",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketStartTlsTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueDomainSocketStringEchoTest.java",
+      "sha256": "d360ba12c14bcdd221a1eb75a2af04a26d76a730e84b5d43652d649c68a40682",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueDomainSocketStringEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueETSocketAutoReadTest.java",
+      "sha256": "72f716e72419ab6def210ae64c381c66512e347478984a4c0d04db8715a47ed1",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueETSocketAutoReadTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueETSocketConditionalWritabilityTest.java",
+      "sha256": "41df8512ae0352b1e3e9cd79ee968049aff173ce3fdc171221780faab57bc525",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueETSocketConditionalWritabilityTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "88dc868039da9e447236cd71349c712dacdd4b4a652ebaa2196690a24c857991"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueETSocketDataReadInitialStateTest.java",
+      "sha256": "a01b872d4edec4b9a05af57e4419523236cec45c616308be1c31d0bc42ff63aa",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueETSocketDataReadInitialStateTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "88dc868039da9e447236cd71349c712dacdd4b4a652ebaa2196690a24c857991"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueETSocketExceptionHandlingTest.java",
+      "sha256": "62eab2da92255576cb96e0ef14b7faa0c18a112cc749066efab6e0704785745e",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueETSocketExceptionHandlingTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueETSocketHalfClosedTest.java",
+      "sha256": "725ea3d48ad3cd07aafae5c5bdc6156b0e98a0767709525174fd05dfe9044c02",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueETSocketHalfClosedTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "61d13b1bcc7b502bd5a98f302f347c7fcdd2f4184c081e4d49a7d198eb1ed9c9"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueETSocketReadPendingTest.java",
+      "sha256": "c0ee57fa073fb4e2277592f3a6d776395af1df83397e11c54db26159520a8c66",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueETSocketReadPendingTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueEventLoopTest.java",
+      "sha256": "f5ac054e52c2a5cc241bda750c9df821fef8596058ee8db20b430910f8b30e85",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueEventLoopTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "9fd0bae51ee82910f44af4a06bd30293dd08b87372995048ea28e7551e4ef905"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testScheduleBigDelayNotOverflow",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testScheduleBigDelayNotOverflow of KQueueEventLoopTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueIoHandlerWakeupEventCountTest.java",
+      "sha256": "e4ec276ad56d14fd737261997b81526a2b3d64f39c0f9e17a9828cdd616c78ca",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueIoHandlerWakeupEventCountTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "1cdf168e6b8a9f8b882242a2dacec8e579c8a0d71057a5db4e6627c27b21df01"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueIovArrayTest.java",
+      "sha256": "0412dc655f62b2fb95e08e77c13a3cdb9f127d6b17c3380952e4183c04bc49c3",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueIovArrayTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "cfe58d173bfa20c89b217d7e8f393d87acb911e375f17883cd129bea5fa7c73e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueJdkLoopbackSocketSslEchoTest.java",
+      "sha256": "0262d69fabf408515610e04ab4a5cc12bbb32def1b0234a55351c9886fa5048f",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueJdkLoopbackSocketSslEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueServerSocketChannelConfigTest.java",
+      "sha256": "43575a02ffbba28baba94048229727081d91022841e1a03a8d3e861e0a84b12f",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueServerSocketChannelConfigTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 4,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 4,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "df9059a705e36af355a6a768e02bdfc71f51c9db094f54dc7f85d6f4413f2c53"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 0,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testReusePort",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testReusePort of KQueueServerSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testAcceptFilter",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testAcceptFilter of KQueueServerSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testOptionsDoesNotThrow",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testOptionsDoesNotThrow of KQueueServerSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketAddressesTest.java",
+      "sha256": "780fcf94ea0cc1c9471be8c594ddf52e91ce332b13d54f4bb812e90a11494307",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketAddressesTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "ee156d2b9815750fc1652eaacca7f23eca2149792ae01687c328ce6d5c8eeb20"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketChannelConfigTest.java",
+      "sha256": "ec27a844f65b52b990762f71dc860d1d5e2597d3ff31f029d612a12d115b754c",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketChannelConfigTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "c434c4dc2b468186fd5266cdc167cb66919c3ed721f8214a026baeef31adb834"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 5,
+        "mappedCount": 0,
+        "reviewedCount": 5,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testRandomSndLowAt",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testRandomSndLowAt of KQueueSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testInvalidHighSndLowAt",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testInvalidHighSndLowAt of KQueueSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testTcpNoPush",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testTcpNoPush of KQueueSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSetOptionWhenClosed",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testSetOptionWhenClosed of KQueueSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testGetOptionWhenClosed",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testGetOptionWhenClosed of KQueueSocketChannelConfigTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketChannelEOFTest.java",
+      "sha256": "541ef208e1c46eb9e8d1e3c8d3a31e94d3c0a2e02606c0fb48d71c7ba0e8e752",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketChannelEOFTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketChannelNotYetConnectedTest.java",
+      "sha256": "4456dc58abe705038a7cba16a7ffb7a9b8dc0b9c7ea3b4f9066345d2fc6767c8",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketChannelNotYetConnectedTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketCloseForciblyTest.java",
+      "sha256": "a96a3f75c097e53367d59e72a29e757d20d890a35d1cfe230620fafb02a3d752",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketCloseForciblyTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "61d13b1bcc7b502bd5a98f302f347c7fcdd2f4184c081e4d49a7d198eb1ed9c9"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketConnectTest.java",
+      "sha256": "1cf31594de1f3c91cc59ca4e24398fec0f81896b4f79b0ee01f12ad1de14d8d8",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketConnectTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketConnectionAttemptTest.java",
+      "sha256": "e479d5c4b5b34d847080d574f5610e0887b2de374cbb52ec679692112fee4da2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketConnectionAttemptTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketEchoTest.java",
+      "sha256": "35cd70748aafd2548e9345b7a137d49d4395d200ec84c286cdc1bdf25dcb1659",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketFileRegionTest.java",
+      "sha256": "3b784775c3f48f6a6f71a3a9fe2236e8d02dbb685cea79d9d8b43fbdfd180a16",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketFileRegionTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketFixedLengthEchoTest.java",
+      "sha256": "b666832b4721a3955580b5bb7981b26404336650979bdb3972efbb5b2a3f4849",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketFixedLengthEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketGatheringWriteTest.java",
+      "sha256": "477ae683c21f814a4810ef223c0833ed740a2cba8e7efb883081d89a8d69aa25",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketGatheringWriteTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketMultipleConnectTest.java",
+      "sha256": "76f90ed311433606dab0fe599c976b7e28e1263e15f8dd79dfbb9d6d82e1dffb",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketMultipleConnectTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketObjectEchoTest.java",
+      "sha256": "a984cd96f9c664a17d9d68b1074ca9bfc7022e1769164830ffebf62caaa945f2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketObjectEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketRstTest.java",
+      "sha256": "007bf319ac17f2ba9e4119552f410e2d40e880fe4c684fab464af9965317cdbb",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketRstTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketShutdownOutputByPeerTest.java",
+      "sha256": "217695fac78d07f4a1bf6d2ab8cf056279f4bdfdef90855e0238bfd530ab96fe",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketShutdownOutputByPeerTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketShutdownOutputBySelfTest.java",
+      "sha256": "f7604d966a281c5b098a544e7454099706f438812757754ac59184e636abc1cd",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketShutdownOutputBySelfTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketSslClientRenegotiateTest.java",
+      "sha256": "2cc02e8228d6932729e3f34c7f6c410bad31470e60428d3fb32e133a8923483f",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketSslClientRenegotiateTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketSslEchoTest.java",
+      "sha256": "765d34f267e13bc31a54fcd4986b5896271900e105be9a7df0c2486604f132aa",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketSslEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketSslGreetingTest.java",
+      "sha256": "25db4f3216483bb307f89c95abbbbd3c4d76962f2771c2618e473cc30fc5efee",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketSslGreetingTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketSslSessionReuseTest.java",
+      "sha256": "cf3fc604789a11a6b5f851707fa8b52258f19549d81f03d3862292dc1169c0a5",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketSslSessionReuseTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketStartTlsTest.java",
+      "sha256": "2bcd3b9f3513d509baea74b53e292bef75ceb63cb77b16819cff3d8544e921d6",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketStartTlsTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketStringEchoTest.java",
+      "sha256": "f374bafa01cb9caadb30aaeddc7d435423c3daeeaf629c33f42696595daffbd2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketStringEchoTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "574d726838875ff22bb958ebda1d4bb0c91b2b3e7951c0a047d65bdea7bfe4f6"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketTest.java",
+      "sha256": "c417a8444edd8aa305fef8d63e4be47eae95c424a49817f2beeca4a0d492539d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 6,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 6,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "4e0a562821562bac66a6eee41338527710e8dafd774aafdb774d7ac76982ec87"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 0,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testPeerCreds",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testPeerCreds of KQueueSocketTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testPeerPID",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testPeerPID of KQueueSocketTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KQueueSocketTestPermutation.java",
+      "sha256": "dd94e39b31bdbdcce8ad8b11d64d3882fa6e3efa6da9414f724f15f879e9aeee",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KQueueSocketTestPermutation of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 4,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 4,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "7e90f0c85c6ec7622f9261b3ec94ca773f6d902c1f17189c34b4f492794b2732"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KqueueDatagramChannelTest.java",
+      "sha256": "4aecc75749efe916479642afa742a5b14460a6e85249d31549f832500a36fade",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KqueueDatagramChannelTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "ee156d2b9815750fc1652eaacca7f23eca2149792ae01687c328ce6d5c8eeb20"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testDefaultMaxMessagePerRead",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testDefaultMaxMessagePerRead of KqueueDatagramChannelTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KqueueDomainDatagramChannelTest.java",
+      "sha256": "dc5bc1dd005dd224a2d7d1b6b01cd2da1660cf44f945e22e88a87938088f3146",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KqueueDomainDatagramChannelTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "ee156d2b9815750fc1652eaacca7f23eca2149792ae01687c328ce6d5c8eeb20"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testDefaultMaxMessagePerRead",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testDefaultMaxMessagePerRead of KqueueDomainDatagramChannelTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KqueueRegistrationTest.java",
+      "sha256": "83bdb4137ca0bd2c5fca869327d27e637c93f6b090e923815d54c1ca19de8173",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KqueueRegistrationTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testFdReuse",
+            "disposition": "jvm-only-replaced",
+            "reason": "The fixture exercises a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+            "sourceContract": "testFdReuse of KqueueRegistrationTest.",
+            "clrEvidence": [
+              "docs/record-only-modules.md",
+              "docs/transport-porting.md",
+              "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+              "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "upstream": "transport-native-kqueue/src/test/java/io/netty/channel/kqueue/KqueueWriteBeforeRegisteredTest.java",
+      "sha256": "801b69ee89c6c61e434b1294d2c8cce89896b710a9055eec8fd1507fca6d5be1",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java test fixture KqueueWriteBeforeRegisteredTest of transport-native-kqueue.",
+        "reason": "JNI native transport (C code loaded by NativeLibraryLoader); Netty.NET's transport is the NIO family on System.Net.Sockets.Socket, whose runtime engine itself waits on epoll (Linux) and kqueue (macOS).",
+        "replacement": {
+          "clr": "NioIoHandler with NioSocketChannel, NioServerSocketChannel, NioDatagramChannel and NioDomainSocketChannel on System.Net.Sockets.Socket.",
+          "noClrCounterpart": [
+            "The transport-specific channel options (EpollChannelOption, IoUringChannelOption, KQueueChannelOption), splice/sendfile/recvmmsg/sendmmsg paths and io_uring submission queues."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md",
+            "docs/transport-porting.md",
+            "src/Netty.NET.Transport/Channels/Nio/NioIoHandler.cs",
+            "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=net-10.0"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: the JNI kqueue transport (BSD, macOS) and its tests.",
+        "sha256": "493e45ededb34663df2fa6ae64941acb9aaa76928769de0e910fa971f3261b7e"
+      },
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      }
+    }
+  ],
+  "validationHistory": []
+}

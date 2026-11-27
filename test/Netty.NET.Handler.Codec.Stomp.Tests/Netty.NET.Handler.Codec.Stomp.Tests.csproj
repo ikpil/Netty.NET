@@ -18,4 +18,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Stomp\Netty.NET.Handler.Codec.Stomp.csproj" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

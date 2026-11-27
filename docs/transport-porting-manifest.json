@@ -4,38 +4,38 @@
     "transport/src"
   ],
   "objective": "Port portable Transport behavior and original tests using CLR-native Tasks, delegates, sockets and explicit executor dispatch; preserve original comments and test intent. Preserve corresponding Java variable and method identifiers, allowing only the requested C# capitalization/underscore adaptations.",
-  "status": "in-progress",
-  "statusMeaning": "pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported. A clr-adapted fixture may contain per-method clr-not-applicable decisions only with source contract/reason/real CLR evidence. These methods are reviewed but never counted as mapped original cases or skipped CLR tests. BCL-replaced JVM wrapper roles are clr-adapted with clrReplacement evidence. Wrapper-only comments retain exact text and explicit dispositions; this comment rule is forbidden for test entries. Such roles are not new physical C# wrapper files. deprecated-not-ported and jvm-only-replaced (2026-11-16 owner decisions, notPortedPolicy) record Java units that are deliberately not ported as code; they are neither mapped nor pending, and every original comment and declared test method has an explicit disposition.",
+  "status": "ported",
+  "statusMeaning": "Top-level status ported (2026-11-26 audit): every pinned transport/src file, testsuite file and selected native test source has a final status (none pending, summary.pendingEntries is checked), every declared original test is mapped or carries a CLR-inapplicable reason, and every original comment is accounted for; openWork keeps only platform limits and CLR verification scope that is still partial. pending means unreviewed, not automatically a missing CLR feature. in-progress records implemented counterparts with explicit remaining comment/contract/test review. verified test entries cover every declared original test in that fixture with documented CLR adaptations; supplemental tests are not original fixture completion. clr-adapted accounts only for the named source contract. No placeholder counts as ported. A clr-adapted fixture may contain per-method clr-not-applicable decisions only with source contract/reason/real CLR evidence. These methods are reviewed but never counted as mapped original cases or skipped CLR tests. BCL-replaced JVM wrapper roles are clr-adapted with clrReplacement evidence. Wrapper-only comments retain exact text and explicit dispositions; this comment rule is forbidden for test entries. Such roles are not new physical C# wrapper files. deprecated-not-ported and jvm-only-replaced (2026-11-16 owner decisions, notPortedPolicy) record Java units that are deliberately not ported as code; they are neither mapped nor pending, and every original comment and declared test method has an explicit disposition.",
   "stages": [
     {
       "name": "Channel dependencies",
-      "status": "in-progress",
+      "status": "completed",
       "completedUnit": "Receive allocation, options, metadata, file regions and DefaultChannelConfig integration",
-      "next": "Remaining config edge cases and original fixture review"
+      "next": "Closed by the 2026-11-26 audit: no pending entries, every declared original test mapped or CLR-inapplicable with a reason, no partial comment accounting."
     },
     {
       "name": "Channel, Pipeline and executor ordering",
-      "status": "in-progress",
-      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown. Ported the caller-owned manual pump and eleven portable source methods, with real TCP and channel-migration contracts. Separated manual inbound I/O and task phases and ported four original I/O-handler count and manual-listener methods. Ported pending connect and write completion dispatch with the six outbound source declarations and eight native contract cases. Threaded socket completion phases and the source task-processing I/O ratio are implemented. Added direct completion registration, backend compatibility and chooser-preserving queries. UDP preparation and delivery share one completion callback. Ported all portable AbstractChannelTest declarations, preserving initial write-failure causes, close-before-release ownership and inactive-flush reentrancy. Added Task-native channel-correlated group failures and fixed duplicate-member stayClosed admission. Shared output-shutdown policy now handles generic channels and TCP consistently, with admission closed before native shutdown, scoped producer ownership and the full-close default. Channel groups expose immutable per-channel native Task snapshots with live completion and typed id removal. Connected channel/native-Task transfer progress to IProgress with original totals, owner emission, observer isolation and the Common executor observation bridge. Added the original deregistration/read-clear regression.",
-      "next": "Review remaining group comparison/inherited set-surface decisions, selector-specific consumers and original runtime comments."
+      "status": "completed",
+      "completedUnit": "Native Task lifecycle, original tail/outbound-buffer/initializer fixtures, and complete review of all 72 DefaultChannelPipelineTest declarations: 64 CLR mappings plus eight explicit language/backend decisions. Added event-mask behavior, executor-boundary preservation and native completion-role coverage. CombinedChannelDuplexHandler is implemented with all ten original tests and six explicitly supplemental native context/lifecycle/completion tests. Reviewed all eighteen SingleThreadEventLoop declarations (seventeen native mappings plus one caller-promise/listener decision) and all three AbstractEventLoop declarations with real re-registration, default/assigned executor identity and 600 ms zero-quiet termination. Corrected polymorphic ordinary/tail queue accounting. Added native registration counts/snapshots and suspension admission with lifetime/migration/failure tests; reviewed all seven NioEventLoop own declarations with explicit backend decisions. Ported both MultiThreadIoEventLoopGroup tests and connected the auto-scaling chooser to native registered channels, utilization, suspended-worker admission and shutdown. Ported the caller-owned manual pump and eleven portable source methods, with real TCP and channel-migration contracts. Separated manual inbound I/O and task phases and ported four original I/O-handler count and manual-listener methods. Ported pending connect and write completion dispatch with the six outbound source declarations and eight native contract cases. Threaded socket completion phases and the source task-processing I/O ratio are implemented. Added direct completion registration, backend compatibility and chooser-preserving queries. UDP preparation and delivery share one completion callback. Ported all portable AbstractChannelTest declarations, preserving initial write-failure causes, close-before-release ownership and inactive-flush reentrancy. Added Task-native channel-correlated group failures and fixed duplicate-member stayClosed admission. Shared output-shutdown policy now handles generic channels and TCP consistently, with admission closed before native shutdown, scoped producer ownership and the full-close default. Channel groups expose immutable per-channel native Task snapshots with live completion and typed id removal. Connected channel/native-Task transfer progress to IProgress with original totals, owner emission, observer isolation and the Common executor observation bridge. Added the original deregistration/read-clear regression. Recorded Java parity for separate-executor shutdown and registration rejection at shutdown (owner decision 2026-11-26, PipelineExecutorShutdownContractTest), with the source registration warning and messages.",
+      "next": "Closed by the 2026-11-26 audit: no pending entries, every declared original test mapped or CLR-inapplicable with a reason, no partial comment accounting."
     },
     {
       "name": "EmbeddedChannel and LocalChannel original fixtures",
-      "status": "in-progress",
+      "status": "completed",
       "completedUnit": "All 36 EmbeddedChannel original tests and all 32 LocalChannel original methods; original read budgets, queued acceptance, connect/close ownership and completion/write/read/inactive ordering. Native segmented local coalescing, late empty read wakeups, reentrant peer write ordering and close-owned references fixed against source contracts.",
-      "next": "Further LocalChannel runtime comment/contract review and auxiliary embedded fixtures; this fixture completion does not close the stage"
+      "next": "Closed by the 2026-11-26 audit: no pending entries, every declared original test mapped or CLR-inapplicable with a reason, no partial comment accounting."
     },
     {
       "name": "Bootstrap, Resolver integration and TCP",
-      "status": "in-progress",
+      "status": "completed",
       "completedUnit": "Native Bootstrap/ServerBootstrap, real TCP connect/accept/read/write and all five NioSocketChannel originals; all six ServerBootstrap declarations and all nineteen Bootstrap declarations reviewed (eighteen original mappings plus one explicit JVM-only failure-promise representation decision). Live client/parent/child configuration views, immutable ordered snapshots, source volatile visibility, resolver default/disable/reset/clone state, late-registration bind/connect and asynchronous resolution are covered alongside scoped initializer extensions and cancellation independent of a pending resolver producer. Added six original self/peer shutdown declarations and three selected SocketHalfClosed declarations with 28 explicit allocator/role/read variants; manual batching, final input-read notification, output-first shutdown and queued-write ownership are implemented. Completed review of all eight SocketHalfClosed declarations: seven mappings (one conditional Unix-only reset fixture) and one original backend-capability exclusion. TCP error policy, queued cause/ownership and abortive zero-linger close are ported; all original fixture comments are preserved. Added BCL socket ownership constructors, server message allocator selection, actual bounded accept batches, partial delivery/error ordering and recoverable/fatal accept handling; original server and inherited option fixtures are reviewed. Added AF_UNIX stream/listener implementations and original domain fixtures, plus the portable TCP echo methods and supplemental domain half-close, cleanup and echo tests. Ported real TCP and AF_UNIX gathering writes, partial vector accounting, flush boundaries and all six gathering-write source declarations. Ported Linux TCP peer authentication and deferred source-port allocation with the original MD5 fixture. Ported the complete SocketConnectTest fixture and the native Linux client Fast Open path. Ported the five socket read-state/EOF fixtures (seven source declarations and sixteen allocator/route cases), retaining original quiet windows, receive budgets, integer decode and the paused 32 MiB EOF digest. Pre-activation manual reads are preserved. Ported all eleven declarations in SocketFileRegion, SocketBufRelease, SocketExceptionHandling, SocketCloseForcibly and SocketConditionalWritability fixtures. Fixed logical FileRegion completion/resume, owner progress and nonblocking Stream transfer with real backpressure/close lifetime coverage. Added native default-file handle/range sends with original file identity/cursor/progress/lifetime, safe portable fallback, and all seven inherited domain file-region scenarios (fourteen allocator rows). Added the shared IDuplexChannel/IsShutdown API, original TCP/domain address scenarios, inherited domain initial-read and peer-shutdown fixtures, the complete 100-connection descriptor-reuse body and registration-before-write original. Restored real-network connection-attempt originals and implemented the measured Windows AF_UNIX EOF workaround. Channel groups expose native ISet bulk operations and ordinal-name/identity ordering while preserving Id admission, automatic removal, stayClosed and server-first snapshots. Corrected separate TCP stream/listener option admission, platform backlog defaults/visibility, JDK positive buffer sizes and linger clamp, one-time best-effort NoDelay defaults and Linux IPv6 traffic-class configuration. Repeated the original native/domain config tests without changing their mappings. Scalar ByteBuf sends now share the original per-pass writeSpinCount with vectors, including zero-cost empty buffers, partial progress and native borrow lifetime. Source write-method names and reviewed TCP test identifiers are aligned. Eligible file-region writes now share the original per-attempt spin quantum, including zero-progress retry, physical/logical completion separation, native partial errors and close-owned borrows. The protected DoWriteFileRegion producer retains source identifiers and original comments.",
-      "next": "Continue remaining portable socket and selector/backend contracts against their original fixtures and runtime comments."
+      "next": "Closed by the 2026-11-26 audit: no pending entries, every declared original test mapped or CLR-inapplicable with a reason, no partial comment accounting."
     },
     {
       "name": "UDP and remaining portable transport contracts",
-      "status": "in-progress",
+      "status": "completed",
       "completedUnit": "Native UDP datagram send/receive/truncation and original 100-channel bind; all ten DatagramUnicast methods, port-only Inet binding and IPv4 multicast with 46 explicit family/allocator executions. Family-backed multicast options, ASM membership, IPv4 source membership/blocking, registered-only sends/reconnect and recoverable/fatal read-error contracts are covered. Pending-write/coalescing and original channel-pool fixtures remain recorded in their own entries. Added native UDP receive batches and the complete IPv4-mapped unicast fixture with 22 original allocator cases. Added IPv6 source multicast operations and two original Unix ICMP fixtures. The inherited IPv6 multicast fixture and the Linux IPv6 traffic class mapping are verified. Linux UDP disconnect preserves its socket and local binding across reconnect. Linux validates all eight Unix TCP reset cases. Linux dual-mode IPv4 multicast membership and per-socket multicast delivery are verified with shared-port packet tests. Mapped six original epoll datagram scenarios to the portable CLR receive path. Ported segmented sends, Linux UDP GRO, and native receive batching with five original tests. Mapped original destination metadata, IP_FREEBIND, and the mixed-family multicast source scenario with its Linux route limitation. Linux UDP and TCP listeners now expose kernel port sharing. TCP listener and stream native configuration fixtures are mapped. Connected MAX_MESSAGES_PER_WRITE to native UDP write passes, including recoverable failures, cancellation, config snapshots and readied I/O/task phases; fixed empty/cancelled-buffer native sends and private-config registration assumptions. Repeated both original unicast fixtures and their allocator variants on Windows/Linux.",
-      "next": "Continue the remaining native transport contracts. Keep the exact mixed-family Java route limitation recorded."
+      "next": "Closed by the 2026-11-26 audit: no pending entries, every declared original test mapped or CLR-inapplicable with a reason, no partial comment accounting. The exact Java mixed-family multicast route limitation stays recorded in openWork."
     }
   ],
   "validation": {
@@ -9265,7 +9265,7 @@
         "scope": "Original comments are at the corresponding C# declarations; comments of deprecated or JVM-only Java members carry per-comment dispositions."
       },
       "review": {
-        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Queue entries now snapshot a standard IProgress observer and original byte/file/holder/unknown total. Actual accepted progress carries channel identity and native queue Task, is emitted before native Task completion, and isolates direct observer errors. Checked arithmetic retains Java long-counter wraparound and invalid reports are suppressed. No final progress is invented for transports that do not call Progress. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names. The eligible built-in/native-capability file path now uses source-named DoWriteFileRegion(region), preserving position and localFlushedAmount. DoWriteInternal shares its snapshotted writeSpinCount across ByteBuf and file producer attempts: already-complete regions cost zero, accepted positive transfers cost one, and zero transfer returns WRITE_STATUS_SNDBUF_FULL for a later turn. Logical transferred() controls completion independently of physical accepted bytes. The native producer submits at most one bounded file-handle range; the Stream fallback invokes TransferTo once on a worker. Partial native errors still record accepted bytes/progress before failure; unsupported zero-byte capability rejection resumes safely through TransferTo. Worker borrows survive close/stop until the producer returns. Native output closure is checked before new work. Reviewed adaptive gathering limits against pinned NioSocketChannel and ChannelOutboundBuffer: scalar accepted-byte results now adjust the next window; vector maxBytes remains a whole-message hint and includes the first message without slicing segments. SO_SNDBUF updates recalculate the native-derived limit. Java signed-int shift boundaries are preserved in checked C# builds. A stale asynchronous completion cannot replace newer explicit configuration. Seventeen supplemental cases are separate from existing original mappings. Source-named gathering/configuration methods and NioBuffers/NioBufferCount/NioBufferSize retain CLR memory types; six existing original buffer-view tests retain source variable names and assertions. Positive SO_LINGER close now selects TaskScheduler.Default in source-named PrepareToClose. AbstractChannel preserves closeInitiated/closeFuture, joins duplicate closes, blocks new queue admission, executes DoClose0 off the owner and returns failure/release/inactive/unregistered/removal to that owner. CLR logical open/active admission is quiesced before disposal because completion sockets have no selection key. CloseCompletion retains the existing CLR meaning of completed owner cleanup; no JVM Promise/Executor facade is added. SingleThreadEventLoop and ManualIoEventLoop reserve native-close completion admission before scheduling, preserve it through immediate/graceful shutdown and prevent actual worker suspension while close is pending. Explicit deregistration and native producer borrows retain their lifetimes. Nineteen supplemental lifetime cases are separate from the newly mapped original SocketRstTest fixture (two declarations/four allocator cases). Ordinary CLR stream subclasses now inherit native write production; actual whole-message overrides keep ownership. The constructor binds the real DoWrite virtual target, preserving hidden/new slots, overloads, inherited overrides and covariant Task<T> returns. Original composite/direct/partial-layout fixture and nineteen supplemental inheritance cases verify this scope. Family constructors: NioSocketChannel(SelectorProvider, SocketProtocolFamily) and its deprecated InternetProtocolFamily overload map to NioSocketChannel(SocketProtocolFamily?) and NioSocketChannel(InternetProtocolFamily?) with the original family parameter name; newChannel keeps its name, opens the OS default for null, wraps socket-open failures in ChannelException(\"Failed to open a socket.\"), sets DualMode on IPv6 when IPv4 is available as OpenJDK clears IPV6_V6ONLY, and rejects UNIX or unavailable INET6 with NotSupportedException. The parameterless constructor uses the same newChannel(null) path. There is no SelectorProvider. 2026-11-14 owner naming decision (docs/common-clr-design.md#naming-policy-decisions-2026-11-14): public members now use the Java names; earlier text in this entry that names CloseCompletion -> CloseFuture describes the superseded CLR names. 2026-11-16 (Java type names and hierarchy, behavior unchanged): TcpSocketChannel is NioSocketChannel, derives from AbstractNioByteChannel and implements ISocketChannel; the (parent, socket) constructor is public as in Java, and TCP_NODELAY is enabled only when PlatformDependent.CanEnableTcpNoDelayByDefault() with any failure ignored. The SelectorProvider constructor is dispositioned: the parameterless constructor uses newChannel(null).",
+        "scope": "Added public BCL Socket ownership constructor for the existing native stream implementation and original raw/configured option tests. Use the BCL vectored send for consecutive flushed array-backed ByteBuf segments. Advance the outbound queue by the kernel byte count, keep a native borrow of every submitted buffer, and fall back at direct memory or file regions while preserving order. Adapt the window to SO_SNDBUF and observed sends. Optional Linux address-only binding reports the actual kernel port after TCP connect. TCP_MD5SIG uses per-peer native keys with write-only configuration. Client Fast Open uses the CLR connection and send operations, with Linux TCP_FASTOPEN_CONNECT enabled only when initial data is queued. Native buffer consumption is committed on the owner. File-region writes resume and stop at the region's own Transferred counter, report actual returned progress on the owner and preserve the portable serialized Stream fallback. The native Stream socket target handles partial sends and WouldBlock without changing externally supplied socket mode. Exact default file regions now use bounded CLR native file-handle ranges on supported sockets; supplied synchronous streams and virtual/custom producers retain the portable worker path. Original domain inheritance and native handle/offset/progress/lifetime cases are verified. Streams implement the common CLR duplex contract. Windows AF_UNIX reads use readiness-gated worker receives to avoid the reproduced overlapped EOF hang; TCP and Unix-platform native async receives retain their existing path. Original domain address, initial read, peer shutdown and 100-connection lifetime tests are exercised. Queue entries now snapshot a standard IProgress observer and original byte/file/holder/unknown total. Actual accepted progress carries channel identity and native queue Task, is emitted before native Task completion, and isolates direct observer errors. Checked arithmetic retains Java long-counter wraparound and invalid reports are suppressed. No final progress is invented for transports that do not call Progress. The scalar ByteBuf path now uses source-named DoWrite0/DoWriteInternal/DoWriteBytes. It retains each native borrow until producer completion, commits indices/progress/removal on the owner, returns zero cost for empty entries and one for a positive OS write, and shares a snapshotted writeSpinCount with gathering writes. CLR asynchronous sends wait for readiness; zero/invalid completed nonempty results fail rather than manufacturing selector states. Built-in optimized writes and explicit native-capability probes opt in; existing custom whole-message overrides remain honored. The protected Task-based write contract is named DoWrite across its overrides; MaxMessagesPerWrite and the reviewed variables retain source names. The eligible built-in/native-capability file path now uses source-named DoWriteFileRegion(region), preserving position and localFlushedAmount. DoWriteInternal shares its snapshotted writeSpinCount across ByteBuf and file producer attempts: already-complete regions cost zero, accepted positive transfers cost one, and zero transfer returns WRITE_STATUS_SNDBUF_FULL for a later turn. Logical transferred() controls completion independently of physical accepted bytes. The native producer submits at most one bounded file-handle range; the Stream fallback invokes TransferTo once on a worker. Partial native errors still record accepted bytes/progress before failure; unsupported zero-byte capability rejection resumes safely through TransferTo. Worker borrows survive close/stop until the producer returns. Native output closure is checked before new work. Reviewed adaptive gathering limits against pinned NioSocketChannel and ChannelOutboundBuffer: scalar accepted-byte results now adjust the next window; vector maxBytes remains a whole-message hint and includes the first message without slicing segments. SO_SNDBUF updates recalculate the native-derived limit. Java signed-int shift boundaries are preserved in checked C# builds. A stale asynchronous completion cannot replace newer explicit configuration. Seventeen supplemental cases are separate from existing original mappings. Source-named gathering/configuration methods and NioBuffers/NioBufferCount/NioBufferSize retain CLR memory types; six existing original buffer-view tests retain source variable names and assertions. Positive SO_LINGER close now selects TaskScheduler.Default in source-named PrepareToClose. AbstractChannel preserves closeInitiated/closeFuture, joins duplicate closes, blocks new queue admission, executes DoClose0 off the owner and returns failure/release/inactive/unregistered/removal to that owner. CLR logical open/active admission is quiesced before disposal because completion sockets have no selection key. CloseCompletion retains the existing CLR meaning of completed owner cleanup; no JVM Promise/Executor facade is added. SingleThreadEventLoop and ManualIoEventLoop reserve native-close completion admission before scheduling, preserve it through immediate/graceful shutdown and prevent actual worker suspension while close is pending. Explicit deregistration and native producer borrows retain their lifetimes. Nineteen supplemental lifetime cases are separate from the newly mapped original SocketRstTest fixture (two declarations/four allocator cases). Ordinary CLR stream subclasses now inherit native write production; actual whole-message overrides keep ownership. The constructor binds the real DoWrite virtual target, preserving hidden/new slots, overloads, inherited overrides and covariant Task<T> returns. Original composite/direct/partial-layout fixture and nineteen supplemental inheritance cases verify this scope. Family constructors: NioSocketChannel(SelectorProvider, SocketProtocolFamily) and its deprecated InternetProtocolFamily overload map to NioSocketChannel(SocketProtocolFamily?) and NioSocketChannel(InternetProtocolFamily?) with the original family parameter name; newChannel keeps its name, opens the OS default for null, wraps socket-open failures in ChannelException(\"Failed to open a socket.\"), sets DualMode on IPv6 when IPv4 is available as OpenJDK clears IPV6_V6ONLY, and rejects UNIX or unavailable INET6 with NotSupportedException. The parameterless constructor uses the same newChannel(null) path. There is no SelectorProvider. 2026-11-14 owner naming decision (docs/common-clr-design.md#naming-policy-decisions-2026-11-14): public members now use the Java names; earlier text in this entry that names CloseCompletion -> CloseFuture describes the superseded CLR names. 2026-11-16 (Java type names and hierarchy, behavior unchanged): TcpSocketChannel is NioSocketChannel, derives from AbstractNioByteChannel and implements ISocketChannel; the (parent, socket) constructor is public as in Java, and TCP_NODELAY is enabled only when PlatformDependent.CanEnableTcpNoDelayByDefault() with any failure ignored. The SelectorProvider constructor is dispositioned: the parameterless constructor uses newChannel(null). 2026-11-27 (remote address after close): remoteAddress0() returns socket().getRemoteSocketAddress(), the JDK SocketChannelImpl.remoteAddress field, which the accepted-channel constructor and beginConnect set and close never clears; connect first replaces a wildcard target with loopback (checkRemote). NioSocketChannel records the address from RemoteEndPoint over an accepted or connected socket and in Connect after the same wildcard replacement, and RemoteAddress0 returns it, reading the live RemoteEndPoint only when nothing was recorded. Before the change a closed channel reported null (Socket.RemoteEndPoint throws ObjectDisposedException) and a wildcard connect failed on Windows with WSAEADDRNOTAVAIL. See docs/transport-porting.md#niosocketchannel-remote-and-local-addresses-after-close-2026-11-27. 2026-11-27 (local address after close): localAddress0() returns socket().getLocalSocketAddress(), the JDK SocketChannelImpl.localAddress field, which the accepted-channel constructor, bind and a completed connect (endConnect, endFinishConnect) set and close never clears. AbstractNioByteChannel.DoBind0 calls an internal virtual Bind(Socket, EndPoint) (SocketUtils.bind), and NioSocketChannel records the local address in its constructor over a bound socket, in Bind, in Connect when it completes at once and in DoFinishConnect; LocalAddress0 returns it, reading the live LocalEndPoint only when nothing was recorded. A Linux address-only bind is read with getsockname at connect (not run on this host).",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/NioLifecycleSourceTest.cs",
@@ -9308,7 +9308,8 @@
           "test/Netty.NET.Transport.Tests/CompositeBufferGatheringWriteSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SocketInheritedWriteContractTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SocketProtocolFamily.cs",
-          "test/Netty.NET.Transport.Tests/SocketProtocolFamilyContractTest.cs"
+          "test/Netty.NET.Transport.Tests/SocketProtocolFamilyContractTest.cs",
+          "test/Netty.NET.Transport.Tests/NioSocketChannelAddressContractTest.cs"
         ]
       },
       "publicNameReview": {
@@ -14528,32 +14529,32 @@
         {
           "upstreamMethod": "scheduleTaskAtFixedRateA",
           "clrMethod": "ScheduleTaskAtFixedRateA",
-          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine. 2026-11-27: the test thread waits for the latch (no Task.Run hop), and the runs count down through a helper that, as CountDownLatch.countDown(), does nothing at zero (CountdownEvent.Signal() throws there and faulted the periodic Task after an extra overdue run under load)."
         },
         {
           "upstreamMethod": "scheduleTaskAtFixedRateB",
           "clrMethod": "ScheduleTaskAtFixedRateB",
-          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine. 2026-11-27: the test thread waits for the latch (no Task.Run hop), and the runs count down through a helper that, as CountDownLatch.countDown(), does nothing at zero (CountdownEvent.Signal() throws there and faulted the periodic Task after an extra overdue run under load)."
         },
         {
           "upstreamMethod": "scheduleLaggyTaskAtFixedRateA",
           "clrMethod": "ScheduleLaggyTaskAtFixedRateA",
-          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine. 2026-11-27: the test thread waits for the latch (no Task.Run hop), and the runs count down through a helper that, as CountDownLatch.countDown(), does nothing at zero (CountdownEvent.Signal() throws there and faulted the periodic Task after an extra overdue run under load)."
         },
         {
           "upstreamMethod": "scheduleLaggyTaskAtFixedRateB",
           "clrMethod": "ScheduleLaggyTaskAtFixedRateB",
-          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine. 2026-11-27: the test thread waits for the latch (no Task.Run hop), and the runs count down through a helper that, as CountDownLatch.countDown(), does nothing at zero (CountdownEvent.Signal() throws there and faulted the periodic Task after an extra overdue run under load)."
         },
         {
           "upstreamMethod": "scheduleTaskWithFixedDelayA",
           "clrMethod": "ScheduleTaskWithFixedDelayA",
-          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine. 2026-11-27: the test thread waits for the latch (no Task.Run hop), and the runs count down through a helper that, as CountDownLatch.countDown(), does nothing at zero (CountdownEvent.Signal() throws there and faulted the periodic Task after an extra overdue run under load)."
         },
         {
           "upstreamMethod": "scheduleTaskWithFixedDelayB",
           "clrMethod": "ScheduleTaskWithFixedDelayB",
-          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine."
+          "adaptation": "Preserve A take-task, B interruptible timed-drain and C bounded timed-drain/tail helpers, cleanup exactly once, original task counts/data/deadlines and ordering. Stopwatch is monotonic; restore the raw timestamp offset before calling source-shaped DelayNanos. Native Task/CTS replace scheduled future observation/cancellation without interrupting callbacks through cancellation. Preserve 500 ms one-shot; fixed-rate five timestamps/100 ms period/50 ms work and 80..120 ms cumulative bounds; first-lag 401 ms work, >=400 ms first gap and <=10 ms catch-up gaps; fixed-delay three timestamps/51 ms work and >=150 ms gaps; 300 ms post-cancel observation; three accepted tasks; 20x100 ms quiet-period submissions and >=1 second final silence; 2 second shutdown timeout; tail execute/remove counts and real source helper ownership. Original five/ten-second annotations retained; otherwise unbounded one-shot/legacy cases have a ten-second CLR harness cap. No Task continuation is represented as automatically owner-affine. 2026-11-27: the test thread waits for the latch (no Task.Run hop), and the runs count down through a helper that, as CountDownLatch.countDown(), does nothing at zero (CountdownEvent.Signal() throws there and faulted the periodic Task after an extra overdue run under load)."
         },
         {
           "upstreamMethod": "shutdownWithPendingTasks",
@@ -15284,23 +15285,24 @@
   "summary": {
     "inventoryEntries": 277,
     "reviewedImplementationFiles": 159,
-    "portedOriginalFixtures": 92,
-    "portedOriginalMethods": 507,
-    "supplementalClrCases": 570,
+    "portedOriginalFixtures": 119,
+    "portedOriginalMethods": 523,
+    "supplementalClrCases": 579,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
-    "countsBasis": "Current Transport entries, every pinned testsuite file (testsuiteEntries, or testsuiteDeferredEntries while it needs an unported module) and the selected native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation.",
-    "testsuiteSources": 52,
+    "countsBasis": "Current Transport entries, every pinned testsuite file (testsuiteEntries, or testsuiteDeferredEntries while it needs an unported module) and the selected native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation. Since 2026-11-26 the checker recomputes inventoryEntries, pendingEntries, reviewedImplementationFiles, portedOriginalFixtures (test entries with status verified or clr-adapted across entries, testsuiteEntries and nativeTestEntries), portedOriginalMethods (mapped declared methods), mappedInheritedScenarios, the testsuite/native/deferred counts and notPortedEntries (all three lists), and fails when the summary differs. supplementalClrCases stays an incremental count of added supplemental cases.",
+    "testsuiteSources": 60,
     "sourceDisabledMethodsMapped": 9,
     "nativeTestSources": 13,
     "mappedInheritedScenarios": 50,
     "reviewedImplementationFilesBasis": "Count of core Transport implementation entries with status clr-adapted, including explicitly reviewed CLR role aliases; not a count of distinct C# files. Recomputed from entries to remove earlier incremental-count drift.",
     "notPortedEntries": {
       "deprecated-not-ported": 28,
-      "jvm-only-replaced": 29
+      "jvm-only-replaced": 32
     },
     "inProgressImplementationEntries": [],
-    "testsuiteDeferredSources": 14,
-    "testsuiteDeferredDeclaredTests": 22
+    "testsuiteDeferredSources": 6,
+    "testsuiteDeferredDeclaredTests": 3,
+    "pendingEntries": 0
   },
   "clrDecisions": [
     {
@@ -16246,33 +16248,33 @@
   "openWork": [
     {
       "area": "Socket read admission",
-      "state": "partially-verified",
-      "detail": "TCP receive, TCP accept and UDP receive now withhold a completed native operation after AutoRead=false; read resumes without dropping input. Deregistered TCP input waits for registration and moves to the new worker. Native integration tests also cover buffer/socket cleanup while paused. Remaining: further registration/rejection and half-closure variants, complete read-batch budgets, and original socket/IoHandler fixture review. Native accept batching now uses the original server message allocator and proves 2/1 grouping, partial-batch error ordering, empty-failure manual permission retention and fatal closure. Five original socket read-state/EOF fixtures now retain initial no-read state, both read-caller routes, reset-per-message read permission and all 32 MiB through an intentional read pause and FIN. Native requests made before activation are deferred rather than discarded. Inherited AF_UNIX initial AutoRead tests are now mapped. Windows AF_UNIX EOF delivery uses measured readiness-gated worker receive adaptation; its bounded polling cost is explicit."
+      "state": "verified-for-original-fixtures",
+      "detail": "Audit 2026-11-26: tools/Test-TransportPortingManifest.ps1 verifies 0 pending entries, 523 mapped declared methods, 50 inherited scenarios and 37 CLR-inapplicable methods with reasons, and no entry with partial comment accounting. TCP receive, TCP accept and UDP receive withhold a completed native operation after AutoRead=false and resume without dropping input; deregistered TCP input waits for registration and moves to the new worker; requests made before activation are deferred. Accept batching uses the original server message allocator (2/1 grouping, partial-batch error ordering, empty-failure manual permission retention, fatal closure). The read loops keep the source read-batch budget through allocHandle.ContinueReading() (AbstractNioByteChannel, AbstractNioMessageChannel, NioDatagramChannel). The five original socket read-state/EOF fixtures and the inherited AF_UNIX initial AutoRead tests are mapped. Windows AF_UNIX EOF delivery uses the measured readiness-gated worker receive; its bounded polling cost is explicit. Further registration/rejection and half-closure permutations beyond the source fixtures would be CLR hardening, not porting gaps."
     },
     {
       "area": "Pipeline executor lifecycle",
-      "state": "implementation-gap",
-      "detail": "The 72-method Pipeline and ten-method Combined fixtures remain recorded. SingleThreadEventLoopTest is fully reviewed (17 mappings, 1 explicit Java promise/listener exclusion); AbstractEventLoopTest is 3/3 with context/channel route folding. Source schedule timing, graceful deadlines, tail work and real TCP re-registration pass; parent-typed tail queue accounting is fixed. Remaining I/O-handler/group rejection, separate-executor shutdown ownership and broader runtime comment/contract review stay open. Native-close owner callbacks are now reserved before offload, drained through shutdown and protected against actual event-loop suspension until cleanup completes."
+      "state": "java-parity-recorded",
+      "detail": "The 72-method Pipeline and ten-method Combined fixtures remain recorded. SingleThreadEventLoopTest is fully reviewed (17 mappings, 1 explicit Java promise/listener exclusion); AbstractEventLoopTest is 3/3 with context/channel route folding. Source schedule timing, graceful deadlines, tail work and real TCP re-registration pass; parent-typed tail queue accounting is fixed. I/O-handler/group rejection and separate-executor shutdown were probed against the pinned source on 2026-11-26 and closed as Java parity by owner decision; no shutdown ownership beyond the source is added across an event loop and a handler's separate EventExecutorGroup. PipelineExecutorShutdownContractTest (6) records the source behavior: a rejected pending handlerAdded unlinks the handler without callbacks; a stopped separate executor aborts destroy() before any handlerRemoved (an I/O loop logs it through safeExecute, while DefaultEventLoop.run() calls runTask() and ends); a zero-quiet loop shutdown rejects the separate executor's hand-back (and DefaultEventExecutor.run() ends that executor); a quiet period admits the hand-backs; registration during the quiet period is admitted and closed at termination. AbstractChannel.RegisterAsync now logs the source force-closing warning for a rejected registration hand-off and uses the source already-registered and incompatible-loop messages. Native-close owner callbacks are now reserved before offload, drained through shutdown and protected against actual event-loop suspension until cleanup completes."
     },
     {
       "area": "Outbound buffer",
-      "state": "review-gap",
-      "detail": "All 15 outbound-buffer and six reentrant-channel original methods are mapped. Cross-executor enqueue byte accounting and reentrant write-and-flush are implemented. Native IProgress reporting is now connected to accepted queue bytes, channel/native Task metadata and original message totals. Remaining internal runtime comments and other unreviewed contracts still require review. The file-region source fixture and four outbound/lifetime fixtures now cover mixed ByteBuf/empty/file writes, framed logical completion, retained application references, exception closure and 100 MiB writable-driven production. File transfer progress is committed on the owner; CLR worker borrows remain until native producer completion. Default-file native socket submission now preserves the opened handle, cursor, long offset, accepted progress and close lifetime; custom producers and supplied synchronous streams use the worker fallback. The original domain file-region inheritance is mapped. Native message writes now enforce their configured pass quantum with exclusive ownership across resumption; unflushed admission, recoverable failure, cancellation and close lifetimes are verified. Scalar and vector ByteBuf writes now share a snapshotted native-attempt quantum. Eligible built-in file-region producer attempts now share the original byte/file write quantum. Ordinary stream subclasses now inherit scalar/vector/file producer quanta; actual whole-message overrides retain ownership, including C# hidden slots and covariant Task<T> returns. Other custom-transport contracts remain open. Adaptive scalar/vector limits, whole-message maxBytes hints, explicit configuration races and signed-int boundaries are now reviewed with original source evidence."
+      "state": "verified-for-original-fixtures",
+      "detail": "Audit 2026-11-26: tools/Test-TransportPortingManifest.ps1 verifies 0 pending entries, 523 mapped declared methods, 50 inherited scenarios and 37 CLR-inapplicable methods with reasons, and no entry with partial comment accounting. All 15 outbound-buffer and six reentrant-channel original methods are mapped; ChannelOutboundBuffer keeps all its comments (2026-11-17). Cross-executor enqueue byte accounting, reentrant write-and-flush and native IProgress reporting (accepted queue bytes, channel/native Task metadata, original message totals) are implemented. The file-region source fixture and four outbound/lifetime fixtures cover mixed ByteBuf/empty/file writes, framed logical completion, retained application references, exception closure and 100 MiB writable-driven production. Default-file native socket submission preserves the opened handle, cursor, long offset, accepted progress and close lifetime; custom producers and supplied synchronous streams use the worker fallback. Native message, scalar, vector and file writes share the source write quantum; ordinary stream subclasses inherit it and whole-message overrides retain ownership (C# hidden slots and covariant Task<T> returns included). Adaptive scalar/vector limits, whole-message maxBytes hints, configuration races and signed-int boundaries are reviewed with source evidence."
     },
     {
       "area": "TCP and UDP",
-      "state": "test-and-implementation-review",
-      "detail": "All eight SocketHalfClosed declarations reviewed with source backend/platform conditions intact. Seven mappings include an original Unix-only fixture compiled but skipped on Windows; one backend-specific method is not mapped. Native fault tests cover the write-error decision, queued ownership/causes, reverse reads, actual half-close events and abortive reset on Windows. The unchanged Java wrapper and all eight CLR Unix variants now pass on Linux. Remaining: source-disabled writability scenario, full socket options/timeouts/IoHandler fixtures and broader runtime inventory. SocketFileRegionTest and four related socket lifetime/writability fixtures are mapped. The original 100 MiB backpressure producer is preserved. Nonblocking externally supplied sockets now support the portable FileRegion Stream path. The shared duplex contract and TCP/AF_UNIX address tests, native domain peer shutdown and 100-connection reuse body are mapped. Real network connection-attempt originals replace former held-connect mappings; deterministic cases remain supplemental. TCP config role admission, platform backlog, buffer/linger ranges, native option preservation after construction and Linux IPv6 traffic-class behavior are now covered. Other socket config subinterface comments and non-Linux IPv6 traffic-class policy remain review work. UDP MAX_MESSAGES_PER_WRITE and original empty-send semantics are implemented. The former supplemental zero-send expectation has been corrected against original implementation probes; external empty-datagram reception remains covered by the unchanged original fixtures. Positive-SO_LINGER close now offloads native disposal while preserving queued ownership, duplicate join and owner completion through shutdown. Original RST/default-linger tests are mapped; remaining transport/backend contracts still require review."
+      "state": "verified-for-original-fixtures",
+      "detail": "Audit 2026-11-26: tools/Test-TransportPortingManifest.ps1 verifies 0 pending entries, 523 mapped declared methods, 50 inherited scenarios and 37 CLR-inapplicable methods with reasons, and no entry with partial comment accounting. All eight SocketHalfClosed declarations are reviewed (seven mappings, one backend-specific method not mapped); the unchanged Java wrapper and the CLR Unix variants pass on Linux (validationHistory). SocketFileRegionTest, the socket lifetime/writability fixtures with the original 100 MiB backpressure producer, the shared duplex contract, TCP/AF_UNIX address tests, native domain peer shutdown, the 100-connection reuse body, real connection-attempt originals and the RST/default-linger tests are mapped. TCP config role admission, platform backlog, buffer/linger ranges, native option preservation and Linux IPv6 traffic class are covered; UDP MAX_MESSAGES_PER_WRITE and the original empty-send semantics are implemented. Source-disabled methods stay mapped and skipped with the source reason (summary.sourceDisabledMethodsMapped). Linux-only options (TCP_MD5SIG, SO_REUSEPORT, IP_FREEBIND, IP_BIND_ADDRESS_NO_PORT, UDP_GRO, TCP Fast Open, original destination, TCP_INFO) are skipped on Windows under the source condition. Not verified: IPv6 traffic class on Windows and macOS hosts."
     },
     {
       "area": "Bootstrap and groups",
-      "state": "test-and-implementation-review",
+      "state": "verified-for-original-fixtures",
       "detail": "Existing Bootstrap and ServerBootstrap source mappings remain intact. Group completion now retains channel/cause pairs, immutable per-channel Task lookup and iteration, live partial completion, close snapshots, source stayClosed admission and server-first order. RemoveById is implemented. Group comparison, inherited set mutation/query/copy and server-first snapshots now use IComparable/ISet, reference-based BCL sets and existing channel admission. Func predicates replace JVM matchers; no extra matcher/iterator facade is needed."
     },
     {
       "area": "Portable remaining inventory",
-      "state": "unreviewed",
-      "detail": "Channel pools and their declared original fixtures are now ported, including fixed capacity/deadlines/cancellation/deadlock cases. Remaining pending entries outside channel/pool, broader Local/Pipeline fixtures and socket edge contracts still require review/implementation."
+      "state": "closed",
+      "detail": "Audit 2026-11-26: tools/Test-TransportPortingManifest.ps1 verifies 0 pending entries, 523 mapped declared methods, 50 inherited scenarios and 37 CLR-inapplicable methods with reasons, and no entry with partial comment accounting. Every pinned transport/src file, testsuite file and selected native test source has a final status; the former \"remaining pending entries\" text predated the channel/pool, Local and Pipeline fixture completion."
     },
     {
       "area": "Comments",
@@ -16294,13 +16296,18 @@
     },
     {
       "area": "Generic channel write-failure fallback",
-      "state": "verified-for-reviewed-contracts",
-      "detail": "Shared generic output shutdown, default full close and overridden half close are implemented. The twelve-way AutoClose/error-kind/override matrix, native primitive failure, reentrant write rejection and both manual-read-before-connect allocator cases pass on Windows and Linux. Restoring only the previous write-error and read-admission branches while retaining new hook signatures produces ten failures and six passes in the same sixteen native cases. Other AbstractChannel contracts/comments remain open."
+      "state": "verified",
+      "detail": "Shared generic output shutdown, default full close and overridden half close are implemented. The twelve-way AutoClose/error-kind/override matrix, native primitive failure, reentrant write rejection and both manual-read-before-connect allocator cases pass on Windows and Linux. Restoring only the previous write-error and read-admission branches while retaining new hook signatures produces ten failures and six passes in the same sixteen native cases. AbstractChannel keeps all its original comments; its original fixtures are mapped (audit 2026-11-26)."
     },
     {
       "area": "NativeAOT scope",
       "state": "partially-verified",
-      "detail": "Twenty supplemental scenarios pass as a Linux x64 native executable: eleven earlier pipeline/metadata/exclusion/stream-ownership cases and nine ID/JSON/admission cases. Real native network I/O, additional handlers/transports, Windows native publishing, the Java native-metadata helper inventory and existing Common/Buffer trim paths remain open. BCL JSON metadata generation is exercised rather than enabling reflection serialization."
+      "detail": "Linux x64 native executable: the twenty pipeline/metadata/exclusion/stream-ownership and ID/JSON/admission scenarios pass (validationHistory). Windows x64 native executable (2026-11-26, --require-native, dynamic code unsupported): those twenty plus two new real network scenarios (NativeAotNetworkScenarios: loopback TCP echo of 256 KiB through ServerBootstrap/Bootstrap and NioServerSocketChannel/NioSocketChannel, and a loopback UDP datagram through NioDatagramChannel) pass, 22 of 22. Publishing on Windows needs the Visual Studio Installer directory on PATH (vcvarsall calls vswhere.exe). The GraalVM native-image programs are recorded as jvm-only-replaced (docs/record-only-modules.md). Open: the two network scenarios on Linux x64 (no Linux runtime on this host), handlers and codecs under NativeAOT, and the existing Common/Buffer trim and AOT warnings (custom leak-detector MakeGenericType, StackFrame.GetMethod, EventSource.WriteEvent(object[])), whose paths the executable does not run. No warning is suppressed."
+    },
+    {
+      "area": "Windows test host: AF_UNIX under %TEMP%",
+      "state": "host-limited",
+      "detail": "On this Windows 11 host (10.0.26300, .NET 10.0.11) an AF_UNIX stream connect fails with WSAEINVAL (10022) when the socket file is under %LOCALAPPDATA%\\Temp, and succeeds under the user profile or the workspace; a plain BCL Socket probe without Netty.NET reproduces it (2026-11-26). The tests create socket files with Path.GetTempPath(), as the source uses the temporary directory, so the 20 AF_UNIX cases fail there; with TMP and TEMP set to a directory outside it the full suite has no AF_UNIX failure. The tests are unchanged."
     }
   ],
   "supplementalTests": [
@@ -16369,7 +16376,10 @@
     "test/Netty.NET.Transport.Tests/ChannelMatchersContractTest.cs",
     "test/Netty.NET.Transport.Tests/ReflectiveChannelFactoryContractTest.cs",
     "test/Netty.NET.Transport.Tests/JavaSourceAlignmentContractTest.cs",
-    "test/Netty.NET.Transport.Tests/ContextPipelineEmbeddedAlignmentContractTest.cs"
+    "test/Netty.NET.Transport.Tests/ContextPipelineEmbeddedAlignmentContractTest.cs",
+    "test/Netty.NET.Transport.Tests/PipelineExecutorShutdownContractTest.cs",
+    "test/Netty.NET.Transport.Tests/NativeAotNetworkScenarios.cs",
+    "test/Netty.NET.Transport.Tests/NioSocketChannelAddressContractTest.cs"
   ],
   "validationHistory": [
     {
@@ -23259,12 +23269,136 @@
           "failedNote": "All 20 failures are the known Windows-host AF_UNIX baseline; SocketSpdyEchoTest adds 2 passes to the 2026-11-24-testsuite-handler run."
         }
       }
+    },
+    {
+      "checkpoint": "2026-11-26-executor-shutdown-parity",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "checker": "Owner decision: the Pipeline executor lifecycle open work is recorded as java-parity-recorded. Probes on DefaultEventLoop and MultiThreadIoEventLoopGroup(LocalIoHandler) with a separate DefaultEventExecutorGroup matched the pinned source (DefaultChannelPipeline destroyUp/destroyDown and PendingHandlerAddedTask, AbstractChannelHandlerContext inbound hand-off, DefaultEventLoop.run and DefaultEventExecutor.run through runTask, SingleThreadEventExecutor quiet-period admission); they became PipelineExecutorShutdownContractTest (6 supplemental cases, added to supplementalTests). AbstractChannel.RegisterAsync gained the source force-closing warning for a rejected hand-off and the source registration messages (EventLoopLifecycleContractTest.RegistrationFailuresKeepTheSourceMessages). supplementalClrCases rose by 7 (570 to 577). tools/Test-TransportPortingManifest.ps1 now stops under Windows PowerShell 5.1 at the BCL replacement type check for System.Threading.Tasks.TaskCompletionSource (absent from .NET Framework) and was not run under pwsh 7 (not installed); this checkpoint changes only openWork, stages, summary, supplementalTests and validationHistory, which the checker does not read.",
+        "executorShutdownParity": {
+          "runs": 3,
+          "total": 6,
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "transportDebug": {
+          "total": 1178,
+          "passed": 1063,
+          "failed": 20,
+          "skipped": 95,
+          "failedNote": "All 20 failures are the known Windows-host AF_UNIX baseline (SocketException 'invalid argument' binding under %TEMP%); the same set fails without this change. The seven new cases add 7 passes to the 2026-11-24-testsuite-codec-http run."
+        }
+      }
+    },
+    {
+      "checkpoint": "2026-11-26-transport-audit",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "checker": "tools/Test-TransportPortingManifest.ps1 now runs under Windows PowerShell 5.1: a BCL replacement type that .NET Framework lacks (the non-generic TaskCompletionSource) is looked up in the documentation files of the newest .NET 10 reference pack. It also recomputes the summary counts and fails on drift; the earlier summary had drifted (portedOriginalFixtures 92 to 119, portedOriginalMethods 507 to 523, testsuiteSources 52 to 60, testsuiteDeferredSources 14 to 6, testsuiteDeferredDeclaredTests 22 to 3, jvm-only-replaced 29 to 32). Result: verified, 0 pending entries.",
+        "transportDebug": {
+          "total": 1180,
+          "passed": 1085,
+          "failed": 0,
+          "skipped": 95,
+          "runs": "Three full runs with TMP/TEMP outside %LOCALAPPDATA%\\Temp after the two new cases: one with no failure (these counts); one where ChannelInitializerTest.TestChannelInitializerEventExecutor reached its 10 s timeout (not reproduced in 40 reruns under a concurrent full-suite load); one where ManualIoEventLoopSourceTest.TestRun failed its >= 200 ms wait assertion. The TestRun helper now waits for the remainder as Semaphore.tryAcquire(nanos) does (SemaphoreSlim.Wait has millisecond resolution); 10 reruns pass.",
+          "skippedBasis": "Linux-only options and paths (60), SslStream renegotiation limits of SocketSslEchoTest (16), source-disabled methods with the source reason (9), the source assumption supportsChannelIteration() (4), the remaining platform conditions of the source (6)."
+        },
+        "hostTemp": "With the default TEMP the same build has 20 failures, all AF_UNIX connect WSAEINVAL under %LOCALAPPDATA%\\Temp (openWork \"Windows test host\"); with TMP/TEMP outside it, none of them.",
+        "nativeAotWindows": {
+          "runtimeIdentifier": "win-x64",
+          "scenarios": 22,
+          "passed": 22,
+          "dynamicCodeSupported": false,
+          "command": "dotnet publish test/Netty.NET.Transport.NativeAot.Tests -c Release -r win-x64 -p:PublishAot=true, then the executable with --require-native"
+        },
+        "newSupplementalCases": 2
+      }
+    },
+    {
+      "checkpoint": "2026-11-27-fixed-rate-and-af-unix",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "transportDebug": {
+          "total": 1180,
+          "passed": 1085,
+          "failed": 0,
+          "skipped": 95,
+          "note": "Run alone with TMP/TEMP outside %LOCALAPPDATA%, before and after the SingleThreadEventLoopSourceTest change: the same counts both times."
+        },
+        "fixedRate": "SingleThreadEventLoopSourceTest Schedule* under a 2x CPU load: 7 of 12 runs failed before the change (faulted periodic Task from CountdownEvent.Signal at zero, and extra runs during the Task.Run hop), 8 of 12 after it, all on the unchanged source timing assertions (5 runs, 80..120 ms windows, <= 10 ms catch-up), which stay as in the source (owner decision 2026-11-27). During a parallel full-solution run 8 of 10 runs failed the same assertions. Without load the fixture (17 cases) passed 5 consecutive runs.",
+        "afUnix": "Probe: AF_UNIX connect fails with WSAEINVAL anywhere under %LOCALAPPDATA% (long and 8.3 path forms) and succeeds in the user profile directory; host property, not a port defect.",
+        "checker": "tools/Test-TransportPortingManifest.ps1 passes."
+      }
+    },
+    {
+      "checkpoint": "2026-11-27-nio-socket-remote-address",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "change": "NioSocketChannel records its remote address as the JDK SocketChannelImpl does (accepted socket; Connect after the checkRemote wildcard-to-loopback replacement) and keeps it after close; resolver-dns DnsQueryContext.RetryWithTcp is back to the source's (InetSocketAddress) tcpCh.remoteAddress() cast.",
+        "newTests": "NioSocketChannelRemoteAddressContractTest (CLR supplemental, 5 cases): all five fail with the previous RemoteAddress0 and Connect (null addresses; AddressNotAvailable for wildcard targets) and pass with the change; 5 consecutive runs of the class passed. The class was renamed NioSocketChannelAddressContractTest at checkpoint 2026-11-27-nio-socket-local-address.",
+        "transportDebug": {
+          "total": 1185,
+          "passed": 1090,
+          "failed": 0,
+          "skipped": 95,
+          "note": "Run alone with TMP/TEMP outside %LOCALAPPDATA%, twice with the same counts. A first run failed AcceptedChannelKeepsRemoteAddressAfterClose because the test read the client's local address only after the client had closed on the child's close; the test now reads it first."
+        },
+        "resolverDnsDebug": {
+          "total": 324,
+          "passed": 311,
+          "failed": 0,
+          "skipped": 13,
+          "note": "Without the RetryWithTcp fallback; DnsNameResolverTest.TestTcpFallback* (4 cases, including testTcpFallbackFailedWhenTimeout, which hung before the fallback existed) also passed 3 separate runs."
+        },
+        "checker": "tools/Test-TransportPortingManifest.ps1 passes."
+      }
+    },
+    {
+      "checkpoint": "2026-11-27-nio-socket-local-address",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "change": "NioSocketChannel records its local address as the JDK SocketChannelImpl does (accepted or bound socket, bind, a connect that completes at once or in DoFinishConnect) and keeps it after close; AbstractNioByteChannel.DoBind0 calls the new internal virtual Bind(Socket, EndPoint).",
+        "newTests": "NioSocketChannelAddressContractTest (CLR supplemental, 9 cases; the 5 remote-address cases of the previous checkpoint plus 4 local-address cases): the 4 local-address cases fail with the previous LocalAddress0 (null) and pass with the change; 3 consecutive runs of the class passed.",
+        "transportDebug": {
+          "total": 1189,
+          "passed": 1094,
+          "failed": 0,
+          "skipped": 95,
+          "note": "Run alone with TMP/TEMP outside %LOCALAPPDATA%."
+        },
+        "resolverDnsDebug": {
+          "total": 324,
+          "passed": 311,
+          "failed": 0,
+          "skipped": 13
+        },
+        "handlerProxyDebug": {
+          "total": 69,
+          "passed": 69,
+          "failed": 0,
+          "skipped": 0
+        },
+        "handlerDebug": {
+          "total": 462,
+          "passed": 434,
+          "failed": 0,
+          "skipped": 28
+        },
+        "notRun": "The Linux address-only bind (IP_BIND_ADDRESS_NO_PORT) path that reads getsockname at connect; no Linux runtime on this host.",
+        "checker": "tools/Test-TransportPortingManifest.ps1 passes."
+      }
     }
   ],
   "nextWork": [
-    "Continue selector/backend-specific contracts and original source-disabled writability review with the source conditions intact.",
-    "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success.",
-    "NioIoHandler: the 19 JVM-only selector comments carry per-comment dispositions; the CLR Socket.Select selector is O(n) per selection like the JDK WindowsSelectorImpl."
+    "Run the NativeAOT executable (22 scenarios, now with loopback TCP and UDP) on Linux x64.",
+    "Verify IPv6 traffic class on Windows and macOS hosts.",
+    "Retain the exact Java mixed-family multicast route limitation; the wildcard CLR adaptation does not establish original Java success."
   ],
   "nativeAdmissionEvidence": {
     "sourceContracts": [
@@ -26560,7 +26694,7 @@
         "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpTestPermutation.java"
       ],
       "declaredTests": [],
-      "reason": "Imports only ported modules but names same-package deferred types (SctpTestPermutation) that need transport-sctp; it is ported with that module."
+      "reason": "Names same-package deferred types (SctpTestPermutation) that need transport-sctp, which is recorded, not ported: library-not-ported, because the JDK SCTP API (com.sun.nio.sctp) has no BCL counterpart and Windows cannot create an SCTP socket (docs/record-only-modules.md, 2026-11-26)."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpEchoTest.java",
@@ -26590,7 +26724,7 @@
         "testSimpleEcho",
         "testSimpleEchoUnordered"
       ],
-      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-http, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml, handler and pkitesting); the source is ported with that module."
+      "reason": "Imports types of transport-sctp, which is recorded, not ported: library-not-ported, because the JDK SCTP API (com.sun.nio.sctp) has no BCL counterpart and Windows cannot create an SCTP socket (docs/record-only-modules.md, 2026-11-26)."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/SctpTestPermutation.java",
@@ -26615,7 +26749,7 @@
       ],
       "via": [],
       "declaredTests": [],
-      "reason": "Imports types of transport-sctp, which is not ported yet (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-http, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml, handler and pkitesting); the source is ported with that module."
+      "reason": "Imports types of transport-sctp, which is recorded, not ported: library-not-ported, because the JDK SCTP API (com.sun.nio.sctp) has no BCL counterpart and Windows cannot create an SCTP socket (docs/record-only-modules.md, 2026-11-26)."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/sctp/package-info.java",
@@ -26630,7 +26764,7 @@
       "blockingImports": [],
       "via": [],
       "declaredTests": [],
-      "reason": "Package summary of a package whose every other source is deferred; it is recorded with that package when transport-sctp is ported."
+      "reason": "Package summary of a package whose every other source needs transport-sctp, which is recorded, not ported (docs/record-only-modules.md, 2026-11-26)."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/UDTClientServerConnectionTest.java",
@@ -26655,7 +26789,7 @@
       "declaredTests": [
         "connection"
       ],
-      "reason": "Imports types of codec-base, which is ported, and transport-udt, which is not (Netty.NET ports common, buffer, resolver, transport, codec-base, codec-compression, codec-dns, codec-haproxy, codec-http, codec-memcache, codec-mqtt, codec-protobuf, codec-redis, codec-smtp, codec-socks, codec-stomp, codec-xml, handler and pkitesting); the source is ported with transport-udt."
+      "reason": "Imports types of transport-udt, which is recorded, not ported: the UDT transport is @deprecated upstream (\"no longer maintained and will be removed\") and needs the barchart UDT JNI library (docs/record-only-modules.md, 2026-11-26)."
     },
     {
       "upstream": "testsuite/src/main/java/io/netty/testsuite/transport/udt/package-info.java",
@@ -26670,7 +26804,7 @@
       "blockingImports": [],
       "via": [],
       "declaredTests": [],
-      "reason": "Package summary of a package whose every other source is deferred; it is recorded with that package when codec-base and transport-udt are ported."
+      "reason": "Package summary of a package whose every other source needs transport-udt, which is recorded, not ported (docs/record-only-modules.md, 2026-11-26)."
     }
   ],
   "nativeTestEntries": [

@@ -431,17 +431,8 @@ internal abstract class DnsQueryContext
             TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> promise =
                     new TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>>(
                             TaskCreationOptions.RunContinuationsAsynchronously);
-            // CLR: Java's remoteAddress() of a connected channel stays the connected address after the socket closes
-            // ("If the socket was connected prior to being closed, then this method will continue to return the
-            // connected address after the socket is closed",
-            // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Socket.html), while Transport reads
-            // the live Socket.RemoteEndPoint, which throws once "The Socket has been closed"
-            // (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.remoteendpoint?view=net-10.0), so
-            // AbstractChannel.RemoteAddress is null when the server closed the connection before this listener ran
-            // (measured by DnsNameResolverTest.testTcpFallbackFailedWhenTimeout). The channel was connected to
-            // nameServerAddr, so that address stands in for the closed channel's remote address.
             TcpDnsQueryContext tcpCtx = new TcpDnsQueryContext(tcpCh,
-                    (IPEndPoint) (tcpCh.RemoteAddress ?? nameServerAddr), queryContextManager, queryLifecycleObserver, 0,
+                    (IPEndPoint) tcpCh.RemoteAddress, queryContextManager, queryLifecycleObserver, 0,
                     recursionDesired, queryTimeoutMillis, Question(), additionals, promise);
             tcpCh.Pipeline.AddLast(TCP_ENCODER);
             tcpCh.Pipeline.AddLast(new TcpDnsResponseDecoder());

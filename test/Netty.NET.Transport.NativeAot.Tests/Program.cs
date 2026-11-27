@@ -16,3 +16,10 @@ for (int scenario = 0; scenario < ChannelIdContractScenarios.Count; scenario++)
     Console.WriteLine($"PASS native identity scenario {scenario}");
 }
 Console.WriteLine($"Passed {ChannelIdContractScenarios.Count} identity scenarios; dynamic code supported: {RuntimeFeature.IsDynamicCodeSupported}");
+
+for (int scenario = 0; scenario < NativeAotNetworkScenarios.Count; scenario++)
+{
+    NativeAotNetworkScenarios.Run(scenario);
+    Console.WriteLine($"PASS native network scenario {scenario}");
+}
+Console.WriteLine($"Passed {NativeAotNetworkScenarios.Count} network scenarios; dynamic code supported: {RuntimeFeature.IsDynamicCodeSupported}");

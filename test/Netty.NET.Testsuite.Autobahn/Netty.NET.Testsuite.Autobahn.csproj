@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- testsuite-autobahn is a runnable Autobahn fuzzingclient target (AutobahnServer.main), not a deployed library
+         (skipDeploy). -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The pom needs common, buffer, transport and codec-http; codec-http brings all of them. -->
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Http\Netty.NET.Handler.Codec.Http.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Testsuite.Autobahn.Tests" />
+  </ItemGroup>
+</Project>

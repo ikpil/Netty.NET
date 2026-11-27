@@ -57,7 +57,9 @@ solution builds with 0 warnings and 0 errors, the Transport checker passes, and 
 passed, 37 skipped).
 
 The C# run of `Netty.NET.Handler.Tests` (Windows 11 10.0.26300, .NET 10.0.8) executes 460 test cases: 432 pass, 28
-are skipped and 0 fail, identical in three runs. The nine packages have 152 cases, because
+are skipped and 0 fail, identical in three runs. Since 2026-11-26 it also runs the CLR supplemental
+`SslContextKeyStoreLifetimeTest` and `SslHandlerHandshakeFlushTest` (462 cases, 434 pass; see
+[Lead decisions](#lead-decisions-2026-11-24), decisions 4 and 5). The nine packages have 152 cases, because
 `ChunkedWriteHandlerTest.testChunkedFileFailsWhenFileWasTruncated` is a theory with two rows: 151 pass and 1 is
 skipped, `FileRegionThrottleTest.testGlobalWriteThrottle`, which is `@Disabled` in Java and `[Fact(Skip = ...)]` with
 the same text in C# (see [Test notes](#test-notes)). ssl and ssl.util have 308 cases: 281 pass and 27 are skipped:
@@ -83,9 +85,9 @@ the same text in C# (see [Test notes](#test-notes)). ssl and ssl.util have 308 c
 | stream | 6 | 2 | 34 | 35 (one theory with two rows) |
 | timeout | 8 | 4 | 14 | 14 |
 | traffic | 6 | 2 | 3 | 3 (one skipped) |
-| ssl | 41 | 32 (19 verified, 13 clr-adapted) | 171 of 444 (107 CLR-inapplicable, 166 not ported) | 299 (27 skipped) |
+| ssl | 41 | 32 (19 verified, 13 clr-adapted) | 171 of 444 (107 CLR-inapplicable, 166 not ported) | 299 (27 skipped), and 2 CLR supplemental |
 | ssl.util | 6 | 3 | 9 of 16 (7 not ported) | 9 |
-| **total** | 90 | 55 | 331 of 612 | 460 (28 skipped) |
+| **total** | 90 | 55 | 331 of 612 | 460 (28 skipped), and 2 CLR supplemental |
 
 Each package also has a `package-info.java` recorded as `jvm-only-replaced`. The ssl main files that are not ported
 are 49 library-not-ported, 14 deprecated-not-ported and 13 jvm-only-replaced units (besides the two package-info
@@ -117,7 +119,9 @@ jvm-only-replaced (see [Not ported](#not-ported)).
 ## Namespaces and assembly
 
 The project references `Netty.NET.Handler.Codec` (codec-base, which brings Transport, Resolver, Buffer and Common), and
-`InternalsVisibleTo` opens internals to `Netty.NET.Handler.Tests` only. The ssl port needs no further reference:
+`InternalsVisibleTo` opens internals to `Netty.NET.Handler.Tests` and `Netty.NET.Transport.Tests`, and since 2026-11-26 to
+`Netty.NET.Handler.Ssl.Ocsp`, which reads the peer certificates through the internal `SslHandler.PeerCertificates()` (see
+[handler-ssl-ocsp-porting.md](handler-ssl-ocsp-porting.md#peer-certificates-from-sslhandler)). The ssl port needs no further reference:
 `SslStream` and the certificate and key types are BCL types. The test project also references `Netty.NET.PkiTesting`
 (the certificates of the ssl tests, see [Lead decisions](#lead-decisions-2026-11-24)) and deploys the 39 ssl test
 resources next to the test assembly.
@@ -743,11 +747,32 @@ Platform limits, stated in CLR comments:
    fields). `SslHandler` answers a received close_notify below TLS 1.3 (`EngineAcknowledgeCloseNotify`, as the JDK
    engine; SslStream does not) and treats a record shorter than its 5-byte header as `BUFFER_UNDERFLOW` (as the JDK
    engine); both were added by the tests-handler wave (see [SslHandler on SslStream](#sslhandler-on-sslstream)).
+   On 2026-11-26 the handler-ssl-ocsp port added the internal, CLR-only `PeerCertificates()`, the counterpart of
+   `engine().getSession().getPeerCertificates()`. `SslHandler` wraps its options' `RemoteCertificateValidationCallback`
+   to record the chain `SslStream` built for the remote certificate, and then decides as the configured callback or
+   `SslStream`'s default would ([handler-ssl-ocsp-porting.md](handler-ssl-ocsp-porting.md#peer-certificates-from-sslhandler)).
+   A public accessor waits for an owner naming decision, as `Engine()` does.
+   Also on 2026-11-26, `WrapNonAppData` flushes the last handshake records it wrote during an unwrap before
+   `setHandshakeSuccess()` fires the handshake event. Java leaves them for `channelReadComplete`, after the event. With
+   SChannel the last records of a TLS 1.3 server are its NewSessionTicket. A peer that closed right after the server's
+   event answered a late ticket with an RST, and Windows then discards the peer's close_notify (see
+   [Intermittent cases](#ssl-tests)). The same bytes are written; only the flush moves ahead of the event.
 5. **pkitesting key lifetime.** `X509Bundle.ToKeyManagerFactory` keeps the loaded PKCS #12 entries alive with the
    returned `SslStreamCertificateContext` (`ConditionalWeakTable`): a self-signed bundle stores the certificate twice,
    both loaded entries share one key container, and finalizing the unused entry deleted the key, so the server failed
    with `SEC_E_UNKNOWN_CREDENTIALS` (6 of 6 runs with a forced GC, about 1 in 70 runs without). See
    [pkitesting-porting.md](pkitesting-porting.md).
+   - **The same fix in `SslContext.BuildKeyManagerFactory` (2026-11-26).** This method loads every server key
+     manager built from a key and certificate chain or a key store, and it had the same defect.
+   - **Symptom.** The test resource `rsaValidations-server-keystore.p12` holds its key entry's certificate twice, both
+     loaded with the key. `JdkSslEngineTest.TestRSASSAPSS` therefore failed intermittently: the client saw
+     `StacklessClosedChannelException` from `channelInactive`, because the server's `AcquireCredentialsHandle` failed with
+     `0x8009030D`.
+   - **Measurements.** With a forced GC after the key stores were loaded, 18 of 18 cases failed before the fix and 18 of
+     18 passed after it. In full test runs, up to all 6 of its rows had failed per run.
+   - **Fix and regression test.** The method now keeps its loaded entries with the context, as `ToKeyManagerFactory`
+     does. The CLR supplemental `SslContextKeyStoreLifetimeTest` forces that GC and completes a handshake: it fails 3 of
+     3 times without the fix and passes with it.
 6. **Test project reference.** `test/Netty.NET.Handler.Tests` references `Netty.NET.PkiTesting`, whose
    `CertificateBuilder` replaces the deprecated `SelfSignedCertificate` in the tests.
 
@@ -1161,6 +1186,36 @@ lead decision 5 fixed.
   - The requests of the ssl test waves (an accessor for the handler's options in place of reflection, the
     `Netty.NET.PkiTesting` reference of the test project, and the pkitesting key lifetime defect) were resolved by lead
     decisions 4, 6 and 5 ([Lead decisions](#lead-decisions-2026-11-24)).
+
+**Intermittent cases (2026-11-26).**
+- **`JdkSslEngineTest.TestRSASSAPSS`.** It failed intermittently in full runs because of the key lifetime defect of
+  `SslContext.BuildKeyManagerFactory` (lead decision 5). After the fix, 10 consecutive full runs of
+  `Netty.NET.Handler.Tests` passed all 60 of its rows.
+- **`SslHandlerTest.TestSslCompletionEventsTls13JDK`.** It failed in 1 of those 10 runs, and in 1 of 8 ssl-only runs.
+  The failing check is the server's `SslCloseCompletionEvent` after the client closes (the `clientClose` cycle): the
+  event was a `ClosedChannelException`.
+  - **Diagnosis.** The test's TLS 1.3 client-close cycle ran 300 times in 5 parallel test processes, 3 rounds. The cycle
+    failed in 14 of 15 processes. The server had received only ClientHello, ChangeCipherSpec and the client Finished,
+    never the client's close_notify, and its read failed with 10054/10053. The client of that connection had closed
+    before the server's 103-byte NewSessionTicket arrived.
+  - **Cause.** SChannel writes the TLS 1.3 NewSessionTicket as the server's last handshake record, before
+    `AuthenticateAsServerAsync` returns (measured). Like Java, `SslHandler` fired the handshake event before flushing
+    it (at `channelReadComplete`). The client, closing right after the server's event, answered the late ticket with
+    an RST.
+  - **Why Windows only.** Windows discards data a socket had already received when an RST arrives (a probe: 20 of 20
+    reads after an RST failed without returning 24 queued bytes). So the server lost the close_notify. Linux returns
+    the queued data first, which is likely why the Java test does not fail there.
+  - **Fix.** `WrapNonAppData` flushes those records before `setHandshakeSuccess()` (lead decision 4). With it, the
+    same load failed in 0 of 15 processes. The CLR supplemental `SslHandlerHandshakeFlushTest` checks the order on
+    EmbeddedChannels: it fails 3 of 3 times without the fix and passes with it.
+  - **Not covered.** A client that closes as soon as its own TLS 1.3 handshake completes, before the server sent its
+    ticket, still meets the RST on Windows. That is TLS 1.3 on this platform, not this handler.
+- **Results with both fixes.** 10 consecutive full runs of `Netty.NET.Handler.Tests`: each had 462 cases, 434 passed,
+  28 skipped and 0 failed. The modules that use `SslHandler` kept their recorded results:
+  - `Netty.NET.Handler.Codec.Http.Tests`: 9054 of 9054.
+  - `Netty.NET.Handler.Codec.Http2.Tests`: 1546 passed, 3 skipped.
+  - `Netty.NET.Handler.Proxy.Tests`: 69 of 69.
+  - `Netty.NET.Handler.Ssl.Ocsp.Tests`: 19 of 19.
 
 ### SSL review items
 

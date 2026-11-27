@@ -2,10 +2,70 @@
 
 The inventory, original test mappings and comment accounting live in
 [transport-porting-manifest.json](transport-porting-manifest.json). Check them with
-`tools/Test-TransportPortingManifest.ps1` (pwsh) against the pinned Netty
+`tools/Test-TransportPortingManifest.ps1` (pwsh, or Windows PowerShell 5.1 since 2026-11-26) against the pinned Netty
 `64cc10f38ea5f5bd7eae48507817c66680d0afdc` checkout. The inventory is every pinned file under `transport/src`
 (277 since 2026-11-19, when the two GraalVM `reflect-config.json` files and the test ServiceLoader file joined the
 Java sources and `module-info.yml`).
+
+## Status (audit of 2026-11-26)
+
+Transport is ported: the manifest's top-level status is `ported`. The checker verifies that no entry is pending
+(`summary.pendingEntries`), that 523 declared original methods and 50 inherited scenarios are mapped and 37 more carry
+a CLR-inapplicable reason, and that no entry has partial comment accounting. The stages are closed.
+
+Windows run of `Netty.NET.Transport.Tests` (2026-11-26, Debug, TMP/TEMP outside `%LOCALAPPDATA%\Temp`): 1180 cases,
+1085 passed, 0 failed, 95 skipped (60 Linux-only options and paths, 16 SslStream renegotiation limits of
+`SocketSslEchoTest`, 9 source-disabled methods with the source reason, 4 for the source assumption
+`supportsChannelIteration()`, 6 other platform conditions of the source). Of three full runs, two had one intermittent
+failure each: `ChannelInitializerTest.TestChannelInitializerEventExecutor` reached its 10 s timeout once and did not
+recur in 40 reruns under a concurrent full-suite load; `ManualIoEventLoopSourceTest.TestRun` failed its ">= 200 ms
+wait" assertion once because the test helper's `SemaphoreSlim.Wait` (millisecond resolution) ended before the
+high-resolution deadline. The helper now waits for the remainder, as `Semaphore.tryAcquire(nanos)` does.
+
+What stays open is recorded in `openWork` and `nextWork`:
+
+| Item | State | Detail |
+| --- | --- | --- |
+| NativeAOT scope | partially verified | Windows x64: 22 of 22 scenarios pass as a native executable (`--require-native`), including two new network scenarios (`NativeAotNetworkScenarios`: a 256 KiB loopback TCP echo through `ServerBootstrap`/`Bootstrap`, and a loopback UDP datagram). Linux x64 passed the 20 earlier scenarios; the network scenarios still need a Linux run, and handlers and codecs are not exercised under NativeAOT. The existing Common/Buffer trim and AOT warnings stay unsuppressed. |
+| Mixed-family multicast | platform-limited | The unchanged Java wrapper fails on the IPv4 send from an IPv6 bind; the CLR test checks the same route error. |
+| IPv6 traffic class | not verified | Covered on Linux; not checked on Windows or macOS hosts. |
+| Windows test host | host-limited | See below. |
+
+The other areas (socket read admission, outbound buffer, TCP and UDP, bootstrap and groups, generic write-failure
+fallback, pipeline executor lifecycle) are `verified-for-original-fixtures` or `verified`. Their earlier "remaining
+review" text predated the fixture completion; the audit rewrote it from the current entries. The summary counts had
+drifted too (for example `portedOriginalFixtures` 92, `testsuiteSources` 52, `testsuiteDeferredSources` 14), so the
+checker now recomputes them and fails on a difference.
+
+Checker changes of the audit:
+
+- Under Windows PowerShell 5.1 a BCL replacement type that .NET Framework lacks (the non-generic
+  `TaskCompletionSource`) is looked up in the documentation files of the newest .NET 10 reference pack
+  (`packs/Microsoft.NETCore.App.Ref/10.*/ref/net10.0/*.xml`, `T:<full name>`), so pwsh 7 is no longer required.
+- The summary is recomputed from the entries.
+
+**Windows test host and AF_UNIX.** On this host (Windows 11 10.0.26300, .NET 10.0.11) an AF_UNIX stream connect
+fails with `WSAEINVAL` (10022) when the socket file is under `%LOCALAPPDATA%\Temp`, and succeeds under the user
+profile or the workspace; a plain `System.Net.Sockets.Socket` probe without Netty.NET reproduces it. A probe of
+2026-11-27 (bind, listen and connect with `UnixDomainSocketEndPoint`) narrowed it down: the connect fails anywhere under
+`%LOCALAPPDATA%` (`AppData\Local` itself, its `Temp` and a subdirectory of `Temp`, in the long and the 8.3 path form)
+and succeeds in the user profile directory, so it is a property of this host, not of the port. The tests create
+socket files with `Path.GetTempPath()`, as the source uses the temporary directory, so with the default TEMP the 20
+AF_UNIX cases fail (the "known Unix-domain-socket failures" of earlier baselines). With `TMP` and `TEMP` set to a
+directory outside it, the full suite has no AF_UNIX failure:
+
+```powershell
+$env:TMP = "$PWD\.udstmp"; $env:TEMP = $env:TMP; New-Item -ItemType Directory -Force $env:TMP; dotnet test test/Netty.NET.Transport.Tests
+```
+
+**Windows NativeAOT publishing.** `vcvarsall.bat` calls `vswhere.exe` through `PATH`; without the Visual Studio
+Installer directory on `PATH`, the link step fails with "'vswhere.exe' is not recognized" in the linker command.
+Git Bash also drops the `ProgramFiles(x86)` variable that the ILCompiler's `findvcvarsall.bat` needs, so publish from
+PowerShell:
+
+```powershell
+$env:PATH = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer;$env:PATH"; dotnet publish test/Netty.NET.Transport.NativeAot.Tests -c Release -r win-x64 -p:PublishAot=true
+```
 
 ## Not-ported Transport sources
 
@@ -386,6 +446,27 @@ comment is at its code except seven per-comment dispositions: `ensurePromiseUseC
 Supplemental cases: `ContextPipelineEmbeddedAlignmentContractTest` (15). `JavaStringConversionContractTest` expects
 `EmbeddedChannel+EmbeddedChannelPipeline{...}` (the JVM prints `EmbeddedChannel$EmbeddedChannelPipeline{...}`).
 
+### Separate executors and registration at shutdown: Java parity (2026-11-26)
+
+Owner decision: the open "I/O-handler/group rejection" and "separate-executor shutdown ownership" items are closed
+as Java parity. No shutdown ownership beyond the pinned source is added across an event loop and a handler's
+separate `EventExecutorGroup`. `PipelineExecutorShutdownContractTest` (6) records the source behavior:
+
+| Case | Behavior (as in Netty 4.2.19) |
+| --- | --- |
+| separate executor stopped before registration | `PendingHandlerAddedTask` is rejected; the handler is unlinked without `handlerAdded`/`handlerRemoved` |
+| separate executor stopped before close, I/O loop | the rejected inbound hand-off reaches `exceptionCaught` of the handler before it; `destroy()` is rejected before any `handlerRemoved`; `runAllTasks` (`safeExecute`) logs it and the loop keeps running |
+| the same on `DefaultEventLoop` | `DefaultEventLoop.run()` calls `runTask()`, so the rejection ends the loop with that cause |
+| loop shut down with a zero quiet period | the separate executor's hand-back to the loop is rejected; no handler is removed, and `DefaultEventExecutor.run()` (`runTask()`) ends the separate executor too |
+| loop shut down with a quiet period | `ST_SHUTTING_DOWN` still admits the hand-backs; every handler is removed |
+| registration during the quiet period | admitted; the shutdown then closes the channel |
+
+`AbstractChannel.RegisterAsync` now follows `AbstractUnsafe.register` for the rejected hand-off: it logs "Force-closing
+a channel whose registration task was not accepted by an event loop: {}" (only when the loop did not admit the task;
+a failure inside the admitted task is the source's `register0` path) and fails with the source messages
+"registered to an event loop already" and "incompatible event loop type: " + the loop's type name
+(`EventLoopLifecycleContractTest.RegistrationFailuresKeepTheSourceMessages`).
+
 ## Testsuite inventory (2026-11-18)
 
 The `testsuite` module is ported only where it needs nothing but the modules in the manifest's
@@ -455,3 +536,71 @@ modules, so `SocketSpdyEchoTest`, the last source it blocked, is ported (testsui
 The testsuite now has 60 entries and 6 deferred files with 3 declared tests. The remaining deferred files need
 `transport-sctp` (four files: `AbstractSctpTest`, `SctpEchoTest`, `SctpTestPermutation` and the sctp `package-info`)
 or `transport-udt` (two files: `UDTClientServerConnectionTest` and the udt `package-info`).
+
+## Fixed-rate scheduling tests (2026-11-27)
+
+`SingleThreadEventLoopSourceTest.ScheduleLaggyTaskAtFixedRateA` was recorded several times as failing in loaded runs.
+Under a CPU load of twice the logical processor count, the `Schedule*` methods of the fixture failed in 7 of 12 runs,
+for two causes that the source does not have:
+
+- `CountdownEvent.Signal()` throws once the count is zero, where `CountDownLatch.countDown()` does nothing. When the
+  laggy run's `Thread.Sleep(401)` overslept, one more overdue run came before the cancel; its `Signal()` faulted the
+  periodic Task, so `Assert.True(periodic.IsCanceled)` failed (the recorded failure). The tests count down through a
+  helper that does nothing at zero; only the event loop thread counts down.
+- The test waited for the latch in `Task.Run`, adding a thread-pool hop between the last count down and the cancel, in
+  which another run could start. The test thread now waits, as `allTimeStampsLatch.await()` does.
+
+After the fix no run faults the Task. What remains are the source's own timing assertions: exactly five runs before
+the cancel (the cancel has 50 ms after the fifth run of `testScheduleTaskAtFixedRate`), cumulative 80..120 ms windows,
+<= 10 ms catch-up gaps. They are kept unchanged (owner decision 2026-11-27: no wider CLR tolerance). Under the 2x CPU load (8 of 12 runs) and while every test project of
+the solution ran in parallel (8 of 10 runs; Common.Tests, Handler.Ssl.Ocsp.Tests and two other Transport timing tests
+failed in the same run), OS scheduling delays of 20-60 ms broke them (a late first run makes the next gap 69 ms, an
+oversleeping run adds a sixth or seventh timestamp). The Java build runs the tests of one module at a time; the
+corresponding run, `Netty.NET.Transport.Tests` alone, passes them (five consecutive runs of the fixture).
+
+## NioSocketChannel remote and local addresses after close (2026-11-27)
+
+`NioSocketChannel.remoteAddress0()` and `localAddress0()` return `javaChannel().socket().getRemoteSocketAddress()` and
+`getLocalSocketAddress()`. In the JDK those are the `SocketChannelImpl.remoteAddress` and `localAddress` fields
+([SocketChannelImpl](https://github.com/openjdk/jdk17u/blob/master/src/java.base/share/classes/sun/nio/ch/SocketChannelImpl.java),
+[SocketAdaptor](https://github.com/openjdk/jdk17u/blob/master/src/java.base/share/classes/sun/nio/ch/SocketAdaptor.java)),
+and close clears neither:
+
+- **Remote address:** the accepted-channel constructor sets it to the address accept returned, and `beginConnect` sets it
+  to the target before the native connect. `connect` first runs `checkRemote`, which replaces a wildcard (any-local)
+  target with the loopback address of the same family. A Java TCP channel therefore reports its remote address after it
+  is closed, and after a failed connect it reports the target.
+- **Local address:** the accepted-channel constructor, `bind` and a completed connect (`endConnect`,
+  `endFinishConnect`) set it from the socket (`Net.localAddress(fd)`). A closed channel reports it; after a failed
+  connect it is the explicitly bound address, or null when the channel was not bound.
+
+The port read the live `Socket.RemoteEndPoint` and `LocalEndPoint`, which throw `ObjectDisposedException` once the
+socket is closed (measured 2026-11-27), so `AbstractChannel.RemoteAddress` and `LocalAddress` were null for a channel
+closed before the address was first read. Resolver-dns's `DnsQueryContext.RetryWithTcp` carried a fallback for the
+remote address. On Windows `Socket.Connect` to a wildcard target fails with `WSAEADDRNOTAVAIL` (10049, measured
+2026-11-27), where Java connects to loopback.
+
+`NioSocketChannel` now records both addresses at the JDK's points:
+
+- In the constructor, from `RemoteEndPoint` over a connected (accepted) socket and from `LocalEndPoint` over a bound one.
+- In `Connect`, the remote address after replacing a wildcard target with loopback, before the socket connects, and the
+  local address when the connect completes at once.
+- In `Bind`, the local address. `AbstractNioByteChannel.DoBind0` now calls an internal virtual `Bind(Socket, EndPoint)`,
+  as it calls `Connect`, standing for `SocketUtils.bind(SocketChannel, SocketAddress)`.
+- In `DoFinishConnect`, the local address of a pending connect that completed.
+
+`RemoteAddress0` and `LocalAddress0` return the recorded address, normalized like the live one (IPv4-mapped IPv6 to
+IPv4), and read the live endpoint only when nothing was recorded (an unresolved `DnsEndPoint` target, which Java
+rejects before connecting; an unbound socket). After a Linux address-only bind (`IP_BIND_ADDRESS_NO_PORT`) the local
+address recorded at connect is read with `getsockname`, as the existing `LocalAddress` override does, because
+`LocalEndPoint` may keep port 0; that path does not run on Windows and was not run on this host.
+`NioDomainSocketChannel` is unchanged: its source reads `javaChannel().getRemoteAddress()` and `getLocalAddress()`,
+which throw `ClosedChannelException` after close, and returns null, as the port does. The `RetryWithTcp` fallback is
+removed and the source's `(InetSocketAddress) tcpCh.remoteAddress()` cast is back.
+
+`NioSocketChannelAddressContractTest` (CLR supplemental, 9 cases) checks, after close, the remote and local addresses
+of a connected and an accepted channel, the local address of a bound channel, the target and the explicitly bound
+local address after a failed connect, and IPv4/IPv6 wildcard connects. The five remote-address cases fail with the
+previous `RemoteAddress0` and `Connect` (null addresses; `AddressNotAvailable`), the four local-address cases fail with
+the previous `LocalAddress0` (null), and all pass with the change. No Java test asserts these addresses;
+`SocketConnectTest.testLocalAddressAfterConnect` still asserts null addresses before connect.

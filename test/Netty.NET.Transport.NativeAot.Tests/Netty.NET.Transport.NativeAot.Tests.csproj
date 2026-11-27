@@ -8,5 +8,6 @@
     <Compile Include="../Netty.NET.Transport.Tests/ChannelIdJsonContext.cs" Link="ChannelIdJsonContext.cs" />
     <Compile Include="../Netty.NET.Transport.Tests/ChannelIdContractScenarios.cs" Link="ChannelIdContractScenarios.cs" />
     <Compile Include="../Netty.NET.Transport.Tests/NativeAotContractScenarios.cs" Link="NativeAotContractScenarios.cs" />
+    <Compile Include="../Netty.NET.Transport.Tests/NativeAotNetworkScenarios.cs" Link="NativeAotNetworkScenarios.cs" />
   </ItemGroup>
 </Project>

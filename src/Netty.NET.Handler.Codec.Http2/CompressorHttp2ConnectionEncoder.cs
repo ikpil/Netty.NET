@@ -34,10 +34,11 @@ namespace Netty.NET.Handler.Codec.Http2;
 // CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Write*Async overrides return the promise's
 // Task (docs/codec-http-porting.md, Shared CLR adaptations). promise.setSuccess() is SetResult(), tryFailure is
 // TrySetException and ctx.newPromise() is Http2CodecUtil.NewPromise(). PromiseCombiner is a list of the buffer promises'
-// Tasks combined with Task.WhenAll ("Collect List<Task> and call Task.WhenAll after collection",
-// docs/common-task-composition.md), and combiner.finish(promise) copies the outcome of that Task into the promise
-// (Http2CodecUtil.Cascade, TrySetFromTask). The two anonymous Http2ConnectionAdapter instances of the constructors are
-// the same code and are one nested class, StreamRemovedListener. CompressionOptions is codec-compression's marker
+// Tasks, and combiner.finish(promise) is codec-base's ExecutorPromiseCombiner.Combine, which completes the promise on
+// ctx.Executor when the last buffer promise completes, as new PromiseCombiner(ctx.executor()) does, with the outcome of
+// Task.WhenAll of them (docs/common-task-composition.md; src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs).
+// The two anonymous Http2ConnectionAdapter instances of the constructors are the same code and are one nested class,
+// StreamRemovedListener. CompressionOptions is codec-compression's marker
 // interface ICompressionOptions (CompressionOptions... is params ICompressionOptions[]) and the option and encoder types
 // are the codec-compression ports (docs/codec-compression-porting.md); EmbeddedChannel.builder() is new
 // EmbeddedChannel.Builder() (docs/codec-http-porting.md, HttpContentCompressor). zstd-jni is library-not-ported (owner
@@ -240,7 +241,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                 padding = 0; // Padding is only communicated once on the first iteration
                 buf = nextBuf;
             }
-            Http2CodecUtil.Cascade(ctx, Task.WhenAll(combiner), promise);
+            ExecutorPromiseCombiner.Combine(ctx, combiner, promise);
         }
         catch (Exception cause)
         {

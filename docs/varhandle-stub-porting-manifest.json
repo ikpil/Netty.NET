@@ -1,0 +1,151 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "varhandle-stub",
+  "scope": [
+    "varhandle-stub/src"
+  ],
+  "objective": "Record every pinned file of varhandle-stub 4.2.19.Final as not ported, with its reason, CLR counterpart and evidence (a compile-time stub of java.lang.invoke.VarHandle); see docs/record-only-modules.md.",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-26",
+    "ownerDecisions": [
+      "No project: the module is recorded, not ported (a compile-time stub of java.lang.invoke.VarHandle). Owner decision 2026-11-16 (JVM-only units are recorded with their CLR counterpart instead of placeholder files) and 2026-11-23 (units that need a Java library without a BCL counterpart are recorded, not ported)."
+    ],
+    "evidence": [
+      "docs/record-only-modules.md"
+    ]
+  },
+  "statusMeaning": {
+    "deprecated-not-ported": "@Deprecated Java unit (or a unit that serves one) recorded with its deprecation facts; no [Obsolete] facade.",
+    "jvm-only-replaced": "JVM-only unit replaced by its recorded CLR counterpart, or JVM build/runtime material with no CLR counterpart.",
+    "library-not-ported": "Needs a Java library or JDK-specific API with no BCL counterpart (owner decision 2026-11-23); recorded, not ported.",
+    "clr-adapted": "Ported with the original names, structure and comments; every CLR difference is stated in a // CLR: comment and in this entry.",
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes."
+  },
+  "summary": {
+    "pinnedFiles": 3,
+    "byStatus": {
+      "jvm-only-replaced": 3
+    },
+    "mainJavaSources": 3,
+    "testJavaSources": 0,
+    "declaredOriginalTests": 0,
+    "mappedOriginalTests": 0,
+    "clrNotApplicableTests": 0,
+    "notPortedTests": 0,
+    "pendingEntries": 0
+  },
+  "entries": [
+    {
+      "upstream": "varhandle-stub/src/main/java/java/lang/invoke/MethodHandle.java",
+      "sha256": "b15b7a0a61e26423e2e50bb1b06c75a19924d3518bcbd6ba6e701287098f0799",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type MethodHandle of varhandle-stub.",
+        "reason": "Stub of java.lang.invoke.VarHandle/MethodHandles so that the JVM build compiles on older JDKs; the CLR uses Interlocked and Volatile instead (docs/common-clr-design.md).",
+        "replacement": {
+          "clr": "Interlocked and Volatile.",
+          "noClrCounterpart": [
+            "java.lang.invoke.VarHandle access modes."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a compile-time stub of java.lang.invoke.VarHandle.",
+        "sha256": "d3fe25ab999d92be2824ba70179901cfc24e932911be6f8c0640cb75edb8d911"
+      }
+    },
+    {
+      "upstream": "varhandle-stub/src/main/java/java/lang/invoke/VarHandle.java",
+      "sha256": "48e322c671449bb995226a52f0c83a36f1f3ec75f852afd8b268063e5ea671b2",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Java type VarHandle of varhandle-stub: A stub for the VarHandle class.",
+        "reason": "Stub of java.lang.invoke.VarHandle/MethodHandles so that the JVM build compiles on older JDKs; the CLR uses Interlocked and Volatile instead (docs/common-clr-design.md).",
+        "replacement": {
+          "clr": "Interlocked and Volatile.",
+          "noClrCounterpart": [
+            "java.lang.invoke.VarHandle access modes."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a compile-time stub of java.lang.invoke.VarHandle.",
+        "sha256": "e9b4b6728e5b289b0a92a6585e460c5ae455bd691e051dcbcda69dc0082eb122"
+      }
+    },
+    {
+      "upstream": "varhandle-stub/src/main/java/java/lang/invoke/package-info.java",
+      "sha256": "cae075ffbabcd9db988a6dff57da5e011b67ec3a8252892ff179a45121d98fc9",
+      "hashMode": "utf8-lf",
+      "kind": "documentation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-26",
+        "sourceContract": "Package documentation of java.lang.invoke.",
+        "reason": "Stub of java.lang.invoke.VarHandle/MethodHandles so that the JVM build compiles on older JDKs; the CLR uses Interlocked and Volatile instead (docs/common-clr-design.md).",
+        "replacement": {
+          "clr": "Interlocked and Volatile.",
+          "noClrCounterpart": [
+            "java.lang.invoke.VarHandle access modes."
+          ]
+        },
+        "evidence": {
+          "files": [
+            "docs/record-only-modules.md"
+          ],
+          "urls": [
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a unit that is not ported: a compile-time stub of java.lang.invoke.VarHandle.",
+        "sha256": "e6b185691dbf1a7f3fd74285496ef293bd12da0f8ce389f3fb3b8a5c8fb20b07"
+      }
+    }
+  ],
+  "validationHistory": []
+}

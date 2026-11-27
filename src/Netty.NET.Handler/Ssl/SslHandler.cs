@@ -24,6 +24,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -284,6 +285,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         this.serverOptions = serverOptions;
         mediation = new MediationStream(this);
         engine = new SslStream(mediation, false);
+        CapturePeerCertificates();
         this.startTls = startTls;
         SetCumulator(cumulator);
         sslTaskRunnerForUnwrap = new SslTasksRunner(this, true);
@@ -411,6 +413,85 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     internal SslServerAuthenticationOptions ServerOptions()
     {
         return serverOptions;
+    }
+
+    // CLR-only: engine().getSession().getPeerCertificates(), "the peer's own certificate first followed by any
+    // certificate authorities" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/javax/net/ssl/SSLSession.html#getPeerCertificates()),
+    // which handler-ssl-ocsp's OcspServerCertificateValidator reads. SslStream exposes only the RemoteCertificate, so
+    // the chain is the one SslStream built for the remote certificate and passed to the validation callback (see
+    // CapturePeerCertificates): the remote certificate followed by its issuers. When SslStream skipped the callback (a
+    // resumed session) or the chain has no element, it is the RemoteCertificate alone; null before a remote certificate
+    // is known. Internal, like Engine(): a public accessor waits for an owner naming decision; InternalsVisibleTo opens
+    // it to Netty.NET.Handler.Ssl.Ocsp.
+    internal X509Certificate2[] PeerCertificates()
+    {
+        X509Certificate2[] certificates = Volatile.Read(ref peerCertificates);
+        if (certificates != null)
+        {
+            return certificates;
+        }
+        X509Certificate remote = engine.RemoteCertificate;
+        return remote == null ? null : new[] { X509CertificateLoader.LoadCertificate(remote.GetRawCertData()) };
+    }
+
+    // CLR-only helper for PeerCertificates(): wraps the options' RemoteCertificateValidationCallback so that it records
+    // the chain SslStream passes for this handler's SslStream ("chain: The chain of certificate authorities associated
+    // with the remote certificate",
+    // https://learn.microsoft.com/en-us/dotnet/api/system.net.security.remotecertificatevalidationcallback?view=net-10.0)
+    // and then decides as before: the configured callback, or without one SslStream's own decision, "success =
+    // sslPolicyErrors == SslPolicyErrors.None" after clearing RemoteCertificateNotAvailable when no remote certificate is
+    // required (VerifyRemoteCertificateCore,
+    // https://raw.githubusercontent.com/dotnet/runtime/main/src/libraries/System.Net.Security/src/System/Net/Security/SslStream.Protocol.cs).
+    // A remote certificate is required of a server and, when ClientCertificateRequired is set, of a client. The chain
+    // elements are copied, as SslStream disposes the chain after the callback. The sender check keeps options shared
+    // by several handlers from recording one handler's peer in another.
+    private void CapturePeerCertificates()
+    {
+        if (clientOptions != null)
+        {
+            RemoteCertificateValidationCallback configured = clientOptions.RemoteCertificateValidationCallback;
+            clientOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, errors) =>
+                    VerifyAndCapturePeer(sender, certificate, chain, errors, configured, true);
+        }
+        else
+        {
+            RemoteCertificateValidationCallback configured = serverOptions.RemoteCertificateValidationCallback;
+            SslServerAuthenticationOptions options = serverOptions;
+            serverOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, errors) =>
+                    VerifyAndCapturePeer(sender, certificate, chain, errors, configured,
+                            options.ClientCertificateRequired);
+        }
+    }
+
+    private bool VerifyAndCapturePeer(object sender, X509Certificate certificate, X509Chain chain,
+                                      SslPolicyErrors errors, RemoteCertificateValidationCallback configured,
+                                      bool remoteCertificateRequired)
+    {
+        if (ReferenceEquals(sender, engine) && certificate != null)
+        {
+            List<X509Certificate2> certificates = new List<X509Certificate2>();
+            if (chain != null)
+            {
+                foreach (X509ChainElement element in chain.ChainElements)
+                {
+                    certificates.Add(X509CertificateLoader.LoadCertificate(element.Certificate.RawData));
+                }
+            }
+            if (certificates.Count == 0)
+            {
+                certificates.Add(X509CertificateLoader.LoadCertificate(certificate.GetRawCertData()));
+            }
+            Volatile.Write(ref peerCertificates, certificates.ToArray());
+        }
+        if (configured != null)
+        {
+            return configured(sender, certificate, chain, errors);
+        }
+        if (!remoteCertificateRequired)
+        {
+            errors &= ~SslPolicyErrors.RemoteCertificateNotAvailable;
+        }
+        return errors == SslPolicyErrors.None;
     }
 
     /**
@@ -891,6 +972,22 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         // and this write is to complete the new handshake. The user may have previously done a
                         // writeAndFlush which wasn't able to wrap data due to needing the pending handshake, so we
                         // attempt to wrap application data here if any is pending.
+                        // CLR: in unwrap, Java leaves these last handshake records unflushed until channelReadComplete
+                        // and fires the handshake event first (STATE_NEEDS_FLUSH). They are flushed here before
+                        // setHandshakeSuccess() instead.
+                        // The last records of a TLS 1.3 server are its NewSessionTicket: SChannel writes it before
+                        // AuthenticateAsServerAsync returns (measured 2026-11-26).
+                        // A peer that closes as soon as it learns of this handshake could then close before the ticket
+                        // arrives. Its stack answers the late ticket with an RST, and Windows discards the data a
+                        // socket had already received when an RST arrives (measured: 20 of 20 reads after an RST failed
+                        // without returning 24 queued bytes). The peer's close_notify was lost that way.
+                        // SslHandlerTest.testSslCompletionEventsTls13JDK failed in 14 of 15 loaded runs of 300 cycles;
+                        // with this flush it failed in 0 of 15.
+                        // The same bytes go out; only the flush moves ahead of the event.
+                        if (inUnwrap)
+                        {
+                            FlushIfNeeded(ctx);
+                        }
                         if (SetHandshakeSuccess() && inUnwrap && !pendingUnencryptedWrites.IsEmpty)
                         {
                             Wrap(ctx, true);
@@ -2583,6 +2680,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 
     private readonly SslClientAuthenticationOptions clientOptions;
     private readonly SslServerAuthenticationOptions serverOptions;
+    private X509Certificate2[] peerCertificates;
     private readonly MediationStream mediation;
     private readonly Action onEngineProgress;
     private Task handshakeOperation;

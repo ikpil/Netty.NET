@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- handler-ssl-ocsp needs codec-http (which brings handler, codec-base, transport, buffer and common) and
+         resolver-dns. The Bouncy Castle OCSP types are replaced by the CLR-only OcspAsn1.cs on System.Formats.Asn1. -->
+    <ProjectReference Include="..\Netty.NET.Handler.Codec.Http\Netty.NET.Handler.Codec.Http.csproj" />
+    <ProjectReference Include="..\Netty.NET.Resolver.Dns\Netty.NET.Resolver.Dns.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Handler.Ssl.Ocsp.Tests" />
+  </ItemGroup>
+</Project>

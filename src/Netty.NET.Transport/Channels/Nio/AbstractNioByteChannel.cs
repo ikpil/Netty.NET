@@ -609,7 +609,14 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
 
     protected void DoBind0(EndPoint localAddress)
     {
-        JavaChannel().Bind(localAddress);
+        Bind(JavaChannel(), localAddress);
+    }
+
+    // CLR: SocketUtils.bind(SocketChannel, SocketAddress), kept apart as Connect is so that NioSocketChannel can record
+    // the bound address as SocketChannelImpl.bind does.
+    internal virtual void Bind(Socket socket, EndPoint localAddress)
+    {
+        socket.Bind(localAddress);
     }
 
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)

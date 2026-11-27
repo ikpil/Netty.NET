@@ -19,4 +19,5 @@
     <ProjectReference Include="..\..\src\Netty.NET.Resolver\Netty.NET.Resolver.csproj" />
     <Content Include="Resources\hosts-unicode" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

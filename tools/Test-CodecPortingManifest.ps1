@@ -1,11 +1,28 @@
 param(
     # Every recorded codec Maven module (codec-http since 2026-11-24) plus pkitesting, handler, handler-proxy and
     # resolver-dns (2026-11-25); each has docs/<module>-porting-manifest.json (codec-marshalling is recorded without a C#
-    # project). handler has no pending entry since its ssl port (2026-11-24).
+    # project). handler has no pending entry since its ssl port (2026-11-24). testsuite-http2 and testsuite-autobahn
+    # (2026-11-26) are the h2spec and Autobahn server modules; they declare no JUnit test. handler-ssl-ocsp
+    # (2026-11-26) records its OpenSSL-only unit against handler's manifest (library.familyManifest). The record-only
+    # modules (2026-11-26, docs/record-only-modules.md) have no project: deprecated, library-bound, JNI native or JVM-only.
+    # codec-classes-quic and codec-native-quic (2026-11-27) are the QUIC port on System.Net.Quic (docs/quic-design.md);
+    # codec-http3 is ported on it (its QUIC-free closure came first, 2026-11-26).
+    # example (2026-11-26) is the Netty.NET.Example executable; examples of not-ported units borrow their family owners.
     [string[]]$Module = @('codec-base', 'codec-dns', 'codec-haproxy', 'codec-memcache', 'codec-mqtt', 'codec-redis',
         'codec-smtp', 'codec-socks', 'codec-stomp', 'codec-compression', 'codec-xml', 'codec-protobuf',
-        'codec-marshalling', 'pkitesting', 'handler', 'codec-http', 'codec-http2', 'handler-proxy', 'resolver-dns'),
+        'codec-marshalling', 'pkitesting', 'handler', 'codec-http', 'codec-http2', 'handler-proxy', 'resolver-dns',
+        'testsuite-http2', 'testsuite-autobahn', 'handler-ssl-ocsp', 'testsuite-common',
+        'transport-udt', 'transport-rxtx', 'transport-sctp', 'transport-native-unix-common',
+        'transport-native-unix-common-tests', 'transport-classes-epoll', 'transport-native-epoll',
+        'transport-classes-io_uring', 'transport-native-io_uring', 'transport-classes-kqueue', 'transport-native-kqueue',
+        'resolver-dns-classes-macos', 'resolver-dns-native-macos', 'microbench', 'testsuite-osgi',
+        'transport-blockhound-tests', 'testsuite-jpms', 'testsuite-shading', 'testsuite-native', 'testsuite-native-image',
+        'testsuite-native-image-client', 'testsuite-native-image-client-runtime-init', 'testsuite-karaf', 'jfr-stub',
+        'varhandle-stub', 'dev-tools', 'codec-classes-quic', 'codec-native-quic', 'codec-http3', 'example'),
     [string]$UpstreamRoot = (Join-Path $PSScriptRoot '../../netty'),
+    # 2026-11-26: a manifest file other than docs/<module>-porting-manifest.json, for one module (a work-in-progress
+    # manifest checked with -AllowPending before it replaces the recorded one).
+    [string]$ManifestOverride,
     [switch]$AllowPending)
 
 $ErrorActionPreference = 'Stop'
@@ -60,6 +77,21 @@ function Get-NormalizedYamlComments([string]$source) {
     # module-info.yml keeps its license in '#' lines; each contiguous '#' block is one comment.
     foreach ($match in [regex]::Matches($source, '(?m)(?:^[ \t]*#[^\n]*(?:\n|$))+')) {
         (($match.Value -replace '(?m)^[ \t]*#', '') -replace '\s+', ' ').Trim()
+    }
+}
+
+function Get-NormalizedM4Comments([string]$source) {
+    # 2026-11-27 (codec-native-quic): autoconf m4 templates comment with 'dnl'; each contiguous 'dnl' block is one
+    # comment, as for '#' lines in YAML.
+    foreach ($match in [regex]::Matches($source, '(?m)(?:^[ \t]*dnl\b[^\n]*(?:\n|$))+')) {
+        (($match.Value -replace '(?m)^[ \t]*dnl\b', '') -replace '\s+', ' ').Trim()
+    }
+}
+
+function Get-NormalizedMarkupComments([string]$source) {
+    # XML, HTML and JFR settings keep their license and notes in <!-- --> comments (2026-11-26, record-only modules).
+    foreach ($match in [regex]::Matches($source, '(?s)<!--(.*?)-->')) {
+        ($match.Groups[1].Value -replace '\s+', ' ').Trim()
     }
 }
 
@@ -182,6 +214,10 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
 
     foreach ($moduleName in $Module) {
     $manifestPath = Join-Path $repositoryRoot "docs/$moduleName-porting-manifest.json"
+    if ($ManifestOverride) {
+        if (@($Module).Count -ne 1) { throw "-ManifestOverride needs exactly one -Module." }
+        $manifestPath = $ManifestOverride
+    }
     if (-not (Test-Path $manifestPath -PathType Leaf)) { throw "Missing manifest: docs/$moduleName-porting-manifest.json" }
     $manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($manifest.module -cne $moduleName) { throw "Manifest module differs: $manifestPath" }
@@ -207,6 +243,8 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
     $notPortedMethodCount = 0
     $libraryNotPortedCount = 0
     $libraryCommentCount = 0
+    $deferredCount = 0
+    $deferredTestCount = 0
     $notPortedStatuses = @('deprecated-not-ported', 'jvm-only-replaced', 'library-not-ported')
     $testsuiteEntries = @()
     foreach ($entry in @($manifest.entries)) {
@@ -233,6 +271,71 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
             }
         }
         if ($entry.status -eq 'pending') { continue }
+        if ($entry.status -ceq 'deferred-to-module') {
+            # 2026-11-26 (codec-http3): a unit that needs a Netty module which has no C# project yet is recorded with
+            # the blocking imports (recomputed exactly from the source) or the deferred same-package types it names
+            # (via). It is ported with that module; this is not a decision against porting it. The pass after this
+            # loop checks that no ported entry needs a deferred one.
+            $deferred = $entry.deferred
+            if (@($entry.implementation).Count -ne 0 -or $entry.hashMode -cne 'utf8-lf' -or -not $path.EndsWith('.java') -or
+                -not $deferred -or -not $deferred.reason -or @($deferred.blockedBy | Where-Object { $_ }).Count -eq 0) {
+                throw "Incomplete deferred-to-module entry: $($entry.upstream)"
+            }
+            $masked = Get-MaskedJava $source
+            $blockers = @()
+            foreach ($blocking in @($deferred.blockingImports | Where-Object { $null -ne $_ })) {
+                if (-not $blocking.module -or -not $blocking.package -or ($deferred.blockedBy -cnotcontains $blocking.module)) {
+                    throw "Invalid blocking import record: $($entry.upstream)"
+                }
+                $imports = @([regex]::Matches($masked, '(?m)^import\s+(?:static\s+)?' + [regex]::Escape($blocking.package) + '\.([A-Z]\w*)') |
+                    ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+                if ($imports.Count -eq 0 -or [string]::Join(',', $imports) -cne [string]::Join(',', @($blocking.imports | Sort-Object))) {
+                    throw "Recorded blocking imports differ from the source: $($entry.upstream)"
+                }
+                # 2026-11-27: once the blocking module has a manifest, the entry stays deferred only while a type it
+                # imports is not ported there yet (pending, deferred or not ported); then it must be ported.
+                $blockingManifest = Join-Path $repositoryRoot "docs/$($blocking.module)-porting-manifest.json"
+                if (Test-Path $blockingManifest -PathType Leaf) {
+                    $blockingEntries = @((Get-Content $blockingManifest -Raw -Encoding UTF8 | ConvertFrom-Json).entries)
+                    $packagePath = '/' + $blocking.package.Replace('.', '/') + '/'
+                    $unported = @($imports | Where-Object {
+                        $typePath = $packagePath + $_ + '.java'
+                        @($blockingEntries | Where-Object {
+                            $_.upstream.EndsWith($typePath) -and $_.upstream.Contains('/src/main/java/') -and
+                            $_.status -cin @('verified', 'clr-adapted')
+                        }).Count -eq 0
+                    })
+                    if ($unported.Count -eq 0) {
+                        throw "Every type this entry imports from $($blocking.module) is ported now; port the entry: $($entry.upstream)"
+                    }
+                }
+                $blockers += $blocking.module
+            }
+            foreach ($viaPath in @($deferred.via | Where-Object { $_ })) {
+                $viaEntry = @($manifest.entries | Where-Object { $_.upstream -ceq $viaPath })
+                $viaType = [IO.Path]::GetFileNameWithoutExtension($viaPath)
+                if ($viaEntry.Count -ne 1 -or $viaEntry[0].status -cne 'deferred-to-module' -or
+                    $masked -cnotmatch ('(?<![\w$])' + [regex]::Escape($viaType) + '(?![\w$])')) {
+                    throw "Deferred via entry is not a deferred type named by the source: $($entry.upstream) -> $viaPath"
+                }
+                $blockers += @($viaEntry[0].deferred.blockedBy)
+            }
+            if ($blockers.Count -eq 0) { throw "Deferred entry needs a blocking import or a deferred via type: $($entry.upstream)" }
+            if ([string]::Join(',', @($blockers | Sort-Object -Unique)) -cne [string]::Join(',', @($deferred.blockedBy | Sort-Object -Unique))) {
+                throw "Recorded blocking modules differ from the imports and via types: $($entry.upstream)"
+            }
+            $tests = @(Get-DeclaredJavaTests $source | Sort-Object)
+            if ([string]::Join(',', $tests) -cne [string]::Join(',', @($deferred.declaredTests | Where-Object { $null -ne $_ } | Sort-Object))) {
+                throw "Deferred declared tests differ from the source: $($entry.upstream)"
+            }
+            $comments = @(Get-NormalizedComments $source | Select-Object -Unique)
+            if ($entry.comments.status -cne 'deferred' -or $entry.comments.uniqueCount -ne $comments.Count) {
+                throw "Deferred comment accounting differs from the source: $($entry.upstream)"
+            }
+            $deferredCount++
+            $deferredTestCount += $tests.Count
+            continue
+        }
         $notPorted = $entry.status -cin $notPortedStatuses
         if ($notPorted) {
             # Owner dispositions for Java units that are deliberately not ported as code (2026-11-16). Nothing is waived:
@@ -264,7 +367,11 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                 $masked = Get-MaskedJava $source
                 $tags = @(Get-DeprecatedTags $source)
                 $annotated = $typeName -cne 'package-info' -and (Test-DeprecatedType $masked $typeName)
-            } elseif (-not $path.EndsWith('.yml') -and -not $path.EndsWith('.json') -and -not $path.EndsWith('.properties')) {
+            } elseif ($path -cnotmatch '\.(yml|json|properties|c|h|proto|xml|html|jfc|txt|pem|crt|key|template)$' -and
+                $entry.upstream -cnotmatch '/META-INF/services/[^/]+$') {
+                # 2026-11-26 (record-only modules): besides JPMS/GraalVM metadata, the native transports carry C sources
+                # and headers, and microbench and the JVM-only testsuites carry XML/HTML, JFR settings, text and
+                # certificate/key test data and ServiceLoader registrations; the example module a protobuf schema (.proto).
                 throw "Unsupported not-ported source: $($entry.upstream)"
             }
             $deprecation = $decision.deprecation
@@ -286,7 +393,14 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                 if (-not $annotated) {
                     # A unit without its own @Deprecated type must serve a recorded @Deprecated public type.
                     $family = $deprecation.family
-                    $owner = @($manifest.entries | Where-Object { $family -and $_.upstream -ceq $family.upstream })
+                    # 2026-11-26 (example): the owner may be recorded in another module's manifest (familyManifest, a
+                    # repository-relative path), as the objectecho example serves codec-base's ObjectEncoder.
+                    $familyEntries = $manifest.entries
+                    if ($family -and $family.familyManifest) {
+                        $familyEntries = (Get-Content (Join-Path $repositoryRoot $family.familyManifest) -Raw -Encoding UTF8 |
+                            ConvertFrom-Json).entries
+                    }
+                    $owner = @($familyEntries | Where-Object { $family -and $_.upstream -ceq $family.upstream })
                     if (-not $family -or -not $family.type -or -not $family.relation -or $owner.Count -ne 1 -or
                         $owner[0].status -cne 'deprecated-not-ported' -or
                         $family.type -cne [IO.Path]::GetFileNameWithoutExtension($family.upstream)) {
@@ -310,18 +424,22 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                         # A helper the family reaches only through another not-ported helper (codec-base: ReferenceMap is
                         # the base class of WeakReferenceMap/SoftReferenceMap, which ClassResolvers creates). The via entry
                         # must share the family, sit in the same package and name this type in its code.
+                        # A family owner of another module's manifest (familyManifest) sits in another package; then only
+                        # the via entry must share this unit's package.
                         $via = @($manifest.entries | Where-Object { $_.upstream -ceq $family.via })
                         if ($via.Count -ne 1 -or $via[0].status -cne 'deprecated-not-ported' -or
-                            $via[0].notPorted.deprecation.family.upstream -cne $family.upstream -or -not $samePackage -or
+                            $via[0].notPorted.deprecation.family.upstream -cne $family.upstream -or
+                            (-not $samePackage -and -not $family.familyManifest) -or
                             (& $javaPackageOf $family.via) -cne (& $javaPackageOf $entry.upstream)) {
                             throw "Invalid deprecated family path: $($entry.upstream)"
                         }
                         $viaMasked = Get-MaskedJava ([Text.Encoding]::UTF8.GetString(
                             [IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $family.via))).Replace("`r`n", "`n"))
                         $viaType = [IO.Path]::GetFileNameWithoutExtension($family.via)
-                        # The via entry names this type, or (a test of the via helper) this test names the via type.
+                        # The via entry names this type, or this unit names the via type: a test of the via helper, or
+                        # (2026-11-26, example) a subclass or user of it (MsgEchoPeerOne extends MsgEchoPeerBase).
                         $linked = $typeName -and ($viaMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b') -or
-                            ($entry.kind -ceq 'test' -and $masked -cmatch ('\b' + [regex]::Escape($viaType) + '\b')))
+                            $masked -cmatch ('\b' + [regex]::Escape($viaType) + '\b'))
                     }
                     if (-not $linked) { throw "Deprecated family is not referenced by code: $($entry.upstream)" }
                     if (-not $tags.Count) { $nameSource = @(Get-DeprecatedTags $familySource) }
@@ -350,15 +468,26 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                 }
                 $importsLibrary = {
                     # An import of a recorded package, or (2026-11-24, handler ssl) a string literal naming a class of
-                    # it for reflection (Class.forName("org.conscrypt.Conscrypt")).
+                    # it for reflection (Class.forName("org.conscrypt.Conscrypt")), or (2026-11-26, example) a fully
+                    # qualified type name in code, as protoc-generated sources (WorldClockProtocol) import nothing.
                     param([string]$javaSource)
+                    $librarySourceMasked = Get-MaskedJava $javaSource
                     @($library.javaPackages | Where-Object {
                         $javaSource -cmatch ('(?m)^import\s+(?:static\s+)?' + [regex]::Escape($_) + '\.') -or
-                        $javaSource -cmatch ('"' + [regex]::Escape($_) + '\.[A-Za-z]')
+                        $javaSource -cmatch ('"' + [regex]::Escape($_) + '\.[A-Za-z]') -or
+                        $librarySourceMasked -cmatch ('(?<![\w.$])' + [regex]::Escape($_) + '\.[A-Z]')
                     }).Count -gt 0
                 }
                 if ($library.family) {
-                    $owner = @($manifest.entries | Where-Object { $_.upstream -ceq $library.family })
+                    # 2026-11-26 (handler-ssl-ocsp): the owner may be recorded in another module's manifest
+                    # (familyManifest, a repository-relative path), as OcspClientHandler serves handler's
+                    # library-not-ported ReferenceCountedOpenSslEngine.
+                    $familyEntries = $manifest.entries
+                    if ($library.familyManifest) {
+                        $familyEntries = (Get-Content (Join-Path $repositoryRoot $library.familyManifest) -Raw -Encoding UTF8 |
+                            ConvertFrom-Json).entries
+                    }
+                    $owner = @($familyEntries | Where-Object { $_.upstream -ceq $library.family })
                     if ($owner.Count -ne 1 -or $owner[0].status -cne 'library-not-ported' -or
                         $owner[0].notPorted.library.name -cne $library.name -or $owner[0].notPorted.library.family) {
                         throw "Missing library family owner: $($entry.upstream)"
@@ -370,6 +499,24 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                     $ownerMasked = Get-MaskedJava $ownerSource
                     $linked = ($masked -cmatch ('\b' + [regex]::Escape($familyType) + '\b')) -or
                         ($ownerMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b'))
+                    if (-not $linked -and $library.via) {
+                        # 2026-11-26 (example): a unit that reaches the family only through another library-not-ported
+                        # unit of this manifest, in the same Java package and with the same family, which names this
+                        # type or is named by it (SctpEchoServer creates SctpEchoServerHandler; WorldClockClient uses
+                        # WorldClockClientInitializer).
+                        $javaPackageOfUnit = { param([string]$path) ($path.Substring(0, $path.LastIndexOf('/'))) -creplace '/src/(main|test)/java/', '/src/java/' }
+                        $via = @($manifest.entries | Where-Object { $_.upstream -ceq $library.via })
+                        if ($via.Count -ne 1 -or $via[0].status -cne 'library-not-ported' -or
+                            $via[0].notPorted.library.family -cne $library.family -or
+                            (& $javaPackageOfUnit $library.via) -cne (& $javaPackageOfUnit $entry.upstream)) {
+                            throw "Invalid library family path: $($entry.upstream)"
+                        }
+                        $viaMasked = Get-MaskedJava ([Text.Encoding]::UTF8.GetString(
+                            [IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $library.via))).Replace("`r`n", "`n"))
+                        $viaType = [IO.Path]::GetFileNameWithoutExtension($library.via)
+                        $linked = ($viaMasked -cmatch ('\b' + [regex]::Escape($typeName) + '\b')) -or
+                            ($masked -cmatch ('\b' + [regex]::Escape($viaType) + '\b'))
+                    }
                     if (-not $linked) { throw "Library family is not referenced by code: $($entry.upstream)" }
                 } elseif (-not (& $importsLibrary $source)) {
                     throw "Library-not-ported unit does not import the recorded library: $($entry.upstream)"
@@ -380,9 +527,11 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
                     throw "JVM-only replacements record CLR replacements, not deprecated-family names: $($entry.upstream)"
                 }
             }
-            if ($isJava) { $comments = @(Get-NormalizedComments $source | Select-Object -Unique) }
-            elseif ($path.EndsWith('.json')) { $comments = @() }
-            else { $comments = @(Get-NormalizedYamlComments $source | Select-Object -Unique) }
+            if ($isJava -or $path -cmatch '\.(c|h|proto)$') { $comments = @(Get-NormalizedComments $source | Select-Object -Unique) }
+            elseif ($path -cmatch '\.(xml|html|jfc)$' -or $path -cmatch '\.props\.template$') { $comments = @(Get-NormalizedMarkupComments $source | Select-Object -Unique) }
+            elseif ($path -cmatch '\.m4(\.android)?\.template$') { $comments = @(Get-NormalizedM4Comments $source | Select-Object -Unique) }
+            elseif ($path -cmatch '\.(yml|properties)$') { $comments = @(Get-NormalizedYamlComments $source | Select-Object -Unique) }
+            else { $comments = @() }
             $record = $entry.comments
             if ($path.EndsWith('.json') -and $record.disposition -cne 'none') {
                 throw "Comment-free JSON metadata must use comment disposition none: $($entry.upstream)"
@@ -400,7 +549,12 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
             } elseif ($record.disposition -ceq 'none') {
                 # The RFC 8259 grammar has no comment token (between tokens only the ws rule applies), so there is
                 # nothing to keep or to give a disposition.
-                if (-not $path.EndsWith('.json') -or $comments.Count -ne 0) { throw "Only comment-free JSON uses disposition none: $($entry.upstream)" }
+                # Data files without a comment syntax (text, certificates, keys, ServiceLoader registrations) likewise
+                # (2026-11-26).
+                if ($comments.Count -ne 0 -or ($path -cnotmatch '\.(json|txt|pem|crt|key)$' -and
+                    $entry.upstream -cnotmatch '/META-INF/services/[^/]+$')) {
+                    throw "Only comment-free JSON or data files use disposition none: $($entry.upstream)"
+                }
             } elseif ($record.disposition -ceq 'per-comment') {
                 $dispositions = @($record.notApplicable | Where-Object { $null -ne $_ })
                 if ($dispositions.Count -ne $comments.Count -or
@@ -558,6 +712,32 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
         }
     }
 
+    $deferredEntries = @($manifest.entries | Where-Object { $_.status -ceq 'deferred-to-module' })
+    if ($deferredEntries.Count) {
+        # A ported unit must not need a deferred one: it imports no blocking package and names no deferred type of its
+        # Java package (src/main/java and src/test/java share packages).
+        $packageOf = { param([string]$path) ($path.Substring(0, $path.LastIndexOf('/'))) -creplace '/src/(main|test)/java/', '/src/java/' }
+        # 2026-11-27: compared by type, since a blocking module may be partly ported (codec-classes-quic).
+        $blockingTypes = @($deferredEntries | ForEach-Object { @($_.deferred.blockingImports) } | Where-Object { $null -ne $_ } |
+            ForEach-Object { $package = $_.package; @($_.imports) | ForEach-Object { "$package.$_" } } | Sort-Object -Unique)
+        foreach ($entry in @($manifest.entries | Where-Object { $_.status -cin @('verified', 'clr-adapted') -and $_.upstream.EndsWith('.java') })) {
+            $masked = Get-MaskedJava ([Text.Encoding]::UTF8.GetString(
+                [IO.File]::ReadAllBytes((Join-Path $UpstreamRoot $entry.upstream))).Replace("`r`n", "`n"))
+            foreach ($blockingType in $blockingTypes) {
+                if ($masked -cmatch ('(?m)^import\s+(?:static\s+)?' + [regex]::Escape($blockingType) + '[.;\s]')) {
+                    throw "A ported entry imports the blocking type $($blockingType): $($entry.upstream)"
+                }
+            }
+            foreach ($other in $deferredEntries) {
+                $otherType = [IO.Path]::GetFileNameWithoutExtension($other.upstream)
+                if ((& $packageOf $other.upstream) -ceq (& $packageOf $entry.upstream) -and
+                    $masked -cmatch ('(?<![\w$])' + [regex]::Escape($otherType) + '(?![\w$])')) {
+                    throw "A ported entry needs the deferred type $($otherType): $($entry.upstream)"
+                }
+            }
+        }
+    }
+
     $entries = @($manifest.entries)
     $pendingEntries = @($entries | Where-Object { $_.status -ceq 'pending' })
     if ($pendingEntries.Count -and -not $AllowPending) { throw "Unreviewed $($moduleName) entry: $($pendingEntries[0].upstream)" }
@@ -565,5 +745,6 @@ function Test-CommentDisposition([string]$source, [string]$masked, $disposition)
     Write-Output ("$($moduleName) manifest verified: $($entries.Count) pinned files (" + [string]::Join(', ', $byStatus) + "), " +
         "$mappedCount mapped original tests, $notApplicableCount CLR-inapplicable and $notPortedMethodCount not-ported original tests, " +
         "$deprecatedCommentCount deprecated-member, $jvmOnlyCommentCount JVM-only-API and $libraryCommentCount library-not-ported comment dispositions; " +
-        "$deprecatedNotPortedCount deprecated-not-ported, $jvmOnlyReplacedCount JVM-only-replaced and $libraryNotPortedCount library-not-ported entries carry $notPortedCommentCount original comments.")
+        "$deprecatedNotPortedCount deprecated-not-ported, $jvmOnlyReplacedCount JVM-only-replaced and $libraryNotPortedCount library-not-ported entries carry $notPortedCommentCount original comments." +
+        $(if ($deferredCount) { " $deferredCount entries ($deferredTestCount declared tests) are deferred to unported modules." } else { '' }))
 }

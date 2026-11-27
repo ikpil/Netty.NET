@@ -54,7 +54,9 @@ public static class HttpObjectEncoder
 // CLR: H extends HttpMessage is the constraint H : IHttpMessage. write(ctx, msg, promise) is WriteAsync(ctx, msg,
 // cancellationToken), whose Task replaces the promise (docs/codec-base-porting.md, Outbound operations); as in codec-base
 // MessageToMessageEncoder, there is no void promise, so writeVoidPromise has no counterpart, and PromiseCombiner is
-// Task.WhenAll of the writes (docs/common-task-composition.md). The reused out list is the field @out. FileRegion is the
+// codec-base's ExecutorPromiseCombiner, which completes the returned Task on the event loop when the last write
+// completes as the Java combiner does (a Task.WhenAll of the Transport write Tasks completed later on a thread-pool
+// thread; src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs). The reused out list is the field @out. FileRegion is the
 // Transport IFileRegion. java.lang.Error is UnreachableException (docs/codec-memcache-porting.md),
 // IllegalStateException is InvalidOperationException and assert is Debug.Assert; the switch sections that fall through
 // end with goto case (docs/codec-compression-porting.md). In encodeFullHttpMessage a local named state is declared after
@@ -179,7 +181,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
         {
             combiner[i] = ctx.WriteAsync(@out[i]);
         }
-        return Task.WhenAll(combiner);
+        return ExecutorPromiseCombiner.Combine(ctx, combiner);
     }
 
     protected override void Encode(IChannelHandlerContext ctx, object msg, IList<object> @out)

@@ -39,7 +39,7 @@ public class MessageToMessageEncoderTest
     }
 
     [Fact]
-    public async Task TestIntermediateWriteFailures()
+    public void TestIntermediateWriteFailures()
     {
         IChannelHandler encoder = new TwoMessageEncoder();
 
@@ -50,9 +50,27 @@ public class MessageToMessageEncoderTest
         EmbeddedChannel channel = new EmbeddedChannel(writeThrower, encoder);
         object msg = new object();
         Task write = channel.WriteAndFlushAsync(msg);
-        // CLR: write.cause() is the exception the completed Task rethrows when awaited.
-        Assert.Same(firstWriteException, await Record.ExceptionAsync(
-                () => write.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)));
+        // CLR: write.cause() is the exception of the faulted Task (Task.Exception.InnerException), read without waiting
+        // as Java reads it: the combined Task completes on the event loop when the last write completes, before
+        // WriteAndFlushAsync returns (ExecutorPromiseCombiner).
+        Assert.True(write.IsFaulted);
+        Assert.Same(firstWriteException, write.Exception.InnerException);
+        Assert.Same(msg, channel.ReadOutbound());
+        Assert.False(channel.Finish());
+    }
+
+    // CLR supplement: the combined Task of several successful writes has completed when WriteAndFlushAsync returns, as
+    // the Java PromiseCombiner completes the promise on its executor when the last write completes. A Task.WhenAll of
+    // the Transport write Tasks (which run their continuations asynchronously) completed it later on a thread-pool
+    // thread.
+    [Fact]
+    public void TestCombinedWritesCompleteWhenFlushed()
+    {
+        EmbeddedChannel channel = new EmbeddedChannel(new TwoMessageEncoder());
+        object msg = new object();
+        Task write = channel.WriteAndFlushAsync(msg);
+        Assert.True(write.IsCompletedSuccessfully);
+        Assert.NotNull(channel.ReadOutbound());
         Assert.Same(msg, channel.ReadOutbound());
         Assert.False(channel.Finish());
     }

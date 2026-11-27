@@ -19,4 +19,5 @@
     <ProjectReference Include="..\..\src\Netty.NET.Handler.Proxy\Netty.NET.Handler.Proxy.csproj" />
     <ProjectReference Include="..\..\src\Netty.NET.PkiTesting\Netty.NET.PkiTesting.csproj" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

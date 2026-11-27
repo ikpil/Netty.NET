@@ -1,0 +1,37 @@
+/*
+ * Copyright 2020 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+using Netty.NET.Buffer;
+
+namespace Netty.NET.Handler.Codec.Http3;
+
+/**
+ * See <a href="https://tools.ietf.org/html/draft-ietf-quic-http-32#section-7.2.1">DATA</a>.
+ */
+// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations). ByteBufHolder is
+// IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md). copy(), duplicate(),
+// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow
+// the return type, so they are inherited from IByteBufHolder, not repeated; DefaultHttp3DataFrame narrows them with
+// covariant overrides (owner decision 2026-11-19; docs/transport-porting.md, Decisions), as IHttp3UnknownFrame. The
+// default method type() that overrides Http3Frame.type() is an explicit default interface member of IHttp3Frame.Type().
+public interface IHttp3DataFrame : IByteBufHolder, IHttp3RequestStreamFrame, IHttp3PushStreamFrame
+{
+
+    long IHttp3Frame.Type()
+    {
+        return Http3CodecUtils.HTTP3_DATA_FRAME_TYPE;
+    }
+}

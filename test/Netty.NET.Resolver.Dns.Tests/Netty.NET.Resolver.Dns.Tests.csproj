@@ -18,4 +18,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Netty.NET.Resolver.Dns\Netty.NET.Resolver.Dns.csproj" />
   </ItemGroup>
+  <Import Project="..\Netty.NET.Testsuite.Common\LeakPresenceExtension.props" />
 </Project>

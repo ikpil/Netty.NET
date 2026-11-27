@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- testsuite-common is a test-support library (skipDeploy): the leak presence extension of the test projects. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Netty.NET.Common.Test</RootNamespace>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The pom's junit-jupiter-api/engine: the xUnit v3 runner extensibility that the test projects' xunit.v3 uses. -->
+    <PackageReference Include="xunit.v3.extensibility.core" Version="4.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Netty.NET.Common\Netty.NET.Common.csproj" />
+    <InternalsVisibleTo Include="Netty.NET.Testsuite.Common.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,2929 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "module": "codec-native-quic",
+  "scope": [
+    "codec-native-quic/src"
+  ],
+  "objective": "Record netty-codec-native-quic 4.2.19.Final: the JNI library of quiche/BoringSSL and its build and GraalVM metadata are jvm-only-replaced (System.Net.Quic ships msquic), the QUIC tests are ported to test/Netty.NET.Handler.Codec.Quic.Tests on the msquic implementation of Netty.NET.Handler.Codec.Quic (stages 2 and 3), and the runnable QUIC examples to the executable test/Netty.NET.Handler.Codec.Quic.Examples (stage 3, docs/codec-native-quic-porting.md).",
+  "namespacePolicy": {
+    "decisionDate": "2026-11-27",
+    "ownerDecisions": [
+      "The tests of codec-native-quic test the io.netty.handler.codec.quic package of codec-classes-quic, so they live in Netty.NET.Handler.Codec.Quic.Tests (namespace Netty.NET.Handler.Codec.Quic.Tests), next to the codec-classes-quic test; the module has no C# project of its own (docs/quic-design.md, owner decisions 2026-11-27).",
+      "The examples of the package io.netty.handler.codec.quic.example live in the executable test/Netty.NET.Handler.Codec.Quic.Examples (namespace Netty.NET.Handler.Codec.Quic.Example), whose CLR-only ExampleLauncher (copied from src/Netty.NET.Example/ExampleLauncher.cs) is the startup object that runs an example by its Java class name, as Netty.NET.Example does for the example module."
+    ],
+    "evidence": [
+      "docs/quic-design.md",
+      "docs/codec-classes-quic-porting.md",
+      "docs/codec-native-quic-porting.md",
+      "test/Netty.NET.Handler.Codec.Quic.Examples/ExampleLauncher.cs",
+      "test/Netty.NET.Handler.Codec.Quic.Examples/Netty.NET.Handler.Codec.Quic.Examples.csproj"
+    ]
+  },
+  "statusMeaning": {
+    "verified": "Every declared original test is mapped to a C# test with the same name (case may differ) and passes.",
+    "clr-adapted": "Ported with the original names, structure and comments (tests, helpers and examples); the declared tests that need a feature System.Net.Quic lacks are recorded CLR-inapplicable with their reasons.",
+    "jvm-only-replaced": "JVM-only unit (the JNI library, its build templates and GraalVM metadata, JVM test resources, the tests of recorded units and the epoll-bound example) replaced by its recorded CLR counterpart."
+  },
+  "summary": {
+    "pinnedFiles": 56,
+    "byStatus": {
+      "clr-adapted": 15,
+      "jvm-only-replaced": 23,
+      "verified": 18
+    },
+    "declaredOriginalTests": 117,
+    "mappedOriginalTests": 64,
+    "clrNotApplicableTests": 48,
+    "notPortedTests": 5,
+    "pendingEntries": 0,
+    "pendingTests": []
+  },
+  "validationHistory": [
+    {
+      "checkpoint": "2026-11-27-stage2-msquic",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "testBuild": {
+          "project": "test/Netty.NET.Handler.Codec.Quic.Tests/Netty.NET.Handler.Codec.Quic.Tests.csproj",
+          "errors": 0,
+          "warnings": 0
+        },
+        "moduleDebug": {
+          "total": 64,
+          "passed": 64,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module codec-native-quic -AllowPending verifies every pinned codec-native-quic file; the pending entries are the tests not ported yet and the three native build templates."
+      }
+    },
+    {
+      "checkpoint": "2026-11-27-stage3-remaining",
+      "validation": {
+        "framework": "net10.0",
+        "platform": "Windows",
+        "testBuild": {
+          "project": "test/Netty.NET.Handler.Codec.Quic.Tests/Netty.NET.Handler.Codec.Quic.Tests.csproj",
+          "errors": 0,
+          "warnings": 0
+        },
+        "examplesBuild": {
+          "project": "test/Netty.NET.Handler.Codec.Quic.Examples/Netty.NET.Handler.Codec.Quic.Examples.csproj",
+          "errors": 0,
+          "warnings": 0
+        },
+        "moduleDebug": {
+          "total": 181,
+          "passed": 181,
+          "failed": 0,
+          "skipped": 0
+        },
+        "checker": "tools/Test-CodecPortingManifest.ps1 -Module codec-native-quic (without -AllowPending) verifies every pinned codec-native-quic file; no entry is pending."
+      }
+    }
+  ],
+  "entries": [
+    {
+      "upstream": "codec-native-quic/src/main/AndroidManifest.xml",
+      "sha256": "f411942dec6b0cd44c71964b314667dd4c26c0d812fa66514486ed351440cdd4",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Android manifest template of the JNI library's Android build.",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): Android packaging of the quiche JNI library; System.Net.Quic ships msquic and has no Android QUIC support in this port (the owner's platforms are Windows and Linux).",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (metadata).",
+        "sha256": "f6b80dcf3575dbe0f18530d4d9cb0272e7749be1a4e14640f66c8fbb257067d2"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/c/musl_compat.c",
+      "sha256": "485fca62b0e7c16b7e29b940c1f49043807b13e5f3f955794bd63aff40025af5",
+      "hashMode": "utf8-lf",
+      "kind": "native",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "C source of the JNI library (musl_compat.c): the JNI bindings of quiche and BoringSSL.",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): The JNI library of quiche/BoringSSL is not ported (owner decision 2026-11-27): System.Net.Quic calls msquic itself.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 20,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 20,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (native).",
+        "sha256": "f0a053b483a849eb2d278380b3285bd4ee52b82ed48169e254a6de932ae4d918"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/c/netty_quic.h",
+      "sha256": "5ba297163ee98ccc05f5763ee6324e0295d349e542f89fe94ece6b10f98f318f",
+      "hashMode": "utf8-lf",
+      "kind": "native",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "C source of the JNI library (netty_quic.h): the JNI bindings of quiche and BoringSSL.",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): The JNI library of quiche/BoringSSL is not ported (owner decision 2026-11-27): System.Net.Quic calls msquic itself.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (native).",
+        "sha256": "8c34f64a1b862f2f10c5d95338f0e3850a02743e332fc1596204e9243f9eb45e"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/c/netty_quic_boringssl.c",
+      "sha256": "573cfc581d2b2d88ce8144b2f525a47b41fc0167dbe9e8d7f797877975b281f0",
+      "hashMode": "utf8-lf",
+      "kind": "native",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "C source of the JNI library (netty_quic_boringssl.c): the JNI bindings of quiche and BoringSSL.",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): The JNI library of quiche/BoringSSL is not ported (owner decision 2026-11-27): System.Net.Quic calls msquic itself.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 95,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 95,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (native).",
+        "sha256": "56eadefbc2b3643f918045b58fef99843bca4ed3d9cd73e8b521603cef9ff2f1"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/c/netty_quic_boringssl.h",
+      "sha256": "aead15735d4aef324371ec96f280fa2d07e7710ce9bb082ea1fa66611a68736e",
+      "hashMode": "utf8-lf",
+      "kind": "native",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "C source of the JNI library (netty_quic_boringssl.h): the JNI bindings of quiche and BoringSSL.",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): The JNI library of quiche/BoringSSL is not ported (owner decision 2026-11-27): System.Net.Quic calls msquic itself.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (native).",
+        "sha256": "2f4ef8ca1ea7b63c6d0dc5ad1e05f75f4f69ec920bac5d7026745eb77129eefb"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/c/netty_quic_quiche.c",
+      "sha256": "609d0d7ffc657ad60a495777d235748a7fd0df8ad6b902abd0799ede186848a2",
+      "hashMode": "utf8-lf",
+      "kind": "native",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "C source of the JNI library (netty_quic_quiche.c): the JNI bindings of quiche and BoringSSL.",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): The JNI library of quiche/BoringSSL is not ported (owner decision 2026-11-27): System.Net.Quic calls msquic itself.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 24,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 24,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (native).",
+        "sha256": "b4176c9abc546b55eb3a9845c53b74e348bb9cf66427cedbf8571f81b97d377f"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/native-package/m4/custom.m4.android.template",
+      "sha256": "f0418cc131049d44f457c6817424bbd34546240bc86da02b86336f767ccea1ef",
+      "hashMode": "utf8-lf",
+      "kind": "build",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Native build input custom.m4.android.template: autoconf m4 macro template of the JNI library's Android build (the libtool library names for the Android toolchain).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): the JNI library of quiche/BoringSSL is not ported, so its native build inputs (autoconf m4 macros and the MSBuild property sheet) have no use; System.Net.Quic ships msquic and needs no native build.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic/src/main/native-package"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments (the license) of a native build template that is not ported (build).",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/native-package/m4/custom.m4.template",
+      "sha256": "9f4c5cdab4a722a4a1502095d79b1c90295d050ff7dadbb7bbbc0ed0d37e4826",
+      "hashMode": "utf8-lf",
+      "kind": "build",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Native build input custom.m4.template: autoconf m4 macro template of the JNI library's native build (the compiler and linker flags for quiche and BoringSSL on Linux and macOS).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): the JNI library of quiche/BoringSSL is not ported, so its native build inputs (autoconf m4 macros and the MSBuild property sheet) have no use; System.Net.Quic ships msquic and needs no native build.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic/src/main/native-package"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments (the license) of a native build template that is not ported (build).",
+        "sha256": "2a24f61f1e35f6c83c24f35a2644d9c40ccfb4209113e089445e582f575964d7"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/native-package/vs2010.custom.props.template",
+      "sha256": "a9f61bc18795c7c8fa3a99608b525563fded11b2a8b91bf50cbe04b32972b132",
+      "hashMode": "utf8-lf",
+      "kind": "build",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Native build input vs2010.custom.props.template: MSBuild property sheet template of the JNI library's Windows build (the JNI, BoringSSL and quiche include directories and libraries).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): the JNI library of quiche/BoringSSL is not ported, so its native build inputs (autoconf m4 macros and the MSBuild property sheet) have no use; System.Net.Quic ships msquic and needs no native build.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic/src/main/native-package"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments (the license) of a native build template that is not ported (build).",
+        "sha256": "f6b80dcf3575dbe0f18530d4d9cb0272e7749be1a4e14640f66c8fbb257067d2"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/resources/META-INF/native-image/io.netty/netty-codec-native-quic/jni-config.json",
+      "sha256": "c2f0cbe16335f33991b357bfc4fed04923c8eb4edec56739a70a884e87902ddc",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "GraalVM native-image metadata of the JNI library (jni-config.json).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): GraalVM native-image configuration has no .NET counterpart; NativeAOT needs no JNI/reflection registration for System.Net.Quic.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/resources/META-INF/native-image/io.netty/netty-codec-native-quic/native-image.properties",
+      "sha256": "3f95120559ea89028c2e221326e96a6c0688c9c22ba4f8d1bad64b3323ea4603",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "GraalVM native-image metadata of the JNI library (native-image.properties).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): GraalVM native-image configuration has no .NET counterpart; NativeAOT needs no JNI/reflection registration for System.Net.Quic.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (metadata).",
+        "sha256": "ee156d2b9815750fc1652eaacca7f23eca2149792ae01687c328ce6d5c8eeb20"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/resources/META-INF/native-image/io.netty/netty-codec-native-quic/reflect-config.json",
+      "sha256": "34b5f23c3a6a0ce23d181bd2a6f0c8b526fa0ea41342147f06899ece4d78664f",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "GraalVM native-image metadata of the JNI library (reflect-config.json).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): GraalVM native-image configuration has no .NET counterpart; NativeAOT needs no JNI/reflection registration for System.Net.Quic.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/main/resources/META-INF/native-image/io.netty/netty-codec-native-quic/resource-config.json",
+      "sha256": "340d8c544dae02e7e7374587cc20759c3a0ec228aeaa1506d599804380434cbe",
+      "hashMode": "utf8-lf",
+      "kind": "metadata",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "GraalVM native-image metadata of the JNI library (resource-config.json).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): GraalVM native-image configuration has no .NET counterpart; NativeAOT needs no JNI/reflection registration for System.Net.Quic.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/AbstractQuicTest.java",
+      "sha256": "c5285c127aaa7600283c98bdbc1d7ec9a61a39b6348f17e77ff2db318bee64d9",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/AbstractQuicTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Shared base of the QUIC tests: @BeforeAll ensureAvailability() is the static constructor, @Timeout(10) the TIMEOUT of the test attributes, newSslTaskExecutors() the [MemberData] rows and shutdown(Executor) shuts a DefaultEventExecutor down; no declared JUnit methods.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/AbstractQuicTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/FlushStrategyTest.java",
+      "sha256": "94e8b45ec773846ac3b8e8cfacae9d26d716c2cb465b4115e904c7eb9d1e9d00",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/FlushStrategyTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testAfterNumBytes",
+          "clrMethod": "TestAfterNumBytes",
+          "adaptation": "FlushStrategy.afterNumBytes is the static member IFlushStrategy.AfterNumBytes; assertions unchanged."
+        },
+        {
+          "upstreamMethod": "testAfterNumPackets",
+          "clrMethod": "TestAfterNumPackets",
+          "adaptation": "FlushStrategy.afterNumPackets is the static member IFlushStrategy.AfterNumPackets; assertions unchanged."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/InsecureQuicTokenHandlerTest.java",
+      "sha256": "d216d3172c0f48d024552ac64ae7bba7502c1d532c7f9017ed59571d4f312d57",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/InsecureQuicTokenHandlerTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testMaxTokenLength",
+          "clrMethod": "TestMaxTokenLength",
+          "adaptation": "MAX_TOKEN_LEN (package-private) is internal; assertion unchanged."
+        },
+        {
+          "upstreamMethod": "testTokenProcessingIpv4",
+          "clrMethod": "TestTokenProcessingIpv4",
+          "adaptation": "Calls the private TestTokenProcessing(true): Quiche.QUICHE_MAX_CONN_ID_LEN is Quic.MAX_CONN_ID_LEN (20), ThreadLocalRandom Random.Shared, InetAddress.getByAddress new IPAddress(byte[]) and InetSocketAddress IPEndPoint; validateToken(token, address, dcid) is the default interface member, called through IQuicTokenHandler; isLessThanOrEqualTo is Assert.InRange."
+        },
+        {
+          "upstreamMethod": "testTokenProcessingIpv6",
+          "clrMethod": "TestTokenProcessingIpv6",
+          "adaptation": "Calls the private TestTokenProcessing(false) with the 16-byte addresses (see testTokenProcessingIpv4)."
+        },
+        {
+          "upstreamMethod": "testTokenValidationResultCanUseDestinationConnectionIdAsOdcid",
+          "clrMethod": "TestTokenValidationResultCanUseDestinationConnectionIdAsOdcid",
+          "adaptation": "TokenValidationResult is IQuicTokenHandler.TokenValidationResult and its package-private originalDestinationConnectionId is internal; ByteBuf equality compares the readable bytes."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 4,
+        "reviewedCount": 4,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/NoQuicTokenHandlerTest.java",
+      "sha256": "ba7d5f23d689ae4f334e8ae2e29940b887b37f1315e4130eedfafba678fc1c66",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/NoQuicTokenHandlerTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testMaxTokenLength",
+          "clrMethod": "TestMaxTokenLength",
+          "adaptation": "NoQuicTokenHandler (package-private) is internal; assertion unchanged."
+        },
+        {
+          "upstreamMethod": "testDontWriteToken",
+          "clrMethod": "TestDontWriteToken",
+          "adaptation": "QuicConnectionAddress.random().id() is the internal Id() (ReadOnlyMemory<byte>), wrapped by Unpooled.WrappedBuffer; InetSocketAddress is IPEndPoint."
+        },
+        {
+          "upstreamMethod": "testValidateToken",
+          "clrMethod": "TestValidateToken",
+          "adaptation": "InetAddress.getByAddress is new IPAddress(byte[]); assertion unchanged."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicChannelConnectTest.java",
+      "sha256": "bdd7fe322292b794ca0b0182f11a584069b1ee9f3ad45798e7a5c0f3fc9a58e0",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelConnectTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testConnectTimeout",
+          "clrMethod": "TestConnectTimeout",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. new DatagramSocket() is a UdpClient on the IPv4 loopback (msquic sends to the given address, and 0.0.0.0 is not a destination on Windows); the 10 ms CONNECT_TIMEOUT_MILLIS fails the connect with ConnectTimeoutException and the channel never becomes active."
+        },
+        {
+          "upstreamMethod": "testConnectFailsInParentPipeline",
+          "clrMethod": "TestConnectFailsInParentPipeline",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The QuicChannel connects through its parent's pipeline (MsQuicChannelAddress), so the handler added to the endpoint fails it with the same exception (assertSame)."
+        },
+        {
+          "upstreamMethod": "testConnectAlreadyConnected",
+          "clrMethod": "TestConnectAlreadyConnected",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. AlreadyConnectedException is SocketException with SocketError.IsConnected (the Transport mapping)."
+        },
+        {
+          "upstreamMethod": "testConnectMultipleTimes",
+          "clrMethod": "TestConnectMultipleTimes",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. Five connections through one bootstrap."
+        },
+        {
+          "upstreamMethod": "testExtendedTrustManagerFailureOnTheClient",
+          "clrMethod": "TestExtendedTrustManagerFailureOnTheClient",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The X509ExtendedTrustManager whose checkServerTrusted throws is a RemoteCertificateValidationCallback returning false; SSLException is AuthenticationException. The private overload is TestTrustManagerFailureOnTheClient0 (xUnit rejects overloaded test names)."
+        },
+        {
+          "upstreamMethod": "testTrustManagerFailureOnTheClient",
+          "clrMethod": "TestTrustManagerFailureOnTheClient",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The X509TrustManager whose checkServerTrusted throws is a RemoteCertificateValidationCallback returning false (with endpointIdentificationAlgorithm(null)); SSLException is AuthenticationException."
+        },
+        {
+          "upstreamMethod": "testConnectSuccessWhenTrustManagerBuildFromSameCert",
+          "clrMethod": "TestConnectSuccessWhenTrustManagerBuildFromSameCert",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder, so the server uses InsecureQuicTokenHandler; the scenario does not depend on the token handler. The client trusts the server's self-signed certificate (X509ChainPolicy with the certificate as custom root) and names localhost."
+        },
+        {
+          "upstreamMethod": "testConnectMutualAuthRequiredSuccess",
+          "clrMethod": "TestConnectMutualAuthRequiredSuccess",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder, so the server uses InsecureQuicTokenHandler; the scenario does not depend on the token handler. The client certificate is the self-signed certificate (keyManager(key, null, cert))."
+        },
+        {
+          "upstreamMethod": "testConnectMutualAuthOptionalWithCertSuccess",
+          "clrMethod": "TestConnectMutualAuthOptionalWithCertSuccess",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder, so the server uses InsecureQuicTokenHandler; the scenario does not depend on the token handler. ClientAuth.OPTIONAL with a client certificate."
+        },
+        {
+          "upstreamMethod": "testConnectMutualAuthOptionalWithoutKeyManagerSuccess",
+          "clrMethod": "TestConnectMutualAuthOptionalWithoutKeyManagerSuccess",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder, so the server uses InsecureQuicTokenHandler; the scenario does not depend on the token handler. ClientAuth.OPTIONAL without a client key manager."
+        },
+        {
+          "upstreamMethod": "testConnectMutualAuthOptionalWithoutKeyInKeyManagerSuccess",
+          "clrMethod": "TestConnectMutualAuthOptionalWithoutKeyInKeyManagerSuccess",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder, so the server uses InsecureQuicTokenHandler; the scenario does not depend on the token handler. The X509ExtendedKeyManager without a client alias is a LocalCertificateSelectionCallback that selects no certificate."
+        },
+        {
+          "upstreamMethod": "testConnectionCloseFrameDeliveredWhenParentClosedImmediately",
+          "clrMethod": "TestConnectionCloseFrameDeliveredWhenParentClosedImmediately",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The delaying outbound handler is added to the server endpoint as in Java, but the endpoint carries no packets (msquic writes them), so it delays nothing; the 10 x 50 streams, the server's closes and the endpoint close follow Java, and every client receives the QuicConnectionCloseEvent (the peer's CONNECTION_CLOSE, QuicError.ConnectionAborted)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 42,
+        "mappedCount": 12,
+        "reviewedCount": 42,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testConnectAndQLog",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with QuicChannelOption.QLOG and checks the QLOG file.",
+            "reason": "System.Net.Quic has no QLOG; setting QuicChannelOption.QLOG reports NotSupportedException (MsQuicChannelConfig).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectAndQLogDir",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with QuicChannelOption.QLOG on a directory and checks the QLOG files.",
+            "reason": "System.Net.Quic has no QLOG; setting QuicChannelOption.QLOG reports NotSupportedException (MsQuicChannelConfig).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testKeylogEnabled",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Logs the TLS secrets through BoringSSLLoggingKeylog and counts the logback entries.",
+            "reason": "Key logging is BoringSSL's (keylog(true) reports NotSupportedException) and the logback appender is JVM-only.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testKeylogDisabled",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Checks with the logback appender that nothing is key-logged by default.",
+            "reason": "The assertion reads logback's TestLogBackAppender (JVM-only); key logging does not exist in System.Net.Quic.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testCustomKeylog",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Logs the TLS secrets through a custom BoringSSLKeylog.",
+            "reason": "BoringSSLKeylog is a JNI unit (jvm-only-replaced); keylog(BoringSSLKeylog) has no counterpart.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testAddressValidation",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with localConnectionIdLength(10) and a 20-byte connection address and expects quiche's IllegalArgumentException for the length mismatch.",
+            "reason": "System.Net.Quic hides the connection IDs; localConnectionIdLength other than 20 reports NotSupportedException.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithCustomIdLength",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with local connection ID lengths 10/5 and checks the ID lengths of both peers' QuicConnectionAddress.",
+            "reason": "System.Net.Quic hides the connection IDs and their length (localConnectionIdLength other than 20 reports NotSupportedException).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithCustomIdLengthOfZero",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with zero-length connection IDs and checks them.",
+            "reason": "System.Net.Quic hides the connection IDs and their length.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithNoDroppedPacketsAndRandomConnectionIdGenerator",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with the random connection ID generator through a datagram pipeline handler.",
+            "reason": "msquic generates the connection IDs (connectionIdAddressGenerator reports NotSupportedException) and the endpoint carries no datagrams.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithDroppedPacketsAndRandomConnectionIdGenerator",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Drops the first datagrams in the server's datagram pipeline with the random connection ID generator.",
+            "reason": "The QuicEndpointChannel carries no datagrams (msquic owns the UDP socket) and msquic generates the connection IDs.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithNoDroppedPacketsAndSignConnectionIdGenerator",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with the HMAC sign connection ID generator.",
+            "reason": "msquic generates the connection IDs (connectionIdAddressGenerator reports NotSupportedException).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithDroppedPacketsAndSignConnectionIdGenerator",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Drops the first datagrams with the HMAC sign connection ID generator.",
+            "reason": "The QuicEndpointChannel carries no datagrams and msquic generates the connection IDs.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testTimedOut",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Drops all datagrams in the server's datagram pipeline until the 1 ms idle timeout closes the connection and checks isTimedOut().",
+            "reason": "The QuicEndpointChannel carries no datagrams, so the path cannot be stalled from the pipeline (IsTimedOut() follows QuicError.ConnectionIdle in MsQuicChannel).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithTokenValidation",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Validates retry tokens with TestQuicTokenHandler and checks its calls.",
+            "reason": "msquic validates addresses with its own retry tokens; a custom token handler reports NotSupportedException.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithoutTokenValidation",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with NoQuicTokenHandler and checks that the connection IDs of the peers match (serverHandler.localAddress() == client remoteAddress) and the QuicheQuicSslEngine's ALPN.",
+            "reason": "System.Net.Quic hides the connection IDs, so the QuicConnectionAddress values of the two peers are not the wire IDs and do not match; QuicheQuicSslEngine is a JNI unit.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testKeyTypeChange",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Selects the server key type with BoringSSLContextOption.SERVER_KEY_TYPES/CLIENT_KEY_TYPES.",
+            "reason": "BoringSSLContextOption is a JNI unit; msquic's TLS stack chooses the key types.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testKeyTypeChangeFail",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Fails the handshake with unsupported BoringSSL key types.",
+            "reason": "BoringSSLContextOption is a JNI unit; msquic's TLS stack chooses the key types.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWith0RTT",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Sends 0-RTT early data with earlyData(true) and SslEarlyDataReadyEvent.",
+            "reason": "System.Net.Quic exposes no 0-RTT; earlyData(true) reports NotSupportedException.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectAndStreamPriority",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Updates and reads stream priorities.",
+            "reason": "System.Net.Quic has no stream priorities; UpdatePriorityAsync reports NotSupportedException.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testALPNProtocolMissmatch",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Expects the server QuicChannel's SslHandshakeCompletionEvent/exceptionCaught with SSLHandshakeException and the client's QuicConnectionCloseEvent with TLS alert 120.",
+            "reason": "msquic's listener rejects a connection without a common ALPN protocol before any server QuicChannel exists, and the client's ConnectAsync fails with AuthenticationException without a CONNECTION_CLOSE event.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectMutualAuthFailsIfClientNotSendCertificate",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Expects exceptionCaught(SSLHandshakeException) on the server QuicChannel when the client sends no certificate.",
+            "reason": "msquic fails the handshake before QuicListener.AcceptConnectionAsync returns the connection, so no server QuicChannel exists to report it.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSniMatch",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Expects SniCompletionEvent with the client's host name on the server.",
+            "reason": "The SNI mapping selects the context in QuicListenerOptions.ConnectionOptionsCallback before the server QuicChannel is registered; SniCompletionEvent is not fired (QuicSslContextBuilder.Sni).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSniFallbackToDefault",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Expects the SNI fallback context and its SniCompletionEvent.",
+            "reason": "SniCompletionEvent is not fired by the msquic implementation.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testNoSniFallbackToDefault",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Expects the default context without SNI and its SniCompletionEvent.",
+            "reason": "SniCompletionEvent is not fired by the msquic implementation.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSniWithClientAuth",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Expects SniCompletionEvent and client authentication of the mapped context.",
+            "reason": "SniCompletionEvent is not fired by the msquic implementation.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectKeyless",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Signs the handshake with BoringSSLKeylessManagerFactory.",
+            "reason": "Keyless signing is BoringSSL's (BoringSSLAsyncPrivateKeyMethod, jvm-only-replaced).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectKeylessSignFailure",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Fails the keyless signing of the handshake.",
+            "reason": "Keyless signing is BoringSSL's (BoringSSLAsyncPrivateKeyMethod, jvm-only-replaced).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSessionTickets",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Resumes a session with shared SslSessionTicketKeys.",
+            "reason": "msquic manages session tickets; SetTicketKeys reports NotSupportedException.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSessionReusedOnClientSide",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Checks the BoringSSL client session cache and session reuse.",
+            "reason": "QuicClientSessionCache is jvm-only-replaced; System.Net.Quic exposes no session reuse.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testConnectWithActiveConnectionIdLimit",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Connects with activeConnectionIdLimit(4) and compares the connection IDs of both peers.",
+            "reason": "activeConnectionIdLimit other than quiche's default reports NotSupportedException, and System.Net.Quic hides the connection IDs.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicSslContextBuilder.cs",
+              "src/Netty.NET.Handler.Codec.Quic/QuicServerCodecBuilder.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 28,
+        "preservedCount": 28,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The connect scenarios System.Net.Quic supports on loopback; the others need quiche or BoringSSL features, connection IDs or datagram access that msquic does not expose.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelConnectTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicChannelDatagramTest.java",
+      "sha256": "5cbc38ceadec4d397294e249d4afa1af17bfe5b92767193f40d984ce297000c3",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 6,
+        "mappedCount": 0,
+        "reviewedCount": 6,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testDatagramFlushInChannelRead",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Echoes QUIC DATAGRAM frames between the QuicChannels and flushes in channelRead.",
+            "reason": "System.Net.Quic has no QUIC datagram extension (RFC 9221): datagram(recvQueueLen, sendQueueLen) on the codec builders reports NotSupportedException from build() and a write on an IQuicChannel fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testDatagramFlushInChannelReadComplete",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Echoes QUIC DATAGRAM frames between the QuicChannels and flushes in channelReadComplete.",
+            "reason": "System.Net.Quic has no QUIC datagram extension (RFC 9221): datagram(recvQueueLen, sendQueueLen) on the codec builders reports NotSupportedException from build() and a write on an IQuicChannel fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testDatagramNoAutoReadMaxMessagesPerRead1",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Reads QUIC DATAGRAM frames with auto-read off and maxMessagesPerRead 1, calling read() in the event loop.",
+            "reason": "System.Net.Quic has no QUIC datagram extension (RFC 9221): datagram(recvQueueLen, sendQueueLen) on the codec builders reports NotSupportedException from build() and a write on an IQuicChannel fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testDatagramNoAutoReadMaxMessagesPerRead3",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Reads QUIC DATAGRAM frames with auto-read off and maxMessagesPerRead 3, calling read() in the event loop.",
+            "reason": "System.Net.Quic has no QUIC datagram extension (RFC 9221): datagram(recvQueueLen, sendQueueLen) on the codec builders reports NotSupportedException from build() and a write on an IQuicChannel fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testDatagramNoAutoReadMaxMessagesPerRead1OutSideEventLoop",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Reads QUIC DATAGRAM frames with auto-read off and maxMessagesPerRead 1, calling read() outside the event loop.",
+            "reason": "System.Net.Quic has no QUIC datagram extension (RFC 9221): datagram(recvQueueLen, sendQueueLen) on the codec builders reports NotSupportedException from build() and a write on an IQuicChannel fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testDatagramNoAutoReadMaxMessagesPerRead3OutSideEventLoop",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Reads QUIC DATAGRAM frames with auto-read off and maxMessagesPerRead 3, calling read() outside the event loop.",
+            "reason": "System.Net.Quic has no QUIC datagram extension (RFC 9221): datagram(recvQueueLen, sendQueueLen) on the codec builders reports NotSupportedException from build() and a write on an IQuicChannel fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicConfig.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Every method uses the QUIC datagram extension, which System.Net.Quic lacks.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelDatagramTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicChannelEchoTest.java",
+      "sha256": "7e87acd112d0af6939124b26a7ff1092338bf84eb3a3d346de3a79fca7e54258",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelEchoTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testEchoStartedFromServer",
+          "clrMethod": "TestEchoStartedFromServer",
+          "adaptation": "Theory over the eight (autoRead, directBuffer, composite) rows of data(). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). The heap-only allocator is the private HeapOnlyByteBufAllocator; the server creates the stream in channelActive and the client reads the 1 MiB echo; assertions unchanged. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testEchoStartedFromClient",
+          "clrMethod": "TestEchoStartedFromClient",
+          "adaptation": "Theory over the eight (autoRead, directBuffer, composite) rows of data(). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). The first client stream is stream 0, as Java asserts; five echo rounds of 1 MiB with composite and plain buffers; assertions unchanged. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicChannelValidationHandler.java",
+      "sha256": "f31b9536cf1e6ddad4f327f6c4b2a5c16381a08b4254c1280cd97ec167e42ebf",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelValidationHandler.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Shared handler that records exceptionCaught and the QuicConnectionAddress values of channelActive and asserts them; no declared JUnit methods.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicChannelValidationHandler.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicCodecBuilderTest.java",
+      "sha256": "526675a20ff9bfa906185a432cc1fb03ad8b20de98caaee6375d5b9433ab491b",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicCodecBuilderTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCopyConstructor",
+          "clrMethod": "TestCopyConstructor",
+          "adaptation": "getSuperclass().getDeclaredFields() is the declared instance fields of the generic base QuicCodecBuilder<TestQuicCodecBuilder> (FieldInfo.SetValue also sets the readonly server field, as setAccessible does for the final one); the boxed field types are nullable values, FlushStrategy IFlushStrategy, Executor IExecutor and Function.identity() a delegate of the Func<IQuicChannel, QuicSslEngine> field type; usingRecursiveComparison().isEqualTo is the CLR-only AssertRecursiveEquals over every instance field (arrays by element). TestQuicCodecBuilder overrides the internal abstract Build(MsQuicConfig, ...) (QuicheConfig is MsQuicConfig, docs/codec-classes-quic-porting.md)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicCodecDispatcherTest.java",
+      "sha256": "5111fc1a5a7b362e19b4d24edace70bd54f7d70362464bc9dda37fe5a8b3b185",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test source QuicCodecDispatcherTest of codec-native-quic for QuicCodecDispatcher (jvm-only-replaced: msquic owns the UDP socket).",
+        "reason": "The test exercises QuicCodecDispatcher (jvm-only-replaced: msquic owns the UDP socket), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "The msquic implementation (MsQuicCodec, MsQuicChannel) and its tests in test/Netty.NET.Handler.Codec.Quic.Tests; see docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/codec-classes-quic-porting.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testPacketsAreDispatchedToCorrectChannel",
+            "disposition": "jvm-only-replaced",
+            "sourceContract": "Original test testPacketsAreDispatchedToCorrectChannel of QuicCodecDispatcherTest.",
+            "reason": "The test exercises QuicCodecDispatcher (jvm-only-replaced: msquic owns the UDP socket), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments of a test of a recorded (not ported) unit.",
+        "sha256": "632e65952c006218a74f256b3f6d66bdffadfd0828240acdfe27fc44dcc375b1"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicConnectionAddressTest.java",
+      "sha256": "12ba470dfb6ac37c85b4e29cd601a6867255b1e6922ebe061c7cd0014e647301",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionAddressTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testNullByteArray",
+          "clrMethod": "TestNullByteArray",
+          "adaptation": "connId.clone() on the null array is a dereference, so NullPointerException is NullReferenceException (the codec-http rule for dereferences)."
+        },
+        {
+          "upstreamMethod": "testByteArrayIsCloned",
+          "clrMethod": "TestByteArrayIsCloned",
+          "adaptation": "ByteBuffer.wrap(bytes) and id() (the internal Id(), a ReadOnlyMemory<byte>) are compared as byte arrays, as ByteBuffer equality compares the remaining bytes; ThreadLocalRandom is Random.Shared."
+        },
+        {
+          "upstreamMethod": "tesByteBufferIsDuplicated",
+          "clrMethod": "TesByteBufferIsDuplicated",
+          "adaptation": "ByteBuffer.wrap(bytes) is a ReadOnlyMemory<byte> and position(1) Slice(1); compared as byte arrays."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 3,
+        "reviewedCount": 4,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testNullByteBuffer",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "new QuicConnectionAddress((ByteBuffer) null) throws NullPointerException.",
+            "reason": "java.nio.ByteBuffer is ReadOnlyMemory<byte> (docs/codec-classes-quic-porting.md, NIO buffers), a struct that cannot be null (a null array converts to an empty memory), so the constructor has no null argument to reject.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/QuicConnectionAddress.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionAddressTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The tests of the stage-1 value type QuicConnectionAddress; the null ByteBuffer case has no ReadOnlyMemory counterpart.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionAddressTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicConnectionIdGeneratorTest.java",
+      "sha256": "169fd6de9bffbfa77f7336c75cfe950f31478a6e7f804402c7d534eeeb9a1bd8",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionIdGeneratorTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testRandomness",
+          "clrMethod": "TestRandomness",
+          "adaptation": "The ByteBuffer ids are ReadOnlyMemory<byte> (remaining() is Length), compared as byte arrays; Quiche.QUICHE_MAX_CONN_ID_LEN is Quic.MAX_CONN_ID_LEN and ThreadLocalRandom Random.Shared."
+        },
+        {
+          "upstreamMethod": "testThrowsIfInputTooBig",
+          "clrMethod": "TestThrowsIfInputTooBig",
+          "adaptation": "assertThrows(IllegalArgumentException.class) is Assert.ThrowsAny<ArgumentException> (assertThrows accepts subclasses)."
+        },
+        {
+          "upstreamMethod": "testThrowsIfInputTooBig2",
+          "clrMethod": "TestThrowsIfInputTooBig2",
+          "adaptation": "assertThrows(IllegalArgumentException.class) is Assert.ThrowsAny<ArgumentException>; ByteBuffer.wrap is a ReadOnlyMemory<byte>."
+        },
+        {
+          "upstreamMethod": "testSignIdGenerator",
+          "clrMethod": "TestSignIdGenerator",
+          "adaptation": "The ids are compared as byte arrays; UnsupportedOperationException is NotSupportedException and IllegalArgumentException ArgumentException (Assert.ThrowsAny). newId(null, 10): the null array converts to an empty ReadOnlyMemory<byte> (a struct cannot be null), which the generator's checkPositive of the input length rejects, so the call still fails, with ArgumentException in place of NullPointerException."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 4,
+        "reviewedCount": 4,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicConnectionPathStatsTest.java",
+      "sha256": "07489737642db90e338b340c7be7e45b23e93ab9e0905e32bb177d4e97c62a96",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionPathStatsTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testPathStatsAreCollected",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "collectStats() on the client and collectPathStats(0) on the server return statistics whose packet, byte and RTT counters are positive.",
+            "reason": "System.Net.Quic reports neither connection nor path statistics: IQuicChannel.CollectStatsAsync and CollectPathStatsAsync fail with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionPathStatsTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The only method needs path statistics, which System.Net.Quic lacks.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionPathStatsTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicConnectionStatsTest.java",
+      "sha256": "ee823fb02554356709418b451ba4414e1996b187739a0357218646dbe980371d",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionStatsTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testStatsAreCollected",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "collectStats() on both peers (while active and after the close) returns QuicConnectionStats whose packet and byte counters are positive.",
+            "reason": "System.Net.Quic reports no connection statistics: IQuicChannel.CollectStatsAsync fails with NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionStatsTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The only method needs connection statistics, which System.Net.Quic lacks.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicConnectionStatsTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicPortReuseTest.java",
+      "sha256": "d6f018aa22235bfa3a3d6949c558d48a2c2ebf9a99de7da5698cc34443c29639",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test source QuicPortReuseTest of codec-native-quic for QuicCodecDispatcher with SO_REUSEPORT binds (QuicCodecDispatcher is jvm-only-replaced: msquic owns the UDP socket and routes the packets itself; EpollChannelOption.SO_REUSEPORT belongs to transport-classes-epoll, which is recorded, not ported).",
+        "reason": "The test exercises QuicCodecDispatcher with SO_REUSEPORT binds (QuicCodecDispatcher is jvm-only-replaced: msquic owns the UDP socket and routes the packets itself; EpollChannelOption.SO_REUSEPORT belongs to transport-classes-epoll, which is recorded, not ported), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "The msquic implementation (MsQuicCodec, MsQuicChannel) and its tests in test/Netty.NET.Handler.Codec.Quic.Tests; see docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/codec-classes-quic-porting.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testReusePort",
+            "disposition": "jvm-only-replaced",
+            "sourceContract": "Original test testReusePort of QuicPortReuseTest.",
+            "reason": "The test exercises QuicCodecDispatcher with SO_REUSEPORT binds (QuicCodecDispatcher is jvm-only-replaced: msquic owns the UDP socket and routes the packets itself; EpollChannelOption.SO_REUSEPORT belongs to transport-classes-epoll, which is recorded, not ported), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 2,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 2,
+        "disposition": "whole-file",
+        "reason": "Original comments of a test of a recorded (not ported) unit.",
+        "sha256": "8bff86e4ad07d61ff6db38cd33c93071d4c3ef376577cf7d833986a198430ef8"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicReadableTest.java",
+      "sha256": "72266cdc2b1860f13cb868ae270f491b51ceaedbf151294866b6c724e2ab85a2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicReadableTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCorrectlyHandleReadableStreams",
+          "clrMethod": "TestCorrectlyHandleReadableStreams",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). 256 client streams write one long each; the first 128 server streams keep auto-read off (channelRegistered) and the later ones turn it on in channelActive, and the server reads 128 longs. AtomicInteger/AtomicReference are StrongBox values with Interlocked/Volatile and Thread.sleep(50) is Task.Delay(50). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 1,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicSslContextTest.java",
+      "sha256": "852e240a7c7ab4ab39b21c52c289a27bcd19b9365d0d0357fd8b723a74dd6ef2",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicSslContextTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 0,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testSessionContextSettingsForClient",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "sessionCacheSize/sessionTimeout set on the builder are read back from SslContext and its SSLSessionContext, changed through the SSLSessionContext setters, and the SSLParameters of context.newEngine(null) carry the endpoint identification algorithm (HTTPS for the client, null for the server).",
+            "reason": "The handler port has no SSLEngine facade and no SSLSessionContext (SslContext.sessionCacheSize()/sessionTimeout() only read the SSLSessionContext and are not ported, docs/handler-ssl-design.md); IQuicSslSessionContext has no SSLSessionContext base because msquic keeps the TLS session cache, and QuicSslEngine carries no SSLParameters.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/handler-ssl-design.md",
+              "src/Netty.NET.Handler/Ssl/SslContext.cs",
+              "src/Netty.NET.Handler.Codec.Quic/IQuicSslSessionContext.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicSslContext.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicSslContextTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSessionContextSettingsForServer",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "sessionCacheSize/sessionTimeout set on the builder are read back from SslContext and its SSLSessionContext, changed through the SSLSessionContext setters, and the SSLParameters of context.newEngine(null) carry the endpoint identification algorithm (HTTPS for the client, null for the server).",
+            "reason": "The handler port has no SSLEngine facade and no SSLSessionContext (SslContext.sessionCacheSize()/sessionTimeout() only read the SSLSessionContext and are not ported, docs/handler-ssl-design.md); IQuicSslSessionContext has no SSLSessionContext base because msquic keeps the TLS session cache, and QuicSslEngine carries no SSLParameters.",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/handler-ssl-design.md",
+              "src/Netty.NET.Handler/Ssl/SslContext.cs",
+              "src/Netty.NET.Handler.Codec.Quic/IQuicSslSessionContext.cs",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicSslContext.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicSslContextTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Both methods need SSLSessionContext and SSLParameters, which the handler and QUIC ports do not have.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicSslContextTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamChannelCloseTest.java",
+      "sha256": "46b68bef9bcccc71bdf5a17553400caad4cb90f762a0176d307ee5460e188a7f",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamChannelCloseTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCloseFromServerWhileInActiveUnidirectional",
+          "clrMethod": "TestCloseFromServerWhileInActiveUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testCloseFromServerWhileInActiveBidirectional",
+          "clrMethod": "TestCloseFromServerWhileInActiveBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testHalfCloseFromServerWhileInActiveUnidirectional",
+          "clrMethod": "TestHalfCloseFromServerWhileInActiveUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testHalfCloseFromServerWhileInActiveBidirectional",
+          "clrMethod": "TestHalfCloseFromServerWhileInActiveBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testCloseFromClientWhileInActiveUnidirectional",
+          "clrMethod": "TestCloseFromClientWhileInActiveUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testCloseFromClientWhileInActiveBidirectional",
+          "clrMethod": "TestCloseFromClientWhileInActiveBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testHalfCloseFromClientWhileInActiveUnidirectional",
+          "clrMethod": "TestHalfCloseFromClientWhileInActiveUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testHalfCloseFromClientWhileInActiveBidirectional",
+          "clrMethod": "TestHalfCloseFromClientWhileInActiveBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The stream writes 8 bytes and closes (or half-closes) in channelActive; the peer closes on FIN."
+        },
+        {
+          "upstreamMethod": "testWriteToUnidirectionalAfterShutdownOutput",
+          "clrMethod": "TestWriteToUnidirectionalAfterShutdownOutput",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The String written after shutdownOutput()/close() fails with ChannelOutputShutdownException on a half-closed bidirectional stream and with ClosedChannelException otherwise: MsQuicStreamChannel checks the FIN before it filters the message, as QuicStreamChannelUnsafe.write does (fixed in stage 3)."
+        },
+        {
+          "upstreamMethod": "testWriteToBidirectionalAfterShutdownOutput",
+          "clrMethod": "TestWriteToBidirectionalAfterShutdownOutput",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The String written after shutdownOutput()/close() fails with ChannelOutputShutdownException on a half-closed bidirectional stream and with ClosedChannelException otherwise: MsQuicStreamChannel checks the FIN before it filters the message, as QuicStreamChannelUnsafe.write does (fixed in stage 3)."
+        },
+        {
+          "upstreamMethod": "testWriteToUnidirectionalAfterClose",
+          "clrMethod": "TestWriteToUnidirectionalAfterClose",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The String written after shutdownOutput()/close() fails with ChannelOutputShutdownException on a half-closed bidirectional stream and with ClosedChannelException otherwise: MsQuicStreamChannel checks the FIN before it filters the message, as QuicStreamChannelUnsafe.write does (fixed in stage 3)."
+        },
+        {
+          "upstreamMethod": "testWriteToBidirectionalAfterClose",
+          "clrMethod": "TestWriteToBidirectionalAfterClose",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE and QuicStreamChannel.SHUTDOWN_OUTPUT (no counterpart) are continuations that call CloseAsync()/ShutdownOutputAsync(); closeFuture().get(3000, MILLISECONDS) is CloseFuture.WaitAsync(3000 ms). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. The String written after shutdownOutput()/close() fails with ChannelOutputShutdownException on a half-closed bidirectional stream and with ClosedChannelException otherwise: MsQuicStreamChannel checks the FIN before it filters the message, as QuicStreamChannelUnsafe.write does (fixed in stage 3)."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 12,
+        "mappedCount": 12,
+        "reviewedCount": 12,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 7,
+        "preservedCount": 7,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamChannelCreationTest.java",
+      "sha256": "f6115ddca0000e30040fe1c0b3b9f7e446cb9db7ea27e77f6d7991c42e2429b0",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamChannelCreationTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCreateStream",
+          "clrMethod": "TestCreateStream",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). config().getOption(AUTO_READ) is Config.TryGetOption. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testCreateStreamViaBootstrap",
+          "clrMethod": "TestCreateStreamViaBootstrap",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). The stream bootstrap's attribute and AUTO_READ option reach the stream before channelRegistered. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamFrameTest.java",
+      "sha256": "7621c227da8c82341c2cea86bb00c1e3875e45837dc3720f91546eb6f6f2865e",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamFrameTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCloseHalfClosureUnidirectional",
+          "clrMethod": "TestCloseHalfClosureUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart: the write Task is continued with ShutdownOutputAsync(); READ_FRAMES is set with Config.SetOption. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testCloseHalfClosureBidirectional",
+          "clrMethod": "TestCloseHalfClosureBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart: the write Task is continued with ShutdownOutputAsync(); the FIN frame written back closes the stream. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamHalfClosureTest.java",
+      "sha256": "a7862c035cb4a087d7bfebeaded8a9047f1bd8209a3f8cf11189eb8201cde451",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamHalfClosureTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testCloseHalfClosureUnidirectional",
+          "clrMethod": "TestCloseHalfClosureUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE is a continuation that closes the stream; the FIN arrives with or after the data (both sequences of the Java assertion). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testCloseHalfClosureBidirectional",
+          "clrMethod": "TestCloseHalfClosureBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). ChannelFutureListener.CLOSE is a continuation that closes the stream. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 4,
+        "preservedCount": 4,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamIdGeneratorTest.java",
+      "sha256": "fb52f964993a3e91696c82f202d17ed8431691a89da685c9cf9be7b234b2833a",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamIdGeneratorTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testServerStreamIds",
+          "clrMethod": "TestServerStreamIds",
+          "adaptation": "QuicStreamIdGenerator (package-private) is internal; assertions unchanged."
+        },
+        {
+          "upstreamMethod": "testClientStreamIds",
+          "clrMethod": "TestClientStreamIds",
+          "adaptation": "QuicStreamIdGenerator (package-private) is internal; assertions unchanged."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamLimitTest.java",
+      "sha256": "5abbb51c1ecdf70abe547787c645605f2eff991ad81d2eb9767c9f4452177422",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamLimitTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testStreamLimitEnforcedWhenCreatingViaClientBidirectional",
+          "clrMethod": "TestStreamLimitEnforcedWhenCreatingViaClientBidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). QuicStreamLimitChangedEvent fires once the connection is established (the server's initial limit of one stream per type, which msquic reports before ConnectAsync completes; MsQuicChannel fires it after channelActive, fixed in stage 3) and again when the closed stream frees a slot (StreamCapacityCallback); PeerAllowedStreams counts them, and the second CreateStreamAsync fails with QuicException (STREAM_LIMIT_ERROR). assertInstanceOf is Assert.IsAssignableFrom. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testStreamLimitEnforcedWhenCreatingViaClientUnidirectional",
+          "clrMethod": "TestStreamLimitEnforcedWhenCreatingViaClientUnidirectional",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). QuicStreamLimitChangedEvent fires once the connection is established (the server's initial limit of one stream per type, which msquic reports before ConnectAsync completes; MsQuicChannel fires it after channelActive, fixed in stage 3) and again when the closed stream frees a slot (StreamCapacityCallback); PeerAllowedStreams counts them, and the second CreateStreamAsync fails with QuicException (STREAM_LIMIT_ERROR). assertInstanceOf is Assert.IsAssignableFrom. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 2,
+        "reviewedCount": 4,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testStreamLimitEnforcedWhenCreatingViaServerBidirectional",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The server creates a stream of the type in channelActive and then a second one, which fails with QuicException because the client allows one stream of each type (initialMaxStreams 1).",
+            "reason": "System.Net.Quic does not report the client's initial stream limits to a server connection (QuicServerConnectionOptions.StreamCapacityCallback is not called for them, measured with .NET 10.0.11 in a scratch System.Net.Quic probe (docs/codec-native-quic-porting.md, Stage 3 probe)), so the server cannot fail the stream early: its second OpenOutboundStreamAsync waits for stream capacity, and the ported test ended with ClosedChannelException at the 5 s idle timeout.",
+            "clrEvidence": [
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamLimitTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testStreamLimitEnforcedWhenCreatingViaServerUnidirectional",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The server creates a stream of the type in channelActive and then a second one, which fails with QuicException because the client allows one stream of each type (initialMaxStreams 1).",
+            "reason": "System.Net.Quic does not report the client's initial stream limits to a server connection (QuicServerConnectionOptions.StreamCapacityCallback is not called for them, measured with .NET 10.0.11 in a scratch System.Net.Quic probe (docs/codec-native-quic-porting.md, Stage 3 probe)), so the server cannot fail the stream early: its second OpenOutboundStreamAsync waits for stream capacity, and the ported test ended with ClosedChannelException at the 5 s idle timeout.",
+            "clrEvidence": [
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamLimitTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The client-side stream limit scenarios; a server connection does not learn the client's stream limits from System.Net.Quic.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamLimitTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamShutdownTest.java",
+      "sha256": "ce77dc7af6d946a8b6583176b571dcc1cc109e4b211ad0a4263de14848b81bc7",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamShutdownTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testShutdownInputClosureCausesStreamStopped",
+          "clrMethod": "TestShutdownInputClosureCausesStreamStopped",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). shutdownInput() is ShutdownInputAsync() (STOP_SENDING with error 0); the server's writes fail with ChannelOutputShutdownException (System.Net.Quic StreamAborted on the write side). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testShutdownInputClosureByServerCausesStreamStopped",
+          "clrMethod": "TestShutdownInputClosureByServerCausesStreamStopped",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). The anonymous ByteToMessageDecoder is FourBytesDecoder; CountDownLatch.countDown() below zero is a no-op (CountDown helper). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testShutdownOutputClosureByServerCausesStreamReset",
+          "clrMethod": "TestShutdownOutputClosureByServerCausesStreamReset",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). shutdownOutput(100) is ShutdownOutputAsync(100) (RESET_STREAM); the client's QuicStreamResetException carries 100 (ApplicationProtocolCode()). Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 3,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicStreamTypeTest.java",
+      "sha256": "d7643b6f56929f694185d4dbfeae71caeb5d91d63181827beed27b47ed803a74",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicStreamTypeTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testUnidirectionalCreatedByClient",
+          "clrMethod": "TestUnidirectionalCreatedByClient",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). UnsupportedOperationException is NotSupportedException (Assert.IsAssignableFrom); the ImmediateEventExecutor promise is a TaskCompletionSource. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        },
+        {
+          "upstreamMethod": "testUnidirectionalCreatedByServer",
+          "clrMethod": "TestUnidirectionalCreatedByServer",
+          "adaptation": "@ParameterizedTest @MethodSource(\"newSslTaskExecutors\") is a theory over AbstractQuicTest.NewSslTaskExecutors() (ImmediateExecutor and a single-thread DefaultEventExecutor; msquic runs TLS on its own threads, so the builders accept the executor without using it). The client and server run on QuicEndpointChannels (QuicTestUtils), which take the DatagramChannel's place: msquic owns the UDP socket (owner decision 2026-11-27, listener model). UnsupportedOperationException is NotSupportedException; PromiseNotifier is a continuation. Futures/promises are Tasks (sync()/get() are awaits, listeners continuations), CountDownLatch is CountdownEvent and BlockingQueue BlockingCollection, waited with the test timeout. "
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 6,
+        "preservedCount": 6,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicTest.java",
+      "sha256": "f879580aea1d581045a775a6530be01b4c06085db9c92b9eaa73dc3e0ffe65c8",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testVersionSupported",
+          "clrMethod": "TestVersionSupported",
+          "adaptation": "The negative Java int literals 0xff00_001c/0xff00_001d are unchecked int casts; Quic.IsVersionSupported answers true for QUIC version 1 only."
+        },
+        {
+          "upstreamMethod": "testToAttributesArrayDoesCopy",
+          "clrMethod": "TestToAttributesArrayDoesCopy",
+          "adaptation": "Map<AttributeKey<?>, Object> is the Dictionary of Quic.ToAttributesArray, whose values carry the attribute value with its typed setter; the array keeps the first value."
+        },
+        {
+          "upstreamMethod": "testToOptionsArrayDoesCopy",
+          "clrMethod": "TestToOptionsArrayDoesCopy",
+          "adaptation": "Map<ChannelOption<?>, Object> is Dictionary<ChannelOption, object>; the array keeps the first value."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 4,
+        "mappedCount": 3,
+        "reviewedCount": 4,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "test",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Quic.ensureAvailability() succeeds and Quiche.quiche_version() returns the version of the quiche library.",
+            "reason": "Quiche.quiche_version() asks the quiche JNI library for its version (Quiche is jvm-only-replaced, docs/codec-classes-quic-porting.md); System.Net.Quic reports no msquic version, and Quic.EnsureAvailability() runs in the static constructor of every QUIC test (AbstractQuicTest).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/Quic.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/AbstractQuicTest.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The Quic utility tests; the quiche version check has no System.Net.Quic counterpart.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicTestUtils.java",
+      "sha256": "bcf54539214327f669bff69160221ce0416f2e533d0a2502b765ad67fbeef554",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 3,
+        "preservedCount": 3,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Shared helpers on the QuicEndpointChannel (the DatagramChannel's place) with the Java builder settings; SelfSignedCertificate is a self-signed ECDSA P-256 certificate for localhost (System.Security.Cryptography); the epoll branches are gone (transport-classes-epoll is recorded) and soReusePortOption() returns null as Java does without epoll; no declared JUnit methods.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicTransportParametersTest.java",
+      "sha256": "237e911fdcafa4986a42c6d282517007e3032c932f41329c1847dbbe34a72ab3",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTransportParametersTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 1,
+        "mappedCount": 0,
+        "reviewedCount": 1,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testParameters",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "peerTransportParameters() on both peers returns the peer's transport parameters (flow control and stream limits, ACK delay settings, active migration, the active connection ID limit, the datagram frame size).",
+            "reason": "System.Net.Quic does not expose the peer's transport parameters: IQuicChannel.PeerTransportParameters() throws NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTransportParametersTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "The only method needs the peer's transport parameters, which System.Net.Quic does not expose.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTransportParametersTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicWritableTest.java",
+      "sha256": "cd27a22370a1487f3092a67d2e0fa6453003fddd349ff3281d21b0d120471f73",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/QuicWritableTest.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 0,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testCorrectlyHandleWritabilityReadRequestedInReadComplete",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The server's 64 KiB stream write stays incomplete until the client, whose stream receive window is 16 KiB (initialMaxStreamDataBidirectionalLocal) and whose auto-read is off, reads; the client asserts on its first read that the write is not done and at 64 KiB that it is.",
+            "reason": "System.Net.Quic's QuicStream takes the received stream data into its own buffer ahead of the application's reads, so the peer's flow control does not hold the write back: measured with .NET 10.0.11 in a scratch System.Net.Quic probe (docs/codec-native-quic-porting.md, Stage 3 probe), a 64 KiB server write to a client with a 16 KiB window completes without any client read, and the ported test failed its first-read assertion (assertFalse(writePromise.isDone())).",
+            "clrEvidence": [
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicStreamChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicWritableTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testCorrectlyHandleWritabilityReadRequestedInRead",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "The server's 64 KiB stream write stays incomplete until the client, whose stream receive window is 16 KiB (initialMaxStreamDataBidirectionalLocal) and whose auto-read is off, reads; the client asserts on its first read that the write is not done and at 64 KiB that it is.",
+            "reason": "System.Net.Quic's QuicStream takes the received stream data into its own buffer ahead of the application's reads, so the peer's flow control does not hold the write back: measured with .NET 10.0.11 in a scratch System.Net.Quic probe (docs/codec-native-quic-porting.md, Stage 3 probe), a 64 KiB server write to a client with a 16 KiB window completes without any client read, and the ported test failed its first-read assertion (assertFalse(writePromise.isDone())).",
+            "clrEvidence": [
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicStreamChannel.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicWritableTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testBytesUntilUnwritable",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "bytesBeforeUnwritable() is the stream's send capacity (the peer's flow control credit) and drops by exactly the bytes of each write until the stream turns unwritable; it turns writable again once the client reads.",
+            "reason": "System.Net.Quic exposes no send capacity of a stream, so MsQuicStreamChannel's writability follows the write buffer water marks of the ChannelOutboundBuffer, which counts each entry with CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD (96 bytes) on top of its bytes, so assertEquals(before, newBefore + size) cannot hold; the ported test timed out.",
+            "clrEvidence": [
+              "docs/codec-native-quic-porting.md",
+              "src/Netty.NET.Handler.Codec.Quic/MsQuicStreamChannel.cs",
+              "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
+              "test/Netty.NET.Handler.Codec.Quic.Tests/QuicWritableTest.cs"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 5,
+        "preservedCount": 5,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Every method needs QUIC flow control to hold back a stream write; System.Net.Quic buffers received stream data ahead of the application and exposes no stream send capacity.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicWritableTest.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicheQuicClientCodecTest.java",
+      "sha256": "8e5c6b83e6f971bfbb9059b10f7557a6db0a605ed13a0e85f98288daefdf9e25",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test source QuicheQuicClientCodecTest of codec-native-quic for the quiche client datagram codec (QuicheQuicClientCodec, jvm-only-replaced).",
+        "reason": "The test exercises the quiche client datagram codec (QuicheQuicClientCodec, jvm-only-replaced), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "The msquic implementation (MsQuicCodec, MsQuicChannel) and its tests in test/Netty.NET.Handler.Codec.Quic.Tests; see docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/codec-classes-quic-porting.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a test of a recorded (not ported) unit.",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicheQuicCodecTest.java",
+      "sha256": "869a7297087058e5b78cf99a157e8b420d2d73b78addb6613343ff8d5a698ae5",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test source QuicheQuicCodecTest of codec-native-quic for the quiche datagram codec base (QuicheQuicCodec, jvm-only-replaced).",
+        "reason": "The test exercises the quiche datagram codec base (QuicheQuicCodec, jvm-only-replaced), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "The msquic implementation (MsQuicCodec, MsQuicChannel) and its tests in test/Netty.NET.Handler.Codec.Quic.Tests; see docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/codec-classes-quic-porting.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "methodReview": {
+        "declaredCount": 3,
+        "mappedCount": 0,
+        "reviewedCount": 3,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": [
+          {
+            "upstreamMethod": "testDefaultVersionIsV1",
+            "disposition": "jvm-only-replaced",
+            "sourceContract": "Original test testDefaultVersionIsV1 of QuicheQuicCodecTest.",
+            "reason": "The test exercises the quiche datagram codec base (QuicheQuicCodec, jvm-only-replaced), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testFlushStrategyUsedWithBytes",
+            "disposition": "jvm-only-replaced",
+            "sourceContract": "Original test testFlushStrategyUsedWithBytes of QuicheQuicCodecTest.",
+            "reason": "The test exercises the quiche datagram codec base (QuicheQuicCodec, jvm-only-replaced), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md"
+            ]
+          },
+          {
+            "upstreamMethod": "testFlushStrategyUsedWithPackets",
+            "disposition": "jvm-only-replaced",
+            "sourceContract": "Original test testFlushStrategyUsedWithPackets of QuicheQuicCodecTest.",
+            "reason": "The test exercises the quiche datagram codec base (QuicheQuicCodec, jvm-only-replaced), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+            "clrEvidence": [
+              "docs/codec-classes-quic-porting.md",
+              "docs/codec-native-quic-porting.md"
+            ]
+          }
+        ]
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 3,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 3,
+        "disposition": "whole-file",
+        "reason": "Original comments of a test of a recorded (not ported) unit.",
+        "sha256": "ce11e1dacc5ee1531c5a16273968991ee5700eb1d352462a50dd7f25c2efd8aa"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/QuicheQuicServerCodecTest.java",
+      "sha256": "a9db5f79dbb4097e25453551386bcae1d342641d1e7fcb32470bd8dd6a1fb019",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test source QuicheQuicServerCodecTest of codec-native-quic for the quiche server datagram codec (QuicheQuicServerCodec, jvm-only-replaced).",
+        "reason": "The test exercises the quiche server datagram codec (QuicheQuicServerCodec, jvm-only-replaced), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "The msquic implementation (MsQuicCodec, MsQuicChannel) and its tests in test/Netty.NET.Handler.Codec.Quic.Tests; see docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/codec-classes-quic-porting.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a test of a recorded (not ported) unit.",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/SipHashTest.java",
+      "sha256": "40a54e193a8b737c832fbcbb7f9e00d757f91f660e1685e99a8eedfeb835e6d4",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/SipHashTest.cs"
+      ],
+      "caseMappings": [
+        {
+          "upstreamMethod": "testReferenceCases",
+          "clrMethod": "TestReferenceCases",
+          "adaptation": "@ParameterizedTest @MethodSource(\"params\") is a theory over the 64 rows of Params() (not enumerated at discovery: ReferenceTestParam is not serializable); the little-endian ByteBuffer of params() is BinaryPrimitives.ReadInt64LittleEndian; SipHash (package-private) is internal and macHash takes a ReadOnlyMemory<byte>."
+        },
+        {
+          "upstreamMethod": "testHash",
+          "clrMethod": "TestHash",
+          "adaptation": "ThreadLocalRandom is Random.Shared and ByteBuffer.wrap a ReadOnlyMemory<byte>; assertions unchanged."
+        }
+      ],
+      "methodReview": {
+        "declaredCount": 2,
+        "mappedCount": 2,
+        "reviewedCount": 2,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 2,
+        "preservedCount": 2,
+        "unreviewedCount": 0
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/TestLogBackAppender.java",
+      "sha256": "90fda5bc5bfa65d0a07f11f5ee41d4db9815f5d1f99825c9bdc3e1c810ab032f",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test source TestLogBackAppender of codec-native-quic for the logback appender that collects log events for the key log tests (logback is a JVM logging library; the key log is BoringSSL's).",
+        "reason": "The test exercises the logback appender that collects log events for the key log tests (logback is a JVM logging library; the key log is BoringSSL's), which the msquic implementation records instead of porting (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "The msquic implementation (MsQuicCodec, MsQuicChannel) and its tests in test/Netty.NET.Handler.Codec.Quic.Tests; see docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/codec-classes-quic-porting.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": [],
+        "notPortedMethods": []
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a test of a recorded (not ported) unit.",
+        "sha256": "7c45e585a578cd909728b539102ebaaf1bc2e59052bfd58f30bb3cee4bd2c916"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/TestQuicTokenHandler.java",
+      "sha256": "2cee02b7b0e7a9002de6d93d8bd4887789df6d4ff56d892659ed6c9f0770b938",
+      "hashMode": "utf8-lf",
+      "kind": "test",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Tests/TestQuicTokenHandler.cs"
+      ],
+      "caseMappings": [],
+      "methodReview": {
+        "declaredCount": 0,
+        "mappedCount": 0,
+        "reviewedCount": 0,
+        "unreviewedMethods": [],
+        "notApplicableMethods": []
+      },
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 1,
+        "preservedCount": 1,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "Helper token handler that delegates to InsecureQuicTokenHandler; no declared JUnit methods. Its checks assertEquals(ByteOrder.BIG_ENDIAN, out.order()/token.order()) read the @Deprecated ByteBuf.order(), which is not ported (a Netty.NET ByteBuf has no byte order of its own and reads big-endian, docs/buffer-porting.md), so they have no counterpart. The msquic server codec builder reports a token handler of its own as unsupported, so only the CLR-inapplicable QuicChannelConnectTest.testConnectWithTokenValidation would use it.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Tests/TestQuicTokenHandler.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/example/QuicClientExample.java",
+      "sha256": "f4c6a852d3ef3e1587155ae9e434345935ad0a8891788deb0274caceba0d442b",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Examples/QuicClientExample.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 10,
+        "preservedCount": 10,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "main is an async Main run by the CLR-only ExampleLauncher (test/Netty.NET.Handler.Codec.Quic.Examples, copied from src/Netty.NET.Example/ExampleLauncher.cs); the futures are awaited Tasks and shutdownGracefully() is a discarded ShutdownGracefullyAsync(). NioDatagramChannel is the QuicEndpointChannel (msquic owns the UDP socket, owner decision 2026-11-27); the anonymous handlers are private nested classes and QuicStreamChannel.SHUTDOWN_OUTPUT a continuation that calls ShutdownOutputAsync(); CharsetUtil.US_ASCII is Encoding.ASCII. QuicChannel.newBootstrap is IQuicChannel.NewBootstrap and System.err Console.Error; close(true, 0, reason) is CloseAsync(true, 0, reason), whose reason System.Net.Quic does not send. Run on loopback against QuicServerExample, it prints the server's \"Hello World!\" and exits (docs/codec-native-quic-porting.md, Examples).",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Examples/QuicClientExample.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Examples/ExampleLauncher.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/example/QuicClientZeroRTTExample.java",
+      "sha256": "706be1c186894db85596d69974efec60130a374a94faa3572010f4b2b7c92d96",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Examples/QuicClientZeroRTTExample.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "main is an async Main run by the CLR-only ExampleLauncher (test/Netty.NET.Handler.Codec.Quic.Examples, copied from src/Netty.NET.Example/ExampleLauncher.cs); the futures are awaited Tasks and shutdownGracefully() is a discarded ShutdownGracefullyAsync(). NioDatagramChannel is the QuicEndpointChannel (msquic owns the UDP socket, owner decision 2026-11-27); the anonymous handlers are private nested classes and QuicStreamChannel.SHUTDOWN_OUTPUT a continuation that calls ShutdownOutputAsync(); CharsetUtil.US_ASCII is Encoding.ASCII. QuicChannel.newBootstrap is IQuicChannel.NewBootstrap and System.err Console.Error; close(true, 0, reason) is CloseAsync(true, 0, reason), whose reason System.Net.Quic does not send. Ported as written: earlyData(true) makes QuicSslContextBuilder.Build() throw NotSupportedException (System.Net.Quic exposes no 0-RTT), so the example ends with that exception before it connects and SslEarlyDataReadyEvent is never fired.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Examples/QuicClientZeroRTTExample.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Examples/ExampleLauncher.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/example/QuicServerExample.java",
+      "sha256": "cf25dd8b4ffd756e8a56fc653b3ea4d39ae107901ed9395257d04f70aa27f6a0",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Examples/QuicServerExample.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 9,
+        "preservedCount": 9,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "main is an async Main run by the CLR-only ExampleLauncher (test/Netty.NET.Handler.Codec.Quic.Examples, copied from src/Netty.NET.Example/ExampleLauncher.cs); the futures are awaited Tasks and shutdownGracefully() is a discarded ShutdownGracefullyAsync(). NioDatagramChannel is the QuicEndpointChannel (msquic owns the UDP socket, owner decision 2026-11-27); the anonymous handlers are private nested classes and QuicStreamChannel.SHUTDOWN_OUTPUT a continuation that calls ShutdownOutputAsync(); CharsetUtil.US_ASCII is Encoding.ASCII. SelfSignedCertificate (@Deprecated, not ported) is the PkiTesting CertificateBuilder, as in Netty.NET.Example's ServerUtil; new InetSocketAddress(9999) is IPEndPoint(IPAddress.Any, 9999). activeMigration(true) is msquic's behavior and accepted (fixed in stage 3); collectStats() fails with NotSupportedException, so the listener logs nothing and still closes the parent. Run on loopback with QuicClientExample (docs/codec-native-quic-porting.md, Examples).",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Examples/QuicServerExample.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Examples/ExampleLauncher.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/example/QuicServerSoReusePortExample.java",
+      "sha256": "2082fdbdb0df6bf01e09da3e3d21ab6d2172e1f573a50c43cd16fc315fc21b23",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "QuicServerSoReusePortExample: a QUIC server that binds one EpollDatagramChannel per core to the same port with EpollChannelOption.SO_REUSEPORT and routes the packets with QuicCodecDispatcher.",
+        "reason": "It needs the epoll transport (EpollIoHandler, EpollDatagramChannel, EpollChannelOption.SO_REUSEPORT; transport-classes-epoll is recorded, not ported) and QuicCodecDispatcher, which is jvm-only-replaced because msquic owns the UDP socket (owner decision 2026-11-27, docs/quic-design.md).",
+        "replacement": {
+          "clr": "QuicServerExample on the QuicEndpointChannel (test/Netty.NET.Handler.Codec.Quic.Examples): msquic's QuicListener owns the socket and spreads the connections over msquic's own worker threads."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md",
+            "docs/transport-classes-epoll-porting-manifest.json",
+            "docs/codec-classes-quic-porting-manifest.json"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 15,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 15,
+        "disposition": "whole-file",
+        "reason": "Original comments of an epoll-bound example that is not ported.",
+        "sha256": "46a97859a93fca41bd99cbfaa7cdaf16e15b2d7f0df5c33204f17c87a1544a2a"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/java/io/netty/handler/codec/quic/example/QuicServerZeroRTTExample.java",
+      "sha256": "0feb4e319a031e5338bbe6685556fc925e8fd4b77a3920ed49804c44dfdee59c",
+      "hashMode": "utf8-lf",
+      "kind": "implementation",
+      "status": "clr-adapted",
+      "implementation": [
+        "test/Netty.NET.Handler.Codec.Quic.Examples/QuicServerZeroRTTExample.cs"
+      ],
+      "comments": {
+        "status": "preserved",
+        "uniqueCount": 8,
+        "preservedCount": 8,
+        "unreviewedCount": 0
+      },
+      "review": {
+        "scope": "main is an async Main run by the CLR-only ExampleLauncher (test/Netty.NET.Handler.Codec.Quic.Examples, copied from src/Netty.NET.Example/ExampleLauncher.cs); the futures are awaited Tasks and shutdownGracefully() is a discarded ShutdownGracefullyAsync(). NioDatagramChannel is the QuicEndpointChannel (msquic owns the UDP socket, owner decision 2026-11-27); the anonymous handlers are private nested classes and QuicStreamChannel.SHUTDOWN_OUTPUT a continuation that calls ShutdownOutputAsync(); CharsetUtil.US_ASCII is Encoding.ASCII. SelfSignedCertificate (@Deprecated, not ported) is the PkiTesting CertificateBuilder, as in Netty.NET.Example's ServerUtil; new InetSocketAddress(9999) is IPEndPoint(IPAddress.Any, 9999). Ported as written: earlyData(true) makes QuicSslContextBuilder.Build() throw NotSupportedException (System.Net.Quic exposes no 0-RTT), so the example ends with that exception before it binds.",
+        "sourceEvidence": [
+          "test/Netty.NET.Handler.Codec.Quic.Examples/QuicServerZeroRTTExample.cs",
+          "test/Netty.NET.Handler.Codec.Quic.Examples/ExampleLauncher.cs",
+          "docs/codec-native-quic-porting.md"
+        ]
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/resources/logback-test.xml",
+      "sha256": "356bfb15e48c468660a28fadaf19d4b3003996a00c1a0e62c78e870dc0e92915",
+      "hashMode": "utf8-lf",
+      "kind": "test-resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test resource logback-test.xml (logback configuration or GraalVM class filter of the JVM test run).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): Configures the JVM test run (logback, GraalVM native-image agent filters); the xUnit tests have no counterpart.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 1,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 1,
+        "disposition": "whole-file",
+        "reason": "Original comments of a JVM-only file that is not ported (test-resource).",
+        "sha256": "b445ebc6e3ed7f1c8a96d70064b5d5fbdcdf499dcef76f1d2f76b4ea83cc1b39"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/resources/netty-filter.json",
+      "sha256": "03fea6676bc3b3bae2c78fa6ecc1d1213851b52c57f8694a19e421cb217ce45e",
+      "hashMode": "utf8-lf",
+      "kind": "test-resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test resource netty-filter.json (logback configuration or GraalVM class filter of the JVM test run).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): Configures the JVM test run (logback, GraalVM native-image agent filters); the xUnit tests have no counterpart.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    },
+    {
+      "upstream": "codec-native-quic/src/test/resources/test-class-filter.json",
+      "sha256": "7c31f311add8dc28b4d7c61f5cb6f95d3ed1d9466f8a896526165bc3d5fd1b53",
+      "hashMode": "utf8-lf",
+      "kind": "test-resource",
+      "status": "jvm-only-replaced",
+      "implementation": [],
+      "notPorted": {
+        "decisionDate": "2026-11-27",
+        "sourceContract": "Test resource test-class-filter.json (logback configuration or GraalVM class filter of the JVM test run).",
+        "reason": "Owner decision 2026-11-27 (docs/quic-design.md): Configures the JVM test run (logback, GraalVM native-image agent filters); the xUnit tests have no counterpart.",
+        "replacement": {
+          "clr": "System.Net.Quic (msquic) behind Netty.NET.Handler.Codec.Quic; see docs/codec-classes-quic-porting.md and docs/codec-native-quic-porting.md."
+        },
+        "evidence": {
+          "files": [
+            "docs/quic-design.md",
+            "docs/record-only-modules.md",
+            "docs/codec-native-quic-porting.md"
+          ],
+          "urls": [
+            "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview",
+            "https://github.com/netty/netty/tree/64cc10f38ea5f5bd7eae48507817c66680d0afdc/codec-native-quic"
+          ]
+        }
+      },
+      "comments": {
+        "status": "not-ported",
+        "uniqueCount": 0,
+        "preservedCount": 0,
+        "unreviewedCount": 0,
+        "notApplicableCount": 0,
+        "disposition": "none"
+      }
+    }
+  ]
+}
