@@ -141,7 +141,11 @@ public class ByteVisitorContractTest
         var text = new AsciiString(new byte[] { 9, 1, 2, 8 }, 1, 2, false);
         var empty = new AsciiString(Array.Empty<byte>(), false);
         int calls = 0;
-        Func<byte, bool> visitor = value => { calls++; return false; };
+        Func<byte, bool> visitor = value =>
+        {
+            calls++;
+            return false;
+        };
         Assert.Equal(-1, descending ? empty.ForEachByteDesc(visitor) : empty.ForEachByte(visitor));
         Assert.Equal(-1, descending ? text.ForEachByteDesc(2, 0, visitor) : text.ForEachByte(2, 0, visitor));
         Assert.Equal(0, calls);
@@ -211,13 +215,29 @@ public class ByteVisitorContractTest
     {
         var text = new AsciiString(new byte[] { 1, 2 }, false);
         var calls = new List<int>();
-        Func<byte, bool> visitor = value => { calls.Add(10 + value); return false; };
-        visitor += value => { calls.Add(20 + value); return true; };
+        Func<byte, bool> visitor = value =>
+        {
+            calls.Add(10 + value);
+            return false;
+        };
+        visitor += value =>
+        {
+            calls.Add(20 + value);
+            return true;
+        };
         Assert.Equal(-1, text.ForEachByte(visitor));
         Assert.Equal(new[] { 11, 21, 12, 22 }, calls);
         calls.Clear();
-        Func<byte, bool> stop = value => { calls.Add(10 + value); return true; };
-        stop += value => { calls.Add(20 + value); return false; };
+        Func<byte, bool> stop = value =>
+        {
+            calls.Add(10 + value);
+            return true;
+        };
+        stop += value =>
+        {
+            calls.Add(20 + value);
+            return false;
+        };
         Assert.Equal(0, text.ForEachByte(stop));
         Assert.Equal(new[] { 11, 21 }, calls);
     }
@@ -228,9 +248,21 @@ public class ByteVisitorContractTest
         var text = new AsciiString(new byte[] { 1, 2 }, false);
         var calls = new List<int>();
         var failure = new InvalidOperationException("multicast failure");
-        Func<byte, bool> visitor = value => { calls.Add(1); return false; };
-        visitor += value => { calls.Add(2); throw failure; };
-        visitor += value => { calls.Add(3); return true; };
+        Func<byte, bool> visitor = value =>
+        {
+            calls.Add(1);
+            return false;
+        };
+        visitor += value =>
+        {
+            calls.Add(2);
+            throw failure;
+        };
+        visitor += value =>
+        {
+            calls.Add(3);
+            return true;
+        };
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => text.ForEachByte(visitor)));
         Assert.Equal(new[] { 1, 2 }, calls);
     }
@@ -257,7 +289,11 @@ public class ByteVisitorContractTest
     public void CapturedStatePersistsAcrossSeparateTraversalCalls()
     {
         int total = 0;
-        Func<byte, bool> visitor = value => { total += value; return total < 6; };
+        Func<byte, bool> visitor = value =>
+        {
+            total += value;
+            return total < 6;
+        };
         Assert.Equal(-1, new AsciiString(new byte[] { 1, 2 }, false).ForEachByte(visitor));
         Assert.Equal(0, new AsciiString(new byte[] { 3, 4 }, false).ForEachByte(visitor));
         Assert.Equal(6, total);

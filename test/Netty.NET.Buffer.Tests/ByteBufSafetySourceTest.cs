@@ -32,7 +32,10 @@ public class ByteBufSafetySourceTest
     {
         for (int provider = 0; provider < 6; ++provider)
         for (int form = 0; form < 4; ++form)
-        for (int operation = 0; operation < 16; ++operation) yield return [provider, form, operation];
+        for (int operation = 0; operation < 16; ++operation)
+                {
+                    yield return [provider, form, operation];
+                }
     }
 
     [Theory]
@@ -47,6 +50,7 @@ public class ByteBufSafetySourceTest
         {
             Assert.True(root.Release());
         }
+
         void Access()
         {
             switch (operation)
@@ -101,6 +105,7 @@ public class ByteBufSafetySourceTest
                     break;
             }
         }
+
         if (operation is >= 12 and <= 14)
         {
             Assert.Throws<IllegalReferenceCountException>(Access);

@@ -66,7 +66,10 @@ public class ByteBufDiscardSourceTest
     public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (DiscardCase scenario in Enum.GetValues<DiscardCase>()) yield return [provider, scenario];
+        foreach (DiscardCase scenario in Enum.GetValues<DiscardCase>())
+            {
+                yield return [provider, scenario];
+            }
     }
 
     [Theory]
@@ -105,11 +108,17 @@ public class ByteBufDiscardSourceTest
         buffer.WriterIndex = 0;
         if (scenario == DiscardCase.SmallPrefix)
         {
-            for (int i = 0; i < buffer.Capacity; i += 4) buffer.WriteInt(i);
+            for (int i = 0; i < buffer.Capacity; i += 4)
+            {
+                buffer.WriteInt(i);
+            }
         }
         else
         {
-            for (int i = 0; i < buffer.Capacity; ++i) buffer.WriteByte(unchecked((byte)i));
+            for (int i = 0; i < buffer.Capacity; ++i)
+            {
+                buffer.WriteByte(unchecked((byte)i));
+            }
         }
         // CLR: independent managed bytes replace the original allocated comparison buffer.
         byte[] copy = ByteBufUtil.GetBytes(buffer, 0, capacity);
@@ -174,7 +183,10 @@ public class ByteBufDiscardSourceTest
     {
         for (int provider = 0; provider < 5; ++provider)
         foreach (bool some in new[] { false, true })
-        for (int state = 0; state < 8; ++state) yield return [provider, some, state];
+        for (int state = 0; state < 8; ++state)
+                {
+                    yield return [provider, some, state];
+                }
     }
 
     [Theory]

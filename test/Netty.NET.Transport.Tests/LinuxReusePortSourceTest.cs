@@ -52,10 +52,12 @@ public class LinuxReusePortSourceTest
             var handler = new DiscardHandler();
             var server = NewServer(loop).ChildHandler(handler);
             var datagram = NewDatagram(loop).Handler(handler);
+
             Task<IChannel> Bind(EndPoint address)
             {
                 return tcp ? server.BindAsync(address, token) : datagram.BindAsync(address, token);
             }
+
             var first = await Bind(Loopback);
             var error = await Assert.ThrowsAsync<SocketException>(() => Bind(first.LocalAddress));
             Assert.Equal(SocketError.AddressAlreadyInUse, error.SocketErrorCode);

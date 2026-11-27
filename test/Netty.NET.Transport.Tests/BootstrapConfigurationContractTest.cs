@@ -178,12 +178,15 @@ public class BootstrapConfigurationContractTest
             {
                 return new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>().ChildHandler(new ChannelInboundHandlerAdapter());
             }
+
             channels.Add(await NewServer().BindAsync("127.0.0.1", 0, token));
             channels.Add(await NewServer().BindAsync(IPAddress.Loopback, 0, token));
+
             Bootstrap NewClient()
             {
                 return new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new ChannelInboundHandlerAdapter());
             }
+
             channels.Add(await NewClient().BindAsync("127.0.0.1", 0, token));
             channels.Add(await NewClient().BindAsync(IPAddress.Loopback, 0, token));
             foreach (IChannel channel in channels)
@@ -198,7 +201,11 @@ public class BootstrapConfigurationContractTest
         }
         finally
         {
-            foreach (IChannel channel in channels) { await channel.CloseAsync(); }
+            foreach (IChannel channel in channels)
+            {
+                await channel.CloseAsync();
+            }
+
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }

@@ -59,6 +59,7 @@ public class ResourceLeakDetectorTest : IDisposable
             threads[i] = new Thread(() =>
             {
                 var resources = new Queue<LeakAwareResource>(100);
+
                 bool CloseResources(bool checkClosed)
                 {
                     while (resources.TryDequeue(out LeakAwareResource value))
@@ -69,6 +70,7 @@ public class ResourceLeakDetectorTest : IDisposable
                         }
                     return false;
                 }
+
                 try
                 {
                     Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(10)));
@@ -133,8 +135,12 @@ public class ResourceLeakDetectorTest : IDisposable
             // Track another resource to trigger refqueue visiting.
             Resource resource2 = new DefaultResource();
             DefaultResource.detectorWithSetupHint.Track(resource2).Close(resource2);
+
             // Give the GC something to work on.
-            for (int i = 0; i < 1000; i++) sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+            for (int i = 0; i < 1000; i++)
+            {
+                sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+            }
         } while (DefaultResource.detectorWithSetupHint.GetLeaksFound() < 1 && deadline.Elapsed < TimeSpan.FromSeconds(10));
         Assert.Equal(1, DefaultResource.detectorWithSetupHint.GetLeaksFound());
         DefaultResource.detectorWithSetupHint.AssertNoErrors();
@@ -158,8 +164,12 @@ public class ResourceLeakDetectorTest : IDisposable
             // Track another resource to trigger refqueue visiting.
             Resource resource2 = new DefaultResource();
             DefaultResource.detectorWithSetupHint.Track(resource2).Close(resource2);
+
             // Give the GC something to work on.
-            for (int i = 0; i < 1000; i++) sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+            for (int i = 0; i < 1000; i++)
+            {
+                sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+            }
         } while (DefaultResource.detectorWithSetupHint.GetLeaksFound() < 1 && deadline.Elapsed < TimeSpan.FromSeconds(10));
         Assert.Equal(1, DefaultResource.detectorWithSetupHint.GetLeaksFound());
         DefaultResource.detectorWithSetupHint.AssertNoErrors();

@@ -259,8 +259,13 @@ public class PoolChunkRunTest
                     Assert.Equal(expectedOffset, PoolChunk.RunOffset(handle));
                     Assert.Equal(count, PoolChunk.RunPages(handle));
                     Assert.Equal(((long)expectedOffset << 49) | ((long)count << 34) | (1L << 33), handle);
+
                     for (int p = 0; p < count; p++)
-                    { Assert.False(occupied[expectedOffset + p]); occupied[expectedOffset + p] = true; }
+                    {
+                        Assert.False(occupied[expectedOffset + p]);
+                        occupied[expectedOffset + p] = true;
+                    }
+
                     live.Add((handle, expectedOffset, count));
                 }
             }

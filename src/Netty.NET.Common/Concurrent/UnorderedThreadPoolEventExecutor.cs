@@ -184,7 +184,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     public bool IsTerminated()
     {
-        using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && shutdownReservations == 0;
+        using (UninterruptibleMonitor.Enter(gate))
+        {
+            return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && shutdownReservations == 0;
+        }
     }
 
     // All callers hold gate. Async continuations cannot run inline while pool
@@ -223,11 +226,38 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     /// Running invocations are excluded. CancellationToken ownership removes native work;
     /// callers cannot mutate the executor's queue or transfer reservations between pools.
     /// </remarks>
-    public int PendingTaskCount { get { using (UninterruptibleMonitor.Enter(gate)) return queue.Count; } }
+    public int PendingTaskCount
+    {
+        get
+        {
+            using (UninterruptibleMonitor.Enter(gate))
+            {
+                return queue.Count;
+            }
+        }
+    }
     /// <summary>Gets the number of worker threads currently owned by this pool, including retiring loops.</summary>
-    public int WorkerCount { get { using (UninterruptibleMonitor.Enter(gate)) return workers.Count; } }
+    public int WorkerCount
+    {
+        get
+        {
+            using (UninterruptibleMonitor.Enter(gate))
+            {
+                return workers.Count;
+            }
+        }
+    }
     /// <summary>Gets the number of currently claimed invocations; yielded asynchronous bodies are caller-owned.</summary>
-    public int ActiveWorkerCount { get { using (UninterruptibleMonitor.Enter(gate)) return activeWorkers.Count; } }
+    public int ActiveWorkerCount
+    {
+        get
+        {
+            using (UninterruptibleMonitor.Enter(gate))
+            {
+                return activeWorkers.Count;
+            }
+        }
+    }
 
     /// <summary>Gets the token requested by immediate stop; graceful closure does not request it.</summary>
     /// <remarks>
@@ -275,7 +305,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             // The stop notification reservation stays owned until after this
             // snapshot settles, including synchronous removal/lifecycle reentry.
             queue.Clear();
-            foreach (Work work in pending) work.CancelOuter();
+
+            foreach (Work work in pending)
+            {
+                work.CancelOuter();
+            }
+
             PublishPoolState();
         }
         if (notifications != null)
@@ -349,7 +384,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     private void CheckGracefulShutdown()
     {
-        using (UninterruptibleMonitor.Enter(gate)) PublishPoolState();
+        using (UninterruptibleMonitor.Enter(gate))
+        {
+            PublishPoolState();
+        }
     }
 
     // All lifecycle decisions and admission share gate. Timer lateness cannot
@@ -689,7 +727,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         DisposeGracefulTimer();
         Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
         queue.Clear();
-        foreach (Work work in pending) work.Reject(backendFailure);
+
+        foreach (Work work in pending)
+        {
+            work.Reject(backendFailure);
+        }
+
         LogWorkerFailure("Failed to replace executor worker", backendFailure);
         PublishPoolState();
     }
@@ -964,7 +1007,11 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         catch (Exception error)
         {
-            using (UninterruptibleMonitor.Enter(gate)) { Remove(backend); PublishPoolState(); }
+            using (UninterruptibleMonitor.Enter(gate))
+            {
+                Remove(backend);
+                PublishPoolState();
+            }
             task.Reject(error);
         }
         task.Publish();

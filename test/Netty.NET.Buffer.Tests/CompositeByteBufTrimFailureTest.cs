@@ -75,7 +75,10 @@ public class CompositeByteBufTrimFailureTest
         foreach (bool direct in new[] { false, true })
         for (int facade = 0; facade < 4; ++facade)
         for (int tails = 0; tails < 3; ++tails)
-        for (int mode = 0; mode < 3; ++mode) yield return [pooled, direct, facade, tails, mode];
+        for (int mode = 0; mode < 3; ++mode)
+                        {
+                            yield return [pooled, direct, facade, tails, mode];
+                        }
     }
 
     [Theory]

@@ -74,7 +74,10 @@ public class ByteBufMutationIterationSourceTest
     public static IEnumerable<object[]> ZeroCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (ZeroCase scenario in Enum.GetValues<ZeroCase>()) yield return [provider, scenario];
+        foreach (ZeroCase scenario in Enum.GetValues<ZeroCase>())
+            {
+                yield return [provider, scenario];
+            }
     }
 
     [Theory]
@@ -126,7 +129,10 @@ public class ByteBufMutationIterationSourceTest
     public static IEnumerable<object[]> IterationCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (IterationCase scenario in Enum.GetValues<IterationCase>()) yield return [provider, scenario];
+        foreach (IterationCase scenario in Enum.GetValues<IterationCase>())
+            {
+                yield return [provider, scenario];
+            }
     }
 
     [Theory]
@@ -140,7 +146,11 @@ public class ByteBufMutationIterationSourceTest
         {
             ReleaseBuffer(buffer);
             int calls = 0;
-            Func<byte, bool> processor = _ => { ++calls; return false; };
+            Func<byte, bool> processor = _ =>
+            {
+                ++calls;
+                return false;
+            };
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
                 _ = scenario switch
@@ -176,7 +186,11 @@ public class ByteBufMutationIterationSourceTest
         }
         else
         {
-            for (int i = 0; i < capacity; ++i) buffer.WriteByte(i + 1);
+            for (int i = 0; i < capacity; ++i)
+            {
+                buffer.WriteByte(i + 1);
+            }
+
             if (scenario == IterationCase.ReadableForward)
             {
                 buffer.SetIndex(capacity / 4, capacity * 3 / 4);
@@ -189,7 +203,8 @@ public class ByteBufMutationIterationSourceTest
             Func<byte, bool> processor = value =>
             {
                 Assert.Equal(unchecked((byte)(index + 1)), value);
-                lastIndex = index; ++calls;
+                lastIndex = index;
+                ++calls;
                 if (scenario == IterationCase.AbortAtMiddle && index == capacity / 2)
                 {
                     return false;
@@ -239,7 +254,10 @@ public class ByteBufMutationIterationSourceTest
     public static IEnumerable<object[]> ReleasedWriteCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (ReleasedWrite operation in Enum.GetValues<ReleasedWrite>()) yield return [provider, operation];
+        foreach (ReleasedWrite operation in Enum.GetValues<ReleasedWrite>())
+            {
+                yield return [provider, operation];
+            }
     }
 
     [Theory]

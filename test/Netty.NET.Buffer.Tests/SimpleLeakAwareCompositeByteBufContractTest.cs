@@ -29,7 +29,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
     {
         for (int kind = 0; kind < 3; ++kind)
             for (int wrapper = 0; wrapper < 2; ++wrapper)
-                for (int operation = 0; operation < 123; ++operation) yield return [kind, wrapper != 0, operation];
+                for (int operation = 0; operation < 123; ++operation)
+                {
+                    yield return [kind, wrapper != 0, operation];
+                }
     }
 
     [Theory]
@@ -78,7 +81,12 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             int length = lengths[i];
             ByteBuf component = kind == 1 || kind == 2 && i % 2 == 1
                 ? allocator.DirectBuffer(length, Math.Max(1, length)) : allocator.HeapBuffer(length, Math.Max(1, length));
-            for (int j = 0; j < length; ++j) component.WriteByte(offset++);
+
+            for (int j = 0; j < length; ++j)
+            {
+                component.WriteByte(offset++);
+            }
+
             if (kind == 2 && i == 2)
             {
                 component = component.AsReadOnly();

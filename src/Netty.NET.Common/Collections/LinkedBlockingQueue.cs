@@ -39,7 +39,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         : this(boundedCapacity)
     {
         ArgumentNullException.ThrowIfNull(collection);
-        foreach (T item in collection.ToArray()) Add(item);
+
+        foreach (T item in collection.ToArray())
+        {
+            Add(item);
+        }
     }
 
     public int Count => Volatile.Read(ref count);
@@ -82,7 +86,10 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
 
     public bool TryTake(out T item)
     {
-        using (UninterruptibleMonitor.Enter(gate)) return Poll(out item);
+        using (UninterruptibleMonitor.Enter(gate))
+        {
+            return Poll(out item);
+        }
     }
 
     private bool Poll(out T item)
@@ -123,7 +130,12 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         using (UninterruptibleMonitor.Enter(gate))
         {
             var node = queue.First;
-            while (node != null && !comparer.Equals(node.Value, item)) node = node.Next;
+
+            while (node != null && !comparer.Equals(node.Value, item))
+            {
+                node = node.Next;
+            }
+
             if (node == null)
             {
                 return false;
@@ -141,7 +153,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         Thread.Sleep(0);
         lock (gate)
         {
-            while (queue.Count == 0) Monitor.Wait(gate);
+            while (queue.Count == 0)
+            {
+                Monitor.Wait(gate);
+            }
+
             Poll(out T item);
             return item;
         }

@@ -76,6 +76,7 @@ public class StringMetadataContractTest
     {
         int enumerations = 0;
         int disposals = 0;
+
         IEnumerable<string> Values()
         {
             enumerations++;
@@ -94,6 +95,7 @@ public class StringMetadataContractTest
                 disposals++;
             }
         }
+
         Assert.Equal("gzip,br,identity", string.Join(",", Values()));
         Assert.Equal(1, enumerations);
         Assert.Equal(1, disposals);

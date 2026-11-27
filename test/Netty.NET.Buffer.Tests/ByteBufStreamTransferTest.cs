@@ -80,16 +80,22 @@ public class ByteBufStreamTransferTest
         try
         {
             byte[] expected = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
+
             for (int i = 0; i < 32; i += 8)
             {
                 using var input = new MemoryStream(expected, i, 8);
-                Assert.Equal(8, b.WriteBytes(input, 8)); Assert.Equal(i + 8, b.WriterIndex);
+                Assert.Equal(8, b.WriteBytes(input, 8));
+                Assert.Equal(i + 8, b.WriterIndex);
             }
+
             using var output = new MemoryStream();
+
             for (int i = 0; i < 32; i += 8)
             {
-                Assert.Same(b, b.ReadBytes(output, 8)); Assert.Equal(i + 8, b.ReaderIndex);
+                Assert.Same(b, b.ReadBytes(output, 8));
+                Assert.Equal(i + 8, b.ReaderIndex);
             }
+
             Assert.Equal(expected, output.ToArray());
             Assert.Equal(1, b.RefCnt);
         }
@@ -418,7 +424,8 @@ public class ByteBufStreamTransferTest
             Parallel.For(0, 1000, _ =>
             {
                 ByteBuf view = slice ? b.Slice(3, 20) : b.Duplicate().SetIndex(3, 23);
-                using var output = new MemoryStream(); view.ReadBytes(output, 20);
+                using var output = new MemoryStream();
+                view.ReadBytes(output, 20);
                 Assert.Equal(Enumerable.Range(3, 20).Select(i => (byte)i).ToArray(), output.ToArray());
             });
             Assert.Equal(0, b.ReaderIndex);

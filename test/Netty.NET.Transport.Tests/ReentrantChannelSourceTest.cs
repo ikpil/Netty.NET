@@ -200,7 +200,11 @@ public class ReentrantChannelSourceTest
             else
             {
                 var blocked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                executor.Execute(() => { blocked.SetResult(); resumeExecutor.Wait(token); });
+                executor.Execute(() =>
+                {
+                    blocked.SetResult();
+                    resumeExecutor.Wait(token);
+                });
                 await blocked.Task.WaitAsync(token);
             }
 
@@ -411,7 +415,11 @@ public class ReentrantChannelSourceTest
             {
                 buffer.Release();
             }
-            foreach (string line in text.Split('\n')) ctx.FireChannelRead(line);
+
+            foreach (string line in text.Split('\n'))
+            {
+                ctx.FireChannelRead(line);
+            }
         }
     }
 

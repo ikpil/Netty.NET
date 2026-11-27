@@ -43,7 +43,12 @@ public class AsciiStringAllocationContractTest
     {
         const string pattern = "aB-09xY";
         var characters = new char[length];
-        for (int i = 0; i < length; i++) characters[i] = pattern[i % pattern.Length];
+
+        for (int i = 0; i < length; i++)
+        {
+            characters[i] = pattern[i % pattern.Length];
+        }
+
         string text = new string(characters);
         AsciiString source = new AsciiString("!" + text + "!").SubSequence(1, length + 1, false);
 

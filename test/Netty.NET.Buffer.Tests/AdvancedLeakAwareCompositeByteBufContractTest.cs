@@ -30,7 +30,10 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
     {
         for (int kind = 0; kind < 3; ++kind)
             for (int depth = 0; depth < 2; ++depth)
-                for (int op = 0; op < 152; ++op) yield return [kind, depth, op];
+                for (int op = 0; op < 152; ++op)
+                {
+                    yield return [kind, depth, op];
+                }
     }
 
     [Theory]
@@ -536,6 +539,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         try
         {
             CancellationToken token = cancel ? new CancellationToken(true) : TestContext.Current.CancellationToken;
+
             async Task Run(ValueTask pending)
             {
                 if (cancel)
@@ -543,6 +547,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                 else
                     await pending;
             }
+
             await Run(b.GetBytesAsync(3, stream, 8, token));
             Assert.Equal(1, tracker.Records);
             await Run(b.ReadBytesAsync(stream, 8, token));

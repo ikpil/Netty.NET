@@ -256,7 +256,13 @@ public class CompositeByteBufScalarKernelTest
         try
         {
             byte[] a = new byte[32], b = new byte[32];
-            for (int i = 0; i < 32; ++i) { a[i] = (byte)(i + 1); b[i] = (byte)(i + 33); }
+
+            for (int i = 0; i < 32; ++i)
+            {
+                a[i] = (byte)(i + 1);
+                b[i] = (byte)(i + 33);
+            }
+
             first.SetBytes(0, a).SetIndex(5, 21);
             second.SetBytes(0, b).SetIndex(3, 19);
             owner = form == 4 ? Unpooled.WrappedUnmodifiableBuffer(first, second)

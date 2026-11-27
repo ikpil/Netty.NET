@@ -47,7 +47,10 @@ public class AbstractCoalescingBufferQueueTest
         var queue = new Queue(channel);
         byte[] bytes = new byte[128];
         queue.Add(Unpooled.WrappedBuffer(bytes), task =>
-        { queue.Add(Unpooled.WrappedBuffer(bytes)); Assert.Equal(bytes.Length, queue.ReadableBytes); });
+        {
+            queue.Add(Unpooled.WrappedBuffer(bytes));
+            Assert.Equal(bytes.Length, queue.ReadableBytes);
+        });
         Assert.Equal(bytes.Length, queue.ReadableBytes);
         if (write)
             await queue.WriteAndRemoveAllAsync(channel.Pipeline.LastContext);

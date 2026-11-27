@@ -29,7 +29,10 @@ public class ByteBufSocketTransferTest
     public static IEnumerable<object[]> Modes()
     {
         for (int kind = 0; kind < 6; kind++)
-            foreach (bool async in new[] { false, true }) yield return [kind, async];
+            foreach (bool async in new[] { false, true })
+            {
+                yield return [kind, async];
+            }
     }
 
     private static ValueTask<int> Get(ByteBuf b, bool async, int index, Socket s, int length, CancellationToken t)
@@ -371,17 +374,24 @@ public class ByteBufSocketTransferTest
         internal byte[] Receive(int length)
         {
             var bytes = new byte[length];
+
             for (int offset = 0; offset < length;)
             {
                 int count = Peer.Receive(bytes.AsSpan(offset));
-                Assert.True(count > 0); offset += count;
+                Assert.True(count > 0);
+                offset += count;
             }
+
             return bytes;
         }
 
         internal void SendAndFinish(byte[] bytes)
         {
-            for (int offset = 0; offset < bytes.Length;) offset += Peer.Send(bytes.AsSpan(offset));
+            for (int offset = 0; offset < bytes.Length;)
+            {
+                offset += Peer.Send(bytes.AsSpan(offset));
+            }
+
             Peer.Shutdown(SocketShutdown.Send);
         }
 

@@ -182,7 +182,8 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         using (var lease = b.AcquireReadLease())
         {
             allocator.Arena.Dispose();
-            Assert.True(b.Release()); Assert.Equal(0, b.RefCnt);
+            Assert.True(b.Release());
+            Assert.Equal(0, b.RefCnt);
             Assert.True(allocator.Native.ReservedBytes > 0);
             Assert.Equal(-1, oldMemory.Span.IndexOfAnyExcept((byte)0x12));
             Assert.Throws<ObjectDisposedException>(() => allocator.DirectBuffer(1));
@@ -201,7 +202,8 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         ReadOnlySpan<byte> captured = memory.Span;
         using (var pin = memory.Pin())
         {
-            b.Release(); allocator.Arena.Dispose();
+            b.Release();
+            allocator.Arena.Dispose();
             Assert.Equal(0, allocator.Native.ReservedBytes);
             Assert.Equal(0xA5, captured[0]);
             Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());

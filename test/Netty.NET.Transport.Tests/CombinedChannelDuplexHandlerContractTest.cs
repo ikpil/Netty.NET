@@ -67,7 +67,12 @@ public class CombinedChannelDuplexHandlerContractTest
         var reads = new List<object>();
         var writes = new List<object>();
         var readHandler = new CaptureInbound { ReadCallback = (_, msg) => reads.Add(msg) };
-        var writeHandler = new CaptureOutbound { WriteCallback = (_, msg, _) => { writes.Add(msg); return Task.CompletedTask; } };
+        var writeHandler = new CaptureOutbound { WriteCallback = (_, msg, _) =>
+        {
+            writes.Add(msg);
+            return Task.CompletedTask;
+        }
+        };
         try
         {
             channel.Pipeline.AddAfter("combined", "read", readHandler);
@@ -137,7 +142,11 @@ public class CombinedChannelDuplexHandlerContractTest
     {
         var failure = new InvalidOperationException("inbound addition");
         var events = new List<string>();
-        var inbound = new CaptureInbound { AddedCallback = _ => { events.Add("in-added"); throw failure; }, RemovedCallback = _ => events.Add("in-removed") };
+        var inbound = new CaptureInbound { AddedCallback = _ =>
+        {
+            events.Add("in-added");
+            throw failure;
+        }, RemovedCallback = _ => events.Add("in-removed") };
         var outbound = new CaptureOutbound { AddedCallback = _ => events.Add("out-added"), RemovedCallback = _ => events.Add("out-removed") };
         var combined = new CombinedChannelDuplexHandler<CaptureInbound, CaptureOutbound>(inbound, outbound);
         var failures = new List<Exception>();

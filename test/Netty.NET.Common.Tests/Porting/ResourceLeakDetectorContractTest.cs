@@ -91,15 +91,19 @@ public class ResourceLeakDetectorContractTest : IDisposable
     private static void CollectUntil(Action visit, Func<bool> done)
     {
         var elapsed = Stopwatch.StartNew();
+
         do
         {
-            GC.Collect(); GC.WaitForPendingFinalizers(); visit();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            visit();
             if (done())
             {
                 return;
             }
             Thread.Sleep(10);
         } while (elapsed.Elapsed < TimeSpan.FromSeconds(5));
+
         Assert.True(done());
     }
 

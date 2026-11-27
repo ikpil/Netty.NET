@@ -68,7 +68,11 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int Capacity
     {
         get => Buffer.Capacity;
-        set { RecordLeakNonRefCountingOperation(_leak); Buffer.Capacity = value; }
+        set
+        {
+            RecordLeakNonRefCountingOperation(_leak);
+            Buffer.Capacity = value;
+        }
     }
 
     public override ByteBuf Retain(int increment = 1)

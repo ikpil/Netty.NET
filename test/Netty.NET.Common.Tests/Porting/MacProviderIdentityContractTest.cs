@@ -141,10 +141,45 @@ public class MacProviderIdentityContractTest
             return ChangingHash ? HashCalls : 0;
         }
 
-        public override string Id { get { MetadataCalls++; return "shared-provider-id"; } }
-        public override string Name { get { MetadataCalls++; return "eth0:1"; } }
-        public override string Description { get { MetadataCalls++; return "virtual adapter"; } }
-        public override NetworkInterfaceType NetworkInterfaceType { get { MetadataCalls++; return type; } }
-        public override OperationalStatus OperationalStatus { get { MetadataCalls++; return OperationalStatus.Down; } }
+        public override string Id
+        {
+            get
+            {
+                MetadataCalls++;
+                return "shared-provider-id";
+            }
+        }
+        public override string Name
+        {
+            get
+            {
+                MetadataCalls++;
+                return "eth0:1";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                MetadataCalls++;
+                return "virtual adapter";
+            }
+        }
+        public override NetworkInterfaceType NetworkInterfaceType
+        {
+            get
+            {
+                MetadataCalls++;
+                return type;
+            }
+        }
+        public override OperationalStatus OperationalStatus
+        {
+            get
+            {
+                MetadataCalls++;
+                return OperationalStatus.Down;
+            }
+        }
     }
 }

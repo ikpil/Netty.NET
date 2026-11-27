@@ -40,13 +40,21 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
 
     public override bool IsReadOnly
     {
-        get { RecordLeakNonRefCountingOperation(Leak); return Wrapped.IsReadOnly; }
+        get
+        {
+            RecordLeakNonRefCountingOperation(Leak);
+            return Wrapped.IsReadOnly;
+        }
     }
 
     public override int Capacity
     {
         get => Wrapped.Capacity;
-        set { RecordLeakNonRefCountingOperation(Leak); Wrapped.Capacity = value; }
+        set
+        {
+            RecordLeakNonRefCountingOperation(Leak);
+            Wrapped.Capacity = value;
+        }
     }
 
     public override CompositeByteBuf Retain(int increment = 1)

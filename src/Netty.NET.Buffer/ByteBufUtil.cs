@@ -56,7 +56,12 @@ public static partial class ByteBufUtil
     private static byte[] SearchBytes(ByteBuf buffer)
     {
         byte[] bytes = new byte[buffer.ReadableBytes];
-        for (int i = 0; i < bytes.Length; ++i) bytes[i] = buffer.GetByte(buffer.ReaderIndex + i);
+
+        for (int i = 0; i < bytes.Length; ++i)
+        {
+            bytes[i] = buffer.GetByte(buffer.ReaderIndex + i);
+        }
+
         return bytes;
     }
 
@@ -108,8 +113,13 @@ public static partial class ByteBufUtil
     public static int Utf8Bytes(ReadOnlySpan<char> text)
     {
         int i = 0;
+
         // ASCII fast path
-        while (i < text.Length && text[i] < 0x80) ++i;
+        while (i < text.Length && text[i] < 0x80)
+        {
+            ++i;
+        }
+
         int length = i;
         // !ASCII is packed in a separate method to let the ASCII case be smaller
         // CLR: keep the remainder in this method; no JVM inlining policy is reproduced.
@@ -306,7 +316,12 @@ public static partial class ByteBufUtil
         buffer.EnsureWritable(text.Length);
         bool contiguous = buffer.TryGetMemory(buffer.WriterIndex, text.Length, out var memory);
         Span<byte> destination = contiguous ? memory.Span : new byte[text.Length];
-        for (int i = 0; i < text.Length; ++i) destination[i] = AsciiString.C2b(text[i]);
+
+        for (int i = 0; i < text.Length; ++i)
+        {
+            destination[i] = AsciiString.C2b(text[i]);
+        }
+
         if (!contiguous)
         {
             buffer.SetBytes(buffer.WriterIndex, destination);

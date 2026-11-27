@@ -45,7 +45,10 @@ public class CompositeByteBufFlatteningTest
     public static IEnumerable<object[]> Providers()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     // CLR: heap/native factories; the unpooled rows keep the shared-counter model of non-pooled slices.
@@ -166,7 +169,12 @@ public class CompositeByteBufFlatteningTest
             ReadOnlySequence<byte> sequence = outer.AsReadOnlySequence(0, 2);
             Assert.False(sequence.IsSingleSegment);
             var segments = new List<byte[]>();
-            foreach (ReadOnlyMemory<byte> segment in sequence) segments.Add(segment.ToArray());
+
+            foreach (ReadOnlyMemory<byte> segment in sequence)
+            {
+                segments.Add(segment.ToArray());
+            }
+
             Assert.Equal(2, segments.Count);
             Assert.Equal(new byte[] { 2 }, segments[0]);
             Assert.Equal(new byte[] { 3 }, segments[1]);
@@ -207,8 +215,16 @@ public class CompositeByteBufFlatteningTest
             var ascending = new byte[6];
             var descending = new byte[6];
             int forward = 0, reverse = 0;
-            Assert.Equal(-1, outer.ForEachByte(value => { ascending[forward++] = value; return true; }));
-            Assert.Equal(-1, outer.ForEachByteDesc(value => { descending[reverse++] = value; return true; }));
+            Assert.Equal(-1, outer.ForEachByte(value =>
+            {
+                ascending[forward++] = value;
+                return true;
+            }));
+            Assert.Equal(-1, outer.ForEachByteDesc(value =>
+            {
+                descending[reverse++] = value;
+                return true;
+            }));
             Assert.Equal(6, forward);
             Assert.Equal(6, reverse);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, ascending);

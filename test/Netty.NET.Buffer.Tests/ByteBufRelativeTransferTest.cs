@@ -66,6 +66,7 @@ public class ByteBufRelativeTransferTest
         // Deterministic octets replace the original random fixture; the expected copy is an independent array model.
         byte[] input = Enumerable.Range(0, 24).Select(i => unchecked((byte)(i * 29 + 131))).ToArray();
         byte[] output = Enumerable.Range(0, 24).Select(i => unchecked((byte)(i * 11 + 7))).ToArray();
+
         for (int operation = 0; operation < 8; operation++)
         {
             var (source, sourceOwner) = Backing(sourceKind, input);
@@ -104,7 +105,8 @@ public class ByteBufRelativeTransferTest
                 source.Release();
                 destination.Release();
             }
-            Assert.Equal(0, sourceOwner.RefCnt); Assert.Equal(0, destinationOwner.RefCnt);
+            Assert.Equal(0, sourceOwner.RefCnt);
+            Assert.Equal(0, destinationOwner.RefCnt);
         }
     }
 

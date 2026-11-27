@@ -89,10 +89,20 @@ public class HexDecodingContractTest
     public void NativeStringDecodingHasNoPerPairTemporaryAllocation()
     {
         const string input = "00aFff";
-        for (int i = 0; i < 1000; i++) StringUtil.DecodeHexByte(input, 2);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            StringUtil.DecodeHexByte(input, 2);
+        }
+
         long before = GC.GetAllocatedBytesForCurrentThread();
         int sum = 0;
-        for (int i = 0; i < 10000; i++) sum += StringUtil.DecodeHexByte(input, 2);
+
+        for (int i = 0; i < 10000; i++)
+        {
+            sum += StringUtil.DecodeHexByte(input, 2);
+        }
+
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.Equal(1750000, sum);
         Assert.Equal(0, allocated);

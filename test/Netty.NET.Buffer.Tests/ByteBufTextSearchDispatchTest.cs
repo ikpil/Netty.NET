@@ -334,7 +334,10 @@ public class ByteBufTextSearchDispatchTest
     public static IEnumerable<object[]> Overrides()
     {
         for (int facade = 0; facade < 3; ++facade)
-        for (int operation = 0; operation < 9; ++operation) yield return [facade, operation];
+        for (int operation = 0; operation < 9; ++operation)
+            {
+                yield return [facade, operation];
+            }
     }
 
     [Theory]
@@ -358,7 +361,11 @@ public class ByteBufTextSearchDispatchTest
             Assert.Equal(operation < 4 ? (byte)66 : (byte)0, observation.Value);
             Assert.Same(operation >= 4 ? Encoding.UTF8 : null, observation.Encoding);
             Assert.Equal(operation >= 7 ? "한Z" : "", observation.Text);
-            for (int i = 0; i < 9; ++i) Assert.Equal(i == operation ? 1 : 0, observation.Calls[i]);
+
+            for (int i = 0; i < 9; ++i)
+            {
+                Assert.Equal(i == operation ? 1 : 0, observation.Calls[i]);
+            }
         }
         finally
         {

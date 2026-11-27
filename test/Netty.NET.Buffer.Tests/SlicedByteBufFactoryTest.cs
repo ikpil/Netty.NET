@@ -88,7 +88,10 @@ public class SlicedByteBufFactoryTest
     {
         for (int provider = 0; provider < 5; ++provider)
         foreach (bool retained in new[] { false, true })
-        foreach (int offset in new[] { 0, 3 }) yield return [provider, retained, offset];
+        foreach (int offset in new[] { 0, 3 })
+                {
+                    yield return [provider, retained, offset];
+                }
     }
 
     [Theory]

@@ -169,7 +169,12 @@ public sealed class ExecutorCompletion : IDisposable
                 batch = new CompletionRegistration[_pending.Count];
                 _pending.CopyTo(batch, 0);
                 _pending.Clear();
-                foreach (var registration in batch) registration.Node = null;
+
+                foreach (var registration in batch)
+                {
+                    registration.Node = null;
+                }
+
                 operation = _operation;
             }
             foreach (var registration in batch)

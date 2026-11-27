@@ -145,8 +145,13 @@ public class DatagramSourceAndReadErrorContractTest
             }
             await sender.SendToAsync(new byte[] { 2 }, SocketFlags.None, multicast, TestContext.Current.CancellationToken);
             await Task.Delay(200, TestContext.Current.CancellationToken);
+
             // A multicast loopback can duplicate the first packet. Only payload 2 tests the filter.
-            while (messages.Reader.TryRead(out int received)) Assert.Equal(1, received);
+            while (messages.Reader.TryRead(out int received))
+            {
+                Assert.Equal(1, received);
+            }
+
             if (sourceSpecific)
             {
                 await channel.JoinGroupAsync(multicast.Address, iface, source);
@@ -158,7 +163,12 @@ public class DatagramSourceAndReadErrorContractTest
             }
             await sender.SendToAsync(new byte[] { 3 }, SocketFlags.None, multicast, TestContext.Current.CancellationToken);
             int resumed;
-            do { resumed = await messages.Reader.ReadAsync(TestContext.Current.CancellationToken); } while (resumed == 1);
+
+            do
+            {
+                resumed = await messages.Reader.ReadAsync(TestContext.Current.CancellationToken);
+            } while (resumed == 1);
+
             Assert.Equal(3, resumed);
         }
         finally

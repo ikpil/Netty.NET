@@ -185,7 +185,11 @@ public class UnorderedWorkerFailureContractTest
     {
         int creations = 0;
         var executor = new UnorderedThreadPoolEventExecutor(1,
-            new Factory(task => { Interlocked.Increment(ref creations); return new Thread(task.Invoke) { IsBackground = true }; }));
+            new Factory(task =>
+            {
+                Interlocked.Increment(ref creations);
+                return new Thread(task.Invoke) { IsBackground = true };
+            }));
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);

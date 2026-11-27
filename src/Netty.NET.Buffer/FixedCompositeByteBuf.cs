@@ -47,8 +47,13 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
     {
         _components = components;
         _direct = true;
+
         // CLR: check every input, including the first (missed by the original loop).
-        foreach (Component component in components) _direct &= component.Source.IsDirect;
+        foreach (Component component in components)
+        {
+            _direct &= component.Source.IsDirect;
+        }
+
         SetIndex(0, Capacity);
     }
 
@@ -249,19 +254,30 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         int acquired = 0;
         try
         {
-            for (; acquired < leases.Length; ++acquired) leases[acquired] = _components[acquired].Source.AcquireReadLease();
+            for (; acquired < leases.Length; ++acquired)
+            {
+                leases[acquired] = _components[acquired].Source.AcquireReadLease();
+            }
+
             return new BufferMemoryLease(leases);
         }
         catch
         {
-            for (int i = acquired - 1; i >= 0; --i) leases[i].Dispose();
+            for (int i = acquired - 1; i >= 0; --i)
+            {
+                leases[i].Dispose();
+            }
+
             throw;
         }
     }
 
     protected override void Deallocate()
     {
-        for (int i = 0; i < _components.Length; ++i) Buffer(i).Release();
+        for (int i = 0; i < _components.Length; ++i)
+        {
+            Buffer(i).Release();
+        }
     }
 
     /**

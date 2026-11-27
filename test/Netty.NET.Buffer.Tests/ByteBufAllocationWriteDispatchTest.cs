@@ -203,7 +203,10 @@ public class ByteBufAllocationWriteDispatchTest
     {
         for (int backing = 0; backing < 3; ++backing)
         for (int facade = 0; facade < (backing == 2 ? 3 : 2); ++facade)
-        foreach (bool failure in new[] { false, true }) yield return [backing, facade, failure];
+        foreach (bool failure in new[] { false, true })
+                {
+                    yield return [backing, facade, failure];
+                }
     }
 
     [Theory]
@@ -259,7 +262,10 @@ public class ByteBufAllocationWriteDispatchTest
         foreach (bool direct in new[] { false, true })
         foreach (bool copy in new[] { false, true })
         foreach (int length in new[] { -1, 0, 2, 5, 6 })
-        for (int mode = 0; mode < 6; ++mode) yield return [direct, copy, length, mode];
+        for (int mode = 0; mode < 6; ++mode)
+                    {
+                        yield return [direct, copy, length, mode];
+                    }
     }
 
     // AbstractByteBuf.readBytes allocates and calls writeBytes(ByteBuf,index,length).
@@ -281,10 +287,12 @@ public class ByteBufAllocationWriteDispatchTest
             bool invalid = length < 0 || !copy && length > 5;
             bool allocate = !invalid && (copy || length != 0);
             bool failure = allocate && mode is 1 or 2 or 5;
+
             ByteBuf Invoke()
             {
                 return copy ? source.Copy(2, length) : source.ReadBytes(length);
             }
+
             if (invalid)
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());

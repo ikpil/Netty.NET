@@ -21,7 +21,10 @@ public class DynamicProgressContractTest
             _running = Thread.CurrentThread;
             try
             {
-                while (_queue.TryDequeue(out var work)) work();
+                while (_queue.TryDequeue(out var work))
+                {
+                    work();
+                }
             }
             finally
             {
@@ -160,7 +163,11 @@ public class DynamicProgressContractTest
         using var reporter = new ExecutorProgress(executor, source.Task);
         ProgressRegistration second = null;
         int calls = 0;
-        using var first = reporter.Register(null, _ => { second.Dispose(); reporter.Dispose(); });
+        using var first = reporter.Register(null, _ =>
+        {
+            second.Dispose();
+            reporter.Dispose();
+        });
         second = reporter.Register(null, _ => ++calls);
         source.SetResult();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await Drain(executor, reporter.NotificationsCompleted));
@@ -394,7 +401,11 @@ public class DynamicProgressContractTest
             observed.Add(ambient.Value);
             ambient.Value = "changed";
             throw new InvalidOperationException("observer failure");
-        }, _ => { observed.Add(ambient.Value); ambient.Value = "changed terminal"; });
+        }, _ =>
+        {
+            observed.Add(ambient.Value);
+            ambient.Value = "changed terminal";
+        });
         using var second = reporter.Register(_ => observed.Add(ambient.Value), _ => observed.Add(ambient.Value));
         ambient.Value = "producer";
         reporter.Report(new TransferProgress(1));

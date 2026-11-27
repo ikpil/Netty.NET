@@ -61,7 +61,12 @@ public class NativeMemoryAccessContractTest
         using var destinationOwner = allocator.Allocate(20, clear: true);
         Memory<byte> source = nativeSource ? sourceOwner.Memory : new byte[20];
         Memory<byte> destination = nativeDestination ? destinationOwner.Memory : new byte[20];
-        for (int i = 0; i < source.Length; i++) source.Span[i] = (byte)(0x80 + i);
+
+        for (int i = 0; i < source.Length; i++)
+        {
+            source.Span[i] = (byte)(0x80 + i);
+        }
+
         destination.Span.Fill(0x5a);
         source.Slice(3, 11).CopyTo(destination.Slice(5, 11));
         Assert.Equal(source.Slice(3, 11).ToArray(), destination.Slice(5, 11).ToArray());
@@ -87,7 +92,12 @@ public class NativeMemoryAccessContractTest
         using var source = new NativeMemoryView(owner.Memory[..24]);
         using var destination = new NativeMemoryView(owner.Memory.Slice(3, 24));
         byte[] expected = new byte[32];
-        for (int i = 0; i < expected.Length; i++) expected[i] = (byte)i;
+
+        for (int i = 0; i < expected.Length; i++)
+        {
+            expected[i] = (byte)i;
+        }
+
         expected.CopyTo(owner.Memory);
         Array.Copy(expected, 0, expected, 3, 24);
         source.Memory.CopyTo(destination.Memory);

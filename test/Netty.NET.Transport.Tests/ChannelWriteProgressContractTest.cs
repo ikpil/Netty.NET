@@ -108,7 +108,11 @@ public class ChannelWriteProgressContractTest
         var channel = new EmbeddedChannel();
         var queue = new ChannelOutboundBuffer(channel);
         int reports = 0;
-        channel.Config.WriteProgress = new Observer(_ => { reports++; throw new InvalidOperationException("observer"); });
+        channel.Config.WriteProgress = new Observer(_ =>
+        {
+            reports++;
+            throw new InvalidOperationException("observer");
+        });
         Task a = queue.AddMessage(Unpooled.Buffer(1).WriteByte(1), 1), b = queue.AddMessage(Unpooled.Buffer(1).WriteByte(2), 1);
         queue.AddFlush();
         queue.RemoveBytes(2);
@@ -146,7 +150,12 @@ public class ChannelWriteProgressContractTest
         var closed = new IOException("closed from observer");
         int calls = 0;
         // The transport closes a buffer as AbstractUnsafe does: failFlushed(cause, false) and then close(cause, ...).
-        channel.Config.WriteProgress = new Observer(_ => { calls++; queue.FailFlushed(closed, false); queue.Close(closed, true); });
+        channel.Config.WriteProgress = new Observer(_ =>
+        {
+            calls++;
+            queue.FailFlushed(closed, false);
+            queue.Close(closed, true);
+        });
         Task first = queue.AddMessage(a, 2), second = queue.AddMessage(b, 2);
         queue.AddFlush();
         queue.RemoveBytes(4);
@@ -273,7 +282,11 @@ public class ChannelWriteProgressContractTest
             Assert.False(wrongOwner);
             Assert.NotEmpty(reports);
             Assert.Equal(bytes.Length - 7, reports.Last().Progress.Completed);
-            Assert.All(reports, r => { Assert.Equal(bytes.Length - 7, r.Progress.Total); Assert.True(r.Operation.IsCompletedSuccessfully); });
+            Assert.All(reports, r =>
+            {
+                Assert.Equal(bytes.Length - 7, r.Progress.Total);
+                Assert.True(r.Operation.IsCompletedSuccessfully);
+            });
             _ = Assert.Single(reports.Select(r => r.Operation).Distinct());
             Assert.Equal(0, region.RefCnt);
         }

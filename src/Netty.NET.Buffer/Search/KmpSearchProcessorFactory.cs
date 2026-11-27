@@ -43,7 +43,11 @@ public class KmpSearchProcessorFactory : AbstractSearchProcessorFactory
         int j = 0;
         for (int i = 1; i < needle.Length; i++)
         {
-            while (j > 0 && needle[j] != needle[i]) j = _jumpTable[j];
+            while (j > 0 && needle[j] != needle[i])
+            {
+                j = _jumpTable[j];
+            }
+
             if (needle[j] == needle[i])
             {
                 j++;

@@ -91,7 +91,10 @@ public class DuplicatedByteBufFactoryTest
     public static IEnumerable<object[]> Factories()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (bool retained in new[] { false, true }) yield return [provider, retained];
+        foreach (bool retained in new[] { false, true })
+            {
+                yield return [provider, retained];
+            }
     }
 
     [Theory]

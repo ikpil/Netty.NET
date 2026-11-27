@@ -47,7 +47,10 @@ public class NestedLeakAwareDerivedOwnershipTest
         for (int depth = 2; depth <= 3; ++depth)
         for (int mask = 0; mask < 1 << depth; ++mask)
         for (int factory = 0; factory < 4; ++factory)
-        foreach (bool parentFirst in new[] { false, true }) yield return [provider, depth, mask, factory, parentFirst];
+        foreach (bool parentFirst in new[] { false, true })
+                        {
+                            yield return [provider, depth, mask, factory, parentFirst];
+                        }
     }
 
     [Theory]
@@ -58,6 +61,7 @@ public class NestedLeakAwareDerivedOwnershipTest
         bool pooled = provider is 2 or 3, direct = (provider & 1) != 0;
         IByteBufAllocator allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4, nativeAllocator: native)
             : new UnpooledByteBufAllocator(false, true, native);
+
         ByteBuf Data(int count)
         {
             ByteBuf b = direct ? allocator.DirectBuffer(count, 64) : allocator.HeapBuffer(count, 64);
@@ -65,6 +69,7 @@ public class NestedLeakAwareDerivedOwnershipTest
                 b.WriteByte(i + 1);
             return b;
         }
+
         ByteBuf root = provider >= 4 ? new CompositeByteBuf(allocator, direct, 16, Data(8), Data(24)) : Data(32);
         root.SetIndex(2, 24);
         ByteBuf parent = root;

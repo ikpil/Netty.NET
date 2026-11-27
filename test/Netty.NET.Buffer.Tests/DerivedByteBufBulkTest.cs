@@ -99,7 +99,12 @@ public class DerivedByteBufBulkTest
         public Storage(bool direct, int kind)
         {
             Root = direct ? new ObservedDirect(Observation, Native) : new ObservedHeap(Observation);
-            for (int i = 0; i < 16; ++i) Root.WriteByte(i);
+
+            for (int i = 0; i < 16; ++i)
+            {
+                Root.WriteByte(i);
+            }
+
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
@@ -211,7 +216,10 @@ public class DerivedByteBufBulkTest
         foreach (bool direct in new[] { false, true })
         for (int kind = 0; kind < 11; kind++)
         foreach (bool input in new[] { false, true })
-        for (int storage = 0; storage < 4; storage++) yield return [direct, kind, input, storage];
+        for (int storage = 0; storage < 4; storage++)
+                    {
+                        yield return [direct, kind, input, storage];
+                    }
     }
 
     [Theory]
@@ -336,7 +344,10 @@ public class DerivedByteBufBulkTest
         for (int kind = 0; kind < 11; kind++)
         foreach (bool input in new[] { false, true })
         foreach (bool buffer in new[] { false, true })
-        foreach (bool forward in new[] { false, true }) yield return [direct, kind, input, buffer, forward];
+        foreach (bool forward in new[] { false, true })
+                        {
+                            yield return [direct, kind, input, buffer, forward];
+                        }
     }
 
     [Theory]
@@ -349,6 +360,7 @@ public class DerivedByteBufBulkTest
         int peerIndex = s.Offset + (forward ? 1 : 3);
         ByteBuf peer = buffer ? s.Root.Slice(peerIndex, 3) : null;
         s.Observation.Visits.Clear();
+
         ByteBuf Copy()
         {
             if (buffer)
@@ -356,6 +368,7 @@ public class DerivedByteBufBulkTest
             return input ? s.View.SetBytes(2, s.Root.AsReadOnlySpan(peerIndex, 3))
                 : s.View.GetBytes(2, s.Root.AsSpan(peerIndex, 3));
         }
+
         if (input && s.View.IsReadOnly)
         {
             Assert.Throws<NotSupportedException>(() => Copy());

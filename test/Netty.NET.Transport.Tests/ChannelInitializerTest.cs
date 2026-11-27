@@ -87,7 +87,11 @@ public class ChannelInitializerTest : IAsyncLifetime
         _client.Handler(new ActionChannelInitializer<IChannel>(channel =>
         {
             channel.Pipeline.AddLast(handler1);
-            channel.Pipeline.AddLast(new ActionChannelInitializer<IChannel>(ch => { ch.Pipeline.AddLast(handler2); ch.Pipeline.AddLast(handler3); }));
+            channel.Pipeline.AddLast(new ActionChannelInitializer<IChannel>(ch =>
+            {
+                ch.Pipeline.AddLast(handler2);
+                ch.Pipeline.AddLast(handler3);
+            }));
             channel.Pipeline.AddLast(handler4);
         })).LocalAddress(LocalAddress.ANY);
         IChannel channel = await _client.BindAsync();
@@ -122,7 +126,11 @@ public class ChannelInitializerTest : IAsyncLifetime
         int registeredCalled = 0, initChannelCalled = 0;
         var handler = new RegisteredHandler(() => Interlocked.Increment(ref registeredCalled));
         _client.Handler(new ActionChannelInitializer<IChannel>(channel =>
-        { Interlocked.Increment(ref initChannelCalled); channel.Pipeline.AddLast(handler); channel.Pipeline.FireChannelRegistered(); }))
+        {
+            Interlocked.Increment(ref initChannelCalled);
+            channel.Pipeline.AddLast(handler);
+            channel.Pipeline.FireChannelRegistered();
+        }))
             .LocalAddress(LocalAddress.ANY);
         IChannel channel = await _client.BindAsync();
         try

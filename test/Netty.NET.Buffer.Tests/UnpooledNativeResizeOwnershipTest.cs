@@ -47,7 +47,10 @@ public class UnpooledNativeResizeOwnershipTest
         foreach (bool borrowed in new[] { false, true })
         foreach (bool pinned in new[] { false, true })
         for (int facade = 0; facade < 5; ++facade)
-        foreach (int capacity in new[] { 2, 8, 12 }) yield return [borrowed, pinned, facade, capacity];
+        foreach (int capacity in new[] { 2, 8, 12 })
+                    {
+                        yield return [borrowed, pinned, facade, capacity];
+                    }
     }
 
     [Theory]

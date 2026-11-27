@@ -153,8 +153,15 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf first = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
         using (var input = new ByteBufInputStream(first, 3, true))
         {
-            Assert.Equal(1, input.ReadByte()); Assert.Equal(2, input.ReadByte()); Assert.Equal(3, input.ReadByte());
-            for (int i = 0; i < 3; i++) Assert.Equal(-1, input.ReadByte());
+            Assert.Equal(1, input.ReadByte());
+            Assert.Equal(2, input.ReadByte());
+            Assert.Equal(3, input.ReadByte());
+
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.Equal(-1, input.ReadByte());
+            }
+
             Assert.Equal(3, first.ReaderIndex);
         }
         Assert.Equal(0, first.RefCnt);
@@ -163,8 +170,13 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf second = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
         using (var input = new ByteBufInputStream(second, 4, true))
         {
-            for (int i = 1; i <= 4; i++) Assert.Equal(i, input.ReadByte());
-            Assert.NotEqual(5, input.ReadByte()); Assert.Equal(-1, input.ReadByte());
+            for (int i = 1; i <= 4; i++)
+            {
+                Assert.Equal(i, input.ReadByte());
+            }
+
+            Assert.NotEqual(5, input.ReadByte());
+            Assert.Equal(-1, input.ReadByte());
             Assert.Equal(4, second.ReaderIndex);
         }
         Assert.Equal(0, second.RefCnt);
@@ -173,15 +185,18 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf noLine = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
         using (var input = new ByteBufInputStream(noLine, 0, true))
         {
-            Assert.Null(input.ReadLine()); Assert.Equal(0, noLine.ReaderIndex);
+            Assert.Null(input.ReadLine());
+            Assert.Equal(0, noLine.ReaderIndex);
         }
         Assert.Equal(0, noLine.RefCnt);
 
         ByteBuf line = Owner(kind, Encoding.ASCII.GetBytes("AB\nCEF"));
         using (var input = new ByteBufInputStream(line, 4, true))
         {
-            Assert.Equal("AB", input.ReadLine()); Assert.Equal("C", input.ReadLine());
-            Assert.Null(input.ReadLine()); Assert.Equal(4, line.ReaderIndex);
+            Assert.Equal("AB", input.ReadLine());
+            Assert.Equal("C", input.ReadLine());
+            Assert.Null(input.ReadLine());
+            Assert.Equal(4, line.ReaderIndex);
         }
         Assert.Equal(0, line.RefCnt);
 

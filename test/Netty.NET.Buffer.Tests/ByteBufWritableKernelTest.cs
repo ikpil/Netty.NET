@@ -56,7 +56,12 @@ public class ByteBufWritableKernelTest
     {
         int initial = scenario == 1 ? 4 : 16, maximum = scenario == 2 ? 16 : 64;
         ByteBuf buffer = direct ? new Direct(calls, initial, maximum, native) : new Heap(calls, initial, maximum);
-        for (int i = 0; i < initial; ++i) buffer.SetByte(i, 160 + i);
+
+        for (int i = 0; i < initial; ++i)
+        {
+            buffer.SetByte(i, 160 + i);
+        }
+
         return buffer.SetIndex(1, scenario == 0 ? 3 : initial).MarkReaderIndex().MarkWriterIndex();
     }
 
@@ -97,7 +102,10 @@ public class ByteBufWritableKernelTest
         foreach (bool direct in new[] { false, true })
         for (int operation = 0; operation < 9; ++operation)
         for (int scenario = 0; scenario < 3; ++scenario)
-        foreach (bool reject in new[] { false, true }) yield return [direct, operation, scenario, reject];
+        foreach (bool reject in new[] { false, true })
+                    {
+                        yield return [direct, operation, scenario, reject];
+                    }
     }
 
     // AbstractByteBuf primitive writes call final ensureWritable0, independently
@@ -148,7 +156,10 @@ public class ByteBufWritableKernelTest
     {
         foreach (bool direct in new[] { false, true })
         for (int scenario = 0; scenario < 3; ++scenario)
-        foreach (bool reject in new[] { false, true }) yield return [direct, scenario, reject];
+        foreach (bool reject in new[] { false, true })
+                {
+                    yield return [direct, scenario, reject];
+                }
     }
 
     [Theory]

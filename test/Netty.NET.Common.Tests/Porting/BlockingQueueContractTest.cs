@@ -82,7 +82,10 @@ public class BlockingQueueContractTest
         });
         Parallel.For(0, producers, producer =>
         {
-            for (int sequence = 0; sequence < items; sequence++) Assert.True(queue.TryEnqueue((producer, sequence)));
+            for (int sequence = 0; sequence < items; sequence++)
+            {
+                Assert.True(queue.TryEnqueue((producer, sequence)));
+            }
         });
         consumer.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
         Assert.True(queue.IsEmpty());

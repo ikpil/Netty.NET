@@ -204,7 +204,12 @@ public class DerivedByteBufChannelTest
         public Storage(bool direct, int kind)
         {
             Root = direct ? new ObservedDirect(Observation, Native) : new ObservedHeap(Observation);
-            for (int i = 0; i < 16; ++i) Root.WriteByte(i);
+
+            for (int i = 0; i < 16; ++i)
+            {
+                Root.WriteByte(i);
+            }
+
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
@@ -287,9 +292,12 @@ public class DerivedByteBufChannelTest
             else
             {
                 int received = 0;
+
                 while (received < count)
                 {
-                    int n = Peer.Receive(bytes.AsSpan(received)); Assert.True(n > 0); received += n;
+                    int n = Peer.Receive(bytes.AsSpan(received));
+                    Assert.True(n > 0);
+                    received += n;
                 }
             }
             return bytes;
@@ -310,7 +318,10 @@ public class DerivedByteBufChannelTest
         foreach (bool direct in new[] { false, true })
         for (int kind = 0; kind < 11; kind++)
         foreach (bool input in new[] { false, true })
-        foreach (bool asynchronous in new[] { false, true }) yield return [file, direct, kind, input, asynchronous];
+        foreach (bool asynchronous in new[] { false, true })
+                        {
+                            yield return [file, direct, kind, input, asynchronous];
+                        }
     }
 
     private static async Task<int> Transfer(ByteBuf b, Transport t, bool input, bool asynchronous,

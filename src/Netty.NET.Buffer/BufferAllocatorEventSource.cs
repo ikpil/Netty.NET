@@ -157,9 +157,13 @@ public sealed class BufferAllocatorEventSource : EventSource
             {
                 return;
             }
+
             // A callback can start an independent operation; it cannot append to
             // the completed batch or keep that operation's ambient state alive.
-            foreach (PendingEvent entry in entries) Log.Publish(entry);
+            foreach (PendingEvent entry in entries)
+            {
+                Log.Publish(entry);
+            }
         }
     }
 

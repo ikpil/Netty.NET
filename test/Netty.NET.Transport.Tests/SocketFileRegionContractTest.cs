@@ -39,7 +39,9 @@ public class SocketFileRegionContractTest
             {
                 throw new IOException("incorrect resume offset");
             }
-            target.Write(new byte[] { 3, 4 }); self.TransferredBytes = 4; return 2;
+            target.Write(new byte[] { 3, 4 });
+            self.TransferredBytes = 4;
+            return 2;
         });
         await socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
         var actual = new byte[2];
@@ -53,7 +55,11 @@ public class SocketFileRegionContractTest
     public async Task LogicalCompletionMayAdvanceWithoutWritingAnotherTargetByte()
     {
         await using var socket = await Connected.Open();
-        var region = new Region(16, 0, (self, _, _) => { self.TransferredBytes = 16; return 0; });
+        var region = new Region(16, 0, (self, _, _) =>
+        {
+            self.TransferredBytes = 16;
+            return 0;
+        });
         await socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
         Assert.Equal(new long[] { 0 }, region.Positions);
         Assert.Equal(0, region.RefCnt);
@@ -138,7 +144,11 @@ public class SocketFileRegionContractTest
         var chunk = new byte[64 * 1024];
         // A long, chunked producer cannot finish in the close race even if the loopback stack buffers eagerly.
         var region = new Region(1L << 40, 0, (self, target, _) =>
-        { target.Write(chunk); self.TransferredBytes += chunk.Length; return chunk.Length; });
+        {
+            target.Write(chunk);
+            self.TransferredBytes += chunk.Length;
+            return chunk.Length;
+        });
         Task write = socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
         var firstByte = new byte[1];
         await socket.Peer.GetStream().ReadExactlyAsync(firstByte, TestContext.Current.CancellationToken);

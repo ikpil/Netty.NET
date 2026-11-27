@@ -67,7 +67,14 @@ public sealed class PendingWriteQueue
     /**
      * Returns {@code true} if there are no pending write operations left in this queue.
      */
-    public bool IsEmpty { get { AssertOwner(); return _head == null; } }
+    public bool IsEmpty
+    {
+        get
+        {
+            AssertOwner();
+            return _head == null;
+        }
+    }
     /**
      * Returns the number of pending write operations.
      */
@@ -80,7 +87,14 @@ public sealed class PendingWriteQueue
     /**
      * Return the current message or {@code null} if empty.
      */
-    public object Current { get { AssertOwner(); return _head?.Message; } }
+    public object Current
+    {
+        get
+        {
+            AssertOwner();
+            return _head?.Message;
+        }
+    }
     [Conditional("DEBUG")]
     private void AssertOwner()
     {
@@ -135,10 +149,12 @@ public sealed class PendingWriteQueue
             {
                 if (Interlocked.CompareExchange(ref entry.Claim, 2, 0) != 0)
                     return;
+
                 void Cancel()
                 {
                     producer.TrySetCanceled(cancellationToken);
                 }
+
                 if (_executor.InEventLoop())
                     Cancel();
                 else

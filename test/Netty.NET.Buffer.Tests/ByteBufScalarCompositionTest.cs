@@ -458,7 +458,10 @@ public class ByteBufScalarCompositionTest
         foreach (bool direct in new[] { false, true })
         for (int operation = 0; operation < 36; ++operation)
         for (int sample = 0; sample < 6; ++sample)
-        foreach (bool failure in new[] { false, true }) yield return [direct, operation, sample, failure];
+        foreach (bool failure in new[] { false, true })
+                    {
+                        yield return [direct, operation, sample, failure];
+                    }
     }
 
     private static object Invoke(ByteBuf b, Observation o, int operation)

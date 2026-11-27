@@ -126,12 +126,15 @@ public class ByteBufSearchSourceTest
             buffer.WriteByte((byte) 13);
             buffer.WriteByte((byte) 14); // 14
             Assert.Equal(15, buffer.Capacity);
-            for (int i = 0; i < 14; ++i) {
+
+            for (int i = 0; i < 14; ++i)
+            {
                 Assert.Equal(i, buffer.IndexOf(i, buffer.Capacity, (byte) i));
             }
 
             // lastIndexOf
-            for (int i = 0; i < 14; ++i) {
+            for (int i = 0; i < 14; ++i)
+            {
                 Assert.Equal(i, buffer.IndexOf(buffer.Capacity, 0, (byte) i));
             }
         }
@@ -269,7 +272,10 @@ public class ByteBufSearchSourceTest
         foreach (int chunk in new[] { 1, 5, 16 })
         for (int form = 0; form < 4; ++form)
         foreach (bool descending in new[] { false, true })
-        foreach (byte value in new byte[] { 128, 7, 255 }) yield return [chunk, form, descending, value];
+        foreach (byte value in new byte[] { 128, 7, 255 })
+                    {
+                        yield return [chunk, form, descending, value];
+                    }
     }
 
     [Theory]
@@ -279,13 +285,16 @@ public class ByteBufSearchSourceTest
         byte[] bytes = [128, 1, 2, 3, 4, 128, 6, 7, 8, 9, 10, 11, 12, 13, 14, 128];
         var native = new NativeMemoryAllocator();
         var root = new ObservedComposite();
+
         for (int index = 0; index < bytes.Length; index += chunk)
         {
             int size = Math.Min(chunk, bytes.Length - index);
             ByteBuf component = (index / chunk) % 2 == 0 ? new UnpooledHeapByteBuf(size, size)
                 : new UnpooledDirectByteBuf(size, size, native);
-            component.WriteBytes(bytes.AsSpan(index, size)); root.AddComponent(component, true);
+            component.WriteBytes(bytes.AsSpan(index, size));
+            root.AddComponent(component, true);
         }
+
         root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
         ByteBuf view = form switch
         {
@@ -366,7 +375,10 @@ public class ByteBufSearchSourceTest
     {
         foreach (bool direct in new[] { false, true })
         for (int overload = 0; overload < 3; ++overload)
-        for (int outcome = 0; outcome < 3; ++outcome) yield return [direct, overload, outcome];
+        for (int outcome = 0; outcome < 3; ++outcome)
+                {
+                    yield return [direct, overload, outcome];
+                }
     }
 
     [Theory]
@@ -377,10 +389,12 @@ public class ByteBufSearchSourceTest
         var calls = new SearchCalls(outcome);
         ByteBuf buffer = direct ? new SearchDirect(calls, native) : new SearchHeap(calls);
         buffer.SetIndex(2, 12).MarkReaderIndex().MarkWriterIndex();
+
         int Invoke()
         {
             return overload switch { 0 => buffer.BytesBefore(128), 1 => buffer.BytesBefore(5, 128), _ => buffer.BytesBefore(3, 8, 128) };
         }
+
         try
         {
             if (outcome == 2)

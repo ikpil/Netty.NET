@@ -247,7 +247,8 @@ public class RecyclerTest
             HandledObject value = recycler.Get();
             Exception failure = null;
             Thread first = Worker(value.Recycle);
-            first.Start(); Join(first);
+            first.Start();
+            Join(first);
             Thread second = Worker(() => {
                 try
                 {
@@ -258,7 +259,8 @@ public class RecyclerTest
                     failure = e;
                 }
             });
-            second.Start(); Join(second);
+            second.Start();
+            Join(second);
             Assert.NotSame(recycler.Get(), recycler.Get());
             if (IsPooling(ownerType))
             {
@@ -300,7 +302,8 @@ public class RecyclerTest
                 }
             };
             Thread first = Worker(recycle), second = Worker(recycle);
-            first.Start(); second.Start();
+            first.Start();
+            second.Start();
             try
             {
                 Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
@@ -442,7 +445,11 @@ public class RecyclerTest
         {
             CheckMaxCapacity(ownerType, unguarded, 300);
             var rand = new Random(2848);
-            for (int i = 0; i < 50; i++) CheckMaxCapacity(ownerType, unguarded, rand.Next(1000) + 256); // 256 - 1256
+
+            for (int i = 0; i < 50; i++)
+            {
+                CheckMaxCapacity(ownerType, unguarded, rand.Next(1000) + 256); // 256 - 1256
+            }
         });
     }
 
@@ -450,8 +457,17 @@ public class RecyclerTest
     {
         Recycler<HandledObject> recycler = NewRecycler(owner, unguarded, capacity);
         var values = new HandledObject[capacity * 3];
-        for (int i = 0; i < values.Length; i++) values[i] = recycler.Get();
-        for (int i = 0; i < values.Length; i++) { values[i].Recycle(); values[i] = null; }
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            values[i] = recycler.Get();
+        }
+        for (int i = 0; i < values.Length; i++)
+        {
+            values[i].Recycle();
+            values[i] = null;
+        }
+
         Assert.True(MathUtil.FindNextPositivePowerOfTwo(capacity) >= recycler.ThreadLocalSize(),
             "The threadLocalSize (" + recycler.ThreadLocalSize() + ") must be <= maxCapacity ("
                 + capacity + ") as we not pool all new handles internally");
@@ -466,8 +482,13 @@ public class RecyclerTest
             AssumeIsPooling(ownerType);
             Recycler<HandledObject> recycler = NewRecycler(ownerType, unguarded, 256, 2, 16);
             HandledObject first = recycler.Get(), second = recycler.Get();
-            Thread thread = Worker(() => { first.Recycle(); second.Recycle(); });
-            thread.Start(); Join(thread);
+            Thread thread = Worker(() =>
+            {
+                first.Recycle();
+                second.Recycle();
+            });
+            thread.Start();
+            Join(thread);
             Assert.Same(recycler.Get(), first);
             Assert.NotSame(recycler.Get(), second);
         });
@@ -483,12 +504,21 @@ public class RecyclerTest
             Recycler<HandledObject> recycler = NewRecycler(ownerType, unguarded, 256);
             HandledObject first = recycler.Get(), second = null;
             using var work = new BlockingCollection<Action>();
-            Thread single = Worker(() => { foreach (Action action in work.GetConsumingEnumerable()) action(); });
+            Thread single = Worker(() => {
+                foreach (Action action in work.GetConsumingEnumerable())
+                {
+                    action();
+                }
+            });
             single.Start();
             try
             {
                 using var latch1 = new CountdownEvent(1);
-                work.Add(() => { first.Recycle(); latch1.Signal(); });
+                work.Add(() =>
+                {
+                    first.Recycle();
+                    latch1.Signal();
+                });
                 Assert.True(latch1.Wait(TimeSpan.FromMilliseconds(100)));
                 second = recycler.Get();
                 // Always recycler the first object, that is Ok
@@ -497,7 +527,8 @@ public class RecyclerTest
                 work.Add(() =>
                 {
                     //The object should be recycled
-                    second.Recycle(); latch2.Signal();
+                    second.Recycle();
+                    latch2.Signal();
                 });
                 Assert.True(latch2.Wait(TimeSpan.FromMilliseconds(100)));
                 // It should be the same object, right?
@@ -524,12 +555,31 @@ public class RecyclerTest
             // Return the half from the same thread.
             // Return the other half from the different thread.
             var values = new HandledObject[maxCapacity * 3];
-            for (int i = 0; i < values.Length; i++) values[i] = recycler.Get();
-            for (int i = 0; i < maxCapacity; i++) values[i].Recycle();
-            Thread thread = Worker(() => { for (int i = maxCapacity; i < values.Length; i++) values[i].Recycle(); });
-            thread.Start(); Join(thread);
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = recycler.Get();
+            }
+            for (int i = 0; i < maxCapacity; i++)
+            {
+                values[i].Recycle();
+            }
+
+            Thread thread = Worker(() => {
+                for (int i = maxCapacity; i < values.Length; i++)
+                {
+                    values[i].Recycle();
+                }
+            });
+            thread.Start();
+            Join(thread);
             Assert.Equal(maxCapacity * 3 / 4, recycler.ThreadLocalSize());
-            for (int i = 0; i < values.Length; i++) recycler.Get();
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                recycler.Get();
+            }
+
             Assert.Equal(0, recycler.ThreadLocalSize());
         });
     }
@@ -545,17 +595,33 @@ public class RecyclerTest
             Recycler<HandledObject> recycler = NewRecycler(ownerType, unguarded, maxCapacity, _ => Interlocked.Increment(ref instances));
             // Borrow 2 * maxCapacity objects.
             var values = new HandledObject[maxCapacity * 2];
-            for (int i = 0; i < values.Length; i++) values[i] = recycler.Get();
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = recycler.Get();
+            }
+
             Assert.Equal(values.Length, instances);
             // Reset counter.
             instances = 0;
             // Recycle from other thread.
-            Thread thread = Worker(() => { foreach (HandledObject value in values) value.Recycle(); });
-            thread.Start(); Join(thread);
+            Thread thread = Worker(() => {
+                foreach (HandledObject value in values)
+                {
+                    value.Recycle();
+                }
+            });
+            thread.Start();
+            Join(thread);
             Assert.Equal(0, instances);
+
             // Borrow 2 * maxCapacity objects. Half of them should come from
             // the recycler queue, the other half should be freshly allocated.
-            for (int i = 0; i < values.Length; i++) recycler.Get();
+            for (int i = 0; i < values.Length; i++)
+            {
+                recycler.Get();
+            }
+
             // The implementation uses maxCapacity / 2 as limit per WeakOrderQueue
             Assert.True(values.Length - maxCapacity / 2 <= instances,
                 "The instances count (" + instances + ") must be <= array.length (" + values.Length

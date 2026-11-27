@@ -44,7 +44,12 @@ public class ByteBufWireContractTest
                 byte[] randomBytes = new byte[8];
                 random.NextBytes(randomBytes);
                 ulong bits = 0;
-                for (int i = 0; i < 8; ++i) bits |= (ulong)randomBytes[i] << (i * 8);
+
+                for (int i = 0; i < 8; ++i)
+                {
+                    bits |= (ulong)randomBytes[i] << (i * 8);
+                }
+
                 long value = unchecked((long)bits);
                 buffer.AsSpan(0, 13).Fill(0xA5);
                 Set(buffer, 3, width, littleEndian, value);

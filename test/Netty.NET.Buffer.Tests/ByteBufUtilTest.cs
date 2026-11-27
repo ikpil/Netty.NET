@@ -525,6 +525,7 @@ public class ByteBufUtilTest
     public void TestIndexOf()
     {
         var copies = new List<ByteBuf>();
+
         ByteBuf Copy(string value, Encoding encoding)
         {
             ByteBuf copy = Unpooled.CopiedBuffer(value, encoding);
@@ -538,6 +539,7 @@ public class ByteBufUtilTest
             copies.Add(copy);
             return copy;
         }
+
         try
         {
             ByteBuf haystack = Copy("abc123", NettyUtf8);
@@ -1277,7 +1279,8 @@ public class ByteBufUtilTest
         Random.Shared.NextBytes(b);
         string hexDump = ByteBufUtil.HexDump(b);
         for (int i = 0; i <= len; i++)
-        {  // going over sub-strings of various lengths including empty byte[].
+        {
+            // going over sub-strings of various lengths including empty byte[].
             byte[] b2 = b[i..];
             byte[] decodedBytes = ByteBufUtil.DecodeHexDump(hexDump, i * 2, (len - i) * 2);
             Assert.Equal(b2, decodedBytes);

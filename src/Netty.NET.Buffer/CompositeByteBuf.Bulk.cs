@@ -70,12 +70,15 @@ public partial class CompositeByteBuf
     {
         CheckIndex(index, length);
         int componentIndex = FindComponentIndex(index);
+
         while (length > 0)
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(length, component.EndOffset - index);
             component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination, destinationIndex, count);
-            index += count; destinationIndex += count; length -= count;
+            index += count;
+            destinationIndex += count;
+            length -= count;
         }
     }
 
@@ -108,12 +111,15 @@ public partial class CompositeByteBuf
     private void SetBufferComponents(int index, ByteBuf source, int sourceIndex, int length)
     {
         int componentIndex = FindComponentIndex(index);
+
         while (length > 0)
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(length, component.EndOffset - index);
             component.Source.SetBytes(component.SourceIndex + (index - component.Offset), source, sourceIndex, count);
-            index += count; sourceIndex += count; length -= count;
+            index += count;
+            sourceIndex += count;
+            length -= count;
         }
     }
 }

@@ -105,7 +105,10 @@ public class ByteBufIterationKernelTest
         foreach (bool direct in new[] { false, true })
         foreach (bool descending in new[] { false, true })
         foreach (bool indexed in new[] { false, true })
-        for (int scenario = 0; scenario < 6; ++scenario) yield return [direct, descending, indexed, scenario];
+        for (int scenario = 0; scenario < 6; ++scenario)
+                    {
+                        yield return [direct, descending, indexed, scenario];
+                    }
     }
 
     // AbstractByteBuf's readable loops do not call the indexed virtual overload.
@@ -147,10 +150,12 @@ public class ByteBufIterationKernelTest
                 }
                 return scenario switch { 0 => value != 132, 3 or 4 => value != 99, _ => true };
             };
+
             int Invoke()
             {
                 return indexed ? Scan(owner, descending, start, end - start, processor) : Scan(owner, descending, processor);
             }
+
             if (scenario == 2)
             {
                 Assert.Same(failure, Assert.Throws<Failure>(() => Invoke()));
@@ -205,7 +210,10 @@ public class ByteBufIterationKernelTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (bool descending in new[] { false, true })
-        for (int kind = 0; kind < 6; ++kind) yield return [direct, descending, kind];
+        for (int kind = 0; kind < 6; ++kind)
+                {
+                    yield return [direct, descending, kind];
+                }
     }
 
     [Theory]
@@ -231,7 +239,11 @@ public class ByteBufIterationKernelTest
         try
         {
             var visited = new List<byte>();
-            Assert.Equal(-1, Scan(view, descending, value => { visited.Add(value); return true; }));
+            Assert.Equal(-1, Scan(view, descending, value =>
+            {
+                visited.Add(value);
+                return true;
+            }));
             IEnumerable<byte> expected = Enumerable.Range(offset + reader, writer - reader).Select(i => (byte)(128 + i));
             Assert.Equal(descending ? expected.Reverse() : expected, visited);
             Assert.Equal(0, calls.Indexed);
@@ -298,7 +310,10 @@ public class ByteBufIterationKernelTest
         foreach (bool direct in new[] { false, true })
         foreach (bool descending in new[] { false, true })
         foreach (bool indexed in new[] { false, true })
-        foreach (bool stop in new[] { false, true }) yield return [direct, descending, indexed, stop];
+        foreach (bool stop in new[] { false, true })
+                    {
+                        yield return [direct, descending, indexed, stop];
+                    }
     }
 
     [Theory]
@@ -309,13 +324,19 @@ public class ByteBufIterationKernelTest
         var calls = new Calls { RejectIndexed = !indexed };
         ByteBuf root = Create(direct, calls, native);
         int visits = 0;
-        Func<byte, bool> processor = _ => { ++visits; Assert.True(root.Release()); return !stop; };
+        Func<byte, bool> processor = _ =>
+        {
+            ++visits;
+            Assert.True(root.Release());
+            return !stop;
+        };
         try
         {
             int Invoke()
             {
                 return indexed ? Scan(root, descending, 2, 4, processor) : Scan(root, descending, processor);
             }
+
             if (stop)
                 Assert.Equal(descending ? indexed ? 5 : 6 : indexed ? 2 : 1, Invoke());
             else

@@ -102,7 +102,10 @@ public class AdvancedLeakRecordingPolicyTest
     {
         for (int provider = 0; provider < 4; ++provider)
         for (int depth = 1; depth <= 2; ++depth)
-        for (int operation = 0; operation < 20; ++operation) yield return [provider, depth, operation];
+        for (int operation = 0; operation < 20; ++operation)
+                {
+                    yield return [provider, depth, operation];
+                }
     }
 
     [Theory]
@@ -112,6 +115,7 @@ public class AdvancedLeakRecordingPolicyTest
         bool referenceOnly = SystemPropertyUtil.GetBoolean(Property, false), composite = provider >= 2;
         var native = new NativeMemoryAllocator();
         var allocator = new UnpooledByteBufAllocator(false, true, native);
+
         ByteBuf Data(int count)
         {
             ByteBuf b = (provider & 1) != 0 ? allocator.DirectBuffer(count, 64) : allocator.HeapBuffer(count, 64);
@@ -119,6 +123,7 @@ public class AdvancedLeakRecordingPolicyTest
                 b.WriteByte(i + 1);
             return b;
         }
+
         ByteBuf root = composite ? new CompositeByteBuf(allocator, (provider & 1) != 0, 16, Data(32), Data(32)) : Data(64);
         root.SetIndex(2, 32);
         ByteBuf b = root;

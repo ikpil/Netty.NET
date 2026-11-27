@@ -378,12 +378,24 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
             _disposed = true;
             lock (_localBindings)
             {
-                foreach (var groups in _localBindings) foreach (var group in groups) group.Dispose();
+                foreach (var groups in _localBindings)
+                {
+                    foreach (var group in groups)
+                    {
+                        group.Dispose();
+                    }
+                }
+
                 _localBindings.Clear();
             }
+
             // CLR: explicit lifetime closes every group, including all fixed classes.
             // Native delegates additionally have SafeHandle cleanup when unreachable.
-            foreach (var group in _sizeClassedMagazineGroups) group.Dispose();
+            foreach (var group in _sizeClassedMagazineGroups)
+            {
+                group.Dispose();
+            }
+
             _largeBufferMagazineGroup.Dispose();
         }
         finally
@@ -426,7 +438,11 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
                 {
                     allocator._localBindings.Remove(groups);
                 }
-                foreach (MagazineGroup group in groups) group.Dispose();
+
+                foreach (MagazineGroup group in groups)
+                {
+                    group.Dispose();
+                }
             }
             finally
             {

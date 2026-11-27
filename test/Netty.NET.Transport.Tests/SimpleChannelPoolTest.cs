@@ -95,7 +95,11 @@ public class SimpleChannelPoolTest
     {
         await using var setup = await Setup.StartAsync();
         bool released = false;
-        var handler = new CallbackHandler(released: channel => { Assert.True(channel.IsActive); released = true; });
+        var handler = new CallbackHandler(released: channel =>
+        {
+            Assert.True(channel.IsActive);
+            released = true;
+        });
         Func<IChannel, Task<bool>> checker = _ => Task.FromResult(false);
         await using var pool = new SimpleChannelPool(setup.Client, handler, checker);
         IChannel channel = null;

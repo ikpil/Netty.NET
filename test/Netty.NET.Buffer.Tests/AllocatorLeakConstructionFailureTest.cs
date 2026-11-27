@@ -140,6 +140,7 @@ public class AllocatorLeakConstructionFailureTest
                         _ => allocator.CompositeBuffer(2)
                     };
                 }
+
                 Assert.Same(factory.Failure, Assert.Throws<InvalidOperationException>(() => Request()));
                 Assert.NotNull(factory.Tracked);
                 Assert.Equal(0, factory.Tracked.RefCnt);

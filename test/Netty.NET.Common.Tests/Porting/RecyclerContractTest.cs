@@ -121,7 +121,11 @@ public class RecyclerContractTest
     {
         Pool pool = null;
         Item item = null;
-        var owner = new Thread(() => { pool = new Pool(Thread.CurrentThread, false); item = pool.Get(); });
+        var owner = new Thread(() =>
+        {
+            pool = new Pool(Thread.CurrentThread, false);
+            item = pool.Get();
+        });
         owner.Start();
         Assert.True(owner.Join(TimeSpan.FromSeconds(5)));
         item.Handle.Recycle(item);

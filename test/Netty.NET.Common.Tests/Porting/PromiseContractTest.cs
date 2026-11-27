@@ -21,7 +21,11 @@ public class PromiseContractTest
         int completions = 0, removedCompletions = 0;
         Task observed = null;
         Action<TransferProgress> progress = updates.Add;
-        Action<Task> completed = task => { observed = task; ++completions; };
+        Action<Task> completed = task =>
+        {
+            observed = task;
+            ++completions;
+        };
         using var first = reporter.Register(progress, completed);
         using var removed = reporter.Register(removedUpdates.Add, _ => ++removedCompletions);
         using var duplicate = reporter.Register(progress, completed);
@@ -289,7 +293,11 @@ public class PromiseContractTest
             () => source.SetResult(null));
         await Task.WhenAll(registrations.Select(registration => registration.NotificationCompleted)).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.All(counts, count => Assert.Equal(1, count));
-        foreach (var registration in registrations) registration.Dispose();
+
+        foreach (var registration in registrations)
+        {
+            registration.Dispose();
+        }
     }
 
     [Fact]
@@ -297,11 +305,13 @@ public class PromiseContractTest
     {
         var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var ready = new CountdownEvent(8);
+
         async Task<object> Wait()
         {
             ready.Signal();
             return await source.Task;
         }
+
         var waiters = Enumerable.Range(0, 8).Select(_ => Wait()).ToArray();
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
         var value = new object();
@@ -538,7 +548,11 @@ public class PromiseContractTest
         var result = Task.FromResult<object>(null);
         using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, result);
         int calls = 0;
-        Action<Task> callback = task => { Assert.Same(result, task); ++calls; };
+        Action<Task> callback = task =>
+        {
+            Assert.Same(result, task);
+            ++calls;
+        };
         using var first = observation.Register(callback);
         Assert.True(first.NotificationCompleted.IsCompletedSuccessfully);
         Assert.Throws<ArgumentNullException>(() => observation.Register(null));

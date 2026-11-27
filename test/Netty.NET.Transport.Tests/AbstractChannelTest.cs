@@ -143,7 +143,11 @@ public class AbstractChannelTest
             await channel.RegisterAsync(loop);
             ByteBuf message = Unpooled.WrappedBuffer(new byte[16]);
             Task write = null;
-            loop.Execute(() => { write = channel.WriteAsync(message); channel.Flush(); });
+            loop.Execute(() =>
+            {
+                write = channel.WriteAsync(message);
+                channel.Flush();
+            });
             Assert.True(write.IsCompleted);
             var error = await Assert.ThrowsAsync<SocketException>(() => write);
             Assert.Equal(SocketError.NotConnected, error.SocketErrorCode);

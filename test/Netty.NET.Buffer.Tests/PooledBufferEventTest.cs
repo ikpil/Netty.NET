@@ -355,11 +355,13 @@ public class PooledBufferEventTest
         try
         {
             var sources = new List<EventSource> { BufferAllocatorEventSource.Log };
+
             foreach (var context in contexts)
             {
                 var assembly = context.LoadFromAssemblyPath(typeof(ByteBuf).Assembly.Location);
                 var source = (EventSource)assembly.GetType(typeof(BufferAllocatorEventSource).FullName).GetField("Log").GetValue(null);
-                Assert.Null(source.ConstructionException); sources.Add(source);
+                Assert.Null(source.ConstructionException);
+                sources.Add(source);
                 using var listener = new Listener(source: source);
                 Type type = assembly.GetType(typeof(PooledByteBufAllocator).FullName);
                 var allocator = (IDisposable)Activator.CreateInstance(type,
@@ -371,6 +373,7 @@ public class PooledBufferEventTest
                 }
                 Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id));
             }
+
             Assert.Equal(3, sources.Select(s => s.Name).Distinct().Count());
             Assert.Equal(3, sources.Select(s => s.Guid).Distinct().Count());
             Assert.Empty(mainListener.Events);
@@ -381,7 +384,10 @@ public class PooledBufferEventTest
         }
         finally
         {
-            foreach (var context in contexts) context.Unload();
+            foreach (var context in contexts)
+            {
+                context.Unload();
+            }
         }
     }
 

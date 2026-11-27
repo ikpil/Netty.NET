@@ -416,11 +416,13 @@ public class DefaultChannelPipelineEventSourceTest
         var writeObject = new object();
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var registration = fixture.Register();
+
         void Run()
         {
             fixture.Channel.Pipeline.AddLast(new WriteOnUserEvent(userEvent, writeObject));
             fixture.Channel.Pipeline.AddFirst(new EventFromAdded(userEvent, writeObject, done));
         }
+
         if (executeInEventLoop)
             await fixture.Channel.EventLoop.SubmitAsync(Run);
         else

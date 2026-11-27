@@ -121,7 +121,10 @@ public class ByteBufScalarSourceTest
     public static IEnumerable<object[]> ReleasedCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int operation = 0; operation < ReleasedOperations.Length; ++operation) yield return [provider, operation];
+        for (int operation = 0; operation < ReleasedOperations.Length; ++operation)
+            {
+                yield return [provider, operation];
+            }
     }
 
     [Theory]
@@ -141,7 +144,10 @@ public class ByteBufScalarSourceTest
     {
         for (int provider = 0; provider < 5; ++provider)
         for (int operation = 0; operation < 6; ++operation)
-        foreach (bool negative in new[] { false, true }) yield return [provider, operation, negative];
+        foreach (bool negative in new[] { false, true })
+                {
+                    yield return [provider, operation, negative];
+                }
     }
 
     private static void GetBoundaryValue(ByteBuf buffer, int operation, int index)
@@ -192,7 +198,10 @@ public class ByteBufScalarSourceTest
 
     public static IEnumerable<object[]> Providers()
     {
-        for (int provider = 0; provider < 5; ++provider) yield return [provider];
+        for (int provider = 0; provider < 5; ++provider)
+        {
+            yield return [provider];
+        }
     }
 
     [Theory]
@@ -283,7 +292,8 @@ public class ByteBufScalarSourceTest
         foreach (ulong bits in values)
         {
             int width = Width(operation);
-            byte[] expected = new byte[32]; Array.Fill(expected, (byte)165);
+            byte[] expected = new byte[32];
+                Array.Fill(expected, (byte)165);
             s.Root.SetBytes(0, expected).SetIndex(2, 6).MarkReaderIndex().MarkWriterIndex();
             for (int i = 0; i < width; ++i)
                 expected[15 + i] = unchecked((byte)(bits >> (8 * (LittleEndian(operation) ? i : width - i - 1))));
@@ -293,16 +303,21 @@ public class ByteBufScalarSourceTest
             long numeric = width == 8 ? unchecked((long)bits) : width is 1 or 3 ? (long)masked
                 : (masked & (1UL << (width * 8 - 1))) == 0 ? (long)masked : (long)masked - (1L << (width * 8));
             Assert.Equal(numeric, Get(s.Root, operation));
-            Assert.Equal(2, s.Root.ReaderIndex); Assert.Equal(6, s.Root.WriterIndex);
+            Assert.Equal(2, s.Root.ReaderIndex);
+                Assert.Equal(6, s.Root.WriterIndex);
             s.Root.SetIndex(15, 15 + width);
             Assert.Equal(numeric, Read(s.Root, operation));
-            Assert.Equal(15 + width, s.Root.ReaderIndex); Assert.Equal(15 + width, s.Root.WriterIndex);
+            Assert.Equal(15 + width, s.Root.ReaderIndex);
+                Assert.Equal(15 + width, s.Root.WriterIndex);
             s.Root.SetIndex(15, 15 + width - 1);
             Assert.Throws<ArgumentOutOfRangeException>(() => Read(s.Root, operation));
-            Assert.Equal(15, s.Root.ReaderIndex); Assert.Equal(15 + width - 1, s.Root.WriterIndex);
+            Assert.Equal(15, s.Root.ReaderIndex);
+                Assert.Equal(15 + width - 1, s.Root.WriterIndex);
             s.Root.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, s.Root.ReaderIndex); Assert.Equal(6, s.Root.WriterIndex);
-            Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 32)); Assert.Equal(1, s.Root.RefCnt);
+            Assert.Equal(2, s.Root.ReaderIndex);
+                Assert.Equal(6, s.Root.WriterIndex);
+            Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 32));
+                Assert.Equal(1, s.Root.RefCnt);
         }
     }
 
@@ -311,14 +326,18 @@ public class ByteBufScalarSourceTest
     public void UnsignedClrByteCoversBothJavaOctetApisAndExplicitSignedConversion(int provider)
     {
         using var s = new Storage(provider, 8);
+
         for (int value = 0; value < 256; ++value)
         {
             s.Root.SetByte(0, value).SetIndex(0, 1);
             Assert.Equal(value, s.Root.GetByte(0));
             Assert.Equal(value < 128 ? value : value - 256, unchecked((sbyte)s.Root.GetByte(0)));
-            Assert.Equal(value, s.Root.ReadByte()); Assert.Equal(1, s.Root.ReaderIndex);
-            s.Root.SetIndex(0, 1); Assert.Equal(value != 0, s.Root.ReadBoolean());
-            Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(1, s.Root.WriterIndex);
+            Assert.Equal(value, s.Root.ReadByte());
+            Assert.Equal(1, s.Root.ReaderIndex);
+            s.Root.SetIndex(0, 1);
+            Assert.Equal(value != 0, s.Root.ReadBoolean());
+            Assert.Equal(1, s.Root.ReaderIndex);
+            Assert.Equal(1, s.Root.WriterIndex);
         }
     }
 }

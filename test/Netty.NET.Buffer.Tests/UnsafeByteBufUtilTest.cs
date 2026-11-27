@@ -197,7 +197,10 @@ public class UnsafeByteBufUtilTest
     public static IEnumerable<object[]> ZeroAlignments()
     {
         foreach (int provider in Enumerable.Range(0, 4))
-        foreach (int offset in Enumerable.Range(0, 8)) yield return [provider, offset];
+        foreach (int offset in Enumerable.Range(0, 8))
+            {
+                yield return [provider, offset];
+            }
     }
 
     [Theory]
@@ -205,6 +208,7 @@ public class UnsafeByteBufUtilTest
     public void ZeroFillReplacesEveryNativeAlignmentAndBatchBoundary(int provider, int offset)
     {
         using var s = new Storage(provider, 160, maxOrder: 4);
+
         foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 129 })
         {
             byte[] expected = Enumerable.Repeat((byte)0xa5, 160).ToArray();
@@ -212,10 +216,13 @@ public class UnsafeByteBufUtilTest
             Array.Clear(expected, offset, length);
             Assert.Same(s.Target, s.Target.SetZero(offset, length));
             Assert.Equal(expected, ByteBufUtil.GetBytes(s.Target, 0, 160));
-            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            Assert.Equal(3, s.Target.ReaderIndex);
+            Assert.Equal(100, s.Target.WriterIndex);
             s.Target.SetIndex(0, 160).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            Assert.Equal(3, s.Target.ReaderIndex);
+            Assert.Equal(100, s.Target.WriterIndex);
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetZero(159, 2));
     }
 
@@ -223,7 +230,10 @@ public class UnsafeByteBufUtilTest
     {
         foreach (int provider in Enumerable.Range(0, 4))
         foreach (int length in new[] { 1024, 1025, 8192, 8193 })
-        foreach (bool fail in new[] { false, true }) yield return [provider, length, fail];
+        foreach (bool fail in new[] { false, true })
+                {
+                    yield return [provider, length, fail];
+                }
     }
 
     private sealed class Output(bool fail) : MemoryStream
@@ -266,7 +276,10 @@ public class UnsafeByteBufUtilTest
     public static IEnumerable<object[]> FactorySizes()
     {
         foreach (bool adaptive in new[] { false, true })
-        foreach (int length in new[] { 1, 128, 1048577 }) yield return [adaptive, length];
+        foreach (int length in new[] { 1, 128, 1048577 })
+            {
+                yield return [adaptive, length];
+            }
     }
 
     private static IByteBufAllocator Factory(bool adaptive, NativeMemoryAllocator native)

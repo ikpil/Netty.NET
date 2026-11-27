@@ -114,7 +114,10 @@ public static class ThrowableUtil
 
     public static void AddSuppressed(Exception target, List<Exception> suppressed)
     {
-        foreach (Exception error in suppressed) AddSuppressed(target, error);
+        foreach (Exception error in suppressed)
+        {
+            AddSuppressed(target, error);
+        }
     }
 
     public static Exception[] GetSuppressed(Exception source)

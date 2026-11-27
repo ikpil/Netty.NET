@@ -44,7 +44,10 @@ public class SimpleLeakAwareByteBufContractTest
     public static IEnumerable<object[]> ViewCases()
     {
         for (int kind = 0; kind < 7; kind++)
-            for (int operation = 0; operation < 9; operation++) yield return [kind, operation];
+            for (int operation = 0; operation < 9; operation++)
+            {
+                yield return [kind, operation];
+            }
     }
 
     private static ByteBuf View(ByteBuf buffer, int operation)

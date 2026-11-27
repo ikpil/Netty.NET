@@ -256,7 +256,11 @@ public class IoLifecycleContractTest
         {
             await server.CloseAsync();
             await group.StopAsync();
-            foreach (var peer in peers) peer.Dispose();
+
+            foreach (var peer in peers)
+            {
+                peer.Dispose();
+            }
         }
     }
     private sealed class CollectChildren(int expected = 1) : ChannelInboundHandlerAdapter
@@ -383,8 +387,16 @@ public class IoLifecycleContractTest
                 // so the selector should not have been rebuild.
                 Thread.CurrentThread.Interrupt();
             });
-            await loop.SubmitAsync(() => { Assert.Equal(worker, Environment.CurrentManagedThreadId); count++; });
-            await loop.ScheduleAsync(() => { Assert.Equal(worker, Environment.CurrentManagedThreadId); count++; }, TimeSpan.FromSeconds(2))
+            await loop.SubmitAsync(() =>
+            {
+                Assert.Equal(worker, Environment.CurrentManagedThreadId);
+                count++;
+            });
+            await loop.ScheduleAsync(() =>
+            {
+                Assert.Equal(worker, Environment.CurrentManagedThreadId);
+                count++;
+            }, TimeSpan.FromSeconds(2))
                 .WaitAsync(TestContext.Current.CancellationToken);
             Assert.Equal(2, count);
         }

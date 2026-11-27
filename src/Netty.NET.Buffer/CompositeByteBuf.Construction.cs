@@ -77,7 +77,12 @@ public partial class CompositeByteBuf
         // Release only references already acquired; do not invoke a derived Deallocate
         // callback before the derived constructor has initialized its state.
         SetReferenceCount(0);
-        for (int i = 0; i < _components.Count; ++i) ReferenceCountUtil.SafeRelease(_components[i].Source);
+
+        for (int i = 0; i < _components.Count; ++i)
+        {
+            ReferenceCountUtil.SafeRelease(_components[i].Source);
+        }
+
         _components.Clear();
     }
 }

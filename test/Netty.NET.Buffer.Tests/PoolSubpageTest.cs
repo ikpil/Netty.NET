@@ -107,7 +107,12 @@ public class PoolSubpageTest
     private static int Gcd(int a, int b)
     {
         while (b != 0)
-        { int remainder = a % b; a = b; b = remainder; }
+        {
+            int remainder = a % b;
+            a = b;
+            b = remainder;
+        }
+
         return a;
     }
 
@@ -256,8 +261,13 @@ public class PoolSubpageTest
         Assert.Throws<ArgumentException>(() => new PoolChunk(sizes, Array.Empty<PoolSubpage>()));
         Assert.Throws<ArgumentException>(() => new PoolChunk(Sizes(), heads));
         var chunk = new PoolChunk(sizes);
+
         foreach (int index in new[] { -1, sizes.SmallMaxSizeIdx + 1 })
-        { Assert.Throws<ArgumentOutOfRangeException>(() => chunk.AllocateSmall(index, out _)); Assert.Throws<ArgumentOutOfRangeException>(() => chunk.CalculateRunSize(index)); }
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => chunk.AllocateSmall(index, out _));
+            Assert.Throws<ArgumentOutOfRangeException>(() => chunk.CalculateRunSize(index));
+        }
+
         foreach (long handle in new[] { -1L, 0, 1L << 33, (64L << 49) | (1L << 34) | (3L << 32) })
             Assert.Throws<ArgumentOutOfRangeException>(() => chunk.FreeSmall(handle));
         long valid = chunk.AllocateSmall(0, out _);

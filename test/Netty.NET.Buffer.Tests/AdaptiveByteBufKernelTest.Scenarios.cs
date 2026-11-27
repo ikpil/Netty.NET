@@ -30,7 +30,10 @@ public partial class AdaptiveByteBufKernelTest
         foreach (bool direct in new[] { false, true })
         for (int profile = 0; profile < 5; ++profile)
         foreach (bool descending in new[] { false, true })
-        foreach (bool indexed in new[] { false, true }) yield return [direct, profile, descending, indexed];
+        foreach (bool indexed in new[] { false, true })
+                    {
+                        yield return [direct, profile, descending, indexed];
+                    }
     }
 
     [Theory]
@@ -44,7 +47,11 @@ public partial class AdaptiveByteBufKernelTest
         s.Observation.Enabled = true;
         s.Observation.Fail = false;
         var seen = new List<byte>();
-        Func<byte, bool> visitor = value => { seen.Add(value); return seen.Count < 2; };
+        Func<byte, bool> visitor = value =>
+        {
+            seen.Add(value);
+            return seen.Count < 2;
+        };
         int result = indexed ? descending ? b.ForEachByteDesc(3, 4, visitor) : b.ForEachByte(3, 4, visitor)
             : descending ? b.ForEachByteDesc(visitor) : b.ForEachByte(visitor);
         Assert.Equal(descending ? 5 : 4, result);
@@ -68,7 +75,10 @@ public partial class AdaptiveByteBufKernelTest
         foreach (bool direct in new[] { false, true })
         for (int profile = 0; profile < 5; ++profile)
         foreach (bool descending in new[] { false, true })
-        for (int result = 0; result < 4; ++result) yield return [direct, profile, descending, result];
+        for (int result = 0; result < 4; ++result)
+                    {
+                        yield return [direct, profile, descending, result];
+                    }
     }
 
     [Theory]
@@ -94,7 +104,10 @@ public partial class AdaptiveByteBufKernelTest
     public static IEnumerable<object[]> Profiles()
     {
         foreach (bool direct in new[] { false, true })
-        for (int profile = 0; profile < 5; ++profile) yield return [direct, profile];
+        for (int profile = 0; profile < 5; ++profile)
+            {
+                yield return [direct, profile];
+            }
     }
 
     [Theory]
@@ -132,7 +145,10 @@ public partial class AdaptiveByteBufKernelTest
         foreach (bool direct in new[] { false, true })
         for (int profile = 0; profile < 5; ++profile)
         foreach (bool descending in new[] { false, true })
-        foreach (bool resize in new[] { false, true }) yield return [direct, profile, descending, resize];
+        foreach (bool resize in new[] { false, true })
+                    {
+                        yield return [direct, profile, descending, resize];
+                    }
     }
 
     [Theory]
@@ -187,7 +203,10 @@ public partial class AdaptiveByteBufKernelTest
         foreach (bool direct in new[] { false, true })
         for (int profile = 0; profile < 5; ++profile)
         foreach (bool typed in new[] { false, true })
-        foreach (bool reverse in new[] { false, true }) yield return [direct, profile, typed, reverse];
+        foreach (bool reverse in new[] { false, true })
+                    {
+                        yield return [direct, profile, typed, reverse];
+                    }
     }
 
     [Theory]

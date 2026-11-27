@@ -111,7 +111,12 @@ public class UnorderedStopContractTest
             callbackEntered.Set();
             Assert.True(callbackRelease.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         }, null);
-        Task<int> running = executor.SubmitAsync(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); return 7; }, TestContext.Current.CancellationToken);
+        Task<int> running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            return 7;
+        }, TestContext.Current.CancellationToken);
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
@@ -160,7 +165,11 @@ public class UnorderedStopContractTest
         using var release = new ManualResetEventSlim();
         int notifications = 0;
         using var registration = executor.StopToken.UnsafeRegister(_ => Interlocked.Increment(ref notifications), null);
-        Task running = executor.SubmitAsync(token => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), token); }, executor.StopToken);
+        Task running = executor.SubmitAsync(token =>
+        {
+            entered.Set();
+            release.Wait(TimeSpan.FromSeconds(5), token);
+        }, executor.StopToken);
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -197,7 +206,12 @@ public class UnorderedStopContractTest
         using var owner = new CancellationTokenSource();
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task<int> running = executor.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); return 7; }, owner.Token);
+        Task<int> running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+            return 7;
+        }, owner.Token);
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -281,7 +295,11 @@ public class UnorderedStopContractTest
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(owner.Token, executor.StopToken);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task running = executor.SubmitAsync(token => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), token); }, linked.Token);
+        Task running = executor.SubmitAsync(token =>
+        {
+            entered.Set();
+            release.Wait(TimeSpan.FromSeconds(5), token);
+        }, linked.Token);
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -330,7 +348,15 @@ public class UnorderedStopContractTest
                 suffixInterrupted = true;
             }
         }) { IsBackground = true }));
-        Task running = executor.SubmitAsync(() => { entered.Set(); while (!release.IsSet) Thread.SpinWait(64); });
+        Task running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+
+            while (!release.IsSet)
+            {
+                Thread.SpinWait(64);
+            }
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -352,9 +378,17 @@ public class UnorderedStopContractTest
     public async Task FactoryReentrantStopDoesNotRunCancellationRemovalUnderItsGate()
     {
         UnorderedThreadPoolEventExecutor executor = null;
-        executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => { executor.StopAsync(); return null; }));
+        executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ =>
+        {
+            executor.StopAsync();
+            return null;
+        }));
         int callbacks = 0;
-        using var registration = executor.StopToken.UnsafeRegister(_ => { Assert.Equal(0, executor.PendingTaskCount); ++callbacks; }, null);
+        using var registration = executor.StopToken.UnsafeRegister(_ =>
+        {
+            Assert.Equal(0, executor.PendingTaskCount);
+            ++callbacks;
+        }, null);
         Task queued = executor.SubmitAsync(() => Assert.Fail("Work admitted after reentrant stop"), executor.StopToken);
         await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(queued.IsCanceled);
@@ -368,7 +402,12 @@ public class UnorderedStopContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Task running = executor.SubmitAsync(async token => { entered.SetResult(); await release.Task; token.ThrowIfCancellationRequested(); }, executor.StopToken);
+        Task running = executor.SubmitAsync(async token =>
+        {
+            entered.SetResult();
+            await release.Task;
+            token.ThrowIfCancellationRequested();
+        }, executor.StopToken);
         try
         {
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -393,7 +432,11 @@ public class UnorderedStopContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Action<CancellationToken> body = token => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), token); };
+        Action<CancellationToken> body = token =>
+        {
+            entered.Set();
+            release.Wait(TimeSpan.FromSeconds(5), token);
+        };
         Task work = periodic
             ? executor.ScheduleAtFixedRateAsync(body, TimeSpan.Zero, TimeSpan.FromDays(1), executor.StopToken)
             : executor.ScheduleAsync(body, TimeSpan.Zero, executor.StopToken);
@@ -441,6 +484,7 @@ public class UnorderedStopContractTest
         int callbacks = 0;
         using var registration = executor.StopToken.UnsafeRegister(_ => Interlocked.Increment(ref callbacks), null);
         Task first = null, second = null;
+
         Task Invoke(Action<Task> save)
         {
             return Task.Run(() =>
@@ -449,6 +493,7 @@ public class UnorderedStopContractTest
                 save(executor.StopAsync());
             });
         }
+
         Task one = Invoke(task => first = task), two = Invoke(task => second = task);
         Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
         await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));

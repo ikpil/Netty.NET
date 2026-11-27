@@ -686,7 +686,11 @@ public class ReadOnlyByteBufTest
         ByteBuf parent = NewBuffer(direct);
         try
         {
-            for (int i = 0; i < 16; ++i) parent.WriteByte(i);
+            for (int i = 0; i < 16; ++i)
+            {
+                parent.WriteByte(i);
+            }
+
             ByteBuf view = parent.AsReadOnly();
             foreach (bool retained in new[] { false, true })
             {
@@ -899,7 +903,11 @@ public class ReadOnlyByteBufTest
         ByteBuf root = direct ? new UnpooledDirectByteBuf(16, 16, native) : new UnpooledHeapByteBuf(16, 16);
         try
         {
-            for (int i = 0; i < 16; i++) root.WriteByte(i);
+            for (int i = 0; i < 16; i++)
+            {
+                root.WriteByte(i);
+            }
+
             root.SetIndex(1, 13);
             var wrapped = new ForwardingWrapper(root);
             ByteBuf parent = shape == 0 ? root : shape == 1 ? wrapped : new ByteBufView(wrapped);
@@ -917,11 +925,14 @@ public class ReadOnlyByteBufTest
             Assert.Equal(0x0302, view.GetShortLE(2));
             foreach (ByteBuf derived in new[] { view.Duplicate(), view.Slice(), view.Slice(2, 6) })
                 Assert.True(derived.IsReadOnly);
+
             foreach (bool force in new[] { false, true })
             {
                 int status = view.EnsureWritable(1, force);
-                Assert.Equal(1, status); Assert.False(ByteBufUtil.EnsureWritableSuccess(status));
+                Assert.Equal(1, status);
+                Assert.False(ByteBufUtil.EnsureWritableSuccess(status));
             }
+
             Assert.Equal(1, root.ReaderIndex);
             Assert.Equal(13, root.WriterIndex);
             Assert.Equal(1, view.ReaderIndex);
@@ -941,7 +952,10 @@ public class ReadOnlyByteBufTest
         foreach (bool readOnly in new[] { false, true })
         foreach (bool retainSlice in new[] { false, true })
         foreach (bool retainDuplicate in new[] { false, true })
-        for (int range = 0; range < 3; range++) yield return [direct, pooled, readOnly, retainSlice, retainDuplicate, range];
+        for (int range = 0; range < 3; range++)
+                            {
+                                yield return [direct, pooled, readOnly, retainSlice, retainDuplicate, range];
+                            }
     }
 
     [Theory]
@@ -958,7 +972,11 @@ public class ReadOnlyByteBufTest
         bool rootReleased = false, sliceReleased = false, duplicateReleased = false;
         try
         {
-            for (int i = 0; i < 16; i++) root.WriteByte(i);
+            for (int i = 0; i < 16; i++)
+            {
+                root.WriteByte(i);
+            }
+
             root.SetIndex(4, 12).MarkReaderIndex().MarkWriterIndex();
             ByteBuf parent = readOnly ? root.AsReadOnly() : root;
             int index = range == 0 ? 4 : range == 1 ? 0 : 16;

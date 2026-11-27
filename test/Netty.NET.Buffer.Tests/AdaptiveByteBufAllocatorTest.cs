@@ -56,7 +56,11 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
     // CLR: shared helper for tests that inspect the adaptive root buffer under derived/leak-aware wrappers.
     internal static AdaptiveByteBuf Root(ByteBuf buffer)
     {
-        while (buffer is not AdaptiveByteBuf) buffer = buffer.Unwrap();
+        while (buffer is not AdaptiveByteBuf)
+        {
+            buffer = buffer.Unwrap();
+        }
+
         return (AdaptiveByteBuf)buffer;
     }
 
@@ -565,10 +569,12 @@ public class AdaptiveByteBufAllocatorClrContractTest
     {
         using var allocator = Allocator();
         var live = new List<ByteBuf>();
+
         ByteBuf NewBuffer()
         {
             return direct ? allocator.DirectBuffer(256) : allocator.HeapBuffer(256);
         }
+
         try
         {
             for (int i = 0; i < 513; i++)
@@ -583,7 +589,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
         }
         finally
         {
-            foreach (var b in live) b.Release();
+            foreach (var b in live)
+            {
+                b.Release();
+            }
         }
     }
 
@@ -593,28 +602,50 @@ public class AdaptiveByteBufAllocatorClrContractTest
     {
         using var allocator = Allocator(reuseCapacity: 2, purgePolls: 4, threshold: 1);
         var live = new List<ByteBuf>();
+
         ByteBuf NewBuffer()
         {
             return direct ? allocator.DirectBuffer(256, 256) : allocator.HeapBuffer(256, 256);
         }
+
         try
         {
-            for (int i = 0; i < 10 * 512; i++) live.Add(NewBuffer());
-            foreach (var b in live) b.Release();
+            for (int i = 0; i < 10 * 512; i++)
+            {
+                live.Add(NewBuffer());
+            }
+            foreach (var b in live)
+            {
+                b.Release();
+            }
+
             live.Clear();
             long before = direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory;
+
             for (int poll = 0; poll < 128; poll++)
             {
-                for (int i = 0; i < 512; i++) live.Add(NewBuffer());
-                foreach (var b in live) b.Release(); live.Clear();
+                for (int i = 0; i < 512; i++)
+                {
+                    live.Add(NewBuffer());
+                }
+                foreach (var b in live)
+                {
+                    b.Release();
+                }
+
+                live.Clear();
             }
+
             long after = direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory;
             Assert.True(after < before, $"before={before}, after={after}");
             Assert.True(after >= 2 * 131072);
         }
         finally
         {
-            foreach (var b in live) b.Release();
+            foreach (var b in live)
+            {
+                b.Release();
+            }
         }
     }
 
@@ -679,7 +710,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
             }
             finally
             {
-                foreach (var buffer in buffers) buffer?.Release();
+                foreach (var buffer in buffers)
+                {
+                    buffer?.Release();
+                }
             }
         }
     }

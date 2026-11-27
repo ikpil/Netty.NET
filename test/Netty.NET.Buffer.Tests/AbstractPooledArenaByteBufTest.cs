@@ -246,7 +246,10 @@ public abstract class AbstractPooledArenaByteBufTest
         }
         finally
         {
-            foreach (var b in buffers) b.Release();
+            foreach (var b in buffers)
+            {
+                b.Release();
+            }
         }
     }
 
@@ -317,7 +320,12 @@ public abstract class AbstractPooledArenaByteBufTest
             .Select(_ => (PooledByteBuf)allocator.Buffer(elemSize, elemSize)).ToArray();
         PoolChunk chunk = buffers[0].Allocation.Chunk;
         int before = chunk.FreeBytes;
-        foreach (var b in buffers) b.Release();
+
+        foreach (var b in buffers)
+        {
+            b.Release();
+        }
+
         Assert.True(before < chunk.FreeBytes);
         Assert.Equal(chunk.ChunkSize - elemSize, chunk.FreeBytes);
     }

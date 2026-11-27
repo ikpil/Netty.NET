@@ -69,7 +69,10 @@ public class CompositeByteBufAllocationFailureTest
         for (int provider = 0; provider < 3; ++provider)
         foreach (bool direct in new[] { false, true })
         for (int operation = 0; operation < 4; ++operation)
-        for (int failAt = 0; failAt < 3; ++failAt) yield return [provider, direct, operation, failAt];
+        for (int failAt = 0; failAt < 3; ++failAt)
+                    {
+                        yield return [provider, direct, operation, failAt];
+                    }
     }
 
     [Theory]
@@ -106,6 +109,7 @@ public class CompositeByteBufAllocationFailureTest
             if (operation != 2)
                 composite.SetIndex(1, 10).MarkReaderIndex().MarkWriterIndex();
             int reader = composite.ReaderIndex, writer = operation == 2 ? 12 : composite.WriterIndex;
+
             void Run()
             {
                 if (operation == 0)
@@ -117,6 +121,7 @@ public class CompositeByteBufAllocationFailureTest
                 else
                     composite.Capacity = 16;
             }
+
             if (failAt != 0)
                 Assert.Same(observation.Failure, Assert.Throws<CopyFailure>(() => Run()));
             else

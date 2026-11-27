@@ -178,10 +178,18 @@ public class ChannelOutboundBufferContractTest
         buffer.AddMessage(d, 0);
 
         var seen = new List<object>();
-        buffer.ForEachFlushedMessage(new Processor(msg => { seen.Add(msg); return true; }));
+        buffer.ForEachFlushedMessage(new Processor(msg =>
+        {
+            seen.Add(msg);
+            return true;
+        }));
         Assert.Equal(new[] { a, c }, seen);
         seen.Clear();
-        buffer.ForEachFlushedMessage(new Processor(msg => { seen.Add(msg); return false; }));
+        buffer.ForEachFlushedMessage(new Processor(msg =>
+        {
+            seen.Add(msg);
+            return false;
+        }));
         Assert.Equal(new[] { a }, seen);
 
         Assert.Equal(3, buffer.Size);

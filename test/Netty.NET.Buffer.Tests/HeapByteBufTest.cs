@@ -109,7 +109,11 @@ public class HeapByteBufTest
         ByteBuf buffer = NewBuffer(10, 13);
         try
         {
-            for (int i = 0; i < 10; ++i) buffer.WriteByte(i);
+            for (int i = 0; i < 10; ++i)
+            {
+                buffer.WriteByte(i);
+            }
+
             buffer.ReaderIndex = 7;
             buffer.Capacity = 5;
             Assert.Equal(5, buffer.ReaderIndex);
@@ -180,7 +184,11 @@ public class HeapByteBufTest
         ByteBuf copy = null;
         try
         {
-            for (int i = 0; i < Capacity; i += 4) buffer.WriteInt(i);
+            for (int i = 0; i < Capacity; i += 4)
+            {
+                buffer.WriteInt(i);
+            }
+
             copy = buffer.Copy();
             // Make sure there's no effect if called when readerIndex is 0.
             buffer.ReaderIndex = Capacity / 4;
@@ -321,7 +329,11 @@ public class HeapByteBufTest
         ByteBuf buffer = NewBuffer(Capacity);
         try
         {
-            for (int i = 0; i < Capacity; ++i) buffer.SetByte(i, i);
+            for (int i = 0; i < Capacity; ++i)
+            {
+                buffer.SetByte(i, i);
+            }
+
             // a writer index below the capacity, and a reader index at zero or above
             for (int readerIndex = 0; readerIndex <= 1; ++readerIndex)
             {

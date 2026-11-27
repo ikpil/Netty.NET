@@ -27,7 +27,10 @@ public class ByteBufSizePredicateTest
     public static IEnumerable<object[]> BackingAndViewCases()
     {
         for (int backing = 0; backing < 6; backing++)
-            for (int view = 0; view < 6; view++) yield return [backing, view];
+            for (int view = 0; view < 6; view++)
+            {
+                yield return [backing, view];
+            }
     }
 
     [Theory]
@@ -211,7 +214,11 @@ public class ByteBufSizePredicateTest
     public void ReadabilityQueriesDoNotAccessCapacityStorageOrReferenceCount()
     {
         var b = new IndicesOnlyBuffer();
-        foreach (int count in Counts) Assert.Equal(count <= 0, b.IsReadable(count));
+
+        foreach (int count in Counts)
+        {
+            Assert.Equal(count <= 0, b.IsReadable(count));
+        }
     }
 
     [Fact]

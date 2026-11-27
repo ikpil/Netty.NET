@@ -80,14 +80,17 @@ public class ByteBufDecoderPolicyTest
             bool contiguous = kind is not (2 or 3 or 4 or 5);
             ByteBuf[] views = { owner, owner.Duplicate(), owner.AsReadOnly(), owner.Slice(0, capacity),
                 Unpooled.UnreleasableBuffer(owner), new SimpleLeakAwareByteBuf(owner, new Tracker()) };
+
             foreach (ByteBuf view in views)
             {
                 int r = view.ReaderIndex, w = view.WriterIndex;
                 Assert.Equal(contiguous, view.IsContiguous);
                 Assert.Equal(view.WritableBytes, view.MaxFastWritableBytes);
-                Assert.Equal(r, view.ReaderIndex); Assert.Equal(w, view.WriterIndex);
+                Assert.Equal(r, view.ReaderIndex);
+                Assert.Equal(w, view.WriterIndex);
                 Assert.Equal(1, view.RefCnt);
             }
+
             if (kind == 3)
             {
                 Assert.True(owner.TryGetReadOnlyMemory(0, capacity, out _));
@@ -175,7 +178,10 @@ public class ByteBufDecoderPolicyTest
     public static IEnumerable<object[]> AllocatorCases()
     {
         foreach (bool preferDirect in new[] { false, true })
-            for (int kind = 0; kind < 9; kind++) yield return new object[] { preferDirect, kind };
+            for (int kind = 0; kind < 9; kind++)
+            {
+                yield return new object[] { preferDirect, kind };
+            }
     }
 
     private static (ByteBuf Buffer, ByteBuf Owner) Source(UnpooledByteBufAllocator allocator, int kind)
@@ -381,7 +387,12 @@ public class ByteBufDecoderPolicyTest
         public override int Capacity
         {
             get => _capacity;
-            set { CheckNewCapacity(value); _capacity = value; TrimIndicesToCapacity(value); }
+            set
+            {
+                CheckNewCapacity(value);
+                _capacity = value;
+                TrimIndicesToCapacity(value);
+            }
         }
         protected override Memory<byte> GetMemoryCore(int index, int length)
         {

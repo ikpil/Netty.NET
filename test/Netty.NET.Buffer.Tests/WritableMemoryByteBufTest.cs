@@ -77,7 +77,12 @@ public class WritableMemoryByteBufTest
             Assert.Equal(0xabcdef, b.ReadUnsignedMedium());
             Assert.Equal(unchecked((int)0xfedcba98), b.ReadIntLE());
             Assert.Equal(long.MinValue, b.ReadLong());
-            for (int i = 0; i < 8; ++i) b.SetByte(i, i);
+
+            for (int i = 0; i < 8; ++i)
+            {
+                b.SetByte(i, i);
+            }
+
             b.SetBytes(2, b.AsSpan(0, 6));
             Assert.Equal(new byte[] { 0, 1, 0, 1, 2, 3, 4, 5 }, b.AsMemory(0, 8).ToArray());
             b.SetBytes(0, b.AsSpan(2, 6));
@@ -96,7 +101,12 @@ public class WritableMemoryByteBufTest
     public void CopiesAndViewsKeepStoragePolicyAndReferenceOwnership(int kind)
     {
         using var storage = new ExternalStorage(kind, 16);
-        for (int i = 0; i < 16; i++) storage.Memory.Span[i] = (byte)i;
+
+        for (int i = 0; i < 16; i++)
+        {
+            storage.Memory.Span[i] = (byte)i;
+        }
+
         ByteBuf b = Unpooled.WrappedBuffer(storage.Memory.Slice(2, 8));
         ByteBuf retained = b.RetainedSlice(1, 5);
         try

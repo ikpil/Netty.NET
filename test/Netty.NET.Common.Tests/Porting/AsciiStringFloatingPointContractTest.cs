@@ -295,9 +295,19 @@ public class AsciiStringFloatingPointContractTest
         var decimalValue = new AsciiString("-123.25e1f");
         var hexValue = new AsciiString("0x1.8p1");
         double sum = 0;
-        for (int i = 0; i < 1000; i++) sum += ParseAll(decimalValue) + ParseAll(hexValue);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            sum += ParseAll(decimalValue) + ParseAll(hexValue);
+        }
+
         long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 1000; i++) sum += ParseAll(decimalValue) + ParseAll(hexValue);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            sum += ParseAll(decimalValue) + ParseAll(hexValue);
+        }
+
         Assert.Equal(0L, GC.GetAllocatedBytesForCurrentThread() - before);
         Assert.Equal((-1232.5 + 3.0) * 4 * 2000, sum);
     }

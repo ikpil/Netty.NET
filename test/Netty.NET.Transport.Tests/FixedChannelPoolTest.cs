@@ -320,12 +320,14 @@ public class FixedChannelPoolTest
         await pool.AcquireAsync();
         await pool.AcquireAsync();
         var closeFuture = pool.CloseAsync();
+
         async Task CloseServerAfterPoolAsync()
         {
             await closeFuture;
             Assert.Equal(0, pool.AcquiredChannelCount);
             await t.Server.CloseAsync();
         }
+
         Task closeServer = CloseServerAfterPoolAsync();
         await closeFuture;
         await closeServer;

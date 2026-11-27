@@ -125,7 +125,10 @@ public partial class CompositeByteBufBulkKernelTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (bool fixedComposite in new[] { false, true })
-        foreach (bool relative in new[] { false, true }) yield return [direct, fixedComposite, relative];
+        foreach (bool relative in new[] { false, true })
+                {
+                    yield return [direct, fixedComposite, relative];
+                }
     }
 
     [Theory]
@@ -162,7 +165,11 @@ public partial class CompositeByteBufBulkKernelTest
                 }
             });
             Assert.Equal(2, observation.Visits.Count);
-            Assert.All(observation.Visits, visit => { Assert.NotSame(first, visit.Other); Assert.Equal(0, visit.Other.RefCnt); });
+            Assert.All(observation.Visits, visit =>
+            {
+                Assert.NotSame(first, visit.Other);
+                Assert.Equal(0, visit.Other.RefCnt);
+            });
             Assert.Equal(relative ? 14 : 1, owner.ReaderIndex);
             Assert.Equal(relative ? 18 : 2, owner.WriterIndex);
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray());

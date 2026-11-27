@@ -44,7 +44,13 @@ public class IndexedPriorityQueueContractTest
         var ascending = Create();
         var descending = Create(true);
         Node[] nodes = [new(1), new(2), new(3)];
-        foreach (Node node in nodes) { ascending.Offer(node); descending.Offer(node); }
+
+        foreach (Node node in nodes)
+        {
+            ascending.Offer(node);
+            descending.Offer(node);
+        }
+
         nodes[1].Priority = 0;
         ascending.PriorityChanged(nodes[1]);
         descending.PriorityChanged(nodes[1]);
@@ -101,7 +107,14 @@ public class IndexedPriorityQueueContractTest
         var queue = Create();
         var alive = new List<Node>();
         var random = new Random(42);
-        for (int i = 0; i < 256; ++i) { var node = new Node(i); alive.Add(node); queue.Offer(node); }
+
+        for (int i = 0; i < 256; ++i)
+        {
+            var node = new Node(i);
+            alive.Add(node);
+            queue.Offer(node);
+        }
+
         for (int step = 0; step < 1024; ++step)
         {
             Node node = alive[random.Next(alive.Count)];
@@ -127,7 +140,12 @@ public class IndexedPriorityQueueContractTest
                 Assert.Equal(index, snapshot[index].PriorityQueueIndex(queue));
         }
         alive.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-        foreach (Node expected in alive) Assert.Same(expected, queue.Poll());
+
+        foreach (Node expected in alive)
+        {
+            Assert.Same(expected, queue.Poll());
+        }
+
         Assert.False(queue.TryDequeue(out _));
     }
 }

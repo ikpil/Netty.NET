@@ -46,7 +46,12 @@ public partial class WrappedCompositeByteBufDispatchTest
     private static ByteBuf Data(IByteBufAllocator allocator, int count)
     {
         ByteBuf b = allocator.Buffer(count, Math.Max(count, 1));
-        for (int i = 0; i < count; ++i) b.WriteByte(i + 1);
+
+        for (int i = 0; i < count; ++i)
+        {
+            b.WriteByte(i + 1);
+        }
+
         return b;
     }
     private sealed class KernelProbe(IByteBufAllocator allocator, bool direct, ByteBuf[] components)
@@ -94,7 +99,10 @@ public partial class WrappedCompositeByteBufDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 3; ++form)
-        for (int operation = 0; operation < 6; ++operation) yield return [direct, form, operation];
+        for (int operation = 0; operation < 6; ++operation)
+                {
+                    yield return [direct, form, operation];
+                }
     }
 
     [Theory]
@@ -133,6 +141,7 @@ public partial class WrappedCompositeByteBufDispatchTest
                         break;
                 }
             }
+
             Assert.Same(root.Failure, Assert.Throws<DispatchFailure>(() => Request()));
             var call = Assert.Single(root.Calls);
             Assert.Equal(operation switch
@@ -246,7 +255,10 @@ public partial class WrappedCompositeByteBufDispatchTest
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 5; ++form)
         for (int operation = 0; operation < 6; ++operation)
-        for (int mode = 0; mode < 3; ++mode) yield return [direct, form, operation, mode];
+        for (int mode = 0; mode < 3; ++mode)
+                    {
+                        yield return [direct, form, operation, mode];
+                    }
     }
 
     [Theory]
@@ -326,7 +338,10 @@ public partial class WrappedCompositeByteBufDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 3; ++form)
-        for (int operation = 0; operation < 10; ++operation) yield return [direct, form, operation];
+        for (int operation = 0; operation < 10; ++operation)
+                {
+                    yield return [direct, form, operation];
+                }
     }
 
     [Theory]

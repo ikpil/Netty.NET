@@ -140,7 +140,11 @@ public class PlatformBootstrapContractTest
         }
         finally
         {
-            foreach (var setting in saved) Environment.SetEnvironmentVariable(setting.Key, setting.Value);
+            foreach (var setting in saved)
+            {
+                Environment.SetEnvironmentVariable(setting.Key, setting.Value);
+            }
+
             context.Unload();
         }
     }

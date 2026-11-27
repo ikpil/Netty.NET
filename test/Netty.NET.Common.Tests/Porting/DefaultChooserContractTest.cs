@@ -90,7 +90,12 @@ public class DefaultChooserContractTest
         IEventExecutor[] children = Children(count);
         var first = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(children);
         var second = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(children);
-        for (int i = 0; i < count * 3; i++) Assert.Same(children[i % count], first.Next());
+
+        for (int i = 0; i < count * 3; i++)
+        {
+            Assert.Same(children[i % count], first.Next());
+        }
+
         Assert.Same(children[0], second.Next());
     }
 
@@ -120,7 +125,11 @@ public class DefaultChooserContractTest
         var chooser = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(children);
         long seed = (long)int.MaxValue - 1;
         Seed(chooser, seed);
-        for (int offset = 0; offset < 8; offset++) Assert.Same(children[(int)((seed + offset) % count)], chooser.Next());
+
+        for (int offset = 0; offset < 8; offset++)
+        {
+            Assert.Same(children[(int)((seed + offset) % count)], chooser.Next());
+        }
     }
 
     [Theory]

@@ -49,7 +49,10 @@ public class AdaptivePoolingAllocatorTest
     public static IEnumerable<object[]> FixedClassCases()
     {
         for (int index = 0; index < Segments.Length; index++)
-            foreach (bool lowMemory in new[] { false, true }) yield return [index, lowMemory];
+            foreach (bool lowMemory in new[] { false, true })
+            {
+                yield return [index, lowMemory];
+            }
     }
 
     // Allocates through the pool and checks whether the reservation came from a pooled chunk.
@@ -256,10 +259,13 @@ public class AdaptivePoolingAllocatorTest
             decisions.Add((size, recorded.Size));
         });
         Assert.Equal(128, decisions.Count);
+
         foreach (var (size, chunk) in decisions)
         {
-            Assert.True(BitOperations.IsPow2(chunk)); Assert.InRange(chunk, size * 8, 8388608);
+            Assert.True(BitOperations.IsPow2(chunk));
+            Assert.InRange(chunk, size * 8, 8388608);
         }
+
         Assert.Equal(8388608, Assert.Throws<RecordedChunkSize>(() => controller.NewChunkAllocation(1048576, magazine)).Size);
         Assert.Equal(0, p.UsedMemory);
     }

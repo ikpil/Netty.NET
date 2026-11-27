@@ -86,7 +86,12 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            var work = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 17; });
+            var work = executor.SubmitAsync<int>(() =>
+            {
+                entered.Signal();
+                release.Wait();
+                return 17;
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var future = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             Assert.Same(executor.TerminationFuture, future);
@@ -122,7 +127,11 @@ public class UnorderedExecutorContractTest
         {
             // Keep the one-shot work pending across shutdown independently of
             // machine scheduling; a 100ms deadline can expire before the assertion.
-            executor.Execute(() => { entered.Set(); release.Wait(); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                release.Wait();
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 42, TimeSpan.FromMilliseconds(100));
             var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromDays(1), TimeSpan.FromSeconds(1));
@@ -305,7 +314,11 @@ public class UnorderedExecutorContractTest
     {
         Action rejected = null;
         UnorderedThreadPoolEventExecutor observed = null;
-        var executor = new UnorderedThreadPoolEventExecutor(1, (task, owner) => { rejected = task; observed = owner; });
+        var executor = new UnorderedThreadPoolEventExecutor(1, (task, owner) =>
+        {
+            rejected = task;
+            observed = owner;
+        });
         Stop(executor);
         executor.Execute(static () => { });
         Assert.NotNull(rejected);
@@ -533,7 +546,12 @@ public class UnorderedExecutorContractTest
         using var cancellation = new CancellationTokenSource();
         try
         {
-            var running = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 1; });
+            var running = executor.SubmitAsync<int>(() =>
+            {
+                entered.Signal();
+                release.Wait();
+                return 1;
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var due = executor.SubmitAsync<int>(() => 2);
             var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
@@ -586,7 +604,12 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            var running = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 1; });
+            var running = executor.SubmitAsync<int>(() =>
+            {
+                entered.Signal();
+                release.Wait();
+                return 1;
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             int executions = 0;
             using var submittedCancellation = new CancellationTokenSource();
@@ -713,7 +736,12 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            var running = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 1; });
+            var running = executor.SubmitAsync<int>(() =>
+            {
+                entered.Signal();
+                release.Wait();
+                return 1;
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             using var cancellation = new CancellationTokenSource();
             var removed = executor.ScheduleAsync(() => 7, TimeSpan.Zero, cancellation.Token);
@@ -776,8 +804,17 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            executor.Execute(() => { entered.Signal(); release.Wait(); });
-            var submitted = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 7; });
+            executor.Execute(() =>
+            {
+                entered.Signal();
+                release.Wait();
+            });
+            var submitted = executor.SubmitAsync<int>(() =>
+            {
+                entered.Signal();
+                release.Wait();
+                return 7;
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var queued = executor.SubmitAsync<int>(() => 8);
             Assert.Equal(2, executor.ActiveWorkerCount);
@@ -854,7 +891,12 @@ public class UnorderedExecutorContractTest
                 var future = executor.ScheduleAsync(() =>
                 {
                     entered.Signal();
-                    while (!release.IsSet) Thread.SpinWait(64);
+
+                    while (!release.IsSet)
+                    {
+                        Thread.SpinWait(64);
+                    }
+
                     return 7;
                 }, TimeSpan.Zero, cancellation.Token);
                 try
@@ -867,7 +909,11 @@ public class UnorderedExecutorContractTest
                 {
                     release.Signal();
                 }
-                var next = executor.SubmitAsync<int>(() => { Thread.Sleep(0); return 8; });
+                var next = executor.SubmitAsync<int>(() =>
+                {
+                    Thread.Sleep(0);
+                    return 8;
+                });
                 Assert.Equal(8, next.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
                 Assert.Equal(7, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             }

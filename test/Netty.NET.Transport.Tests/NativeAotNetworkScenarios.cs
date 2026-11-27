@@ -60,7 +60,12 @@ internal static class NativeAotNetworkScenarios
     private static byte[] Payload(int length)
     {
         var payload = new byte[length];
-        for (int i = 0; i < payload.Length; i++) payload[i] = (byte)(i % 251);
+
+        for (int i = 0; i < payload.Length; i++)
+        {
+            payload[i] = (byte)(i % 251);
+        }
+
         return payload;
     }
 

@@ -59,7 +59,10 @@ public class ByteBufComparisonSourceTest
 
     public static IEnumerable<object[]> Providers()
     {
-        for (int provider = 0; provider < 5; ++provider) yield return [provider];
+        for (int provider = 0; provider < 5; ++provider)
+        {
+            yield return [provider];
+        }
     }
 
     [Theory]

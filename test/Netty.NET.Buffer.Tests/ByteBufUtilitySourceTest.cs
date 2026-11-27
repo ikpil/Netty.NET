@@ -38,10 +38,12 @@ public class ByteBufUtilitySourceTest
                 _ => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native)
             };
             bool direct = (provider & 1) != 0;
+
             ByteBuf Buffer(int size)
             {
                 return direct ? Allocator.DirectBuffer(size, maximum) : Allocator.HeapBuffer(size, maximum);
             }
+
             if (composite)
             {
                 var c = direct ? Allocator.CompositeDirectBuffer(16) : Allocator.CompositeHeapBuffer(16);
@@ -72,7 +74,10 @@ public class ByteBufUtilitySourceTest
         for (int provider = 0; provider < 6; ++provider)
         for (int form = 0; form < 5; ++form)
         for (int text = 0; text < Texts.Length; ++text)
-        for (int mode = 0; mode < 6; ++mode) yield return [provider, form, text, mode];
+        for (int mode = 0; mode < 6; ++mode)
+                    {
+                        yield return [provider, form, text, mode];
+                    }
     }
 
     [Theory]
@@ -132,17 +137,28 @@ public class ByteBufUtilitySourceTest
         {
             byte[] input = new byte[2 + random.Next(5)], data = new byte[random.Next(16)], prefix = new byte[needleReaderIndex];
             foreach (byte[] bytes in new[] { input, data, prefix })
-                for (int i = 0; i < bytes.Length; ++i) bytes[i] = (byte)random.Next(3);
+                for (int i = 0; i < bytes.Length; ++i)
+                {
+                    bytes[i] = (byte)random.Next(3);
+                }
             int expected = -1;
+
             for (int i = 0; i <= data.Length - input.Length; ++i)
             {
-                int j = 0; while (j < input.Length && input[j] == data[i + j]) ++j;
+                int j = 0;
+
+                while (j < input.Length && input[j] == data[i + j])
+                {
+                    ++j;
+                }
+
                 if (j == input.Length)
                 {
                     expected = i;
                     break;
                 }
             }
+
             ByteBuf needle = allocator.HeapBuffer(256).WriteBytes(prefix).WriteBytes(input);
             needle.ReaderIndex = prefix.Length;
             ByteBuf haystack = Unpooled.WrappedBuffer(data);

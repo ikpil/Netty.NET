@@ -29,7 +29,11 @@ public class ConstantPoolNativeContractTest
         Assert.Throws<InvalidOperationException>(() => createOnly ? pool.NewInstance("retry") : pool.ValueOf("retry"));
         Assert.False(pool.Exists("retry"));
         int retryId = 0;
-        pool.Factory = (id, name) => { retryId = id; return new Constant(id, name); };
+        pool.Factory = (id, name) =>
+        {
+            retryId = id;
+            return new Constant(id, name);
+        };
         Constant value = createOnly ? pool.NewInstance("retry") : pool.ValueOf("retry");
         Assert.Equal(2, retryId);
         Assert.Equal("retry", value.ToString());

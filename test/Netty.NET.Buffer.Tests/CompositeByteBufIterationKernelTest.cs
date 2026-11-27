@@ -124,7 +124,10 @@ public partial class CompositeByteBufIterationKernelTest
         for (int form = 0; form < 7; ++form)
         foreach (bool descending in new[] { false, true })
         foreach (int rootIndex in new[] { 8, 14, 20 })
-        for (int mode = 0; mode < 3; ++mode) yield return [direct, form, descending, rootIndex, mode];
+        for (int mode = 0; mode < 3; ++mode)
+                        {
+                            yield return [direct, form, descending, rootIndex, mode];
+                        }
     }
 
     [Theory]
@@ -135,7 +138,11 @@ public partial class CompositeByteBufIterationKernelTest
         int index = rootIndex - s.Offset;
         s.View.SetIndex(index, index + 5).MarkReaderIndex().MarkWriterIndex();
         var visited = new List<byte>();
-        Func<byte, bool> processor = value => { visited.Add(value); return mode != 2 || visited.Count < 3; };
+        Func<byte, bool> processor = value =>
+        {
+            visited.Add(value);
+            return mode != 2 || visited.Count < 3;
+        };
         int result = mode == 0 ? descending ? s.View.ForEachByteDesc(processor) : s.View.ForEachByte(processor)
             : descending ? s.View.ForEachByteDesc(index, 5, processor) : s.View.ForEachByte(index, 5, processor);
         Assert.Equal(mode == 2 ? index + 2 : -1, result);
@@ -162,7 +169,10 @@ public partial class CompositeByteBufIterationKernelTest
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 7; ++form)
         foreach (bool descending in new[] { false, true })
-        foreach (int rootIndex in new[] { 8, 14, 20 }) yield return [direct, form, descending, rootIndex];
+        foreach (int rootIndex in new[] { 8, 14, 20 })
+                    {
+                        yield return [direct, form, descending, rootIndex];
+                    }
     }
 
     [Theory]

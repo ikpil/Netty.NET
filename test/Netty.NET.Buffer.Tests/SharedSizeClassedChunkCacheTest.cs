@@ -36,7 +36,12 @@ public class SharedSizeClassedChunkCacheTest
         {
             var chunk = new SizeClassedChunk(new UnpooledHeapByteBuf(131072, 131072), Registry, 4096);
             Chunks.Add(chunk);
-            for (int i = 0; i < allocated; i++) Claims.Add(chunk.TryAllocate(4096));
+
+            for (int i = 0; i < allocated; i++)
+            {
+                Claims.Add(chunk.TryAllocate(4096));
+            }
+
             return chunk;
         }
 
@@ -180,11 +185,19 @@ public class SharedSizeClassedChunkCacheTest
     public async Task ConcurrentScansTerminateWhenNoCapacity()
     {
         using var f = new Fixture();
+
         // Fill with no-capacity chunks — no scan can find anything
-        for (int i = 0; i < 10; i++) f.Cache.OfferChunk(f.Chunk(32));
+        for (int i = 0; i < 10; i++)
+        {
+            f.Cache.OfferChunk(f.Chunk(32));
+        }
+
         await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Task.Run(() =>
         {
-            for (int i = 0; i < 1000; i++) Assert.Null(f.Cache.PollChunk(256));
+            for (int i = 0; i < 1000; i++)
+            {
+                Assert.Null(f.Cache.PollChunk(256));
+            }
         }, TestContext.Current.CancellationToken))).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
         // With the == sentinel check, threads could livelock here.
         // With >= ordering, all scans terminate promptly.

@@ -55,7 +55,12 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
     private static (int[] Jumps, int[] Matches) BuildTrie(byte[][] needles)
     {
         var jumps = new List<int>(AlphabetSize);
-        for (int i = 0; i < AlphabetSize; i++) jumps.Add(-1);
+
+        for (int i = 0; i < AlphabetSize; i++)
+        {
+            jumps.Add(-1);
+        }
+
         var matches = new List<int> { -1 };
         for (int needleId = 0; needleId < needles.Length; needleId++)
         {
@@ -68,7 +73,12 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
                     int newPosition = jumps.Count;
                     jumps.EnsureCapacity(checked(newPosition + AlphabetSize));
                     jumps[next] = newPosition;
-                    for (int i = 0; i < AlphabetSize; i++) jumps.Add(-1);
+
+                    for (int i = 0; i < AlphabetSize; i++)
+                    {
+                        jumps.Add(-1);
+                    }
+
                     matches.Add(-1);
                 }
                 position = jumps[next];

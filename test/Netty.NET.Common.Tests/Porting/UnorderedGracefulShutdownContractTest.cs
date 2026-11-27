@@ -125,7 +125,11 @@ public class UnorderedGracefulShutdownContractTest
         var oneShots = new Task<int>[count * 2];
         var childResults = new Task[count];
         var periodic = new Task[count];
-        Task running = executor.SubmitAsync(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); }, TestContext.Current.CancellationToken);
+        Task running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }, TestContext.Current.CancellationToken);
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
@@ -133,7 +137,11 @@ public class UnorderedGracefulShutdownContractTest
             {
                 int index = i;
                 executor.Execute(() => ++rawCalls);
-                oneShots[i * 2] = executor.SubmitAsync(() => { submittedOrder.Add(index); return index; }, TestContext.Current.CancellationToken);
+                oneShots[i * 2] = executor.SubmitAsync(() =>
+                {
+                    submittedOrder.Add(index);
+                    return index;
+                }, TestContext.Current.CancellationToken);
                 oneShots[i * 2 + 1] = executor.ScheduleAsync(() => index + count, TimeSpan.Zero, TestContext.Current.CancellationToken);
                 childResults[i] = child.SubmitAsync(() => ++childCalls, TestContext.Current.CancellationToken);
                 periodic[i] = i % 2 == 0
@@ -159,7 +167,13 @@ public class UnorderedGracefulShutdownContractTest
             int[] values = await Task.WhenAll(oneShots).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             await Task.WhenAll(childResults).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Equal(Enumerable.Range(0, count), submittedOrder);
-            for (int i = 0; i < count; ++i) { Assert.Equal(i, values[i * 2]); Assert.Equal(i + count, values[i * 2 + 1]); }
+
+            for (int i = 0; i < count; ++i)
+            {
+                Assert.Equal(i, values[i * 2]);
+                Assert.Equal(i + count, values[i * 2 + 1]);
+            }
+
             Assert.Equal(count, rawCalls);
             Assert.Equal(count, childCalls);
             Assert.False(deadline.IsCompleted);
@@ -206,7 +220,11 @@ public class UnorderedGracefulShutdownContractTest
         using var release = new ManualResetEventSlim();
         using var lastEntered = new ManualResetEventSlim();
         using var lastRelease = new ManualResetEventSlim();
-        Task running = executor.SubmitAsync(() => { entered.Set(); release.Wait(); });
+        Task running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            release.Wait();
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -251,7 +269,12 @@ public class UnorderedGracefulShutdownContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task<int> running = executor.SubmitAsync(() => { entered.Set(); release.Wait(); return 17; });
+        Task<int> running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            release.Wait();
+            return 17;
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));

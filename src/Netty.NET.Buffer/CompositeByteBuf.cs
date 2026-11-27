@@ -259,7 +259,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     private CompositeByteBuf RemoveComponentsCore(int componentIndex, int numComponents)
     {
         CheckComponentRange(componentIndex, numComponents);
-        for (int i = componentIndex; i < componentIndex + numComponents; ++i) _components[i].Free();
+
+        for (int i = componentIndex; i < componentIndex + numComponents; ++i)
+        {
+            _components[i].Free();
+        }
+
         _components.RemoveRange(componentIndex, numComponents);
         // Only need to call updateComponentOffsets if the length was > 0
         // CLR: recompute the small List's offsets uniformly, including empty components.
@@ -351,6 +356,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         var result = new List<ByteBuf>();
         // The first component
         int componentIndex = FindComponentIndex(offset);
+
         // Add all the slices until there is nothing more left and then return the List.
         while (length > 0)
         {
@@ -360,8 +366,10 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             // unwrapped one as otherwise we could loose the ability to correctly update the reference count on the
             // returned buffer.
             result.Add(component.Source.Slice(component.SourceIndex + (offset - component.Offset), count));
-            offset += count; length -= count;
+            offset += count;
+            length -= count;
         }
+
         return result;
     }
 
@@ -405,7 +413,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
                 bytesToTrim -= component.Length;
                 keepCount = i;
             }
-            for (int i = _components.Count - 1; i >= keepCount; --i) _components[i].Free();
+
+            for (int i = _components.Count - 1; i >= keepCount; --i)
+            {
+                _components[i].Free();
+            }
+
             _components.RemoveRange(keepCount, _components.Count - keepCount);
             UpdateOffsets();
             TrimIndicesToCapacity(value);
@@ -463,7 +476,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         _components[componentIndex] = replacementEntry;
         _components.RemoveRange(componentIndex + 1, numComponents - 1);
         UpdateOffsets();
-        foreach (ComponentEntry component in originals) component.Free();
+
+        foreach (ComponentEntry component in originals)
+        {
+            component.Free();
+        }
+
         return this;
     }
 
@@ -597,12 +615,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             return;
         }
         int componentIndex = FindComponentIndex(index);
+
         while (!destination.IsEmpty)
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, destination.Length);
             component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination[..count]);
-            index += count; destination = destination[count..];
+            index += count;
+            destination = destination[count..];
         }
     }
 
@@ -633,12 +653,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             return;
         }
         int componentIndex = FindComponentIndex(index);
+
         while (!source.IsEmpty)
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, source.Length);
             component.Source.SetBytes(component.SourceIndex + (index - component.Offset), source[..count]);
-            index += count; source = source[count..];
+            index += count;
+            source = source[count..];
         }
     }
 
@@ -649,12 +671,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             return;
         }
         int componentIndex = FindComponentIndex(index);
+
         while (length > 0)
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, length);
             component.Source.SetZero(component.SourceIndex + (index - component.Offset), count);
-            index += count; length -= count;
+            index += count;
+            length -= count;
         }
     }
 
@@ -678,6 +702,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         }
         SequenceSegment first = null, last = null;
         int componentIndex = FindComponentIndex(index);
+
         while (length > 0)
         {
             ComponentEntry component = _components[componentIndex++];
@@ -702,8 +727,10 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
                 }
                 last = next;
             }
-            index += count; length -= count;
+            index += count;
+            length -= count;
         }
+
         return new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
     }
 
@@ -714,12 +741,20 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         int acquired = 0;
         try
         {
-            for (; acquired < leases.Length; ++acquired) leases[acquired] = _components[acquired].Source.AcquireReadLease();
+            for (; acquired < leases.Length; ++acquired)
+            {
+                leases[acquired] = _components[acquired].Source.AcquireReadLease();
+            }
+
             return new BufferMemoryLease(leases);
         }
         catch
         {
-            for (int i = acquired - 1; i >= 0; --i) leases[i].Dispose();
+            for (int i = acquired - 1; i >= 0; --i)
+            {
+                leases[i].Dispose();
+            }
+
             throw;
         }
     }
@@ -737,9 +772,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         // CLR clears component references on release; preserve the original count for freed diagnostics.
         _deallocatedComponentCount = _components.Count;
+
         // We're not using foreach to avoid creating an iterator.
         // see https://github.com/netty/netty/issues/2642
-        for (int i = 0; i < _components.Count; ++i) _components[i].Free();
+        for (int i = 0; i < _components.Count; ++i)
+        {
+            _components[i].Free();
+        }
+
         _components.Clear();
     }
 
@@ -788,8 +828,12 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     private void UpdateOffsets()
     {
         int offset = 0;
+
         foreach (ComponentEntry component in _components)
-        { component.Offset = offset; offset += component.Length; }
+        {
+            component.Offset = offset;
+            offset += component.Length;
+        }
     }
     private sealed class ComponentEntry
     {

@@ -66,7 +66,10 @@ public class ByteBufIndexStateSourceTest
     public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (IndexCase scenario in Enum.GetValues<IndexCase>()) yield return [provider, scenario];
+        foreach (IndexCase scenario in Enum.GetValues<IndexCase>())
+            {
+                yield return [provider, scenario];
+            }
     }
 
     [Theory]
@@ -162,7 +165,10 @@ public class ByteBufIndexStateSourceTest
     public static IEnumerable<object[]> MarkCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int view = 0; view < 6; ++view) yield return [provider, view];
+        for (int view = 0; view < 6; ++view)
+            {
+                yield return [provider, view];
+            }
     }
 
     [Theory]

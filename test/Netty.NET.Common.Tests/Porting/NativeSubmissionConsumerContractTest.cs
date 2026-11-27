@@ -27,7 +27,12 @@ public class NativeSubmissionConsumerContractTest
 
         internal void RunAll()
         {
-            RunOwned(() => { while (_queue.TryDequeue(out var task)) task(); });
+            RunOwned(() => {
+                while (_queue.TryDequeue(out var task))
+                {
+                    task();
+                }
+            });
         }
 
         public override void Execute(Action task)

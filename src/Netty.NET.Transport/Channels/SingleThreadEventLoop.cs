@@ -170,7 +170,10 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
 
     private void RunCloseCompletions()
     {
-        while (_closeCompletions.TryDequeue(out var completion)) SafeExecute(completion);
+        while (_closeCompletions.TryDequeue(out var completion))
+        {
+            SafeExecute(completion);
+        }
     }
 
     protected override bool ConfirmShutdown()

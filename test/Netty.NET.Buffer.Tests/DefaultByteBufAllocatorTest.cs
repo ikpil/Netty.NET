@@ -110,7 +110,11 @@ public partial class DefaultByteBufAllocatorTest
             finally
             {
                 _context.Unload();
-                foreach (var pair in _previous) Environment.SetEnvironmentVariable(pair.Key, pair.Value);
+
+                foreach (var pair in _previous)
+                {
+                    Environment.SetEnvironmentVariable(pair.Key, pair.Value);
+                }
             }
         }
     }
@@ -255,6 +259,7 @@ public partial class DefaultByteBufAllocatorTest
         scope.Set("io.netty.allocator.lowMemory", setting);
         Check(scope.Default, setting == "true");
         Check(scope.Adaptive(low: low), expected);
+
         static void Check(object allocator, bool lowMemory)
         {
             object b = Call(allocator, "HeapBuffer", 32768, 32768);

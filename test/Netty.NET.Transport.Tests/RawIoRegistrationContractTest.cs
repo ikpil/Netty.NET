@@ -140,7 +140,11 @@ public class RawIoRegistrationContractTest
     private static void Terminate(ManualIoEventLoop loop)
     {
         loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-        while (!loop.IsTerminated()) loop.RunNow();
+
+        while (!loop.IsTerminated())
+        {
+            loop.RunNow();
+        }
     }
 
     private sealed class RecordingHandle(IEventExecutor owner, Socket socket) : INioIoHandle

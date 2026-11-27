@@ -27,7 +27,10 @@ public class ByteBufDiagnosticsTest
     {
         for (int kind = 0; kind < 6; ++kind)
             for (int limit = 0; limit < (kind < 4 ? 2 : 1); ++limit)
-                for (int view = 0; view < 4; ++view) yield return [kind, limit == 0, view];
+                for (int view = 0; view < 4; ++view)
+                {
+                    yield return [kind, limit == 0, view];
+                }
     }
 
     [Theory]
@@ -122,10 +125,12 @@ public class ByteBufDiagnosticsTest
             3 => "UnreleasableByteBuf",
             _ => "SimpleLeakAwareByteBuf"
         };
+
         string Parent(string raw)
         {
             return kind == 4 ? "AdvancedLeakAwareByteBuf(" + raw + ")" : raw;
         }
+
         try
         {
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)") + ')', wrapper.ToString());

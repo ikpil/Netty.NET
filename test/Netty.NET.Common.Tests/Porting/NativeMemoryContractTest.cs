@@ -186,7 +186,11 @@ public class NativeMemoryContractTest
                 catch (ObjectDisposedException)
                 {
                 }
-            }, () => { barrier.SignalAndWait(); original.Dispose(); });
+            }, () =>
+            {
+                barrier.SignalAndWait();
+                original.Dispose();
+            });
             try
             {
                 Assert.Equal(replacement == null ? 0 : 16, allocator.ReservedBytes);
@@ -331,7 +335,12 @@ public class NativeMemoryContractTest
     {
         var allocator = new NativeMemoryAllocator();
         using var owner = allocator.Allocate(32, clear: true);
-        for (int i = 0; i < 16; i++) owner.Memory.Span[i] = (byte)i;
+
+        for (int i = 0; i < 16; i++)
+        {
+            owner.Memory.Span[i] = (byte)i;
+        }
+
         owner.Memory.Slice(0, 12).CopyTo(owner.Memory.Slice(3, 12));
         Assert.Equal(new byte[] { 0, 1, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
             owner.Memory.Span.Slice(0, 15).ToArray());
@@ -443,7 +452,11 @@ public class NativeMemoryContractTest
                 catch (ObjectDisposedException)
                 {
                 }
-            }, () => { barrier.SignalAndWait(); owner.Dispose(); });
+            }, () =>
+            {
+                barrier.SignalAndWait();
+                owner.Dispose();
+            });
             try
             {
                 Assert.Equal(0, allocator.ReservedBytes);

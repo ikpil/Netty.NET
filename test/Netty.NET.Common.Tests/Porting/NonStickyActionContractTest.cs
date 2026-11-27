@@ -131,15 +131,32 @@ public class NonStickyActionContractTest
         {
             ownedThread &= child.InEventLoop();
             order.Add(1);
-            child.Execute(() => { ownedThread &= child.InEventLoop(); order.Add(4); });
+            child.Execute(() =>
+            {
+                ownedThread &= child.InEventLoop();
+                order.Add(4);
+            });
         };
-        Action failing = () => { order.Add(2); throw new InvalidOperationException("multicast"); };
+        Action failing = () =>
+        {
+            order.Add(2);
+            throw new InvalidOperationException("multicast");
+        };
         Action skipped = () => order.Add(-1);
         child.Execute(first);
         child.Execute(failing + skipped);
-        child.Execute(() => { ownedThread &= child.InEventLoop(); order.Add(3); });
+        child.Execute(() =>
+        {
+            ownedThread &= child.InEventLoop();
+            order.Add(3);
+        });
         int runners = 0;
-        while (executor.Pending.Count != 0 && ++runners <= 5) executor.RunNext();
+
+        while (executor.Pending.Count != 0 && ++runners <= 5)
+        {
+            executor.RunNext();
+        }
+
         Assert.Empty(executor.Pending);
         Assert.Equal(5, runners);
         Assert.Equal(new[] { 1, 2, 3, 4 }, order);

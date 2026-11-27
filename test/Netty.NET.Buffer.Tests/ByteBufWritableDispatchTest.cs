@@ -140,7 +140,10 @@ public class ByteBufWritableDispatchTest
     {
         for (int backing = 0; backing < 3; backing++)
         for (int facade = 0; facade < (backing == 2 ? 3 : 2); facade++)
-        for (int operation = 0; operation < 9; operation++) yield return [backing, facade, operation];
+        for (int operation = 0; operation < 9; operation++)
+                {
+                    yield return [backing, facade, operation];
+                }
     }
 
     [Theory]

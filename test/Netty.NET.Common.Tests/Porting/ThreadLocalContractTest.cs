@@ -51,7 +51,12 @@ public class ThreadLocalContractTest : IDisposable
             locals.Add(local);
         }
         Assert.Equal(100, FastThreadLocal.Size());
-        for (int i = 0; i < locals.Count; i++) Assert.Equal(i.ToString(), locals[i].Get());
+
+        for (int i = 0; i < locals.Count; i++)
+        {
+            Assert.Equal(i.ToString(), locals[i].Get());
+        }
+
         FastThreadLocal.RemoveAll();
         Assert.Equal(0, FastThreadLocal.Size());
     }
@@ -182,18 +187,27 @@ public class ThreadLocalContractTest : IDisposable
                 Removal = _ =>
                 {
                     // The first callback removes all peers; do not depend on set iteration order.
-                    foreach (var local in locals) local.Remove();
+                    foreach (var local in locals)
+                    {
+                        local.Remove();
+                    }
                 }
             };
+
         void Work()
         {
-            for (int index = 0; index < locals.Length; index++) locals[index].Set(index.ToString());
+            for (int index = 0; index < locals.Length; index++)
+            {
+                locals[index].Set(index.ToString());
+            }
+
             Assert.Equal(3, FastThreadLocal.Size());
             if (!scoped)
             {
                 FastThreadLocal.RemoveAll();
             }
         }
+
         if (scoped)
         {
             FastThreadLocalThread.RunWithFastThreadLocal(Work);

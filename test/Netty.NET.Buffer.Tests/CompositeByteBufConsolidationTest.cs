@@ -45,13 +45,19 @@ public class CompositeByteBufConsolidationTest
     public static IEnumerable<object[]> Providers()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     public static IEnumerable<object[]> Copies()
     {
         foreach (object[] provider in Providers())
-        foreach (bool indexed in new[] { false, true }) yield return [provider[0], provider[1], indexed];
+        foreach (bool indexed in new[] { false, true })
+            {
+                yield return [provider[0], provider[1], indexed];
+            }
     }
 
     // CLR: allocator-owned sources over heap/native pooled/unpooled factories replace wrappedBuffer.

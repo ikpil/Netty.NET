@@ -59,7 +59,10 @@ public class UnorderedThreadPoolEventExecutorTest
 
             // Now just check if the queue stays empty multiple times. This is needed as the submit to execute(...)
             // by DefaultPromise may happen in an async fashion
-            for (int i = 0; i < 10000; i++) Assert.Equal(0, executor.PendingTaskCount);
+            for (int i = 0; i < 10000; i++)
+            {
+                Assert.Equal(0, executor.PendingTaskCount);
+            }
         }
         finally
         {

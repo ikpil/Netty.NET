@@ -100,6 +100,7 @@ public class SequenceComparisonContractTest
         {
             return value >= 'A' && value <= 'Z' ? value + ('a' - 'A') : value;
         }
+
         for (int left = 0; left < 256; left++)
         for (int right = 0; right < 256; right++)
         {

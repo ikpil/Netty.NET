@@ -68,7 +68,12 @@ internal sealed class TraceRecord : Exception
         // CLR inlining can remove those implementation frames. Skip by identity,
         // rather than dropping a fixed number of frames that may belong to callers.
         int firstCaller = 0;
-        while (firstCaller < frames.Length && IsImplementationFrame(frames[firstCaller])) firstCaller++;
+
+        while (firstCaller < frames.Length && IsImplementationFrame(frames[firstCaller]))
+        {
+            firstCaller++;
+        }
+
         for (int i = firstCaller; i < frames.Length; i++)
         {
             MethodBaseInfo(frames[i], out string className, out string methodName);

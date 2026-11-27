@@ -49,10 +49,20 @@ public class IpByteViewContractTest
     public void WarmIntegerExtractionDoesNotAllocateAddressArrays()
     {
         IPAddress address = IPAddress.Parse("192.168.1.1");
-        for (int i = 0; i < 1000; i++) NetUtil.Ipv4AddressToInt(address);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            NetUtil.Ipv4AddressToInt(address);
+        }
+
         long sum = 0;
         long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 1000; i++) sum += NetUtil.Ipv4AddressToInt(address);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            sum += NetUtil.Ipv4AddressToInt(address);
+        }
+
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.Equal(-1062731519000L, sum);
         Assert.Equal(0L, allocated);

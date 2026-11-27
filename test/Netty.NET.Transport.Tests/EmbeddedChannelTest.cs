@@ -77,7 +77,12 @@ public class EmbeddedChannelTest
     public void TestConstructWithChannelInitializer()
     {
         object first = 1, second = 2;
-        var handler = new InboundActions { ReadAction = (ctx, _) => { ctx.FireChannelRead(first); ctx.FireChannelRead(second); } };
+        var handler = new InboundActions { ReadAction = (ctx, _) =>
+        {
+            ctx.FireChannelRead(first);
+            ctx.FireChannelRead(second);
+        }
+        };
         var channel = new EmbeddedChannel(new Bootstrapping.ActionChannelInitializer<IChannel>(ch => ch.Pipeline.AddLast(handler)));
         Assert.Same(handler, channel.Pipeline.FirstContext.Handler);
         Assert.True(channel.WriteInbound(3));
@@ -350,7 +355,11 @@ public class EmbeddedChannelTest
         int flushCount = 0;
         var channel = new EmbeddedChannel(new InboundActions
         {
-            ReadAction = (_, msg) => { ReferenceCountUtil.Release(msg); latch.Signal(); },
+            ReadAction = (_, msg) =>
+            {
+                ReferenceCountUtil.Release(msg);
+                latch.Signal();
+            },
             ReadComplete = _ => Interlocked.Increment(ref flushCount)
         });
         await channel.WriteOneInboundAsync("Hello, Netty!");
@@ -377,7 +386,12 @@ public class EmbeddedChannelTest
         int flushCount = 0;
         var channel = new EmbeddedChannel(new OutboundActions
         {
-            WriteAction = (ctx, msg, token) => { Task task = ctx.WriteAsync(msg, token); latch.Signal(); return task; },
+            WriteAction = (ctx, msg, token) =>
+            {
+                Task task = ctx.WriteAsync(msg, token);
+                latch.Signal();
+                return task;
+            },
             FlushAction = _ => Interlocked.Increment(ref flushCount)
         });
         // This shouldn't trigger a #flush()
@@ -646,6 +660,7 @@ public class EmbeddedChannelTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
             async Task WriteLater()
             {
                 try
@@ -665,6 +680,7 @@ public class EmbeddedChannelTest
                     completion.TrySetException(error);
                 }
             }
+
             if (delayMillis == 0)
                 ctx.Executor.Execute(() => _ = WriteLater());
             else

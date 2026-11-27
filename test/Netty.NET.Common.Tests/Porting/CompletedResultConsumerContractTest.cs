@@ -21,12 +21,14 @@ public class CompletedResultConsumerContractTest
         using var release = new ManualResetEventSlim();
         var address = new IPEndPoint(IPAddress.Loopback, 443);
         var error = new ArgumentException("Unsupported address type");
+
         // AbstractAddressResolver.resolve fast paths return a completed value or
         // failure without performing I/O. A failure is a result, not a factory throw.
         Task<IPEndPoint> Resolve()
         {
             return failed ? Task.FromException<IPEndPoint>(error) : Task.FromResult(address);
         }
+
         Task<IPEndPoint> operation = Resolve();
         Assert.True(operation.IsCompleted);
         using var observation = new ExecutorCompletion(executor, operation);
@@ -91,7 +93,11 @@ public class CompletedResultConsumerContractTest
 
         void AwaitStartBlocker()
         {
-            executor.SubmitAsync(() => { entered.Set(); release.Wait(); });
+            executor.SubmitAsync(() =>
+            {
+                entered.Set();
+                release.Wait();
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
         }
     }

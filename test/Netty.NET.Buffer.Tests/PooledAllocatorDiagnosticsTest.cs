@@ -120,7 +120,10 @@ public class PooledAllocatorDiagnosticsTest
         }
         finally
         {
-            foreach (ByteBuf b in live) b.Release();
+            foreach (ByteBuf b in live)
+            {
+                b.Release();
+            }
         }
     }
 
@@ -133,7 +136,11 @@ public class PooledAllocatorDiagnosticsTest
         var live = new List<ByteBuf>();
         try
         {
-            for (int i = 0; i < 513; i++) live.Add(direct ? allocator.DirectBuffer(16, 16) : allocator.HeapBuffer(16, 16));
+            for (int i = 0; i < 513; i++)
+            {
+                live.Add(direct ? allocator.DirectBuffer(16, 16) : allocator.HeapBuffer(16, 16));
+            }
+
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             live[0].Release();
             live[256].Release();
@@ -166,8 +173,13 @@ public class PooledAllocatorDiagnosticsTest
                 live.Add(direct ? allocator.DirectBuffer(4096, 4096) : allocator.HeapBuffer(4096, 4096));
                 Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             }
+
             for (int i = live.Count - 1; i >= 0; i--)
-            { live[i].Release(); Assert.Equal(Model(allocator), Normalize(allocator.DumpStats())); }
+            {
+                live[i].Release();
+                Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
+            }
+
             live.Clear();
         }
         finally

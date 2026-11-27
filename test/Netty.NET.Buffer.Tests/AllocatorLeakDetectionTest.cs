@@ -42,7 +42,11 @@ public class AllocatorLeakDetectionTest : IDisposable
     // Inspection never replaces the public reference used for release.
     internal static ByteBuf UnwrapLeak(ByteBuf buffer)
     {
-        while (buffer is SimpleLeakAwareByteBuf or SimpleLeakAwareCompositeByteBuf) buffer = buffer.Unwrap();
+        while (buffer is SimpleLeakAwareByteBuf or SimpleLeakAwareCompositeByteBuf)
+        {
+            buffer = buffer.Unwrap();
+        }
+
         return buffer;
     }
 
@@ -74,7 +78,10 @@ public class AllocatorLeakDetectionTest : IDisposable
         for (int kind = 0; kind < 4; ++kind)
             foreach (bool prefer in new[] { false, true })
                 foreach (bool disabled in new[] { false, true })
-                    for (int method = 0; method < 11; ++method) yield return [kind, prefer, disabled, method];
+                    for (int method = 0; method < 11; ++method)
+                    {
+                        yield return [kind, prefer, disabled, method];
+                    }
     }
 
     [Theory]
@@ -157,7 +164,10 @@ public class AllocatorLeakDetectionTest : IDisposable
     public static IEnumerable<object[]> ViewCases()
     {
         for (int shape = 0; shape < 6; ++shape)
-            for (int view = 0; view < 9; ++view) yield return [shape, view];
+            for (int view = 0; view < 9; ++view)
+            {
+                yield return [shape, view];
+            }
     }
 
     [Theory]
@@ -251,7 +261,10 @@ public class AllocatorLeakDetectionTest : IDisposable
         }
         finally
         {
-            foreach (ByteBuf b in buffers) b.Release();
+            foreach (ByteBuf b in buffers)
+            {
+                b.Release();
+            }
         }
         Assert.Equal(0, native.ReservedBytes);
     }

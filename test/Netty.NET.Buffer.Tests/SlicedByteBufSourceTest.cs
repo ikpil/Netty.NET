@@ -70,7 +70,10 @@ public class SlicedByteBufSourceTest
     public static IEnumerable<object[]> Cases()
     {
         for (int path = 0; path < 7; ++path)
-        foreach (int offset in new[] { 0, 3 }) yield return [path, offset];
+        foreach (int offset in new[] { 0, 3 })
+            {
+                yield return [path, offset];
+            }
     }
 
     [Theory]
@@ -80,9 +83,11 @@ public class SlicedByteBufSourceTest
         using var s = new Storage(path, offset);
         const ulong value = 0xfedcba9876543210;
         int[] widths = [1, 2, 2, 3, 3, 4, 4, 8, 8];
+
         for (int operation = 0; operation < widths.Length; ++operation)
         {
-            byte[] expected = new byte[32]; Array.Fill(expected, (byte)0xcc);
+            byte[] expected = new byte[32];
+            Array.Fill(expected, (byte)0xcc);
             s.Root.SetBytes(0, expected);
             int width = widths[operation];
             bool little = operation != 0 && (operation & 1) == 0;
@@ -118,7 +123,9 @@ public class SlicedByteBufSourceTest
                     s.View.SetLongLE(7, unchecked((long)value));
                     break;
             }
-            byte[] actual = new byte[32]; s.Root.GetBytes(0, actual); Assert.Equal(expected, actual);
+            byte[] actual = new byte[32];
+            s.Root.GetBytes(0, actual);
+            Assert.Equal(expected, actual);
             long read = operation switch
             {
                 0 => s.View.GetByte(7), 1 => s.View.GetShort(7), 2 => s.View.GetShortLE(7),
@@ -132,9 +139,12 @@ public class SlicedByteBufSourceTest
                 3 => (long)(value & 0xffffff), 4 => unchecked((int)value), _ => unchecked((long)value)
             };
             Assert.Equal(wanted, read);
-            Assert.Equal(0, s.View.ReaderIndex); Assert.Equal(16, s.View.WriterIndex);
-            Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(31, s.Root.WriterIndex);
-            Assert.Equal(16, s.View.Capacity); Assert.Equal(16, s.View.MaxCapacity);
+            Assert.Equal(0, s.View.ReaderIndex);
+            Assert.Equal(16, s.View.WriterIndex);
+            Assert.Equal(1, s.Root.ReaderIndex);
+            Assert.Equal(31, s.Root.WriterIndex);
+            Assert.Equal(16, s.View.Capacity);
+            Assert.Equal(16, s.View.MaxCapacity);
             Assert.Equal(s.Root.IsContiguous, s.View.IsContiguous);
         }
     }

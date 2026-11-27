@@ -112,7 +112,12 @@ public class ByteBufTextSearchTest
         try
         {
             byte[] bytes = new byte[515];
-            for (int i = 0; i < bytes.Length; ++i) bytes[i] = unchecked((byte)(i * 73));
+
+            for (int i = 0; i < bytes.Length; ++i)
+            {
+                bytes[i] = unchecked((byte)(i * 73));
+            }
+
             buffer.WriteBytes(bytes);
             for (int value = 0; value <= byte.MaxValue; ++value)
                 for (int start = 0; start < bytes.Length; start += 17)
@@ -176,10 +181,18 @@ public class ByteBufTextSearchTest
         ByteBuf buffer = NewBuffer(direct, 4096, 4096);
         try
         {
-            for (int i = 0; i < 4096; ++i) buffer.WriteByte(i + 1);
+            for (int i = 0; i < 4096; ++i)
+            {
+                buffer.WriteByte(i + 1);
+            }
+
             buffer.SetIndex(1024, 3072);
             int next = 1024;
-            Assert.Equal(-1, buffer.ForEachByte(value => { Assert.Equal(unchecked((byte)(++next)), value); return true; }));
+            Assert.Equal(-1, buffer.ForEachByte(value =>
+            {
+                Assert.Equal(unchecked((byte)(++next)), value);
+                return true;
+            }));
             Assert.Equal(3072, next);
             next = 4096 / 3;
             Assert.Equal(2048, buffer.ForEachByte(next, 4096 / 3, value =>
@@ -190,7 +203,8 @@ public class ByteBufTextSearchTest
             next = 3071;
             Assert.Equal(-1, buffer.ForEachByteDesc(1024, 2048, value =>
             {
-                Assert.Equal(unchecked((byte)(next-- + 1)), value); return true;
+                Assert.Equal(unchecked((byte)(next-- + 1)), value);
+                return true;
             }));
             Assert.Equal(1023, next);
             Assert.Equal(3071, buffer.ForEachByteDesc(_ => false));
@@ -230,7 +244,11 @@ public class ByteBufTextSearchTest
         };
         Assert.Equal(-1, reverse ? buffer.ForEachByteDesc(visitor) : buffer.ForEachByte(visitor));
         Assert.Equal(reverse ? new byte[] { 3, 2, 1 } : new byte[] { 1, 2, 3 }, seen);
-        visitor = _ => { buffer.Release(); return true; };
+        visitor = _ =>
+        {
+            buffer.Release();
+            return true;
+        };
         Assert.Throws<IllegalReferenceCountException>(() =>
         {
             if (reverse)
@@ -248,7 +266,10 @@ public class ByteBufTextSearchTest
     public static IEnumerable<object[]> TextEncodings()
     {
         foreach (bool direct in new[] { false, true })
-            for (int kind = 0; kind < 6; ++kind) yield return new object[] { direct, kind };
+            for (int kind = 0; kind < 6; ++kind)
+            {
+                yield return new object[] { direct, kind };
+            }
     }
 
     private static Encoding Encoder(int kind)

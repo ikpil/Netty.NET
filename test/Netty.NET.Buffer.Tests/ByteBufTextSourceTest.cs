@@ -80,7 +80,10 @@ public class ByteBufTextSourceTest
 
     public static IEnumerable<object[]> Providers()
     {
-        for (int provider = 0; provider < 5; ++provider) yield return [provider];
+        for (int provider = 0; provider < 5; ++provider)
+        {
+            yield return [provider];
+        }
     }
 
     // Original releasedBuffer(): a released eight-byte buffer.
@@ -447,7 +450,10 @@ public class ByteBufTextSourceTest
     public static IEnumerable<object[]> EncodingCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int charset = 0; charset < 4; ++charset) yield return [provider, charset];
+        for (int charset = 0; charset < 4; ++charset)
+            {
+                yield return [provider, charset];
+            }
     }
 
     private static Encoding Charset(int kind)

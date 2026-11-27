@@ -252,9 +252,17 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         };
         try
         {
-            for (int i = 0; i < numTasks; i++) _a.Execute(task);
+            for (int i = 0; i < numTasks; i++)
+            {
+                _a.Execute(task);
+            }
             // At this point, the first task should be running and stuck at latch.await().
-            while (Volatile.Read(ref ranTasks) == 0) { TestContext.Current.CancellationToken.ThrowIfCancellationRequested(); Thread.Yield(); }
+            while (Volatile.Read(ref ranTasks) == 0)
+            {
+                TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+                Thread.Yield();
+            }
+
             Assert.Equal(1, Volatile.Read(ref ranTasks));
             // Shut down the event loop to test if the other tasks are run before termination.
             _a.Shutdown();

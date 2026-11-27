@@ -141,7 +141,12 @@ public static partial class ByteBufUtil
             return Array.Empty<byte>();
         }
         byte[] result = new byte[hexDump.Length / 2];
-        for (int i = 0; i < result.Length; i++) result[i] = DecodeHexByte(hexDump, i * 2);
+
+        for (int i = 0; i < result.Length; i++)
+        {
+            result[i] = DecodeHexByte(hexDump, i * 2);
+        }
+
         return result;
     }
 
@@ -197,15 +202,18 @@ public static partial class ByteBufUtil
             .Append(StringUtil.NEWLINE).Append("+--------+-------------------------------------------------+----------------+");
         Span<byte> bytes = stackalloc byte[16];
         int fullRows = length / 16;
+
         // Dump the rows which have 16 bytes.
         for (int row = 0; row < fullRows; row++)
         {
-            reader.TryCopyTo(bytes); reader.Advance(16);
+            reader.TryCopyTo(bytes);
+            reader.Advance(16);
             // Per-row prefix.
             // Hex dump
             // ASCII dump
             AppendPrettyHexRow(dump, bytes, row, offset + row * 16);
         }
+
         // Dump the last row which has less than 16 bytes.
         int remainder = length & 15;
         if (remainder != 0)
@@ -226,12 +234,22 @@ public static partial class ByteBufUtil
         // CLR: preserve the cached-vs-fallback label rule without caching row strings.
         int label = row < 4096 ? row * 16 : absoluteIndex;
         dump.Append(StringUtil.NEWLINE).Append('|').Append(label.ToString("x8", CultureInfo.InvariantCulture)).Append('|');
+
         // Generate the lookup table for byte-to-hex-dump conversion
-        foreach (byte value in bytes) dump.Append(' ').Append(StringUtil.ByteToHexStringPadded(value));
+        foreach (byte value in bytes)
+        {
+            dump.Append(' ').Append(StringUtil.ByteToHexStringPadded(value));
+        }
+
         // Generate the lookup table for hex dump paddings
         dump.Append(' ', (16 - bytes.Length) * 3).Append(" |");
+
         // Generate the lookup table for byte-to-char conversion
-        foreach (byte value in bytes) dump.Append(value is >= 32 and <= 126 ? (char)value : '.');
+        foreach (byte value in bytes)
+        {
+            dump.Append(value is >= 32 and <= 126 ? (char)value : '.');
+        }
+
         // Generate the lookup table for byte dump paddings
         dump.Append(' ', 16 - bytes.Length).Append('|');
     }

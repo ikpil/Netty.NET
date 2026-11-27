@@ -398,7 +398,12 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 return;
             }
             _disposed = true;
-            foreach (PoolChunkList list in _chunkLists) list.Destroy();
+
+            foreach (PoolChunkList list in _chunkLists)
+            {
+                list.Destroy();
+            }
+
             _lastDestroyedChunk = null;
             Array.Clear(_smallSubpagePools);
         }

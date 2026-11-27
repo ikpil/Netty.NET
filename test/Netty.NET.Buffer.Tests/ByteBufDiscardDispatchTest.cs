@@ -83,7 +83,10 @@ public class ByteBufDiscardDispatchTest
     public static IEnumerable<object[]> Positions()
     {
         foreach (bool direct in new[] { false, true })
-        foreach (int reader in new[] { 0, 1, 3, 4, 5, 8 }) yield return [direct, reader];
+        foreach (int reader in new[] { 0, 1, 3, 4, 5, 8 })
+            {
+                yield return [direct, reader];
+            }
     }
 
     // AbstractByteBuf.discardSomeReadBytes compacts through setBytes, not discardReadBytes.

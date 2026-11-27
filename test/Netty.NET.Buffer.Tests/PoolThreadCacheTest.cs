@@ -241,7 +241,11 @@ public class PoolThreadCacheTest
         using var worker = new Worker();
         using var owner = new Worker();
         ByteBuf b = null;
-        await owner.InvokeAsync(() => { b = Allocate(a, direct, 48); b.WriteInt(0x12345678); });
+        await owner.InvokeAsync(() =>
+        {
+            b = Allocate(a, direct, 48);
+            b.WriteInt(0x12345678);
+        });
         var oldArena = PooledStorage(b).Allocation.Arena;
         PoolArena callerArena = null;
         await worker.InvokeAsync(() =>
@@ -271,7 +275,11 @@ public class PoolThreadCacheTest
         using var a = NewAllocator();
         ByteBuf live = null;
         using (var worker = new Worker())
-            await worker.InvokeAsync(() => { live = Allocate(a, direct, 48); Allocate(a, direct, 64).Release(); });
+            await worker.InvokeAsync(() =>
+            {
+                live = Allocate(a, direct, 48);
+                Allocate(a, direct, 64).Release();
+            });
         var m = Arena(a, direct);
         Assert.Equal(2, m.NumActiveAllocations);
         Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
@@ -386,7 +394,8 @@ public class PoolThreadCacheTest
         // The source passes cache sizes to PoolThreadCache unchecked; a nonpositive size disables that cache.
         using (var disabled = new PooledByteBufAllocator(nativeAllocator: native, smallCacheSize: -1, normalCacheSize: -1))
         {
-            Assert.Equal(-1, disabled.Metric.SmallCacheSize); Assert.Equal(-1, disabled.Metric.NormalCacheSize);
+            Assert.Equal(-1, disabled.Metric.SmallCacheSize);
+            Assert.Equal(-1, disabled.Metric.NormalCacheSize);
         }
         // CLR: explicit overrides of the process-wide capacity/trim defaults are validated eagerly.
         Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, maxCachedBufferCapacity: -1));

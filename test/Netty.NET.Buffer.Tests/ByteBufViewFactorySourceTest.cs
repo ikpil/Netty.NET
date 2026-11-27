@@ -63,13 +63,19 @@ public class ByteBufViewFactorySourceTest
 
     public static IEnumerable<object[]> Providers()
     {
-        for (int provider = 0; provider < 5; ++provider) yield return [provider];
+        for (int provider = 0; provider < 5; ++provider)
+        {
+            yield return [provider];
+        }
     }
 
     public static IEnumerable<object[]> RetainedProviders()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (bool retained in new[] { false, true }) yield return [provider, retained];
+        foreach (bool retained in new[] { false, true })
+            {
+                yield return [provider, retained];
+            }
     }
 
     public static IEnumerable<object[]> NestedBoundsCases()
@@ -154,7 +160,10 @@ public class ByteBufViewFactorySourceTest
     public static IEnumerable<object[]> ReleasedCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (ReleasedFactory factory in Enum.GetValues<ReleasedFactory>()) yield return [provider, factory];
+        foreach (ReleasedFactory factory in Enum.GetValues<ReleasedFactory>())
+            {
+                yield return [provider, factory];
+            }
     }
 
     [Theory]
@@ -261,7 +270,12 @@ public class ByteBufViewFactorySourceTest
     public void RetainedSlicesOfBorrowedDerivedViewsCoverTheirReadableBytesBeforeAndAfterRead(int provider)
     {
         using var s = new Storage(provider, Capacity);
-        for (int i = 0; i < Capacity; ++i) s.Root.SetByte(i, i);
+
+        for (int i = 0; i < Capacity; ++i)
+        {
+            s.Root.SetByte(i, i);
+        }
+
         // a writer index below the capacity, and a reader index at zero or above
         for (int reader = 0; reader <= 1; ++reader)
         {
@@ -296,7 +310,12 @@ public class ByteBufViewFactorySourceTest
                 Assert.Equal(buffer.ReadableBytes, retained.ReadableBytes);
                 Assert.True(buffer.Slice().Equals(retained));
                 byte[] expected = new byte[buffer.ReadableBytes];
-                for (int i = 0; i < expected.Length; ++i) expected[i] = unchecked((byte)(originalStart + phase + i));
+
+                for (int i = 0; i < expected.Length; ++i)
+                {
+                    expected[i] = unchecked((byte)(originalStart + phase + i));
+                }
+
                 Assert.Equal(expected, ByteBufUtil.GetBytes(retained));
             }
             finally
@@ -317,18 +336,24 @@ public class ByteBufViewFactorySourceTest
         using var s = new Storage(provider, Capacity);
         var random = new Random(12345);
         s.Root.WriterIndex = 0;
+
         for (int i = 0; i < Capacity - BlockSize + 1; i += BlockSize)
         {
-            byte[] value = new byte[BlockSize]; random.NextBytes(value);
-            Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(i, s.Root.WriterIndex);
+            byte[] value = new byte[BlockSize];
+            random.NextBytes(value);
+            Assert.Equal(0, s.Root.ReaderIndex);
+            Assert.Equal(i, s.Root.WriterIndex);
             s.Root.WriteBytes(value);
         }
+
         random = new Random(12345);
         byte[] expected = new byte[BlockSize];
+
         for (int i = 0; i < Capacity - BlockSize + 1; i += BlockSize)
         {
             random.NextBytes(expected);
-            Assert.Equal(i, s.Root.ReaderIndex); Assert.Equal(Capacity, s.Root.WriterIndex);
+            Assert.Equal(i, s.Root.ReaderIndex);
+            Assert.Equal(Capacity, s.Root.WriterIndex);
             ByteBuf actual = s.Root.ReadSlice(BlockSize);
             Assert.Equal(expected, ByteBufUtil.GetBytes(actual));
             // CLR has explicit BE/LE operations instead of a mutable byte-order facade.
@@ -339,6 +364,7 @@ public class ByteBufViewFactorySourceTest
             Assert.Equal(s.Root.GetByte(i), actual.GetByte(0));
             Assert.Equal(1, s.Root.RefCnt);
         }
+
         Assert.Equal(Capacity, s.Root.ReaderIndex);
     }
 }

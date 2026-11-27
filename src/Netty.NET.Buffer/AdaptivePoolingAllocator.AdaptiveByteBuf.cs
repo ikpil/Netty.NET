@@ -73,9 +73,20 @@ internal sealed partial class AdaptivePoolingAllocator
         }
         public override bool IsDirect
         {
-            get { EnsureAccessible(); return _allocation.IsDirect; }
+            get
+            {
+                EnsureAccessible();
+                return _allocation.IsDirect;
+            }
         }
-        public override bool IsContiguous { get { EnsureAccessible(); return _allocation.Root.IsContiguous; } }
+        public override bool IsContiguous
+        {
+            get
+            {
+                EnsureAccessible();
+                return _allocation.Root.IsContiguous;
+            }
+        }
         public override int MaxFastWritableBytes => Math.Min(_maxFastCapacity, MaxCapacity) - WriterIndex;
 
         // setBytes(...) will take care of checking the indices.

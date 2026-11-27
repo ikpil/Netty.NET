@@ -65,7 +65,11 @@ public static partial class Unpooled
         public override int Capacity
         {
             get => MaxCapacity;
-            set { CheckNewCapacity(value); throw new NotSupportedException("A borrowed manager range has fixed capacity."); }
+            set
+            {
+                CheckNewCapacity(value);
+                throw new NotSupportedException("A borrowed manager range has fixed capacity.");
+            }
         }
         protected override Memory<byte> GetMemoryCore(int index, int length)
         {

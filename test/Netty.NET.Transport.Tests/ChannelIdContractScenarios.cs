@@ -35,12 +35,14 @@ internal static class ChannelIdContractScenarios
                 }
                 finally
                 {
-                    foreach (var channel in channels) {
+                    foreach (var channel in channels)
+                    {
                         if (!channel.IsRegistered)
                         {
                             channel.Register();
                         }
-                        channel.FinishAndReleaseAll(); }
+                        channel.FinishAndReleaseAll();
+                    }
                 }
                 break;
             case 1:

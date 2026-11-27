@@ -439,7 +439,12 @@ public static class StringUtil
         }
         // Read the native immutable string directly; only the owned byte result is allocated on success.
         byte[] bytes = new byte[length / 2];
-        for (int i = 0; i < length; i += 2) bytes[i / 2] = DecodeHexByte(hexDump, i);
+
+        for (int i = 0; i < length; i += 2)
+        {
+            bytes[i / 2] = DecodeHexByte(hexDump, i);
+        }
+
         return bytes;
     }
 

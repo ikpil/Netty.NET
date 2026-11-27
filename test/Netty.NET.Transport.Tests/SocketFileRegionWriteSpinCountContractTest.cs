@@ -52,7 +52,9 @@ public class SocketFileRegionWriteSpinCountContractTest
             {
                 return 0;
             }
-            target.WriteByte(42); self.Advance(1); return 1;
+            target.WriteByte(42);
+            self.Advance(1);
+            return 1;
         });
         var write = fixture.Channel.WriteAndFlushAsync(region);
         Assert.Equal(1, fixture.Channel.FileCalls);
@@ -175,7 +177,9 @@ public class SocketFileRegionWriteSpinCountContractTest
             {
                 return 0;
             }
-            target.WriteByte(42); self.Advance(1); return 1;
+            target.WriteByte(42);
+            self.Advance(1);
+            return 1;
         });
         var write = fixture.Channel.WriteAndFlushAsync(region);
         fixture.PumpUntil(() => write.IsCompleted);
@@ -280,11 +284,13 @@ public class SocketFileRegionWriteSpinCountContractTest
         internal void PumpUntil(Func<bool> condition)
         {
             var clock = Stopwatch.StartNew();
+
             while (!condition())
             {
                 TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
                 Assert.True(clock.Elapsed < TimeSpan.FromSeconds(5), "File write did not reach its owner.");
-                Loop.RunNow(); Thread.Sleep(1);
+                Loop.RunNow();
+                Thread.Sleep(1);
             }
         }
 

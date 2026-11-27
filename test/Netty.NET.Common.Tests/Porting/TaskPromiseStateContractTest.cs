@@ -24,10 +24,12 @@ public class TaskPromiseStateContractTest
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         const int iterations = 2000;
+
         void Meet()
         {
             Assert.True(rendezvous.SignalAndWait(TimeSpan.FromSeconds(10)));
         }
+
         Task reader = System.Threading.Tasks.Task.Run(() =>
         {
             for (int i = 0; i < iterations; i++)

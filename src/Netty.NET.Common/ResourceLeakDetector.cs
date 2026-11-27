@@ -322,7 +322,11 @@ public class ResourceLeakDetector<T> where T : class
     {
         if (!NeedReport())
         {
-            while (refQueue.TryDequeue(out var discarded)) discarded.Dispose();
+            while (refQueue.TryDequeue(out var discarded))
+            {
+                discarded.Dispose();
+            }
+
             return;
         }
         // Detect and report previous leaks.

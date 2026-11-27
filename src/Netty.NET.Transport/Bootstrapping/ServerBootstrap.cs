@@ -331,11 +331,25 @@ public class ServerBootstrap : AbstractBootstrap
         var copy = new ServerBootstrap { _parentGroup = _parentGroup, _childGroup = _childGroup, _factory = _factory, _handler = _handler, _childHandler = _childHandler, _local = _local };
         lock (_optionsGate)
         {
-            foreach (var pair in _options) copy._options.Add(pair.Key, pair.Value);
-            foreach (var pair in _childOptions) copy._childOptions.Add(pair.Key, pair.Value);
+            foreach (var pair in _options)
+            {
+                copy._options.Add(pair.Key, pair.Value);
+            }
+            foreach (var pair in _childOptions)
+            {
+                copy._childOptions.Add(pair.Key, pair.Value);
+            }
         }
-        foreach (var pair in _attributes) copy._attributes[pair.Key] = pair.Value;
-        foreach (var pair in _childAttributes) copy._childAttributes[pair.Key] = pair.Value;
+
+        foreach (var pair in _attributes)
+        {
+            copy._attributes[pair.Key] = pair.Value;
+        }
+        foreach (var pair in _childAttributes)
+        {
+            copy._childAttributes[pair.Key] = pair.Value;
+        }
+
         return copy;
     }
 

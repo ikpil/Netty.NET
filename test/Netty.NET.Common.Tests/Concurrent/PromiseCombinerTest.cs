@@ -273,8 +273,17 @@ public class TaskWhenAllPortTest
             {
                 var queue = new Queue<Func<Task>>();
                 var writes = new List<Task>();
-                queue.Enqueue(() => { queue.Enqueue(() => revived.Task); return first.Task; });
-                while (queue.TryDequeue(out Func<Task> write)) writes.Add(write());
+                queue.Enqueue(() =>
+                {
+                    queue.Enqueue(() => revived.Task);
+                    return first.Task;
+                });
+
+                while (queue.TryDequeue(out Func<Task> write))
+                {
+                    writes.Add(write());
+                }
+
                 Assert.Equal(2, writes.Count);
                 return Task.WhenAll(writes);
             });

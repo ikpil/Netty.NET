@@ -12,7 +12,11 @@ public class NativeTimerDispatchContractTest
     public void InvalidDispatcherIsRejectedBeforeCreatingAWorker()
     {
         int creations = 0;
-        var factory = new AnonymousThreadFactory(entry => { creations++; return new Thread(entry.Invoke); });
+        var factory = new AnonymousThreadFactory(entry =>
+        {
+            creations++;
+            return new Thread(entry.Invoke);
+        });
         Assert.Equal("taskExecutor", Assert.Throws<ArgumentNullException>(() =>
             new HashedWheelTimer(factory, TimeSpan.FromMilliseconds(1), 4, false, 1, null)).ParamName);
         Assert.Equal(0, creations);
@@ -63,7 +67,10 @@ public class NativeTimerDispatchContractTest
             ambient.Value = "start";
             if (suppressFlow)
             {
-                using (ExecutionContext.SuppressFlow()) timer.NewTimeout(callback, TimeSpan.Zero);
+                using (ExecutionContext.SuppressFlow())
+                {
+                    timer.NewTimeout(callback, TimeSpan.Zero);
+                }
             }
             else
             {

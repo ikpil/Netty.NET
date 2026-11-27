@@ -35,7 +35,10 @@ public class AdaptiveByteBufTest
     public static IEnumerable<object[]> Configurations()
     {
         foreach (bool direct in new[] { false, true })
-            foreach (bool lowMemory in new[] { false, true }) yield return [direct, lowMemory];
+            foreach (bool lowMemory in new[] { false, true })
+            {
+                yield return [direct, lowMemory];
+            }
     }
 
     private static AdaptiveByteBuf Buffer(AdaptiveBufferTestAllocator allocator, bool direct, int capacity, int max)
@@ -200,11 +203,13 @@ public class AdaptiveByteBufTest
     public void CopiesPreserveChunkDelegateMaximumStorageKindAndIndependentOwnership(bool direct, bool lowMemory)
     {
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
+
         foreach (int requested in new[] { 7, 16897, 1048577 })
         {
             int max = requested + 19;
             var buffer = Buffer(allocator, direct, requested, max);
-            buffer.SetBytes(0, Pattern(7)); buffer.SetIndex(2, 6);
+            buffer.SetBytes(0, Pattern(7));
+            buffer.SetIndex(2, 6);
             ByteBuf copy = buffer.Copy(1, 5);
             try
             {
@@ -374,7 +379,11 @@ public class AdaptiveByteBufTest
         {
             lease.Dispose();
             b.Release();
-            foreach (var item in held) item.Release();
+
+            foreach (var item in held)
+            {
+                item.Release();
+            }
         }
     }
 

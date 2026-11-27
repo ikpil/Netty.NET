@@ -44,7 +44,10 @@ public class CompositeByteBufLookupTest
     public static IEnumerable<object[]> Providers()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     /**

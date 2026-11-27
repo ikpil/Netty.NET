@@ -458,7 +458,11 @@ public class ChannelOutboundBufferTest
         using var running = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { running.Set(); execute.Wait(); });
+            executor.Execute(() =>
+            {
+                running.Set();
+                execute.Wait();
+            });
             Assert.True(running.Wait(TimeSpan.FromSeconds(5)));
             executor.Execute(() => { }); // Will not be executed but ensure the pending count is 1.
             Assert.Equal(1, executor.PendingTasks());
@@ -582,7 +586,8 @@ public class ChannelOutboundBufferTest
         protected override void Run()
         {
             do
-            { var task = TakeTask();
+            {
+                var task = TakeTask();
                 if (task != null)
                 {
                     task();

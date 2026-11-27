@@ -117,7 +117,10 @@ public class ByteBufRelativeTransferDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (bool write in new[] { false, true })
-        for (int scenario = 0; scenario < 9; ++scenario) yield return [direct, write, scenario];
+        for (int scenario = 0; scenario < 9; ++scenario)
+                {
+                    yield return [direct, write, scenario];
+                }
     }
 
     // AbstractByteBuf's relative overload calls the indexed readBytes/writeBytes overload,
@@ -137,10 +140,12 @@ public class ByteBufRelativeTransferDispatchTest
             source.WriteBytes(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 });
             source.SetIndex(2, 7).MarkReaderIndex().MarkWriterIndex();
             destination.SetByte(0, 99).SetIndex(0, 1).MarkReaderIndex().MarkWriterIndex();
+
             ByteBuf Invoke()
             {
                 return write ? owner.WriteBytes(peer, length) : owner.ReadBytes(peer, length);
             }
+
             if (scenario is 2 or 3)
             {
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
@@ -172,7 +177,12 @@ public class ByteBufRelativeTransferDispatchTest
             Assert.Equal(1 + (write ? copiedLength : peerLength), destination.WriterIndex);
             Assert.Equal(write && scenario == 6 ? 16 : write ? 4 : 8, owner.Capacity);
             Assert.Equal(99, destination.GetByte(0));
-            for (int i = 0; i < copiedLength; ++i) Assert.Equal(12 + i, destination.GetByte(1 + i));
+
+            for (int i = 0; i < copiedLength; ++i)
+            {
+                Assert.Equal(12 + i, destination.GetByte(1 + i));
+            }
+
             source.ResetReaderIndex().ResetWriterIndex();
             destination.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, source.ReaderIndex);
@@ -205,10 +215,12 @@ public class ByteBufRelativeTransferDispatchTest
         {
             owner.SetIndex(2, 7);
             peer.SetIndex(1, 3);
+
             ByteBuf Invoke()
             {
                 return write ? owner.WriteBytes(peer) : owner.ReadBytes(peer);
             }
+
             if (failure)
             {
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));

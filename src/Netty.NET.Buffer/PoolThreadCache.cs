@@ -189,7 +189,11 @@ internal sealed class PoolThreadCache : IDisposable
         {
             return;
         }
-        foreach (RegionCache cache in caches) cache.Trim();
+
+        foreach (RegionCache cache in caches)
+        {
+            cache.Trim();
+        }
     }
 
     /**
@@ -221,7 +225,11 @@ internal sealed class PoolThreadCache : IDisposable
         {
             return;
         }
-        foreach (RegionCache cache in caches) cache.Free(int.MaxValue);
+
+        foreach (RegionCache cache in caches)
+        {
+            cache.Free(int.MaxValue);
+        }
     }
 
     private readonly record struct Entry(PoolArena Arena, PoolArena.ChunkStorage Storage, long Handle, int Length);

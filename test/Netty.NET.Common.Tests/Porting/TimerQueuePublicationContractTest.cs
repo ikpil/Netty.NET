@@ -41,7 +41,10 @@ public class TimerQueuePublicationContractTest
             for (int index = 0; index < (cancellation ? 33 : 32); index++)
                 timeouts[index] = timer.NewTimeout(task, TimeSpan.FromDays(1));
             if (cancellation)
-                for (int index = 0; index < 32; index++) Assert.True(timeouts[index].Cancel());
+                for (int index = 0; index < 32; index++)
+                {
+                    Assert.True(timeouts[index].Cancel());
+                }
 
             object queue = typeof(HashedWheelTimer).GetField(cancellation ? "_cancelledTimeouts" : "_timeouts",
                 BindingFlags.Instance | BindingFlags.NonPublic).GetValue(timer);
@@ -101,7 +104,12 @@ public class TimerQueuePublicationContractTest
             {
                 Assert.NotNull(timeouts[32]);
             }
-            foreach (ITimeout timeout in timeouts) timeout.Cancel();
+
+            foreach (ITimeout timeout in timeouts)
+            {
+                timeout.Cancel();
+            }
+
             proceed.Set();
             Assert.True(cancellationsProcessed.Wait(TimeSpan.FromSeconds(5)));
             Assert.Equal(33, cancelled);

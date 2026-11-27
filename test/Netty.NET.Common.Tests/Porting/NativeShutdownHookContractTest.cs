@@ -89,7 +89,11 @@ public class NativeShutdownHookContractTest
     {
         var executor = new DefaultEventExecutor();
         var trace = new List<string>();
-        Action first = () => { trace.Add("throw"); throw new InvalidOperationException("expected hook failure"); };
+        Action first = () =>
+        {
+            trace.Add("throw");
+            throw new InvalidOperationException("expected hook failure");
+        };
         Action skipped = () => trace.Add("skipped multicast tail");
         try
         {

@@ -412,7 +412,11 @@ public class UnpooledWrappingTest
         }
         finally
         {
-            for (int i = 1; i < inputs.Length; ++i) inputs[i].Release();
+            for (int i = 1; i < inputs.Length; ++i)
+            {
+                inputs[i].Release();
+            }
+
             owner.Release();
         }
     }

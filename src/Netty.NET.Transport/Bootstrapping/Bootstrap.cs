@@ -309,7 +309,12 @@ public class Bootstrap : AbstractBootstrap
         var copy = new Bootstrap { _group = _group, _registrationLoop = _registrationLoop, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _externalResolver = _externalResolver, _disableResolver = _disableResolver };
         foreach (var option in NewOptionsArray())
             copy._options.Add(option.Key, option.Value);
-        foreach (var pair in _attributes) copy._attributes[pair.Key] = pair.Value;
+
+        foreach (var pair in _attributes)
+        {
+            copy._attributes[pair.Key] = pair.Value;
+        }
+
         return copy;
     }
 

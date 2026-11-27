@@ -42,6 +42,7 @@ public partial class CompositeByteBuf
             // avoid additional checks in AbstractByteBuf case
             // CLR: all storage providers expose this internal loop, independently of public iteration overrides.
             int remaining = count;
+
             bool Process(byte value)
             {
                 if (!processor(value))
@@ -55,6 +56,7 @@ public partial class CompositeByteBuf
                 }
                 return true;
             }
+
             int result = storage.ForEachByteAscending(local, local + count, Process);
             if (result != -1)
             {
@@ -90,6 +92,7 @@ public partial class CompositeByteBuf
             ByteBuf storage = component.Source.UnwrapIterationStorage(ref local);
             // avoid additional checks in AbstractByteBuf case
             int remaining = count;
+
             bool Process(byte value)
             {
                 if (!processor(value))
@@ -103,6 +106,7 @@ public partial class CompositeByteBuf
                 }
                 return true;
             }
+
             int result = storage.ForEachByteDescending(local + count - 1, local, Process);
             if (result != -1)
             {

@@ -41,7 +41,12 @@ public class RecyclerFactoryContractTest
             {
                 Assert.False(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
                 int creations = 0;
-                var pool = Recycler.Create<Item>(handle => { Assert.NotNull(handle); creations++; return new Item(handle); });
+                var pool = Recycler.Create<Item>(handle =>
+                {
+                    Assert.NotNull(handle);
+                    creations++;
+                    return new Item(handle);
+                });
                 Assert.Equal(0, creations);
                 Item first = pool.Get(), second = pool.Get();
                 Assert.NotSame(first, second);
@@ -69,7 +74,11 @@ public class RecyclerFactoryContractTest
         RunInFastThreadLocalThreadExtension.Run(() =>
         {
             int creations = 0;
-            var pool = Recycler.Create<Item>(handle => { creations++; return new Item(handle); });
+            var pool = Recycler.Create<Item>(handle =>
+            {
+                creations++;
+                return new Item(handle);
+            });
             Item first = pool.Get();
             var impostor = new Item(first.Handle);
             Assert.True(first.Equals(impostor));
@@ -129,8 +138,16 @@ public class RecyclerFactoryContractTest
         RunInFastThreadLocalThreadExtension.Run(() =>
         {
             int firstCreations = 0, otherCreations = 0;
-            var firstPool = Recycler.Create<Item>(handle => { firstCreations++; return new Item(handle); });
-            var otherPool = Recycler.Create<Other>(handle => { otherCreations++; return new Other(handle); });
+            var firstPool = Recycler.Create<Item>(handle =>
+            {
+                firstCreations++;
+                return new Item(handle);
+            });
+            var otherPool = Recycler.Create<Other>(handle =>
+            {
+                otherCreations++;
+                return new Other(handle);
+            });
             Item first = firstPool.Get();
             Other other = otherPool.Get();
             first.Handle.Recycle(first);
@@ -152,8 +169,16 @@ public class RecyclerFactoryContractTest
         RunInFastThreadLocalThreadExtension.Run(() =>
         {
             int firstCreations = 0, secondCreations = 0;
-            var firstPool = Recycler.Create<Item>(handle => { firstCreations++; return new Item(handle); });
-            var secondPool = Recycler.Create<Item>(handle => { secondCreations++; return new Item(handle); });
+            var firstPool = Recycler.Create<Item>(handle =>
+            {
+                firstCreations++;
+                return new Item(handle);
+            });
+            var secondPool = Recycler.Create<Item>(handle =>
+            {
+                secondCreations++;
+                return new Item(handle);
+            });
             Item first = firstPool.Get(), second = secondPool.Get();
             Assert.NotSame(first, second);
             first.Handle.Recycle(first);

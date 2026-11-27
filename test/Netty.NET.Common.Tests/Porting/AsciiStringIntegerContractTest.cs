@@ -11,7 +11,10 @@ public class AsciiStringIntegerContractTest
 {
     public static IEnumerable<object[]> Radices()
     {
-        for (int radix = 2; radix <= 36; radix++) yield return new object[] { radix };
+        for (int radix = 2; radix <= 36; radix++)
+        {
+            yield return new object[] { radix };
+        }
     }
 
     [Theory]
@@ -197,9 +200,19 @@ public class AsciiStringIntegerContractTest
     {
         var value = new AsciiString("-12345");
         long sum = 0;
-        for (int i = 0; i < 1000; i++) sum += ParseAllWidths(value);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            sum += ParseAllWidths(value);
+        }
+
         long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 1000; i++) sum += ParseAllWidths(value);
+
+        for (int i = 0; i < 1000; i++)
+        {
+            sum += ParseAllWidths(value);
+        }
+
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.Equal(0L, allocated);
         Assert.Equal(-12345L * 6 * 2000, sum);

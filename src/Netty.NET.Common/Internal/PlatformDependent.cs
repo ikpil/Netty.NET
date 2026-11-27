@@ -446,7 +446,8 @@ public static class PlatformDependent
         // of this we take special provisions to unroll the looping for these conditions.
         if (length >= 32)
         {
-            for (int i = length - 8; i >= remainingBytes; i -= 8) {
+            for (int i = length - 8; i >= remainingBytes; i -= 8)
+            {
                 hash = HashCodeAsciiCompute(bytes, i, hash);
             }
         }

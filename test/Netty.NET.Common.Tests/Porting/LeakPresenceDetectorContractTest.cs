@@ -216,7 +216,8 @@ public class LeakPresenceDetectorContractTest
                 var forced = detector.TrackForcibly(new object());
                 Assert.True(forced.Close(null));
                 var other = new Thread(() => concurrentTracker = detector.Track(new object()));
-                other.Start(); Assert.True(other.Join(TimeSpan.FromSeconds(5)));
+                other.Start();
+                Assert.True(other.Join(TimeSpan.FromSeconds(5)));
                 return true;
             });
             Forced = LeakPresenceDetector.StaticInitializer(() => LeakPresenceDetector.StaticInitializer(() => true));
@@ -286,7 +287,12 @@ public class LeakPresenceDetectorContractTest
         using var scope = new ResourceScope("diagnostic");
         var detector = new Scoped<object>(scope);
         var trackers = new List<IResourceLeakTracker<object>>();
-        for (int i = 0; i < 10; i++) trackers.Add(CreateDiagnostic(detector));
+
+        for (int i = 0; i < 10; i++)
+        {
+            trackers.Add(CreateDiagnostic(detector));
+        }
+
         var leak = Assert.Throws<InvalidOperationException>(scope.Check);
         Exception[] creation = ThrowableUtil.GetSuppressed(leak);
         if (LeakPresenceDetector.TRACK_CREATION_STACK)
@@ -303,7 +309,12 @@ public class LeakPresenceDetectorContractTest
             Assert.Empty(creation);
             Assert.Contains("trackCreationStack=true", leak.Message);
         }
-        foreach (var tracker in trackers) Assert.True(tracker.Close(null));
+
+        foreach (var tracker in trackers)
+        {
+            Assert.True(tracker.Close(null));
+        }
+
         Assert.Throws<InvalidOperationException>(scope.Check);
     }
 }

@@ -239,6 +239,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             epoch = ++_registrationEpoch;
         }
         return RegisterCoreAsync();
+
         async Task RegisterCoreAsync()
         {
             // CLR: tells the rejected hand-off (the source's catch around eventLoop.execute) from a failure of the
@@ -361,6 +362,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             _readBeforeActive = false;
             DoClearReadPending();
         }
+
         if (!_registered)
         {
             // Best effort if we are not registered yet clear readPending. This happens during channel initialization.
@@ -458,6 +460,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             }
         }
         return FinishAsync();
+
         async Task FinishAsync()
         {
             try
@@ -469,7 +472,11 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 await OnLoopAsync(CloseIfClosed).ConfigureAwait(false);
                 throw;
             }
-            await OnLoopAsync(() => { EnsureOpen(); success(); }).ConfigureAwait(false);
+            await OnLoopAsync(() =>
+            {
+                EnsureOpen();
+                success();
+            }).ConfigureAwait(false);
         }
     }
 
@@ -526,6 +533,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _ = ConnectCoreAsync();
         return completion.Task;
+
         async Task ConnectCoreAsync()
         {
             try

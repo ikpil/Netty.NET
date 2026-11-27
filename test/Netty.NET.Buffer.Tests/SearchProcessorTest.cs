@@ -29,7 +29,10 @@ public class SearchProcessorTest
     public static IEnumerable<object[]> Layouts()
     {
         for (int algorithm = 0; algorithm < 3; algorithm++)
-            for (int layout = 0; layout < 8; layout++) yield return new object[] { algorithm, layout };
+            for (int layout = 0; layout < 8; layout++)
+            {
+                yield return new object[] { algorithm, layout };
+            }
     }
 
     private static ISearchProcessorFactory Factory(int algorithm, byte[] needle)
@@ -155,7 +158,10 @@ public class SearchProcessorTest
         byte[] haystackBytes = new byte[32 * 65]; // 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, ...
         int pos = 0;
         for (int i = 1; i <= 64; i++)
-            for (int j = 0; j < i; j++) haystackBytes[pos++] = (byte)i;
+            for (int j = 0; j < i; j++)
+            {
+                haystackBytes[pos++] = (byte)i;
+            }
         ByteBuf haystack = Unpooled.CopiedBuffer(haystackBytes);
         try
         {
@@ -237,12 +243,16 @@ public class SearchProcessorTest
     public void RandomSessionsAgreeWithIndependentSlidingWindowIncludingResets(int algorithm)
     {
         var random = new Random(271828);
+
         for (int seed = 0; seed < 256; seed++)
         {
             byte[] pattern = new byte[1 + seed % 64], data = new byte[512];
-            random.NextBytes(pattern); random.NextBytes(data);
-            pattern.CopyTo(data, 80); pattern.CopyTo(data, 240);
-            ISearchProcessor processor = Factory(algorithm, pattern).NewSearchProcessor(); int resetStart = 0;
+            random.NextBytes(pattern);
+            random.NextBytes(data);
+            pattern.CopyTo(data, 80);
+            pattern.CopyTo(data, 240);
+            ISearchProcessor processor = Factory(algorithm, pattern).NewSearchProcessor();
+            int resetStart = 0;
             for (int index = 0; index < data.Length; index++)
             {
                 if (index == 257 || index == 81 && seed % 2 == 0)
@@ -264,8 +274,13 @@ public class SearchProcessorTest
         Parallel.For(0, 64, _ =>
         {
             ISearchProcessor processor = factory.NewSearchProcessor();
+
             for (int i = 0; i < 256; i++)
-            { Assert.True(processor.Process(255)); Assert.True(processor.Process(128)); Assert.False(processor.Process(0)); }
+            {
+                Assert.True(processor.Process(255));
+                Assert.True(processor.Process(128));
+                Assert.False(processor.Process(0));
+            }
         });
     }
 
@@ -304,7 +319,11 @@ public class SearchProcessorTest
     {
         byte[] needle = Enumerable.Range(0, 1025).Select(i => (byte)(i % 251)).ToArray();
         ISearchProcessor processor = AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(needle).NewSearchProcessor();
-        for (int i = 0; i < needle.Length; i++) Assert.Equal(i != needle.Length - 1, processor.Process(needle[i]));
+
+        for (int i = 0; i < needle.Length; i++)
+        {
+            Assert.Equal(i != needle.Length - 1, processor.Process(needle[i]));
+        }
     }
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>

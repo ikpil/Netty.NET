@@ -1275,8 +1275,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
         else
         {
-            while (start < end && c.CharAt(start) <= ' ') start++;
-            while (end > start && c.CharAt(end - 1) <= ' ') end--;
+            while (start < end && c.CharAt(start) <= ' ')
+            {
+                start++;
+            }
+            while (end > start && c.CharAt(end - 1) <= ' ')
+            {
+                end--;
+            }
         }
 
         // subSequence has an exclusive end; retain the final non-control char.
@@ -1784,8 +1790,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         // String.trim() removes every code unit <= U+0020, including NUL.
         int start = 0;
         int end = bytes.Length;
-        while (start < end && bytes[start] <= 0x20) start++;
-        while (end > start && bytes[end - 1] <= 0x20) end--;
+
+        while (start < end && bytes[start] <= 0x20)
+        {
+            start++;
+        }
+        while (end > start && bytes[end - 1] <= 0x20)
+        {
+            end--;
+        }
+
         bytes = bytes.Slice(start, end - start);
         if (bytes.IsEmpty)
         {
@@ -1844,11 +1858,22 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         int i = 0;
         int digits = 0;
-        while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') { i++; digits++; }
+
+        while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9')
+        {
+            i++;
+            digits++;
+        }
+
         if (i < bytes.Length && bytes[i] == '.')
         {
             i++;
-            while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') { i++; digits++; }
+
+            while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9')
+            {
+                i++;
+                digits++;
+            }
         }
         if (digits == 0)
         {
@@ -1862,7 +1887,12 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 i++;
             }
             int exponentStart = i;
-            while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') i++;
+
+            while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9')
+            {
+                i++;
+            }
+
             if (i == exponentStart)
             {
                 return false;

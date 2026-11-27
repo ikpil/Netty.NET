@@ -39,13 +39,25 @@ public class GlobalActionContractTest
             {
                 ownedThread &= executor.InEventLoop();
                 order.Add(1);
-                executor.Execute(() => { order.Add(4); finished.SetResult(); });
+                executor.Execute(() =>
+                {
+                    order.Add(4);
+                    finished.SetResult();
+                });
             };
-            Action failing = () => { order.Add(2); throw new InvalidOperationException("multicast"); };
+            Action failing = () =>
+            {
+                order.Add(2);
+                throw new InvalidOperationException("multicast");
+            };
             Action skipped = () => order.Add(-1);
             executor.Execute(first);
             executor.Execute(failing + skipped);
-            executor.Execute(() => { ownedThread &= executor.InEventLoop(); order.Add(3); });
+            executor.Execute(() =>
+            {
+                ownedThread &= executor.InEventLoop();
+                order.Add(3);
+            });
             var field = typeof(GlobalEventExecutor).GetField("_taskQueue", BindingFlags.Instance | BindingFlags.NonPublic);
             var queue = Assert.IsType<LinkedBlockingQueue<Action>>(field.GetValue(executor));
             Assert.True(queue.TryPeek(out Action head));

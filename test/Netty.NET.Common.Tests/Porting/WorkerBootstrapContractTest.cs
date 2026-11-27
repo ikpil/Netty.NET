@@ -12,7 +12,11 @@ public class WorkerBootstrapContractTest
     public void NullEntryIsRejectedBeforeCallingTheConfiguredFactory()
     {
         int creations = 0;
-        var executor = new ThreadPerTaskExecutor(new AnonymousThreadFactory(_ => { creations++; return null; }));
+        var executor = new ThreadPerTaskExecutor(new AnonymousThreadFactory(_ =>
+        {
+            creations++;
+            return null;
+        }));
         Assert.Equal("command", Assert.Throws<ArgumentNullException>(() => executor.Execute(null)).ParamName);
         Assert.Equal(0, creations);
     }
@@ -162,7 +166,11 @@ public class WorkerBootstrapContractTest
     {
         int starts = 0;
         var starter = new ThreadPerTaskExecutor(new DefaultThreadFactory("native-bootstrap", true));
-        var executor = new DefaultEventExecutor(command => { Interlocked.Increment(ref starts); starter.Execute(command); });
+        var executor = new DefaultEventExecutor(command =>
+        {
+            Interlocked.Increment(ref starts);
+            starter.Execute(command);
+        });
         Thread worker = null;
         int counter = 0;
         try
@@ -181,7 +189,12 @@ public class WorkerBootstrapContractTest
                     return ++counter;
                 }, TestContext.Current.CancellationToken);
             int[] results = await Task.WhenAll(work).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-            for (int i = 0; i < results.Length; i++) Assert.Equal(i + 1, results[i]);
+
+            for (int i = 0; i < results.Length; i++)
+            {
+                Assert.Equal(i + 1, results[i]);
+            }
+
             Assert.Equal(1, starts);
             Assert.NotSame(Thread.CurrentThread, worker);
             Assert.False(executor.TerminationFuture.IsCompleted);
@@ -208,7 +221,11 @@ public class WorkerBootstrapContractTest
     {
         int starts = 0;
         var starter = new ThreadPerTaskExecutor(new DefaultThreadFactory("native-group-bootstrap", true));
-        var group = new NativeGroup(command => { Interlocked.Increment(ref starts); starter.Execute(command); });
+        var group = new NativeGroup(command =>
+        {
+            Interlocked.Increment(ref starts);
+            starter.Execute(command);
+        });
         try
         {
             IEventExecutor first = group.Next();

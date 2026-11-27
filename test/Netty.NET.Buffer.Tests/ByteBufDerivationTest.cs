@@ -54,10 +54,16 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf slice = root.Slice(1, 7);
-            Assert.Same(root, slice.Unwrap()); Assert.Equal(0, slice.ReaderIndex); Assert.Equal(7, slice.WriterIndex);
-            Assert.Equal(7, slice.Capacity); Assert.Equal(7, slice.MaxCapacity); slice.SetIndex(1, 6);
-            Assert.Equal(1, root.ReaderIndex); Assert.Equal(7, root.WriterIndex);
+            root.SetIndex(1, 7);
+            ByteBuf slice = root.Slice(1, 7);
+            Assert.Same(root, slice.Unwrap());
+            Assert.Equal(0, slice.ReaderIndex);
+            Assert.Equal(7, slice.WriterIndex);
+            Assert.Equal(7, slice.Capacity);
+            Assert.Equal(7, slice.MaxCapacity);
+            slice.SetIndex(1, 6);
+            Assert.Equal(1, root.ReaderIndex);
+            Assert.Equal(7, root.WriterIndex);
         });
     }
 
@@ -67,7 +73,10 @@ public class ByteBufDerivationTest
         WithRoot(direct, root =>
         {
             ByteBuf slice = root.Slice(1, 7), second = slice.Slice(0, 6);
-            Assert.NotSame(slice, second); Assert.Same(root, second.Unwrap()); Assert.Equal(6, second.WriterIndex); Assert.Equal(6, second.Capacity);
+            Assert.NotSame(slice, second);
+            Assert.Same(root, second.Unwrap());
+            Assert.Equal(6, second.WriterIndex);
+            Assert.Equal(6, second.Capacity);
         });
     }
 
@@ -76,9 +85,13 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf duplicate = root.Duplicate();
-            Assert.Same(root, duplicate.Unwrap()); SameShape(root, duplicate); duplicate.SetIndex(2, 6);
-            Assert.Equal(1, root.ReaderIndex); Assert.Equal(7, root.WriterIndex);
+            root.SetIndex(1, 7);
+            ByteBuf duplicate = root.Duplicate();
+            Assert.Same(root, duplicate.Unwrap());
+            SameShape(root, duplicate);
+            duplicate.SetIndex(2, 6);
+            Assert.Equal(1, root.ReaderIndex);
+            Assert.Equal(7, root.WriterIndex);
         });
     }
 
@@ -87,8 +100,11 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf duplicate = root.Duplicate().SetIndex(2, 6), second = duplicate.Duplicate();
-            Assert.NotSame(duplicate, second); Assert.Same(root, second.Unwrap()); SameShape(duplicate, second);
+            root.SetIndex(1, 7);
+            ByteBuf duplicate = root.Duplicate().SetIndex(2, 6), second = duplicate.Duplicate();
+            Assert.NotSame(duplicate, second);
+            Assert.Same(root, second.Unwrap());
+            SameShape(duplicate, second);
         });
     }
 
@@ -97,9 +113,13 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf readOnly = root.AsReadOnly();
-            Assert.True(readOnly.IsReadOnly); Assert.Same(root, readOnly.Unwrap()); SameShape(root, readOnly);
-            readOnly.SetIndex(2, 6); Assert.Equal(1, root.ReaderIndex);
+            root.SetIndex(1, 7);
+            ByteBuf readOnly = root.AsReadOnly();
+            Assert.True(readOnly.IsReadOnly);
+            Assert.Same(root, readOnly.Unwrap());
+            SameShape(root, readOnly);
+            readOnly.SetIndex(2, 6);
+            Assert.Equal(1, root.ReaderIndex);
         });
     }
 
@@ -108,10 +128,14 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf readOnly = root.AsReadOnly().SetIndex(2, 6), second = readOnly.Duplicate();
+            root.SetIndex(1, 7);
+            ByteBuf readOnly = root.AsReadOnly().SetIndex(2, 6), second = readOnly.Duplicate();
             // CLR AsReadOnly is idempotent; Duplicate supplies the independent read-only view
             // requested by the original deprecated Unpooled.unmodifiableBuffer factory.
-            Assert.NotSame(readOnly, second); Assert.True(second.IsReadOnly); Assert.Same(root, second.Unwrap()); SameShape(readOnly, second);
+            Assert.NotSame(readOnly, second);
+            Assert.True(second.IsReadOnly);
+            Assert.Same(root, second.Unwrap());
+            SameShape(readOnly, second);
         });
     }
 
@@ -120,8 +144,11 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf duplicate = root.Duplicate().SetIndex(2, 6), readOnly = duplicate.AsReadOnly();
-            Assert.True(readOnly.IsReadOnly); Assert.Same(root, readOnly.Unwrap()); SameShape(duplicate, readOnly);
+            root.SetIndex(1, 7);
+            ByteBuf duplicate = root.Duplicate().SetIndex(2, 6), readOnly = duplicate.AsReadOnly();
+            Assert.True(readOnly.IsReadOnly);
+            Assert.Same(root, readOnly.Unwrap());
+            SameShape(duplicate, readOnly);
         });
     }
 
@@ -130,20 +157,27 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            root.SetIndex(1, 7); ByteBuf readOnly = root.AsReadOnly().SetIndex(2, 6), duplicate = readOnly.Duplicate();
-            Assert.True(duplicate.IsReadOnly); Assert.Same(root, duplicate.Unwrap()); SameShape(readOnly, duplicate);
+            root.SetIndex(1, 7);
+            ByteBuf readOnly = root.AsReadOnly().SetIndex(2, 6), duplicate = readOnly.Duplicate();
+            Assert.True(duplicate.IsReadOnly);
+            Assert.Same(root, duplicate.Unwrap());
+            SameShape(readOnly, duplicate);
         });
     }
 
     private static int Depth(ByteBuf buffer)
     {
         int depth = 0;
-        while (buffer.Unwrap() is { } parent) {
+
+        while (buffer.Unwrap() is { } parent)
+        {
             if (++depth > 4)
             {
                 break;
             }
-            buffer = parent; }
+            buffer = parent;
+        }
+
         return depth;
     }
 
@@ -153,10 +187,14 @@ public class ByteBufDerivationTest
         WithRoot(direct, root =>
         {
             root.SetIndex(1, 7);
-            Assert.Equal(0x04030201, root.GetIntLE(root.ReaderIndex)); Assert.Equal(0x01020304, root.GetInt(root.ReaderIndex));
+            Assert.Equal(0x04030201, root.GetIntLE(root.ReaderIndex));
+            Assert.Equal(0x01020304, root.GetInt(root.ReaderIndex));
             root.SetIndex(2, 6);
-            Assert.Equal(0x05040302, root.GetIntLE(root.ReaderIndex)); Assert.Equal(0x02030405, root.GetInt(root.ReaderIndex));
-            Assert.Equal(2, root.ReaderIndex); Assert.Equal(6, root.WriterIndex); Assert.Equal(1, root.RefCnt);
+            Assert.Equal(0x05040302, root.GetIntLE(root.ReaderIndex));
+            Assert.Equal(0x02030405, root.GetInt(root.ReaderIndex));
+            Assert.Equal(2, root.ReaderIndex);
+            Assert.Equal(6, root.WriterIndex);
+            Assert.Equal(1, root.RefCnt);
         });
     }
 
@@ -165,7 +203,11 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            uint random = 0x12345678; ByteBuf derived = root; int offset = 0; bool little = false;
+            uint random = 0x12345678;
+            ByteBuf derived = root;
+            int offset = 0;
+            bool little = false;
+
             for (int i = 0; i < 10000; i++)
             {
                 random = unchecked(random * 1664525 + 1013904223);
@@ -186,9 +228,16 @@ public class ByteBufDerivationTest
                         break;
                 }
                 byte[] bytes = Enumerable.Range(offset, 4).Select(value => unchecked((byte)value)).ToArray();
-                long expected = 0; foreach (byte value in little ? bytes.Reverse() : bytes) expected = (expected << 8) | value;
+                long expected = 0;
+
+                foreach (byte value in little ? bytes.Reverse() : bytes)
+                {
+                    expected = (expected << 8) | value;
+                }
+
                 Assert.Equal(unchecked((int)expected), little ? derived.GetIntLE(0) : derived.GetInt(0));
-                Assert.InRange(Depth(derived), 0, 2); Assert.Equal(1, derived.RefCnt);
+                Assert.InRange(Depth(derived), 0, 2);
+                Assert.Equal(1, derived.RefCnt);
             }
         }, 10000);
     }
@@ -198,7 +247,10 @@ public class ByteBufDerivationTest
     {
         WithRoot(direct, root =>
         {
-            uint random = 0x12345678; ByteBuf derived = root; int offset = 0;
+            uint random = 0x12345678;
+            ByteBuf derived = root;
+            int offset = 0;
+
             for (int i = 0; i < 10000; i++)
             {
                 random = unchecked(random * 1664525 + 1013904223);
@@ -206,12 +258,16 @@ public class ByteBufDerivationTest
                 {
                     0 => NextSlice(), 1 => derived.Duplicate(), _ => new ReadOnlyByteBuf(derived)
                 };
+
                 ByteBuf NextSlice()
                 {
                     offset++;
                     return derived.Slice(1, derived.Capacity - 1);
                 }
-                Assert.InRange(Depth(derived), 1, 2); Assert.Equal(unchecked((byte)offset), derived.GetByte(0)); Assert.Equal(1, derived.RefCnt);
+
+                Assert.InRange(Depth(derived), 1, 2);
+                Assert.Equal(unchecked((byte)offset), derived.GetByte(0));
+                Assert.Equal(1, derived.RefCnt);
             }
         }, 10000);
     }
@@ -222,10 +278,17 @@ public class ByteBufDerivationTest
         WithRoot(direct, root =>
         {
             ByteBuf slice = root.Slice(2, 6).SetIndex(1, 5), duplicate = slice.Duplicate();
-            Assert.Same(root, duplicate.Unwrap()); SameShape(slice, duplicate);
-            duplicate.ResetReaderIndex(); duplicate.ResetWriterIndex(); Assert.Equal(0, duplicate.ReaderIndex); Assert.Equal(0, duplicate.WriterIndex);
+            Assert.Same(root, duplicate.Unwrap());
+            SameShape(slice, duplicate);
+            duplicate.ResetReaderIndex();
+            duplicate.ResetWriterIndex();
+            Assert.Equal(0, duplicate.ReaderIndex);
+            Assert.Equal(0, duplicate.WriterIndex);
             Assert.Throws<NotSupportedException>(() => duplicate.Capacity = 7);
-            duplicate.SetByte(0, 77); Assert.Equal(77, root.GetByte(2)); Assert.Equal(1, slice.ReaderIndex); Assert.Equal(5, slice.WriterIndex);
+            duplicate.SetByte(0, 77);
+            Assert.Equal(77, root.GetByte(2));
+            Assert.Equal(1, slice.ReaderIndex);
+            Assert.Equal(5, slice.WriterIndex);
         });
     }
 

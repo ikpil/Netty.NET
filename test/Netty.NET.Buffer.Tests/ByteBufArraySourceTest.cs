@@ -66,7 +66,10 @@ public class ByteBufArraySourceTest
     public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (ArrayCase scenario in Enum.GetValues<ArrayCase>()) yield return [provider, scenario];
+        foreach (ArrayCase scenario in Enum.GetValues<ArrayCase>())
+            {
+                yield return [provider, scenario];
+            }
     }
 
     [Theory]
@@ -173,7 +176,11 @@ public class ByteBufArraySourceTest
             }
             Span<byte> destination = value.AsSpan(offset, blockSize);
             Assert.Same(buffer, sequential ? buffer.ReadBytes(destination) : buffer.GetBytes(i, destination));
-            for (int j = offset; j < offset + blockSize; ++j) Assert.Equal(expected[j], value[j]);
+
+            for (int j = offset; j < offset + blockSize; ++j)
+            {
+                Assert.Equal(expected[j], value[j]);
+            }
         }
         Assert.Equal(sequential ? capacity : 0, buffer.ReaderIndex);
         Assert.Equal(sequential ? capacity : 0, buffer.WriterIndex);
@@ -183,7 +190,10 @@ public class ByteBufArraySourceTest
     public static IEnumerable<object[]> SpanCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        for (int operation = 0; operation < 4; ++operation) yield return [provider, operation];
+        for (int operation = 0; operation < 4; ++operation)
+            {
+                yield return [provider, operation];
+            }
     }
 
     [Theory]

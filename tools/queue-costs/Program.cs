@@ -23,7 +23,12 @@ foreach (int count in new[] { 64, 1024, 16384 })
                  : new[] { "snapshot-rebuild", "priority-queue-remove", "sorted-set" })
     {
         IQueue verified = Create(candidate);
-        foreach (Entry entry in entries) verified.Add(entry);
+
+        foreach (Entry entry in entries)
+        {
+            verified.Add(entry);
+        }
+
         foreach (Entry entry in withdrawn)
         {
             if (!verified.Remove(entry) || verified.Remove(entry))
@@ -61,26 +66,62 @@ foreach (int count in new[] { 64, 1024, 16384 })
         Measure(candidate, "fill-drain", count, count * 2,
             () => Create(candidate), q =>
             {
-                foreach (Entry entry in entries) q.Add(entry);
-                while (q.Count != 0) q.Pop();
+                foreach (Entry entry in entries)
+                {
+                    q.Add(entry);
+                }
+                while (q.Count != 0)
+                {
+                    q.Pop();
+                }
             });
         Measure(candidate, "reuse-fill-drain", count, count * 2,
             () =>
             {
                 IQueue q = Create(candidate);
-                foreach (Entry entry in entries) q.Add(entry);
-                while (q.Count != 0) q.Pop();
+
+                foreach (Entry entry in entries)
+                {
+                    q.Add(entry);
+                }
+                while (q.Count != 0)
+                {
+                    q.Pop();
+                }
+
                 return q;
             }, q =>
             {
-                foreach (Entry entry in entries) q.Add(entry);
-                while (q.Count != 0) q.Pop();
+                foreach (Entry entry in entries)
+                {
+                    q.Add(entry);
+                }
+                while (q.Count != 0)
+                {
+                    q.Pop();
+                }
             });
         Measure(candidate, "remove-hit-and-miss", count, withdrawn.Length * 2,
-            () => { IQueue q = Create(candidate); foreach (Entry entry in entries) q.Add(entry); return q; }, q =>
+            () =>
             {
-                foreach (Entry entry in withdrawn) q.Remove(entry);
-                foreach (Entry entry in withdrawn) q.Remove(entry);
+                IQueue q = Create(candidate);
+
+                foreach (Entry entry in entries)
+                {
+                    q.Add(entry);
+                }
+
+                return q;
+            }, q =>
+            {
+                foreach (Entry entry in withdrawn)
+                {
+                    q.Remove(entry);
+                }
+                foreach (Entry entry in withdrawn)
+                {
+                    q.Remove(entry);
+                }
             });
     }
 }
@@ -106,7 +147,12 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
             int[] indices = Enumerable.Range(0, count).ToArray();
             new Random(42).Shuffle(indices);
             long bytes = GC.GetAllocatedBytesForCurrentThread(), start = Stopwatch.GetTimestamp();
-            for (int i = 0; i < cancelCount; ++i) owners[indices[i]].Cancel();
+
+            for (int i = 0; i < cancelCount; ++i)
+            {
+                owners[indices[i]].Cancel();
+            }
+
             long ticks = Stopwatch.GetTimestamp() - start;
             long allocated = GC.GetAllocatedBytesForCurrentThread() - bytes;
             if (pool.PendingTaskCount != count - cancelCount || indices.Take(cancelCount).Any(i => !tasks[i].IsCanceled))
@@ -119,7 +165,11 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
         finally
         {
             await pool.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
-            foreach (var owner in owners) owner?.Dispose();
+
+            foreach (var owner in owners)
+            {
+                owner?.Dispose();
+            }
         }
     }
     Record("public-executor", "scheduled-owner-cancel", count, values);
@@ -139,7 +189,10 @@ var result = new
     rows
 };
 File.WriteAllText(args[0], JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
-foreach (Row row in rows) Console.WriteLine($"{row.Candidate},{row.Phase},{row.Count},{row.MedianNs:F1},{row.MedianBytes:F1}");
+foreach (Row row in rows)
+{
+    Console.WriteLine($"{row.Candidate},{row.Phase},{row.Count},{row.MedianNs:F1},{row.MedianBytes:F1}");
+}
 
 void Measure(string candidate, string phase, int count, int operations, Func<IQueue> setup, Action<IQueue> action)
 {
@@ -155,9 +208,13 @@ void Measure(string candidate, string phase, int count, int operations, Func<IQu
         {
             values.Add((ticks * 1e9 / Stopwatch.Frequency / operations, (double)allocated / operations));
         }
+
         // Indexed nodes are reused in the next setup. Release memberships after
         // recording the interval; cleanup is outside measured work/allocation.
-        while (queue.Count != 0) queue.Pop();
+        while (queue.Count != 0)
+        {
+            queue.Pop();
+        }
     }
     Record(candidate, phase, count, values);
 }

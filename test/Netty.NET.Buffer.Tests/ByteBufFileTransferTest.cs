@@ -405,11 +405,14 @@ public class ByteBufFileTransferTest
         {
             byte[] bytes = new byte[checked((int)RandomAccess.GetLength(Handle))];
             int offset = 0;
+
             while (offset < bytes.Length)
             {
                 int count = RandomAccess.Read(Handle, bytes.AsSpan(offset), offset);
-                Assert.True(count > 0); offset += count;
+                Assert.True(count > 0);
+                offset += count;
             }
+
             return bytes;
         }
 

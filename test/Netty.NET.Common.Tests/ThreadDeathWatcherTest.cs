@@ -32,7 +32,10 @@ public class ThreadDeathWatcherTest
         {
             try
             {
-                for (;;) Thread.Sleep(1000);
+                for (;;)
+                {
+                    Thread.Sleep(1000);
+                }
             }
             catch (ThreadInterruptedException)
             {

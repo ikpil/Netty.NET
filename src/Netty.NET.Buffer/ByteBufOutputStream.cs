@@ -183,7 +183,12 @@ public sealed class ByteBufOutputStream : Stream
         // `writeCharSequence` will instead write a '?' replacement character.
         _buffer.EnsureWritable(value.Length);
         int offset = _buffer.WriterIndex;
-        for (int i = 0; i < value.Length; ++i) _buffer.SetByte(offset + i, unchecked((byte)value[i]));
+
+        for (int i = 0; i < value.Length; ++i)
+        {
+            _buffer.SetByte(offset + i, unchecked((byte)value[i]));
+        }
+
         _buffer.WriterIndex = offset + value.Length;
     }
 
@@ -195,7 +200,11 @@ public sealed class ByteBufOutputStream : Stream
         // CLR: validate permission even for an empty string. Preserve per-character progress
         // on capacity failure, rather than making the original loop transactional.
         _buffer.EnsureWritable(0);
-        foreach (char character in value) _buffer.WriteChar(character);
+
+        foreach (char character in value)
+        {
+            _buffer.WriteChar(character);
+        }
     }
 
     /// <summary>Writes Java DataOutput's unsigned-length-prefixed modified UTF-8 wire format.</summary>

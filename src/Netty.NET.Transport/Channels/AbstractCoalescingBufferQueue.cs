@@ -396,6 +396,7 @@ public abstract class AbstractCoalescingBufferQueue
             return operation;
         }
         return CompleteWriteAsync();
+
         async Task CompleteWriteAsync()
         {
             try

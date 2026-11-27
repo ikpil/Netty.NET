@@ -24,7 +24,10 @@ public class ExecutorCompletionContractTest
             _running = Thread.CurrentThread;
             try
             {
-                while (_queue.TryDequeue(out var work)) work();
+                while (_queue.TryDequeue(out var work))
+                {
+                    work();
+                }
             }
             finally
             {
@@ -101,7 +104,11 @@ public class ExecutorCompletionContractTest
         using var observation = new ExecutorCompletion(executor, source.Task);
         Task observed = null;
         bool affinity = false;
-        using var registration = observation.Register(task => { observed = task; affinity = executor.InEventLoop(); });
+        using var registration = observation.Register(task =>
+        {
+            observed = task;
+            affinity = executor.InEventLoop();
+        });
         var failure = new InvalidOperationException("source failure");
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -225,7 +232,11 @@ public class ExecutorCompletionContractTest
         var executor = new QueuedExecutor();
         using var observation = new ExecutorCompletion(executor, Task.CompletedTask);
         var seen = new List<int>();
-        Action<Task> callback = _ => { seen.Add(1); throw new InvalidOperationException("observer failure"); };
+        Action<Task> callback = _ =>
+        {
+            seen.Add(1);
+            throw new InvalidOperationException("observer failure");
+        };
         callback += _ => seen.Add(2);
         using var first = observation.Register(callback);
         using var second = observation.Register(_ => seen.Add(3));
@@ -270,6 +281,7 @@ public class ExecutorCompletionContractTest
         var observations = Enumerable.Range(0, 10_000)
             .Select(_ => new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, Task.CompletedTask)).ToArray();
         int calls = 0, depth = 0, maximum = 0;
+
         void Invoke(int index)
         {
             maximum = Math.Max(maximum, ++depth);
@@ -280,6 +292,7 @@ public class ExecutorCompletionContractTest
             }
             --depth;
         }
+
         try
         {
             using var registration = observations[0].Register(_ => Invoke(0));
@@ -288,7 +301,10 @@ public class ExecutorCompletionContractTest
         }
         finally
         {
-            foreach (var observation in observations) observation.Dispose();
+            foreach (var observation in observations)
+            {
+                observation.Dispose();
+            }
         }
     }
 
@@ -304,7 +320,11 @@ public class ExecutorCompletionContractTest
         using var observation = new ExecutorCompletion(executor, source.Task);
         var seen = new List<string>();
         ambient.Value = "registration";
-        Action<Task> callback = _ => { seen.Add(ambient.Value); ambient.Value = "callback mutation"; };
+        Action<Task> callback = _ =>
+        {
+            seen.Add(ambient.Value);
+            ambient.Value = "callback mutation";
+        };
         callback += _ => seen.Add(ambient.Value);
         using var first = observation.Register(callback);
         using var second = observation.Register(_ => seen.Add(ambient.Value));
@@ -315,7 +335,10 @@ public class ExecutorCompletionContractTest
         ambient.Value = "executor";
         if (suppressFlow)
         {
-            using (ExecutionContext.SuppressFlow()) executor.RunAll();
+            using (ExecutionContext.SuppressFlow())
+            {
+                executor.RunAll();
+            }
         }
         else
         {

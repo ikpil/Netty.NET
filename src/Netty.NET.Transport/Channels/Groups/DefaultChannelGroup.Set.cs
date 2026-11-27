@@ -123,7 +123,11 @@ public partial class DefaultChannelGroup
         {
             return;
         }
-        foreach (var channel in other) Add(channel);
+
+        foreach (var channel in other)
+        {
+            Add(channel);
+        }
     }
 
     public void ExceptWith(IEnumerable<IChannel> other)
@@ -134,7 +138,11 @@ public partial class DefaultChannelGroup
             Clear();
             return;
         }
-        foreach (var channel in other) Remove(channel);
+
+        foreach (var channel in other)
+        {
+            Remove(channel);
+        }
     }
 
     public void IntersectWith(IEnumerable<IChannel> other)

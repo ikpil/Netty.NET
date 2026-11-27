@@ -22,7 +22,10 @@ public class ExecutorProgressContractTest
             _running = Thread.CurrentThread;
             try
             {
-                while (_queue.TryDequeue(out var work)) work();
+                while (_queue.TryDequeue(out var work))
+                {
+                    work();
+                }
             }
             finally
             {
@@ -94,8 +97,16 @@ public class ExecutorProgressContractTest
         var operation = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var events = new List<string>();
         var reporter = new ExecutorProgress(executor, operation.Task,
-            value => { Assert.True(executor.InEventLoop()); events.Add($"p:{value.Completed}/{value.Total}"); },
-            task => { Assert.Same(operation.Task, task); events.Add("done"); });
+            value =>
+            {
+                Assert.True(executor.InEventLoop());
+                events.Add($"p:{value.Completed}/{value.Total}");
+            },
+            task =>
+            {
+                Assert.Same(operation.Task, task);
+                events.Add("done");
+            });
         IProgress<TransferProgress> progress = reporter;
         progress.Report(new TransferProgress(3, 10));
         progress.Report(new TransferProgress(7, 10));
@@ -166,7 +177,11 @@ public class ExecutorProgressContractTest
         }
         int completions = 0;
         var reporter = new ExecutorProgress(executor, operation.Task, _ => throw new InvalidOperationException("unexpected progress"),
-            task => { Assert.Same(operation.Task, task); ++completions; });
+            task =>
+            {
+                Assert.Same(operation.Task, task);
+                ++completions;
+            });
         Assert.False(reporter.TryReport(1, 2));
         await Drain(executor, reporter.NotificationsCompleted);
         Assert.Equal(1, completions);
@@ -190,9 +205,17 @@ public class ExecutorProgressContractTest
     {
         var operation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var events = new List<string>();
-        Action<TransferProgress> progress = _ => { events.Add("bad-progress"); throw new InvalidOperationException(); };
+        Action<TransferProgress> progress = _ =>
+        {
+            events.Add("bad-progress");
+            throw new InvalidOperationException();
+        };
         progress += _ => events.Add("good-progress");
-        Action<Task> completed = _ => { events.Add("bad-complete"); throw new InvalidOperationException(); };
+        Action<Task> completed = _ =>
+        {
+            events.Add("bad-complete");
+            throw new InvalidOperationException();
+        };
         completed += _ => events.Add("good-complete");
         var reporter = new ExecutorProgress(ImmediateEventExecutor.INSTANCE, operation.Task, progress, completed);
         reporter.Report(new TransferProgress(1, 2));
@@ -211,7 +234,8 @@ public class ExecutorProgressContractTest
         int depth = 0, maxDepth = 0;
         Action<TransferProgress> progress = value =>
         {
-            ++depth; maxDepth = Math.Max(maxDepth, depth);
+            ++depth;
+            maxDepth = Math.Max(maxDepth, depth);
             events.Add(value.Completed * 2);
             if (value.Completed < 10_000)
             {
@@ -236,10 +260,18 @@ public class ExecutorProgressContractTest
         var ambient = new AsyncLocal<string>();
         var observed = new List<string>();
         ambient.Value = "constructor";
-        Action<TransferProgress> progress = _ => { observed.Add(ambient.Value); ambient.Value = "changed"; };
+        Action<TransferProgress> progress = _ =>
+        {
+            observed.Add(ambient.Value);
+            ambient.Value = "changed";
+        };
         progress += _ => observed.Add(ambient.Value);
         var reporter = new ExecutorProgress(executor, operation.Task, progress,
-            _ => { observed.Add(ambient.Value); ambient.Value = "complete-change"; });
+            _ =>
+            {
+                observed.Add(ambient.Value);
+                ambient.Value = "complete-change";
+            });
         ambient.Value = "producer";
         reporter.Report(new TransferProgress(1));
         ambient.Value = "executor";

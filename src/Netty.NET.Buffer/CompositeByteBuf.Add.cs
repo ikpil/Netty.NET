@@ -124,7 +124,11 @@ public partial class CompositeByteBuf
         {
             // ci is now the index following the last successfully added component
             // we bailed early
-            for (; next < buffers.Length; ++next) ReferenceCountUtil.SafeRelease(buffers[next]);
+            for (; next < buffers.Length; ++next)
+            {
+                ReferenceCountUtil.SafeRelease(buffers[next]);
+            }
+
             // only need to do this here for components after the added ones
             // CLR: each List insertion has already updated offsets; only indices remain.
             if (increaseWriterIndex && addedBytes != 0)
@@ -363,7 +367,11 @@ public partial class CompositeByteBuf
                 {
                     WriterIndex = writerBefore;
                 }
-                foreach (ComponentEntry addition in additions) addition.Free();
+
+                foreach (ComponentEntry addition in additions)
+                {
+                    addition.Free();
+                }
             }
         }
         buffer.Release();

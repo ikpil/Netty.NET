@@ -235,7 +235,12 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
         lock (_arena.SyncRoot)
         {
             var metrics = new List<IPoolChunkMetric>();
-            for (PoolChunk cur = _head; cur != null; cur = cur.Next) metrics.Add(cur);
+
+            for (PoolChunk cur = _head; cur != null; cur = cur.Next)
+            {
+                metrics.Add(cur);
+            }
+
             return metrics.GetEnumerator();
         }
     }

@@ -70,7 +70,11 @@ public class ChannelMatchersContractTest
         Assert.Same(single, ChannelMatchers.Compose(single));
 
         int laterCalls = 0;
-        Func<IChannel, bool> later = _ => { laterCalls++; return true; };
+        Func<IChannel, bool> later = _ =>
+        {
+            laterCalls++;
+            return true;
+        };
         Assert.True(ChannelMatchers.Compose(ChannelMatchers.All(), later)(channel));
         Assert.Equal(1, laterCalls);
         Assert.False(ChannelMatchers.Compose(ChannelMatchers.IsServerChannel(), later)(channel));

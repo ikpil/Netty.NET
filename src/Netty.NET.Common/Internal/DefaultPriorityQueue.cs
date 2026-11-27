@@ -110,7 +110,11 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public void Clear()
     {
-        for (int i = 0; i < _size; i++) SetIndex(_queue[i], -1);
+        for (int i = 0; i < _size; i++)
+        {
+            SetIndex(_queue[i], -1);
+        }
+
         Array.Clear(_queue, 0, _size);
         _size = 0;
     }

@@ -113,7 +113,11 @@ public class UnorderedQueueOwnershipContractTest
                 Task<int> operation = null;
                 Task admission = Task.Run(() =>
                 {
-                    operation = executor.SubmitAsync(() => { Interlocked.Increment(ref calls); return 17; }, cancellation.Token);
+                    operation = executor.SubmitAsync(() =>
+                    {
+                        Interlocked.Increment(ref calls);
+                        return 17;
+                    }, cancellation.Token);
                 });
                 await Task.WhenAll(admission, Task.Run(cancellation.Cancel)).WaitAsync(TimeSpan.FromSeconds(5));
                 try
@@ -194,7 +198,11 @@ public class UnorderedQueueOwnershipContractTest
         finally
         {
             await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
-            foreach (var owner in owners) owner?.Dispose();
+
+            foreach (var owner in owners)
+            {
+                owner?.Dispose();
+            }
         }
     }
 
@@ -207,7 +215,11 @@ public class UnorderedQueueOwnershipContractTest
         var owners = new CancellationTokenSource[32];
         var operations = new Task<int>[32];
         var executed = new ConcurrentQueue<int>();
-        Task blocker = executor.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); });
+        Task blocker = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -215,19 +227,36 @@ public class UnorderedQueueOwnershipContractTest
             {
                 int index = i;
                 owners[i] = new CancellationTokenSource();
-                Func<int> action = () => { executed.Enqueue(index); return index; };
+                Func<int> action = () =>
+                {
+                    executed.Enqueue(index);
+                    return index;
+                };
                 operations[i] = i % 2 == 0
                     ? executor.ScheduleAsync(action, TimeSpan.Zero, owners[i].Token)
                     : executor.SubmitAsync(action, owners[i].Token);
             }
             int[] canceled = { 0, 31, 13, 7, 24, 16 };
-            foreach (int i in canceled) owners[i].Cancel();
+
+            foreach (int i in canceled)
+            {
+                owners[i].Cancel();
+            }
+
             Assert.Equal(operations.Length - canceled.Length, executor.PendingTaskCount);
             release.Set();
             await blocker.WaitAsync(TimeSpan.FromSeconds(5));
             int[] remaining = Enumerable.Range(0, operations.Length).Except(canceled).ToArray();
-            foreach (int i in remaining) Assert.Equal(i, await operations[i].WaitAsync(TimeSpan.FromSeconds(5)));
-            foreach (int i in canceled) Assert.True(operations[i].IsCanceled);
+
+            foreach (int i in remaining)
+            {
+                Assert.Equal(i, await operations[i].WaitAsync(TimeSpan.FromSeconds(5)));
+            }
+            foreach (int i in canceled)
+            {
+                Assert.True(operations[i].IsCanceled);
+            }
+
             // All deadlines were admitted sequentially with zero delay. This checks
             // the existing deadline order on one worker, not ordering across a pool.
             Assert.Equal(remaining, executed.ToArray());
@@ -237,7 +266,11 @@ public class UnorderedQueueOwnershipContractTest
         {
             release.Set();
             await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
-            foreach (var owner in owners) owner?.Dispose();
+
+            foreach (var owner in owners)
+            {
+                owner?.Dispose();
+            }
         }
     }
 

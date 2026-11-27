@@ -90,7 +90,10 @@ public class UnreleasableByteBufComparisonTest
     public static IEnumerable<object[]> Cases()
     {
         for (int backing = 0; backing < 3; backing++)
-        for (int parent = 0; parent < 4; parent++) yield return [backing, parent];
+        for (int parent = 0; parent < 4; parent++)
+            {
+                yield return [backing, parent];
+            }
     }
 
     private static ByteBuf Peer()

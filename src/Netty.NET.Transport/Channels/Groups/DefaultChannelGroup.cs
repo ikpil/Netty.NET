@@ -179,7 +179,11 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
             // See https://github.com/netty/netty/issues/4020
             Volatile.Write(ref _closed, 1);
         }
-        return OperateAsync(async channel => { await channel.CloseAsync().ConfigureAwait(false); Remove(channel); }, matcher, true, out operations);
+        return OperateAsync(async channel =>
+        {
+            await channel.CloseAsync().ConfigureAwait(false);
+            Remove(channel);
+        }, matcher, true, out operations);
     }
 
     /**

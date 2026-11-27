@@ -25,6 +25,7 @@ public class UnorderedTerminationContractTest
         using var entered = new CountdownEvent(2);
         using var firstRelease = new ManualResetEventSlim();
         using var lastRelease = new ManualResetEventSlim();
+
         Task Invoke(ManualResetEventSlim release)
         {
             return executor.SubmitAsync(() =>
@@ -44,6 +45,7 @@ public class UnorderedTerminationContractTest
                 }
             });
         }
+
         Task first = Invoke(firstRelease), last = Invoke(lastRelease);
         try
         {

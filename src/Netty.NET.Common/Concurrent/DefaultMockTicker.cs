@@ -69,7 +69,11 @@ public sealed class DefaultMockTicker : MockTicker
         {
             // A signaled old phase must leave its registration before an
             // observer can mistake it for this newly admitted sleep.
-            while (pendingTicks.Count != 0) Monitor.Wait(_lock);
+            while (pendingTicks.Count != 0)
+            {
+                Monitor.Wait(_lock);
+            }
+
             var sleeper = new Sleeper();
             var registration = registered.AddLast(sleeper);
             try
@@ -79,7 +83,11 @@ public sealed class DefaultMockTicker : MockTicker
                 Monitor.PulseAll(_lock);
                 while (true)
                 {
-                    while (pendingTicks.First != sleeper.Tick) Monitor.Wait(_lock);
+                    while (pendingTicks.First != sleeper.Tick)
+                    {
+                        Monitor.Wait(_lock);
+                    }
+
                     pendingTicks.RemoveFirst();
                     if (unchecked(NanoTime() - startTimeNanos) >= delayNanos)
                     {
@@ -143,7 +151,12 @@ public sealed class DefaultMockTicker : MockTicker
                     }
                 }
                 Interlocked.Add(ref _nanoTime, amountNanos);
-                foreach (var sleeper in registered) pendingTicks.AddLast(sleeper.Tick);
+
+                foreach (var sleeper in registered)
+                {
+                    pendingTicks.AddLast(sleeper.Tick);
+                }
+
                 Monitor.PulseAll(_lock);
             }
         }

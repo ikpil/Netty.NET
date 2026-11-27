@@ -78,7 +78,12 @@ public class DerivedByteBufIterationTest
         public Storage(bool direct, int kind)
         {
             Root = direct ? new ObservedDirect(Observation, Native) : new ObservedHeap(Observation);
-            for (int i = 0; i < 16; ++i) Root.WriteByte(i);
+
+            for (int i = 0; i < 16; ++i)
+            {
+                Root.WriteByte(i);
+            }
+
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
@@ -118,7 +123,10 @@ public class DerivedByteBufIterationTest
     {
         foreach (bool direct in new[] { false, true })
         for (int kind = 0; kind < 11; ++kind)
-        foreach (bool descending in new[] { false, true }) yield return [direct, kind, descending];
+        foreach (bool descending in new[] { false, true })
+                {
+                    yield return [direct, kind, descending];
+                }
     }
 
     private static int Scan(ByteBuf b, bool descending, Func<byte, bool> p)
@@ -138,7 +146,11 @@ public class DerivedByteBufIterationTest
         using var s = new Storage(direct, kind);
         int reader = s.View.ReaderIndex, writer = s.View.WriterIndex;
         var visited = new List<byte>();
-        Func<byte, bool> stop = value => { visited.Add(value); return value != s.Offset + 3; };
+        Func<byte, bool> stop = value =>
+        {
+            visited.Add(value);
+            return value != s.Offset + 3;
+        };
         Assert.Equal(3, Scan(s.View, descending, 2, 3, stop));
         Assert.Equal(descending ? new byte[] { (byte)(s.Offset + 4), (byte)(s.Offset + 3) }
             : new byte[] { (byte)(s.Offset + 2), (byte)(s.Offset + 3) }, visited);
@@ -149,14 +161,22 @@ public class DerivedByteBufIterationTest
 
         s.Observation.Calls = 0;
         visited.Clear();
-        Assert.Equal(-1, Scan(s.View, descending, 2, 3, value => { visited.Add(value); return true; }));
+        Assert.Equal(-1, Scan(s.View, descending, 2, 3, value =>
+        {
+            visited.Add(value);
+            return true;
+        }));
         Assert.Equal(1, s.Observation.Calls);
         Assert.Equal(descending ? new byte[] { (byte)(s.Offset + 4), (byte)(s.Offset + 3), (byte)(s.Offset + 2) }
             : new byte[] { (byte)(s.Offset + 2), (byte)(s.Offset + 3), (byte)(s.Offset + 4) }, visited);
 
         s.Observation.Calls = 0;
         visited.Clear();
-        Assert.Equal(-1, Scan(s.View, descending, value => { visited.Add(value); return true; }));
+        Assert.Equal(-1, Scan(s.View, descending, value =>
+        {
+            visited.Add(value);
+            return true;
+        }));
         Assert.Equal(0, s.Observation.Calls);
         IEnumerable<byte> range = Enumerable.Range(s.Offset + reader, writer - reader).Select(x => (byte)x);
         Assert.Equal(descending ? range.Reverse() : range, visited);
@@ -220,7 +240,10 @@ public class DerivedByteBufIterationTest
     {
         for (int kind = 0; kind < 11; ++kind)
         foreach (bool descending in new[] { false, true })
-        foreach (int result in new[] { -2, -1, 1 }) yield return [kind, descending, result];
+        foreach (int result in new[] { -2, -1, 1 })
+                {
+                    yield return [kind, descending, result];
+                }
     }
 
     [Theory]

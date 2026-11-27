@@ -46,7 +46,12 @@ public partial class CompositeByteBufBulkKernelTest
         {
             _observation.Visit("GetSpan", index, destination.Length);
             base.GetBytes(index, destination);
-            for (int i = 0; i < destination.Length; ++i) destination[i] ^= 0x5A;
+
+            for (int i = 0; i < destination.Length; ++i)
+            {
+                destination[i] ^= 0x5A;
+            }
+
             return this;
         }
 
@@ -78,7 +83,12 @@ public partial class CompositeByteBufBulkKernelTest
         {
             _observation.Visit("GetSpan", index, destination.Length);
             base.GetBytes(index, destination);
-            for (int i = 0; i < destination.Length; ++i) destination[i] ^= 0x5A;
+
+            for (int i = 0; i < destination.Length; ++i)
+            {
+                destination[i] ^= 0x5A;
+            }
+
             return this;
         }
 
@@ -103,7 +113,10 @@ public partial class CompositeByteBufBulkKernelTest
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 7; ++form)
         for (int operation = 0; operation < 9; ++operation)
-        foreach (bool boundary in new[] { false, true }) yield return [direct, form, operation, boundary];
+        foreach (bool boundary in new[] { false, true })
+                    {
+                        yield return [direct, form, operation, boundary];
+                    }
     }
 
     [Theory]

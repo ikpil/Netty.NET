@@ -59,7 +59,11 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
 
     public void Dispose()
     {
-        foreach (NativeMemoryOwner owner in _owners) owner.Dispose();
+        foreach (NativeMemoryOwner owner in _owners)
+        {
+            owner.Dispose();
+        }
+
         Assert.Equal(0, _native.ReservedBytes);
     }
 

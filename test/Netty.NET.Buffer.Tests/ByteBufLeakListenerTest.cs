@@ -51,7 +51,11 @@ public class ByteBufLeakListenerTest : IDisposable
         MakeLeak(hint, out var weak);
         CollectUntil(() => !weak.IsAlive);
         ByteBufUtil.SetLeakListener(second);
-        CollectUntil(() => { Drain(); return second.Calls == 1; });
+        CollectUntil(() =>
+        {
+            Drain();
+            return second.Calls == 1;
+        });
         Assert.Equal(0, first.Calls);
         Assert.Equal(1, second.Calls);
         Assert.Equal("ByteBuf", second.ResourceType);
@@ -75,7 +79,11 @@ public class ByteBufLeakListenerTest : IDisposable
         ByteBufUtil.SetLeakListener(null);
         ByteBufUtil.SetLeakListener(null);
         // The report clears the abandoned tracker's records even without a listener.
-        CollectUntil(() => { Drain(); return tracker.ToString().Length == 0; });
+        CollectUntil(() =>
+        {
+            Drain();
+            return tracker.ToString().Length == 0;
+        });
         Assert.Equal(0, listener.Calls);
     }
 
@@ -148,15 +156,18 @@ public class ByteBufLeakListenerTest : IDisposable
     private static void CollectUntil(Func<bool> done)
     {
         var timer = Stopwatch.StartNew();
+
         do
         {
-            GC.Collect(); GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             if (done())
             {
                 return;
             }
             Thread.Sleep(10);
         } while (timer.Elapsed < TimeSpan.FromSeconds(5));
+
         Assert.True(done());
     }
 

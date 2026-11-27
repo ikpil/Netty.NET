@@ -146,7 +146,10 @@ internal sealed partial class AdaptivePoolingAllocator
                 if (!_freeList.IsEmpty)
                 {
                     // A concurrent snapshot, like weakPeekReduce, is not a transaction with allocation.
-                    foreach (int entry in _freeList) capacityInFreeList += UnpackSize(entry);
+                    foreach (int entry in _freeList)
+                    {
+                        capacityInFreeList += UnpackSize(entry);
+                    }
                 }
                 return base.RemainingCapacity + capacityInFreeList;
             }

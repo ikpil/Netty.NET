@@ -57,7 +57,12 @@ public abstract class AbstractBootstrapConfig
     protected static IReadOnlyDictionary<TKey, object> Freeze<TKey>(IEnumerable<KeyValuePair<TKey, object>> values)
     {
         var snapshot = new OrderedDictionary<TKey, object>();
-        foreach (var pair in values) snapshot.Add(pair.Key, pair.Value);
+
+        foreach (var pair in values)
+        {
+            snapshot.Add(pair.Key, pair.Value);
+        }
+
         return new ReadOnlyDictionary<TKey, object>(snapshot);
     }
 

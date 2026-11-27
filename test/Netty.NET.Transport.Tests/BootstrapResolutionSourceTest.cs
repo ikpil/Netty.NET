@@ -81,7 +81,11 @@ public class BootstrapResolutionSourceTest
         LocalChannel channel = null;
         try
         {
-            group.Next().Execute(() => { entered.SetResult(); release.Wait(); });
+            group.Next().Execute(() =>
+            {
+                entered.SetResult();
+                release.Wait();
+            });
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => channel = new LocalChannel())
                 .Resolver(resolver).Handler(new ChannelInboundHandlerAdapter());

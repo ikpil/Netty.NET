@@ -147,7 +147,11 @@ public class NativeExecutorTaskContractTest
         using var cancellation = new CancellationTokenSource();
         var calls = new List<int>();
         Task action = group.SubmitAsync(() => { calls.Add(0); });
-        Task<int> value = group.SubmitAsync(() => { calls.Add(1); return 1; });
+        Task<int> value = group.SubmitAsync(() =>
+        {
+            calls.Add(1);
+            return 1;
+        });
         Task tokenAction = group.SubmitAsync((CancellationToken token) =>
         {
             Assert.Equal(cancellation.Token, token);
@@ -159,8 +163,16 @@ public class NativeExecutorTaskContractTest
             calls.Add(3);
             return 3;
         }, cancellation.Token);
-        Task asyncAction = group.SubmitAsync(() => { calls.Add(4); return Task.CompletedTask; });
-        Task<int> asyncValue = group.SubmitAsync(() => { calls.Add(5); return Task.FromResult(5); });
+        Task asyncAction = group.SubmitAsync(() =>
+        {
+            calls.Add(4);
+            return Task.CompletedTask;
+        });
+        Task<int> asyncValue = group.SubmitAsync(() =>
+        {
+            calls.Add(5);
+            return Task.FromResult(5);
+        });
         Task tokenAsyncAction = group.SubmitAsync((CancellationToken token) =>
         {
             Assert.Equal(cancellation.Token, token);
@@ -177,7 +189,13 @@ public class NativeExecutorTaskContractTest
         Assert.Equal(4, first.Pending);
         Assert.Equal(4, second.Pending);
         Assert.Empty(calls);
-        for (int i = 0; i < 4; ++i) { first.RunNext(); second.RunNext(); }
+
+        for (int i = 0; i < 4; ++i)
+        {
+            first.RunNext();
+            second.RunNext();
+        }
+
         await Task.WhenAll(action, value, tokenAction, tokenValue, asyncAction, asyncValue,
             tokenAsyncAction, tokenAsyncValue);
         Assert.Equal(new[] { 0, 1, 2, 3, 4, 5, 6, 7 }, calls);
@@ -341,7 +359,11 @@ public class NativeExecutorTaskContractTest
         var underlying = new QueuedExecutor
         {
             Rejection = original,
-            BeforeAdmission = () => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); }
+            BeforeAdmission = () =>
+            {
+                entered.Set();
+                Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+            }
         };
         IEventExecutor child = new NonStickyEventExecutorGroup(underlying).Next();
         Task<Task> firstAdmission = Task.Factory.StartNew(() => child.SubmitAsync(() => { }),
@@ -494,8 +516,16 @@ public class NativeExecutorTaskContractTest
         try
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            Task first = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(1); });
-            Task second = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(2); });
+            Task first = child.SubmitAsync(() =>
+            {
+                Assert.True(child.InEventLoop());
+                calls.Add(1);
+            });
+            Task second = child.SubmitAsync(() =>
+            {
+                Assert.True(child.InEventLoop());
+                calls.Add(2);
+            });
             if (immediate)
             {
                 _ = executor.StopAsync();
@@ -561,8 +591,16 @@ public class NativeExecutorTaskContractTest
         var underlying = new QueuedExecutor();
         IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).Next();
         var threads = new List<int>();
-        Task first = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); threads.Add(Thread.CurrentThread.ManagedThreadId); });
-        Task second = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); threads.Add(Thread.CurrentThread.ManagedThreadId); });
+        Task first = child.SubmitAsync(() =>
+        {
+            Assert.True(child.InEventLoop());
+            threads.Add(Thread.CurrentThread.ManagedThreadId);
+        });
+        Task second = child.SubmitAsync(() =>
+        {
+            Assert.True(child.InEventLoop());
+            threads.Add(Thread.CurrentThread.ManagedThreadId);
+        });
         var firstWorker = new Thread(underlying.RunNext);
         firstWorker.Start();
         Assert.True(firstWorker.Join(TimeSpan.FromSeconds(5)));
@@ -744,7 +782,11 @@ public class NativeExecutorTaskContractTest
             using var cancellation = new CancellationTokenSource();
             var executor = new QueuedExecutor();
             int calls = 0;
-            Task<int> result = executor.SubmitAsync(() => { ++calls; return 7; }, cancellation.Token);
+            Task<int> result = executor.SubmitAsync(() =>
+            {
+                ++calls;
+                return 7;
+            }, cancellation.Token);
             Parallel.Invoke(cancellation.Cancel, executor.RunNext);
             if (calls == 0)
             {
@@ -784,7 +826,12 @@ public class NativeExecutorTaskContractTest
         var executor = new QueuedExecutor();
         Task<string> result;
         using (ExecutionContext.SuppressFlow())
-            result = executor.SubmitAsync(() => { string value = ambient.Value; ambient.Value = "invocation"; return value; });
+            result = executor.SubmitAsync(() =>
+            {
+                string value = ambient.Value;
+                ambient.Value = "invocation";
+                return value;
+            });
         ambient.Value = "executor";
         executor.RunNext();
         Assert.Equal("executor", ambient.Value);
@@ -970,7 +1017,11 @@ public class NativeExecutorTaskContractTest
         var value = new object();
         var retained = new WeakReference(value);
         var ambient = new AsyncLocal<object> { Value = value };
-        Task result = executor.SubmitAsync(() => { GC.KeepAlive(value); GC.KeepAlive(ambient.Value); }, cancellationToken);
+        Task result = executor.SubmitAsync(() =>
+        {
+            GC.KeepAlive(value);
+            GC.KeepAlive(ambient.Value);
+        }, cancellationToken);
         ambient.Value = null;
         return (retained, result);
     }

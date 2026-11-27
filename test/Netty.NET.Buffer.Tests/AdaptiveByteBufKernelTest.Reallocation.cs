@@ -26,7 +26,10 @@ public partial class AdaptiveByteBufKernelTest
     {
         foreach (bool direct in new[] { false, true })
         for (int profile = 0; profile < 5; ++profile)
-        for (int mode = 0; mode < 3; ++mode) yield return [direct, profile, mode];
+        for (int mode = 0; mode < 3; ++mode)
+                {
+                    yield return [direct, profile, mode];
+                }
     }
 
     [Theory]

@@ -62,7 +62,11 @@ public class NioEventLoopSourceTest
             {
                 try
                 {
-                    for (;;) { loop.Execute(task); started.Set(); }
+                    for (;;)
+                    {
+                        loop.Execute(task);
+                        started.Set();
+                    }
                 }
                 catch (Exception cause)
                 {

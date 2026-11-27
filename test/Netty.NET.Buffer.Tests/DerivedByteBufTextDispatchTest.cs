@@ -65,8 +65,14 @@ public class DerivedByteBufTextDispatchTest
         internal Context(bool direct, int form)
         {
             Root = direct ? new Direct(Observation, Native) : new Heap(Observation);
-            for (int i = 0; i < 64; ++i) Root.WriteByte('A' + i % 26);
+
+            for (int i = 0; i < 64; ++i)
+            {
+                Root.WriteByte('A' + i % 26);
+            }
+
             Root.SetIndex(3, 40);
+
             ByteBuf Slice()
             {
                 return Own(PooledDerivedByteBuf.NewSlice(Root, Root, 2, 30));
@@ -76,6 +82,7 @@ public class DerivedByteBufTextDispatchTest
             {
                 return Own(PooledDerivedByteBuf.NewDuplicate(Root, Root, 3, 40));
             }
+
             View = form switch
             {
                 0 => Root.Slice(4, 16), 1 => Root.Duplicate(), 2 => Root.AsReadOnly(),
@@ -120,7 +127,10 @@ public class DerivedByteBufTextDispatchTest
         for (int operation = 0; operation < 5; ++operation)
         for (int encoding = 0; encoding < 3; ++encoding)
         foreach (bool fail in new[] { false, true })
-        foreach (bool empty in new[] { false, true }) yield return [direct, form, operation, encoding, fail, empty];
+        foreach (bool empty in new[] { false, true })
+                            {
+                                yield return [direct, form, operation, encoding, fail, empty];
+                            }
     }
 
     [Theory]
@@ -135,6 +145,7 @@ public class DerivedByteBufTextDispatchTest
         int reader = c.View.ReaderIndex, writer = c.View.WriterIndex, claims = c.Root.RefCnt;
         int index = operation is 0 or 3 ? empty ? c.View.Capacity : 2 : reader;
         int length = empty ? 0 : operation == 1 ? writer - reader : 5;
+
         // Operations 0 and 2 are getCharSequence/readCharSequence, which a non-retained slice delegates to its parent;
         // 1, 3 and 4 are toString(Charset), toString(int, int, Charset) and readString, which always decode locally.
         string Request()
@@ -148,6 +159,7 @@ public class DerivedByteBufTextDispatchTest
                 _ => c.View.ReadString(length, codec),
             };
         }
+
         bool forward = c.Forward && operation is 0 or 2;
         if (forward && fail)
             Assert.Same(c.Observation.Failure, Assert.Throws<TextFailure>(() => Request()));
@@ -177,7 +189,10 @@ public class DerivedByteBufTextDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 16; ++form)
-        for (int range = 0; range < 4; ++range) yield return [direct, form, range];
+        for (int range = 0; range < 4; ++range)
+                {
+                    yield return [direct, form, range];
+                }
     }
 
     [Theory]

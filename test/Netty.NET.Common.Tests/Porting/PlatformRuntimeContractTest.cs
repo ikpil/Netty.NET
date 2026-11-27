@@ -23,7 +23,9 @@ public class PlatformRuntimeContractTest
     [Fact]
     public void GraalNativeImagePropertiesDoNotEnableReflectiveAccess()
     {
-        foreach (string setting in new string[] { null, "false", "true" }) WithFreshPlatform(new()
+        foreach (string setting in new string[] { null, "false", "true" })
+        {
+            WithFreshPlatform(new()
         {
             ["org.graalvm.nativeimage.imagecode"] = "runtime",
             ["io.netty.tryReflectionSetAccessible"] = setting
@@ -34,6 +36,7 @@ public class PlatformRuntimeContractTest
             Assert.NotNull(probe);
             Assert.Equal(OperatingSystem.IsAndroid(), (bool)probe.Invoke(null, null));
         });
+        }
     }
 
     [Fact]

@@ -183,9 +183,18 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                 return;
             }
             _disposed = true;
-            foreach (var entry in _chunks) entry.Chunk.Dispose();
+
+            foreach (var entry in _chunks)
+            {
+                entry.Chunk.Dispose();
+            }
+
             _chunks.Clear();
-            foreach (var pool in _pools) pool.Dispose();
+
+            foreach (var pool in _pools)
+            {
+                pool.Dispose();
+            }
         }
     }
 }

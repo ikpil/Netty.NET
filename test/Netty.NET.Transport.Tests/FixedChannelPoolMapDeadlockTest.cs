@@ -160,8 +160,16 @@ public class FixedChannelPoolMapDeadlockTest
             // thread1 tries to remove pool1 which is running on thread2
             // thread2 tries to remove pool2 which is running on thread1
             using var barrier = new Barrier(2);
-            var future1 = thread1.SubmitAsync(() => { Await(barrier); map.Remove("#1"); });
-            var future2 = thread2.SubmitAsync(() => { Await(barrier); map.Remove("#2"); });
+            var future1 = thread1.SubmitAsync(() =>
+            {
+                Await(barrier);
+                map.Remove("#1");
+            });
+            var future2 = thread2.SubmitAsync(() =>
+            {
+                Await(barrier);
+                map.Remove("#2");
+            });
             // A blocking close on remove will cause a deadlock here and the test will time out
             // Fail the test on timeout to distinguish from other errors
             await future1.WaitAsync(TimeSpan.FromSeconds(1));

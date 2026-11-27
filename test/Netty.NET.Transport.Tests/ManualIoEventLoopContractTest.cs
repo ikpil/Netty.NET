@@ -30,7 +30,12 @@ public class ManualIoEventLoopContractTest
             try
             {
                 loop.SetOwningThread(Thread.CurrentThread);
-                while (!loop.IsTerminated()) loop.Run(0);
+
+                while (!loop.IsTerminated())
+                {
+                    loop.Run(0);
+                }
+
                 finished.SetResult();
             }
             catch (Exception error)

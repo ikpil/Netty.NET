@@ -27,7 +27,12 @@ public class PooledDerivedByteBufTest
     {
         ByteBuf b = direct ? new PooledDirectByteBuf((PoolDirectArena)a.DirectArenas[0], length, 64)
             : new PooledHeapByteBuf((PoolHeapArena)a.HeapArenas[0], length, 64);
-        for (int i = 0; i < length; i++) b.WriteByte(i);
+
+        for (int i = 0; i < length; i++)
+        {
+            b.WriteByte(i);
+        }
+
         return b;
     }
 
@@ -36,7 +41,10 @@ public class PooledDerivedByteBufTest
         foreach (bool direct in new[] { false, true })
             foreach (bool firstSlice in new[] { false, true })
                 foreach (bool secondSlice in new[] { false, true })
-                    foreach (bool childFirst in new[] { false, true }) yield return [direct, firstSlice, secondSlice, childFirst];
+                    foreach (bool childFirst in new[] { false, true })
+                    {
+                        yield return [direct, firstSlice, secondSlice, childFirst];
+                    }
     }
 
     [Theory]

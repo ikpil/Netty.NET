@@ -412,7 +412,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
              *            less than {@code 0} or
              *            greater than {@code this.writerIndex}
              */
-        set { CheckIndices(value, _writerIndex); _readerIndex = value; }
+        set
+        {
+            CheckIndices(value, _writerIndex);
+            _readerIndex = value;
+        }
     }
     /**
          * Returns the {@code writerIndex} of this buffer.
@@ -428,7 +432,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
              *            less than {@code this.readerIndex} or
              *            greater than {@code this.capacity}
              */
-        set { CheckIndices(_readerIndex, value); _writerIndex = value; }
+        set
+        {
+            CheckIndices(_readerIndex, value);
+            _writerIndex = value;
+        }
     }
     /**
          * Returns the number of readable bytes which is equal to
@@ -798,7 +806,12 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         }
         // 64 <= newCapacity is a power of 2 <= threshold
         int rounded = 64;
-        while (rounded < minimum) rounded <<= 1;
+
+        while (rounded < minimum)
+        {
+            rounded <<= 1;
+        }
+
         return Math.Min(rounded, maximum);
     }
 

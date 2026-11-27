@@ -36,7 +36,11 @@ public class ChannelGroupContractTest
         var lastChannel = Channel(last.Task, operation);
         var excluded = Channel(Task.CompletedTask, operation);
         var group = new DefaultChannelGroup();
-        foreach (var channel in new[] { firstChannel, successful, lastChannel, excluded }) group.Add(channel.Object);
+
+        foreach (var channel in new[] { firstChannel, successful, lastChannel, excluded })
+        {
+            group.Add(channel.Object);
+        }
 
         Task result = Operate(group, operation, channel => !ReferenceEquals(channel, excluded.Object));
         first.SetException(firstError);
@@ -104,7 +108,12 @@ public class ChannelGroupContractTest
         var server = new Mock<IServerChannel>();
         server.SetupGet(channel => channel.Id).Returns(DefaultChannelId.NewInstance());
         server.SetupGet(channel => channel.CloseFuture).Returns(new TaskCompletionSource().Task);
-        foreach (IChannel channel in new IChannel[] { first, second, excluded, server.Object }) group.Add(channel);
+
+        foreach (IChannel channel in new IChannel[] { first, second, excluded, server.Object })
+        {
+            group.Add(channel);
+        }
+
         ByteBuf content = Unpooled.WrappedBuffer(new byte[] { 9, 1, 2 });
         content.ReaderIndex = 1;
         object message = holder ? new DefaultByteBufHolder(content) : content;
@@ -304,7 +313,12 @@ public class ChannelGroupContractTest
         var second = Channel(failure.Task, operation);
         var third = Channel(canceled.Task, operation);
         var group = new DefaultChannelGroup();
-        foreach (var child in new[] { first, second, third }) group.Add(child.Object);
+
+        foreach (var child in new[] { first, second, third })
+        {
+            group.Add(child.Object);
+        }
+
         var (completion, operations) = OperateWithTasks(group, operation);
         group.Clear();
         var later = Channel(Task.CompletedTask, operation);

@@ -33,6 +33,7 @@ public class ConstantPoolConcurrencyContractTest
     {
         using var rendezvous = new Barrier(2);
         var pool = new Pool(rendezvous);
+
         Constant Create()
         {
             try
@@ -44,6 +45,7 @@ public class ConstantPoolConcurrencyContractTest
                 return null;
             }
         }
+
         // Dedicated workers keep the barrier independent of thread-pool injection.
         Task<Constant> first = Task.Factory.StartNew(Create, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         Task<Constant> second = Task.Factory.StartNew(Create, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);

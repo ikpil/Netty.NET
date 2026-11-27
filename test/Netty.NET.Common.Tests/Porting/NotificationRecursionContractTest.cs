@@ -20,6 +20,7 @@ public class NotificationRecursionContractTest
         var completions = new ExecutorCompletion[count];
         int calls = 0, depth = 0, maximum = 0;
         var delivered = new List<int>();
+
         void Visit(int index)
         {
             maximum = Math.Max(maximum, ++depth);
@@ -45,6 +46,7 @@ public class NotificationRecursionContractTest
                 --depth;
             }
         }
+
         try
         {
             for (int index = 0; index < count; index++)
@@ -62,8 +64,14 @@ public class NotificationRecursionContractTest
         }
         finally
         {
-            foreach (var reporter in reporters) reporter?.Dispose();
-            foreach (var completion in completions) completion?.Dispose();
+            foreach (var reporter in reporters)
+            {
+                reporter?.Dispose();
+            }
+            foreach (var completion in completions)
+            {
+                completion?.Dispose();
+            }
         }
     }
 }

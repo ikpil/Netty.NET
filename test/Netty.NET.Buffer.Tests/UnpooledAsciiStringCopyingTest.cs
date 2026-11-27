@@ -37,7 +37,10 @@ public class UnpooledAsciiStringCopyingTest
         for (int kind = 0; kind < 6; ++kind)
         for (int shape = 0; shape < 5; ++shape)
         foreach (bool range in new[] { false, true })
-        foreach (bool offset in new[] { false, true }) yield return [kind, shape, range, offset];
+        foreach (bool offset in new[] { false, true })
+                    {
+                        yield return [kind, shape, range, offset];
+                    }
     }
 
     [Theory]

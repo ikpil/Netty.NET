@@ -71,9 +71,18 @@ public class NativeRejectionContractTest
         using var release = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
-            for (int index = 0; index < 16; index++) executor.Execute(static () => { });
+
+            for (int index = 0; index < 16; index++)
+            {
+                executor.Execute(static () => { });
+            }
+
             executor.OnWake = static () => { };
             int calls = 0;
             Assert.Throws<RejectedExecutionException>(() => executor.Execute(() => calls++));
@@ -98,10 +107,23 @@ public class NativeRejectionContractTest
         using var slotRelease = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
-            executor.Execute(() => { slotEntered.Set(); Wait(slotRelease); });
-            for (int index = 1; index < 16; index++) executor.Execute(static () => { });
+            executor.Execute(() =>
+            {
+                slotEntered.Set();
+                Wait(slotRelease);
+            });
+
+            for (int index = 1; index < 16; index++)
+            {
+                executor.Execute(static () => { });
+            }
+
             executor.OnWake = () => {
                 if (executor.WakeCalls == 2)
                 {
@@ -110,7 +132,11 @@ public class NativeRejectionContractTest
                 }
             };
             int calls = 0;
-            Task<int> result = executor.SubmitAsync(() => { calls++; return 42; }, TestContext.Current.CancellationToken);
+            Task<int> result = executor.SubmitAsync(() =>
+            {
+                calls++;
+                return 42;
+            }, TestContext.Current.CancellationToken);
             Assert.Equal(2, executor.WakeCalls);
             Assert.Equal(16, executor.PendingTasks());
             Assert.False(result.IsCompleted);
@@ -135,7 +161,11 @@ public class NativeRejectionContractTest
             executor.OnWake = static () => { };
             await executor.SubmitAsync(() =>
             {
-                for (int index = 0; index < 16; index++) executor.Execute(static () => { });
+                for (int index = 0; index < 16; index++)
+                {
+                    executor.Execute(static () => { });
+                }
+
                 Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
                 Assert.Equal(0, executor.WakeCalls);
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
@@ -153,14 +183,27 @@ public class NativeRejectionContractTest
     {
         var failure = new InvalidOperationException("native policy failure");
         Thread observed = null;
-        var executor = new Loop((_, _) => { observed = Thread.CurrentThread; throw failure; });
+        var executor = new Loop((_, _) =>
+        {
+            observed = Thread.CurrentThread;
+            throw failure;
+        });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
-            for (int index = 0; index < 16; index++) executor.Execute(static () => { });
+
+            for (int index = 0; index < 16; index++)
+            {
+                executor.Execute(static () => { });
+            }
+
             Thread caller = Thread.CurrentThread;
             if (nativeResult)
             {
@@ -198,10 +241,23 @@ public class NativeRejectionContractTest
         });
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
-            executor.Execute(() => { slotEntered.Set(); Wait(slotRelease); });
-            for (int index = 1; index < 16; index++) executor.Execute(static () => { });
+            executor.Execute(() =>
+            {
+                slotEntered.Set();
+                Wait(slotRelease);
+            });
+
+            for (int index = 1; index < 16; index++)
+            {
+                executor.Execute(static () => { });
+            }
+
             int calls = 0;
             Task result = executor.SubmitAsync(() => calls++, TestContext.Current.CancellationToken);
             await Assert.ThrowsAsync<RejectedExecutionException>(() => result.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
@@ -229,9 +285,18 @@ public class NativeRejectionContractTest
         var completion = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
-            for (int index = 0; index < 16; index++) executor.Execute(static () => { });
+
+            for (int index = 0; index < 16; index++)
+            {
+                executor.Execute(static () => { });
+            }
+
             executor.OnWake = static () => { };
             var caller = new Thread(() =>
             {
@@ -284,7 +349,11 @@ public class NativeRejectionContractTest
     {
         int policies = 0;
         int starts = 0;
-        var executor = new Loop((_, _) => policies++, work => { starts++; new Thread(() => work()) { IsBackground = true }.Start(); });
+        var executor = new Loop((_, _) => policies++, work =>
+        {
+            starts++;
+            new Thread(() => work()) { IsBackground = true }.Start();
+        });
         try
         {
             Assert.Equal("task", Assert.Throws<ArgumentNullException>(() => executor.OfferTask((Action)null)).ParamName);

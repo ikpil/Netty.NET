@@ -125,7 +125,11 @@ public class NativeLazySchedulingContractTest
             _inLoop = true;
             try
             {
-                foreach (Action task in Ready) task();
+                foreach (Action task in Ready)
+                {
+                    task();
+                }
+
                 Ready.Clear();
             }
             finally

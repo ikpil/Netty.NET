@@ -211,7 +211,11 @@ public class DefaultPromiseTest
                 listener1 = _ => listeners.Add(listener1);
                 listener2 = _ => listeners.Add(listener2);
                 listener4 = _ => listeners.Add(listener4);
-                listener3 = _ => { listeners.Add(listener3); fourth = observer.Register(listener4); };
+                listener3 = _ =>
+                {
+                    listeners.Add(listener3);
+                    fourth = observer.Register(listener4);
+                };
                 GlobalEventExecutor.INSTANCE.Execute(() => source.SetResult(null));
                 using var first = observer.Register(listener1);
                 using var second = observer.Register(listener2);
@@ -358,6 +362,7 @@ public class DefaultPromiseTest
         var sources = new TaskCompletionSource<object>[promiseChainLength];
         var observations = new ExecutorCompletion[promiseChainLength];
         using var latch = new CountdownEvent(promiseChainLength);
+
         void Initialize()
         {
             for (int i = 0; i < sources.Length; i++)
@@ -383,6 +388,7 @@ public class DefaultPromiseTest
             }
             sources[0].SetResult(null);
         }
+
         try
         {
             if (runTestInExecutorThread)
@@ -394,11 +400,18 @@ public class DefaultPromiseTest
                 Initialize();
             }
             Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
-            foreach (var source in sources) Assert.True(source.Task.IsCompletedSuccessfully);
+
+            foreach (var source in sources)
+            {
+                Assert.True(source.Task.IsCompletedSuccessfully);
+            }
         }
         finally
         {
-            foreach (var observation in observations) observation?.Dispose();
+            foreach (var observation in observations)
+            {
+                observation?.Dispose();
+            }
         }
     }
 
@@ -434,7 +447,11 @@ public class DefaultPromiseTest
                 source.SetException(cause);
             }
             // Add a "late listener"
-            observer.Register(_ => { Assert.Equal(1, Interlocked.CompareExchange(ref state, 2, 1)); latch1.Signal(); });
+            observer.Register(_ =>
+            {
+                Assert.Equal(1, Interlocked.CompareExchange(ref state, 2, 1));
+                latch1.Signal();
+            });
             // Wait for the listeners and late listeners to be completed.
             Assert.True(latch1.Wait(TimeSpan.FromSeconds(2)));
             Assert.Equal(2, Volatile.Read(ref state));
@@ -489,7 +506,11 @@ public class DefaultPromiseTest
             using var observer = new ExecutorCompletion(executor, source.Task);
             executor.Execute(() =>
             {
-                for (int i = 0; i < numListenersBefore; i++) observer.Register(listener);
+                for (int i = 0; i < numListenersBefore; i++)
+                {
+                    observer.Register(listener);
+                }
+
                 source.SetResult(null);
                 GlobalEventExecutor.INSTANCE.Execute(() => observer.Register(listener));
                 observer.Register(listener);
@@ -531,7 +552,12 @@ public class DefaultPromiseTest
         private readonly Thread thread;
         internal TestSingleThreadExecutor()
         {
-            thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task(); }) { IsBackground = true };
+            thread = new Thread(() => {
+                foreach (var task in tasks.GetConsumingEnumerable())
+                {
+                    task();
+                }
+            }) { IsBackground = true };
             thread.Start();
         }
 

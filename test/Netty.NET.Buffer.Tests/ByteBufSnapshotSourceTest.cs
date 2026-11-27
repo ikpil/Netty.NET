@@ -69,7 +69,10 @@ public class ByteBufSnapshotSourceTest
     public static IEnumerable<object[]> SupplementalCases()
     {
         for (int provider = 0; provider < 5; ++provider)
-        foreach (SnapshotCase scenario in Enum.GetValues<SnapshotCase>()) yield return [provider, scenario];
+        foreach (SnapshotCase scenario in Enum.GetValues<SnapshotCase>())
+            {
+                yield return [provider, scenario];
+            }
     }
 
     [Theory]
@@ -196,7 +199,10 @@ public class ByteBufSnapshotSourceTest
     {
         for (int provider = 0; provider < 5; ++provider)
         for (int form = 0; form < 2; ++form)
-        for (int range = 0; range < 3; ++range) yield return [provider, form, range];
+        for (int range = 0; range < 3; ++range)
+                {
+                    yield return [provider, form, range];
+                }
     }
 
     [Theory]

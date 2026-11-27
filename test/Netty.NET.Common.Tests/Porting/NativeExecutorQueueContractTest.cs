@@ -235,7 +235,12 @@ public class NativeExecutorQueueContractTest
             Assert.NotNull(loop.Poll());
             Assert.True(owner.OfferTask(callback));
         });
-        for (int i = 0; i < 16; i++) executor.Execute(static () => { });
+
+        for (int i = 0; i < 16; i++)
+        {
+            executor.Execute(static () => { });
+        }
+
         int calls = 0;
         Action original = () => calls++;
         executor.Execute(original);

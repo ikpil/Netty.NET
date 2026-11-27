@@ -88,7 +88,12 @@ public class ConcurrentSkipListIntObjMultimapContractTest
     {
         var map = new ConcurrentSkipListIntObjMultimap<Value>(-1);
         map.Put(1, new Value(1));
-        var target = new Value(1) { OnCompare = () => { map.Clear(); map.Put(1, new Value(2)); } };
+        var target = new Value(1) { OnCompare = () =>
+        {
+            map.Clear();
+            map.Put(1, new Value(2));
+        }
+        };
         Assert.False(map.Remove(1, target));
         Assert.Equal(1, map.Size());
         Assert.Equal(2, map.FirstEntry().GetValue().Id);
@@ -115,7 +120,10 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         var published = Enumerable.Range(0, 8).Select(producer => Task.Run(() =>
         {
             for (int i = 0; i < 250; i++)
-            { int id = producer * 250 + i; map.Put(id % 17, id); }
+            {
+                int id = producer * 250 + i;
+                map.Put(id % 17, id);
+            }
         }, TestContext.Current.CancellationToken)).ToArray();
         await Task.WhenAll(published);
         Assert.Equal(2000, map.Size());

@@ -129,7 +129,11 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
             throw new ArgumentOutOfRangeException(nameof(arrayIndex));
         if (array.Length - arrayIndex < Count)
             throw new ArgumentException("The destination array is too small.", nameof(array));
-        foreach (var pair in this) array[arrayIndex++] = pair;
+
+        foreach (var pair in this)
+        {
+            array[arrayIndex++] = pair;
+        }
     }
 
     public override string ToString()

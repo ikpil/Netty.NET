@@ -222,7 +222,11 @@ public class CompositeByteBufTest
         CompositeByteBuf buffer = new(64);
         try
         {
-            for (int i = 0; i < 32; ++i) buffer.AddComponent(Segment(new byte[1], direct, allocator));
+            for (int i = 0; i < 32; ++i)
+            {
+                buffer.AddComponent(Segment(new byte[1], direct, allocator));
+            }
+
             buffer.WriteShort(-1).WriteMedium(-2).WriteIntLE(int.MinValue).WriteLong(long.MinValue)
                 .WriteFloatLE(BitConverter.Int32BitsToSingle(unchecked((int)0x7fc01234))).WriteDouble(-0.0);
             Assert.Equal(-1, buffer.ReadShort());
@@ -318,7 +322,12 @@ public class CompositeByteBufTest
         try
         {
             foreach (byte[] bytes in new[] { new byte[] { 1 }, new byte[] { 2, 3 }, new byte[] { 4, 5, 6 } })
-            { ByteBuf source = Segment(bytes, direct, allocator); sources.Add(source); buffer.AddComponent(source, true); }
+            {
+                ByteBuf source = Segment(bytes, direct, allocator);
+                sources.Add(source);
+                buffer.AddComponent(source, true);
+            }
+
             Assert.Equal(3, buffer.NumComponents);
             ByteBuf fourth = Segment(new byte[] { 7 }, direct, allocator);
             sources.Add(fourth);
@@ -584,7 +593,12 @@ public class CompositeByteBufTest
     {
         var allocator = new NativeMemoryAllocator(1024);
         CompositeByteBuf buffer = new(64);
-        for (int i = 0; i < 24; ++i) buffer.AddComponent(Segment(new byte[1], direct, allocator));
+
+        for (int i = 0; i < 24; ++i)
+        {
+            buffer.AddComponent(Segment(new byte[1], direct, allocator));
+        }
+
         ByteBuf needle = Unpooled.WrappedBuffer(new byte[] { 0xe2, 0x82, 0xac });
         try
         {
@@ -692,9 +706,11 @@ public class CompositeByteBufTest
     {
         var random = new Random(0x16799);
         var allocator = new NativeMemoryAllocator(4096);
+
         for (int iteration = 0; iteration < 100; ++iteration)
         {
-            byte[] expected = new byte[64]; random.NextBytes(expected);
+            byte[] expected = new byte[64];
+            random.NextBytes(expected);
             CompositeByteBuf buffer = new(128);
             try
             {
@@ -714,8 +730,13 @@ public class CompositeByteBufTest
                 for (int index = 0; index <= expected.Length - 8; ++index)
                 {
                     ulong big = 0, little = 0;
+
                     for (int i = 0; i < 8; ++i)
-                    { big = (big << 8) | expected[index + i]; little |= (ulong)expected[index + i] << (i * 8); }
+                    {
+                        big = (big << 8) | expected[index + i];
+                        little |= (ulong)expected[index + i] << (i * 8);
+                    }
+
                     Assert.Equal(unchecked((long)big), buffer.GetLong(index));
                     Assert.Equal(unchecked((long)little), buffer.GetLongLE(index));
                 }
@@ -788,7 +809,10 @@ public class CompositeByteBufTest
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
-                for (int i = 0; i < 2048; ++i) buffer.AddComponent(source.RetainedDuplicate());
+                for (int i = 0; i < 2048; ++i)
+                {
+                    buffer.AddComponent(source.RetainedDuplicate());
+                }
             });
             Assert.Equal(2047, buffer.NumComponents);
             Assert.Equal(2047 * capacity, buffer.Capacity);

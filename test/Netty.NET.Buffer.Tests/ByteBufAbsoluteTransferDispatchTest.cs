@@ -116,7 +116,10 @@ public class ByteBufAbsoluteTransferDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (bool set in new[] { false, true })
-        for (int scenario = 0; scenario < 11; ++scenario) yield return [direct, set, scenario];
+        for (int scenario = 0; scenario < 11; ++scenario)
+                {
+                    yield return [direct, set, scenario];
+                }
     }
 
     // AbstractByteBuf.setBytes(index, src, length) validates its own range before
@@ -138,10 +141,12 @@ public class ByteBufAbsoluteTransferDispatchTest
             destination.WriteBytes(new byte[] { 90, 91, 92, 93, 94, 95, 96, 97 });
             source.SetIndex(2, 7).MarkReaderIndex().MarkWriterIndex();
             destination.SetIndex(1, 3).MarkReaderIndex().MarkWriterIndex();
+
             ByteBuf Invoke()
             {
                 return set ? owner.SetBytes(index, peer, length) : owner.GetBytes(index, peer, length);
             }
+
             if (scenario is 2 or 3)
             {
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
@@ -208,10 +213,12 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             owner.SetIndex(2, 7);
             peer.SetIndex(1, 3);
+
             ByteBuf Invoke()
             {
                 return set ? owner.SetBytes(2, peer) : owner.GetBytes(2, peer);
             }
+
             if (failure)
             {
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));

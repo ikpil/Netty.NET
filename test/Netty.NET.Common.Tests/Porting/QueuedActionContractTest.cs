@@ -79,7 +79,11 @@ public class QueuedActionContractTest
             executor.Execute(() =>
             {
                 ambient.Value = "enqueue";
-                executor.Execute(() => { rawValue = ambient.Value; ambient.Value = "raw"; });
+                executor.Execute(() =>
+                {
+                    rawValue = ambient.Value;
+                    ambient.Value = "raw";
+                });
                 captured = executor.SubmitAsync(() =>
                 {
                     string value = ambient.Value;
@@ -233,7 +237,11 @@ public class QueuedActionContractTest
         using var cancellation = new CancellationTokenSource();
         try
         {
-            executor.Execute(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             int runs = 0;
             Task task = executor.SubmitAsync(() => runs++, cancellation.Token);
@@ -273,7 +281,11 @@ public class QueuedActionContractTest
         using var cancellation = new CancellationTokenSource();
         try
         {
-            owner.Execute(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); });
+            owner.Execute(() =>
+            {
+                entered.Set();
+                release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             Task result = executor.SubmitAsync(() => calls++, cancellation.Token);
             Assert.Equal(1, owner.PendingTaskCount);
@@ -317,7 +329,11 @@ public class QueuedActionContractTest
         int calls = 0, tailCalls = 0, prefixes = 0;
         try
         {
-            owner.Execute(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); });
+            owner.Execute(() =>
+            {
+                entered.Set();
+                release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             owner.Shutdown();
             Action callback = () => calls++;

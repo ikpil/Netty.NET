@@ -15,7 +15,11 @@ public static class EventExecutorExtensions
     public static Task SubmitAsync(this IEventExecutorGroup executor, Action action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
-        return SubmitCoreAsync<object>(executor, _ => { action(); return null; }, cancellationToken);
+        return SubmitCoreAsync<object>(executor, _ =>
+        {
+            action();
+            return null;
+        }, cancellationToken);
     }
 
     /// <summary>Queues a synchronous function on the executor and returns its result.</summary>
@@ -29,7 +33,11 @@ public static class EventExecutorExtensions
     public static Task SubmitAsync(this IEventExecutorGroup executor, Action<CancellationToken> action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
-        return SubmitCoreAsync<object>(executor, token => { action(token); return null; }, cancellationToken);
+        return SubmitCoreAsync<object>(executor, token =>
+        {
+            action(token);
+            return null;
+        }, cancellationToken);
     }
 
     /// <summary>Queues a function that can cooperatively observe cancellation after it starts.</summary>

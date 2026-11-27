@@ -100,7 +100,12 @@ public class AutoScalingChooserContractTest
             start.SignalAndWait();
             long sampled = 0;
             long deadline = Environment.TickCount64 + 5_000;
-            while (Volatile.Read(ref done) == 0 && Environment.TickCount64 < deadline) sampled += executor.Sample();
+
+            while (Volatile.Read(ref done) == 0 && Environment.TickCount64 < deadline)
+            {
+                sampled += executor.Sample();
+            }
+
             Assert.True(reporter.Join(TimeSpan.FromSeconds(5)));
             Assert.Null(reportingFailure);
             sampled += executor.Sample();
@@ -216,7 +221,10 @@ public class AutoScalingChooserContractTest
             }
             children = Enumerable.Range(0, max).Select(_ => new ManualExecutor(clock)).ToArray();
             if (initialTime != 0)
-                foreach (ManualExecutor child in children) child.lastActivity = clock.NanoTime();
+                foreach (ManualExecutor child in children)
+                {
+                    child.lastActivity = clock.NanoTime();
+                }
             var factory = new AutoScalingEventExecutorChooserFactory(min, max, TimeSpan.FromHours(1),
                 0.4, 0.6, rampUp, rampDown, patience);
             chooser = (IObservableEventExecutorChooser)factory.NewChooser(children);
@@ -379,7 +387,12 @@ public class AutoScalingChooserContractTest
     public void PartialWindowCallbacksPreserveTheReportedActiveTimeBudget()
     {
         using var h = new Harness(2, 2);
-        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+
+        foreach (ManualExecutor child in h.children)
+        {
+            child.activeTime = Period;
+        }
+
         h.Tick();
         for (int quarter = 1; quarter <= 4; ++quarter)
         {
@@ -402,9 +415,19 @@ public class AutoScalingChooserContractTest
     public void ADelayedSampleDoesNotMoveTheNextScheduledWindowBoundary()
     {
         using var h = new Harness(2, 2);
-        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+
+        foreach (ManualExecutor child in h.children)
+        {
+            child.activeTime = Period;
+        }
+
         h.Tick(Period + Period / 100);
-        foreach (ManualExecutor child in h.children) child.activeTime = Period / 2;
+
+        foreach (ManualExecutor child in h.children)
+        {
+            child.activeTime = Period / 2;
+        }
+
         h.Tick(Period - Period / 100);
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
         Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(50.0 / 99.0, metric.Utilization()));
@@ -416,7 +439,12 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(1, 2, patience: 2);
         h.Tick();
         h.Tick(Period * 4);
-        for (int callback = 0; callback < 8; ++callback) h.Tick(1);
+
+        for (int callback = 0; callback < 8; ++callback)
+        {
+            h.Tick(1);
+        }
+
         Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
         h.Tick(Period - 8);
@@ -430,11 +458,21 @@ public class AutoScalingChooserContractTest
     {
         using var h = new Harness(2, 2);
         h.clock.Advance(initialTime);
-        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+
+        foreach (ManualExecutor child in h.children)
+        {
+            child.activeTime = Period;
+        }
+
         h.Tick(0);
         h.Tick(1);
         Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
-        foreach (ManualExecutor child in h.children) child.activeTime = Period / 2;
+
+        foreach (ManualExecutor child in h.children)
+        {
+            child.activeTime = Period / 2;
+        }
+
         h.Tick(Period - 1);
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
         Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(0.5, metric.Utilization()));
@@ -569,6 +607,7 @@ public class AutoScalingChooserContractTest
         {
             return new(min, max, window ?? TimeSpan.FromHours(1), down, up, rampUp, rampDown, patience);
         }
+
         Assert.Throws<ArgumentException>(() => Create(min: -1));
         Assert.Throws<ArgumentException>(() => Create(max: 0));
         Assert.Throws<ArgumentException>(() => Create(min: 2));

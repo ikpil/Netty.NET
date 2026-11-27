@@ -71,7 +71,12 @@ public class ReadOnlyMemoryByteBufTest
     public void OriginalPrimitiveAndBulkReadsUseTheBorrowedMemory(int kind)
     {
         using var storage = new ExternalStorage(kind, 16);
-        for (int i = 0; i < 16; i++) storage.Memory.Span[i] = (byte)(i + 1);
+
+        for (int i = 0; i < 16; i++)
+        {
+            storage.Memory.Span[i] = (byte)(i + 1);
+        }
+
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
         try
         {
@@ -289,7 +294,12 @@ public class ReadOnlyMemoryByteBufTest
     public async Task SynchronousAndAsynchronousStreamOutputUseReadOnlyContent(int kind)
     {
         using var storage = new ExternalStorage(kind, 8);
-        for (int i = 0; i < 8; i++) storage.Memory.Span[i] = (byte)i;
+
+        for (int i = 0; i < 8; i++)
+        {
+            storage.Memory.Span[i] = (byte)i;
+        }
+
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
         try
         {

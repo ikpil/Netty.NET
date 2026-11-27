@@ -170,7 +170,12 @@ public class AsciiStringDelimiterContractTest
         Assert.Equal(2, start);
         Assert.Equal(logical.Length, length);
         var fields = new List<string>();
-        foreach (Range range in value.AsSpan().Split(',')) fields.Add(value.AsSpan()[range].ToString());
+
+        foreach (Range range in value.AsSpan().Split(','))
+        {
+            fields.Add(value.AsSpan()[range].ToString());
+        }
+
         Assert.Equal(new[] { "é😀", "\0Ā" }, fields.ToArray());
         for (int i = 0; i < logical.Length; i++)
             Assert.Equal(logical.IndexOf(logical[i], i), value.IndexOf(logical[i], i));

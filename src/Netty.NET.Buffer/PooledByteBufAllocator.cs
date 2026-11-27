@@ -231,7 +231,11 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         if (nHeapArena > 0)
         {
             var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, 0);
-            for (int i = 0; i < nHeapArena; ++i) _heapArenas[i] = new PoolHeapArena(this, sizeClasses);
+
+            for (int i = 0; i < nHeapArena; ++i)
+            {
+                _heapArenas[i] = new PoolHeapArena(this, sizeClasses);
+            }
         }
         if (nDirectArena > 0)
         {
@@ -356,10 +360,22 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
                 return;
             }
             _disposed = true;
-            foreach (ThreadBinding binding in _threadBindings.Values) binding.Detach();
+
+            foreach (ThreadBinding binding in _threadBindings.Values)
+            {
+                binding.Detach();
+            }
+
             _threadBindings.Clear();
-            foreach (PoolArena arena in _heapArenas) arena.Dispose();
-            foreach (PoolArena arena in _directArenas) arena.Dispose();
+
+            foreach (PoolArena arena in _heapArenas)
+            {
+                arena.Dispose();
+            }
+            foreach (PoolArena arena in _directArenas)
+            {
+                arena.Dispose();
+            }
         }
     }
 }

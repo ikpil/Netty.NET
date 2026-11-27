@@ -78,14 +78,21 @@ public class HeapByteBufProviderTest
 
     private static ByteBuf Owner(ByteBuf buffer)
     {
-        while (buffer.Unwrap() is ByteBuf parent) buffer = parent;
+        while (buffer.Unwrap() is ByteBuf parent)
+        {
+            buffer = parent;
+        }
+
         return buffer;
     }
 
     public static IEnumerable<object[]> ScalarCases()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (int index in new[] { 0, 1, 7, 120 }) yield return [pooled, index];
+        foreach (int index in new[] { 0, 1, 7, 120 })
+            {
+                yield return [pooled, index];
+            }
     }
 
     [Theory]
@@ -97,9 +104,11 @@ public class HeapByteBufProviderTest
         foreach (ulong value in new ulong[] { 0, 0x1122334455667788, 0xffeeddcc8000fedc })
         for (int operation = 0; operation < widths.Length; ++operation)
         {
-            byte[] expected = new byte[128]; Array.Fill(expected, (byte)0xcc);
+            byte[] expected = new byte[128];
+                Array.Fill(expected, (byte)0xcc);
             s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
-            int width = widths[operation]; bool little = operation != 0 && (operation & 1) == 0;
+            int width = widths[operation];
+                bool little = operation != 0 && (operation & 1) == 0;
             for (int i = 0; i < width; ++i)
                 expected[index + i] = unchecked((byte)(value >> (8 * (little ? i : width - i - 1))));
             ByteBuf receiver = operation switch
@@ -129,9 +138,11 @@ public class HeapByteBufProviderTest
                 4 => unchecked((int)value), _ => unchecked((long)value)
             };
             Assert.Equal(wanted, read);
-            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            Assert.Equal(3, s.Target.ReaderIndex);
+                Assert.Equal(100, s.Target.WriterIndex);
             s.Target.SetIndex(0, 128).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            Assert.Equal(3, s.Target.ReaderIndex);
+                Assert.Equal(100, s.Target.WriterIndex);
             s.Neighbors();
         }
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.GetLong(121));
@@ -141,7 +152,10 @@ public class HeapByteBufProviderTest
     public static IEnumerable<object[]> ZeroCases()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 128, 129 }) yield return [pooled, length];
+        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 128, 129 })
+            {
+                yield return [pooled, length];
+            }
     }
 
     [Theory]

@@ -49,13 +49,19 @@ public class AllocatorStorageContractTest
     public static IEnumerable<object[]> Providers()
     {
         for (int provider = 0; provider < 4; ++provider)
-        foreach (bool preferDirect in new[] { false, true }) yield return [provider, preferDirect];
+        foreach (bool preferDirect in new[] { false, true })
+            {
+                yield return [provider, preferDirect];
+            }
     }
 
     public static IEnumerable<object[]> CopyWindows()
     {
         foreach (object[] p in Providers())
-        foreach (int window in new[] { 1, 2 }) yield return [p[0], p[1], window];
+        foreach (int window in new[] { 1, 2 })
+            {
+                yield return [p[0], p[1], window];
+            }
     }
 
     [Theory]
@@ -228,7 +234,12 @@ public class AllocatorStorageContractTest
             byte[] original = [0, 1, 2, 3, 4, 5, 6, 7], expected = (byte[])original.Clone();
             (int source, int destination, int length) = window == 1 ? (2, 0, 6) : (0, 2, 6);
             buffer.SetBytes(0, original);
-            for (int i = 0; i < length; ++i) expected[destination + i] = original[source + i];
+
+            for (int i = 0; i < length; ++i)
+            {
+                expected[destination + i] = original[source + i];
+            }
+
             ReadOnlyMemory<byte> borrowed = buffer.AsReadOnlyMemory(source, length);
             long reserved = s.Native.ReservedBytes;
             Assert.Same(buffer, buffer.SetBytes(destination, borrowed.Span));

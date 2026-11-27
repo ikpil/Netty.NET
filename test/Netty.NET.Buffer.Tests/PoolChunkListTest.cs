@@ -47,15 +47,18 @@ public class PoolChunkListTest
         try
         {
             int[] promoted = { 1, 2, 3, 5 };
+
             for (int i = 0; i < 4; ++i)
             {
                 var b = (PooledByteBuf)a.Buffer(quarter);
-                buffers.Add(b); chunk ??= b.Allocation.Chunk;
+                buffers.Add(b);
+                chunk ??= b.Allocation.Chunk;
                 Assert.Same(chunk, b.Allocation.Chunk);
                 Assert.Equal(promoted[i], ListIndex(a.Arena, chunk));
                 Assert.Equal((i + 1) * 25, chunk.Usage);
                 b.AsSpan(0, quarter).Fill((byte)(i + 1));
             }
+
             int[] demoted = { 4, 3, 2 };
             for (int i = 0; i < 4; ++i)
             {
@@ -128,7 +131,12 @@ public class PoolChunkListTest
                 Assert.Same(first[i].Allocation.Chunk, second[i].Allocation.Chunk);
             }
             PoolChunk[] chunks = first.Select(b => b.Allocation.Chunk).ToArray();
-            foreach (var b in second) b.Release();
+
+            foreach (var b in second)
+            {
+                b.Release();
+            }
+
             Assert.Equal(chunks.Reverse(), a.Arena.ChunkLists[3]);
             first[1].Release();
             Assert.Equal(new[] { chunks[2], chunks[0] }, a.Arena.ChunkLists[3]);
@@ -244,7 +252,12 @@ public class PoolChunkListTest
         using var a = NewAllocator(false);
         var old = Enumerable.Range(0, 3).Select(_ => (PooledByteBuf)a.Buffer(131072)).ToArray();
         var storage = old.Select(b => b.Allocation.Storage).ToArray();
-        foreach (var b in old) b.Release();
+
+        foreach (var b in old)
+        {
+            b.Release();
+        }
+
         Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
         var reused = (PooledByteBuf)a.Buffer(131072);
         var another = (PooledByteBuf)a.Buffer(131072);

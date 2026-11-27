@@ -12,7 +12,12 @@ public class QueueSurfaceContractTest
     {
         Type[] types = [typeof(IQueue<>), typeof(LinkedBlockingQueue<>),
             typeof(DefaultPriorityQueue<>), typeof(EmptyPriorityQueue<>)];
-        foreach (Type type in types) Assert.Null(type.GetMethod("Drain"));
+
+        foreach (Type type in types)
+        {
+            Assert.Null(type.GetMethod("Drain"));
+        }
+
         var assembly = typeof(IQueue<>).Assembly;
         Assert.Null(assembly.GetType("Netty.NET.Common.Functional.IConsumer`1"));
         Assert.Null(assembly.GetType("Netty.NET.Common.Collections.BlockingMessageQueue`1"));

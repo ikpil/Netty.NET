@@ -144,7 +144,10 @@ public abstract partial class AbstractByteBufTest
         }
         finally
         {
-            foreach (Thread thread in threads) thread.Join();
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
         }
         // Ensure failures in worker threads are propagated to the test thread.
         if (!errors.IsEmpty)
@@ -263,11 +266,20 @@ public abstract partial class AbstractByteBufTest
                 {
                     finish.Release();
                     start.Wait();
-                    for (int j = 0; j < iterations; j++) buf.SetCharSequence(0, text, encoding);
+
+                    for (int j = 0; j < iterations; j++)
+                    {
+                        buf.SetCharSequence(0, text, encoding);
+                    }
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default));
             }
             CancellationToken token = TestContext.Current.CancellationToken;
-            for (int i = 0; i < bufs.Length; i++) await finish.WaitAsync(token);
+
+            for (int i = 0; i < bufs.Length; i++)
+            {
+                await finish.WaitAsync(token);
+            }
+
             start.Release(bufs.Length);
             Task all = Task.WhenAll(tasks);
             try
@@ -313,7 +325,10 @@ public abstract partial class AbstractByteBufTest
             }
             finally
             {
-                foreach (ByteBuf buf in bufs) buf?.Release();
+                foreach (ByteBuf buf in bufs)
+                {
+                    buf?.Release();
+                }
             }
         }
     }

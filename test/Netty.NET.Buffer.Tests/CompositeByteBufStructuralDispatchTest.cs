@@ -178,32 +178,47 @@ public class CompositeByteBufStructuralDispatchTest
     public static IEnumerable<object[]> Providers()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     public static IEnumerable<object[]> AutomaticCases()
     {
         foreach (object[] provider in Providers())
-        for (int operation = 0; operation < 4; ++operation) yield return [provider[0], provider[1], operation];
+        for (int operation = 0; operation < 4; ++operation)
+            {
+                yield return [provider[0], provider[1], operation];
+            }
     }
 
     public static IEnumerable<object[]> RemovalCases()
     {
         foreach (object[] provider in Providers())
-        for (int operation = 0; operation < 3; ++operation) yield return [provider[0], provider[1], operation];
+        for (int operation = 0; operation < 3; ++operation)
+            {
+                yield return [provider[0], provider[1], operation];
+            }
     }
 
     public static IEnumerable<object[]> BatchCases()
     {
         foreach (object[] provider in Providers())
         foreach (bool enumerable in new[] { false, true })
-        foreach (bool increase in new[] { false, true }) yield return [provider[0], provider[1], enumerable, increase];
+        foreach (bool increase in new[] { false, true })
+                {
+                    yield return [provider[0], provider[1], enumerable, increase];
+                }
     }
 
     public static IEnumerable<object[]> ConstructorCases()
     {
         foreach (object[] provider in Providers())
-        foreach (bool enumerable in new[] { false, true }) yield return [provider[0], provider[1], enumerable];
+        foreach (bool enumerable in new[] { false, true })
+            {
+                yield return [provider[0], provider[1], enumerable];
+            }
     }
 
     [Theory]

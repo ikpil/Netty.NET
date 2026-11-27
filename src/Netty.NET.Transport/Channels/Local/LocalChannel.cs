@@ -816,6 +816,7 @@ public class LocalChannel : AbstractChannel
                     }
                     promise.TrySetCanceled(cancellationToken);
                 }
+
                 try
                 {
                     channel.ExecuteOnLoop(Cancel);

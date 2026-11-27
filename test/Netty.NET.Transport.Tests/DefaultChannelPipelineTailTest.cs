@@ -77,7 +77,12 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         using var latch = new CountdownEvent(1);
         Exception cause = null;
-        IChannel channel = await Connect(new MyChannel { Error = error => { cause = error; latch.Signal(); } });
+        IChannel channel = await Connect(new MyChannel { Error = error =>
+        {
+            cause = error;
+            latch.Signal();
+        }
+        });
         try
         {
             var error = new IOException("testOnUnhandledInboundException");

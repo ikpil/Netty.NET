@@ -77,9 +77,17 @@ public class NativeSchedulingContractTest
     {
         var executor = new ManualExecutor();
         var order = new List<int>();
-        Task<int> first = executor.ScheduleAsync(() => { order.Add(1); return 42; }, TimeSpan.FromTicks(1));
+        Task<int> first = executor.ScheduleAsync(() =>
+        {
+            order.Add(1);
+            return 42;
+        }, TimeSpan.FromTicks(1));
         Assert.False((object)executor.Head is System.Threading.Tasks.Task);
-        Task<string> second = executor.ScheduleAsync(() => { order.Add(2); return "text"; }, TimeSpan.FromTicks(1));
+        Task<string> second = executor.ScheduleAsync(() =>
+        {
+            order.Add(2);
+            return "text";
+        }, TimeSpan.FromTicks(1));
         Task third = executor.ScheduleAsync(() => { order.Add(3); }, TimeSpan.FromTicks(1));
         Assert.Null(executor.Poll());
         executor.Advance(100);
@@ -101,7 +109,11 @@ public class NativeSchedulingContractTest
         var executor = new ManualExecutor();
         using var cancellation = new CancellationTokenSource();
         int calls = 0;
-        Action callback = () => { ++calls; executor.Advance(100); };
+        Action callback = () =>
+        {
+            ++calls;
+            executor.Advance(100);
+        };
         Task task = fixedDelay
             ? executor.ScheduleWithFixedDelayAsync(callback, TimeSpan.Zero, TimeSpan.FromTicks(2), cancellation.Token)
             : executor.ScheduleAtFixedRateAsync(callback, TimeSpan.Zero, TimeSpan.FromTicks(2), cancellation.Token);
@@ -176,7 +188,11 @@ public class NativeSchedulingContractTest
         using var cancellation = new CancellationTokenSource();
         var values = new List<string>();
         ambient.Value = "caller";
-        Action action = () => { values.Add(ambient.Value); ambient.Value = "changed"; };
+        Action action = () =>
+        {
+            values.Add(ambient.Value);
+            ambient.Value = "changed";
+        };
         Task task;
         if (suppressFlow)
         {
@@ -230,7 +246,11 @@ public class NativeSchedulingContractTest
         using var cancellation = new CancellationTokenSource();
         using var started = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task blocker = executor.SubmitAsync(() => { started.Set(); release.Wait(); });
+        Task blocker = executor.SubmitAsync(() =>
+        {
+            started.Set();
+            release.Wait();
+        });
         try
         {
             Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
@@ -397,7 +417,11 @@ public class NativeSchedulingContractTest
             Task once = executor.ScheduleAsync((Action)(() => throw failure), TimeSpan.Zero);
             Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(async () => await once.WaitAsync(TimeSpan.FromSeconds(5))));
             int calls = 0;
-            Task periodic = executor.ScheduleAtFixedRateAsync(() => { Interlocked.Increment(ref calls); throw failure; }, TimeSpan.Zero, TimeSpan.FromTicks(1));
+            Task periodic = executor.ScheduleAtFixedRateAsync(() =>
+            {
+                Interlocked.Increment(ref calls);
+                throw failure;
+            }, TimeSpan.Zero, TimeSpan.FromTicks(1));
             Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(async () => await periodic.WaitAsync(TimeSpan.FromSeconds(5))));
             await executor.ScheduleAsync(() => { }, TimeSpan.Zero);
             Assert.Equal(1, calls);
@@ -466,7 +490,11 @@ public class NativeSchedulingContractTest
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            Task<int> task = executor.ScheduleAsync(async () => { started.SetResult(); return await inner.Task.ConfigureAwait(false); }, TimeSpan.Zero);
+            Task<int> task = executor.ScheduleAsync(async () =>
+            {
+                started.SetResult();
+                return await inner.Task.ConfigureAwait(false);
+            }, TimeSpan.Zero);
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             await executor.ScheduleAsync(() => { }, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(task.IsCompleted);

@@ -111,7 +111,12 @@ public class AttributeMapContractTest
         var slots = new IAttribute<object>[8];
         var values = new object[8];
         var previous = new object[8];
-        for (int index = 0; index < values.Length; index++) values[index] = new object();
+
+        for (int index = 0; index < values.Length; index++)
+        {
+            values[index] = new object();
+        }
+
         RunContenders(index =>
         {
             slots[index] = map.Attr(key);
@@ -144,11 +149,24 @@ public class AttributeMapContractTest
         attribute.Set(initial);
         var values = new object[8];
         var previous = new object[8];
-        for (int index = 0; index < values.Length; index++) values[index] = new object();
+
+        for (int index = 0; index < values.Length; index++)
+        {
+            values[index] = new object();
+        }
+
         RunContenders(index => previous[index] = attribute.GetAndSet(values[index]));
         var expected = new HashSet<object>(ReferenceEqualityComparer.Instance) { initial };
-        foreach (object value in values) Assert.True(expected.Add(value));
-        foreach (object value in previous) Assert.True(expected.Remove(value));
+
+        foreach (object value in values)
+        {
+            Assert.True(expected.Add(value));
+        }
+        foreach (object value in previous)
+        {
+            Assert.True(expected.Remove(value));
+        }
+
         Assert.True(expected.Remove(attribute.Get()));
         Assert.Empty(expected);
     }
@@ -249,7 +267,11 @@ public class AttributeMapContractTest
         finally
         {
             start.Set();
-            foreach (Thread thread in threads) Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+
+            foreach (Thread thread in threads)
+            {
+                Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+            }
         }
         Assert.All(errors, error => Assert.Null(error));
     }

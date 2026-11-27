@@ -151,7 +151,16 @@ public class SingleThreadMetricsContractTest
     {
         var executor = new ManualExecutor();
         int calls = 0;
-        for (int i = 0; i < 100; i++) executor.Execute(() => { ++calls; executor.clock.Advance(5); });
+
+        for (int i = 0; i < 100; i++)
+        {
+            executor.Execute(() =>
+            {
+                ++calls;
+                executor.clock.Advance(5);
+            });
+        }
+
         Assert.True(executor.Drain(0));
         Assert.Equal(64, calls);
         Assert.Equal(320, executor.ResetActive());
@@ -177,7 +186,11 @@ public class SingleThreadMetricsContractTest
         executor.clock.Advance(320);
         int calls = 0;
         for (int i = 0; i < 100; i++)
-            executor.Execute(() => { calls++; executor.clock.Advance(5); });
+            executor.Execute(() =>
+            {
+                calls++;
+                executor.clock.Advance(5);
+            });
         Assert.True(executor.Drain(budget));
         Assert.Equal(expectedCalls, calls);
         Assert.Equal(expectedCalls * 5, executor.ResetActive());
@@ -212,7 +225,11 @@ public class SingleThreadMetricsContractTest
         var executor = new ManualExecutor();
         var idle = new ConcurrentBag<int>();
         var busy = new ConcurrentBag<int>();
-        Parallel.For(0, 256, _ => { idle.Add(executor.Idle()); busy.Add(executor.Busy()); });
+        Parallel.For(0, 256, _ =>
+        {
+            idle.Add(executor.Idle());
+            busy.Add(executor.Busy());
+        });
         Assert.Equal(Enumerable.Range(0, 256), idle.Order());
         Assert.Equal(Enumerable.Range(0, 256), busy.Order());
         executor.ResetIdle();
@@ -228,8 +245,16 @@ public class SingleThreadMetricsContractTest
     {
         var executor = new ManualExecutor();
         int calls = 0;
-        executor.Execute(() => { executor.clock.Advance(12); throw new InvalidOperationException(); });
-        executor.Execute(() => { executor.clock.Advance(5); ++calls; });
+        executor.Execute(() =>
+        {
+            executor.clock.Advance(12);
+            throw new InvalidOperationException();
+        });
+        executor.Execute(() =>
+        {
+            executor.clock.Advance(5);
+            ++calls;
+        });
         Assert.True(executor.Drain(long.MaxValue));
         Assert.Equal(1, calls);
         Assert.Equal(17, executor.ResetActive());

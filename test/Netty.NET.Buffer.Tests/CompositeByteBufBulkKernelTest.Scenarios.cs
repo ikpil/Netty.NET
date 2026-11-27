@@ -53,7 +53,10 @@ public partial class CompositeByteBufBulkKernelTest
         foreach (bool direct in new[] { false, true })
         foreach (bool wrapped in new[] { false, true })
         for (int range = 0; range < 3; ++range)
-        for (int operation = 0; operation < 6; ++operation) yield return [direct, wrapped, range, operation];
+        for (int operation = 0; operation < 6; ++operation)
+                    {
+                        yield return [direct, wrapped, range, operation];
+                    }
     }
 
     [Theory]
@@ -66,7 +69,12 @@ public partial class CompositeByteBufBulkKernelTest
         try
         {
             byte[] original = new byte[32];
-            for (int i = 0; i < 32; ++i) original[i] = (byte)(i + 1);
+
+            for (int i = 0; i < 32; ++i)
+            {
+                original[i] = (byte)(i + 1);
+            }
+
             backing.WriteBytes(original);
             ByteBuf first = backing.RetainedSlice(0, 16), second = backing.RetainedSlice(16, 16);
             owner = operation >= 4 ? Unpooled.WrappedUnmodifiableBuffer(first, second)
@@ -118,7 +126,10 @@ public partial class CompositeByteBufBulkKernelTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (bool fixedComposite in new[] { false, true })
-        for (int endpoint = 0; endpoint < 6; ++endpoint) yield return [direct, fixedComposite, endpoint];
+        for (int endpoint = 0; endpoint < 6; ++endpoint)
+                {
+                    yield return [direct, fixedComposite, endpoint];
+                }
     }
 
     [Theory]
@@ -196,7 +207,11 @@ public partial class CompositeByteBufBulkKernelTest
                 }
             }
             Assert.Equal(2, observation.Visits.Count);
-            Assert.All(observation.Visits, visit => { Assert.Equal("GetSpan", visit.Method); Assert.Equal(2, visit.Length); });
+            Assert.All(observation.Visits, visit =>
+            {
+                Assert.Equal("GetSpan", visit.Method);
+                Assert.Equal(2, visit.Length);
+            });
             Assert.Equal(1, owner.ReaderIndex);
             Assert.Equal(3, owner.WriterIndex);
             owner.SetIndex(0, owner.Capacity).ResetWriterIndex().ResetReaderIndex();

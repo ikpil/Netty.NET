@@ -198,7 +198,11 @@ public class ReferenceCountUtilContractTest : IDisposable
     {
         var bad = new Stub { Failure = new InvalidOperationException("deferred failure") };
         var good = new Counted();
-        var caller = new Thread(() => { ReferenceCountUtil.ReleaseLater(bad); ReferenceCountUtil.ReleaseLater(good); }) { IsBackground = true };
+        var caller = new Thread(() =>
+        {
+            ReferenceCountUtil.ReleaseLater(bad);
+            ReferenceCountUtil.ReleaseLater(good);
+        }) { IsBackground = true };
         caller.Start();
         Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));

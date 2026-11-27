@@ -286,7 +286,10 @@ public partial class PooledByteBufAllocator
             }
             else
             {
-                using (ExecutionContext.SuppressFlow()) StartTrimmingCore(executor, period);
+                using (ExecutionContext.SuppressFlow())
+                {
+                    StartTrimmingCore(executor, period);
+                }
             }
         }
 

@@ -280,7 +280,11 @@ public class ExecutorLifecycleContractTest
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         using var cancellation = new CancellationTokenSource();
-        Task work = executor.SubmitAsync(() => { entered.Set(); release.Wait(); });
+        Task work = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            release.Wait();
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -543,7 +547,12 @@ public class ExecutorLifecycleContractTest
         IEventExecutorGroup executor = new DefaultEventExecutor();
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task<int> running = executor.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); return 7; });
+        Task<int> running = executor.SubmitAsync(() =>
+        {
+            entered.Set();
+            Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+            return 7;
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -589,7 +598,11 @@ public class ExecutorLifecycleContractTest
         IEventExecutorGroup surface = selectedChild ? group.Next() : group;
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task running = underlying.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); });
+        Task running = underlying.SubmitAsync(() =>
+        {
+            entered.Set();
+            Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+        });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -640,7 +653,12 @@ public class ExecutorLifecycleContractTest
         Assert.Equal(new[] { first.stopFailure, third.stopFailure }, failure.InnerExceptions);
         Assert.All(new[] { first, second, third }, child => Assert.Equal(1, child.stopRequests));
         Assert.False(group.TerminationFuture.IsCompleted);
-        foreach (Child child in new[] { first, second, third }) child.termination.SetResult();
+
+        foreach (Child child in new[] { first, second, third })
+        {
+            child.termination.SetResult();
+        }
+
         await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
@@ -667,11 +685,21 @@ public class ExecutorLifecycleContractTest
         Assert.False(group.Iterator() is ICollection<IEventExecutor>);
         Assert.Equal(children, group.Iterator());
         Assert.Equal(3, group.ExecutorCount());
-        for (int i = 0; i < 12; ++i) Assert.Same(children[i % 3], group.Next());
+
+        for (int i = 0; i < 12; ++i)
+        {
+            Assert.Same(children[i % 3], group.Next());
+        }
+
         Assert.Same(group.TerminationFuture, group.StopAsync());
         Assert.True(group.IsShutdown());
         Assert.All(children, child => Assert.Equal(1, child.stopRequests));
-        foreach (var child in children) child.termination.SetResult();
+
+        foreach (var child in children)
+        {
+            child.termination.SetResult();
+        }
+
         await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
@@ -708,7 +736,12 @@ public class ExecutorLifecycleContractTest
         long payload = unchecked((long)0x7ff8000000001234UL);
         metric.SetUtilization(BitConverter.Int64BitsToDouble(payload));
         Assert.Equal(payload, BitConverter.DoubleToInt64Bits(metric.Utilization()));
-        foreach (var child in children) child.termination.SetResult();
+
+        foreach (var child in children)
+        {
+            child.termination.SetResult();
+        }
+
         await ordinary.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         await observable.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -759,7 +792,11 @@ public class ExecutorLifecycleContractTest
         {
             var children = group.Iterator().ToArray();
             Assert.Equal(2, children.Length);
-            Assert.All(children, child => { Assert.IsType<DefaultEventExecutor>(child); Assert.Same(group, child.Parent()); });
+            Assert.All(children, child =>
+            {
+                Assert.IsType<DefaultEventExecutor>(child);
+                Assert.Same(group, child.Parent());
+            });
             var first = group.SubmitAsync<Thread>(() => Thread.CurrentThread);
             var second = group.SubmitAsync<Thread>(() => Thread.CurrentThread);
             Assert.NotSame(first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult(), second.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
@@ -795,7 +832,11 @@ public class ExecutorLifecycleContractTest
         Assert.True(secondWork.DeadlineNanos() < rateWork.DeadlineNanos());
         Assert.True(rateWork.DeadlineNanos() < delayWork.DeadlineNanos());
         cancellation.Cancel();
-        foreach (Task operation in new Task[] { runnable, callable, rate, delay }) Assert.True(operation.IsCanceled);
+
+        foreach (Task operation in new Task[] { runnable, callable, rate, delay })
+        {
+            Assert.True(operation.IsCanceled);
+        }
     }
 
     [Fact]
@@ -830,7 +871,11 @@ public class ExecutorLifecycleContractTest
         for (int i = 0; i < 3; ++i)
         {
             int value = i;
-            executor.Execute(() => { Assert.True(executor.InEventLoop()); values.Add(value); });
+            executor.Execute(() =>
+            {
+                Assert.True(executor.InEventLoop());
+                values.Add(value);
+            });
         }
         Assert.Single(child.tasks);
         for (int i = 0; i < 3; ++i)
@@ -852,7 +897,11 @@ public class ExecutorLifecycleContractTest
         var executor = new NonStickyEventExecutorGroup(new SingleChildGroup(child), 1).Next();
         int count = 0;
         executor.Execute(() => ++count);
-        executor.Execute(() => { Assert.True(executor.InEventLoop()); ++count; });
+        executor.Execute(() =>
+        {
+            Assert.True(executor.InEventLoop());
+            ++count;
+        });
         child.Run(child.tasks.Dequeue());
         Assert.Equal(2, count);
         Assert.Equal(3, child.executions);
@@ -869,7 +918,11 @@ public class ExecutorLifecycleContractTest
         executor.Execute(() =>
         {
             order.Add(1);
-            executor.Execute(() => { order.Add(3); throw new InvalidOperationException("queued"); });
+            executor.Execute(() =>
+            {
+                order.Add(3);
+                throw new InvalidOperationException("queued");
+            });
             executor.Execute(() => order.Add(4));
             order.Add(2);
             throw new InvalidOperationException("outer");
@@ -900,7 +953,11 @@ public class ExecutorLifecycleContractTest
         var executor = GlobalEventExecutor.INSTANCE;
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
-        executor.Execute(() => { entered.Signal(); release.Wait(); });
+        executor.Execute(() =>
+        {
+            entered.Signal();
+            release.Wait();
+        });
         Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
         Exception failure = null;
         bool inactive = false;
@@ -936,7 +993,11 @@ public class ExecutorLifecycleContractTest
         var executor = GlobalEventExecutor.INSTANCE;
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
-        executor.Execute(() => { entered.Signal(); release.Wait(); });
+        executor.Execute(() =>
+        {
+            entered.Signal();
+            release.Wait();
+        });
         Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
         Exception failure = null;
         var waiter = new Thread(() =>
@@ -975,7 +1036,11 @@ public class ExecutorLifecycleContractTest
         var executor = GlobalEventExecutor.INSTANCE;
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        executor.Execute(() => { entered.Set(); release.Wait(); });
+        executor.Execute(() =>
+        {
+            entered.Set();
+            release.Wait();
+        });
         Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
         Exception failure = null;
         bool inactive = false;

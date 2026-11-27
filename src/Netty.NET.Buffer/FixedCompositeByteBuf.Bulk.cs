@@ -70,12 +70,15 @@ internal sealed partial class FixedCompositeByteBuf
     {
         CheckIndex(index, length);
         int componentIndex = FindComponent(index);
+
         while (length > 0)
         {
             Component component = _components[componentIndex++];
             int count = Math.Min(length, component.EndOffset - index);
             component.Source.GetBytes(index - component.Offset, destination, destinationIndex, count);
-            index += count; destinationIndex += count; length -= count;
+            index += count;
+            destinationIndex += count;
+            length -= count;
         }
     }
 }

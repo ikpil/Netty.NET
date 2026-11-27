@@ -92,7 +92,10 @@ public class PooledProviderCopyTest
         foreach (bool direct in new[] { false, true })
         foreach (int capacity in new[] { 13, 513, 4097, 17000, 131073 })
         for (int view = 0; view < 4; ++view)
-        for (int mode = 0; mode < 3; ++mode) yield return [direct, capacity, view, mode];
+        for (int mode = 0; mode < 3; ++mode)
+                    {
+                        yield return [direct, capacity, view, mode];
+                    }
     }
 
     [Theory]
@@ -119,10 +122,12 @@ public class PooledProviderCopyTest
             if (view == 3)
                 target = root.RetainedSlice(2, 9);
             int reader = root.ReaderIndex, writer = root.WriterIndex, claims = root.RefCnt;
+
             ByteBuf Copy()
             {
                 return view == 1 ? target.Copy() : target.Copy(view >= 2 ? 1 : 3, 7);
             }
+
             if (mode != 0)
                 Assert.Same(observation.Failure, Assert.Throws<CopyFailure>(() => Copy()));
             else

@@ -86,7 +86,12 @@ public class PoolThreadCacheSchedulingTest
     {
         var executor = new ManualExecutor();
         using var a = NewAllocator();
-        Mapped(executor, () => { for (int i = 0; i < 12; ++i) Allocate(a, false, 48).Release(); });
+        Mapped(executor, () => {
+            for (int i = 0; i < 12; ++i)
+            {
+                Allocate(a, false, 48).Release();
+            }
+        });
         long id = executor.Head.GetId();
         executor.Advance(Period * 3);
         Assert.Equal(3, executor.RunDue());
@@ -200,7 +205,12 @@ public class PoolThreadCacheSchedulingTest
         var executor = new ManualExecutor();
         using var a = NewAllocator(native: native);
         ByteBuf live = null;
-        Mapped(executor, () => { live = Allocate(a, true, 48); live.WriteInt(42); Allocate(a, true, 64).Release(); });
+        Mapped(executor, () =>
+        {
+            live = Allocate(a, true, 48);
+            live.WriteInt(42);
+            Allocate(a, true, 64).Release();
+        });
         var lease = useLease ? live.AcquireReadLease() : default;
         if (useLease)
             live.Release();
@@ -431,7 +441,12 @@ public class PoolThreadCacheSchedulingTest
             var buffers = await executor.SubmitAsync(() => Enumerable.Range(0, 64).Select(_ => Allocate(a, true, 48)).ToArray(),
                     TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
-            Task returns = Task.Run(() => { foreach (var b in buffers) b.Release(); }, TestContext.Current.CancellationToken);
+            Task returns = Task.Run(() => {
+                foreach (var b in buffers)
+                {
+                    b.Release();
+                }
+            }, TestContext.Current.CancellationToken);
             clock.Advance(Period);
             a.Dispose();
             await returns.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
@@ -522,7 +537,13 @@ public class PoolThreadCacheSchedulingTest
         internal int RunDue()
         {
             int count = 0;
-            while (Poll() is Action due) { due(); Assert.True(++count < 1024); }
+
+            while (Poll() is Action due)
+            {
+                due();
+                Assert.True(++count < 1024);
+            }
+
             return count;
         }
 

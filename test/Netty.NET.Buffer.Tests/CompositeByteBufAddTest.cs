@@ -230,7 +230,12 @@ public class CompositeByteBufAddTest
         const int capacity = 1024 * 1024; // 1MB
         ByteBuf owner = Unpooled.Buffer(capacity).WriteZero(capacity);
         CompositeByteBuf buffer = new(int.MaxValue);
-        for (int i = 0; i < 2046; ++i) buffer.AddComponent(owner.RetainedDuplicate());
+
+        for (int i = 0; i < 2046; ++i)
+        {
+            buffer.AddComponent(owner.RetainedDuplicate());
+        }
+
         ByteBuf first = owner.RetainedDuplicate();
         ByteBuf second = owner.RetainedDuplicate();
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 7 });
@@ -279,7 +284,8 @@ public class CompositeByteBufAddTest
         {
             // The third input observes the earlier inputs while being inserted/read.
             // They must still be alive until the complete batch has been copied.
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
         });
         CompositeByteBuf buffer = new(1, true, allocator);
         try
@@ -660,7 +666,12 @@ public class CompositeByteBufAddTest
         const int capacity = 1024 * 1024;
         ByteBuf owner = Unpooled.Buffer(capacity).WriteZero(capacity);
         CompositeByteBuf source = new(), target = new(int.MaxValue);
-        for (int i = 0; i < 2047; ++i) target.AddComponent(owner.RetainedDuplicate());
+
+        for (int i = 0; i < 2047; ++i)
+        {
+            target.AddComponent(owner.RetainedDuplicate());
+        }
+
         source.AddComponent(owner.RetainedDuplicate(), true);
         try
         {

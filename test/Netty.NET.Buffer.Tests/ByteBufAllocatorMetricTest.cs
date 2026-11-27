@@ -137,7 +137,11 @@ public class ByteBufAllocatorMetricTest
         CompositeByteBuf b = direct ? a.CompositeDirectBuffer(2) : a.CompositeHeapBuffer(2);
         try
         {
-            for (int i = 0; i < 3; i++) b.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }), true);
+            for (int i = 0; i < 3; i++)
+            {
+                b.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }), true);
+            }
+
             Assert.Equal(1, b.NumComponents);
             AssertUsage(a, direct, 6);
             b.Capacity = 9;

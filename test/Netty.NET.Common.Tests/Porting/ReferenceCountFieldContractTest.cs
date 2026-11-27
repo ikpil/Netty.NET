@@ -162,7 +162,11 @@ public class ReferenceCountFieldContractTest
                     return false;
                 }
             });
-            Task<bool> releasing = Task.Run(() => { start.Wait(); return counted.Release(); });
+            Task<bool> releasing = Task.Run(() =>
+            {
+                start.Wait();
+                return counted.Release();
+            });
             start.Set();
             await Task.WhenAll(retaining, releasing);
             bool retained = await retaining;

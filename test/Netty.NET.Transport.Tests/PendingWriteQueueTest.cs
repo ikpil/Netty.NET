@@ -59,14 +59,20 @@ public class PendingWriteQueueTest
     public async Task TestRemoveAndFail()
     {
         await AssertWriteFails(new TestHandler((queue, ctx, _) =>
-        { queue.RemoveAndFail(new TestException()); ctx.Flush(); }), 1);
+        {
+            queue.RemoveAndFail(new TestException());
+            ctx.Flush();
+        }), 1);
     }
 
     [Fact]
     public async Task TestRemoveAndFailAll()
     {
         await AssertWriteFails(new TestHandler((queue, ctx, _) =>
-        { queue.RemoveAndFailAll(new TestException()); ctx.Flush(); }), 3);
+        {
+            queue.RemoveAndFailAll(new TestException());
+            ctx.Flush();
+        }), 3);
     }
 
     [Fact]
@@ -245,7 +251,11 @@ public class PendingWriteQueueTest
         var first = new TaskCompletionSource();
         var third = new TaskCompletionSource();
         Task thirdListener = OnCompleted(third.Task, () => failOrder.Add(3));
-        Task firstListener = OnCompleted(first.Task, () => { failOrder.Add(1); queue.Add(3L, third); });
+        Task firstListener = OnCompleted(first.Task, () =>
+        {
+            failOrder.Add(1);
+            queue.Add(3L, third);
+        });
         queue.Add(1L, first);
         var second = new TaskCompletionSource();
         Task secondListener = OnCompleted(second.Task, () => failOrder.Add(2));

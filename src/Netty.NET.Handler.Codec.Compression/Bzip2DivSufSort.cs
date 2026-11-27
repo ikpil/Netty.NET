@@ -697,8 +697,10 @@ internal sealed class Bzip2DivSufSort
                     {
                         while (j < bufend)
                         {
-                            SA[i++] = buf[j]; buf[j++] = SA[i];
+                            SA[i++] = buf[j];
+                            buf[j++] = SA[i];
                         }
+
                         SA[i] = buf[j];
                         buf[j] = t;
                         return;

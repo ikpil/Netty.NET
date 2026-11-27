@@ -202,8 +202,18 @@ public class ReceiveAllocatorContractTest
     {
         var allocator = new DefaultMaxBytesRecvByteBufAllocator(20, 10);
         Parallel.Invoke(
-            () => { for (int i = 0; i < 10000; i++) allocator.MaxBytesPerReadPair(20, 10); },
-            () => { for (int i = 0; i < 10000; i++) allocator.MaxBytesPerReadPair(40, 30); },
+            () => {
+                for (int i = 0; i < 10000; i++)
+                {
+                    allocator.MaxBytesPerReadPair(20, 10);
+                }
+            },
+            () => {
+                for (int i = 0; i < 10000; i++)
+                {
+                    allocator.MaxBytesPerReadPair(40, 30);
+                }
+            },
             () =>
             {
                 for (int i = 0; i < 10000; i++)

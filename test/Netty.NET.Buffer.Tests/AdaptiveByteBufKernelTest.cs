@@ -193,8 +193,16 @@ public partial class AdaptiveByteBufKernelTest
             Allocator.StorageFactory = (_, size, max) =>
             {
                 ByteBuf root = direct ? new NativeProbe(Observation, size, max, Allocator.Native) : new HeapProbe(Observation, size, max);
-                byte[] bytes = new byte[size]; for (int i = 0; i < bytes.Length; ++i) bytes[i] = (byte)(i % 251);
-                root.SetBytes(0, bytes.AsSpan()); Raw.Add(root); return root;
+                byte[] bytes = new byte[size];
+
+                for (int i = 0; i < bytes.Length; ++i)
+                {
+                    bytes[i] = (byte)(i % 251);
+                }
+
+                root.SetBytes(0, bytes.AsSpan());
+                Raw.Add(root);
+                return root;
             };
             int size = profile is 2 or 4 ? 17000 : profile == 3 ? 1048577 : profile == 1 ? 513 : 13;
             int max = profile == 3 ? 1048640 : 65536;
@@ -217,7 +225,10 @@ public partial class AdaptiveByteBufKernelTest
     {
         foreach (bool direct in new[] { false, true })
         for (int profile = 0; profile < 5; ++profile)
-        for (int operation = 0; operation < 14; ++operation) yield return [direct, profile, operation];
+        for (int operation = 0; operation < 14; ++operation)
+                {
+                    yield return [direct, profile, operation];
+                }
     }
 
     [Theory]
@@ -288,6 +299,7 @@ public partial class AdaptiveByteBufKernelTest
                         break;
                 }
             }
+
             Assert.Same(s.Observation.Failure, Assert.Throws<KernelFailure>(() => Request()));
             var call = Assert.Single(s.Observation.Calls);
             string expected = operation switch

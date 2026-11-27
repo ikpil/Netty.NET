@@ -77,6 +77,7 @@ public class CompositeByteBufIoEmptyComponentTest
         {
             Allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4, nativeAllocator: Native)
                 : new UnpooledByteBufAllocator(false, Native);
+
             ByteBuf Data(int start)
             {
                 ByteBuf b = direct ? Allocator.DirectBuffer(4, 4) : Allocator.HeapBuffer(4, 4);
@@ -84,14 +85,17 @@ public class CompositeByteBufIoEmptyComponentTest
                     b.WriteByte(start + i);
                 return b;
             }
+
             Root = new CompositeByteBuf(Allocator, direct, 16, Data(1), FirstEmpty, Data(5), SecondEmpty, Data(9));
             Root.SetIndex(0, 12);
             Tracker = new Tracker(Root);
             Index = facade is 5 or 6 or 9 or 11 ? 1 : 2;
+
             CompositeByteBuf Nested(ByteBuf b)
             {
                 return new(Allocator, direct, 16, b);
             }
+
             Owner = facade switch
             {
                 0 => Root,
@@ -128,7 +132,10 @@ public class CompositeByteBufIoEmptyComponentTest
         for (int facade = 0; facade < 13; ++facade)
         for (int input = 0; input < 3; ++input)
         foreach (bool asynchronous in new[] { false, true })
-        foreach (bool relative in new[] { false, true }) yield return [pooled, direct, facade, input, asynchronous, relative];
+        foreach (bool relative in new[] { false, true })
+                            {
+                                yield return [pooled, direct, facade, input, asynchronous, relative];
+                            }
     }
 
     [Theory]

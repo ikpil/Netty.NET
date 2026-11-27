@@ -73,7 +73,12 @@ public class ChannelOutputShutdownContractTest
             Assert.Equal(!autoClosed && halfClose, channel.IsActive);
             Assert.False(channel.IsWritable);
             Assert.True(channel.AllOnOwner);
-            foreach (var buffer in buffers) Assert.Equal(0, buffer.RefCnt);
+
+            foreach (var buffer in buffers)
+            {
+                Assert.Equal(0, buffer.RefCnt);
+            }
+
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             Assert.Equal(autoClosed || !halfClose ? 1 : 0, channel.NativeCloses);
         }

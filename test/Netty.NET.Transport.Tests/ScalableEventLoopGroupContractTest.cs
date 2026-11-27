@@ -106,6 +106,10 @@ public class ScalableEventLoopGroupContractTest
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         deadline.CancelAfter(TimeSpan.FromSeconds(3));
-        while (!condition()) await Task.Delay(20, deadline.Token);
+
+        while (!condition())
+        {
+            await Task.Delay(20, deadline.Token);
+        }
     }
 }

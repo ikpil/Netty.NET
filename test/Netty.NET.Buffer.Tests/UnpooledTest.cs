@@ -52,7 +52,13 @@ public class UnpooledTest
         Assert.Equal(12 + 512, buffer.ReadableBytes);
         // CLR: the nonempty segments of the readable sequence replace nioBufferCount().
         int segments = 0;
-        foreach (var segment in buffer.ReadableSequence) { Assert.False(segment.IsEmpty); ++segments; }
+
+        foreach (var segment in buffer.ReadableSequence)
+        {
+            Assert.False(segment.IsEmpty);
+            ++segments;
+        }
+
         Assert.Equal(2, segments);
         Assert.Equal(2, Assert.IsType<CompositeByteBuf>(buffer).NumComponents);
 
@@ -204,12 +210,14 @@ public class UnpooledTest
         // CLR: the source leaks the buffer(0) inputs of the copiedBuffer cases (copying takes no ownership); the
         // CLR test releases them at the end.
         var sources = new List<ByteBuf>();
+
         ByteBuf Buffer0()
         {
             ByteBuf b = Unpooled.Buffer(0);
             sources.Add(b);
             return b;
         }
+
         try
         {
             AssertSameAndRelease(Unpooled.EmptyBuffer, Unpooled.WrappedBuffer(Array.Empty<byte>()));
@@ -447,7 +455,11 @@ public class UnpooledTest
                 Unpooled.WrappedBuffer(new byte[] { 2 }), Unpooled.WrappedBuffer(new byte[] { 3 }) };
         AssertEqualsAndRelease(Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 }),
                 Unpooled.CopiedBuffer(parts[0], parts[1], parts[2]));
-        foreach (ByteBuf part in parts) part.Release();
+
+        foreach (ByteBuf part in parts)
+        {
+            part.Release();
+        }
 
         AssertEqualsAndRelease(Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 }),
                 Unpooled.CopiedBuffer(new ReadOnlyMemory<byte>[] { new byte[] { 1, 2, 3 } }));

@@ -43,10 +43,12 @@ public class ByteBufLifetimeFixtureTest
         public ByteBuf Buffer(int capacity)
         {
             bool direct = (_provider & 1) != 0;
+
             ByteBuf Part(int size)
             {
                 return direct ? Allocator.DirectBuffer(size) : Allocator.HeapBuffer(size);
             }
+
             if (_provider < 6)
                 return Part(capacity);
             CompositeByteBuf result = direct ? Allocator.CompositeDirectBuffer() : Allocator.CompositeHeapBuffer();
@@ -551,10 +553,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestSliceAfterReleaseRetainedSlice(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         AssertSliceFailAfterRelease(buf, buf2);
@@ -565,10 +569,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestSliceAfterReleaseRetainedSliceDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         ByteBuf buf3 = buf2.Duplicate();
@@ -580,10 +586,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestSliceAfterReleaseRetainedSliceRetainedDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         ByteBuf buf3 = buf2.RetainedDuplicate();
@@ -595,10 +603,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestSliceAfterReleaseRetainedDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         AssertSliceFailAfterRelease(buf, buf2);
@@ -609,10 +619,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestSliceAfterReleaseRetainedDuplicateSlice(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         ByteBuf buf3 = buf2.Slice(0, 1);
@@ -624,10 +636,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedSliceAfterReleaseRetainedSlice(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         AssertRetainedSliceFailAfterRelease(buf, buf2);
@@ -638,10 +652,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedSliceAfterReleaseRetainedSliceDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         ByteBuf buf3 = buf2.Duplicate();
@@ -653,10 +669,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedSliceAfterReleaseRetainedSliceRetainedDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         ByteBuf buf3 = buf2.RetainedDuplicate();
@@ -668,10 +686,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedSliceAfterReleaseRetainedDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         AssertRetainedSliceFailAfterRelease(buf, buf2);
@@ -682,10 +702,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedSliceAfterReleaseRetainedDuplicateSlice(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         ByteBuf buf3 = buf2.Slice(0, 1);
@@ -697,10 +719,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestDuplicateAfterReleaseRetainedSliceDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         ByteBuf buf3 = buf2.Duplicate();
@@ -712,10 +736,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestDuplicateAfterReleaseRetainedDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         AssertDuplicateFailAfterRelease(buf, buf2);
@@ -726,10 +752,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestDuplicateAfterReleaseRetainedDuplicateSlice(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         ByteBuf buf3 = buf2.Slice(0, 1);
@@ -741,10 +769,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedDuplicateAfterReleaseRetainedDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedDuplicate();
         AssertRetainedDuplicateFailAfterRelease(buf, buf2);
@@ -755,10 +785,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedDuplicateAfterReleaseDuplicate(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.Duplicate();
         AssertRetainedDuplicateFailAfterRelease(buf, buf2);
@@ -769,10 +801,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedDuplicateAfterReleaseRetainedSlice(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(1);
         ByteBuf buf2 = buf.RetainedSlice(0, 1);
         AssertRetainedDuplicateFailAfterRelease(buf, buf2);
@@ -783,10 +817,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedSliceAndRetainedDuplicateContentIsExpected(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(8).ResetWriterIndex();
         ByteBuf expected1 = NewBuffer(6).ResetWriterIndex();
         ByteBuf expected2 = NewBuffer(5).ResetWriterIndex();
@@ -853,10 +889,12 @@ public class ByteBufLifetimeFixtureTest
     public void TestRetainedDuplicateAndRetainedSliceContentIsExpected(int provider, int form)
     {
         using var scope = new Scope(provider);
+
         ByteBuf NewBuffer(int capacity)
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(8).ResetWriterIndex();
         ByteBuf expected1 = NewBuffer(6).ResetWriterIndex();
         ByteBuf expected2 = NewBuffer(5).ResetWriterIndex();
@@ -1143,6 +1181,7 @@ public class ByteBufLifetimeFixtureTest
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(8);
         ByteBuf buf1 = initRetainedSlice ? buf.RetainedSlice() : buf.Slice().Retain();
         ByteBuf buf2 = Unpooled.UnreleasableBuffer(buf1);
@@ -1161,6 +1200,7 @@ public class ByteBufLifetimeFixtureTest
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(8);
         ByteBuf buf1 = initRetainedSlice ? buf.RetainedSlice() : buf.Slice().Retain();
         ByteBuf buf2 = Unpooled.UnreleasableBuffer(buf1);
@@ -1180,6 +1220,7 @@ public class ByteBufLifetimeFixtureTest
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(8);
         ByteBuf buf1 = initRetainedDuplicate ? buf.RetainedDuplicate() : buf.Duplicate().Retain();
         ByteBuf buf2 = Unpooled.UnreleasableBuffer(buf1);
@@ -1198,6 +1239,7 @@ public class ByteBufLifetimeFixtureTest
         {
             return Entry(scope.Buffer(capacity), form);
         }
+
         ByteBuf buf = NewBuffer(8).ResetWriterIndex();
         ByteBuf expected1 = NewBuffer(6).ResetWriterIndex();
         ByteBuf expected2 = NewBuffer(4).ResetWriterIndex();

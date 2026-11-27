@@ -25,7 +25,11 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class AbstractScheduledEventExecutorTest
 {
     private static readonly Action TEST_RUNNABLE = () => { };
-    private static readonly Func<object> TEST_CALLABLE = () => { TEST_RUNNABLE(); return null; };
+    private static readonly Func<object> TEST_CALLABLE = () =>
+    {
+        TEST_RUNNABLE();
+        return null;
+    };
 
     [Fact]
     public void TestScheduleRunnableZero()

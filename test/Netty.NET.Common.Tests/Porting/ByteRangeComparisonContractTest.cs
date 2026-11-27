@@ -24,7 +24,12 @@ public class ByteRangeComparisonContractTest
         byte[] right = new byte[length + 11];
         left.AsSpan().Fill(0x5a);
         right.AsSpan().Fill(0xa5);
-        for (int i = 0; i < length; i++) left[i + 3] = right[i + 5] = unchecked((byte)(i * 73 + 128));
+
+        for (int i = 0; i < length; i++)
+        {
+            left[i + 3] = right[i + 5] = unchecked((byte)(i * 73 + 128));
+        }
+
         var leftView = new AsciiString(left, 3, length, false);
         var rightView = new AsciiString(right, 5, length, false);
         Assert.True(leftView.ContentEquals(rightView));

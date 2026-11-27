@@ -248,6 +248,7 @@ public class ChannelCoreContractTest
         var channel = new FailureChannel(Task.CompletedTask, false);
         var writes = new List<Task>();
         int remaining = 8, depth = 0, maximumDepth = 0;
+
         void Enqueue()
         {
             var message = new ReleaseObserver(Unpooled.Buffer(1).WriteByte(1), () =>
@@ -261,6 +262,7 @@ public class ChannelCoreContractTest
             });
             writes.Add(channel.WriteAndFlushAsync(message));
         }
+
         try
         {
             await channel.RegisterAsync(loop.Object);

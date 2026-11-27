@@ -29,7 +29,12 @@ public class UnpooledMemoryWrappingTest
     public void OriginalMultipleRangesAliasCapturedStorageAndSkipEmpties(int kind, bool readOnly)
     {
         using var storage = new ExternalStorage(kind, 16);
-        for (int i = 0; i < 16; i++) storage.Memory.Span[i] = (byte)i;
+
+        for (int i = 0; i < 16; i++)
+        {
+            storage.Memory.Span[i] = (byte)i;
+        }
+
         Memory<byte>[] ranges = { default, storage.Memory.Slice(2, 3), storage.Memory.Slice(16, 0), storage.Memory.Slice(8, 4), default };
         ByteBuf result = Wrap(ranges, readOnly);
         try
@@ -77,7 +82,13 @@ public class UnpooledMemoryWrappingTest
     {
         using var storage = new ExternalStorage(kind, 6);
         var ranges = new Memory<byte>[6];
-        for (int i = 0; i < 6; i++) { storage.Memory.Span[i] = (byte)(i + 1); ranges[i] = storage.Memory.Slice(i, 1); }
+
+        for (int i = 0; i < 6; i++)
+        {
+            storage.Memory.Span[i] = (byte)(i + 1);
+            ranges[i] = storage.Memory.Slice(i, 1);
+        }
+
         ByteBuf result = Wrap(ranges, readOnly, 2);
         try
         {

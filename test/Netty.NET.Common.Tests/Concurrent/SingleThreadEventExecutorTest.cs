@@ -35,7 +35,11 @@ public class SingleThreadEventExecutorTest
         private readonly CountdownEvent runLatch = new(1);
         internal TestThread(Action task)
         {
-            thread = new Thread(() => { runLatch.Signal(); task(); }) { IsBackground = true };
+            thread = new Thread(() =>
+            {
+                runLatch.Signal();
+                task();
+            }) { IsBackground = true };
         }
 
         internal void AwaitStarted()
@@ -111,7 +115,10 @@ public class SingleThreadEventExecutorTest
 
         protected override void Run()
         {
-            while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Invoke();
+            while (!ConfirmShutdown() && !CanSuspend())
+            {
+                TakeTask()?.Invoke();
+            }
         }
 
         protected internal override void Wakeup(bool inEventLoop)
@@ -508,8 +515,16 @@ public class SingleThreadEventExecutorTest
                 Assert.True(executor.InEventLoop());
                 Task<int>[] children =
                 {
-                    executor.SubmitAsync(() => { Assert.True(executor.InEventLoop()); return ++calls; }),
-                    executor.SubmitAsync(() => { Assert.True(executor.InEventLoop()); return ++calls; })
+                    executor.SubmitAsync(() =>
+                    {
+                        Assert.True(executor.InEventLoop());
+                        return ++calls;
+                    }),
+                    executor.SubmitAsync(() =>
+                    {
+                        Assert.True(executor.InEventLoop());
+                        return ++calls;
+                    })
                 };
                 Task composition = any ? Task.WhenAny(children) : Task.WhenAll(children);
                 if (timeout)
@@ -671,7 +686,11 @@ public class SingleThreadEventExecutorTest
             Assert.True(taskQueue.IsEmpty());
             Assert.True(executor.attempts > 0);
             Assert.Equal(executor.attempts, executor.submittedTasks.Count + executor.rejects);
-            foreach (Task future in executor.submittedTasks) Assert.True(future.IsCompletedSuccessfully);
+
+            foreach (Task future in executor.submittedTasks)
+            {
+                Assert.True(future.IsCompletedSuccessfully);
+            }
         }
         finally
         {

@@ -52,20 +52,29 @@ public class CompositeByteBufOwnershipTest
     {
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true })
-        foreach (bool rootFirst in new[] { false, true }) yield return [pooled, direct, rootFirst];
+        foreach (bool rootFirst in new[] { false, true })
+                {
+                    yield return [pooled, direct, rootFirst];
+                }
     }
 
     public static IEnumerable<object[]> Factories()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     public static IEnumerable<object[]> Removals()
     {
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true })
-        foreach (int shape in new[] { 0, 1, 2 }) yield return [pooled, direct, shape];
+        foreach (int shape in new[] { 0, 1, 2 })
+                {
+                    yield return [pooled, direct, shape];
+                }
     }
 
     // CLR: heap/native pooled/unpooled factories and both root/composite release orders.
@@ -104,11 +113,14 @@ public class CompositeByteBufOwnershipTest
             byte[] bytes = new byte[1024];
             Random.Shared.NextBytes(bytes);
             root.WriteBytes(bytes);
+
             foreach ((int sliceIndex, int sliceLength) in new[] { (100, 200), (300, 400), (700, 100) })
             {
                 ByteBuf component = root.RetainedSlice(sliceIndex, sliceLength);
-                components.Add(component); composite.AddComponent(component, true);
+                components.Add(component);
+                composite.AddComponent(component, true);
             }
+
             (int start, int count, int expectedParts) = (offset, length, expectedListSize);
             parts = composite.Decompose(start, count);
             Assert.Equal(expectedParts, parts.Count);
@@ -122,7 +134,12 @@ public class CompositeByteBufOwnershipTest
                 actual.AddRange(Read(part, 0, part.ReadableBytes));
             }
             byte[] expected = new byte[count];
-            for (int i = 0; i < count; ++i) expected[i] = bytes[100 + start + i];
+
+            for (int i = 0; i < count; ++i)
+            {
+                expected[i] = bytes[100 + start + i];
+            }
+
             Assert.Equal(expected, actual.ToArray());
             Assert.Equal(expected, Read(composite.Slice(start, count), 0, count));
             if (count != 0)
@@ -203,8 +220,10 @@ public class CompositeByteBufOwnershipTest
             for (int i = 0; i < count; ++i)
             {
                 ByteBuf component = root.RetainedSlice(i == 0 ? 100 : 400, i == 0 ? 200 : 100).Retain();
-                components.Add(component); composite.AddComponent(component, true);
+                components.Add(component);
+                composite.AddComponent(component, true);
             }
+
             IReadOnlyList<ByteBuf> parts = composite.Decompose(count == 1 ? 0 : 100, count == 1 ? 100 : 150);
             Assert.Equal(count, parts.Count);
             Assert.Equal(pooled ? 1 + count : 1 + 2 * count, root.RefCnt);
@@ -213,8 +232,13 @@ public class CompositeByteBufOwnershipTest
                 Assert.Equal(components[i].RefCnt, parts[i].RefCnt);
                 Assert.Equal(pooled ? 2 : 1 + 2 * count, parts[i].RefCnt);
             }
+
             // Consume the explicit Retain claim, not the composite's transferred claim.
-            foreach (ByteBuf part in parts) part.Release();
+            foreach (ByteBuf part in parts)
+            {
+                part.Release();
+            }
+
             for (int i = 0; i < count; ++i)
                 Assert.Equal(components[i].RefCnt, parts[i].RefCnt);
             Assert.All(components, component => Assert.Equal(pooled ? 1 : 1 + count, component.RefCnt));
@@ -267,8 +291,10 @@ public class CompositeByteBufOwnershipTest
                 ByteBuf source = s.Allocator.Buffer(4, 4)
                     .WriteBytes(new byte[] { 0xcc, unchecked((byte)(2 * i + 1)), unchecked((byte)(2 * i + 2)), 0xdd })
                     .SetIndex(1, 3);
-                sources.Add(source); composite.AddComponent(source, true);
+                sources.Add(source);
+                composite.AddComponent(source, true);
             }
+
             composite.SetIndex(1, count * 2);
             Assert.Equal(count, composite.NumComponents);
             Assert.Equal(count * 2, composite.Capacity);
@@ -286,6 +312,7 @@ public class CompositeByteBufOwnershipTest
             Assert.Equal(count * 2, composite.WriterIndex);
             var expected = new List<byte>();
             int remainingIndex = 0;
+
             for (int i = 0; i < count; ++i)
             {
                 bool removed = i >= removeAt && i < removeAt + removeCount;
@@ -298,9 +325,11 @@ public class CompositeByteBufOwnershipTest
                 Assert.Equal(remainingIndex, composite.ToComponentIndex(remainingIndex * 2));
                 Assert.Equal(1, sources[i].ReaderIndex);
                 Assert.Equal(3, sources[i].WriterIndex);
-                expected.Add(unchecked((byte)(2 * i + 1))); expected.Add(unchecked((byte)(2 * i + 2)));
+                expected.Add(unchecked((byte)(2 * i + 1)));
+                expected.Add(unchecked((byte)(2 * i + 2)));
                 remainingIndex++;
             }
+
             Assert.Equal(expected.ToArray(), Read(composite, 0, composite.Capacity));
             Assert.Same(composite, composite.RemoveComponents(composite.NumComponents, 0));
         }
@@ -355,7 +384,11 @@ public class CompositeByteBufOwnershipTest
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
         try
         {
-            for (int i = 0; i < 10; i++) buf.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            for (int i = 0; i < 10; i++)
+            {
+                buf.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }));
+            }
+
             Assert.Equal(10, buf.NumComponents);
             Assert.Equal(20, buf.Capacity);
             buf.RemoveComponents(4, 3);

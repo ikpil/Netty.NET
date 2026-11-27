@@ -75,7 +75,15 @@ internal sealed partial class AdaptivePoolingAllocator
         private List<(int Key, Chunk Chunk)> Entries()
         {
             var entries = new List<(int, Chunk)>(_count);
-            foreach (var pair in _chunks) foreach (var chunk in pair.Value) entries.Add((pair.Key, chunk));
+
+            foreach (var pair in _chunks)
+            {
+                foreach (var chunk in pair.Value)
+                {
+                    entries.Add((pair.Key, chunk));
+                }
+            }
+
             return entries;
         }
 

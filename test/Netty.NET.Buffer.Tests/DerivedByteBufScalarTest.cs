@@ -267,7 +267,12 @@ public class DerivedByteBufScalarTest
         public Storage(bool direct, int kind)
         {
             Root = direct ? new ObservedDirect(Observation, Native) : new ObservedHeap(Observation);
-            for (int i = 0; i < 64; i++) Root.WriteByte(128 + i);
+
+            for (int i = 0; i < 64; i++)
+            {
+                Root.WriteByte(128 + i);
+            }
+
             Root.SetIndex(4, 60).MarkReaderIndex().MarkWriterIndex();
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 4, 60)
@@ -339,7 +344,10 @@ public class DerivedByteBufScalarTest
 
     private static void Encode(byte[] bytes, int index, int type, ulong bits)
     {
-        for (int i = 0; i < Widths[type]; i++) bytes[index + i] = unchecked((byte)(bits >> (8 * (Little(type) ? i : Widths[type] - 1 - i))));
+        for (int i = 0; i < Widths[type]; i++)
+        {
+            bytes[index + i] = unchecked((byte)(bits >> (8 * (Little(type) ? i : Widths[type] - 1 - i))));
+        }
     }
 
     private static ulong Written(int type)
@@ -415,7 +423,10 @@ public class DerivedByteBufScalarTest
         foreach (bool direct in new[] { false, true })
         for (int kind = 0; kind < 11; kind++)
         for (int type = 0; type < 21; type++)
-        foreach (bool write in new[] { false, true }) yield return [direct, kind, type, write];
+        foreach (bool write in new[] { false, true })
+                    {
+                        yield return [direct, kind, type, write];
+                    }
     }
 
     [Theory]
@@ -532,15 +543,22 @@ public class DerivedByteBufScalarTest
     {
         using var s = new Storage(direct, 0);
         s.Observation.Fail = s.Observation.Alter = true;
+
         for (int type = 0; type < 21; type++)
         {
-            byte[] expected = Snapshot(s); s.Root.SetIndex(1, 10);
+            byte[] expected = Snapshot(s);
+            s.Root.SetIndex(1, 10);
             Assert.Equal(Result(Decode(expected, 1, type), type), Read(s.Root, type, 0, true));
-            Assert.Equal(1 + Widths[type], s.Root.ReaderIndex); Assert.Equal(10, s.Root.WriterIndex);
-            s.Root.SetIndex(1, 2); Assert.Same(s.Root, Write(s.Root, type, 0, true));
-            Encode(expected, 2, type, Written(type)); Assert.Equal(expected, Snapshot(s));
-            Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(2 + Widths[type], s.Root.WriterIndex);
+            Assert.Equal(1 + Widths[type], s.Root.ReaderIndex);
+            Assert.Equal(10, s.Root.WriterIndex);
+            s.Root.SetIndex(1, 2);
+            Assert.Same(s.Root, Write(s.Root, type, 0, true));
+            Encode(expected, 2, type, Written(type));
+            Assert.Equal(expected, Snapshot(s));
+            Assert.Equal(1, s.Root.ReaderIndex);
+            Assert.Equal(2 + Widths[type], s.Root.WriterIndex);
         }
+
         Assert.Empty(s.Observation.Visits);
     }
     private sealed class RelativePolicy : UnpooledHeapByteBuf

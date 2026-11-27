@@ -91,8 +91,12 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
         {
             throw new ArgumentNullException(nameof(other));
         }
+
         // self-union is a no-op; but no special case needed (Add ignores duplicates)
-        foreach (var item in other) Add(item);
+        foreach (var item in other)
+        {
+            Add(item);
+        }
     }
 
     public void IntersectWith(IEnumerable<T> other)

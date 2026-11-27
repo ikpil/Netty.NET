@@ -83,12 +83,21 @@ public class ExecutorSubmissionContractTest
         using var observation = new ExecutorCompletion(executor, operation);
         bool onLoop = false;
         Task observed = null;
-        using var registration = observation.Register(task => { onLoop = executor.InEventLoop(); observed = task; });
+        using var registration = observation.Register(task =>
+        {
+            onLoop = executor.InEventLoop();
+            observed = task;
+        });
         Assert.False(operation.IsCompleted);
         Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(executor.tasks.First()));
         executor.Run(executor.Take());
         Assert.Same(result, operation.GetAwaiter().GetResult());
-        while (!registration.NotificationCompleted.IsCompleted) executor.Run(executor.Take());
+
+        while (!registration.NotificationCompleted.IsCompleted)
+        {
+            executor.Run(executor.Take());
+        }
+
         registration.NotificationCompleted.GetAwaiter().GetResult();
         Assert.True(onLoop);
         Assert.Same(operation, observed);
@@ -100,7 +109,11 @@ public class ExecutorSubmissionContractTest
         var executor = new ManualExecutor();
         int calls = 0;
         var result = new object();
-        var supplied = executor.SubmitAsync(() => { ++calls; return result; });
+        var supplied = executor.SubmitAsync(() =>
+        {
+            ++calls;
+            return result;
+        });
         Task empty = executor.SubmitAsync(() => { ++calls; });
         executor.Run(executor.Take());
         executor.Run(executor.Take());
@@ -226,7 +239,12 @@ public class ExecutorSubmissionContractTest
             owner.Cancel();
         }
         Assert.All(operations, task => Assert.True(task.IsCanceled));
-        while (executor.tasks.TryTake(out var task)) executor.Run(task);
+
+        while (executor.tasks.TryTake(out var task))
+        {
+            executor.Run(task);
+        }
+
         Assert.Equal(0, calls);
     }
 
@@ -257,6 +275,7 @@ public class ExecutorSubmissionContractTest
         int lateCalls = 0;
         Task<int>[] operations = { executor.SubmitAsync(int () => throw cause, owner.Token),
             executor.SubmitAsync(() => 42, owner.Token), executor.SubmitAsync(() => ++lateCalls, owner.Token) };
+
         async Task<int> FindSuccessAsync()
         {
             var remaining = operations.ToList();
@@ -283,6 +302,7 @@ public class ExecutorSubmissionContractTest
                 owner.Cancel();
             }
         }
+
         Task<int> result = FindSuccessAsync();
         executor.Run(executor.Take());
         executor.Run(executor.Take());

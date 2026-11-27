@@ -218,7 +218,11 @@ public partial class LocalChannelSourceTest
             // learns that the queued connection was closed: closing the server only schedules that notification on
             // the client's event loop. Calling both from this thread would let the event loop run the server's
             // close, and so the notification, before the client's close is submitted.
-            await server.EventLoop.SubmitAsync(() => { _ = server.CloseAsync(); return client.CloseAsync(); }).WaitAsync(TimeSpan.FromSeconds(5));
+            await server.EventLoop.SubmitAsync(() =>
+            {
+                _ = server.CloseAsync();
+                return client.CloseAsync();
+            }).WaitAsync(TimeSpan.FromSeconds(5));
             // CLR: await the native bootstrap's asynchronous result propagation after the source close order.
             await Assert.ThrowsAnyAsync<ClosedChannelException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(connection.IsCompleted);
@@ -424,7 +428,11 @@ public partial class LocalChannelSourceTest
             var owner = task.Method.DeclaringType;
             /* Only slow down the anonymous class in LocalChannel#doRegister() */
             if (owner == typeof(LocalChannel) || owner?.DeclaringType == typeof(LocalChannel))
-                base.Execute(() => { Assert.True(closeLatch.Wait(TimeSpan.FromSeconds(5))); task(); });
+                base.Execute(() =>
+                {
+                    Assert.True(closeLatch.Wait(TimeSpan.FromSeconds(5)));
+                    task();
+                });
             else
                 base.Execute(task);
         }

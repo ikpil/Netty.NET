@@ -60,8 +60,16 @@ public class ThreadDeathWatcherContractTest : IDisposable
         using var owner = new LiveThread();
         using var completed = new CountdownEvent(2);
         int firstCount = 0, secondCount = 0;
-        Action first = () => { Interlocked.Increment(ref firstCount); completed.Signal(); };
-        Action second = () => { Interlocked.Increment(ref secondCount); completed.Signal(); };
+        Action first = () =>
+        {
+            Interlocked.Increment(ref firstCount);
+            completed.Signal();
+        };
+        Action second = () =>
+        {
+            Interlocked.Increment(ref secondCount);
+            completed.Signal();
+        };
         var copy = (Action)first.Clone();
         Assert.NotSame(first, copy);
         Assert.True(first.Equals(copy));
@@ -85,7 +93,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
         ThreadPriority priority = ThreadPriority.Normal;
         bool background = false;
         string name = null;
-        ThreadDeathWatcher.Watch(owner.Thread, () => { Interlocked.Increment(ref failures); throw new InvalidOperationException("callback failure"); });
+        ThreadDeathWatcher.Watch(owner.Thread, () =>
+        {
+            Interlocked.Increment(ref failures);
+            throw new InvalidOperationException("callback failure");
+        });
         ThreadDeathWatcher.Watch(owner.Thread, () =>
         {
             priority = Thread.CurrentThread.Priority;
@@ -140,7 +152,9 @@ public class ThreadDeathWatcherContractTest : IDisposable
             {
                 ThreadDeathWatcher.Watch(owner.Thread, () =>
                 {
-                    captured = ambient.Value; firstWorker = Thread.CurrentThread; firstDone.Set();
+                    captured = ambient.Value;
+                    firstWorker = Thread.CurrentThread;
+                    firstDone.Set();
                 });
                 Assert.Same(marker, ambient.Value);
             }
@@ -157,7 +171,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
         {
             using (ExecutionContext.SuppressFlow())
             {
-                ThreadDeathWatcher.Watch(owner.Thread, () => { secondWorker = Thread.CurrentThread; secondDone.Set(); });
+                ThreadDeathWatcher.Watch(owner.Thread, () =>
+                {
+                    secondWorker = Thread.CurrentThread;
+                    secondDone.Set();
+                });
                 Assert.True(ExecutionContext.IsFlowSuppressed());
             }
             Assert.False(ExecutionContext.IsFlowSuppressed());
@@ -175,7 +193,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
         using var firstDone = new ManualResetEventSlim();
         using var secondDone = new ManualResetEventSlim();
         Thread worker = null;
-        ThreadDeathWatcher.Watch(first.Thread, () => { worker = Thread.CurrentThread; firstDone.Set(); });
+        ThreadDeathWatcher.Watch(first.Thread, () =>
+        {
+            worker = Thread.CurrentThread;
+            firstDone.Set();
+        });
         ThreadDeathWatcher.Watch(second.Thread, secondDone.Set);
         first.End();
         Assert.True(firstDone.Wait(TimeSpan.FromSeconds(5)));
@@ -299,7 +321,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
         using var owner = new LiveThread();
         var order = new List<int>();
         Action task = () => order.Add(1);
-        task += () => { order.Add(2); throw new InvalidOperationException("multicast failure"); };
+        task += () =>
+        {
+            order.Add(2);
+            throw new InvalidOperationException("multicast failure");
+        };
         task += () => order.Add(3);
         var copy = (Action)task.Clone();
         Assert.NotSame(task, copy);
@@ -350,7 +376,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
             {
                 bool cancel = (i & 1) == 0;
                 Action task = cancel ? () => Interlocked.Increment(ref cancelled) :
-                    () => { Interlocked.Increment(ref fired); completed.Signal(); };
+                    () =>
+                    {
+                        Interlocked.Increment(ref fired);
+                        completed.Signal();
+                    };
                 ThreadDeathWatcher.Watch(owner.Thread, task);
                 if (cancel)
                 {

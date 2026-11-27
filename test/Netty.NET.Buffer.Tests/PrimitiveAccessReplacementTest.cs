@@ -60,12 +60,15 @@ public class PrimitiveAccessReplacementTest
             0x7fffff, 0x800000, 0xffffff, int.MinValue, int.MaxValue, 0x100000000L, long.MinValue, long.MaxValue,
             unchecked((long)0xfedcba9876543210UL) };
         uint state = 0x12345678;
+
         for (int i = 0; i < 32; i++)
         {
-            state = unchecked(state * 1664525 + 1013904223); uint high = state;
+            state = unchecked(state * 1664525 + 1013904223);
+            uint high = state;
             state = unchecked(state * 1664525 + 1013904223);
             values.Add(unchecked((long)((ulong)high << 32 | state)));
         }
+
         return values.ToArray();
     }
 

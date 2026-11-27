@@ -45,6 +45,7 @@ public class IpLiteralViewContractTest
             }
             return (GC.GetAllocatedBytesForCurrentThread() - before, sum);
         }
+
         var bare = Measure("fe80::1%42");
         var bracketed = Measure("[fe80::1%42]");
         Assert.Equal(43000L, bare.Sum);

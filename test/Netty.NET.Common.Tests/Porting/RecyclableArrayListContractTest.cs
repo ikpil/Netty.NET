@@ -203,6 +203,7 @@ public class RecyclableArrayListContractTest
         var list = RecyclableArrayList.NewInstance();
         object first = new object(), second = new object();
         int enumerations = 0;
+
         IEnumerable<object> Values()
         {
             if (++enumerations != 1)
@@ -212,6 +213,7 @@ public class RecyclableArrayListContractTest
             yield return first;
             yield return second;
         }
+
         try
         {
             if (indexed)
@@ -238,11 +240,13 @@ public class RecyclableArrayListContractTest
     public void ThrowingEnumerablesDoNotPublishTheirPrefix(bool indexed)
     {
         var list = RecyclableArrayList.NewInstance();
+
         IEnumerable<object> Values()
         {
             yield return new object();
             throw new InvalidOperationException("source failed");
         }
+
         try
         {
             Assert.Throws<InvalidOperationException>(() =>

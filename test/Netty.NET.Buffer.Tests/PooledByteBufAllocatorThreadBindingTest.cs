@@ -138,7 +138,10 @@ public class PooledByteBufAllocatorThreadBindingTest
         }
         finally
         {
-            foreach (Worker w in workers) w.Dispose();
+            foreach (Worker w in workers)
+            {
+                w.Dispose();
+            }
         }
         Assert.Equal(7, a.ReleaseTerminatedThreadBindings());
         Assert.Equal(0, a.ReleaseTerminatedThreadBindings());
@@ -197,7 +200,10 @@ public class PooledByteBufAllocatorThreadBindingTest
     public async Task TerminatedBindingsAreReapedByExplicitCleanupMetricReadOrNewAssignment(int trigger)
     {
         using var a = NewAllocator(2, 2);
-        using (var worker = new Worker()) await worker.InvokeAsync(() => AllocateAndRelease(a, false));
+        using (var worker = new Worker())
+        {
+            await worker.InvokeAsync(() => AllocateAndRelease(a, false));
+        }
         Assert.Equal(1, a.Metric.HeapArenas[0].NumThreadCaches);
         Assert.Equal(1, a.Metric.DirectArenas[0].NumThreadCaches);
         using var live = new Worker();
@@ -227,8 +233,11 @@ public class PooledByteBufAllocatorThreadBindingTest
         ByteBuf b = null;
         try
         {
-            using (var exiting = new Worker()) await exiting.InvokeAsync(() =>
+            using (var exiting = new Worker())
+            {
+                await exiting.InvokeAsync(() =>
                 b = (direct ? a.DirectBuffer(500) : a.HeapBuffer(500)).WriteInt(42));
+            }
             Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
             b.Capacity = 510;
             Assert.Equal(42, b.GetInt(0));
@@ -463,15 +472,21 @@ public class PooledByteBufAllocatorThreadBindingTest
             a.Dispose();
             await Task.WhenAll(actions);
             Assert.Equal(0, a.Metric.NumThreadLocalCaches);
+
             foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
             {
-                Assert.Equal(0, m.NumThreadCaches); Assert.Equal(0, m.NumActiveAllocations);
-                Assert.Equal(m.NumAllocations, m.NumDeallocations); Assert.Equal(0, m.NumActiveBytes);
+                Assert.Equal(0, m.NumThreadCaches);
+                Assert.Equal(0, m.NumActiveAllocations);
+                Assert.Equal(m.NumAllocations, m.NumDeallocations);
+                Assert.Equal(0, m.NumActiveBytes);
             }
         }
         finally
         {
-            foreach (Worker w in workers) w.Dispose();
+            foreach (Worker w in workers)
+            {
+                w.Dispose();
+            }
         }
         Assert.Equal(0, native.ReservedBytes);
     }

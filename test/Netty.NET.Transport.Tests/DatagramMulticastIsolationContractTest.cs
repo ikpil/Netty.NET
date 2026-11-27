@@ -80,9 +80,16 @@ public class DatagramMulticastIsolationContractTest
             await SendAsync(2);
             Assert.Equal(2, await otherPackets.Reader.ReadAsync(cancellation));
             await Task.Delay(200, cancellation);
+
             // A duplicated multicast loopback may repeat the first payload on its original receiver.
-            while (memberPackets.Reader.TryRead(out int memberValue)) Assert.Equal(1, memberValue);
-            while (otherPackets.Reader.TryRead(out int otherValue)) Assert.Equal(2, otherValue);
+            while (memberPackets.Reader.TryRead(out int memberValue))
+            {
+                Assert.Equal(1, memberValue);
+            }
+            while (otherPackets.Reader.TryRead(out int otherValue))
+            {
+                Assert.Equal(2, otherValue);
+            }
 
             Task JoinAsync(NioDatagramChannel channel)
             {

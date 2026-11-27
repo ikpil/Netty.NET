@@ -92,7 +92,10 @@ public class SocketTransportContractTest
         var channel = new NioSocketChannel();
         var endpoint = new IPEndPoint(IPAddress.Loopback, 0);
         using (var listener = new TcpListener(endpoint))
-        { listener.Start(); endpoint = (IPEndPoint)listener.LocalEndpoint; }
+        {
+            listener.Start();
+            endpoint = (IPEndPoint)listener.LocalEndpoint;
+        }
         try
         {
             await Assert.ThrowsAnyAsync<Exception>(() => new Bootstrap().Group(group).ChannelFactory(() => channel)

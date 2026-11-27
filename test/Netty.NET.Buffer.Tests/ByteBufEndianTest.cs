@@ -83,7 +83,10 @@ public class ByteBufEndianTest
     public static IEnumerable<object[]> Cases()
     {
         for (int kind = 0; kind < 7; kind++)
-            foreach (bool little in new[] { false, true }) yield return [kind, little];
+            foreach (bool little in new[] { false, true })
+            {
+                yield return [kind, little];
+            }
     }
 
     private sealed class Storage : IDisposable

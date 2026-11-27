@@ -44,7 +44,10 @@ public class CompositeByteBufReferenceTest
     public static IEnumerable<object[]> Providers()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     // CLR: heap/native pooled/unpooled factories; a final cleanup releases whatever a failed assertion left.

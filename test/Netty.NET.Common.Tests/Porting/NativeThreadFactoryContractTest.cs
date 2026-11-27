@@ -55,7 +55,11 @@ public class NativeThreadFactoryContractTest
     {
         var target = new object();
         var weak = new WeakReference(target);
-        var owner = new CapturingOwner(() => { GC.KeepAlive(target); throw new InvalidOperationException("expected"); });
+        var owner = new CapturingOwner(() =>
+        {
+            GC.KeepAlive(target);
+            throw new InvalidOperationException("expected");
+        });
         owner.Thread.IsBackground = true;
         owner.Thread.Start();
         Assert.True(owner.Thread.Join(TimeSpan.FromSeconds(5)));
@@ -152,7 +156,11 @@ public class NativeThreadFactoryContractTest
         var factory = new CapturingFactory();
         var local = new TrackingLocal();
         var expected = new InvalidOperationException("worker failed");
-        Thread thread = factory.NewThread(() => { local.Set(new object()); throw expected; });
+        Thread thread = factory.NewThread(() =>
+        {
+            local.Set(new object());
+            throw expected;
+        });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Same(expected, factory.Error);
@@ -168,7 +176,11 @@ public class NativeThreadFactoryContractTest
         int tailCalls = 0;
         Action tail = FastThreadLocalRunnable.Wrap(() => tailCalls++);
         Assert.Same(tail, FastThreadLocalRunnable.Wrap(tail));
-        Action chain = () => { local.Set(new object()); throw expected; };
+        Action chain = () =>
+        {
+            local.Set(new object());
+            throw expected;
+        };
         chain += tail;
         Assert.Same(expected, Assert.Throws<InvalidOperationException>(FastThreadLocalRunnable.Wrap(chain)));
         Assert.Equal(0, tailCalls);
@@ -190,7 +202,10 @@ public class NativeThreadFactoryContractTest
         {
             if (suppressed)
             {
-                using (ExecutionContext.SuppressFlow()) thread.Start();
+                using (ExecutionContext.SuppressFlow())
+                {
+                    thread.Start();
+                }
             }
             else
             {

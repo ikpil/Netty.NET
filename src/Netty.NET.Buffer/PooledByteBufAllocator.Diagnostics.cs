@@ -34,9 +34,19 @@ public partial class PooledByteBufAllocator
     {
         var text = new StringBuilder(512);
         text.Append(_heapArenas.Length.ToString(CultureInfo.InvariantCulture)).Append(" heap arena(s):").Append(Environment.NewLine);
-        foreach (PoolArena arena in _heapArenas) text.Append(arena);
+
+        foreach (PoolArena arena in _heapArenas)
+        {
+            text.Append(arena);
+        }
+
         text.Append(_directArenas.Length.ToString(CultureInfo.InvariantCulture)).Append(" direct arena(s):").Append(Environment.NewLine);
-        foreach (PoolArena arena in _directArenas) text.Append(arena);
+
+        foreach (PoolArena arena in _directArenas)
+        {
+            text.Append(arena);
+        }
+
         return text.ToString();
     }
 }

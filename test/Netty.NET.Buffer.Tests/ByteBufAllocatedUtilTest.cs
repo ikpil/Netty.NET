@@ -275,7 +275,8 @@ public class ByteBufAllocatedUtilTest
         foreach (Encoding encoding in encodings)
         foreach (string text in new[] { "", "NettyRocks", "A\u00e9\ud83d\ude00", "\ud800" })
         {
-            byte[] expected = encoding.GetBytes(text); ByteBuf b = ByteBufUtil.EncodeString(a, text, encoding, 3);
+            byte[] expected = encoding.GetBytes(text);
+                ByteBuf b = ByteBufUtil.EncodeString(a, text, encoding, 3);
             try
             {
                 Assert.Equal(expected.Length + 3, a.RequestedCapacity);

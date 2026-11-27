@@ -120,7 +120,10 @@ public class ByteBufNativeCopyLeaseTest
     {
         for (int form = 0; form < 7; ++form)
         for (int range = 0; range < 5; ++range)
-        for (int failure = 0; failure < 3; ++failure) yield return [form, range, failure];
+        for (int failure = 0; failure < 3; ++failure)
+                {
+                    yield return [form, range, failure];
+                }
     }
 
     // UnpooledDirectByteBuf.copy duplicates a read source, then calls the allocator's
@@ -198,7 +201,10 @@ public class ByteBufNativeCopyLeaseTest
     public static IEnumerable<object[]> LeaseCases()
     {
         foreach (int form in new[] { 0, 2, 3, 4, 5, 6 })
-        for (int action = 0; action < 4; ++action) yield return [form, action];
+        for (int action = 0; action < 4; ++action)
+            {
+                yield return [form, action];
+            }
     }
 
     // CLR-specific lifetime contract: an already borrowed native span must stay

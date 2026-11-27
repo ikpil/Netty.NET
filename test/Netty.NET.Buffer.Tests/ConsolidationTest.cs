@@ -54,6 +54,7 @@ public class ConsolidationTest
                 Current = (CompositeByteBuf)(limit.HasValue ? Unpooled.WrappedBuffer(limit.Value, components) : Unpooled.WrappedBuffer(components));
                 Nodes.Add(Current);
             }
+
             for (int pair = 0; pair < pairs; pair++)
             {
                 string key = ((char)('a' + pair)).ToString(), value = (pair + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -112,7 +113,13 @@ public class ConsolidationTest
 
     public static IEnumerable<object[]> Limits()
     {
-        for (int kind = 0; kind < 3; kind++) foreach (int limit in new[] { 1, 2, 3, 16 }) yield return [kind, limit];
+        for (int kind = 0; kind < 3; kind++)
+        {
+            foreach (int limit in new[] { 1, 2, 3, 16 })
+            {
+                yield return [kind, limit];
+            }
+        }
     }
 
     [Theory] [MemberData(nameof(Limits))]

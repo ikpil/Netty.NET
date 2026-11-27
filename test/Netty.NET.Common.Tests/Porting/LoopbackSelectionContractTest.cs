@@ -86,7 +86,12 @@ public class LoopbackSelectionContractTest
     {
         int lookups = 0;
         var selected = NetUtilInitializations.DetermineLoopback(Array.Empty<NetworkInterface>(), IPAddress.Loopback, IPAddress.IPv6Loopback,
-            address => { Assert.Same(IPAddress.IPv6Loopback, address); lookups++; return assigned; });
+            address =>
+            {
+                Assert.Same(IPAddress.IPv6Loopback, address);
+                lookups++;
+                return assigned;
+            });
         Assert.Null(selected.Iface);
         Assert.Same(assigned ? IPAddress.IPv6Loopback : IPAddress.Loopback, selected.Address);
         Assert.Equal(1, lookups);

@@ -175,10 +175,17 @@ public class SizeClassesTest
         Assert.Throws<ArgumentOutOfRangeException>(() => sizes.Size2SizeIdx(-1));
         Assert.Throws<ArgumentOutOfRangeException>(() => sizes.Pages2PageIdx(0));
         Assert.Throws<ArgumentOutOfRangeException>(() => sizes.Pages2PageIdxFloor(-1));
+
         foreach (int index in new[] { -1, sizes.NSizes })
-        { Assert.Throws<ArgumentOutOfRangeException>(() => sizes.SizeIdx2Size(index)); Assert.Throws<ArgumentOutOfRangeException>(() => sizes.SizeIdx2SizeCompute(index)); }
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => sizes.SizeIdx2Size(index));
+            Assert.Throws<ArgumentOutOfRangeException>(() => sizes.SizeIdx2SizeCompute(index));
+        }
         foreach (int index in new[] { -1, sizes.NPSizes })
-        { Assert.Throws<ArgumentOutOfRangeException>(() => sizes.PageIdx2Size(index)); Assert.Throws<ArgumentOutOfRangeException>(() => sizes.PageIdx2SizeCompute(index)); }
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => sizes.PageIdx2Size(index));
+            Assert.Throws<ArgumentOutOfRangeException>(() => sizes.PageIdx2SizeCompute(index));
+        }
     }
 
     [Theory]

@@ -90,16 +90,32 @@ public class DefaultMockTickerTest
                 futures.Add(completion.Task);
                 thread.Start();
             }
+
             // Wait for all threads to be sleeping.
-            foreach (Thread thread in threads) ticker.AwaitSleepingThread(thread);
+            foreach (Thread thread in threads)
+            {
+                ticker.AwaitSleepingThread(thread);
+            }
             // Time did not advance at all, and thus future will not complete.
-            foreach (Task future in futures) Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
+            foreach (Task future in futures)
+            {
+                Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
+            }
+
             // Advance just one nanosecond before completion.
             ticker.Advance(999_999);
+
             // All threads should still be sleeping.
-            foreach (Thread thread in threads) ticker.AwaitSleepingThread(thread);
+            foreach (Thread thread in threads)
+            {
+                ticker.AwaitSleepingThread(thread);
+            }
             // Still needs one more nanosecond for our futures.
-            foreach (Task future in futures) Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
+            foreach (Task future in futures)
+            {
+                Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
+            }
+
             // Reach at the 1 millisecond mark and ensure the future is complete.
             ticker.Advance(1);
             await Task.WhenAll(futures).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);

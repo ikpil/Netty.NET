@@ -32,6 +32,7 @@ public class MapOwnershipContractTest : IDisposable
         var parentCache = parentMap.HandlerSharableCache();
         var context = ExecutionContext.Capture();
         Exception failure = null;
+
         void Body()
         {
             Assert.Equal("parent context", marker.Value);
@@ -98,6 +99,7 @@ public class MapOwnershipContractTest : IDisposable
                 FastThreadLocal.RemoveAll();
             }
         }
+
         Thread worker = mode == 2
             ? new DefaultThreadFactory(typeof(MapOwnershipContractTest), true).NewThread(Execute)
             : new Thread(Execute) { IsBackground = true };

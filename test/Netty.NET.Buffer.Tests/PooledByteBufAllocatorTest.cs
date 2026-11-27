@@ -1480,8 +1480,11 @@ public class PooledByteBufAllocatorClrContractTest
         ReadOnlySpan<byte> captured = b.AsReadOnlySpan(0, 4);
         using (var pin = b.AsMemory(0, 4).Pin())
         {
-            b.Release(); Assert.Equal(0, a.PinnedDirectMemory); Assert.Equal(0, a.Metric.UsedDirectMemory);
-            Assert.Equal(0, native.ReservedBytes); Assert.Equal(42, captured[3]);
+            b.Release();
+            Assert.Equal(0, a.PinnedDirectMemory);
+            Assert.Equal(0, a.Metric.UsedDirectMemory);
+            Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(42, captured[3]);
         }
         Assert.Equal(0, native.ReservedBytes);
     }

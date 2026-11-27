@@ -31,7 +31,10 @@ public partial class CompositeByteBufIterationKernelTest
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 8; ++form)
         foreach (bool descending in new[] { false, true })
-        for (int mode = 0; mode < 3; ++mode) yield return [direct, form, descending, mode];
+        for (int mode = 0; mode < 3; ++mode)
+                    {
+                        yield return [direct, form, descending, mode];
+                    }
     }
 
     [Theory]
@@ -69,10 +72,12 @@ public partial class CompositeByteBufIterationKernelTest
                 }
                 return mode != 1 || seen.Count < 4;
             };
+
             int Visit()
             {
                 return descending ? outer.ForEachByteDesc(processor) : outer.ForEachByte(processor);
             }
+
             if (mode == 2)
             {
                 Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Visit()));
@@ -107,7 +112,10 @@ public partial class CompositeByteBufIterationKernelTest
         foreach (bool direct in new[] { false, true })
         foreach (bool fixedComposite in new[] { false, true })
         foreach (bool descending in new[] { false, true })
-        for (int action = 0; action < 4; ++action) yield return [direct, fixedComposite, descending, action];
+        for (int action = 0; action < 4; ++action)
+                    {
+                        yield return [direct, fixedComposite, descending, action];
+                    }
     }
 
     [Theory]
@@ -136,10 +144,12 @@ public partial class CompositeByteBufIterationKernelTest
             }
             return action != 2 && (action != 1 || seen.Count < 2);
         };
+
         int Visit()
         {
             return descending ? s.Owner.ForEachByteDesc(processor) : s.Owner.ForEachByte(processor);
         }
+
         if (action == 0)
             Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Visit()));
         else if (action == 3)
@@ -166,7 +176,10 @@ public partial class CompositeByteBufIterationKernelTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (bool fixedComposite in new[] { false, true })
-        for (int algorithm = 0; algorithm < 3; ++algorithm) yield return [direct, fixedComposite, algorithm];
+        for (int algorithm = 0; algorithm < 3; ++algorithm)
+                {
+                    yield return [direct, fixedComposite, algorithm];
+                }
     }
 
     [Theory]
@@ -194,7 +207,10 @@ public partial class CompositeByteBufIterationKernelTest
         foreach (bool direct in new[] { false, true })
         foreach (bool fixedComposite in new[] { false, true })
         foreach (bool slice in new[] { false, true })
-        for (int operation = 0; operation < 6; ++operation) yield return [direct, fixedComposite, slice, operation];
+        for (int operation = 0; operation < 6; ++operation)
+                    {
+                        yield return [direct, fixedComposite, slice, operation];
+                    }
     }
 
     [Theory]
@@ -234,6 +250,7 @@ public partial class CompositeByteBufIterationKernelTest
                         break;
                 }
             }
+
             if (fixedComposite && operation != 0)
             {
                 Assert.Throws<NotSupportedException>(() => Request());
@@ -268,7 +285,10 @@ public partial class CompositeByteBufIterationKernelTest
     {
         foreach (bool direct in new[] { false, true })
         for (int needle = 0; needle < 7; ++needle)
-        for (int haystack = 0; haystack < 7; ++haystack) yield return [direct, needle, haystack];
+        for (int haystack = 0; haystack < 7; ++haystack)
+                {
+                    yield return [direct, needle, haystack];
+                }
     }
 
     private static void PutLogical(Storage storage, int index, byte value)
@@ -367,10 +387,12 @@ public partial class CompositeByteBufIterationKernelTest
                 s.Owner.Release();
             }
             return true; };
+
         int Visit()
         {
             return descending ? s.Owner.ForEachByteDesc(2, 4, processor) : s.Owner.ForEachByte(2, 4, processor);
         }
+
         if (last)
             Assert.Equal(-1, Visit());
         else

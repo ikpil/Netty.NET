@@ -61,7 +61,12 @@ public class TaskCompletionTransferPortTest
         Task<object> source = Task.FromResult(value);
         var first = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        foreach (var producer in new[] { first, second }) Assert.True(producer.TrySetFromTask(source));
+
+        foreach (var producer in new[] { first, second })
+        {
+            Assert.True(producer.TrySetFromTask(source));
+        }
+
         Assert.Same(value, await first.Task);
         Assert.Same(value, await second.Task);
     }
@@ -73,7 +78,12 @@ public class TaskCompletionTransferPortTest
         Task<object> source = Task.FromException<object>(error);
         var first = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        foreach (var producer in new[] { first, second }) Assert.True(producer.TrySetFromTask(source));
+
+        foreach (var producer in new[] { first, second })
+        {
+            Assert.True(producer.TrySetFromTask(source));
+        }
+
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await first.Task));
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await second.Task));
     }

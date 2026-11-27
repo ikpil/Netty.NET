@@ -28,10 +28,21 @@ public class BoundedPoolQueueContractTest
     {
         var pool = new Pool(128);
         var items = new Item[enqueue ? 33 : 65];
-        for (int index = 0; index < items.Length; index++) items[index] = pool.Get();
-        for (int index = 0; index < (enqueue ? 32 : 65); index++) items[index].Handle.Recycle(items[index]);
+
+        for (int index = 0; index < items.Length; index++)
+        {
+            items[index] = pool.Get();
+        }
+        for (int index = 0; index < (enqueue ? 32 : 65); index++)
+        {
+            items[index].Handle.Recycle(items[index]);
+        }
+
         if (!enqueue)
-            for (int index = 0; index < 32; index++) Assert.Same(items[index], pool.Get());
+            for (int index = 0; index < 32; index++)
+            {
+                Assert.Same(items[index], pool.Get());
+            }
 
         // Hold the actual net10 ConcurrentQueue segment-transition lock to force the CLR-specific wait.
         // Reflection controls the schedule only; recycle/borrow use the ordinary public API.
@@ -99,7 +110,10 @@ public class BoundedPoolQueueContractTest
         Assert.Equal(enqueue ? 33 : 32, pool.ThreadLocalSize());
         if (enqueue)
         {
-            for (int index = 0; index < 33; index++) Assert.Same(items[index], pool.Get());
+            for (int index = 0; index < 33; index++)
+            {
+                Assert.Same(items[index], pool.Get());
+            }
         }
         else
         {
@@ -119,13 +133,31 @@ public class BoundedPoolQueueContractTest
         int expectedCapacity = Recycler.BLOCKING_POOL ? Math.Max(4, requested) : effective;
         var pool = new Pool(requested, unguarded);
         var items = new Item[expectedCapacity + 2];
-        for (int index = 0; index < items.Length; index++) items[index] = pool.Get();
-        foreach (Item item in items) item.Handle.Recycle(item);
+
+        for (int index = 0; index < items.Length; index++)
+        {
+            items[index] = pool.Get();
+        }
+        foreach (Item item in items)
+        {
+            item.Handle.Recycle(item);
+        }
+
         Assert.Equal(expectedCapacity, pool.ThreadLocalSize());
-        for (int index = 0; index < expectedCapacity; index++) Assert.Same(items[index], pool.Get());
+
+        for (int index = 0; index < expectedCapacity; index++)
+        {
+            Assert.Same(items[index], pool.Get());
+        }
+
         Assert.Equal(0, pool.ThreadLocalSize());
         Item fresh = pool.Get();
-        foreach (Item item in items) Assert.NotSame(item, fresh);
+
+        foreach (Item item in items)
+        {
+            Assert.NotSame(item, fresh);
+        }
+
         items[0].Handle.Recycle(items[0]);
         Assert.Equal(1, pool.ThreadLocalSize());
         Assert.Same(items[0], pool.Get());
@@ -139,8 +171,16 @@ public class BoundedPoolQueueContractTest
         int expectedCapacity = Recycler.BLOCKING_POOL ? 17 : 32;
         var pool = new Pool(17, unguarded);
         var items = new Item[96];
-        for (int index = 0; index < items.Length; index++) items[index] = pool.Get();
-        for (int index = 0; index < 4; index++) items[index].Handle.Recycle(items[index]);
+
+        for (int index = 0; index < items.Length; index++)
+        {
+            items[index] = pool.Get();
+        }
+        for (int index = 0; index < 4; index++)
+        {
+            items[index].Handle.Recycle(items[index]);
+        }
+
         var workers = new Task[4];
         for (int producer = 0; producer < workers.Length; producer++)
         {
@@ -153,7 +193,12 @@ public class BoundedPoolQueueContractTest
         }
         await Task.WhenAll(workers).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         Assert.Equal(expectedCapacity, pool.ThreadLocalSize());
-        for (int index = 0; index < 4; index++) Assert.Same(items[index], pool.Get());
+
+        for (int index = 0; index < 4; index++)
+        {
+            Assert.Same(items[index], pool.Get());
+        }
+
         var accepted = new HashSet<Item>(ReferenceEqualityComparer.Instance);
         var borrowed = new Item[expectedCapacity - 4];
         for (int index = 0; index < borrowed.Length; index++)
@@ -164,10 +209,22 @@ public class BoundedPoolQueueContractTest
         }
         Assert.Equal(0, pool.ThreadLocalSize());
         Item fresh = pool.Get();
-        foreach (Item item in items) Assert.NotSame(item, fresh);
-        foreach (Item item in borrowed) item.Handle.Recycle(item);
+
+        foreach (Item item in items)
+        {
+            Assert.NotSame(item, fresh);
+        }
+        foreach (Item item in borrowed)
+        {
+            item.Handle.Recycle(item);
+        }
+
         Assert.Equal(borrowed.Length, pool.ThreadLocalSize());
-        foreach (Item item in borrowed) Assert.Same(item, pool.Get());
+
+        foreach (Item item in borrowed)
+        {
+            Assert.Same(item, pool.Get());
+        }
     }
 
     private static object Field(object instance, string name)

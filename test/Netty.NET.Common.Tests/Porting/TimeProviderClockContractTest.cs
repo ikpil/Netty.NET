@@ -42,9 +42,18 @@ public class TimeProviderClockContractTest
         internal void Pump()
         {
             Assert.True(InEventLoop());
-            while (tasks.TryDequeue(out var normal)) normal();
+
+            while (tasks.TryDequeue(out var normal))
+            {
+                normal();
+            }
+
             Action due;
-            while ((due = PollScheduledTask()) != null) due();
+
+            while ((due = PollScheduledTask()) != null)
+            {
+                due();
+            }
         }
 
         public override bool InEventLoop(Thread thread)

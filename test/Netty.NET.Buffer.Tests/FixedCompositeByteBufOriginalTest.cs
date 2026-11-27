@@ -502,8 +502,14 @@ public class FixedCompositeByteBufOriginalTest
         internal byte[] Receive(int length)
         {
             byte[] bytes = new byte[length];
+
             for (int offset = 0; offset < length;)
-            { int count = Peer.Receive(bytes.AsSpan(offset)); Assert.True(count > 0); offset += count; }
+            {
+                int count = Peer.Receive(bytes.AsSpan(offset));
+                Assert.True(count > 0);
+                offset += count;
+            }
+
             return bytes;
         }
 

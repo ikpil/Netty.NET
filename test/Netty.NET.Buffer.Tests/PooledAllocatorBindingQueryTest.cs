@@ -29,7 +29,10 @@ public class PooledAllocatorBindingQueryTest
         for (int topology = 0; topology < 4; ++topology)
         foreach (bool direct in new[] { false, true })
         foreach (bool cached in new[] { false, true })
-        for (int trigger = 0; trigger < 3; ++trigger) yield return [topology, direct, cached, trigger];
+        for (int trigger = 0; trigger < 3; ++trigger)
+                    {
+                        yield return [topology, direct, cached, trigger];
+                    }
     }
 
     [Theory]
@@ -42,7 +45,11 @@ public class PooledAllocatorBindingQueryTest
         ByteBuf owner = null;
         try
         {
-            for (int i = 0; i < 3; ++i) Assert.False(allocator.HasCurrentThreadBinding);
+            for (int i = 0; i < 3; ++i)
+            {
+                Assert.False(allocator.HasCurrentThreadBinding);
+            }
+
             Assert.Equal(0, allocator.Metric.NumThreadLocalCaches);
             owner = trigger == 0 ? direct ? allocator.DirectBuffer(64, 128) : allocator.HeapBuffer(64, 128)
                 : trigger == 1 ? direct ? allocator.DirectBuffer(0, 0) : allocator.HeapBuffer(0, 0)
@@ -78,7 +85,12 @@ public class PooledAllocatorBindingQueryTest
             {
                 ExceptionDispatchInfo.Capture(workerFailure).Throw();
             }
-            for (int i = 0; i < 3; ++i) Assert.Equal(expected, allocator.HasCurrentThreadBinding);
+
+            for (int i = 0; i < 3; ++i)
+            {
+                Assert.Equal(expected, allocator.HasCurrentThreadBinding);
+            }
+
             Assert.Equal(expected ? 1 : 0, allocator.Metric.NumThreadLocalCaches);
             Assert.Equal(pinnedHeap, allocator.PinnedHeapMemory);
             Assert.Equal(pinnedDirect, allocator.PinnedDirectMemory);

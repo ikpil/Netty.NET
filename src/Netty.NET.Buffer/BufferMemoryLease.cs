@@ -81,7 +81,10 @@ internal readonly struct BufferMemoryLease : IDisposable
     public void Dispose()
     {
         if (_children != null)
-            for (int i = _children.Length - 1; i >= 0; --i) _children[i].Dispose();
+            for (int i = _children.Length - 1; i >= 0; --i)
+            {
+                _children[i].Dispose();
+            }
         _handle.Dispose();
         _reservation?.Dispose();
     }

@@ -43,13 +43,19 @@ public class CompositeByteBufDiscardTest
     public static IEnumerable<object[]> Providers()
     {
         foreach (bool pooled in new[] { false, true })
-        foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
+        foreach (bool direct in new[] { false, true })
+            {
+                yield return [pooled, direct];
+            }
     }
 
     public static IEnumerable<object[]> TailGrowths()
     {
         foreach (object[] provider in Providers())
-        foreach (bool littleEndian in new[] { false, true }) yield return [provider[0], provider[1], littleEndian];
+        foreach (bool littleEndian in new[] { false, true })
+            {
+                yield return [provider[0], provider[1], littleEndian];
+            }
     }
 
     [Theory]
@@ -250,6 +256,7 @@ public class CompositeByteBufDiscardTest
         using var s = new Storage(pooled, direct);
         CompositeByteBuf composite = s.Allocator.CompositeBuffer();
         var sources = new List<ByteBuf>();
+
         void Discard()
         {
             if (some)
@@ -257,13 +264,16 @@ public class CompositeByteBufDiscardTest
             else
                 composite.DiscardReadBytes();
         }
+
         try
         {
             for (int i = 0; i < 4; ++i)
             {
                 ByteBuf source = s.Allocator.Buffer().WriteInt(i);
-                sources.Add(source); composite.AddComponent(source, true);
+                sources.Add(source);
+                composite.AddComponent(source, true);
             }
+
             // Skip the first 2 bytes which means even if we call discard*ReadBytes() later we can no drop the first
             // component as it is still used.
             composite.SkipBytes(2);

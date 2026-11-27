@@ -12,7 +12,11 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
-        return ScheduleCore<object>(executor, _ => { action(); return null; }, delay, 0, cancellationToken);
+        return ScheduleCore<object>(executor, _ =>
+        {
+            action();
+            return null;
+        }, delay, 0, cancellationToken);
     }
 
     public static Task<T> ScheduleAsync<T>(this IEventExecutorGroup executor, Func<T> function, TimeSpan delay,
@@ -26,7 +30,11 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
-        return ScheduleCore<object>(executor, token => { action(token); return null; }, delay, 0, cancellationToken);
+        return ScheduleCore<object>(executor, token =>
+        {
+            action(token);
+            return null;
+        }, delay, 0, cancellationToken);
     }
 
     /// <remarks>
@@ -118,7 +126,11 @@ public static class EventExecutorSchedulingExtensions
             throw new ArgumentOutOfRangeException(nameof(interval));
         }
         long period = AbstractScheduledEventExecutor.ToNanos(interval);
-        return ScheduleCore<object>(executor, ct => { action(ct); return null; }, initialDelay,
+        return ScheduleCore<object>(executor, ct =>
+        {
+            action(ct);
+            return null;
+        }, initialDelay,
             fixedDelay ? -period : period, token);
     }
 
@@ -131,9 +143,14 @@ public static class EventExecutorSchedulingExtensions
         {
             delay = TimeSpan.Zero;
         }
+
         // A NonSticky group directly delegates scheduling to its underlying group;
         // its ordered child wrapper deliberately does not support scheduling.
-        while (group is NonStickyEventExecutorGroup wrapper) group = wrapper.DelegatedGroup;
+        while (group is NonStickyEventExecutorGroup wrapper)
+        {
+            group = wrapper.DelegatedGroup;
+        }
+
         IEventExecutor executor = group is IEventExecutor child ? child : group.Next();
         if (executor is AbstractScheduledEventExecutor ordered)
             return ordered.ScheduleNative(function, delay, period, token);

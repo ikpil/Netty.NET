@@ -116,7 +116,11 @@ public class NativeByteBufProviderTest
     }
     private static ByteBuf Owner(ByteBuf b)
     {
-        while (b.Unwrap() is ByteBuf parent) b = parent;
+        while (b.Unwrap() is ByteBuf parent)
+        {
+            b = parent;
+        }
+
         return b;
     }
 
@@ -138,19 +142,28 @@ public class NativeByteBufProviderTest
 
     public static IEnumerable<object[]> ProviderCases()
     {
-        foreach (int provider in Enumerable.Range(0, 5)) yield return [provider];
+        foreach (int provider in Enumerable.Range(0, 5))
+        {
+            yield return [provider];
+        }
     }
 
     public static IEnumerable<object[]> BooleanCases()
     {
         foreach (int provider in Enumerable.Range(0, 5))
-        foreach (bool value in new[] { false, true }) yield return [provider, value];
+        foreach (bool value in new[] { false, true })
+            {
+                yield return [provider, value];
+            }
     }
 
     public static IEnumerable<object[]> ScalarCases()
     {
         foreach (int provider in Enumerable.Range(0, 5))
-        foreach (int index in new[] { 0, 1, 7, provider == 1 ? 8992 : 120 }) yield return [provider, index];
+        foreach (int index in new[] { 0, 1, 7, provider == 1 ? 8992 : 120 })
+            {
+                yield return [provider, index];
+            }
     }
 
     [Theory]
@@ -162,9 +175,11 @@ public class NativeByteBufProviderTest
         foreach (ulong value in new ulong[] { 0, 0x1122334455667788, 0xffeeddcc8000fedc })
         for (int operation = 0; operation < widths.Length; ++operation)
         {
-            byte[] expected = new byte[s.Initial]; Array.Fill(expected, (byte)0xcc);
+            byte[] expected = new byte[s.Initial];
+                Array.Fill(expected, (byte)0xcc);
             s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
-            int width = widths[operation]; bool little = operation != 0 && (operation & 1) == 0;
+            int width = widths[operation];
+                bool little = operation != 0 && (operation & 1) == 0;
             for (int i = 0; i < width; ++i)
                 expected[index + i] = unchecked((byte)(value >> (8 * (little ? i : width - i - 1))));
             ByteBuf receiver = operation switch
@@ -194,9 +209,11 @@ public class NativeByteBufProviderTest
                 4 => unchecked((int)value), _ => unchecked((long)value)
             };
             Assert.Equal(wanted, read);
-            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            Assert.Equal(3, s.Target.ReaderIndex);
+                Assert.Equal(100, s.Target.WriterIndex);
             s.Target.SetIndex(0, s.Initial).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            Assert.Equal(3, s.Target.ReaderIndex);
+                Assert.Equal(100, s.Target.WriterIndex);
             s.Neighbors();
         }
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.GetLong(s.Initial - 7));
@@ -206,7 +223,10 @@ public class NativeByteBufProviderTest
     public static IEnumerable<object[]> ZeroCases()
     {
         foreach (int provider in Enumerable.Range(0, 5))
-        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 128, -1 }) yield return [provider, length];
+        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 128, -1 })
+            {
+                yield return [provider, length];
+            }
     }
 
     [Theory]
@@ -249,7 +269,10 @@ public class NativeByteBufProviderTest
     public static IEnumerable<object[]> CopyCases()
     {
         foreach (int provider in Enumerable.Range(0, 5))
-        foreach (int length in new[] { 0, 7, 128 }) yield return [provider, length];
+        foreach (int length in new[] { 0, 7, 128 })
+            {
+                yield return [provider, length];
+            }
     }
 
     [Theory]
@@ -292,7 +315,10 @@ public class NativeByteBufProviderTest
     {
         foreach (int provider in Enumerable.Range(0, 5))
         foreach (int kind in new[] { 0, 1, 2 })
-        foreach (bool output in new[] { false, true }) yield return [provider, kind, output];
+        foreach (bool output in new[] { false, true })
+                {
+                    yield return [provider, kind, output];
+                }
     }
 
     [Theory]
@@ -382,7 +408,10 @@ public class NativeByteBufProviderTest
     public static IEnumerable<object[]> StreamCases()
     {
         foreach (int provider in Enumerable.Range(0, 5))
-        foreach (int mode in new[] { 0, 1, 2, 3 }) yield return [provider, mode];
+        foreach (int mode in new[] { 0, 1, 2, 3 })
+            {
+                yield return [provider, mode];
+            }
     }
 
     [Theory]

@@ -441,8 +441,16 @@ public static class ObjectUtil
     {
         CheckNotNull(value, name);
         int start = 0, end = value.Length;
-        while (start < end && value[start] <= ' ') start++;
-        while (start < end && value[end - 1] <= ' ') end--;
+
+        while (start < end && value[start] <= ' ')
+        {
+            start++;
+        }
+        while (start < end && value[end - 1] <= ' ')
+        {
+            end--;
+        }
+
         string trimmed = value.Substring(start, end - start);
         return CheckNonEmpty(trimmed, name);
     }

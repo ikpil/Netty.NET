@@ -40,7 +40,11 @@ internal sealed partial class AdaptivePoolingAllocator
         internal int Length { get; }
         internal ByteBuf Root
         {
-            get { ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this); return _chunk.Root; }
+            get
+            {
+                ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+                return _chunk.Root;
+            }
         }
         internal IByteBufAllocator Allocator => _chunk.Allocator;
         internal bool IsDirect => _chunk.IsDirect;

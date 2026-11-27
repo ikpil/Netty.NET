@@ -128,7 +128,12 @@ public class AbstractEventLoopSourceTest
             {
                 var oldLoop = outCtx.Channel.EventLoop;
                 IEventLoop next;
-                do { next = group.Next(); } while (ReferenceEquals(next, oldLoop));
+
+                do
+                {
+                    next = group.Next();
+                } while (ReferenceEquals(next, oldLoop));
+
                 // Source listener callbacks run on their owner; Task continuations regain that owner explicitly.
                 if (throughChannel)
                 {
@@ -143,7 +148,8 @@ public class AbstractEventLoopSourceTest
                 await next.SubmitAsync(() =>
                 {
                     outCtx.Pipeline.AddLast(new EchoThroughOriginalContext(outCtx));
-                    handedOff = true; outCtx.FireChannelRead(msg);
+                    handedOff = true;
+                    outCtx.FireChannelRead(msg);
                 });
             }
             catch (Exception error)

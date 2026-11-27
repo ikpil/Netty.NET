@@ -37,10 +37,12 @@ public class ByteProcessorTest
     {
         var native = new NativeMemoryAllocator();
         var allocator = new UnpooledByteBufAllocator(false, native);
+
         ByteBuf Direct(byte[] content)
         {
             return allocator.DirectBuffer(content.Length, content.Length).WriteBytes(content);
         }
+
         ByteBuf buffer = kind switch
         {
             0 => Unpooled.WrappedBuffer(bytes),
@@ -83,7 +85,9 @@ public class ByteProcessorTest
             Assert.Equal(24, buf.ForEachByte(21, length - 21, ByteProcessor.FIND_LINEAR_WHITESPACE));
             Assert.Equal(28, buf.ForEachByte(24, length - 24, ByteProcessor.FIND_NON_LINEAR_WHITESPACE));
             Assert.Equal(-1, buf.ForEachByte(28, length - 28, ByteProcessor.FIND_LINEAR_WHITESPACE));
-            Assert.Equal(0, buf.ReaderIndex); Assert.Equal(length, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
+            Assert.Equal(0, buf.ReaderIndex);
+            Assert.Equal(length, buf.WriterIndex);
+            Assert.Equal(1, buf.RefCnt);
         });
     }
 
@@ -106,7 +110,9 @@ public class ByteProcessorTest
             Assert.Equal(5, buf.ForEachByteDesc(0, 9, ByteProcessor.FIND_CRLF));
             Assert.Equal(2, buf.ForEachByteDesc(0, 6, ByteProcessor.FIND_NON_CRLF));
             Assert.Equal(-1, buf.ForEachByteDesc(0, 3, ByteProcessor.FIND_CRLF));
-            Assert.Equal(0, buf.ReaderIndex); Assert.Equal(length, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
+            Assert.Equal(0, buf.ReaderIndex);
+            Assert.Equal(length, buf.WriterIndex);
+            Assert.Equal(1, buf.RefCnt);
         });
     }
 
@@ -147,7 +153,9 @@ public class ByteProcessorTest
                     Assert.Equal(last, buf.ForEachByteDesc(start, length, Processors[predicate]));
                 }
             Assert.Equal(bytes, ByteBufUtil.GetBytes(buf, 0, bytes.Length));
-            Assert.Equal(7, buf.ReaderIndex); Assert.Equal(249, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
+            Assert.Equal(7, buf.ReaderIndex);
+            Assert.Equal(249, buf.WriterIndex);
+            Assert.Equal(1, buf.RefCnt);
         });
     }
 
@@ -158,11 +166,19 @@ public class ByteProcessorTest
         byte[] bytes = { 0, 128, 255, 13, 10, 32, 9, 0 };
         WithBuffer(kind, bytes, buf =>
         {
-            buf.SetIndex(1, 7); buf.MarkReaderIndex(); buf.MarkWriterIndex();
+            buf.SetIndex(1, 7);
+            buf.MarkReaderIndex();
+            buf.MarkWriterIndex();
+
             foreach (bool reverse in new[] { false, true })
             {
-                var seen = new List<byte>(); int remaining = 3;
-                Func<byte, bool> processor = value => { seen.Add(value); return --remaining > 0; };
+                var seen = new List<byte>();
+                int remaining = 3;
+                Func<byte, bool> processor = value =>
+                {
+                    seen.Add(value);
+                    return --remaining > 0;
+                };
                 Assert.Equal(reverse ? 4 : 3, reverse ? buf.ForEachByteDesc(processor) : buf.ForEachByte(processor));
                 Assert.Equal(reverse ? new byte[] { 9, 32, 10 } : new byte[] { 128, 255, 13 }, seen);
                 var failure = new InvalidOperationException("processor failure");
@@ -177,9 +193,15 @@ public class ByteProcessorTest
                         buf.ForEachByte(_ => throw failure);
                     }
                 }));
-                Assert.Equal(1, buf.ReaderIndex); Assert.Equal(7, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
+                Assert.Equal(1, buf.ReaderIndex);
+                Assert.Equal(7, buf.WriterIndex);
+                Assert.Equal(1, buf.RefCnt);
             }
-            buf.ResetReaderIndex(); buf.ResetWriterIndex(); Assert.Equal(1, buf.ReaderIndex); Assert.Equal(7, buf.WriterIndex);
+
+            buf.ResetReaderIndex();
+            buf.ResetWriterIndex();
+            Assert.Equal(1, buf.ReaderIndex);
+            Assert.Equal(7, buf.WriterIndex);
         });
     }
 }

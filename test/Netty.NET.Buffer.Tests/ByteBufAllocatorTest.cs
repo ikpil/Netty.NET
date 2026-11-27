@@ -40,7 +40,11 @@ public abstract class ByteBufAllocatorTest : IDisposable
 
     public virtual void Dispose()
     {
-        foreach (IDisposable allocator in _allocators) allocator.Dispose();
+        foreach (IDisposable allocator in _allocators)
+        {
+            allocator.Dispose();
+        }
+
         _allocators.Clear();
     }
 

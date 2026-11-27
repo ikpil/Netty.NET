@@ -106,7 +106,12 @@ public class DerivedByteBufStreamTest
         public Storage(bool direct, int kind)
         {
             Root = direct ? new ObservedDirect(Observation, Native) : new ObservedHeap(Observation);
-            for (int i = 0; i < 16; ++i) Root.WriteByte(i);
+
+            for (int i = 0; i < 16; ++i)
+            {
+                Root.WriteByte(i);
+            }
+
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
@@ -148,7 +153,10 @@ public class DerivedByteBufStreamTest
         foreach (bool direct in new[] { false, true })
         for (int kind = 0; kind < 11; kind++)
         foreach (bool input in new[] { false, true })
-        foreach (bool asynchronous in new[] { false, true }) yield return [direct, kind, input, asynchronous];
+        foreach (bool asynchronous in new[] { false, true })
+                    {
+                        yield return [direct, kind, input, asynchronous];
+                    }
     }
     private sealed class Input() : MemoryStream(new byte[] { 91, 92, 93 })
     {

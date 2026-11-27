@@ -122,14 +122,22 @@ public class ByteBufIterationDispatchTest
         bool descending = operation >= 2, indexed = (operation & 1) != 0;
         var visited = new List<byte>();
         int before = storage.Inner.Records;
-        Assert.Equal(3, Scan(buffer, operation, value => { visited.Add(value); return value != 3; }));
+        Assert.Equal(3, Scan(buffer, operation, value =>
+        {
+            visited.Add(value);
+            return value != 3;
+        }));
         Assert.Equal(descending ? indexed ? new byte[] { 5, 4, 3 } : new byte[] { 6, 5, 4, 3 }
             : indexed ? new byte[] { 2, 3 } : new byte[] { 1, 2, 3 }, visited);
         Assert.Equal(before + 1, storage.Inner.Records);
 
         visited.Clear();
         before = storage.Inner.Records;
-        Assert.Equal(-1, Scan(buffer, operation, value => { visited.Add(value); return true; }));
+        Assert.Equal(-1, Scan(buffer, operation, value =>
+        {
+            visited.Add(value);
+            return true;
+        }));
         Assert.Equal(descending ? indexed ? new byte[] { 5, 4, 3, 2 } : new byte[] { 6, 5, 4, 3, 2, 1 }
             : indexed ? new byte[] { 2, 3, 4, 5 } : new byte[] { 1, 2, 3, 4, 5, 6 }, visited);
         Assert.Equal(before + 1, storage.Inner.Records);
@@ -251,7 +259,11 @@ public class ByteBufIterationDispatchTest
             Assert.Same(processor, observation.Processor);
             Assert.Equal((operation & 1) == 0 ? -1 : 2, observation.Index);
             Assert.Equal((operation & 1) == 0 ? -1 : 4, observation.Length);
-            for (int i = 0; i < 4; ++i) Assert.Equal(i == operation ? 1 : 0, observation.Calls[i]);
+
+            for (int i = 0; i < 4; ++i)
+            {
+                Assert.Equal(i == operation ? 1 : 0, observation.Calls[i]);
+            }
         }
         finally
         {

@@ -59,7 +59,12 @@ public abstract partial class AbstractByteBufTest
             });
             threads.Add(thread);
         }
-        foreach (Thread thread in threads) thread.Start();
+
+        foreach (Thread thread in threads)
+        {
+            thread.Start();
+        }
+
         JoinAllAndReportErrors(threads, errors, TimeSpan.FromSeconds(30));
     }
 
@@ -89,7 +94,10 @@ public abstract partial class AbstractByteBufTest
         finally
         {
             // Workers must relinquish borrowed storage before fixture cleanup releases its owner.
-            foreach (Thread thread in threads) thread.Join();
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
         }
         if (!errors.IsEmpty)
         {
@@ -143,7 +151,12 @@ public abstract partial class AbstractByteBufTest
                 });
                 threads.Add(thread);
             }
-            foreach (Thread thread in threads) thread.Start();
+
+            foreach (Thread thread in threads)
+            {
+                thread.Start();
+            }
+
             JoinAllAndReportErrors(threads, errors, TimeSpan.FromSeconds(60));
         }
         finally
@@ -261,7 +274,10 @@ public abstract partial class AbstractByteBufTest
         }
         finally
         {
-            foreach (Thread thread in threads) thread.Join();
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
         }
         // Ensure failures in worker threads are propagated to the test thread.
         if (!errors.IsEmpty)
@@ -347,7 +363,11 @@ public abstract partial class AbstractByteBufTest
         try
         {
             Assert.True(endBarrier.SignalAndWait(TimeSpan.FromSeconds(30)));
-            foreach (Task task in tasks) await task.WaitAsync(TimeSpan.FromSeconds(1));
+
+            foreach (Task task in tasks)
+            {
+                await task.WaitAsync(TimeSpan.FromSeconds(1));
+            }
         }
         finally
         {

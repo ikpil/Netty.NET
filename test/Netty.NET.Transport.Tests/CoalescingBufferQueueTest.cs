@@ -39,7 +39,11 @@ public class CoalescingBufferQueueTest : IDisposable
     public CoalescingBufferQueueTest()
     {
         _queue = new CoalescingBufferQueue(_channel, 16, true);
-        _mouseCompletion = task => { _mouseDone = true; _mouseSuccess = task.IsCompletedSuccessfully; };
+        _mouseCompletion = task =>
+        {
+            _mouseDone = true;
+            _mouseSuccess = task.IsCompletedSuccessfully;
+        };
     }
 
     public void Dispose()

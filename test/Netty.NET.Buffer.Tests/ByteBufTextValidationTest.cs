@@ -100,9 +100,18 @@ public class ByteBufTextValidationTest
         {
             Check(kind, hex, Encoding.UTF8, true);
             byte[] bytes = Convert.FromHexString(hex);
-            for (int length = 1; length < bytes.Length; length++) Check(kind, Convert.ToHexString(bytes[..length]), Encoding.UTF8, false);
+
+            for (int length = 1; length < bytes.Length; length++)
+            {
+                Check(kind, Convert.ToHexString(bytes[..length]), Encoding.UTF8, false);
+            }
         }
-        foreach (string hex in invalid) Check(kind, hex, Encoding.UTF8, false);
+
+        foreach (string hex in invalid)
+        {
+            Check(kind, hex, Encoding.UTF8, false);
+        }
+
         Check(kind, "4142C2A243E282AC44F0908D8845", Encoding.UTF8, true);
         Check(kind, "4142C2A243E282AC44F0908D88FF", Encoding.UTF8, false);
     }
@@ -197,9 +206,11 @@ public class ByteBufTextValidationTest
     public void BoundedScratchDrainsLongInputAndFindsMalformedTail(int kind)
     {
         string text = string.Concat(Enumerable.Repeat("A\u00A2\u20AC\U00010348", 3000));
+
         foreach (Encoding encoding in new[] { Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode, Encoding.UTF32, new UTF32Encoding(true, false) })
         {
-            byte[] bytes = encoding.GetBytes(text); ByteBuf b = Owner(kind, bytes, 1);
+            byte[] bytes = encoding.GetBytes(text);
+            ByteBuf b = Owner(kind, bytes, 1);
             try
             {
                 Assert.True(ByteBufUtil.IsText(b, encoding));
@@ -223,7 +234,10 @@ public class ByteBufTextValidationTest
             int remaining = 60000;
             await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => Task.Run(() =>
             {
-                while (Interlocked.Decrement(ref remaining) > 0) Assert.True(ByteBufUtil.IsText(b, Encoding.Latin1));
+                while (Interlocked.Decrement(ref remaining) > 0)
+                {
+                    Assert.True(ByteBufUtil.IsText(b, Encoding.Latin1));
+                }
             }, TestContext.Current.CancellationToken)));
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(13, b.WriterIndex);

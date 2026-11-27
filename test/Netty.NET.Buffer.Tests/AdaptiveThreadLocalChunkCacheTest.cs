@@ -35,7 +35,12 @@ public class AdaptiveThreadLocalChunkCacheTest
         {
             var chunk = new SizeClassedChunk(new UnpooledHeapByteBuf(131072, 131072), Registry, 4096, true);
             Chunks.Add(chunk);
-            for (int i = 0; i < allocated; i++) Claims.Add(chunk.TryAllocate(4096));
+
+            for (int i = 0; i < allocated; i++)
+            {
+                Claims.Add(chunk.TryAllocate(4096));
+            }
+
             return chunk;
         }
         internal SizeClassedChunk[] Slots => (SizeClassedChunk[])typeof(ThreadLocalSizeClassedChunkCache)

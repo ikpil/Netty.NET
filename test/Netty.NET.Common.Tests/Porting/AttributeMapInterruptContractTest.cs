@@ -62,7 +62,12 @@ public class AttributeMapInterruptContractTest
         {
             // Hold the actual native bucket monitors; reflection schedules the
             // contention only, and no other owner shares this dictionary.
-            foreach (object gate in locks) { Monitor.Enter(gate); acquired++; }
+            foreach (object gate in locks)
+            {
+                Monitor.Enter(gate);
+                acquired++;
+            }
+
             worker.Start();
             started = true;
             waited = SpinWait.SpinUntil(() => (worker.ThreadState & ThreadState.WaitSleepJoin) != 0,
@@ -74,7 +79,11 @@ public class AttributeMapInterruptContractTest
         }
         finally
         {
-            while (acquired > 0) Monitor.Exit(locks[--acquired]);
+            while (acquired > 0)
+            {
+                Monitor.Exit(locks[--acquired]);
+            }
+
             if (started)
             {
                 Assert.True(worker.Join(TimeSpan.FromSeconds(5)));

@@ -59,9 +59,14 @@ public class DatagramLifecycleContractTest
             }
             Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_TOS, -1));
             Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_TOS, 256));
+
             foreach (var option in new ChannelOption[] { ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_ADDR,
                 ChannelOption.IP_MULTICAST_TTL, ChannelOption.IP_MULTICAST_LOOP_DISABLED, ChannelOption.IP_TOS,
-                ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION }) Assert.True(options.ContainsKey(option));
+                ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION })
+            {
+                Assert.True(options.ContainsKey(option));
+            }
+
             channel.Config.SetOption(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, true);
             await channel.RegisterAsync(group.Next());
             Assert.True(channel.IsActive);

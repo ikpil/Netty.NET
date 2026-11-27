@@ -42,7 +42,12 @@ public class BacklogContractTest
     {
         int calls = 0;
         Assert.Equal(value, SoMaxConnAction.Run(200, _ => false, _ => throw new InvalidOperationException(), () => true,
-            key => { Assert.Equal("kern.ipc.somaxconn", key); Assert.Equal(0, calls++); return value; }));
+            key =>
+            {
+                Assert.Equal("kern.ipc.somaxconn", key);
+                Assert.Equal(0, calls++);
+                return value;
+            }));
         Assert.Equal(1, calls);
     }
 
@@ -54,7 +59,11 @@ public class BacklogContractTest
     {
         int calls = 0;
         Assert.Equal(expected, SoMaxConnAction.Run(128, _ => false, _ => throw new InvalidOperationException(), () => true,
-            key => { Assert.Equal(calls++ == 0 ? "kern.ipc.somaxconn" : "kern.ipc.soacceptqueue", key); return calls == 1 ? null : value; }));
+            key =>
+            {
+                Assert.Equal(calls++ == 0 ? "kern.ipc.somaxconn" : "kern.ipc.soacceptqueue", key);
+                return calls == 1 ? null : value;
+            }));
         Assert.Equal(2, calls);
     }
 
@@ -144,7 +153,11 @@ public class BacklogContractTest
         var error = new Win32Exception(2);
         Assert.Same(error, Assert.Throws<Win32Exception>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn", _ => throw error)));
         Assert.Throws<Win32Exception>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn",
-            info => { info.FileName = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")); return Process.Start(info); }));
+            info =>
+            {
+                info.FileName = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+                return Process.Start(info);
+            }));
     }
 
     [Fact]

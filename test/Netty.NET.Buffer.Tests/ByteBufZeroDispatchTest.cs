@@ -172,7 +172,10 @@ public class ByteBufZeroDispatchTest
     public static IEnumerable<object[]> OwnerCases()
     {
         foreach (bool direct in new[] { false, true })
-        foreach (int length in new[] { -1, 0, 1, 4, 7, 8, 9, 17, 62 }) yield return [direct, length];
+        foreach (int length in new[] { -1, 0, 1, 4, 7, 8, 9, 17, 62 })
+            {
+                yield return [direct, length];
+            }
     }
 
     // AbstractByteBuf.writeZero uses low-level storage writes, independently of setZero.
@@ -203,7 +206,10 @@ public class ByteBufZeroDispatchTest
             Assert.Equal(12, owner.GetByte(2));
             if (length is >= 0 and <= 61)
             {
-                for (int i = 0; i < length; ++i) Assert.Equal(0, owner.GetByte(3 + i));
+                for (int i = 0; i < length; ++i)
+                {
+                    Assert.Equal(0, owner.GetByte(3 + i));
+                }
             }
             else
             {
@@ -253,7 +259,10 @@ public class ByteBufZeroDispatchTest
         for (int backing = 0; backing < 3; ++backing)
         for (int facade = 0; facade < (backing == 2 ? 5 : 3); ++facade)
         foreach (bool write in new[] { false, true })
-        foreach (bool failure in new[] { false, true }) yield return [backing, facade, write, failure];
+        foreach (bool failure in new[] { false, true })
+                    {
+                        yield return [backing, facade, write, failure];
+                    }
     }
 
     [Theory]
@@ -281,6 +290,7 @@ public class ByteBufZeroDispatchTest
             {
                 return write ? buffer.WriteZero(7) : buffer.SetZero(1, 5);
             }
+
             if (failure)
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else

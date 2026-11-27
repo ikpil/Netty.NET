@@ -53,13 +53,19 @@ public class UnorderedActionBoundaryContractTest
         UnorderedThreadPoolEventExecutor observed = null;
         var executor = new UnorderedThreadPoolEventExecutor(1, (work, owner) =>
         {
-            replay = work; observed = owner; policyThread = Thread.CurrentThread;
+            replay = work;
+            observed = owner;
+            policyThread = Thread.CurrentThread;
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
             Task termination = immediate ? executor.StopAsync() : executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             int calls = 0;
@@ -90,7 +96,11 @@ public class UnorderedActionBoundaryContractTest
         using var release = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
             Task termination = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             int calls = 0;
@@ -120,12 +130,20 @@ public class UnorderedActionBoundaryContractTest
     {
         Action replay = null;
         var error = new InvalidOperationException("native unordered policy");
-        var executor = new UnorderedThreadPoolEventExecutor(1, (work, _) => { replay = work; throw error; });
+        var executor = new UnorderedThreadPoolEventExecutor(1, (work, _) =>
+        {
+            replay = work;
+            throw error;
+        });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
             _ = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             int calls = 0;
@@ -150,14 +168,22 @@ public class UnorderedActionBoundaryContractTest
         Task stop = null;
         var executor = new UnorderedThreadPoolEventExecutor(1, (_, owner) =>
         {
-            new Thread(() => { stop = owner.StopAsync(); requested.Set(); }) { IsBackground = true }.Start();
+            new Thread(() =>
+            {
+                stop = owner.StopAsync();
+                requested.Set();
+            }) { IsBackground = true }.Start();
             Wait(requested);
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         try
         {
-            executor.Execute(() => { entered.Set(); Wait(release); });
+            executor.Execute(() =>
+            {
+                entered.Set();
+                Wait(release);
+            });
             Wait(entered);
             _ = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             executor.Execute(static () => { });

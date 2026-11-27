@@ -147,9 +147,17 @@ public class DomainMappingNativeContractTest
         var snapshot = builder.Build();
         var reads = Enumerable.Range(0, 32).Select(index => Task.Run(() =>
         {
-            for (int attempt = 0; attempt < 100; attempt++) Assert.Same(oldValue, snapshot("a.netty.io"));
+            for (int attempt = 0; attempt < 100; attempt++)
+            {
+                Assert.Same(oldValue, snapshot("a.netty.io"));
+            }
         })).ToArray();
-        for (int index = 0; index < 100; index++) builder.Add("*.netty.io", newValue);
+
+        for (int index = 0; index < 100; index++)
+        {
+            builder.Add("*.netty.io", newValue);
+        }
+
         await Task.WhenAll(reads);
         Assert.Same(newValue, builder.Build()("a.netty.io"));
     }

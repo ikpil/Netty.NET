@@ -620,8 +620,13 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         var context = (AbstractChannelHandlerContext)pipeline.FirstContext;
         int number = 0;
+
         while (context != ((DefaultChannelPipeline)pipeline).Tail)
-        { number++; context = context.Next; }
+        {
+            number++;
+            context = context.Next;
+        }
+
         Assert.Equal(expectedNumber, number);
     }
 
@@ -667,12 +672,20 @@ public class DefaultChannelPipelineMutationSourceTest
         {
             if (InboundBuffer.Count != 0)
             {
-                foreach (var value in InboundBuffer) ctx.FireChannelRead(value);
+                foreach (var value in InboundBuffer)
+                {
+                    ctx.FireChannelRead(value);
+                }
+
                 ctx.FireChannelReadComplete();
             }
             if (OutboundBuffer.Count != 0)
             {
-                foreach (var value in OutboundBuffer) _ = ctx.WriteAsync(value);
+                foreach (var value in OutboundBuffer)
+                {
+                    _ = ctx.WriteAsync(value);
+                }
+
                 ctx.Flush();
             }
         }

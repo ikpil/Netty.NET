@@ -32,7 +32,10 @@ public class AdaptiveChunkTest
     {
         foreach (int segment in AdaptivePoolingAllocator.GetSizeClasses())
             foreach (bool local in new[] { false, true })
-                foreach (bool direct in new[] { false, true }) yield return [segment, local, direct];
+                foreach (bool direct in new[] { false, true })
+                {
+                    yield return [segment, local, direct];
+                }
     }
 
     private static ByteBuf Storage(bool direct, int capacity, NativeMemoryAllocator native)
@@ -99,7 +102,10 @@ public class AdaptiveChunkTest
         }
         finally
         {
-            foreach (var allocation in live) allocation.Release();
+            foreach (var allocation in live)
+            {
+                allocation.Release();
+            }
         }
     }
 
@@ -144,7 +150,10 @@ public class AdaptiveChunkTest
         }
         finally
         {
-            foreach (var allocation in live) allocation.Release();
+            foreach (var allocation in live)
+            {
+                allocation.Release();
+            }
         }
         chunk.Dispose();
         Assert.Equal(0, registry.TotalCapacity);
@@ -243,7 +252,10 @@ public class AdaptiveChunkTest
         }
         finally
         {
-            foreach (var a in live) a.Release();
+            foreach (var a in live)
+            {
+                a.Release();
+            }
         }
         Assert.Equal(kind == 1 ? 7 : 4, live.Count);
         chunk.Dispose();

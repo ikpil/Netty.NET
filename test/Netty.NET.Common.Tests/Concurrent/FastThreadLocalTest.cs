@@ -147,15 +147,28 @@ public class FastThreadLocalTest : IDisposable
         var threads = workers.Select((worker, i) => new Thread(worker.Run) { IsBackground = true, Name = "worker-" + i }).ToList();
         try
         {
-            foreach (Thread thread in threads) thread.Start();
+            foreach (Thread thread in threads)
+            {
+                thread.Start();
+            }
+
             for (int i = 0; i < 2; i++)
-                foreach (Worker worker in workers.OrderBy(_ => Random.Shared.Next())) worker.Semaphore.Release();
+                foreach (Worker worker in workers.OrderBy(_ => Random.Shared.Next()))
+                {
+                    worker.Semaphore.Release();
+                }
             await Task.WhenAll(workers.Select(worker => worker.Completion.Task)).WaitAsync(TimeSpan.FromSeconds(15));
         }
         finally
         {
-            foreach (Thread thread in threads) Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
-            foreach (Worker worker in workers) worker.Semaphore.Dispose();
+            foreach (Thread thread in threads)
+            {
+                Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
+            }
+            foreach (Worker worker in workers)
+            {
+                worker.Semaphore.Dispose();
+            }
         }
     }
 
@@ -257,7 +270,12 @@ public class FastThreadLocalTest : IDisposable
         {
             // CLR test adaptation: jump to the boundary rather than allocating over two billion objects.
             field.SetValue(null, ARRAY_LIST_CAPACITY_MAX_SIZE - 2);
-            while ((int)field.GetValue(null) < ARRAY_LIST_CAPACITY_MAX_SIZE) new FastThreadLocal<object>();
+
+            while ((int)field.GetValue(null) < ARRAY_LIST_CAPACITY_MAX_SIZE)
+            {
+                new FastThreadLocal<object>();
+            }
+
             Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.LastVariableIndex());
             // Assert the max index cannot greater than (ARRAY_LIST_CAPACITY_MAX_SIZE - 1).
             Assert.Throws<InvalidOperationException>(() => new FastThreadLocal<object>());

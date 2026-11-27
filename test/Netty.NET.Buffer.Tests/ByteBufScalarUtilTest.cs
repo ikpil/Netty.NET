@@ -55,11 +55,13 @@ public class ByteBufScalarUtilTest
     {
         foreach (int value in Values)
         {
-            byte[] bytes = BitConverter.GetBytes(value); Array.Reverse(bytes);
+            byte[] bytes = BitConverter.GetBytes(value);
+            Array.Reverse(bytes);
             Assert.Equal(BitConverter.ToInt32(bytes), ByteBufUtil.SwapInt(value));
             Assert.Equal(value, ByteBufUtil.SwapInt(ByteBufUtil.SwapInt(value)));
             long wide = unchecked((long)(((ulong)(uint)value << 32) | (uint)~value));
-            bytes = BitConverter.GetBytes(wide); Array.Reverse(bytes);
+            bytes = BitConverter.GetBytes(wide);
+            Array.Reverse(bytes);
             Assert.Equal(BitConverter.ToInt64(bytes), ByteBufUtil.SwapLong(wide));
             Assert.Equal(wide, ByteBufUtil.SwapLong(ByteBufUtil.SwapLong(wide)));
             int medium = (int)ReverseWidth(value, 3);
@@ -68,7 +70,11 @@ public class ByteBufScalarUtilTest
             Assert.Equal(low24 >= 0x800000 ? low24 - 0x1000000 : low24, ByteBufUtil.SwapMedium(ByteBufUtil.SwapMedium(value)));
         }
         foreach (long value in new[] { long.MinValue, long.MaxValue, -1L, 0L, 1L })
-        { byte[] bytes = BitConverter.GetBytes(value); Array.Reverse(bytes); Assert.Equal(BitConverter.ToInt64(bytes), ByteBufUtil.SwapLong(value)); }
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            Array.Reverse(bytes);
+            Assert.Equal(BitConverter.ToInt64(bytes), ByteBufUtil.SwapLong(value));
+        }
     }
 
     [Theory]
@@ -83,15 +89,19 @@ public class ByteBufScalarUtilTest
                 b.Clear().WriteByte(99).MarkReaderIndex().MarkWriterIndex();
                 Assert.Same(b, ByteBufUtil.WriteShortBE(b, value));
                 Assert.Same(b, ByteBufUtil.WriteMediumBE(b, value));
-                Assert.Equal(0, b.ReaderIndex); Assert.Equal(6, b.WriterIndex);
+                Assert.Equal(0, b.ReaderIndex);
+                Assert.Equal(6, b.WriterIndex);
                 Assert.Equal(99, b.GetByte(0));
                 Assert.Equal(Octets(value, 2).Concat(Octets(value, 3)), ByteBufUtil.GetBytes(b, 1, 5));
                 Assert.Equal(unchecked((short)value), b.GetShort(1));
                 Assert.Equal(unchecked((short)ReverseWidth(value, 2)), b.GetShortLE(1));
                 Assert.Same(b, ByteBufUtil.SetShortBE(b, 9, value));
                 Assert.Equal(Octets(value, 2), ByteBufUtil.GetBytes(b, 9, 2));
-                Assert.Equal(6, b.WriterIndex); Assert.Equal(0, b.ReaderIndex);
-                b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(0, b.ReaderIndex); Assert.Equal(1, b.WriterIndex);
+                Assert.Equal(6, b.WriterIndex);
+                Assert.Equal(0, b.ReaderIndex);
+                b.ResetReaderIndex().ResetWriterIndex();
+                Assert.Equal(0, b.ReaderIndex);
+                Assert.Equal(1, b.WriterIndex);
             }
         }
         finally
@@ -117,15 +127,20 @@ public class ByteBufScalarUtilTest
             b.Clear().WriteShort(shortValue).WriteShortLE(shortValue);
             Assert.Equal(shortValue, ByteBufUtil.ReadUnsignedShortBE(b));
             Assert.Equal(swappedShortValue, ByteBufUtil.ReadUnsignedShortBE(b));
+
             foreach (int value in Values)
             {
                 b.Clear().WriteInt(value).WriteIntLE(value).MarkReaderIndex().MarkWriterIndex();
                 Assert.Equal(value, ByteBufUtil.ReadIntBE(b));
                 Assert.Equal(unchecked((int)ReverseWidth(value, 4)), ByteBufUtil.ReadIntBE(b));
-                Assert.Equal(8, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
-                b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(0, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
+                Assert.Equal(8, b.ReaderIndex);
+                Assert.Equal(8, b.WriterIndex);
+                b.ResetReaderIndex().ResetWriterIndex();
+                Assert.Equal(0, b.ReaderIndex);
+                Assert.Equal(8, b.WriterIndex);
                 ByteBuf readOnly = b.AsReadOnly();
-                Assert.Equal(value, ByteBufUtil.ReadIntBE(readOnly)); Assert.Equal(0, b.ReaderIndex);
+                Assert.Equal(value, ByteBufUtil.ReadIntBE(readOnly));
+                Assert.Equal(0, b.ReaderIndex);
             }
         }
         finally
@@ -261,7 +276,12 @@ public class ByteBufScalarUtilTest
     private static uint ReverseWidth(int value, int width)
     {
         uint result = 0;
-        foreach (byte octet in Octets(value, width)) result = (result >> 8) | ((uint)octet << (8 * (width - 1)));
+
+        foreach (byte octet in Octets(value, width))
+        {
+            result = (result >> 8) | ((uint)octet << (8 * (width - 1)));
+        }
+
         return result;
     }
 }

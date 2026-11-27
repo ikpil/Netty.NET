@@ -150,6 +150,7 @@ public class AsyncMappingContractTest
             invokedOnLoop = executor.InEventLoop();
             return producer.Task;
         });
+
         void Finish()
         {
             if (outcome == 0)
@@ -166,6 +167,7 @@ public class AsyncMappingContractTest
                 producer.SetCanceled(cancellation.Token);
             }
         }
+
         var hello = new HelloLease { Executor = executor };
         var consumer = new LookupConsumer(executor);
         try
@@ -268,7 +270,11 @@ public class AsyncMappingContractTest
         using var cancellation = new CancellationTokenSource();
         var producer = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         CancellationToken received = default;
-        var mapping = new DelegateMapping<string, object>((_, token) => { received = token; return producer.Task; });
+        var mapping = new DelegateMapping<string, object>((_, token) =>
+        {
+            received = token;
+            return producer.Task;
+        });
         var hello = new HelloLease { Executor = executor };
         var consumer = new LookupConsumer(executor);
         var value = new object();

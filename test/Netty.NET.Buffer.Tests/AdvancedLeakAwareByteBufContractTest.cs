@@ -34,7 +34,10 @@ public class AdvancedLeakAwareByteBufContractTest
     public static IEnumerable<object[]> OperationCases()
     {
         for (int kind = 0; kind < 6; ++kind)
-            for (int operation = 0; operation < 123; ++operation) yield return [kind, operation];
+            for (int operation = 0; operation < 123; ++operation)
+            {
+                yield return [kind, operation];
+            }
     }
 
     [Theory]
@@ -81,7 +84,12 @@ public class AdvancedLeakAwareByteBufContractTest
             4 => Unpooled.Buffer(66, 66).Slice(1, 64),
             _ => Unpooled.Buffer(64, 128).Duplicate()
         };
-        for (int i = 0; i < 64; ++i) b.SetByte(i, i);
+
+        for (int i = 0; i < 64; ++i)
+        {
+            b.SetByte(i, i);
+        }
+
         b.SetIndex(2, 32);
         return kind == 2 ? b.AsReadOnly() : b;
     }
@@ -1097,6 +1105,7 @@ public class AdvancedLeakAwareByteBufContractTest
         try
         {
             CancellationToken token = cancel ? new CancellationToken(true) : TestContext.Current.CancellationToken;
+
             async Task Run(ValueTask pending)
             {
                 if (cancel)
@@ -1104,6 +1113,7 @@ public class AdvancedLeakAwareByteBufContractTest
                 else
                     await pending;
             }
+
             await Run(b.GetBytesAsync(3, stream, 8, token));
             Assert.Equal(1, tracker.Records);
             await Run(b.ReadBytesAsync(stream, 8, token));

@@ -24,7 +24,10 @@ public class BoundedInputStreamTest
 {
     public static System.Collections.Generic.IEnumerable<object[]> Repetitions()
     {
-        for (int i = 0; i < 50; i++) yield return new object[] { i };
+        for (int i = 0; i < 50; i++)
+        {
+            yield return new object[] { i };
+        }
     }
 
     [Theory]

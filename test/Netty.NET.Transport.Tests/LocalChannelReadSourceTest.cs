@@ -319,6 +319,7 @@ public partial class LocalChannelSourceTest
             ctx.Read();
         else
             _ = ReadAfterWriteAsync();
+
         async Task ReadAfterWriteAsync()
         {
             try
@@ -406,7 +407,11 @@ public partial class LocalChannelSourceTest
                 {
                     // The read will be scheduled 100ms in the future to ensure we not receive any
                     // channelRead calls in the meantime.
-                    _ = ctx.Executor.ScheduleAsync(() => { _read = 0; ctx.Read(); }, TimeSpan.FromMilliseconds(100));
+                    _ = ctx.Executor.ScheduleAsync(() =>
+                    {
+                        _read = 0;
+                        ctx.Read();
+                    }, TimeSpan.FromMilliseconds(100));
                 }
                 else
                     _read = 0;

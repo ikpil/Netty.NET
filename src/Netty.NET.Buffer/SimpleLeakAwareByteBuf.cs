@@ -188,7 +188,12 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
         // another leak facade. Keep that facade, but find its actual owner before
         // choosing a shared tracker or replacing the immediate release parent.
         ByteBuf unwrapped = derived;
-        while (unwrapped is SimpleLeakAwareByteBuf) unwrapped = unwrapped.Unwrap();
+
+        while (unwrapped is SimpleLeakAwareByteBuf)
+        {
+            unwrapped = unwrapped.Unwrap();
+        }
+
         if (unwrapped is not PooledDerivedByteBuf { IsIndependent: true } pooled)
             return NewSharedLeakAwareByteBuf(derived);
 

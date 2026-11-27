@@ -46,7 +46,11 @@ public class ChannelInitializerExtensionContractTest
         {
             foreach (var extension in new[] { new Recording(double.NaN, "nan", calls), new Recording(0.0, "positive-zero", calls),
                 new Recording(-0.0, "negative-zero", calls), new Recording(-1, "negative", calls), new Recording(1, "positive", calls),
-                new Recording(-2, "throws", calls, throws: true) }) registrations.Add(ChannelInitializerExtension.Register(extension));
+                new Recording(-2, "throws", calls, throws: true) })
+            {
+                registrations.Add(ChannelInitializerExtension.Register(extension));
+            }
+
             channel = await new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).RegisterAsync();
             Assert.Equal(new[] { "throws", "negative", "negative-zero", "positive-zero", "positive", "nan" }, calls);
         }
@@ -57,7 +61,11 @@ public class ChannelInitializerExtensionContractTest
                 await channel.CloseAsync();
             }
             await group.StopAsync();
-            foreach (var registration in registrations) registration.Dispose();
+
+            foreach (var registration in registrations)
+            {
+                registration.Dispose();
+            }
         }
     }
 
@@ -148,16 +156,25 @@ public class ChannelInitializerExtensionContractTest
                 server.Option(ChannelOption.AUTO_READ, (i & 1) == 0).ChildOption(ChannelOption.AUTO_READ, (i & 1) == 0).ChildAttr(key, i % 2 == 0 ? "value" : null);
             }
         }, TestContext.Current.CancellationToken);
+
         for (int i = 0; i < 2048; i++)
         {
             var snapshot = bootstrap.Clone().NewOptionsArray();
             Assert.Equal(2, snapshot.Length);
-            Assert.Same(ChannelOption.AUTO_READ, snapshot[0].Key); Assert.IsType<bool>(snapshot[0].Value);
-            Assert.Same(ChannelOption.CONNECT_TIMEOUT_MILLIS, snapshot[1].Key); Assert.IsType<int>(snapshot[1].Value);
+            Assert.Same(ChannelOption.AUTO_READ, snapshot[0].Key);
+            Assert.IsType<bool>(snapshot[0].Value);
+            Assert.Same(ChannelOption.CONNECT_TIMEOUT_MILLIS, snapshot[1].Key);
+            Assert.IsType<int>(snapshot[1].Value);
+
             foreach (var attribute in bootstrap.NewAttributesArray())
-            { Assert.Same(key, attribute.Key); Assert.Equal("value", attribute.Value); }
+            {
+                Assert.Same(key, attribute.Key);
+                Assert.Equal("value", attribute.Value);
+            }
+
             server.Clone();
         }
+
         await writer;
     }
     private sealed class Recording(double priority, string name, List<string> calls, bool throws = false) : ChannelInitializerExtension

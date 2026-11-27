@@ -150,7 +150,11 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             var monitoringCancellation = new CancellationTokenSource();
             var monitor = new UtilizationMonitor(this);
             Task utilizationMonitoringTask = GlobalEventExecutor.INSTANCE.ScheduleNative<object>(
-                    _ => { monitor.Run(); return null; }, TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100),
+                    _ =>
+                    {
+                        monitor.Run();
+                        return null;
+                    }, TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100),
                     factory.utilizationCheckPeriodNanos, monitoringCancellation.Token, captureContext: false);
             utilizationMonitoringTask.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
             {
@@ -251,7 +255,11 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 // utilization can count toward sustained idle/busy patience.
                 var resumedAt = new Dictionary<IEventExecutor, long>(oldState.resumedAt, ReferenceEqualityComparer.Instance);
                 long resumeTime = executors[0].Ticker().NanoTime();
-                foreach (IEventExecutor child in wokenUp) resumedAt[child] = resumeTime;
+
+                foreach (IEventExecutor child in wokenUp)
+                {
+                    resumedAt[child] = resumeTime;
+                }
 
                 AutoScalingState newState = new AutoScalingState(
                         oldState.activeChildrenCount + wokenUp.Count,

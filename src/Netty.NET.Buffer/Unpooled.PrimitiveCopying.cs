@@ -53,7 +53,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 4));
-        foreach (int value in values) buffer.WriteInt(value);
+
+        foreach (int value in values)
+        {
+            buffer.WriteInt(value);
+        }
+
         return buffer;
     }
 
@@ -84,7 +89,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 2));
-        foreach (short value in values) buffer.WriteShort(value);
+
+        foreach (short value in values)
+        {
+            buffer.WriteShort(value);
+        }
+
         return buffer;
     }
 
@@ -107,7 +117,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 2));
-        foreach (int value in values) buffer.WriteShort(value);
+
+        foreach (int value in values)
+        {
+            buffer.WriteShort(value);
+        }
+
         return buffer;
     }
 
@@ -138,7 +153,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 3));
-        foreach (int value in values) buffer.WriteMedium(value);
+
+        foreach (int value in values)
+        {
+            buffer.WriteMedium(value);
+        }
+
         return buffer;
     }
 
@@ -169,7 +189,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 8));
-        foreach (long value in values) buffer.WriteLong(value);
+
+        foreach (long value in values)
+        {
+            buffer.WriteLong(value);
+        }
+
         return buffer;
     }
 
@@ -200,7 +225,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 1));
-        foreach (bool value in values) buffer.WriteBoolean(value);
+
+        foreach (bool value in values)
+        {
+            buffer.WriteBoolean(value);
+        }
+
         return buffer;
     }
 
@@ -231,7 +261,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 4));
-        foreach (float value in values) buffer.WriteFloat(value);
+
+        foreach (float value in values)
+        {
+            buffer.WriteFloat(value);
+        }
+
         return buffer;
     }
 
@@ -262,7 +297,12 @@ public static partial class Unpooled
             return EmptyBuffer;
         }
         ByteBuf buffer = Buffer(checked(values.Length * 8));
-        foreach (double value in values) buffer.WriteDouble(value);
+
+        foreach (double value in values)
+        {
+            buffer.WriteDouble(value);
+        }
+
         return buffer;
     }
 }

@@ -69,6 +69,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         internal Context(bool direct, int form)
         {
             var allocator = new UnpooledByteBufAllocator(direct, Native);
+
             ByteBuf Data(int length)
             {
                 ByteBuf b = allocator.Buffer(length, length);
@@ -76,6 +77,7 @@ public partial class WrappedCompositeByteBufDispatchTest
                     b.WriteByte(i + 1);
                 return b;
             }
+
             _components = [Data(8), Data(0), Data(24), Data(32)];
             Peer = Data(64);
             Peer.SetIndex(1, 17);
@@ -1160,7 +1162,10 @@ public partial class WrappedCompositeByteBufDispatchTest
     {
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 5; ++form)
-        for (int operation = 0; operation < 133; ++operation) yield return [direct, form, operation];
+        for (int operation = 0; operation < 133; ++operation)
+                {
+                    yield return [direct, form, operation];
+                }
     }
 
     [Theory]

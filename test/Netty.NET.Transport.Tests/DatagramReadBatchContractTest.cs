@@ -117,7 +117,12 @@ public class DatagramReadBatchContractTest
     private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition)
     {
         var watch = Stopwatch.StartNew();
-        while (!condition() && watch.Elapsed < TimeSpan.FromSeconds(3)) loop.Run(10_000_000, -1);
+
+        while (!condition() && watch.Elapsed < TimeSpan.FromSeconds(3))
+        {
+            loop.Run(10_000_000, -1);
+        }
+
         Assert.True(condition(), "The UDP read did not settle on its owner.");
     }
 
