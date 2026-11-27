@@ -179,28 +179,10 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
         await TestSimpleSendWithConnect0(sb, cb, Unpooled.DirectBuffer().WriteBytes(BYTES), BYTES, 4);
     }
 
-    // CLR: EpollDatagramUnicastTest (transport-native-epoll) extends DatagramUnicastInetTest with
-    // EpollSocketTestPermutation.datagram(SocketProtocolFamily.INET) and overrides testSimpleSendWithConnect(sb, cb)
-    // to enable EpollChannelOption.IP_RECVORIGDSTADDR. This port has no epoll transport; NioDatagramChannel implements
-    // ChannelOption.IP_RECVORIGDSTADDR for Linux IPv4 sockets, so the override runs as this separate test, for the
-    // INET fixture on Linux only.
-    [Fact]
-    public async Task TestSimpleSendWithConnectAndOriginalDestination()
-    {
-        Assert.SkipUnless(OperatingSystem.IsLinux(), "Original destination metadata requires Linux.");
-        Assert.SkipUnless(SocketProtocolFamily() == Channels.Sockets.SocketProtocolFamily.Inet,
-                "EpollDatagramUnicastTest runs the INET datagram permutations only.");
-        await Run(TestContext.Current, TestSimpleSendWithConnectAndOriginalDestination0);
-    }
-
-    // CLR: the body of the EpollDatagramUnicastTest.testSimpleSendWithConnect(sb, cb) override.
-    private async Task TestSimpleSendWithConnectAndOriginalDestination0(Bootstrap sb, Bootstrap cb)
-    {
-        // Run this test with IP_RECVORIGDSTADDR option enabled
-        sb.Option(ChannelOption.IP_RECVORIGDSTADDR, true);
-        await TestSimpleSendWithConnect0(sb, cb);
-        sb.Option(ChannelOption.IP_RECVORIGDSTADDR, false);
-    }
+    // CLR: the native epoll variant needs original destination ancillary data.
+    // Run this test with IP_RECVORIGDSTADDR option enabled
+    [Fact(Skip = "IP_RECVORIGDSTADDR is unavailable on the managed transport.")]
+    public Task TestSimpleSendWithConnectAndOriginalDestination() => Task.CompletedTask;
 
     [Fact]
     public async Task TestReceiveEmptyDatagrams()

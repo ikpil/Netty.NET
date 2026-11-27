@@ -54,14 +54,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         internal readonly IPAddress Address = address;
         internal readonly HashSet<IPAddress> Blocked = new();
     }
-    private bool _udpGro;
-    private int _udpSlotSize;
-    private bool _receiveOriginalDestination;
-    private bool _offloadConfigurationClosed;
     internal bool LinuxDualMode => _linuxDualMode;
-    internal bool UdpGro => Volatile.Read(ref _udpGro);
-    internal int UdpSlotSize => Volatile.Read(ref _udpSlotSize);
-    internal bool ReceiveOriginalDestination => Volatile.Read(ref _receiveOriginalDestination);
     private static readonly ChannelMetadata METADATA = new ChannelMetadata(true, 16);
     /**
      * Create a new instance which will use the Operation Systems default {@link SocketProtocolFamily}.
@@ -282,33 +275,18 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     protected override void DoRegister()
     {
         base.DoRegister();
-        lock (JavaChannel())
-            _offloadConfigurationClosed = true;
         SetActive(JavaChannel().IsBound || ActiveOnRegistration);
     }
 
     internal void SetUdpGro(bool enabled)
     {
-        lock (JavaChannel())
-        {
-            if (_udpGro == enabled) return;
-            EnsureOffloadConfigurationOpen();
-            LinuxUdpOffload.SetGro(JavaChannel(), enabled);
-            Volatile.Write(ref _udpGro, enabled);
-        }
+        if (enabled) throw new PlatformNotSupportedException("UDP_GRO is unavailable on the managed transport.");
     }
 
     internal void SetUdpSlotSize(int size)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(size);
-        lock (JavaChannel())
-        {
-            if (_udpSlotSize == size) return;
-            EnsureOffloadConfigurationOpen();
-            if (!OperatingSystem.IsLinux())
-                throw new PlatformNotSupportedException("UDP scattering requires Linux.");
-            Volatile.Write(ref _udpSlotSize, size);
-        }
+        if (size != 0) throw new PlatformNotSupportedException("UDP scattering is unavailable on the managed transport.");
     }
 
     /**
@@ -317,21 +295,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
      */
     internal void SetReceiveOriginalDestination(bool enabled)
     {
-        lock (JavaChannel())
-        {
-            if (_receiveOriginalDestination == enabled) return;
-            EnsureOffloadConfigurationOpen();
-            if (!OperatingSystem.IsLinux())
-                throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR requires Linux.");
-            LinuxSocketOptions.SetFlag(JavaChannel(), (int)SocketOptionLevel.IP, LinuxUdpOffload.IpOriginalDestination, enabled);
-            Volatile.Write(ref _receiveOriginalDestination, enabled);
-        }
-    }
-
-    private void EnsureOffloadConfigurationOpen()
-    {
-        if (_offloadConfigurationClosed)
-            throw new InvalidOperationException("Set UDP receive offload options before registering the channel.");
+        if (enabled) throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR is unavailable on the managed transport.");
     }
     protected override void DoDeregister()
     {
@@ -372,7 +336,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             CheckUnresolved(p);
             ByteBuf content = p.Content;
-            // CLR: a SegmentedDatagramPacket keeps its type (segment size) for the Linux UDP_SEGMENT path.
+            // CLR: preserve the segment size for the managed datagram send loop.
             if (IsSingleDirectBuffer(content) || p is SegmentedDatagramPacket)
             {
                 return p;
@@ -446,14 +410,9 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         if (msg is SegmentedDatagramPacket segmented && dataLen > segmented.SegmentSize)
         {
             int segmentSize = segmented.SegmentSize;
-            if (LinuxUdpOffload.CanSend(JavaChannel(), dataLen, segmentSize) &&
-                TrySendSegmented(nioData, dataLen, segmentSize, segmented.Recipient))
-            {
-                return true;
-            }
-            // CLR: without UDP_SEGMENT offload each segment is its own datagram; the message counts as written once
-            // every segment was accepted.
-            for (int offset = 0; offset < dataLen;)
+            // Each segment is a separate datagram. Resume at the last accepted byte
+            // if the socket becomes non-writable partway through this message.
+            for (int offset = (int)@in.CurrentProgress; offset < dataLen;)
             {
                 int count = Math.Min(segmentSize, dataLen - offset);
                 if (SendDatagram(nioData.Slice(offset, count), remoteAddress) <= 0)
@@ -461,24 +420,12 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                     return false;
                 }
                 offset += count;
+                @in.Progress(count);
             }
             return true;
         }
         int writtenBytes = SendDatagram(nioData, remoteAddress);
         return writtenBytes > 0;
-    }
-
-    private bool TrySendSegmented(ReadOnlySequence<byte> sequence, int length, int segmentSize, IPEndPoint recipient)
-    {
-        if (sequence.IsSingleSegment)
-            return LinuxUdpOffload.TrySend(JavaChannel(), sequence.First, segmentSize, recipient);
-        byte[] staging = ArrayPool<byte>.Shared.Rent(length);
-        try
-        {
-            sequence.CopyTo(staging);
-            return LinuxUdpOffload.TrySend(JavaChannel(), staging.AsMemory(0, length), segmentSize, recipient);
-        }
-        finally { ArrayPool<byte>.Shared.Return(staging); }
     }
 
     // CLR: javaChannel().send(ByteBuffer, SocketAddress)/write(ByteBuffer) as non-blocking SendTo/Send; WouldBlock
@@ -527,36 +474,19 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             Memory<byte> nioData = data.AsMemory(data.WriterIndex, data.WritableBytes);
             IPEndPoint any = ch.AddressFamily == AddressFamily.InterNetworkV6
                 ? new IPEndPoint(IPAddress.IPv6Any, 0) : new IPEndPoint(IPAddress.Any, 0);
-            LinuxUdpOffload.ReadResult? received = _udpGro || _udpSlotSize != 0 || _receiveOriginalDestination
-                ? LinuxUdpOffload.TryReceive(ch, nioData, any, _udpSlotSize) : Receive(nioData, any);
-            if (received is not { } result)
+            SocketReceiveFromResult result;
+            try
+            {
+                result = ReceiveDatagram(nioData, any);
+            }
+            catch (SocketException error) when (error.SocketErrorCode == SocketError.WouldBlock)
             {
                 return 0;
             }
 
-            allocHandle.LastBytesRead(result.BytesRead);
-            var localAddress = (IPEndPoint)LocalAddress;
-            int start = data.WriterIndex;
-            if (result.Batch is { } packets)
-            {
-                // CLR: one recvmmsg/GRO receive can carry several datagrams; each one is its own DatagramPacket
-                // slice retained from the received aggregate.
-                var last = packets[^1];
-                data.WriterIndex = start + last.Offset + last.Length;
-                int before = buf.Count;
-                foreach (var packet in packets)
-                    AddDatagramSlices(data, start, packet, localAddress, buf);
-                return buf.Count - before;
-            }
-            var single = result.Single;
-            data.WriterIndex += single.Length;
-            if (single.SegmentSize > 0 && single.SegmentSize < single.Length)
-            {
-                int before = buf.Count;
-                AddDatagramSlices(data, start, single, localAddress, buf);
-                return buf.Count - before;
-            }
-            buf.Add(new DatagramPacket(data, single.Recipient ?? localAddress, (IPEndPoint)Normalize(single.Sender)));
+            allocHandle.LastBytesRead(result.ReceivedBytes);
+            data.WriterIndex += result.ReceivedBytes;
+            buf.Add(new DatagramPacket(data, (IPEndPoint)LocalAddress, (IPEndPoint)Normalize(result.RemoteEndPoint)));
             free = false;
             return 1;
         }
@@ -567,21 +497,6 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 data.Release();
             }
         }
-    }
-
-    // CLR: DatagramChannel.receive(ByteBuffer) as a non-blocking ReceiveFrom; WouldBlock returns null.
-    private LinuxUdpOffload.ReadResult? Receive(Memory<byte> memory, EndPoint remote)
-    {
-        SocketReceiveFromResult result;
-        try
-        {
-            result = ReceiveDatagram(memory, remote);
-        }
-        catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock)
-        {
-            return null;
-        }
-        return new LinuxUdpOffload.ReadResult(new(result.ReceivedBytes, result.RemoteEndPoint, 0), BytesRead: result.ReceivedBytes);
     }
 
     protected virtual SocketReceiveFromResult ReceiveDatagram(Memory<byte> memory, EndPoint remote)
@@ -603,22 +518,6 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         }
         int length = JavaChannel().ReceiveFrom(memory.Span, SocketFlags.None, ref remote);
         return new SocketReceiveFromResult { ReceivedBytes = length, RemoteEndPoint = remote };
-    }
-
-    private static void AddDatagramSlices(ByteBuf data, int start, LinuxUdpOffload.Received packet, IPEndPoint recipient,
-        List<object> buf)
-    {
-        var sender = (IPEndPoint)Normalize(packet.Sender);
-        recipient = packet.Recipient ?? recipient;
-        int segmentSize = packet.SegmentSize > 0 ? packet.SegmentSize : packet.Length;
-        int offset = 0;
-        // Retain the payload of each delivered datagram independently of the aggregate.
-        do
-        {
-            int count = Math.Min(segmentSize, packet.Length - offset);
-            buf.Add(new DatagramPacket(data.RetainedSlice(start + packet.Offset + offset, count), recipient, sender));
-            offset += count;
-        } while (offset < packet.Length);
     }
 
     protected override bool ContinueReading(IRecvByteBufAllocator.IHandle allocHandle)

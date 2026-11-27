@@ -147,7 +147,7 @@ public class PoolThreadCacheTest
     }
 
     [Fact]
-    public void NativePinHoldsPhysicalStorageWhileCachedHandleCanBeReused()
+    public void RuntimePinDoesNotOwnACachedAllocation()
     {
         var native = new NativeMemoryAllocator(); using var a = NewAllocator(native: native, alignment: 64);
         var b = Allocate(a, true, 48); var original = PooledStorage(b).Allocation;
@@ -157,7 +157,7 @@ public class PoolThreadCacheTest
             var next = Allocate(a, true, 48);
             Assert.Same(original.Storage, PooledStorage(next).Allocation.Storage); Assert.Equal(original.Handle, PooledStorage(next).Allocation.Handle);
             next.Release(); a.Dispose();
-            Assert.Equal(0, a.Metric.UsedDirectMemory); Assert.True(native.ReservedBytes > 0);
+            Assert.Equal(0, a.Metric.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
         }
         Assert.Equal(0, native.ReservedBytes);
     }

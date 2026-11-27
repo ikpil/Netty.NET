@@ -25,9 +25,8 @@ namespace Netty.NET.Buffer;
  * {@link UnpooledByteBufAllocator#directBuffer(int, int)}, {@link Unpooled#directBuffer(int)} and
  * {@link Unpooled#wrappedBuffer(ByteBuffer)} instead of calling the constructor explicitly.
  */
-/// <summary>A reference-counted buffer with owned or borrowed native storage.</summary>
-/// <remarks>Memory views are borrowed. Pins preserve physical storage across final
-/// release; they do not keep the buffer's logical reference count above zero.</remarks>
+/// <summary>A reference-counted direct buffer with owned or borrowed managed storage.</summary>
+/// <remarks>Memory views are borrowed. Keep the buffer retained while using its memory.</remarks>
 // CLR: NativeMemoryAllocator supplies the native reservation domain, while
 // IByteBufAllocator controls buffer creation, copies and growth policy.
 // UnpooledUnsafeDirectByteBuf uses this same bounded storage kernel; native
@@ -36,7 +35,6 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly NativeMemoryAllocator _allocator;
     private NativeMemoryOwner _owner;
-    private IDisposable _externalOwner;
     private Memory<byte> _memory;
     private int _capacity;
     private readonly IByteBufAllocator _bufferAllocator;
@@ -114,25 +112,11 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         SetIndex(0, _capacity);
     }
 
-    // CLR: raw-address wrapping has a separately disposable memory facade. Its
-    // SafeHandle controls optional external ownership and outstanding pin leases.
-    internal UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, NativeAddressMemoryManager manager,
-        NativeMemoryAllocator nativeAllocator = null) : base(manager.Length)
-    {
-        ArgumentNullException.ThrowIfNull(bufferAllocator);
-        _bufferAllocator = bufferAllocator;
-        _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
-        _memory = manager.Memory;
-        _externalOwner = manager;
-        _capacity = manager.Length;
-        SetIndex(0, _capacity);
-    }
-
     protected override Memory<byte> GetMemoryCore(int index, int length) => _memory.Slice(index, length);
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
-        return new BufferMemoryLease(_memory.Pin());
+        return BufferMemoryLease.ForBorrowedMemory(_memory);
     }
     public override bool IsContiguous => true;
     public override bool IsDirect => true;
@@ -156,8 +140,6 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             _capacity = value;
             TrimIndicesToCapacity(value);
             previous?.Dispose();
-            _externalOwner?.Dispose();
-            _externalOwner = null;
             _metric?.AddDirect((long)value - previousCapacity);
         }
     }
@@ -175,14 +157,12 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
      * Free a direct {@link ByteBuffer}
      * @deprecated Use {@link #allocateDirectBuffer(int)} instead.
      */
-    // CLR: dispose owned allocations and address facades; external memory stays borrowed.
+    // CLR: dispose owned storage. Borrowed memory remains caller-owned.
     protected override void Deallocate()
     {
         _memory = default;
         _owner?.Dispose();
         _owner = null;
-        _externalOwner?.Dispose();
-        _externalOwner = null;
         _metric?.AddDirect(-_capacity);
     }
 }

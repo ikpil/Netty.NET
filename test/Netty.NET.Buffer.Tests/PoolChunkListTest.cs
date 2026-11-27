@@ -200,28 +200,28 @@ public class PoolChunkListTest
     }
 
     [Fact]
-    public unsafe void NativePinDelaysPhysicalFreeOfRetiredChunkWithoutReusingIt()
+    public void RetiredChunkReleasesItsReservationWithoutReusingItsManagedArray()
     {
         using var a = NewAllocator(true);
-        var b = (PooledByteBuf)a.Buffer(131072).WriteByte(42);
-        var storage = b.Allocation.Storage;
-        Memory<byte> memory = b.AsMemory(0, 1);
-        using (var pin = memory.Pin())
+        var buffer = (PooledByteBuf)a.Buffer(131072).WriteByte(42);
+        var storage = buffer.Allocation.Storage;
+        Memory<byte> memory = buffer.AsMemory(0, 1);
+        ReadOnlySpan<byte> captured = memory.Span;
+        using var pin = memory.Pin();
+
+        buffer.Release();
+        Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
+        Assert.Equal(0, a.Native.ReservedBytes);
+        Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
+
+        var fresh = (PooledByteBuf)a.Buffer(131072);
+        try
         {
-            b.Release();
-            Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
+            Assert.NotSame(storage, fresh.Allocation.Storage);
             Assert.Equal(131072, a.Native.ReservedBytes);
-            Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
-            var fresh = (PooledByteBuf)a.Buffer(131072);
-            try
-            {
-                Assert.NotSame(storage, fresh.Allocation.Storage);
-                Assert.Equal(262144, a.Native.ReservedBytes);
-                Assert.Equal(42, *(byte*)pin.Pointer);
-            }
-            finally { fresh.Release(); }
-            Assert.Equal(131072, a.Native.ReservedBytes);
+            Assert.Equal(42, captured[0]);
         }
+        finally { fresh.Release(); }
         Assert.Equal(0, a.Native.ReservedBytes);
     }
 

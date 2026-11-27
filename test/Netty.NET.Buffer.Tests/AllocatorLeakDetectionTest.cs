@@ -234,18 +234,18 @@ public class AllocatorLeakDetectionTest : IDisposable
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void NativePinPreservesStorageAfterLogicalTrackingCloses(bool pooled)
+    public void OperationLeasePreservesStorageAfterLogicalTrackingCloses(bool pooled)
     {
         var native = new NativeMemoryAllocator(); var allocator = Allocator(pooled ? 1 : 0, true, native);
         ByteBuf b = allocator.DirectBuffer(8, 8).WriteLong(42); var tracker = Tracker(b); var referent = b.Unwrap();
-        var pin = b.AsMemory(0, 8).Pin();
+        var lease = b.AcquireReadLease();
         try
         {
             Assert.True(b.Release()); Assert.False(tracker.Close(referent));
             (allocator as IDisposable)?.Dispose(); Assert.True(native.ReservedBytes > 0);
             if (allocator is UnpooledByteBufAllocator unpooled) Assert.Equal(0, unpooled.Metric.UsedDirectMemory);
         }
-        finally { if (b.RefCnt > 0) b.Release(); (allocator as IDisposable)?.Dispose(); pin.Dispose(); }
+        finally { if (b.RefCnt > 0) b.Release(); (allocator as IDisposable)?.Dispose(); lease.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

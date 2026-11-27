@@ -70,7 +70,7 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
-        return new BufferMemoryLease(_memory.Pin());
+        return BufferMemoryLease.ForBorrowedMemory(_memory);
     }
 
     public override ByteBuf Copy(int index, int length)

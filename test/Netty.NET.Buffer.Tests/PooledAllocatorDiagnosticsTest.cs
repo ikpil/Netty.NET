@@ -152,17 +152,17 @@ public class PooledAllocatorDiagnosticsTest
     }
 
     [Fact]
-    public unsafe void DisposedAllocatorReportsRetiredListsWhileLiveStorageAndPinsRemainValid()
+    public void DisposedAllocatorReportsRetiredListsWhileLiveStorageAndPinsRemainValid()
     {
         var native = new NativeMemoryAllocator();
         using var allocator = new PooledByteBufAllocator(nativeAllocator: native, pageSize: 4096, maxOrder: 2);
         ByteBuf b = allocator.DirectBuffer(16, 16).WriteByte(77);
-        MemoryHandle pin = b.AsMemory(0, 1).Pin();
+        ReadOnlySpan<byte> captured = b.AsReadOnlySpan(0, 1); var pin = b.AsMemory(0, 1).Pin();
         allocator.Dispose();
         Assert.DoesNotMatch(@"Chunk\([0-9a-f]+:", allocator.DumpStats());
         Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
         Assert.Equal(77, b.GetByte(0)); b.Release();
-        Assert.Equal(77, *((byte*)pin.Pointer)); Assert.True(native.ReservedBytes > 0);
+        Assert.Equal(77, captured[0]); Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
         pin.Dispose(); Assert.Equal(0, native.ReservedBytes);
     }

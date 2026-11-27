@@ -38,14 +38,9 @@ public class WrappedUnpooledUnsafeByteBufTest : AbstractSingleRegionByteBufTest
         // Assumptions.assumeTrue(maxCapacity == Integer.MAX_VALUE) is an assertion here.
         Assert.Equal(int.MaxValue, maxCapacity);
 
-        // CLR: NativeMemory.Alloc replaces PlatformDependent.allocateMemory and Unpooled.WrappedBuffer(nint, int,
-        // doFree: true) replaces new WrappedUnpooledUnsafeDirectByteBuf(UnpooledByteBufAllocator.DEFAULT, ...);
-        // the buffer frees the allocation with NativeMemory.Free on its final release
-        // (https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.nativememory.alloc?view=net-10.0).
-        return Unpooled.WrappedBuffer(AllocateMemory(length), length, true);
+        // CLR: a bounded direct buffer supplies the fully readable range.
+        return Unpooled.DirectBuffer(length, length).SetIndex(0, length);
     }
-
-    private static unsafe nint AllocateMemory(int length) => (nint)NativeMemory.Alloc((nuint)length);
 
     [Fact]
     public void TestIsContiguous()

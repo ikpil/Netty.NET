@@ -36,7 +36,7 @@ public class PooledAllocatorConstructionTest
 
     [Theory]
     [MemberData(nameof(ConstructionOptions))]
-    public unsafe void NamedConstructorOptionsReachArenaGeometryFactorySelectionAndPhysicalAlignment(
+    public void NamedConstructorOptionsReachArenaGeometryFactorySelectionAndPhysicalAlignment(
         bool preferDirect, int alignment, int heap, int direct, bool convenience)
     {
         var native = new NativeMemoryAllocator();
@@ -69,8 +69,7 @@ public class PooledAllocatorConstructionTest
             }
             if (direct != 0 && alignment != 0)
             {
-                using var pin = d.AsMemory(0, 17).Pin();
-                Assert.Equal(0UL, (ulong)pin.Pointer % (uint)alignment);
+                Assert.Equal(0UL, (ulong)ManagedMemoryTest.Address(d.AsMemory(0, 17)) % (uint)alignment);
             }
             Assert.Equal(heap + direct == 0 ? 0 : 1, allocator.Metric.NumThreadLocalCaches);
         }

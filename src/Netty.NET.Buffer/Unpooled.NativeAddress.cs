@@ -24,26 +24,9 @@ public static partial class Unpooled
      * Creates a new buffer which wraps the specified memory address. If {@code doFree} is true the
      * memoryAddress will automatically be freed once the reference count of the {@link ByteBuf} reaches {@code 0}.
      */
-    /// <remarks>The range is not copied and initially fully readable. When doFree is true,
-    /// the pointer must be the base of an allocation compatible with NativeMemory.Free;
-    /// ownership transfers only when this method succeeds. Otherwise the caller owns the
-    /// allocation and must keep it valid throughout buffer access and outstanding pins.
-    /// A capacity change detaches to owned native storage. Final release or detachment
-    /// invalidates new access to the old Memory; outstanding pins delay its owned free.
-    /// External storage does not charge Netty's native reservation or allocator metrics.</remarks>
-    public static ByteBuf WrappedBuffer(nint memoryAddress, int size, bool doFree)
-    {
-        var manager = new NativeAddressMemoryManager(memoryAddress, size);
-        try
-        {
-            var buffer = new UnpooledDirectByteBuf(UnpooledByteBufAllocator.Default, manager);
-            manager.TakeOwnership(doFree);
-            return buffer;
-        }
-        catch
-        {
-            ((IDisposable)manager).Dispose();
-            throw;
-        }
-    }
+    /// <remarks>Use the overload that accepts bounded Memory&lt;byte&gt;. This overload
+    /// always throws before accessing the address or taking ownership.</remarks>
+    [Obsolete("Wrapping raw addresses is unsupported. Use WrappedBuffer(Memory<byte>).")]
+    public static ByteBuf WrappedBuffer(nint memoryAddress, int size, bool doFree) =>
+        throw new PlatformNotSupportedException("Raw address buffers are unavailable on the managed allocator.");
 }

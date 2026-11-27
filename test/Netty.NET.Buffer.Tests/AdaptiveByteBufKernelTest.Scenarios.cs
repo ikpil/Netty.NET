@@ -74,21 +74,21 @@ public partial class AdaptiveByteBufKernelTest
     }
     [Theory]
     [MemberData(nameof(Profiles))]
-    public unsafe void PhysicalBorrowsStillInvalidateOnReturnWhilePinsKeepTheirRegion(bool direct, int profile)
+    public void PhysicalBorrowsStillInvalidateOnReturnWhileLeasesKeepTheirRegion(bool direct, int profile)
     {
         using var s = new Storage(direct, profile); ByteBuf b = s.Buffer;
         Assert.False(b.IsContiguous);
         Memory<byte> memory = b.AsMemory(3, 4); var sequence = b.AsReadOnlySequence(3, 4); byte first = memory.Span[0];
-        var pin = memory.Pin(); var copied = pin;
+        using var lease = b.AcquireReadLease(); ReadOnlySpan<byte> bytes = memory.Span;
         try
         {
             b.Release(); s.Guard.Release(); s.Allocator.Dispose();
             Assert.Throws<ObjectDisposedException>(() => memory.Span.Clear());
             Assert.Throws<ObjectDisposedException>(() => sequence.FirstSpan.ToArray());
-            Assert.Equal(first, Marshal.ReadByte((IntPtr)pin.Pointer));
+            Assert.Equal(first, bytes[0]);
             Assert.Throws<IllegalReferenceCountException>(() => b.GetBytes(0, new byte[1].AsSpan()));
         }
-        finally { pin.Dispose(); copied.Dispose(); }
+        finally { lease.Dispose(); }
         Assert.Equal(0, s.Allocator.UsedHeapMemory + s.Allocator.UsedDirectMemory);
         Assert.Equal(0, s.Allocator.Native.ReservedBytes);
     }

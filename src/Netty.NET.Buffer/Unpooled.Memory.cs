@@ -64,7 +64,7 @@ public static partial class Unpooled
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();
-            return new BufferMemoryLease(_memory.Pin());
+            return BufferMemoryLease.ForBorrowedMemory(_memory);
         }
         protected override void Deallocate() => _memory = default;
     }

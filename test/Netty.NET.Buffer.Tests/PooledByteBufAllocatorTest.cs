@@ -1383,15 +1383,16 @@ public class PooledByteBufAllocatorClrContractTest
     }
 
     [Fact]
-    public unsafe void RawNativePinIsPhysicalMemoryRatherThanLogicalPinnedMetric()
+    public void RuntimePinDoesNotRetainTheAllocatorReservation()
     {
         var native = new NativeMemoryAllocator();
         using var a = NewAllocator(true, native: native);
         ByteBuf b = a.DirectBuffer(131072).WriteInt(42);
+        ReadOnlySpan<byte> captured = b.AsReadOnlySpan(0, 4);
         using (var pin = b.AsMemory(0, 4).Pin())
         {
             b.Release(); Assert.Equal(0, a.PinnedDirectMemory); Assert.Equal(0, a.Metric.UsedDirectMemory);
-            Assert.Equal(131072, native.ReservedBytes); Assert.Equal(42, ((byte*)pin.Pointer)[3]);
+            Assert.Equal(0, native.ReservedBytes); Assert.Equal(42, captured[3]);
         }
         Assert.Equal(0, native.ReservedBytes);
     }

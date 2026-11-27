@@ -451,7 +451,6 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         FileStream input = null;
         MemoryMappedFile map = null;
         MemoryMappedViewAccessor view = null;
-        MappedMemory mapped = null;
         ByteBuf b1 = null;
         ByteBuf b2 = null;
 
@@ -461,18 +460,16 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
             byte[] bytes = new byte[1024];
             Random.Shared.NextBytes(bytes);
             output.Write(bytes);
-            // CLR: FileStream buffers what FileChannel.write has already issued to the file.
+            // CLR: flush the FileStream before reading through the mapping.
             output.Flush();
-
             input = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            // CLR: FileChannel.map(READ_ONLY, 0, size) becomes a read-only MemoryMappedFile view
-            // (https://learn.microsoft.com/en-us/dotnet/api/system.io.memorymappedfiles.memorymappedfile.createviewaccessor?view=net-10.0)
-            // exposed as ReadOnlyMemory<byte> through a test MemoryManager over the mapped pointer.
+            // CLR: read the mapping into bounded managed memory.
             map = MemoryMappedFile.CreateFromFile(input, null, 0, MemoryMappedFileAccess.Read,
                 HandleInheritability.None, true);
             view = map.CreateViewAccessor(0, input.Length, MemoryMappedFileAccess.Read);
-            mapped = new MappedMemory(view, checked((int)input.Length));
-            ReadOnlyMemory<byte> m = mapped.Memory;
+            byte[] mappedBytes = new byte[checked((int)input.Length)];
+            Assert.Equal(mappedBytes.Length, view.ReadArray(0, mappedBytes, 0, mappedBytes.Length));
+            ReadOnlyMemory<byte> m = mappedBytes;
 
             b1 = Buffer(m);
 
@@ -500,7 +497,6 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
             }
             // CLR: the mapping is released explicitly before the input channel closes; the JVM
             // unmaps a MappedByteBuffer only when it is garbage collected.
-            ((IDisposable)mapped)?.Dispose();
             view?.Dispose();
             map?.Dispose();
             if (input != null)
@@ -985,43 +981,6 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         return Buffer(nioBuffer[..bytes.Length]);
     }
 
-    // CLR: test-only MemoryManager over a mapped view; SafeBuffer.AcquirePointer exposes the view address
-    // and must be paired with ReleasePointer
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.safebuffer.acquirepointer?view=net-10.0),
-    // and PointerOffset locates the view start
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.io.memorymappedfiles.memorymappedviewaccessor.pointeroffset?view=net-10.0).
-    private sealed unsafe class MappedMemory : MemoryManager<byte>
-    {
-        private readonly MemoryMappedViewAccessor _view;
-        private readonly int _length;
-        private byte* _base;
-
-        internal MappedMemory(MemoryMappedViewAccessor view, int length)
-        {
-            _view = view;
-            _length = length;
-            view.SafeMemoryMappedViewHandle.AcquirePointer(ref _base);
-        }
-
-        private byte* Start => _base + _view.PointerOffset;
-
-        public override Span<byte> GetSpan() => new(Start, _length);
-
-        public override MemoryHandle Pin(int elementIndex = 0) => new(Start + elementIndex);
-
-        public override void Unpin()
-        {
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (_base != null)
-            {
-                _view.SafeMemoryMappedViewHandle.ReleasePointer();
-                _base = null;
-            }
-        }
-    }
 }
 
 public abstract partial class AbstractByteBufTest

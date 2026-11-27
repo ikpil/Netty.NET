@@ -91,28 +91,24 @@ internal sealed class LinuxTcpMd5Keys
         return new IPAddress(peer.GetAddressBytes());
     }
 
-    private unsafe void Apply(IPAddress peer, ReadOnlySpan<byte> key)
+    private void Apply(IPAddress peer, ReadOnlySpan<byte> key)
     {
-        Span<byte> value = stackalloc byte[KeyOffset + MaxKeyLength];
-        value.Clear();
+        byte[] value = new byte[KeyOffset + MaxKeyLength];
         var address = new IPEndPoint(peer, 0).Serialize();
         address.Buffer.Span[..address.Size].CopyTo(value);
-        BitConverter.TryWriteBytes(value[KeyLengthOffset..], (ushort)key.Length);
-        key.CopyTo(value[KeyOffset..]);
+        BitConverter.TryWriteBytes(value.AsSpan(KeyLengthOffset), (ushort)key.Length);
+        key.CopyTo(value.AsSpan(KeyOffset));
         try
         {
-            fixed (byte* bytes = value)
-            {
-                if (SetSocketOption(_socket.SafeHandle, (int)SocketOptionLevel.Tcp, TcpMd5Sig, bytes, (uint)value.Length) == 0)
-                    return;
-                if (key.IsEmpty && Marshal.GetLastPInvokeError() == NoSuchEntry)
-                    return;
-                throw new SocketException();
-            }
+            if (SetSocketOption(_socket.SafeHandle, (int)SocketOptionLevel.Tcp, TcpMd5Sig, value, (uint)value.Length) == 0)
+                return;
+            if (key.IsEmpty && Marshal.GetLastPInvokeError() == NoSuchEntry)
+                return;
+            throw new SocketException();
         }
         finally { CryptographicOperations.ZeroMemory(value); }
     }
 
     [DllImport("libc", EntryPoint = "setsockopt", SetLastError = true)]
-    private static extern unsafe int SetSocketOption(SafeSocketHandle socket, int level, int name, byte* value, uint length);
+    private static extern int SetSocketOption(SafeSocketHandle socket, int level, int name, [In] byte[] value, uint length);
 }

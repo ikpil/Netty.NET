@@ -58,43 +58,33 @@ public class SegmentedDatagramContractTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task BoundChannelSendsOneKernelAggregateWithoutChangingTheFollowingWrite(bool ipv6)
+    public async Task SegmentsAndTheFollowingDatagramArriveInOrder(bool ipv6)
     {
+        if (ipv6) Assert.SkipUnless(Socket.OSSupportsIPv6, "IPv6 unavailable.");
         var family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
-        SegmentedDatagramSourceTest.RequireGro(family);
         var token = TestContext.Current.CancellationToken;
         using var receiver = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
         var local = new IPEndPoint(ipv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, 0);
         receiver.Bind(local);
-        LinuxUdpOffload.SetGro(receiver, true);
 
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
             var sender = await NewSender(group, family).BindAsync(local, token);
             var target = (IPEndPoint)receiver.LocalEndPoint;
-            byte[] expected = new byte[1025];
-            Random.Shared.NextBytes(expected);
-            await sender.WriteAndFlushAsync(new SegmentedDatagramPacket(Unpooled.WrappedBuffer(expected), 512, target), token);
+            byte[] payload = new byte[1025];
+            new Random(1).NextBytes(payload);
+            await sender.WriteAndFlushAsync(new SegmentedDatagramPacket(Unpooled.WrappedBuffer(payload), 512, target), token);
             await sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer().WriteByte(33), target), token);
 
-            byte[] actual = new byte[4096];
-            LinuxUdpOffload.ReadResult? received;
-            var deadline = DateTime.UtcNow.AddSeconds(3);
-            while ((received = LinuxUdpOffload.TryReceive(receiver, actual, local, 2048)) == null && DateTime.UtcNow < deadline)
-                receiver.Poll(100_000, SelectMode.SelectRead);
-            var result = received ?? throw new TimeoutException("No segmented datagram arrived.");
-            Assert.Equal(2, result.Batch.Length);
-            var aggregate = result.Batch[0];
-            Assert.Equal(512, aggregate.SegmentSize);
-            Assert.Equal(sender.LocalAddress, aggregate.Sender);
-            Assert.Equal(expected, actual[..aggregate.Length]);
-
-            var ordinary = result.Batch[1];
-            Assert.Equal(0, ordinary.SegmentSize);
-            Assert.Equal(1, ordinary.Length);
-            Assert.Equal(2048, ordinary.Offset);
-            Assert.Equal(33, actual[ordinary.Offset]);
+            byte[] actual = new byte[1025];
+            foreach (byte[] expected in new byte[][] { payload[..512], payload[512..1024], payload[1024..], [33] })
+            {
+                var received = await receiver.ReceiveFromAsync(actual.AsMemory(), SocketFlags.None, local, token)
+                    .AsTask().WaitAsync(TimeSpan.FromSeconds(3), token);
+                Assert.Equal(sender.LocalAddress, received.RemoteEndPoint);
+                Assert.Equal(expected, actual[..received.ReceivedBytes]);
+            }
         }
         finally { await group.StopAsync(); }
     }

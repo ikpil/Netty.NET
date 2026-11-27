@@ -141,15 +141,14 @@ public class WritableMemoryByteBufTest
     }
 
     [Fact]
-    public unsafe void OriginalDirectSliceAddressMapsToPinAtSelectedOffset()
+    public void OriginalDirectSliceAddressMapsToPinAtSelectedOffset()
     {
         var native = new NativeMemoryAllocator(16); using NativeMemoryOwner owner = native.Allocate(16);
         ByteBuf b = Unpooled.WrappedBuffer(owner.Memory.Slice(4, 8));
         try
         {
-            using MemoryHandle original = owner.Memory.Pin(); using MemoryHandle selected = b.AsMemory(0, 8).Pin();
-            Assert.True((byte*)original.Pointer + 4 == selected.Pointer);
-            b.SetByte(0, 42); Assert.Equal(42, *((byte*)original.Pointer + 4));
+            Assert.Equal(ManagedMemoryTest.Address(owner.Memory) + 4, ManagedMemoryTest.Address(b.AsMemory(0, 8)));
+            b.SetByte(0, 42); Assert.Equal(42, owner.Memory.Span[4]);
         }
         finally { b.Release(); }
         Assert.Equal(16, native.ReservedBytes);
@@ -235,20 +234,20 @@ public class WritableMemoryByteBufTest
     }
 
     [Fact]
-    public unsafe void PinsPreserveBorrowedAndReplacementStorageAcrossRelease()
+    public void CapturedSpansPreserveBorrowedAndReplacementStorageAcrossRelease()
     {
         var external = new NativeMemoryAllocator(8); NativeMemoryOwner owner = external.Allocate(8);
         owner.Memory.Span.Fill(7); var native = new NativeMemoryAllocator(32);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
-        MemoryHandle original = b.AsMemory(0, 8).Pin(); MemoryHandle replacement = default;
+        ReadOnlySpan<byte> original = b.AsReadOnlySpan(0, 8), replacement = default;
         try
         {
-            b.Capacity = 12; replacement = b.AsMemory(0, 12).Pin(); b.SetByte(0, 99);
-            Assert.Equal(7, *(byte*)original.Pointer); Assert.Equal(99, *(byte*)replacement.Pointer);
-            b.Release(); owner.Dispose(); Assert.Equal(8, external.ReservedBytes); Assert.Equal(12, native.ReservedBytes);
-            Assert.Equal(7, *(byte*)original.Pointer); Assert.Equal(99, *(byte*)replacement.Pointer);
+            b.Capacity = 12; replacement = b.AsReadOnlySpan(0, 12); b.SetByte(0, 99);
+            Assert.Equal(7, original[0]); Assert.Equal(99, replacement[0]);
+            b.Release(); owner.Dispose(); Assert.Equal(0, external.ReservedBytes); Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(7, original[0]); Assert.Equal(99, replacement[0]);
         }
-        finally { if (b.RefCnt > 0) b.Release(); owner.Dispose(); original.Dispose(); replacement.Dispose(); }
+        finally { if (b.RefCnt > 0) b.Release(); owner.Dispose(); }
         Assert.Equal(0, external.ReservedBytes); Assert.Equal(0, native.ReservedBytes);
     }
 

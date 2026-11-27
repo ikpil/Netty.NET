@@ -124,17 +124,17 @@ public class ConsolidationTest
     }
 
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
-    public unsafe void OutstandingPinKeepsOnlyPhysicalStorageAliveAfterConsolidation(int kind)
+    public void CapturedSpanKeepsBytesAfterConsolidation(int kind)
     {
         using var graph = new Graph(kind, 5); CompositeByteBuf current = graph.Current;
         ByteBuf leaf = graph.Leaves.FirstOrDefault(value => value.IsDirect) ?? graph.Leaves[0];
-        bool direct = leaf.IsDirect; byte original = leaf.GetByte(0);
+        byte original = leaf.GetByte(0); ReadOnlySpan<byte> captured = leaf.AsReadOnlySpan(0, 1);
         using (var pin = leaf.AsReadOnlyMemory(0, 1).Pin())
         {
             current.Consolidate(); Assert.All(graph.Leaves, value => Assert.Equal(0, value.RefCnt));
-            Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII)); Assert.Equal(original, *(byte*)pin.Pointer);
-            current.Release(); Assert.Equal(original, *(byte*)pin.Pointer);
-            if (direct) Assert.True(graph.Native.ReservedBytes > 0); else Assert.Equal(0, graph.Native.ReservedBytes);
+            Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII)); Assert.Equal(original, captured[0]);
+            current.Release(); Assert.Equal(original, captured[0]);
+            Assert.Equal(0, graph.Native.ReservedBytes);
         }
         Assert.Equal(0, graph.Native.ReservedBytes);
     }

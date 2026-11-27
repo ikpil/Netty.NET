@@ -114,19 +114,19 @@ public class DirectByteBufTest : HeapByteBufTest
     }
 
     [Fact]
-    public unsafe void PinKeepsPhysicalAllocationAfterLogicalFinalRelease()
+    public void ManagedSpanRemainsValidAfterLogicalFinalRelease()
     {
         var allocator = new NativeMemoryAllocator(16);
         ByteBuf buffer = new UnpooledDirectByteBuf(8, 8, allocator);
         buffer.SetLong(0, 0x0102030405060708);
         Memory<byte> borrowed = buffer.AsMemory(2, 4);
-        MemoryHandle pin = borrowed.Pin();
+        ReadOnlySpan<byte> captured = borrowed.Span; var pin = borrowed.Pin();
         try
         {
             Assert.True(buffer.Release());
             Assert.Equal(0, buffer.RefCnt);
-            Assert.Equal(8, allocator.ReservedBytes);
-            Assert.Equal(3, *(byte*)pin.Pointer);
+            Assert.Equal(0, allocator.ReservedBytes);
+            Assert.Equal(3, captured[0]);
             Assert.Throws<IllegalReferenceCountException>(() => buffer.GetByte(2));
             Assert.Throws<ObjectDisposedException>(() => borrowed.ToArray());
         }
@@ -135,18 +135,19 @@ public class DirectByteBufTest : HeapByteBufTest
     }
 
     [Fact]
-    public unsafe void PinDescribesItsOriginalAllocationAfterCapacityReplacement()
+    public void ManagedSpanRemainsOnItsOriginalStorageAfterCapacityReplacement()
     {
         var allocator = new NativeMemoryAllocator(64);
         ByteBuf buffer = new UnpooledDirectByteBuf(4, 16, allocator);
         buffer.WriteBytes(new byte[] { 1, 2, 3, 4 });
-        MemoryHandle pin = buffer.AsMemory(0, 4).Pin();
+        Memory<byte> old = buffer.AsMemory(0, 4);
+        ReadOnlySpan<byte> captured = old.Span; var pin = old.Pin();
         try
         {
             buffer.Capacity = 12;
-            Assert.Equal(16, allocator.ReservedBytes);
+            Assert.Equal(12, allocator.ReservedBytes);
             buffer.SetByte(0, 9);
-            Assert.Equal(1, *(byte*)pin.Pointer);
+            Assert.Equal(1, captured[0]);
             Assert.Equal(9, buffer.GetByte(0));
         }
         finally { pin.Dispose(); }

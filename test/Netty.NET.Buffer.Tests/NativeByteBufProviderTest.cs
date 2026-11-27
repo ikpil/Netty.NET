@@ -267,7 +267,7 @@ public class NativeByteBufProviderTest
     }
     [Theory]
     [MemberData(nameof(BooleanCases))]
-    public unsafe void BoundedSpansReplaceArrayAndByteBufferRanges(int provider, bool output)
+    public void BoundedSpansReplaceArrayAndByteBufferRanges(int provider, bool output)
     {
         using var s = new Storage(provider);
         byte[] root = Filled(s.Initial, 0xcc), other = Filled(32, 0x42);
@@ -280,8 +280,7 @@ public class NativeByteBufProviderTest
         Memory<byte> memory = s.Target.AsMemory(index, 17);
         Assert.False(MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)memory, out _));
         Assert.True(NativeMemoryOwner.TryGetOwner(memory, out _));
-        using MemoryHandle pin = memory.Pin();
-        Assert.Equal(root.Skip(index).Take(17), new ReadOnlySpan<byte>(pin.Pointer, 17).ToArray());
+        Assert.Equal(root.Skip(index).Take(17), memory.ToArray());
         IndicesAndMarks(s.Target); s.Neighbors();
     }
     private sealed class Input(int mode) : MemoryStream(new byte[] { 1, 2, 3, 4, 5 })

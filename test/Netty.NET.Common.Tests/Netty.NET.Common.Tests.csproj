@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
     <!-- Keep dotnet test on the configured VSTest adapter. -->
     <IsTestingPlatformApplication>false</IsTestingPlatformApplication>

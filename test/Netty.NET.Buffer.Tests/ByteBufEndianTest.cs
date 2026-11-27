@@ -237,7 +237,7 @@ public class ByteBufEndianTest
     {
         using var storage = new Storage(kind); ByteBuf b = storage.Buffer;
         b.WriteBytes(new byte[] { 1, 2, 3 });
-        using (b.AsReadOnlyMemory(0, 3).Pin())
+        using (b.AcquireReadLease())
         {
             b.Capacity = 256;
             b.SetLongLE(193, 0x0123456789abcdef); Assert.Equal(0x0123456789abcdef, b.GetLongLE(193));

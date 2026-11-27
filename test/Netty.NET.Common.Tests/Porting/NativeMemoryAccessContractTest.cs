@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 
@@ -18,8 +17,7 @@ public class NativeMemoryAccessContractTest
     {
         var allocator = new NativeMemoryAllocator();
         using var owner = allocator.Allocate(32, clear: true);
-        using var lifetime = owner.Memory.Pin();
-        using var view = new NativeMemoryView(Address(lifetime) + offset, 8);
+        using var view = new NativeMemoryView(owner.Memory.Slice(offset, 8));
         short shortValue = short.MinValue;
         int intValue = unchecked((int)0x80abcdef);
         long longValue = unchecked((long)0x8070605040302010);
@@ -44,7 +42,7 @@ public class NativeMemoryAccessContractTest
         Assert.Equal(new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80 }, view.Memory.ToArray());
         Assert.Equal(longValue, BinaryPrimitives.ReadInt64LittleEndian(owner.Memory.Span.Slice(offset)));
 
-        using var shortView = new NativeMemoryView(Address(lifetime) + offset, 3);
+        using var shortView = new NativeMemoryView(owner.Memory.Slice(offset, 3));
         byte[] before = owner.Memory.ToArray();
         Assert.Throws<ArgumentOutOfRangeException>(() => MemoryMarshal.Read<int>(shortView.Memory.Span));
         Assert.Throws<ArgumentOutOfRangeException>(() => MemoryMarshal.Write(shortView.Memory.Span, in intValue));
@@ -86,9 +84,8 @@ public class NativeMemoryAccessContractTest
     {
         var allocator = new NativeMemoryAllocator();
         using var owner = allocator.Allocate(32);
-        using var lifetime = owner.Memory.Pin();
-        using var source = new NativeMemoryView(Address(lifetime), 24);
-        using var destination = new NativeMemoryView(Address(lifetime) + 3, 24);
+        using var source = new NativeMemoryView(owner.Memory[..24]);
+        using var destination = new NativeMemoryView(owner.Memory.Slice(3, 24));
         byte[] expected = new byte[32];
         for (int i = 0; i < expected.Length; i++) expected[i] = (byte)i;
         expected.CopyTo(owner.Memory);
@@ -101,28 +98,20 @@ public class NativeMemoryAccessContractTest
     }
 
     [Fact]
-    public void BorrowedRegionCannotWrapTheUnsignedAddressSpaceIncludingItsEndPin()
+    public void BorrowedManagedViewsRemainBoundedAtTheEndOfTheirRange()
     {
-        // Metadata checks only: these synthetic addresses are never dereferenced.
-        nint lastAddress = unchecked((nint)nuint.MaxValue);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeMemoryView(lastAddress, 1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeMemoryView(lastAddress - 7, 8));
-        using var empty = new NativeMemoryView(lastAddress, 0);
-        using var emptyPin = empty.Memory.Pin();
-        Assert.Equal(lastAddress, Address(emptyPin));
-        using var bounded = new NativeMemoryView(lastAddress - 7, 7);
-        using var end = bounded.Memory.Slice(7, 0).Pin();
-        Assert.Equal(lastAddress, Address(end));
+        using var view = new NativeMemoryView(new byte[8].AsMemory(1, 7));
+        Assert.True(view.Memory.Slice(7, 0).IsEmpty);
+        Assert.Throws<ArgumentOutOfRangeException>(() => view.Memory.Slice(7, 1));
     }
 
     [Fact]
-    public void BorrowedAddressBitsMayCrossTheSignedPointerBoundary()
+    public void RawAddressViewsRejectTheAddressBeforeAttemptingToAccessIt()
     {
-        // Addresses are unsigned bits; crossing nint.MaxValue is not pointer wrap.
-        using var view = new NativeMemoryView(nint.MaxValue - 3, 8);
-        using var end = view.Memory.Slice(8, 0).Pin();
-        Assert.Equal(unchecked(nint.MinValue + 4), Address(end));
+#pragma warning disable CS0618 // Exercise the old API's explicit failure.
+        Assert.Throws<PlatformNotSupportedException>(() => new NativeMemoryView(nint.MaxValue - 3, 8));
+        Assert.Throws<PlatformNotSupportedException>(() => new NativeMemoryView(0, 0));
+#pragma warning restore CS0618
     }
 
-    private static unsafe nint Address(MemoryHandle handle) => unchecked((nint)handle.Pointer);
 }

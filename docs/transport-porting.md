@@ -9,9 +9,10 @@ Java sources and `module-info.yml`).
 
 ## Status (audit of 2026-11-26)
 
-Transport is ported: the manifest's top-level status is `ported`. The checker verifies that no entry is pending
-(`summary.pendingEntries`), that 523 declared original methods and 50 inherited scenarios are mapped and 37 more carry
-a CLR-inapplicable reason, and that no entry has partial comment accounting. The stages are closed.
+Transport is ported. The current manifest maps 520 declared original methods and 49 inherited scenarios.
+The managed UDP revision records three former GRO/scatter methods and the inherited original-destination scenario
+as unavailable. Segmented packets use individual socket sends. Entries and numbers in earlier validation sections
+describe the implementation at the date of each run.
 
 Windows run of `Netty.NET.Transport.Tests` (2026-11-26, Debug, TMP/TEMP outside `%LOCALAPPDATA%\Temp`): 1180 cases,
 1085 passed, 0 failed, 95 skipped (60 Linux-only options and paths, 16 SslStream renegotiation limits of

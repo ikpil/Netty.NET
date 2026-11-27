@@ -31,8 +31,8 @@
     "mainJavaSources": 0,
     "testJavaSources": 78,
     "declaredOriginalTests": 70,
-    "mappedOriginalTests": 33,
-    "clrNotApplicableTests": 0,
+    "mappedOriginalTests": 30,
+    "clrNotApplicableTests": 3,
     "notPortedTests": 37,
     "pendingEntries": 0
   },
@@ -407,8 +407,7 @@
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs"
         ]
       },
       "caseMappings": [
@@ -931,12 +930,11 @@
         "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
       ],
       "review": {
-        "scope": "The five declared segmentation methods and the inherited connected unicast scenario with IP_RECVORIGDSTADDR run with both allocators. The inherited case reuses the original wrap, count, echo, disconnect and reconnect checks. Separate wildcard tests establish that native packet metadata changes the delivered recipient.",
+        "scope": "Two original send methods cover managed segmentation and retain their segment-count and size assertions. The three kernel GRO cases and the inherited original-destination case require native ancillary data.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SegmentedDatagramPacket.cs",
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
@@ -946,7 +944,7 @@
         {
           "upstreamMethod": "testSendSegmentedDatagramPacket",
           "clrMethod": "TestSendSegmentedDatagramPacket",
-          "adaptation": "Send 16 512-byte segments from one contiguous direct buffer. Keep the original receiver segment count and size assertions.",
+          "adaptation": "Send 16 512-byte segments from one contiguous direct buffer. Keep the original receiver segment count and size assertions. The managed socket sends each segment as a separate datagram.",
           "nativeCases": [
             [
               false
@@ -959,46 +957,7 @@
         {
           "upstreamMethod": "testSendSegmentedDatagramPacketComposite",
           "clrMethod": "TestSendSegmentedDatagramPacketComposite",
-          "adaptation": "Repeat the original send with 16 direct composite components.",
-          "nativeCases": [
-            [
-              false
-            ],
-            [
-              true
-            ]
-          ]
-        },
-        {
-          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacket",
-          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacket",
-          "adaptation": "Enable real Linux UDP_GRO and retain the original fixed 8192-byte receive buffer. Verify GRO configuration and all 16 delivered segments.",
-          "nativeCases": [
-            [
-              false
-            ],
-            [
-              true
-            ]
-          ]
-        },
-        {
-          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketComposite",
-          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacketComposite",
-          "adaptation": "Repeat real Linux UDP_GRO with the source composite layout.",
-          "nativeCases": [
-            [
-              false
-            ],
-            [
-              true
-            ]
-          ]
-        },
-        {
-          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
-          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
-          "adaptation": "Enable real Linux UDP_GRO with 8192-byte slots and a 16384-byte receive buffer. Use recvmmsg and retain the original 16 delivered segment assertions.",
+          "adaptation": "Repeat the original send with 16 direct composite components. The managed socket sends each segment as a separate datagram.",
           "nativeCases": [
             [
               false
@@ -1011,9 +970,41 @@
       ],
       "methodReview": {
         "declaredCount": 5,
-        "mappedCount": 5,
+        "mappedCount": 2,
         "reviewedCount": 5,
-        "unreviewedMethods": []
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacket",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Enable real Linux UDP_GRO and retain the original fixed 8192-byte receive buffer. Verify GRO configuration and all 16 delivered segments.",
+            "reason": "The managed datagram transport does not expose Linux GRO or recvmmsg.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+              "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketComposite",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Repeat real Linux UDP_GRO with the source composite layout.",
+            "reason": "The managed datagram transport does not expose Linux GRO or recvmmsg.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+              "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Enable real Linux UDP_GRO with 8192-byte slots and a 16384-byte receive buffer. Use recvmmsg and retain the original 16 delivered segment assertions.",
+            "reason": "The managed datagram transport does not expose Linux GRO or recvmmsg.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+              "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+            ]
+          }
+        ]
       },
       "comments": {
         "status": "preserved",

@@ -172,13 +172,14 @@ public class PlatformDependentTest
     }
 
     [Fact]
-    public unsafe void TestAllocateWithCapacity0()
+    public void TestAllocateWithCapacity0()
     {
         var allocator = new NativeMemoryAllocator();
         using (var buffer = allocator.Allocate(0))
         {
             using var pin = buffer.Memory.Pin();
-            Assert.NotEqual(0, (nint)pin.Pointer);
+            Assert.True(NativeMemoryOwner.TryGetAddress(buffer.Memory, out nint address));
+            Assert.NotEqual(0, address);
             Assert.Equal(0, buffer.Memory.Length);
         }
         Assert.Equal(0, allocator.ReservedBytes);

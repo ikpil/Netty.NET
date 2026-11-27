@@ -268,15 +268,12 @@ public class FixedCompositeByteBufOriginalTest
     public void TestHasMemoryAddressWithSingleBuffer(int written) => SingleInputCapabilities(true, written);
 
     [Fact]
-    public unsafe void TestHasMemoryAddressWhenEmpty()
+    public void TestHasMemoryAddressWhenEmpty()
     {
         // CLR has no permanent raw zero-length address capability or JVM assumption gate: a scoped pin of the
         // empty range has the same (null) address as the empty buffer's.
         using var s = new Storage(); ByteBuf buf = s.Fixed();
-        using var pin = buf.AsReadOnlyMemory(0, 0).Pin();
-        using var emptyPin = Unpooled.EmptyBuffer.AsReadOnlyMemory(0, 0).Pin();
-        Assert.Equal((nint)emptyPin.Pointer, (nint)pin.Pointer);
-        Assert.Equal(nint.Zero, (nint)pin.Pointer);
+        Assert.Equal(Unpooled.EmptyBuffer.AsReadOnlyMemory(0, 0), buf.AsReadOnlyMemory(0, 0));
     }
 
     [Theory]
@@ -302,12 +299,12 @@ public class FixedCompositeByteBufOriginalTest
 
     // CLR: the original single-buffer capability tests use an unwritten 10-byte buffer; the CLR test checks the
     // empty and the 10-byte readable range through bounded arrays (heap) and scoped pins (native).
-    private static unsafe void SingleInputCapabilities(bool direct, int written)
+    private static void SingleInputCapabilities(bool direct, int written)
     {
         using var s = new Storage(); ByteBuf source = s.Data(direct, new byte[written]); ByteBuf b = s.Fixed(source);
         ReadOnlyMemory<byte> memory = b.AsReadOnlyMemory(0, written);
         Assert.Equal(written, memory.Length); Assert.Equal(direct, b.IsDirect);
-        if (written == 0) { Assert.True(memory.IsEmpty); using var zero = memory.Pin(); Assert.Equal(nint.Zero, (nint)zero.Pointer); return; }
+        if (written == 0) { Assert.True(memory.IsEmpty); return; }
         if (!direct)
         {
             Assert.True(MemoryMarshal.TryGetArray(source.AsReadOnlyMemory(0, written), out var original));
@@ -316,8 +313,7 @@ public class FixedCompositeByteBufOriginalTest
         }
         else
         {
-            using var original = source.AsReadOnlyMemory(0, written).Pin(); using var pin = memory.Pin();
-            Assert.Equal((nint)original.Pointer, (nint)pin.Pointer); Assert.NotEqual(nint.Zero, (nint)pin.Pointer);
+            Assert.Equal(ManagedMemoryTest.Address(source.AsReadOnlyMemory(0, written)), ManagedMemoryTest.Address(memory));
         }
     }
 

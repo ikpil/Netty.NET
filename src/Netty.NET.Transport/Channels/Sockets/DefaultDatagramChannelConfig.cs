@@ -95,15 +95,15 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         else if (ReferenceEquals(option, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION))
             value = _activeOnOpen;
         else if (ReferenceEquals(option, ChannelOption.UDP_GRO))
-            value = ((NioDatagramChannel)Channel).UdpGro;
+            value = false;
         else if (ReferenceEquals(option, ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE))
-            value = ((NioDatagramChannel)Channel).UdpSlotSize;
+            value = 0;
         /**
          * Returns {@code true} if <a href="https://man7.org/linux/man-pages/man7/ip.7.html">IP_RECVORIGDSTADDR</a> is
          * enabled, {@code false} otherwise.
          */
         else if (ReferenceEquals(option, ChannelOption.IP_RECVORIGDSTADDR))
-            value = ((NioDatagramChannel)Channel).ReceiveOriginalDestination;
+            value = false;
         /**
          * Returns {@code true} if <a href="https://man7.org/linux/man-pages/man7/ip.7.html">IP_FREEBIND</a> is enabled,
          * {@code false} otherwise.

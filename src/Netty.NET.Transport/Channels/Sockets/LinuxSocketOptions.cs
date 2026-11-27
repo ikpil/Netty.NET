@@ -66,19 +66,20 @@ internal static class LinuxSocketOptions
         SetInt(socket, level, name, raw);
     }
 
-    internal static unsafe IPEndPoint GetLocalEndpoint(Socket socket)
+    internal static IPEndPoint GetLocalEndpoint(Socket socket)
     {
         var template = new IPEndPoint(socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
         var address = template.Serialize();
-        uint length = (uint)address.Size;
-        fixed (byte* bytes = address.Buffer.Span[..address.Size])
-        {
-            if (GetSocketName(socket.SafeHandle, bytes, ref length) != 0)
-                throw new SocketException();
-        }
+        byte[] bytes = new byte[address.Size];
+        uint length = (uint)bytes.Length;
+        if (GetSocketName(socket.SafeHandle, bytes, ref length) != 0)
+            throw new SocketException();
+        if (length != bytes.Length)
+            throw new SocketException((int)SocketError.Fault);
+        bytes.CopyTo(address.Buffer.Span);
         return (IPEndPoint)template.Create(address);
     }
 
     [DllImport("libc", EntryPoint = "getsockname", SetLastError = true)]
-    private static extern unsafe int GetSocketName(SafeSocketHandle socket, byte* address, ref uint length);
+    private static extern int GetSocketName(SafeSocketHandle socket, [Out] byte[] address, ref uint length);
 }

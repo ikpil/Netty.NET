@@ -1,5 +1,5 @@
 using System;
-using System.Buffers;
+
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -64,33 +64,25 @@ public class NativeMemoryContractTest
         Assert.Equal(0, owner.Memory.Span[4]);
         Assert.Equal(0xa5, owner.Memory.Span[5]);
         Assert.Equal(0, owner.Memory.Span[13]);
-        using var rootPin = owner.Memory.Pin();
-        using var slicePin = slice.Pin();
-        Assert.Equal(Address(rootPin) + 5, Address(slicePin));
-        using var endPin = owner.Memory.Slice(32, 0).Pin();
-        Assert.Equal(Address(rootPin) + 32, Address(endPin));
+        Assert.Equal(Address(owner.Memory) + 5, Address(slice));
+        Assert.Equal(Address(owner.Memory) + 32, Address(owner.Memory.Slice(32, 0)));
         Assert.Throws<ArgumentOutOfRangeException>(() => owner.Memory.Slice(-1));
         Assert.Throws<ArgumentOutOfRangeException>(() => owner.Memory.Slice(31, 2));
     }
 
     [Fact]
-    public void CopiedPinHandlesReleaseTheirLeaseOnlyOnceAndKeepDisposedStorageAlive()
+    public void DisposedOwnerReleasesTheReservationAndInvalidatesViews()
     {
         var allocator = new NativeMemoryAllocator();
-        var owner = allocator.Allocate(16, clear: true);
-        var first = owner.Memory.Pin();
-        var copiedFirst = first;
-        var second = owner.Memory.Slice(3).Pin();
+        using var owner = allocator.Allocate(16, clear: true);
+        Memory<byte> view = owner.Memory;
+        using var pin = view.Pin();
+        Span<byte> bytes = view.Span;
+        bytes[3] = 0xc7;
         owner.Dispose();
-        Assert.Equal(16, allocator.ReservedBytes);
-        Marshal.WriteByte(Address(second), 0xc7);
-        Assert.Equal(0xc7, Marshal.ReadByte(Address(first) + 3));
-        first.Dispose();
-        copiedFirst.Dispose();
-        Assert.Equal(16, allocator.ReservedBytes);
-        second.Dispose();
-        second.Dispose();
         Assert.Equal(0, allocator.ReservedBytes);
+        Assert.Throws<ObjectDisposedException>(() => _ = view.Span.Length);
+        Assert.Equal(0xc7, bytes[3]);
     }
 
     [Fact]
@@ -131,8 +123,7 @@ public class NativeMemoryContractTest
         using var empty = allocator.Reallocate(shrunk, 0);
         Assert.Equal(0, empty.Memory.Length);
         Assert.Equal(1, allocator.ReservedBytes);
-        using var pin = empty.Memory.Pin();
-        Assert.NotEqual(0, Address(pin));
+        Assert.NotEqual(0, Address(empty.Memory));
     }
 
     [Fact]
@@ -147,19 +138,14 @@ public class NativeMemoryContractTest
         Assert.Throws<ArgumentNullException>(() => allocator.Reallocate(null, 1));
         Assert.Equal(8, allocator.ReservedBytes);
         Assert.True(owner.Memory.Span.IndexOfAnyExcept((byte)0x7b) < 0);
-        using var pin = owner.Memory.Pin();
-        Assert.Throws<InvalidOperationException>(() => allocator.Reallocate(owner, 4));
-        Assert.Equal(8, allocator.ReservedBytes);
     }
 
     [Fact]
-    public void ReallocationBecomesAvailableAfterTheLastPinAndKeepsSameSizeOwnershipCoherent()
+    public void ReallocationWithARuntimePinKeepsSameSizeOwnershipCoherent()
     {
         var allocator = new NativeMemoryAllocator();
         var owner = allocator.Allocate(8, clear: true);
-        var pin = owner.Memory.Pin();
-        Assert.Throws<InvalidOperationException>(() => allocator.Reallocate(owner, 8));
-        pin.Dispose();
+        using var pin = owner.Memory.Pin();
         Memory<byte> old = owner.Memory;
         using var replacement = allocator.Reallocate(owner, 8);
         Assert.Equal(8, allocator.ReservedBytes);
@@ -242,13 +228,31 @@ public class NativeMemoryContractTest
         Memory<byte> aligned = owner.GetAlignedMemory(alignment);
         Assert.True(aligned.Length >= logicalLength);
         Assert.Equal(0, aligned.Length % alignment);
-        using var basePin = owner.Memory.Pin();
-        using var alignedPin = aligned.Pin();
-        Assert.Equal(0, (long)Address(alignedPin) & (alignment - 1));
-        int offset = checked((int)(Address(alignedPin) - Address(basePin)));
+        Assert.Equal(0, (long)Address(aligned) & (alignment - 1));
+        int offset = checked((int)(Address(aligned) - Address(owner.Memory)));
         Assert.InRange(offset, 0, alignment - 1);
         aligned.Span.Slice(0, logicalLength).Fill(0xa7);
         Assert.Equal(0xa7, owner.Memory.Span[offset + logicalLength - 1]);
+    }
+
+    [Fact]
+    public void AlignedMemoryKeepsItsAlignmentAndAliasAcrossACompactingCollection()
+    {
+        const int alignment = 4096;
+        using var owner = new NativeMemoryAllocator().Allocate(2 * alignment, clear: true);
+        Memory<byte> aligned = owner.GetAlignedMemory(alignment);
+        aligned.Span[0] = 42;
+
+        // A diagnostic address lookup also pins the array, so defer it until after collection.
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+
+        nint address = Address(aligned);
+        Assert.Equal(0, (long)address & (alignment - 1));
+        int offset = checked((int)(address - Address(owner.Memory)));
+        Assert.InRange(offset, 0, alignment - 1);
+        Assert.Equal(42, owner.Memory.Span[offset]);
+        owner.Memory.Span[offset] = 7;
+        Assert.Equal(7, aligned.Span[0]);
     }
 
     [Fact]
@@ -267,12 +271,9 @@ public class NativeMemoryContractTest
     {
         var allocator = new NativeMemoryAllocator();
         using var owner = allocator.Allocate(32, clear: true);
-        using var externalLifetime = owner.Memory.Pin();
-        var view = new NativeMemoryView(Address(externalLifetime) + 3, 5);
+        var view = new NativeMemoryView(owner.Memory.Slice(3, 5));
         Memory<byte> memory = view.Memory;
         memory.Span.Fill(0xd8);
-        using var borrowedPin = memory.Slice(2).Pin();
-        Assert.Equal(Address(externalLifetime) + 5, Address(borrowedPin));
         view.Dispose();
         view.Dispose();
         Assert.Equal(32, allocator.ReservedBytes);
@@ -282,14 +283,12 @@ public class NativeMemoryContractTest
     }
 
     [Fact]
-    public void NullAndNegativeViewBoundsFailBeforePointerAccess()
+    public void EmptyManagedViewSupportsEmptySlices()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeMemoryView(1, -1));
-        Assert.Throws<ArgumentException>(() => new NativeMemoryView(0, 1));
-        using var empty = new NativeMemoryView(0, 0);
-        Assert.Empty(empty.Memory.ToArray());
+        using var empty = new NativeMemoryView(Memory<byte>.Empty);
+        Assert.True(empty.Memory.IsEmpty);
+        Assert.Throws<ArgumentOutOfRangeException>(() => empty.Memory.Slice(0, 1));
         using var pin = empty.Memory.Pin();
-        Assert.Equal(0, Address(pin));
     }
 
     [Fact]
@@ -323,21 +322,14 @@ public class NativeMemoryContractTest
     }
 
     [Fact]
-    public async Task AScopedPinKeepsNativeStorageValidAcrossAsyncCompletionAndOwnerDisposal()
+    public async Task BorrowedMemoryCanBeUsedAcrossAsyncCompletionWhileTheOwnerLives()
     {
         var allocator = new NativeMemoryAllocator();
-        var owner = allocator.Allocate(8, clear: true);
-        var pin = owner.Memory.Pin();
-        try
-        {
-            owner.Dispose();
-            nint address = Address(pin);
-            await Task.Run(() => Marshal.WriteByte(address + 4, 0xa9));
-            Assert.Equal(0xa9, Marshal.ReadByte(address + 4));
-            Assert.Equal(8, allocator.ReservedBytes);
-        }
-        finally { pin.Dispose(); owner.Dispose(); }
-        Assert.Equal(0, allocator.ReservedBytes);
+        using var owner = allocator.Allocate(8, clear: true);
+        Memory<byte> bytes = owner.Memory;
+        await Task.Run(() => bytes.Span[4] = 0xa9);
+        Assert.Equal(0xa9, bytes.Span[4]);
+        Assert.Equal(8, allocator.ReservedBytes);
     }
 
     [Fact]
@@ -375,26 +367,24 @@ public class NativeMemoryContractTest
     }
 
     [Fact]
-    public void PinAndDisposeRaceEitherRejectsThePinOrRetainsTheAllocation()
+    public void PinAndDisposeRaceEitherRejectsThePinOrReturnsARuntimeHandle()
     {
         var allocator = new NativeMemoryAllocator();
         for (int i = 0; i < 256; i++)
         {
             var owner = allocator.Allocate(16, clear: true);
             Memory<byte> memory = owner.Memory;
-            MemoryHandle pin = default;
-            bool acquired = false;
+            System.Buffers.MemoryHandle pin = default;
             using var barrier = new Barrier(2);
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
-                try { pin = memory.Pin(); acquired = true; }
+                try { pin = memory.Pin(); }
                 catch (ObjectDisposedException) { }
             }, () => { barrier.SignalAndWait(); owner.Dispose(); });
             try
             {
-                Assert.Equal(acquired ? 16 : 0, allocator.ReservedBytes);
-                if (acquired) Assert.Equal(0, Marshal.ReadByte(Address(pin)));
+                Assert.Equal(0, allocator.ReservedBytes);
             }
             finally { pin.Dispose(); owner.Dispose(); }
             Assert.Equal(0, allocator.ReservedBytes);
@@ -402,11 +392,11 @@ public class NativeMemoryContractTest
     }
 
     [Fact]
-    public async Task AbandonedOwnersAndPinLeasesHaveGcFallbackWithoutLeakingQuota()
+    public async Task AbandonedOwnersReleaseTheirReservationAtFinalization()
     {
         var allocator = new NativeMemoryAllocator();
-        WeakReference first = AbandonAllocation(allocator, false);
-        WeakReference second = AbandonAllocation(allocator, true);
+        WeakReference first = AbandonAllocation(allocator);
+        WeakReference second = AbandonAllocation(allocator);
         var timeout = Stopwatch.StartNew();
         while (allocator.ReservedBytes != 0 && timeout.Elapsed < TimeSpan.FromSeconds(5))
         {
@@ -420,12 +410,16 @@ public class NativeMemoryContractTest
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static WeakReference AbandonAllocation(NativeMemoryAllocator allocator, bool pin)
+    private static WeakReference AbandonAllocation(NativeMemoryAllocator allocator)
     {
         var owner = allocator.Allocate(32);
-        if (pin) _ = owner.Memory.Pin();
+        _ = owner.GetAlignedMemory(16);
         return new WeakReference(owner);
     }
 
-    private static unsafe nint Address(MemoryHandle handle) => (nint)handle.Pointer;
+    private static nint Address(ReadOnlyMemory<byte> memory)
+    {
+        Assert.True(NativeMemoryOwner.TryGetAddress(memory, out nint address));
+        return address;
+    }
 }

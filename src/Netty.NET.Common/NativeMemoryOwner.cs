@@ -20,37 +20,33 @@ using System.Threading;
 
 namespace Netty.NET.Common;
 
-/// <summary>Owns a native allocation and exposes bounded, non-owning Memory slices.</summary>
-/// <remarks>Dispose invalidates new memory access, while outstanding pins keep the
-/// allocation alive until released. A previously obtained Span cannot be revoked:
-/// keep this owner alive and do not dispose or reallocate while using unpinned spans.
-/// This is single ownership; buffer retain/release and pool leases remain separate.</remarks>
-public sealed unsafe class NativeMemoryOwner : IMemoryOwner<byte>
+/// <summary>Owns managed storage and exposes bounded, non-owning Memory slices.</summary>
+/// <remarks>Disposal invalidates access through the owner. Previously acquired spans and
+/// runtime pins reference the same managed array, whose lifetime is controlled by the GC.</remarks>
+public sealed class NativeMemoryOwner : IMemoryOwner<byte>
 {
     internal readonly NativeMemoryAllocator Allocator;
-    internal readonly NativeMemoryAllocator.NativeAllocationHandle Handle;
     internal readonly object Sync = new();
     private readonly NativeMemoryManager _manager;
+    private byte[] _storage;
+    private GCHandle _stablePin;
+    private bool _hasReservation;
     private bool _disposed;
-    private int _pinCount;
+    private int _leases;
 
-    internal NativeMemoryOwner(NativeMemoryAllocator allocator,
-        NativeMemoryAllocator.NativeAllocationHandle handle, int length)
+    internal NativeMemoryOwner(NativeMemoryAllocator allocator, int length, bool clear)
     {
         Allocator = allocator;
-        Handle = handle;
         Length = length;
+        int storageLength = Math.Max(1, length);
+        _storage = clear ? new byte[storageLength] : GC.AllocateUninitializedArray<byte>(storageLength);
         _manager = new NativeMemoryManager(this);
     }
 
     public int Length { get; }
     public Memory<byte> Memory => _manager.Memory;
-    internal int PinCount => Volatile.Read(ref _pinCount);
 
-    /// <summary>Finds the native owner that created a memory range, including slices.</summary>
-    /// <remarks>This is a metadata lookup and acquires no ownership, pin or lifetime guarantee.
-    /// It can identify previously obtained memory after owner disposal; accessing that memory
-    /// still throws. Other memory managers, including other native providers, return false.</remarks>
+    /// <summary>Finds the owner that created a memory range, including slices.</summary>
     public static bool TryGetOwner(ReadOnlyMemory<byte> memory, out NativeMemoryOwner owner)
     {
         if (MemoryMarshal.TryGetMemoryManager<byte, NativeMemoryManager>(memory, out var manager))
@@ -62,19 +58,43 @@ public sealed unsafe class NativeMemoryOwner : IMemoryOwner<byte>
         return false;
     }
 
+    internal static bool TryGetAddress(ReadOnlyMemory<byte> memory, out nint address)
+    {
+        if (MemoryMarshal.TryGetMemoryManager<byte, NativeMemoryManager>(memory, out var manager, out int start, out _))
+        {
+            lock (manager.Owner.Sync)
+            {
+                address = manager.Owner.GetAddress() + start;
+                return true;
+            }
+        }
+        address = 0;
+        return false;
+    }
+
+    internal IDisposable AcquireStorageLease()
+    {
+        lock (Sync)
+        {
+            ThrowIfDisposed();
+            var lease = new StorageLease(this);
+            _leases++;
+            return lease;
+        }
+    }
+
     /// <summary>Returns the largest slice whose start and end are aligned.</summary>
-    /// <remarks>The source memory is unchanged and retains ownership. If no aligned
-    /// interval fits, the returned slice is empty. Alignment must be a power of two.</remarks>
+    /// <remarks>Alignment must be a power of two. When alignment requires a stable address,
+    /// the array is pinned until the owner and any outstanding Netty.NET storage leases are released.</remarks>
     public Memory<byte> GetAlignedMemory(int alignment)
     {
         if (alignment <= 0 || (alignment & (alignment - 1)) != 0)
             throw new ArgumentOutOfRangeException(nameof(alignment));
+        if (alignment == 1) return Memory;
         lock (Sync)
         {
-            ThrowIfDisposed();
             nuint mask = (nuint)alignment - 1;
-            nuint address = (nuint)Handle.DangerousGetHandle();
-            nuint padding = unchecked(0 - address) & mask;
+            nuint padding = unchecked(0 - (nuint)GetAddress()) & mask;
             if (padding > (nuint)Length) return Memory.Slice(0, 0);
             int start = (int)padding;
             int count = (Length - start) & ~(alignment - 1);
@@ -82,105 +102,112 @@ public sealed unsafe class NativeMemoryOwner : IMemoryOwner<byte>
         }
     }
 
+    private nint GetAddress()
+    {
+        ThrowIfDisposed();
+        // Called under Sync. Only aligned slices and address diagnostics need a stable address.
+        if (!_stablePin.IsAllocated)
+            _stablePin = GCHandle.Alloc(_storage, GCHandleType.Pinned);
+        return _stablePin.AddrOfPinnedObject();
+    }
+
     public void Dispose()
     {
         lock (Sync)
         {
-            if (_disposed) return;
             _disposed = true;
-            Handle.Dispose();
+            ReleaseStorageIfUnused();
         }
+        GC.SuppressFinalize(this);
     }
 
-    internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+    ~NativeMemoryOwner() => Dispose();
 
-    // Called only after successful native reallocation under Sync. The replacement
-    // owns the allocation, reservation and GC pressure; the old handle must not free it.
-    internal void TransferAllocation()
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+
+    internal Span<byte> GetSpan()
     {
-        _disposed = true;
-        Handle.SetHandleAsInvalid();
+        ThrowIfDisposed();
+        return _storage.AsSpan(0, Length);
     }
 
-    private void ReleasePin()
+    internal void TakeReservation() => _hasReservation = true;
+
+    internal void EnsureReallocatable()
     {
-        // Release the SafeHandle reference before allowing a reallocation to see
-        // no pins. This path also works on the pin lease's finalizer thread.
-        try { Handle.DangerousRelease(); }
-        finally { Interlocked.Decrement(ref _pinCount); }
+        ThrowIfDisposed();
+        if (_leases != 0) throw new InvalidOperationException("Release storage leases before reallocating.");
     }
 
-    private sealed class NativeMemoryManager : MemoryManager<byte>
+    // Called under Sync. The replacement takes over the active reservation.
+    internal void TransferReservation()
     {
-        private readonly NativeMemoryOwner _owner;
-        internal NativeMemoryOwner Owner => _owner;
-        internal NativeMemoryManager(NativeMemoryOwner owner) => _owner = owner;
+        _hasReservation = false;
+        Dispose();
+    }
+
+    private void ReleaseStorageIfUnused()
+    {
+        if (!_disposed || _leases != 0) return;
+        if (_stablePin.IsAllocated) _stablePin.Free();
+        _storage = null;
+        if (!_hasReservation) return;
+        _hasReservation = false;
+        Allocator.Release(Math.Max(1, Length));
+    }
+
+    private sealed class StorageLease(NativeMemoryOwner owner) : IDisposable
+    {
+        private NativeMemoryOwner _owner = owner;
+
+        public void Dispose()
+        {
+            NativeMemoryOwner current = Interlocked.Exchange(ref _owner, null);
+            if (current == null) return;
+            lock (current.Sync)
+            {
+                current._leases--;
+                current.ReleaseStorageIfUnused();
+            }
+            GC.SuppressFinalize(this);
+        }
+
+        ~StorageLease() => Dispose();
+    }
+
+    private sealed class NativeMemoryManager(NativeMemoryOwner owner) : MemoryManager<byte>
+    {
+        internal NativeMemoryOwner Owner => owner;
 
         public override Memory<byte> Memory
         {
             get
             {
-                lock (_owner.Sync)
+                lock (owner.Sync)
                 {
-                    _owner.ThrowIfDisposed();
-                    return CreateMemory(_owner.Length);
+                    owner.ThrowIfDisposed();
+                    return CreateMemory(owner.Length);
                 }
             }
         }
 
         public override Span<byte> GetSpan()
         {
-            lock (_owner.Sync)
-            {
-                _owner.ThrowIfDisposed();
-                return new Span<byte>((void*)_owner.Handle.DangerousGetHandle(), _owner.Length);
-            }
+            lock (owner.Sync) return owner.GetSpan();
         }
 
         public override MemoryHandle Pin(int elementIndex = 0)
         {
-            lock (_owner.Sync)
+            lock (owner.Sync)
             {
-                _owner.ThrowIfDisposed();
-                if ((uint)elementIndex > (uint)_owner.Length)
-                    throw new ArgumentOutOfRangeException(nameof(elementIndex));
-                var lease = new PinLease();
-                bool acquired = false;
-                try
-                {
-                    _owner.Handle.DangerousAddRef(ref acquired);
-                    Interlocked.Increment(ref _owner._pinCount);
-                    lease.Activate(_owner);
-                    return new MemoryHandle((byte*)_owner.Handle.DangerousGetHandle() + elementIndex,
-                        pinnable: lease);
-                }
-                catch
-                {
-                    if (!lease.Release() && acquired) _owner.Handle.DangerousRelease();
-                    throw;
-                }
+                owner.ThrowIfDisposed();
+                ArgumentOutOfRangeException.ThrowIfNegative(elementIndex);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(elementIndex, owner.Length);
+                return owner._storage.AsMemory(elementIndex, owner.Length - elementIndex).Pin();
             }
         }
 
-        // Each returned handle owns a separate idempotent lease, including copied
-        // MemoryHandle structs. There is no shared, unidentifiable Unpin authority.
         public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
-        protected override void Dispose(bool disposing) => _owner.Dispose();
-    }
-
-    private sealed class PinLease : IPinnable
-    {
-        private NativeMemoryOwner _owner;
-        internal void Activate(NativeMemoryOwner owner) => _owner = owner;
-        public MemoryHandle Pin(int elementIndex) => throw new NotSupportedException("A pin lease is single-use.");
-        public void Unpin() => Release();
-        internal bool Release()
-        {
-            NativeMemoryOwner owner = Interlocked.Exchange(ref _owner, null);
-            owner?.ReleasePin();
-            GC.SuppressFinalize(this);
-            return owner != null;
-        }
-        ~PinLease() => Unpin();
+        protected override void Dispose(bool disposing) => owner.Dispose();
     }
 }

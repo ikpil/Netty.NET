@@ -32,7 +32,7 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
      * Default instance which uses leak-detection for direct buffers.
      */
     /// <summary>The shared unpooled allocator. Buffer follows io.netty.noPreferDirect;
-    /// IoBuffer uses native storage. Unpooled.Buffer always requests heap storage.</summary>
+    /// IoBuffer uses direct storage. Unpooled.Buffer always requests heap storage.</summary>
     public static UnpooledByteBufAllocator Default { get; } = new(ByteBufUtil.PreferDirect);
 
     private readonly NativeMemoryAllocator _nativeAllocator;
@@ -41,8 +41,8 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
 
     /// <summary>Capacity owned by buffers created through this allocator's factories.</summary>
     /// <remarks>Views and additional references do not allocate storage. Final buffer release
-    /// removes its capacity even if a CLR pin still preserves physical native storage.
-    /// NativeMemoryAllocator.ReservedBytes separately measures those physical reservations.
+    /// removes its capacity immediately. NativeMemoryAllocator.ReservedBytes includes storage
+    /// still held by Netty.NET operation leases. Runtime pins are owned by the caller.
     /// Individual counters are atomic; reading both is not a transactional snapshot.</remarks>
     public IByteBufAllocatorMetric Metric => _metric;
 

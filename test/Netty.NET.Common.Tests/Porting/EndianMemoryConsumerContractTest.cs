@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Buffers.Binary;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -21,8 +20,7 @@ public class EndianMemoryConsumerContractTest
         var allocator = new NativeMemoryAllocator();
         using var owner = allocator.Allocate(24);
         Check(owner.Memory, width, little);
-        using var pin = owner.Memory.Pin();
-        using var view = new NativeMemoryView(Address(pin), 24);
+        using var view = new NativeMemoryView(owner.Memory);
         Check(view.Memory, width, little);
     }
 
@@ -85,5 +83,4 @@ public class EndianMemoryConsumerContractTest
         }
     }
 
-    private static unsafe nint Address(MemoryHandle pin) => (nint)pin.Pointer;
 }

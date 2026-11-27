@@ -20,39 +20,22 @@ namespace Netty.NET.Common.Tests.Internal;
 
 public class PlatformDependent0Test
 {
-    // CLR adaptation: address metadata uses a borrowed native view. No JVM
-    // constructor/Unsafe assumption controls CLR memory support.
+    // Raw addresses have no managed view. The compatibility overload rejects
+    // every address without taking ownership or reading it.
     [Fact]
-    public void TestNewDirectBufferNegativeMemoryAddress()
-    {
-        // The original (-1, 10) describes a range that wraps to zero. CLR views
-        // reject that range while preserving valid unsigned address bits.
-        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeMemoryView(-1, 10));
-        TestNewDirectBufferMemoryAddress(-16);
-    }
+    public void TestNewDirectBufferNegativeMemoryAddress() => AssertUnsupported(-1);
 
     [Fact]
-    public void TestNewDirectBufferNonNegativeMemoryAddress()
-    {
-        TestNewDirectBufferMemoryAddress(10);
-    }
+    public void TestNewDirectBufferNonNegativeMemoryAddress() => AssertUnsupported(10);
 
     [Fact]
-    public void TestNewDirectBufferZeroMemoryAddress()
-    {
-        // The original ByteBuffer constructor permits metadata for a null
-        // nonempty address. CLR Memory must reject that unusable span boundary.
-        Assert.Throws<ArgumentException>(() => new NativeMemoryView(0, 10));
-        using var empty = new NativeMemoryView(0, 0);
-        Assert.Equal(0, empty.Memory.Length);
-    }
+    public void TestNewDirectBufferZeroMemoryAddress() => AssertUnsupported(0);
 
-    private static void TestNewDirectBufferMemoryAddress(long address)
+    private static void AssertUnsupported(nint address)
     {
-        int capacity = 10;
-        using var buffer = new NativeMemoryView(checked((nint)address), capacity);
-        Assert.Equal(address, (long)buffer.Address);
-        Assert.Equal(capacity, buffer.Memory.Length);
+#pragma warning disable CS0618
+        Assert.Throws<PlatformNotSupportedException>(() => new NativeMemoryView(address, 10));
+#pragma warning restore CS0618
     }
 
     // The two JDK-version/SecurityManager scenarios and their original comments

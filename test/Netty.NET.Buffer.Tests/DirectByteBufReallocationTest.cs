@@ -178,25 +178,25 @@ public class DirectByteBufReallocationTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public unsafe void OldPinKeepsItsAllocationThroughReplacementAndFinalRelease(bool factory)
+    public void ManagedSpanKeepsItsBytesThroughReplacementAndFinalRelease(bool factory)
     {
         using var s = new Storage(factory, budget: 32);
         ByteBuf b = s.Buffer;
         Memory<byte> old = b.AsMemory(0, 8);
-        MemoryHandle pin = old.Pin();
+        ReadOnlySpan<byte> oldBytes = old.Span; var pin = old.Pin();
         try
         {
             b.Capacity = 16;
-            Assert.Equal(Prefix(8), new ReadOnlySpan<byte>(pin.Pointer, 8).ToArray());
+            Assert.Equal(Prefix(8), oldBytes.ToArray());
             Assert.Equal(Prefix(8), b.AsMemory(0, 8).ToArray());
             b.SetByte(0, 99);
-            Assert.Equal(1, *(byte*)pin.Pointer);
-            s.Accounting(16, 24);
+            Assert.Equal(1, oldBytes[0]);
+            s.Accounting(16, 16);
             Assert.True(b.Release());
             Assert.Equal(0, b.RefCnt);
             Assert.Throws<ObjectDisposedException>(() => old.ToArray());
-            Assert.Equal(Prefix(8), new ReadOnlySpan<byte>(pin.Pointer, 8).ToArray());
-            s.Accounting(0, 8);
+            Assert.Equal(Prefix(8), oldBytes.ToArray());
+            s.Accounting(0, 0);
         }
         finally { pin.Dispose(); }
         s.Accounting(0, 0);

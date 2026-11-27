@@ -51,11 +51,15 @@ public class SegmentedDatagramSourceTest
     [InlineData(false)]
     [InlineData(true)]
     public Task TestSendAndReceiveSegmentedDatagramPacketWithScatteringRead(bool adaptive) =>
-        Run(adaptive, composite: false, gro: true, scatteringRead: true);
+        Run(adaptive, composite: false, gro: true);
 
-    private static async Task Run(bool adaptive, bool composite, bool gro, bool scatteringRead = false)
+    private static async Task Run(bool adaptive, bool composite, bool gro)
     {
-        if (gro) RequireGro(AddressFamily.InterNetwork);
+        // Only supported for the native epoll transport.
+        // Enable GRO and also ensure we can read everything with one read as otherwise
+        // we will drop things on the floor.
+        // Room for two batches, so the batch is read with recvmmsg instead of recvmsg.
+        if (gro) Assert.Skip("Kernel UDP GRO and scattering are unavailable on the managed transport.");
         var token = TestContext.Current.CancellationToken;
         using var adaptiveAllocator = adaptive ? new AdaptiveByteBufAllocator() : null;
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
@@ -69,20 +73,6 @@ public class SegmentedDatagramSourceTest
             const int bufferCapacity = numBuffers * segmentSize;
             var capture = new Capture(numBuffers, segmentSize);
             var server = NewBootstrap(loop, allocator, capture);
-            if (gro)
-            {
-                // Enable GRO and also ensure we can read everything with one read as otherwise
-                // we will drop things on the floor.
-                server.Option(ChannelOption.UDP_GRO, true);
-                if (scatteringRead)
-                {
-                    // Room for two batches, so the batch is read with recvmmsg instead of recvmsg.
-                    server.Option(ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE, bufferCapacity)
-                        .Option(ChannelOption.RECVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(2 * bufferCapacity));
-                }
-                else
-                    server.Option(ChannelOption.RECVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(bufferCapacity));
-            }
             var receiver = await server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
             Assert.True(receiver.Config.TryGetOption(ChannelOption.UDP_GRO, out bool configured));
             Assert.Equal(gro, configured);
@@ -107,25 +97,6 @@ public class SegmentedDatagramSourceTest
     private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
         new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
             .Option(ChannelOption.ALLOCATOR, allocator).Handler(handler);
-
-    internal static void RequireGro(AddressFamily family)
-    {
-        // Only supported for the native epoll transport.
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Kernel UDP_GRO is available only on Linux.");
-        if (family == AddressFamily.InterNetworkV6 && !Socket.OSSupportsIPv6) Assert.Skip("IPv6 unavailable.");
-        using var receiver = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
-        try
-        {
-            LinuxUdpOffload.SetGro(receiver, true);
-            // Match the source capability probe with an integer socket option, independent of the
-            // channel's per-message sendmsg path.
-            receiver.SetRawSocketOption(17, 103, BitConverter.GetBytes(512));
-        }
-        catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
-        {
-            Assert.Skip("Kernel does not support UDP_GRO.");
-        }
-    }
 
     private sealed class Discard : SimpleChannelInboundHandler<object>
     {

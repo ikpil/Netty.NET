@@ -32,9 +32,12 @@ public class StringMetadataContractTest
     }
 
     [Fact]
-    public unsafe void FunctionPointerMetadataProvidesItsSignatureInsteadOfAnEmptyLabel()
+    public void FunctionPointerMetadataProvidesItsSignatureInsteadOfAnEmptyLabel()
     {
-        string name = StringUtil.SimpleClassName(typeof(delegate*<int, int>));
+        Type signature = typeof(System.Runtime.InteropServices.ObjectiveC.ObjectiveCMarshal)
+            .GetMethod("Initialize").GetParameters()[1].ParameterType;
+        Assert.True(signature.IsFunctionPointer);
+        string name = StringUtil.SimpleClassName(signature);
         Assert.Contains("Int32", name);
         Assert.Contains("(", name);
         Assert.Contains(")", name);

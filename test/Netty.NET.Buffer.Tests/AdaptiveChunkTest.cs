@@ -91,10 +91,10 @@ public class AdaptiveChunkTest
         var held = chunk.TryAllocate(13); Memory<byte> borrowed = held.Memory;
         borrowed.Span[0] = 47;
         var lease = held.AcquireLease(); var leaseCopy = lease;
-        using var pin = borrowed.Pin(); var copiedPin = pin;
+        using var secondLease = held.AcquireLease(); Span<byte> bytes = borrowed.Span;
         held.Release(); held.Release();
         Assert.Throws<ObjectDisposedException>(() => borrowed.Span.Clear());
-        Assert.Throws<ObjectDisposedException>(() => borrowed.Pin());
+        Assert.Throws<NotSupportedException>(() => borrowed.Pin());
         Assert.Throws<ObjectDisposedException>(() => held.AcquireLease());
         var live = new List<AdaptiveChunkAllocation>();
         try
@@ -105,16 +105,14 @@ public class AdaptiveChunkTest
                 Assert.NotEqual(held.Offset, next.Offset); live.Add(next); next.Memory.Span.Fill(99);
             }
             lease.Dispose(); leaseCopy.Dispose();
-            Assert.Null(chunk.TryAllocate(16896)); Assert.Equal(47, Marshal.ReadByte((nint)PinPointer(pin)));
-            copiedPin.Dispose();
+            Assert.Null(chunk.TryAllocate(16896)); Assert.Equal(47, bytes[0]);
+            secondLease.Dispose();
             var reused = chunk.TryAllocate(16896); Assert.NotNull(reused); live.Add(reused);
             Assert.Equal(held.Offset, reused.Offset);
         }
         finally { foreach (var allocation in live) allocation.Release(); }
         chunk.Dispose(); Assert.Equal(0, registry.TotalCapacity); Assert.Equal(0, native.ReservedBytes);
     }
-
-    private static unsafe nint PinPointer(System.Buffers.MemoryHandle pin) => (nint)pin.Pointer;
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
@@ -142,18 +140,18 @@ public class AdaptiveChunkTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void DedicatedChunkOwnerAndPinsHaveIndependentLifetimes(bool direct)
+    public void DedicatedChunkOwnerAndLeasesHaveIndependentLifetimes(bool direct)
     {
         var native = new NativeMemoryAllocator(); var registry = new ChunkRegistry();
         using var chunk = new Chunk(Storage(direct, 37, native), registry);
         var allocation = chunk.TryAllocate(37);
         Assert.False(chunk.Pooled); Assert.Null(chunk.TryAllocate(1));
         Memory<byte> memory = allocation.Memory; memory.Span[36] = 121;
-        var pin = memory.Slice(36).Pin(); var copied = pin;
+        using var lease = allocation.AcquireLease(); var copied = lease; Span<byte> bytes = memory.Span;
         chunk.Dispose(); allocation.Release();
         Assert.False(chunk.IsDeallocated); Assert.Equal(37, registry.TotalCapacity);
-        Assert.Equal(121, Marshal.ReadByte(PinPointer(pin)));
-        pin.Dispose(); copied.Dispose();
+        Assert.Equal(121, bytes[36]);
+        lease.Dispose(); copied.Dispose();
         Assert.True(chunk.IsDeallocated); Assert.Equal(0, registry.TotalCapacity); Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -260,11 +258,11 @@ public class AdaptiveChunkTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void AbandonedPinClaimEventuallyReleasesRetiredChunk(bool direct)
+    public void AbandonedOperationLeaseEventuallyReleasesRetiredChunk(bool direct)
     {
         var registry = new ChunkRegistry(); var native = new NativeMemoryAllocator();
         using var chunk = new SizeClassedChunk(Storage(direct, 131072, native), registry, 16896);
-        AbandonPin(chunk);
+        AbandonLease(chunk);
         chunk.Dispose();
         for (int i = 0; i < 10 && !chunk.IsDeallocated; i++)
         {
@@ -274,26 +272,25 @@ public class AdaptiveChunkTest
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void AbandonPin(Chunk chunk)
+    private static void AbandonLease(Chunk chunk)
     {
         var allocation = chunk.TryAllocate(13);
-        var pin = allocation.Memory.Pin(); allocation.Release();
-        GC.KeepAlive(pin);
+        var lease = allocation.AcquireLease(); allocation.Release();
+        GC.KeepAlive(lease);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void EmptyDedicatedStorageAndOnePastEndPinsHaveBalancedOwnership(bool direct)
+    public void EmptyDedicatedStorageHasBalancedOperationLeases(bool direct)
     {
         var registry = new ChunkRegistry(); var native = new NativeMemoryAllocator();
         using var chunk = new Chunk(Storage(direct, 0, native), registry);
         var allocation = chunk.TryAllocate(0);
         Assert.Equal(0, allocation.Length);
-        Assert.Throws<ArgumentOutOfRangeException>(() => allocation.Pin(-1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => allocation.Pin(1));
-        var pin = allocation.Pin(0);
+        Assert.Throws<NotSupportedException>(() => allocation.Pin(0));
+        using var lease = allocation.AcquireLease();
         chunk.Dispose(); allocation.Release(); Assert.False(chunk.IsDeallocated);
         Assert.Equal(direct ? 1 : 0, native.ReservedBytes);
-        pin.Dispose(); Assert.True(chunk.IsDeallocated); Assert.Equal(0, native.ReservedBytes);
+        lease.Dispose(); Assert.True(chunk.IsDeallocated); Assert.Equal(0, native.ReservedBytes);
     }
 }

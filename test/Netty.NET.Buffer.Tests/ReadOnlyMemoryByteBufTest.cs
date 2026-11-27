@@ -232,7 +232,7 @@ public class ReadOnlyMemoryByteBufTest
     }
 
     [Fact]
-    public void FinalWrapperReleaseDoesNotDisposeExternalOwnerAndPinsRemainPhysical()
+    public void FinalWrapperReleaseDoesNotDisposeTheExternalOwner()
     {
         var native = new NativeMemoryAllocator(16); NativeMemoryOwner owner = native.Allocate(8);
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)owner.Memory);
@@ -240,7 +240,7 @@ public class ReadOnlyMemoryByteBufTest
         try
         {
             b.Release(); Assert.Equal(8, native.ReservedBytes); owner.Memory.Span[0] = 42;
-            Assert.Equal(42, memory.Span[0]); owner.Dispose(); Assert.Equal(8, native.ReservedBytes);
+            Assert.Equal(42, memory.Span[0]); owner.Dispose(); Assert.Equal(0, native.ReservedBytes);
         }
         finally { if (b.RefCnt > 0) b.Release(); owner.Dispose(); pin.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);

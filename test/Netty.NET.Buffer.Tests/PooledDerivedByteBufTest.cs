@@ -205,15 +205,15 @@ public class PooledDerivedByteBufTest
     }
 
     [Fact]
-    public unsafe void NativePinsSurviveTheWholeDerivedChainAfterLogicalFinalRelease()
+    public void ManagedSpanKeepsDataFromAReleasedDerivedChain()
     {
         var native = new NativeMemoryAllocator(); using var a = new PooledByteBufAllocator(nativeAllocator: native, maxOrder: 1);
-        ByteBuf root = Root(a, true), child = root.RetainedSlice(3, 8); var pin = child.AsMemory(0, 8).Pin();
+        ByteBuf root = Root(a, true), child = root.RetainedSlice(3, 8); ReadOnlySpan<byte> captured = child.AsReadOnlySpan(0, 8); var pin = child.AsMemory(0, 8).Pin();
         try
         {
             Assert.False(root.Release()); a.Dispose(); Assert.True(child.Release());
-            Assert.Equal(0, root.RefCnt); Assert.Equal(0, a.PinnedDirectMemory); Assert.True(native.ReservedBytes > 0);
-            Assert.Equal(3, ((byte*)pin.Pointer)[0]);
+            Assert.Equal(0, root.RefCnt); Assert.Equal(0, a.PinnedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(3, captured[0]);
         }
         finally { pin.Dispose(); if (child.RefCnt > 0) child.Release(); if (root.RefCnt > 0) root.Release(root.RefCnt); }
         Assert.Equal(0, native.ReservedBytes);

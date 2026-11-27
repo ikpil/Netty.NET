@@ -673,18 +673,18 @@ public class AdaptiveByteBufAllocatorClrContractTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void DisposePreservesLiveViewsAndPinsButClosesReallocation(bool direct)
+    public void DisposePreservesLiveViewsAndLeasesButClosesReallocation(bool direct)
     {
         var native = new NativeMemoryAllocator(); using var allocator = Allocator(native: native);
         ByteBuf b = direct ? allocator.DirectBuffer(7, 100) : allocator.HeapBuffer(7, 100); b.SetInt(0, 12345);
-        ByteBuf child = b.RetainedSlice(0, 4); var pin = child.AsMemory(0, 4).Pin();
+        ByteBuf child = b.RetainedSlice(0, 4); using var lease = child.AcquireReadLease();
         b.Release(); allocator.Dispose(); Assert.Equal(12345, child.GetInt(0));
         AdaptiveByteBuf root = AdaptiveByteBufAllocatorTest.Root(child); root.Capacity = 32;
         Assert.Throws<ObjectDisposedException>(() => root.Capacity = 33);
         Assert.Throws<ObjectDisposedException>(() => allocator.HeapBuffer(1));
         Assert.Throws<ObjectDisposedException>(() => allocator.DirectBuffer(1));
         child.Release(); Assert.Equal(131072, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
-        pin.Dispose(); Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        lease.Dispose(); Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]

@@ -51,41 +51,32 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public unsafe void GetDirectByteBufferBoundaryCheck()
+    public void GetDirectByteBufferBoundaryCheck()
     {
-        nint address = (nint)NativeMemory.AllocZeroed(1);
-        try
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(-1, new Span<byte>((void*)address, 0)));
-        }
-        finally { NativeMemory.Free((void*)address); }
+        byte[] destination = GC.AllocateArray<byte>(1, pinned: true);
+        Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(-1, destination.AsSpan(0, 0)));
     }
 
     [Fact]
-    public unsafe void GetDirectByteBufferState()
+    public void GetDirectByteBufferState()
     {
-        void* allocation = NativeMemory.AllocZeroed(4);
-        try
-        {
-            Span<byte> dst = new(allocation, 4);
-            Span<byte> window = dst.Slice(1, 2);
-            buffer.SetByte(0, 1);
-            buffer.SetByte(1, 2);
-            buffer.SetByte(2, 3);
-            buffer.SetByte(3, 4);
-            int readerIndex = buffer.ReaderIndex;
-            int writerIndex = buffer.WriterIndex;
-            buffer.GetBytes(1, window);
+        Span<byte> dst = GC.AllocateArray<byte>(4, pinned: true);
+        Span<byte> window = dst.Slice(1, 2);
+        buffer.SetByte(0, 1);
+        buffer.SetByte(1, 2);
+        buffer.SetByte(2, 3);
+        buffer.SetByte(3, 4);
+        int readerIndex = buffer.ReaderIndex;
+        int writerIndex = buffer.WriterIndex;
+        buffer.GetBytes(1, window);
 
-            // JVM direct allocation is zero-initialized; AllocZeroed preserves the two original guard bytes.
-            Assert.Equal((byte)0, dst[0]);
-            Assert.Equal((byte)2, dst[1]);
-            Assert.Equal((byte)3, dst[2]);
-            Assert.Equal((byte)0, dst[3]);
-            Assert.Equal(readerIndex, buffer.ReaderIndex);
-            Assert.Equal(writerIndex, buffer.WriterIndex);
-        }
-        finally { NativeMemory.Free(allocation); }
+        // JVM direct allocation is zero-initialized; The zeroed array preserves the two original guard bytes.
+        Assert.Equal((byte)0, dst[0]);
+        Assert.Equal((byte)2, dst[1]);
+        Assert.Equal((byte)3, dst[2]);
+        Assert.Equal((byte)0, dst[3]);
+        Assert.Equal(readerIndex, buffer.ReaderIndex);
+        Assert.Equal(writerIndex, buffer.WriterIndex);
     }
 
     [Fact]

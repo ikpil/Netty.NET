@@ -175,12 +175,12 @@ public class AdaptiveAllocatorEventTest
     }
 
     [Theory]
-    [InlineData(false, false)] [InlineData(true, false)] [InlineData(false, true)] [InlineData(true, true)]
-    public void OperationAndPinClaimsDelayChunkFreeBeyondLogicalReleaseAndAllocatorClose(bool direct, bool pin)
+    [InlineData(false)] [InlineData(true)]
+    public void OperationLeasesDelayChunkFreeBeyondLogicalReleaseAndAllocatorClose(bool direct)
     {
         var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native); using var listener = Listen();
         ByteBuf buffer = Allocate(allocator, direct, 128);
-        IDisposable lease = pin ? buffer.AsReadOnlyMemory(0, 128).Pin() : AdaptiveByteBufAllocatorTest.Root(buffer).AcquireReadLease();
+        using var lease = buffer.AcquireReadLease();
         allocator.Dispose(); buffer.Release(); Assert.Equal(new[] { 4, 1, 2 }, listener.Events.Select(e => e.Id));
         lease.Dispose(); Assert.Equal(new[] { 4, 1, 2, 5 }, listener.Events.Select(e => e.Id)); Assert.Equal(0, native.ReservedBytes);
     }

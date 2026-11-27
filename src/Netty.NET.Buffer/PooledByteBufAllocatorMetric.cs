@@ -25,7 +25,7 @@ namespace Netty.NET.Buffer;
 /// <remarks>Cache sizes reflect configured entries per size class. NumThreadLocalCaches counts arena bindings,
 /// including bindings with no cached regions, as in Java. Memory values
 /// measure arena storage, excluding retained retired heap storage, alignment headroom
-/// and raw native pins; NativeMemoryAllocator.ReservedBytes measures physical reservations.
+/// and independent runtime pins. NativeMemoryAllocator.ReservedBytes tracks allocator reservations.
 /// Separate property reads are not a transactional snapshot.</remarks>
 public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
 {

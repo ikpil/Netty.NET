@@ -40,7 +40,7 @@ public class PooledBufferEventTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public unsafe void OriginalPooledAllocationAndFinalReleaseCarryCompleteMetadata(bool direct)
+    public void OriginalPooledAllocationAndFinalReleaseCarryCompleteMetadata(bool direct)
     {
         var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
         using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, direct, 128, int.MaxValue);
@@ -48,8 +48,7 @@ public class PooledBufferEventTest
         {
             Record allocation = Assert.Single(listener.Events); Check(allocation, 1, 128, 128, int.MaxValue, direct);
             Assert.True(allocation.Flag("chunkPooled")); Assert.False(allocation.Flag("chunkThreadLocal"));
-            using (var pin = buffer.AsReadOnlyMemory(0, 128).Pin())
-                Assert.True(direct ? allocation.Number("address") == unchecked((long)(nint)pin.Pointer) : allocation.Number("address") == 0);
+            Assert.Equal(direct ? (long)ManagedMemoryTest.Address(buffer.AsReadOnlyMemory(0, 128)) : 0, allocation.Number("address"));
             buffer.Retain(); Assert.False(buffer.Release()); Assert.Single(listener.Events);
             buffer.SetIndex(7, 99).MarkReaderIndex().MarkWriterIndex();
         }
@@ -223,7 +222,7 @@ public class PooledBufferEventTest
     }
 
     [Fact]
-    public unsafe void NativeOffsetAndRetainedViewsKeepOneRootLifecycle()
+    public void NativeOffsetAndRetainedViewsKeepOneRootLifecycle()
     {
         var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
         using var listener = new Listener();
@@ -231,8 +230,7 @@ public class PooledBufferEventTest
         ByteBuf view = second.RetainedSlice(3, 8).Duplicate();
         try
         {
-            using var pin = second.AsReadOnlyMemory(0, 128).Pin();
-            Assert.True(listener.Events[1].Number("address") == unchecked((long)(nint)pin.Pointer));
+            Assert.Equal((long)ManagedMemoryTest.Address(second.AsReadOnlyMemory(0, 128)), listener.Events[1].Number("address"));
             Assert.True(listener.Events[0].Number("address") != listener.Events[1].Number("address"));
             Assert.False(second.Release()); Assert.Equal(2, listener.Events.Length);
             Assert.True(view.Release()); Assert.Equal(3, listener.Events.Length);

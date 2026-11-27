@@ -16,6 +16,8 @@
 
 using System;
 using System.Buffers;
+using System.Runtime.InteropServices;
+using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
 
@@ -32,6 +34,38 @@ internal readonly struct BufferMemoryLease : IDisposable
     internal BufferMemoryLease(BufferMemoryLease[] children) => _children = children;
     // CLR: pooled heap reservations must survive reuse as well as GC collection.
     internal BufferMemoryLease(IDisposable reservation) => _reservation = reservation;
+
+    internal static BufferMemoryLease ForBorrowedMemory(ReadOnlyMemory<byte> memory)
+    {
+        if (MemoryMarshal.TryGetMemoryManager<byte, AdaptivePoolingAllocator.AdaptiveChunkAllocation>(memory, out var adaptive))
+            return adaptive.AcquireLease();
+        if (MemoryMarshal.TryGetMemoryManager<byte, ThreadLocalDirectAllocation>(memory, out var threadLocal))
+            return threadLocal.AcquireLease();
+        if (NativeMemoryOwner.TryGetOwner(memory, out var owner))
+            return new BufferMemoryLease(owner.AcquireStorageLease());
+        return new BufferMemoryLease(memory.Pin());
+    }
+
+    // The caller keeps the returned lease until the external consumer has disposed its pin.
+    internal static BufferMemoryLease ForPinnableMemory(ReadOnlyMemory<byte> memory, out ReadOnlyMemory<byte> storage)
+    {
+        if (MemoryMarshal.TryGetMemoryManager<byte, AdaptivePoolingAllocator.AdaptiveChunkAllocation>(
+                memory, out var adaptive, out int start, out int length))
+        {
+            var lease = adaptive.AcquireLease();
+            storage = adaptive.GetStorage(start, length);
+            return lease;
+        }
+        if (MemoryMarshal.TryGetMemoryManager<byte, ThreadLocalDirectAllocation>(
+                memory, out var threadLocal, out start, out length))
+        {
+            var lease = threadLocal.AcquireLease();
+            storage = threadLocal.GetStorage(start, length);
+            return lease;
+        }
+        storage = memory;
+        return default;
+    }
 
     public void Dispose()
     {

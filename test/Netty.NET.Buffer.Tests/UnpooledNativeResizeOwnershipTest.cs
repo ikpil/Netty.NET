@@ -40,7 +40,7 @@ public class UnpooledNativeResizeOwnershipTest
     }
     [Theory]
     [MemberData(nameof(Cases))]
-    public unsafe void FailedShrinkPreservesStateAndRetryDetachesOrFreesOnlyOwnedStorage(bool borrowed, bool pinned, int facade, int capacity)
+    public void FailedShrinkPreservesStateAndRetryDetachesOrFreesOnlyOwnedStorage(bool borrowed, bool pinned, int facade, int capacity)
     {
         var native = new NativeMemoryAllocator(32); var externalDomain = new NativeMemoryAllocator(24);
         var allocator = new UnpooledByteBufAllocator(true, disableLeakDetector: true, native);
@@ -58,6 +58,7 @@ public class UnpooledNativeResizeOwnershipTest
         };
         if (facade == 4) b.SetIndex(1, 6).MarkReaderIndex().MarkWriterIndex().SetIndex(4, 12);
         ReadOnlyMemory<byte> old = root.AsReadOnlyMemory(0, 16);
+        ReadOnlySpan<byte> captured = old.Span;
         MemoryHandle pin = pinned ? old.Pin() : default;
         NativeMemoryOwner pressure = native.Allocate(borrowed ? 31 : 15);
         try
@@ -80,7 +81,7 @@ public class UnpooledNativeResizeOwnershipTest
             // not repair that duplicate's independent cursors (the original rule).
             Assert.Equal(facade == 4 ? (4, 12) : (Math.Min(3, capacity), capacity), (b.ReaderIndex, b.WriterIndex));
             Assert.Equal(borrowed ? 0 : capacity, allocator.Metric.UsedDirectMemory);
-            Assert.Equal(capacity + (!borrowed && pinned ? 16 : 0), native.ReservedBytes);
+            Assert.Equal(capacity, native.ReservedBytes);
             if (borrowed)
             {
                 Assert.Equal(bytes, old.ToArray());
@@ -88,7 +89,7 @@ public class UnpooledNativeResizeOwnershipTest
                 root.SetByte(0, 91); Assert.Equal(1, external.Memory.Span[4]);
             }
             else Assert.Throws<ObjectDisposedException>(() => old.Span.ToArray());
-            if (pinned) Assert.Equal(bytes, new ReadOnlySpan<byte>(pin.Pointer, 16).ToArray());
+            if (pinned) Assert.Equal(bytes, captured.ToArray());
             if (capacity < 6)
             {
                 // Shrink preserves marks; a writer mark outside the new capacity
@@ -113,10 +114,10 @@ public class UnpooledNativeResizeOwnershipTest
             }
             Assert.True(b.Release()); Assert.Equal(facade is 2 or 3 ? 1 : 0, tracker.Closes);
             Assert.Equal(0, allocator.Metric.UsedDirectMemory);
-            Assert.Equal(!borrowed && pinned ? 16 : 0, native.ReservedBytes);
+            Assert.Equal(0, native.ReservedBytes);
             Assert.Equal(24, externalDomain.ReservedBytes);
             external.Dispose();
-            Assert.Equal(borrowed && pinned ? 24 : 0, externalDomain.ReservedBytes);
+            Assert.Equal(0, externalDomain.ReservedBytes);
         }
         finally
         {

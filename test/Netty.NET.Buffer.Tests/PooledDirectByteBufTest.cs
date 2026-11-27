@@ -47,7 +47,7 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
 
     [Theory]
     [InlineData(1)] [InlineData(8)] [InlineData(16)] [InlineData(64)] [InlineData(8192)]
-    public unsafe void EveryAlignedClassAndHugeReservationHasAlignedBoundedStorage(int alignment)
+    public void EveryAlignedClassAndHugeReservationHasAlignedBoundedStorage(int alignment)
     {
         using var allocator = NewAllocator(alignment: alignment);
         var sizes = allocator.Arena.SizeClass;
@@ -62,8 +62,7 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
                 Assert.Equal(0, b.Allocation.ReservedLength % alignment);
                 Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, requested), out var owner));
                 Assert.Equal(b.Allocation.Memory.Length + alignment, owner.Length);
-                using var pin = b.AsMemory(0, requested).Pin();
-                Assert.Equal((nuint)0, (nuint)pin.Pointer % (nuint)alignment);
+                Assert.Equal(0UL, (ulong)ManagedMemoryTest.Address(b.AsMemory(0, requested)) % (uint)alignment);
                 b.AsSpan(0, requested).Fill(0xA5);
                 Assert.Equal(-1, b.AsSpan(0, requested).IndexOfAnyExcept((byte)0xA5));
             }
@@ -167,16 +166,17 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
 
     [Theory]
     [InlineData(48)] [InlineData(131073)]
-    public unsafe void NativePinKeepsPhysicalStorageAliveAfterArenaClose(int size)
+    public void ManagedSpanKeepsTheRetiredChunkBytesAfterArenaClose(int size)
     {
         using var allocator = NewAllocator();
         ByteBuf b = allocator.DirectBuffer(size).WriteByte(0xA5);
         Memory<byte> memory = b.AsMemory(0, 1);
+        ReadOnlySpan<byte> captured = memory.Span;
         using (var pin = memory.Pin())
         {
             b.Release(); allocator.Arena.Dispose();
-            Assert.True(allocator.Native.ReservedBytes > 0);
-            Assert.Equal(0xA5, *(byte*)pin.Pointer);
+            Assert.Equal(0, allocator.Native.ReservedBytes);
+            Assert.Equal(0xA5, captured[0]);
             Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
         }
         Assert.Equal(0, allocator.Native.ReservedBytes);

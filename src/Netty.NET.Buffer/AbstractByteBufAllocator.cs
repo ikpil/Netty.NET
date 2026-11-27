@@ -23,8 +23,7 @@ namespace Netty.NET.Buffer;
 /**
  * Skeletal {@link ByteBufAllocator} implementation to extend.
  */
-/// <remarks>NativeMemoryOwner can reliably free CLR native allocations, so preferDirect does not
-/// depend on JVM Unsafe/Cleaner detection. IoBuffer always chooses native storage.</remarks>
+/// <remarks>Direct buffers use managed storage. IoBuffer always chooses direct storage.</remarks>
 public abstract class AbstractByteBufAllocator : IByteBufAllocator
 {
     static AbstractByteBufAllocator()

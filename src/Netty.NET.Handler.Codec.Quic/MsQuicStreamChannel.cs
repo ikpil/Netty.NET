@@ -729,7 +729,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
     {
         if (data.IsSingleSegment)
         {
-            await stream.WriteAsync(data.First, fin).ConfigureAwait(false);
+            await WriteSegmentAsync(data.First, fin).ConfigureAwait(false);
             return;
         }
         ReadOnlySequence<byte>.Enumerator segments = data.GetEnumerator();
@@ -738,8 +738,14 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             ReadOnlyMemory<byte> segment = segments.Current;
             hasSegment = segments.MoveNext();
-            await stream.WriteAsync(segment, fin && !hasSegment).ConfigureAwait(false);
+            await WriteSegmentAsync(segment, fin && !hasSegment).ConfigureAwait(false);
         }
+    }
+
+    private async ValueTask WriteSegmentAsync(ReadOnlyMemory<byte> segment, bool fin)
+    {
+        using var lease = BufferMemoryLease.ForPinnableMemory(segment, out ReadOnlyMemory<byte> storage);
+        await stream.WriteAsync(storage, fin).ConfigureAwait(false);
     }
 
     protected override void DoWriteComplete()

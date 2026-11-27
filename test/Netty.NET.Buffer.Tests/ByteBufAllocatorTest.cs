@@ -486,11 +486,11 @@ public class ByteBufAllocatorClrContractTest
     }
 
     [Fact]
-    public void FailedNativeGrowthAndPinsKeepTheirReservationSemantics()
+    public void FailedGrowthKeepsTheReservationWhileAnOperationLeaseIsActive()
     {
         var native = new NativeMemoryAllocator(8); var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
-        var pin = b.AsMemory(0, 4).Pin();
+        using var lease = b.AcquireReadLease();
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 8);
@@ -498,7 +498,7 @@ public class ByteBufAllocatorClrContractTest
             Assert.Equal(0x01020304, b.GetInt(0)); Assert.Same(a, b.Alloc());
             b.Release(); Assert.Equal(4, native.ReservedBytes);
         }
-        finally { if (b.RefCnt > 0) b.Release(); pin.Dispose(); }
+        finally { if (b.RefCnt > 0) b.Release(); lease.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
     }
 

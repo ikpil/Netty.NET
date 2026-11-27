@@ -1,6 +1,18 @@
 # Netty.NET
 - https://github.com/netty/netty/commit/64cc10f38ea5f5bd7eae48507817c66680d0afdc
 
+Netty.NET builds without C# unsafe code. Direct buffers use managed arrays and retain the allocator reservation
+limit. Storage is pinned on demand for alignment or address diagnostics. A runtime pin keeps its backing array
+alive, while only an active owner or a Netty.NET storage lease counts toward that limit. Keep a reusable
+buffer retained while accessing its borrowed memory. Adaptive and
+thread-local memory views reject caller-created pins. QUIC takes a storage lease for the runtime's asynchronous pin.
+Use bounded `Memory<byte>` to wrap storage. The legacy raw-address overloads report
+`PlatformNotSupportedException` and leave ownership with the caller.
+
+UDP sends each segment as an individual datagram. Linux kernel segmentation, GRO, scatter reads, and
+original-destination ancillary metadata are unavailable in this build. Setting a non-default receive offload
+option reports `PlatformNotSupportedException`. Linux TCP options and endpoint queries still use bounded interop.
+
 The buffer port records every pinned file of buffer/src with a final status (no entry pending or in progress); see
 [buffer porting status](docs/buffer-porting.md) (`powershell -NoProfile -File tools/Update-BufferPortingManifest.ps1 -Check`).
 The transport port is complete; its [source and test manifest](docs/transport-porting-manifest.json)

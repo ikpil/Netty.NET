@@ -15,23 +15,20 @@
  */
 using System;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
 
-/// <summary>Allocates owned native byte memory with an explicit reservation limit.</summary>
-/// <remarks>The limit and count include the one-byte allocation backing an empty owner.
-/// They exclude native allocator metadata. No limit is inferred from the managed heap.</remarks>
-public sealed unsafe class NativeMemoryAllocator
+/// <summary>Allocates managed byte storage with an explicit reservation limit.</summary>
+/// <remarks>Reservations count active owners and storage retained by Netty.NET operation leases.
+/// An empty owner counts as one byte. The GC controls the lifetime of retired arrays.</remarks>
+public sealed class NativeMemoryAllocator
 {
     private long _reservedBytes;
 
-    /// <summary>The shared Netty native reservation domain.</summary>
-    /// <remarks>A positive io.netty.maxDirectMemory environment setting supplies
-    /// its byte limit at first use. Other values use no inferred managed-heap limit.
-    /// Construct an allocator explicitly for an independent reservation domain.</remarks>
+    /// <summary>The shared reservation domain.</summary>
+    /// <remarks>A positive io.netty.maxDirectMemory environment setting supplies its byte limit at first use.</remarks>
     public static NativeMemoryAllocator Shared => SharedAllocator.Instance;
 
     private static class SharedAllocator
@@ -58,30 +55,23 @@ public sealed unsafe class NativeMemoryAllocator
     {
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         long bytes = Math.Max(1, length);
-        var handle = new NativeAllocationHandle(this, bytes);
-        var owner = new NativeMemoryOwner(this, handle, length);
         Reserve(bytes);
         try
         {
-            void* pointer = clear ? NativeMemory.AllocZeroed((nuint)bytes) : NativeMemory.Alloc((nuint)bytes);
-            if (pointer == null) throw new OutOfMemoryException();
-            handle.Initialize(pointer);
-            GC.AddMemoryPressure(bytes);
-            handle.HasMemoryPressure = true;
+            var owner = new NativeMemoryOwner(this, length, clear);
+            owner.TakeReservation();
             return owner;
         }
         catch
         {
-            if (handle.IsInvalid) Release(bytes);
-            else handle.Dispose();
+            Release(bytes);
             throw;
         }
     }
 
-    /// <summary>Transfers an owner's allocation to a replacement of the requested length.</summary>
-    /// <remarks>The retained prefix is unchanged. New bytes are unspecified. On failure,
-    /// the original owner remains usable. On success, its memory views are invalidated.
-    /// All unpinned users must have ceased, and any outstanding pin rejects reallocation.</remarks>
+    /// <summary>Transfers an owner's reservation to a replacement of the requested length.</summary>
+    /// <remarks>The retained prefix is copied. On failure the original owner remains usable.
+    /// On success its views are invalidated, and existing pins still reference the old array.</remarks>
     public NativeMemoryOwner Reallocate(NativeMemoryOwner owner, int length)
     {
         ArgumentNullException.ThrowIfNull(owner);
@@ -89,42 +79,26 @@ public sealed unsafe class NativeMemoryAllocator
         if (!ReferenceEquals(owner.Allocator, this))
             throw new ArgumentException("The owner belongs to another allocator.", nameof(owner));
 
-        long bytes = Math.Max(1, length);
-        var replacementHandle = new NativeAllocationHandle(this, bytes);
-        var replacement = new NativeMemoryOwner(this, replacementHandle, length);
         lock (owner.Sync)
         {
-            owner.ThrowIfDisposed();
-            if (owner.PinCount != 0)
-                throw new InvalidOperationException("Dispose all pins before reallocating native memory.");
-
-            long delta = bytes - owner.Handle.Bytes;
-            bool addedPressure = false;
+            owner.EnsureReallocatable();
+            Span<byte> previous = owner.GetSpan();
+            long delta = (long)Math.Max(1, length) - Math.Max(1, owner.Length);
             if (delta > 0) Reserve(delta);
+            NativeMemoryOwner replacement;
             try
             {
-                if (delta > 0)
-                {
-                    GC.AddMemoryPressure(delta);
-                    addedPressure = true;
-                }
-                void* pointer = NativeMemory.Realloc((void*)owner.Handle.DangerousGetHandle(), (nuint)bytes);
-                if (pointer == null) throw new OutOfMemoryException();
-                replacementHandle.Initialize(pointer);
-                replacementHandle.HasMemoryPressure = true;
-                owner.TransferAllocation();
+                replacement = new NativeMemoryOwner(this, length, clear: false);
+                previous[..Math.Min(length, previous.Length)].CopyTo(replacement.GetSpan());
             }
             catch
             {
-                if (addedPressure) GC.RemoveMemoryPressure(delta);
                 if (delta > 0) Release(delta);
                 throw;
             }
-            if (delta < 0)
-            {
-                GC.RemoveMemoryPressure(-delta);
-                Release(-delta);
-            }
+            owner.TransferReservation();
+            replacement.TakeReservation();
+            if (delta < 0) Release(-delta);
             return replacement;
         }
     }
@@ -136,8 +110,7 @@ public sealed unsafe class NativeMemoryAllocator
             long current = Volatile.Read(ref _reservedBytes);
             if (bytes > MaximumBytes - current)
             {
-                // CLR: PlatformDependent.incrementMemoryCounter adds first and rolls back on
-                // failure; the CAS loop never publishes the excess, so used is the current value.
+                // CLR: the CAS loop rejects excess capacity without publishing an over-limit count.
                 throw new OutOfDirectMemoryError(string.Create(CultureInfo.InvariantCulture,
                     $"failed to allocate {bytes} byte(s) of direct memory (used: {current}, max: {MaximumBytes})"));
             }
@@ -146,28 +119,4 @@ public sealed unsafe class NativeMemoryAllocator
     }
 
     internal void Release(long bytes) => Interlocked.Add(ref _reservedBytes, -bytes);
-
-    internal sealed class NativeAllocationHandle : SafeHandle
-    {
-        private readonly NativeMemoryAllocator _allocator;
-        internal readonly long Bytes;
-        internal bool HasMemoryPressure;
-
-        internal NativeAllocationHandle(NativeMemoryAllocator allocator, long bytes) : base(0, ownsHandle: true)
-        {
-            _allocator = allocator;
-            Bytes = bytes;
-        }
-
-        public override bool IsInvalid => handle == 0;
-        internal void Initialize(void* pointer) => SetHandle((nint)pointer);
-
-        protected override bool ReleaseHandle()
-        {
-            NativeMemory.Free((void*)handle);
-            if (HasMemoryPressure) GC.RemoveMemoryPressure(Bytes);
-            _allocator.Release(Bytes);
-            return true;
-        }
-    }
 }

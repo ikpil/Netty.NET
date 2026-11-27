@@ -314,7 +314,7 @@ public class UnpooledTest
     }
 
     [Fact]
-    public unsafe void TestWrappedDirectBufferMemoryAddress()
+    public void TestWrappedDirectBufferMemoryAddress()
     {
         // CLR: a slice of native storage replaces the positioned direct ByteBuffer, and scoped pins replace
         // memoryAddress(); native storage always has an address, so there is no assumption gate.
@@ -327,9 +327,7 @@ public class UnpooledTest
         {
             Assert.True(buffer.IsDirect);
             Assert.Equal(8, buffer.Capacity);
-            using var expected = expectedBuffer.Pin();
-            using var actual = buffer.AsReadOnlyMemory(0, 8).Pin();
-            Assert.True(expected.Pointer == actual.Pointer);
+            Assert.Equal(ManagedMemoryTest.Address(expectedBuffer), ManagedMemoryTest.Address(buffer.AsReadOnlyMemory(0, 8)));
         }
         finally
         {

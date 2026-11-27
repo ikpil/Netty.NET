@@ -35,7 +35,7 @@ public class ReadOnlyUnsafeDirectByteBufferBufTest : ReadOnlyDirectByteBufferBuf
     }
 
     [Fact]
-    public unsafe void TestMemoryAddress()
+    public void TestMemoryAddress()
     {
         Memory<byte> memory = Allocate(8);
         ByteBuf buf = Buffer(memory);
@@ -44,10 +44,9 @@ public class ReadOnlyUnsafeDirectByteBufferBufTest : ReadOnlyDirectByteBufferBuf
             // CLR: hasMemoryAddress()/memoryAddress() become a scoped pin of the borrowed range;
             // ReadOnlyMemory<T>.Pin "enables taking and using the memory's address"
             // (https://learn.microsoft.com/en-us/dotnet/api/system.readonlymemory-1.pin?view=net-10.0).
-            using MemoryHandle address = buf.AsReadOnlyMemory(0, buf.Capacity).Pin();
-            Assert.True(address.Pointer != null);
-            using MemoryHandle source = memory.Pin();
-            Assert.Equal((nint)source.Pointer, (nint)address.Pointer);
+            nint address = ManagedMemoryTest.Address(buf.AsReadOnlyMemory(0, buf.Capacity));
+            Assert.NotEqual(0, address);
+            Assert.Equal(ManagedMemoryTest.Address(memory), address);
         }
         finally
         {

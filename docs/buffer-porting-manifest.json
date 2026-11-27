@@ -4,6 +4,7 @@
     "buffer/src"
   ],
   "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer. Comment preservedCount includes verbatim referenceComments for JVM-only directives/group labels or superseded compatibility APIs; preservedInImplementationCount/preservedAsReferenceCount distinguish code from archived references where present.",
+  "managedStorageRevision": "Direct storage uses managed arrays with on-demand pinning for alignment or address diagnostics. Raw address wrapping is unsupported. Earlier native lifetime and pointer evidence predates the managed storage revision.",
   "completionPlan": {
     "objective": "Complete the portable Netty.Buffer contracts using idiomatic CLR APIs; determine remaining implementation work from original implementation and consumers, not original test-method counts.",
     "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
@@ -25124,7 +25125,6 @@
         "src/Netty.NET.Buffer/Unpooled.MemoryCopying.cs",
         "src/Netty.NET.Buffer/Unpooled.MemoryWrapping.cs",
         "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
-        "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
         "test/Netty.NET.Buffer.Tests/UnpooledTest.cs",
         "test/Netty.NET.Buffer.Tests/UnpooledAsciiStringCopyingTest.cs",
         "test/Netty.NET.Buffer.Tests/UnpooledPrimitiveCopyingTest.cs",
@@ -25907,8 +25907,7 @@
           "src/Netty.NET.Buffer/Unpooled.Memory.cs",
           "src/Netty.NET.Buffer/Unpooled.MemoryCopying.cs",
           "src/Netty.NET.Buffer/Unpooled.MemoryWrapping.cs",
-          "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
-          "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs"
+          "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs"
         ],
         "evidence": [
           "test/Netty.NET.Buffer.Tests/UnpooledTest.cs",
@@ -26122,7 +26121,6 @@
         "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
         "src/Netty.NET.Buffer/ByteBuf.Files.cs",
         "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
-        "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
         "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufNativeCopyLeaseTest.cs",
         "test/Netty.NET.Buffer.Tests/UnpooledNativeResizeOwnershipTest.cs",
@@ -26853,7 +26851,6 @@
           "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
           "src/Netty.NET.Buffer/ByteBuf.Files.cs",
           "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
-          "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
           "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
           "src/Netty.NET.Buffer/WrappedByteBuf.Forwarding.cs",
           "src/Netty.NET.Buffer/WrappedByteBuf.cs"
@@ -27879,7 +27876,6 @@
         "src/Netty.NET.Buffer/ByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
         "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
-        "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
         "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs",
         "src/Netty.NET.Common/NativeMemoryOwner.cs",
         "test/Netty.NET.Buffer.Tests/NativeAddressByteBufTest.cs",
@@ -33374,7 +33370,6 @@
       "kind": "source",
       "status": "clr-replacement",
       "implementation": [
-        "src/Netty.NET.Buffer/NativeAddressMemoryManager.cs",
         "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
         "src/Netty.NET.Buffer/Unpooled.NativeAddress.cs"
       ],

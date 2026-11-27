@@ -69,21 +69,19 @@ public class ThreadLocalDirectBufferTest
         cache.Dispose(); Assert.Equal(0, native.ReservedBytes);
     }
 
-    [Theory]
-    [InlineData(false)] [InlineData(true)]
-    public unsafe void PinsAndInternalLeasesDelayReuseUntilTheLastClaim(bool lease)
+    [Fact]
+    public void InternalLeasesDelayReuseUntilTheLastClaim()
     {
         var native = new NativeMemoryAllocator(); using var cache = new ThreadLocalDirectBufferCache(512, native);
         ByteBuf b = cache.Rent().WriteByte(72);
         Memory<byte> memory = b.AsMemory(0, 1);
-        MemoryHandle pin = lease ? default : memory.Pin();
-        BufferMemoryLease claim = lease ? b.AcquireReadLease() : default;
+        Assert.Throws<NotSupportedException>(() => memory.Pin());
+        using BufferMemoryLease claim = b.AcquireReadLease();
         b.Release();
         Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
         ByteBuf other = cache.Rent(); other.SetByte(0, 22);
         Assert.Equal(512, native.ReservedBytes);
-        if (!lease) Assert.Equal(72, *((byte*)pin.Pointer));
-        var copiedPin = pin; pin.Dispose(); copiedPin.Dispose(); claim.Dispose();
+        var copiedClaim = claim; claim.Dispose(); copiedClaim.Dispose();
         Assert.Equal(512, native.ReservedBytes);
         other.Release(); Assert.Equal(256, native.ReservedBytes);
         ByteBuf reused = cache.Rent(); Assert.Equal(72, reused.GetByte(0)); reused.Release();
@@ -91,15 +89,15 @@ public class ThreadLocalDirectBufferTest
     }
 
     [Fact]
-    public unsafe void ResizeRetiresOldStorageAndPreservesPinnedBytesWithoutCachingIt()
+    public void ResizeRetiresOldStorageAndAnOperationLeasePreservesItsBytes()
     {
         var native = new NativeMemoryAllocator(); using var cache = new ThreadLocalDirectBufferCache(512, native);
         ByteBuf b = cache.Rent().WriteByte(72);
-        Memory<byte> old = b.AsMemory(0, 1); MemoryHandle pin = old.Pin();
+        Memory<byte> old = b.AsMemory(0, 1); ReadOnlySpan<byte> captured = old.Span; using var claim = b.AcquireReadLease();
         b.Capacity = 512; b.SetByte(0, 22);
-        Assert.Equal(768, native.ReservedBytes); Assert.Equal(72, *((byte*)pin.Pointer));
+        Assert.Equal(768, native.ReservedBytes); Assert.Equal(72, captured[0]);
         Assert.Throws<ObjectDisposedException>(() => old.Span.ToArray());
-        pin.Dispose(); Assert.Equal(512, native.ReservedBytes);
+        claim.Dispose(); Assert.Equal(512, native.ReservedBytes);
         b.Release(); ByteBuf next = cache.Rent(); Assert.Equal(512, next.Capacity); Assert.Equal(22, next.GetByte(0));
         next.Release(); cache.Dispose(); Assert.Equal(0, native.ReservedBytes);
     }
@@ -169,16 +167,14 @@ public class ThreadLocalDirectBufferTest
         b.Release(); cache.Dispose(); Assert.Equal(0, native.ReservedBytes);
     }
 
-    [Theory]
-    [InlineData(false)] [InlineData(true)]
-    public void ClosingCacheBeforeCrossThreadPinOrLeaseReturnNeverReusesStorage(bool lease)
+    [Fact]
+    public void ClosingCacheBeforeCrossThreadLeaseReturnNeverReusesStorage()
     {
         var native = new NativeMemoryAllocator(); using var cache = new ThreadLocalDirectBufferCache(512, native);
         ByteBuf b = cache.Rent();
-        MemoryHandle pin = lease ? default : b.AsMemory(0, 1).Pin();
-        BufferMemoryLease claim = lease ? b.AcquireReadLease() : default;
+        using BufferMemoryLease claim = b.AcquireReadLease();
         b.Release(); cache.Dispose(); Assert.Equal(256, native.ReservedBytes);
-        var worker = new Thread(() => { pin.Dispose(); claim.Dispose(); });
+        var worker = new Thread(claim.Dispose);
         worker.Start(); Assert.True(worker.Join(TimeSpan.FromSeconds(10)));
         Assert.Equal(0, native.ReservedBytes);
     }

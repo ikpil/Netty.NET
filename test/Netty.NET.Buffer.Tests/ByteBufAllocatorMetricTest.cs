@@ -181,18 +181,18 @@ public class ByteBufAllocatorMetricTest
     }
 
     [Fact]
-    public void PinsKeepPhysicalStorageWhileResizeAndFinalReleaseUpdateOwnedCapacity()
+    public void RuntimePinsDoNotCountTowardsOwnedCapacity()
     {
         var native = new NativeMemoryAllocator(32); var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
         var oldPin = b.AsMemory(0, 4).Pin();
         try
         {
-            b.Capacity = 8; AssertUsage(a, true, 8); Assert.Equal(12, native.ReservedBytes);
+            b.Capacity = 8; AssertUsage(a, true, 8); Assert.Equal(8, native.ReservedBytes);
             var newPin = b.AsMemory(0, 8).Pin();
-            try { b.Release(); AssertUsage(a, true, 0); Assert.Equal(12, native.ReservedBytes); }
+            try { b.Release(); AssertUsage(a, true, 0); Assert.Equal(0, native.ReservedBytes); }
             finally { newPin.Dispose(); }
-            Assert.Equal(4, native.ReservedBytes);
+            Assert.Equal(0, native.ReservedBytes);
         }
         finally { if (b.RefCnt > 0) b.Release(); oldPin.Dispose(); }
         AssertUsage(a, true, 0); Assert.Equal(0, native.ReservedBytes);

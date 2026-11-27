@@ -720,6 +720,8 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
             throw new ArgumentOutOfRangeException(nameof(index));
     }
     /// <summary>Returns writable borrowed memory for a contiguous range.</summary>
+    /// <remarks>Keep the buffer retained and its storage unchanged for the duration of the borrow.
+    /// Reusable adaptive and thread-local memory views do not support caller-created pins.</remarks>
     /// <exception cref="NotSupportedException">The range is read-only or spans
     /// multiple components. Use SetBytes or consolidate for segmented writes.</exception>
     public virtual Memory<byte> AsMemory(int index, int length)

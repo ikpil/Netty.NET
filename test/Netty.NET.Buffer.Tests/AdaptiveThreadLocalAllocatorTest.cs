@@ -84,10 +84,10 @@ public class AdaptiveThreadLocalAllocatorTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void FastThreadExitReleasesCachesWhileLiveBufferAndPinSurvive(bool direct)
+    public void FastThreadExitReleasesCachesWhileLiveBufferAndLeaseSurvive(bool direct)
     {
         var native = new NativeMemoryAllocator(); using var a = Allocator(native: native);
-        ByteBuf live = null; System.Buffers.MemoryHandle pin = default; Exception error = null;
+        ByteBuf live = null; BufferMemoryLease lease = default; Exception error = null;
         // Thread-local magazines require FastThreadLocalThread
         // (allocate() checks currentThreadWillCleanupFastThreadLocals)
         var thread = new FastThreadLocalThread(() =>
@@ -95,7 +95,7 @@ public class AdaptiveThreadLocalAllocatorTest
             try
             {
                 live = direct ? a.DirectBuffer(7, 100) : a.HeapBuffer(7, 100); live.SetInt(0, 12345);
-                pin = live.AsMemory(0, 4).Pin();
+                lease = live.AcquireReadLease();
                 for (int i = 0; i < 1300; i++)
                 { var b = direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256); b.Release(); }
             }
@@ -105,7 +105,7 @@ public class AdaptiveThreadLocalAllocatorTest
         Assert.Equal(0, a.HeapPool.LocalBindingCount + a.DirectPool.LocalBindingCount);
         Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory); Assert.Equal(12345, live.GetInt(0));
         live.Release(); Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
-        pin.Dispose(); Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        lease.Dispose(); Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class AdaptiveThreadLocalAllocatorTest
         {
             var native = new NativeMemoryAllocator(); using var a = Allocator(native: native);
             using var ready = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
-            Exception error = null; ByteBuf held = null; System.Buffers.MemoryHandle pin = default;
+            Exception error = null; ByteBuf held = null; BufferMemoryLease lease = default;
             var owner = new Thread(() =>
             {
                 try
@@ -168,7 +168,7 @@ public class AdaptiveThreadLocalAllocatorTest
                     {
                         var live = new List<ByteBuf>();
                         for (int i = 0; i < 1025; i++) live.Add(direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256));
-                        held = live[0]; held.SetInt(0, 54321); pin = held.AsMemory(0, 4).Pin();
+                        held = live[0]; held.SetInt(0, 54321); lease = held.AcquireReadLease();
                         ready.Set(); release.Wait();
                         for (int i = 1; i < live.Count; i++) live[i].Release();
                     });
@@ -180,7 +180,7 @@ public class AdaptiveThreadLocalAllocatorTest
             finally { release.Set(); Assert.True(owner.Join(TimeSpan.FromSeconds(15))); }
             Assert.Null(error); Assert.Equal(54321, held.GetInt(0));
             Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
-            held.Release(); pin.Dispose(); Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory);
+            held.Release(); lease.Dispose(); Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, a.HeapPool.LocalBindingCount + a.DirectPool.LocalBindingCount);
         }
     }

@@ -252,17 +252,17 @@ public class AdaptiveByteBufTest
 
     [Theory]
     [MemberData(nameof(Configurations))]
-    public void AliasedGrowingWritesAndPinsKeepOldRegionsAliveUntilTheirClaimsReturn(bool direct, bool lowMemory)
+    public void AliasedGrowingWritesAndLeasesKeepOldRegionsAliveUntilTheirClaimsReturn(bool direct, bool lowMemory)
     {
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
         var b = Buffer(allocator, direct, 32, 1000); b.WriteBytes(Pattern(32));
         AdaptiveChunkAllocation original = b.Allocation; Memory<byte> old = b.AsMemory(0, 32);
-        var pin = old.Pin(); var copied = pin; var lease = b.AcquireReadLease();
+        var lease = b.AcquireReadLease(); Span<byte> oldBytes = old.Span;
         var held = new List<ByteBuf>();
         try
         {
             b.WriteBytes(old.Span); Assert.Equal(Pattern(32).Concat(Pattern(32)), b.AsSpan(0, 64).ToArray());
-            Assert.NotSame(original, b.Allocation); Assert.Equal(0, Marshal.ReadByte(Pointer(pin)));
+            Assert.NotSame(original, b.Allocation); Assert.Equal(0, oldBytes[0]);
             Assert.Throws<ObjectDisposedException>(() => old.Span.Clear());
             // Exhaust the other FIFO slots before asking for reuse of the returned slot.
             for (int i = 1; i < AdaptivePoolingAllocator.MIN_CHUNK_SIZE / 32; i++)
@@ -270,14 +270,12 @@ public class AdaptiveByteBufTest
                 var first = Buffer(allocator, direct, 32, 1000); held.Add(first);
                 Assert.NotEqual(original.Offset, first.Allocation.Offset);
             }
-            pin.Dispose(); copied.Dispose(); lease.Dispose();
+            lease.Dispose();
             var next = Buffer(allocator, direct, 32, 1000); Assert.Equal(original.Offset, next.Allocation.Offset);
             next.Release();
         }
-        finally { pin.Dispose(); copied.Dispose(); lease.Dispose(); b.Release(); foreach (var item in held) item.Release(); }
+        finally { lease.Dispose(); b.Release(); foreach (var item in held) item.Release(); }
     }
-
-    private static unsafe nint Pointer(MemoryHandle pin) => (nint)pin.Pointer;
 
     [Fact]
     public void NativeAllocationFailurePreservesDataCapacityIndicesMarksAndOldReservation()
@@ -299,16 +297,16 @@ public class AdaptiveByteBufTest
 
     [Theory]
     [MemberData(nameof(Configurations))]
-    public void AllocatorRetirementLeavesViewsPinsAndLiveDataOwnedUntilFinalReturn(bool direct, bool lowMemory)
+    public void AllocatorRetirementLeavesViewsAndLeasesOwnedUntilFinalReturn(bool direct, bool lowMemory)
     {
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
         var root = Buffer(allocator, direct, 7, 1000); root.SetBytes(0, Pattern(7));
-        ByteBuf child = root.RetainedSlice(1, 5); var pin = child.AsMemory(0, 5).Pin();
+        ByteBuf child = root.RetainedSlice(1, 5); using var lease = child.AcquireReadLease(); ReadOnlySpan<byte> oldBytes = child.AsReadOnlySpan(0, 5);
         root.Release(); allocator.Dispose(); Assert.Equal(1, child.RefCnt);
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, child.AsSpan(0, 5).ToArray());
         root.Capacity = 32; Assert.Throws<ObjectDisposedException>(() => root.Capacity = 33);
         child.Release(); Assert.Equal(131072, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
-        Assert.Equal(1, Marshal.ReadByte(Pointer(pin))); pin.Dispose();
+        Assert.Equal(1, oldBytes[0]); lease.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, allocator.Native.ReservedBytes);
     }
 

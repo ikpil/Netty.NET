@@ -14,6 +14,27 @@ are retained. Partial source/API and test coverage is explicitly in-progress.
 No throwing placeholder API or artificial skipped test is used to represent
 unported work. Use the existing common design records for actual shared decisions.
 
+## Managed direct-buffer performance
+
+Direct buffers use managed arrays. The allocator pins storage on demand for aligned ranges and
+address diagnostics. The pin lasts until the owner and its storage leases release the array.
+Runtime pins obtained through `Memory.Pin()` have their own lifetime.
+
+The initial managed conversion pinned every allocation. On Windows with .NET 10 Release,
+an alternating-order benchmark compared commit `a81fdc0`, the eager-pinning conversion,
+and on-demand pinning. Each workload ran a warmup and seven timed batches of 300,000 operations.
+The values below are the median of three process medians in ns/op.
+
+| 256-byte workload | Native baseline | Eager pinning | On-demand pinning |
+| --- | ---: | ---: | ---: |
+| Allocate, access and dispose a standalone owner | 230 | 356 | 135 |
+| Rent, write, read and release a pooled direct buffer | 436 | 349 | 365 |
+| Rent, write, read and release an adaptive direct buffer | 425 | 425 | 426 |
+
+The standalone benchmark observed 160, 392 and 400 managed bytes per operation, respectively.
+The baseline allocates its payload outside the managed heap. These measurements cover local
+buffer operations and do not measure network throughput or tail latency.
+
 ## First implementation unit: heap buffers and shared views
 
 Add net10.0 Buffer and Buffer.Tests projects to the default solution.

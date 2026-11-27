@@ -107,7 +107,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
     }
 
     [Fact]
-    public unsafe void DirectBuffersMustHaveMemoryAddress()
+    public void DirectBuffersMustHaveMemoryAddress()
     {
         // The memory address must always be available when we either have Unsafe available,
         // or when we have memory segments available (though CleanerJava25 only enables for Java 25+).
@@ -117,11 +117,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
         ByteBuf buf = allocator.DirectBuffer();
         try
         {
-            using (MemoryHandle address = buf.AsMemory(0, buf.Capacity).Pin())
-            {
-                Assert.True(address.Pointer != null);
-                Assert.NotEqual(0L, (long)(nint)address.Pointer);
-            }
+            Assert.NotEqual(0, ManagedMemoryTest.Address(buf.AsMemory(0, buf.Capacity)));
         }
         finally
         {

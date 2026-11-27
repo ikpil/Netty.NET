@@ -14,10 +14,11 @@
  * under the License.
  */
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Runtime.Loader;
+using System.Runtime.InteropServices;
+using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
 
@@ -65,18 +66,11 @@ public sealed class BufferAllocatorEventSource : EventSource
     internal bool Enabled(EventKeywords keyword) => IsEnabled(EventLevel.Informational, keyword);
 
     [NonEvent]
-    internal unsafe Snapshot? Capture(ByteBuf buffer, EventKeywords keyword, ReadOnlyMemory<byte> memory,
+    internal Snapshot? Capture(ByteBuf buffer, EventKeywords keyword, ReadOnlyMemory<byte> memory,
         bool chunkPooled, bool chunkThreadLocal)
     {
         if (!Enabled(keyword)) return null;
-        long address = 0;
-        if (buffer.IsDirect)
-        {
-            // A pin only observes live native storage while capturing the address. The
-            // emitted integer grants no access and does not extend the storage lifetime.
-            using MemoryHandle pin = memory.Pin();
-            address = unchecked((long)(nint)pin.Pointer);
-        }
+        long address = buffer.IsDirect ? StorageAddress(memory) : 0;
         return new Snapshot(buffer.Capacity, buffer.MaxFastWritableBytes + buffer.WriterIndex,
             buffer.MaxCapacity, buffer.IsDirect, address, chunkPooled, chunkThreadLocal);
     }
@@ -93,17 +87,12 @@ public sealed class BufferAllocatorEventSource : EventSource
     }
 
     [NonEvent]
-    internal unsafe Snapshot? CaptureAdaptive(AdaptivePoolingAllocator.AdaptiveByteBuf buffer,
+    internal Snapshot? CaptureAdaptive(AdaptivePoolingAllocator.AdaptiveByteBuf buffer,
         AdaptivePoolingAllocator.AdaptiveChunkAllocation allocation, EventKeywords keyword)
     {
         if (!Enabled(keyword)) return null;
         bool direct = allocation.IsDirect;
-        long address = 0;
-        if (direct)
-        {
-            using MemoryHandle pin = allocation.Memory.Pin();
-            address = unchecked((long)(nint)pin.Pointer);
-        }
+        long address = direct && allocation.TryGetAddress(0, out nint start) ? (long)start : 0;
         // Final release has already made ByteBuf inaccessible. The live allocation
         // supplies storage metadata until the caller returns its buffer claim.
         return new Snapshot(buffer.Capacity, buffer.MaxFastWritableBytes + buffer.WriterIndex,
@@ -111,16 +100,11 @@ public sealed class BufferAllocatorEventSource : EventSource
     }
 
     [NonEvent]
-    internal unsafe void AdaptiveChunkChanged(ByteBuf storage, bool pooled, bool threadLocal, bool allocated)
+    internal void AdaptiveChunkChanged(ByteBuf storage, bool pooled, bool threadLocal, bool allocated)
     {
         if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk)) return;
         bool direct = storage.IsDirect;
-        long address = 0;
-        if (direct)
-        {
-            using MemoryHandle pin = storage.AsReadOnlyMemory(0, storage.Capacity).Pin();
-            address = unchecked((long)(nint)pin.Pointer);
-        }
+        long address = direct ? StorageAddress(storage.AsReadOnlyMemory(0, storage.Capacity)) : 0;
         Record(new PendingEvent(allocated ? 4 : 5, default,
             new ChunkSnapshot(storage.Capacity, direct, address, pooled, threadLocal, true), 0));
     }
@@ -198,17 +182,20 @@ public sealed class BufferAllocatorEventSource : EventSource
     }
 
     [NonEvent]
-    internal unsafe void ChunkChanged(PoolArena.ChunkStorage storage, bool direct, bool allocated)
+    internal void ChunkChanged(PoolArena.ChunkStorage storage, bool direct, bool allocated)
     {
         if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk)) return;
-        long address = 0;
-        if (direct)
-        {
-            using MemoryHandle pin = storage.Memory.Pin();
-            address = unchecked((long)(nint)pin.Pointer);
-        }
+        long address = direct ? StorageAddress(storage.Memory) : 0;
         Record(new PendingEvent(allocated ? 4 : 5, default,
             new ChunkSnapshot(storage.Memory.Length, direct, address, storage.Chunk != null), 0));
+    }
+
+    [NonEvent]
+    private static long StorageAddress(ReadOnlyMemory<byte> memory)
+    {
+        if (MemoryMarshal.TryGetMemoryManager<byte, ThreadLocalDirectAllocation>(memory, out var storage, out int offset, out _))
+            return storage.TryGetAddress(offset, out nint start) ? (long)start : 0;
+        return NativeMemoryOwner.TryGetAddress(memory, out nint address) ? (long)address : 0;
     }
 
     [NonEvent]

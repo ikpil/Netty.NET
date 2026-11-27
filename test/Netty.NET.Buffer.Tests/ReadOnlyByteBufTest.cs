@@ -667,21 +667,22 @@ public class ReadOnlyByteBufTest
     }
 
     [Fact]
-    public unsafe void NativeReadOnlyMemoryPinsRetainPhysicalStorageAfterLogicalRelease()
+    public void CapturedReadOnlySpanKeepsDataAfterLogicalRelease()
     {
         var allocator = new NativeMemoryAllocator();
         ByteBuf parent = new UnpooledDirectByteBuf(8, 16, allocator);
         parent.WriteLong(0x0102030405060708L);
         ByteBuf view = parent.AsReadOnly();
         ReadOnlyMemory<byte> borrowed = view.ReadableMemory;
+        ReadOnlySpan<byte> captured = borrowed.Span;
         using (MemoryHandle lease = borrowed.Pin())
         {
             Assert.True(view.Release());
             Assert.Throws<IllegalReferenceCountException>(() => view.GetByte(0));
             Assert.Throws<ObjectDisposedException>(() => borrowed.Span.ToArray());
-            Assert.Equal(1, ((byte*)lease.Pointer)[0]);
-            Assert.Equal(8, ((byte*)lease.Pointer)[7]);
-            Assert.Equal(8, allocator.ReservedBytes);
+            Assert.Equal(1, captured[0]);
+            Assert.Equal(8, captured[7]);
+            Assert.Equal(0, allocator.ReservedBytes);
         }
         Assert.Equal(0, allocator.ReservedBytes);
     }

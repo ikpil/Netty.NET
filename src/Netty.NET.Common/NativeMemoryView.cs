@@ -15,70 +15,75 @@
  */
 using System;
 using System.Buffers;
-using System.Threading;
 
 namespace Netty.NET.Common;
 
-/// <summary>A bounded, borrowed view of externally owned native memory.</summary>
-/// <remarks>The caller must keep the external allocation valid throughout every
-/// span and pin use. Disposing this descriptor invalidates new access and never
-/// frees the external address. Pinning this view does not extend external ownership.</remarks>
-public sealed unsafe class NativeMemoryView : IDisposable
+/// <summary>A bounded, borrowed view of existing byte memory.</summary>
+/// <remarks>Disposal closes the view. The supplied memory remains caller-owned.</remarks>
+public sealed class NativeMemoryView : IDisposable
 {
     private readonly ViewManager _manager;
-    public NativeMemoryView(nint address, int length)
+
+    public NativeMemoryView(Memory<byte> memory)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(length);
-        if (address == 0 && length != 0)
-            throw new ArgumentException("Nonempty native memory requires a nonzero address.", nameof(address));
-        // Native addresses are unsigned bits. The exclusive end must also be
-        // representable because an empty slice at Length can be pinned.
-        // This arithmetic check cannot establish external allocation validity.
-        if ((nuint)length > nuint.MaxValue - unchecked((nuint)address))
-            throw new ArgumentOutOfRangeException(nameof(length), "The native memory range wraps the address space.");
-        Address = address;
-        Length = length;
-        _manager = new ViewManager(this);
+        Length = memory.Length;
+        _manager = new ViewManager(memory);
     }
 
-    public nint Address { get; }
+    [Obsolete("Wrapping raw addresses is unsupported. Supply bounded Memory<byte>.")]
+    public NativeMemoryView(nint address, int length) =>
+        throw new PlatformNotSupportedException("Raw address views are unavailable on the managed allocator.");
+
     public int Length { get; }
     public Memory<byte> Memory => _manager.Memory;
     public void Dispose() => ((IDisposable)_manager).Dispose();
 
-    private sealed class ViewManager : MemoryManager<byte>
+    private sealed class ViewManager(Memory<byte> memory) : MemoryManager<byte>
     {
-        private readonly NativeMemoryView _view;
-        private int _disposed;
-        internal ViewManager(NativeMemoryView view) => _view = view;
-        private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, _view);
+        private readonly object _sync = new();
+        private Memory<byte> _memory = memory;
+        private bool _disposed;
+
         public override Memory<byte> Memory
         {
-            get { ThrowIfDisposed(); return CreateMemory(_view.Length); }
+            get
+            {
+                lock (_sync)
+                {
+                    ThrowIfDisposed();
+                    return CreateMemory(_memory.Length);
+                }
+            }
         }
+
         public override Span<byte> GetSpan()
         {
-            ThrowIfDisposed();
-            return new Span<byte>((void*)_view.Address, _view.Length);
+            lock (_sync)
+            {
+                ThrowIfDisposed();
+                return _memory.Span;
+            }
         }
+
         public override MemoryHandle Pin(int elementIndex = 0)
         {
-            ThrowIfDisposed();
-            if ((uint)elementIndex > (uint)_view.Length)
-                throw new ArgumentOutOfRangeException(nameof(elementIndex));
-            // Borrowing provides no owner retention. Keep the descriptor alive;
-            // the external owner remains the caller's responsibility.
-            return new MemoryHandle(unchecked((byte*)_view.Address + elementIndex), pinnable: new ViewPin(_view));
+            lock (_sync)
+            {
+                ThrowIfDisposed();
+                return _memory.Slice(elementIndex).Pin();
+            }
         }
-        public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
-        protected override void Dispose(bool disposing) => Interlocked.Exchange(ref _disposed, 1);
-    }
 
-    private sealed class ViewPin : IPinnable
-    {
-        private NativeMemoryView _view;
-        internal ViewPin(NativeMemoryView view) => _view = view;
-        public MemoryHandle Pin(int elementIndex) => throw new NotSupportedException("A pin lease is single-use.");
-        public void Unpin() => Interlocked.Exchange(ref _view, null);
+        public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
+        protected override void Dispose(bool disposing)
+        {
+            lock (_sync)
+            {
+                _disposed = true;
+                _memory = default;
+            }
+        }
+
+        private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
     }
 }

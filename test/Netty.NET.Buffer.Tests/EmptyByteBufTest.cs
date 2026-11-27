@@ -130,15 +130,14 @@ public class EmptyByteBufTest
         Assert.Equal(0, native.ReservedBytes);
     }
 
-    private static unsafe void AssertEmptyMemoryPins(ByteBuf empty)
+    private static void AssertEmptyMemoryPins(ByteBuf empty)
     {
         // CLR: Memory.Empty has a null pin, so an empty sentinel needs no dummy native allocation.
         // Simultaneous writable/read-only pins cover the original NIO/address agreement without JVM capability skips.
         using (MemoryHandle writable = empty.AsMemory(0, 0).Pin())
         using (MemoryHandle readable = empty.ReadableMemory.Pin())
         {
-            Assert.True(writable.Pointer == null);
-            Assert.True(readable.Pointer == writable.Pointer);
+            Assert.True(empty.AsMemory(0, 0).IsEmpty);
             Assert.False(empty.Release());
             Assert.Equal(1, empty.RefCnt);
             Assert.True(empty.ReadableMemory.IsEmpty);

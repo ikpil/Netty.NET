@@ -268,7 +268,7 @@ public class SimpleLeakAwareByteBufContractTest
     }
 
     [Fact]
-    public void TrackerClosesAtLogicalReleaseWhileNativePinPreservesPhysicalStorage()
+    public void TrackerClosesAtLogicalReleaseWhileAnOperationLeasePreservesStorage()
     {
         var native = new NativeMemoryAllocator(8);
         var allocator = new UnpooledByteBufAllocator(true, native);
@@ -277,7 +277,7 @@ public class SimpleLeakAwareByteBufContractTest
         var wrapper = new SimpleLeakAwareByteBuf(origin, tracker);
         try
         {
-            using (var pin = wrapper.AsMemory(0, 1).Pin())
+            using (wrapper.AcquireReadLease())
             {
                 Assert.True(wrapper.Release());
                 Assert.Equal(1, tracker.Closes);

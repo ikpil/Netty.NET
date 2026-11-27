@@ -96,7 +96,7 @@ public class AllocatorStorageContractTest
 
     [Theory]
     [MemberData(nameof(Providers))]
-    public unsafe void DirectBuffersMustHaveMemoryAddress(int provider, bool preferDirect)
+    public void DirectBuffersMustHaveMemoryAddress(int provider, bool preferDirect)
     {
         using var s = new Storage(provider, preferDirect);
         ByteBuf buffer = s.Allocator.DirectBuffer();
@@ -107,17 +107,15 @@ public class AllocatorStorageContractTest
             // The memory address must always be available when we either have Unsafe available,
             // or when we have memory segments available (though CleanerJava25 only enables for Java 25+).
             // CLR: borrow an address only within a pin; no JVM capability check or persistent pointer API.
-            using (var pin = buffer.AsMemory(0, buffer.Capacity).Pin())
-            {
-                Assert.NotEqual((nint)0, (nint)pin.Pointer);
-                ((byte*)pin.Pointer)[0] = 0x5a;
-                Assert.Equal(0x5a, buffer.GetByte(0));
-                buffer.SetByte(buffer.Capacity - 1, 0xa5);
-                Assert.Equal(0xa5, ((byte*)pin.Pointer)[buffer.Capacity - 1]);
-                Assert.Equal(0, buffer.ReaderIndex);
-                Assert.Equal(0, buffer.WriterIndex);
-                Assert.Equal(1, buffer.RefCnt);
-            }
+            Span<byte> bytes = buffer.AsSpan(0, buffer.Capacity);
+            Assert.NotEqual(0, ManagedMemoryTest.Address(buffer.AsMemory(0, buffer.Capacity)));
+            bytes[0] = 0x5a;
+            Assert.Equal(0x5a, buffer.GetByte(0));
+            buffer.SetByte(buffer.Capacity - 1, 0xa5);
+            Assert.Equal(0xa5, bytes[buffer.Capacity - 1]);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(0, buffer.WriterIndex);
+            Assert.Equal(1, buffer.RefCnt);
         }
         finally { Assert.True(buffer.Release()); }
     }

@@ -622,14 +622,15 @@ public class CompositeByteBufTest
         buffer.AddComponent(Segment(new byte[] { 1, 2 }, true, allocator), true)
             .AddComponent(Segment(new byte[] { 3, 4 }, true, allocator), true);
         ReadOnlyMemory<byte> saved = buffer.AsReadOnlyMemory(0, 2);
+        ReadOnlySpan<byte> captured = saved.Span;
         using (MemoryHandle pin = saved.Pin())
         {
             buffer.RemoveComponent(0);
-            Assert.Equal(4, allocator.ReservedBytes);
-            buffer.Release();
             Assert.Equal(2, allocator.ReservedBytes);
+            buffer.Release();
+            Assert.Equal(0, allocator.ReservedBytes);
             Assert.Throws<ObjectDisposedException>(() => saved.Span.ToArray());
-            unsafe { Assert.Equal((byte)1, *(byte*)pin.Pointer); }
+            Assert.Equal((byte)1, captured[0]);
         }
         Assert.Equal(0, allocator.ReservedBytes);
     }

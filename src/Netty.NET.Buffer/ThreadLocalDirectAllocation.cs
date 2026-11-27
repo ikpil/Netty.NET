@@ -23,9 +23,9 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
-// CLR: a fresh memory facade invalidates old borrows; pins/operation claims delay
-// native-storage reuse until their final return. Copied handles return exactly once.
-internal sealed unsafe class ThreadLocalDirectAllocation : MemoryManager<byte>
+// CLR: a fresh memory facade invalidates old borrows; operation leases delay
+// reuse until their final return.
+internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
 {
     private NativeMemoryOwner _owner;
     private ThreadLocalDirectBufferCache _cache;
@@ -70,25 +70,15 @@ internal sealed unsafe class ThreadLocalDirectAllocation : MemoryManager<byte>
         throw new ObjectDisposedException(nameof(ThreadLocalDirectAllocation));
     }
 
-    public override MemoryHandle Pin(int elementIndex = 0)
-    {
-        if (elementIndex < 0 || elementIndex > Length) throw new ArgumentOutOfRangeException(nameof(elementIndex));
-        Claim claim = AcquireClaim();
-        try
-        {
-            // The claim owns the underlying handle too, so copied MemoryHandle values
-            // unpin and return the segment exactly once. Native and heap use the same path.
-            claim.Pin(_memory.Slice(elementIndex));
-            return new MemoryHandle(claim.Pointer, pinnable: claim);
-        }
-        catch
-        {
-            claim.Dispose();
-            throw;
-        }
-    }
+    internal bool TryGetAddress(int offset, out nint address) =>
+        NativeMemoryOwner.TryGetAddress(_memory.Slice(offset), out address);
 
-    public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
+    internal ReadOnlyMemory<byte> GetStorage(int offset, int length) => _memory.Slice(offset, length);
+
+    public override MemoryHandle Pin(int elementIndex = 0) =>
+        throw new NotSupportedException("Keep the buffer retained while using this reusable memory.");
+
+    public override void Unpin() => throw new NotSupportedException();
     internal void Release() => Dispose(true);
     protected override void Dispose(bool disposing)
     {
@@ -107,24 +97,14 @@ internal sealed unsafe class ThreadLocalDirectAllocation : MemoryManager<byte>
         else cache.Return(owner);
     }
 
-    private sealed class Claim : IDisposable, IPinnable
+    private sealed class Claim : IDisposable
     {
         private ThreadLocalDirectAllocation _allocation;
-        private MemoryHandle _handle;
-        internal void* Pointer => _handle.Pointer;
         internal void Activate(ThreadLocalDirectAllocation allocation) => _allocation = allocation;
-        internal void Pin(Memory<byte> memory) => _handle = memory.Pin();
-        public MemoryHandle Pin(int elementIndex) => throw new NotSupportedException("A pin claim is single-use.");
-        public void Unpin() => Dispose();
         public void Dispose()
         {
             ThreadLocalDirectAllocation allocation = Interlocked.Exchange(ref _allocation, null);
-            if (allocation != null)
-            {
-                // Release the physical pin before making this segment reusable.
-                try { _handle.Dispose(); }
-                finally { allocation.ReleaseClaim(); }
-            }
+            allocation?.ReleaseClaim();
             GC.SuppressFinalize(this);
         }
         ~Claim() => Dispose();

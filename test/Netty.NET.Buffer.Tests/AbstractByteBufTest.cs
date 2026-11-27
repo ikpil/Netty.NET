@@ -621,147 +621,119 @@ public abstract partial class AbstractByteBufTest : IDisposable
 
     }
 
-    private unsafe void AssertShortConsistentWithByteBuffer(bool direct, bool testBigEndian)
+    private void AssertShortConsistentWithByteBuffer(bool direct, bool testBigEndian)
     {
         for (int i = 0; i < JAVA_BYTEBUFFER_CONSISTENCY_ITERATIONS; ++i)
         {
             // Independent heap/native reference storage replaces the JVM ByteBuffer;
             // the BCL writes and reads the selected order without using Netty codecs.
-            void* allocation = direct ? NativeMemory.Alloc((nuint)buffer.Capacity) : null;
-            try
-            {
-                Span<byte> reference = direct ? new Span<byte>(allocation, buffer.Capacity) : new byte[buffer.Capacity];
-                short expected = unchecked((short)(NextSignedInt32() & 0xFFFF));
-                if (testBigEndian)
-                    BinaryPrimitives.WriteInt16BigEndian(reference, expected);
-                else
-                    BinaryPrimitives.WriteInt16LittleEndian(reference, expected);
+            byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
+            Span<byte> reference = allocation;
+            short expected = unchecked((short)(NextSignedInt32() & 0xFFFF));
+            if (testBigEndian)
+                BinaryPrimitives.WriteInt16BigEndian(reference, expected);
+            else
+                BinaryPrimitives.WriteInt16LittleEndian(reference, expected);
 
-                int bufferIndex = buffer.Capacity - 2;
-                if (testBigEndian)
-                    buffer.SetShort(bufferIndex, expected);
-                else
-                    buffer.SetShortLE(bufferIndex, expected);
+            int bufferIndex = buffer.Capacity - 2;
+            if (testBigEndian)
+                buffer.SetShort(bufferIndex, expected);
+            else
+                buffer.SetShortLE(bufferIndex, expected);
 
-                short referenceActual = testBigEndian ? BinaryPrimitives.ReadInt16BigEndian(reference)
-                    : BinaryPrimitives.ReadInt16LittleEndian(reference);
-                Assert.Equal(expected, referenceActual);
-                Assert.Equal(referenceActual, testBigEndian ? buffer.GetShort(bufferIndex) : buffer.GetShortLE(bufferIndex));
-                // A matching getter/setter endian error must not cancel itself in a roundtrip.
-                Assert.Equal(reference[..2].ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 2));
-            }
-            finally
-            {
-                NativeMemory.Free(allocation);
-            }
+            short referenceActual = testBigEndian ? BinaryPrimitives.ReadInt16BigEndian(reference)
+                : BinaryPrimitives.ReadInt16LittleEndian(reference);
+            Assert.Equal(expected, referenceActual);
+            Assert.Equal(referenceActual, testBigEndian ? buffer.GetShort(bufferIndex) : buffer.GetShortLE(bufferIndex));
+            // A matching getter/setter endian error must not cancel itself in a roundtrip.
+            Assert.Equal(reference[..2].ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 2));
         }
     }
 
-    private unsafe void AssertMediumConsistentWithByteBuffer(bool direct, bool testBigEndian)
+    private void AssertMediumConsistentWithByteBuffer(bool direct, bool testBigEndian)
     {
         for (int i = 0; i < JAVA_BYTEBUFFER_CONSISTENCY_ITERATIONS; ++i)
         {
             // Independent heap/native reference storage replaces the JVM ByteBuffer;
             // the BCL writes and reads the selected order without using Netty codecs.
-            void* allocation = direct ? NativeMemory.Alloc((nuint)buffer.Capacity) : null;
-            try
-            {
-                Span<byte> reference = direct ? new Span<byte>(allocation, buffer.Capacity) : new byte[buffer.Capacity];
-                int expected = NextSignedInt32() & 0x00FFFFFF;
-                if (testBigEndian)
-                    BinaryPrimitives.WriteInt32BigEndian(reference, expected);
-                else
-                    BinaryPrimitives.WriteInt32LittleEndian(reference, expected);
+            byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
+            Span<byte> reference = allocation;
+            int expected = NextSignedInt32() & 0x00FFFFFF;
+            if (testBigEndian)
+                BinaryPrimitives.WriteInt32BigEndian(reference, expected);
+            else
+                BinaryPrimitives.WriteInt32LittleEndian(reference, expected);
 
-                int bufferIndex = buffer.Capacity - 3;
-                if (testBigEndian)
-                    buffer.SetMedium(bufferIndex, expected);
-                else
-                    buffer.SetMediumLE(bufferIndex, expected);
+            int bufferIndex = buffer.Capacity - 3;
+            if (testBigEndian)
+                buffer.SetMedium(bufferIndex, expected);
+            else
+                buffer.SetMediumLE(bufferIndex, expected);
 
-                int referenceActual = testBigEndian ? BinaryPrimitives.ReadInt32BigEndian(reference)
-                    : BinaryPrimitives.ReadInt32LittleEndian(reference);
-                Assert.Equal(expected, referenceActual);
-                Assert.Equal(referenceActual, testBigEndian ? buffer.GetUnsignedMedium(bufferIndex) : buffer.GetUnsignedMediumLE(bufferIndex));
-                // A matching getter/setter endian error must not cancel itself in a roundtrip.
-                Assert.Equal((testBigEndian ? reference.Slice(1, 3) : reference[..3]).ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 3));
-            }
-            finally
-            {
-                NativeMemory.Free(allocation);
-            }
+            int referenceActual = testBigEndian ? BinaryPrimitives.ReadInt32BigEndian(reference)
+                : BinaryPrimitives.ReadInt32LittleEndian(reference);
+            Assert.Equal(expected, referenceActual);
+            Assert.Equal(referenceActual, testBigEndian ? buffer.GetUnsignedMedium(bufferIndex) : buffer.GetUnsignedMediumLE(bufferIndex));
+            // A matching getter/setter endian error must not cancel itself in a roundtrip.
+            Assert.Equal((testBigEndian ? reference.Slice(1, 3) : reference[..3]).ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 3));
         }
     }
 
-    private unsafe void AssertIntConsistentWithByteBuffer(bool direct, bool testBigEndian)
+    private void AssertIntConsistentWithByteBuffer(bool direct, bool testBigEndian)
     {
         for (int i = 0; i < JAVA_BYTEBUFFER_CONSISTENCY_ITERATIONS; ++i)
         {
             // Independent heap/native reference storage replaces the JVM ByteBuffer;
             // the BCL writes and reads the selected order without using Netty codecs.
-            void* allocation = direct ? NativeMemory.Alloc((nuint)buffer.Capacity) : null;
-            try
-            {
-                Span<byte> reference = direct ? new Span<byte>(allocation, buffer.Capacity) : new byte[buffer.Capacity];
-                int expected = NextSignedInt32();
-                if (testBigEndian)
-                    BinaryPrimitives.WriteInt32BigEndian(reference, expected);
-                else
-                    BinaryPrimitives.WriteInt32LittleEndian(reference, expected);
+            byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
+            Span<byte> reference = allocation;
+            int expected = NextSignedInt32();
+            if (testBigEndian)
+                BinaryPrimitives.WriteInt32BigEndian(reference, expected);
+            else
+                BinaryPrimitives.WriteInt32LittleEndian(reference, expected);
 
-                int bufferIndex = buffer.Capacity - 4;
-                if (testBigEndian)
-                    buffer.SetInt(bufferIndex, expected);
-                else
-                    buffer.SetIntLE(bufferIndex, expected);
+            int bufferIndex = buffer.Capacity - 4;
+            if (testBigEndian)
+                buffer.SetInt(bufferIndex, expected);
+            else
+                buffer.SetIntLE(bufferIndex, expected);
 
-                int referenceActual = testBigEndian ? BinaryPrimitives.ReadInt32BigEndian(reference)
-                    : BinaryPrimitives.ReadInt32LittleEndian(reference);
-                Assert.Equal(expected, referenceActual);
-                Assert.Equal(referenceActual, testBigEndian ? buffer.GetInt(bufferIndex) : buffer.GetIntLE(bufferIndex));
-                // A matching getter/setter endian error must not cancel itself in a roundtrip.
-                Assert.Equal(reference[..4].ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 4));
-            }
-            finally
-            {
-                NativeMemory.Free(allocation);
-            }
+            int referenceActual = testBigEndian ? BinaryPrimitives.ReadInt32BigEndian(reference)
+                : BinaryPrimitives.ReadInt32LittleEndian(reference);
+            Assert.Equal(expected, referenceActual);
+            Assert.Equal(referenceActual, testBigEndian ? buffer.GetInt(bufferIndex) : buffer.GetIntLE(bufferIndex));
+            // A matching getter/setter endian error must not cancel itself in a roundtrip.
+            Assert.Equal(reference[..4].ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 4));
         }
     }
 
-    private unsafe void AssertLongConsistentWithByteBuffer(bool direct, bool testBigEndian)
+    private void AssertLongConsistentWithByteBuffer(bool direct, bool testBigEndian)
     {
         for (int i = 0; i < JAVA_BYTEBUFFER_CONSISTENCY_ITERATIONS; ++i)
         {
             // Independent heap/native reference storage replaces the JVM ByteBuffer;
             // the BCL writes and reads the selected order without using Netty codecs.
-            void* allocation = direct ? NativeMemory.Alloc((nuint)buffer.Capacity) : null;
-            try
-            {
-                Span<byte> reference = direct ? new Span<byte>(allocation, buffer.Capacity) : new byte[buffer.Capacity];
-                long expected = NextSignedInt64();
-                if (testBigEndian)
-                    BinaryPrimitives.WriteInt64BigEndian(reference, expected);
-                else
-                    BinaryPrimitives.WriteInt64LittleEndian(reference, expected);
+            byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
+            Span<byte> reference = allocation;
+            long expected = NextSignedInt64();
+            if (testBigEndian)
+                BinaryPrimitives.WriteInt64BigEndian(reference, expected);
+            else
+                BinaryPrimitives.WriteInt64LittleEndian(reference, expected);
 
-                int bufferIndex = buffer.Capacity - 8;
-                if (testBigEndian)
-                    buffer.SetLong(bufferIndex, expected);
-                else
-                    buffer.SetLongLE(bufferIndex, expected);
+            int bufferIndex = buffer.Capacity - 8;
+            if (testBigEndian)
+                buffer.SetLong(bufferIndex, expected);
+            else
+                buffer.SetLongLE(bufferIndex, expected);
 
-                long referenceActual = testBigEndian ? BinaryPrimitives.ReadInt64BigEndian(reference)
-                    : BinaryPrimitives.ReadInt64LittleEndian(reference);
-                Assert.Equal(expected, referenceActual);
-                Assert.Equal(referenceActual, testBigEndian ? buffer.GetLong(bufferIndex) : buffer.GetLongLE(bufferIndex));
-                // A matching getter/setter endian error must not cancel itself in a roundtrip.
-                Assert.Equal(reference[..8].ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 8));
-            }
-            finally
-            {
-                NativeMemory.Free(allocation);
-            }
+            long referenceActual = testBigEndian ? BinaryPrimitives.ReadInt64BigEndian(reference)
+                : BinaryPrimitives.ReadInt64LittleEndian(reference);
+            Assert.Equal(expected, referenceActual);
+            Assert.Equal(referenceActual, testBigEndian ? buffer.GetLong(bufferIndex) : buffer.GetLongLE(bufferIndex));
+            // A matching getter/setter endian error must not cancel itself in a roundtrip.
+            Assert.Equal(reference[..8].ToArray(), ByteBufUtil.GetBytes(buffer, bufferIndex, 8));
         }
     }
 

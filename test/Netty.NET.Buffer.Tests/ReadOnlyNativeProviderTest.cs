@@ -86,7 +86,7 @@ public class ReadOnlyNativeProviderTest
     // (see ReadOnlyUnsafeDirectByteBufferBufTest.cs for the original fixture and its comment).
     [Theory]
     [InlineData(1)] [InlineData(3)] [InlineData(8)]
-    public unsafe void CapturedNativeOffsetControlsPrimitiveReadsBulkTransfersAndPinnedAddress(int offset)
+    public void CapturedNativeOffsetControlsPrimitiveReadsBulkTransfersAndPinnedAddress(int offset)
     {
         var native = new NativeMemoryAllocator(); using var owner = native.Allocate(48);
         for (int i = 0; i < 48; i++) owner.Memory.Span[i] = unchecked((byte)(i * 17 + 128));
@@ -116,9 +116,7 @@ public class ReadOnlyNativeProviderTest
             Assert.Equal(owner.Memory.Slice(offset + 2, 24).ToArray(), array[3..27]);
             // Use buffer as the super class will slice the passed in ByteBuffer which means the memoryAddress
             // may be different if the position != 0.
-            using MemoryHandle rootPin = owner.Memory.Pin();
-            using MemoryHandle rangePin = source.AsReadOnlyMemory(0, 32).Pin();
-            Assert.Equal((nint)((byte*)rootPin.Pointer + offset), (nint)rangePin.Pointer);
+            Assert.Equal(ManagedMemoryTest.Address(owner.Memory) + offset, ManagedMemoryTest.Address(source.AsReadOnlyMemory(0, 32)));
             owner.Memory.Span[offset] = 99; Assert.Equal(99, source.GetByte(0));
         }
         finally { source.Release(); heap.Release(); direct.Release(); composite.Release(); }

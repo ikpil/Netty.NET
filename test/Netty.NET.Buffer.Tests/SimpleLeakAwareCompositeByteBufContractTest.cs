@@ -473,7 +473,7 @@ public class SimpleLeakAwareCompositeByteBufContractTest
         try
         {
             Assert.True(b.Release()); Assert.Equal(1, tracker.Closes); Assert.Equal(0, component.RefCnt);
-            Assert.Equal(8, native.ReservedBytes);
+            Assert.Equal(internalLease ? 8 : 0, native.ReservedBytes);
         }
         finally { lease.Dispose(); pin.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);

@@ -18,18 +18,19 @@ using System;
 using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Netty.NET.Common;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
 internal sealed partial class AdaptivePoolingAllocator
 {
-    // CLR: a region has one buffer claim and temporary operation/pin claims. Returning
-    // the buffer invalidates its borrowed Memory, but a lease delays slot reuse. Wrappers
-    // and pin tokens are never recycled; old references cannot attach to a new allocation.
+    // CLR: a region has one buffer claim and temporary operation leases. Returning
+    // the buffer invalidates its borrowed Memory, but a lease delays slot reuse. Lease tokens
+    // are never recycled; old references cannot attach to a new allocation.
     // CLR: this reservation is what Chunk.TryAllocate hands to AdaptiveByteBuf where the source's
     // readInitInto initializes the buffer's chunk, rootParent and startIndex; it has no source type.
-    internal sealed unsafe class AdaptiveChunkAllocation : MemoryManager<byte>
+    internal sealed class AdaptiveChunkAllocation : MemoryManager<byte>
     {
         private Chunk _chunk;
         private Memory<byte> _memory;
@@ -90,25 +91,15 @@ internal sealed partial class AdaptivePoolingAllocator
             throw new ObjectDisposedException(nameof(AdaptiveChunkAllocation));
         }
 
-        public override MemoryHandle Pin(int elementIndex = 0)
-        {
-            if (elementIndex < 0 || elementIndex > Length) throw new ArgumentOutOfRangeException(nameof(elementIndex));
-            Claim claim = AcquireClaim();
-            try
-            {
-                // The claim owns the underlying handle too, so copied MemoryHandle values
-                // unpin and return the segment exactly once. Native and heap use the same path.
-                claim.Pin(_memory.Slice(elementIndex));
-                return new MemoryHandle(claim.Pointer, pinnable: claim);
-            }
-            catch
-            {
-                claim.Dispose();
-                throw;
-            }
-        }
+        internal bool TryGetAddress(int offset, out nint address) =>
+            NativeMemoryOwner.TryGetAddress(_memory.Slice(offset), out address);
 
-        public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
+        internal ReadOnlyMemory<byte> GetStorage(int offset, int length) => _memory.Slice(offset, length);
+
+        public override MemoryHandle Pin(int elementIndex = 0) =>
+            throw new NotSupportedException("Keep the buffer retained while using this reusable memory.");
+
+        public override void Unpin() => throw new NotSupportedException();
         internal void Release() => Dispose(true);
         protected override void Dispose(bool disposing)
         {
@@ -125,24 +116,14 @@ internal sealed partial class AdaptivePoolingAllocator
             chunk.ReleaseSegment(Offset, Length);
         }
 
-        private sealed class Claim : IDisposable, IPinnable
+        private sealed class Claim : IDisposable
         {
             private AdaptiveChunkAllocation _allocation;
-            private MemoryHandle _handle;
-            internal void* Pointer => _handle.Pointer;
             internal void Activate(AdaptiveChunkAllocation allocation) => _allocation = allocation;
-            internal void Pin(Memory<byte> memory) => _handle = memory.Pin();
-            public MemoryHandle Pin(int elementIndex) => throw new NotSupportedException("A pin claim is single-use.");
-            public void Unpin() => Dispose();
             public void Dispose()
             {
                 AdaptiveChunkAllocation allocation = Interlocked.Exchange(ref _allocation, null);
-                if (allocation != null)
-                {
-                    // Release the physical pin before making this segment reusable.
-                    try { _handle.Dispose(); }
-                    finally { allocation.ReleaseClaim(); }
-                }
+                allocation?.ReleaseClaim();
                 GC.SuppressFinalize(this);
             }
             ~Claim() => Dispose();

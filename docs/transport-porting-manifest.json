@@ -6221,7 +6221,6 @@
           "test/Netty.NET.Transport.Tests/DatagramReadBatchContractTest.cs",
           "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
@@ -8230,7 +8229,6 @@
           "test/Netty.NET.Transport.Tests/DatagramLifecycleContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
@@ -8851,7 +8849,6 @@
           "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs",
           "test/Netty.NET.Transport.Tests/ManualIoPhaseContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramScatteringReadSourceTest.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
@@ -15286,14 +15283,14 @@
     "inventoryEntries": 277,
     "reviewedImplementationFiles": 159,
     "portedOriginalFixtures": 119,
-    "portedOriginalMethods": 523,
+    "portedOriginalMethods": 520,
     "supplementalClrCases": 579,
     "pendingMeaning": "Unreviewed source/fixture inventory, not a count of missing CLR runtime features.",
     "countsBasis": "Current Transport entries, every pinned testsuite file (testsuiteEntries, or testsuiteDeferredEntries while it needs an unported module) and the selected native test sources. Java JUnit wrappers, allocator executions, CLR original cases and supplemental cases are separated in validation. Since 2026-11-26 the checker recomputes inventoryEntries, pendingEntries, reviewedImplementationFiles, portedOriginalFixtures (test entries with status verified or clr-adapted across entries, testsuiteEntries and nativeTestEntries), portedOriginalMethods (mapped declared methods), mappedInheritedScenarios, the testsuite/native/deferred counts and notPortedEntries (all three lists), and fails when the summary differs. supplementalClrCases stays an incremental count of added supplemental cases.",
     "testsuiteSources": 60,
     "sourceDisabledMethodsMapped": 9,
     "nativeTestSources": 13,
-    "mappedInheritedScenarios": 50,
+    "mappedInheritedScenarios": 49,
     "reviewedImplementationFilesBasis": "Count of core Transport implementation entries with status clr-adapted, including explicitly reviewed CLR role aliases; not a count of distinct C# files. Recomputed from entries to remove earlier incremental-count drift.",
     "notPortedEntries": {
       "deprecated-not-ported": 28,
@@ -15681,7 +15678,6 @@
       "sourceEvidence": [
         "src/Netty.NET.Transport/Channels/Sockets/SegmentedDatagramPacket.cs",
         "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
         "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs"
       ],
@@ -15699,7 +15695,6 @@
       "decision": "Parse IPv4 original destination and UDP_GRO control messages together for both recvmsg and recvmmsg. Propagate the per-packet recipient to retained segments and use the channel local endpoint when ancillary metadata is absent. Configure original destination before registration so a pending CLR read cannot consume it. Map IP_FREEBIND to the native Linux socket flag.",
       "sourceEvidence": [
         "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
-        "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
         "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
         "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
         "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
@@ -26930,12 +26925,11 @@
         "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs"
       ],
       "review": {
-        "scope": "The five declared segmentation methods and the inherited connected unicast scenario with IP_RECVORIGDSTADDR run with both allocators. The inherited case reuses the original wrap, count, echo, disconnect and reconnect checks. Separate wildcard tests establish that native packet metadata changes the delivered recipient.",
+        "scope": "Two original send methods cover managed segmentation and retain their segment-count and size assertions. The three kernel GRO cases and the inherited original-destination case require native ancillary data.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SegmentedDatagramSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SegmentedDatagramContractTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs",
           "src/Netty.NET.Transport/Channels/Sockets/SegmentedDatagramPacket.cs",
           "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
@@ -26945,7 +26939,7 @@
         {
           "upstreamMethod": "testSendSegmentedDatagramPacket",
           "clrMethod": "TestSendSegmentedDatagramPacket",
-          "adaptation": "Send 16 512-byte segments from one contiguous direct buffer. Keep the original receiver segment count and size assertions.",
+          "adaptation": "Send 16 512-byte segments from one contiguous direct buffer. Keep the original receiver segment count and size assertions. The managed socket sends each segment as a separate datagram.",
           "nativeCases": [
             [
               false
@@ -26958,46 +26952,7 @@
         {
           "upstreamMethod": "testSendSegmentedDatagramPacketComposite",
           "clrMethod": "TestSendSegmentedDatagramPacketComposite",
-          "adaptation": "Repeat the original send with 16 direct composite components.",
-          "nativeCases": [
-            [
-              false
-            ],
-            [
-              true
-            ]
-          ]
-        },
-        {
-          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacket",
-          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacket",
-          "adaptation": "Enable real Linux UDP_GRO and retain the original fixed 8192-byte receive buffer. Verify GRO configuration and all 16 delivered segments.",
-          "nativeCases": [
-            [
-              false
-            ],
-            [
-              true
-            ]
-          ]
-        },
-        {
-          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketComposite",
-          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacketComposite",
-          "adaptation": "Repeat real Linux UDP_GRO with the source composite layout.",
-          "nativeCases": [
-            [
-              false
-            ],
-            [
-              true
-            ]
-          ]
-        },
-        {
-          "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
-          "clrMethod": "TestSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
-          "adaptation": "Enable real Linux UDP_GRO with 8192-byte slots and a 16384-byte receive buffer. Use recvmmsg and retain the original 16 delivered segment assertions.",
+          "adaptation": "Repeat the original send with 16 direct composite components. The managed socket sends each segment as a separate datagram.",
           "nativeCases": [
             [
               false
@@ -27010,9 +26965,41 @@
       ],
       "methodReview": {
         "declaredCount": 5,
-        "mappedCount": 5,
+        "mappedCount": 2,
         "reviewedCount": 5,
-        "unreviewedMethods": []
+        "unreviewedMethods": [],
+        "notApplicableMethods": [
+          {
+            "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacket",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Enable real Linux UDP_GRO and retain the original fixed 8192-byte receive buffer. Verify GRO configuration and all 16 delivered segments.",
+            "reason": "The managed datagram transport does not expose Linux GRO or recvmmsg.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+              "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketComposite",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Repeat real Linux UDP_GRO with the source composite layout.",
+            "reason": "The managed datagram transport does not expose Linux GRO or recvmmsg.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+              "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+            ]
+          },
+          {
+            "upstreamMethod": "testSendAndReceiveSegmentedDatagramPacketWithScatteringRead",
+            "disposition": "clr-not-applicable",
+            "sourceContract": "Enable real Linux UDP_GRO with 8192-byte slots and a 16384-byte receive buffer. Use recvmmsg and retain the original 16 delivered segment assertions.",
+            "reason": "The managed datagram transport does not expose Linux GRO or recvmmsg.",
+            "clrEvidence": [
+              "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+              "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+            ]
+          }
+        ]
       },
       "comments": {
         "status": "preserved",
@@ -27021,12 +27008,15 @@
         "unreviewedCount": 0,
         "scope": "All original fixture comments are preserved, including the inherited override."
       },
-      "inheritedCaseMappings": [
+      "inheritedNotApplicable": [
         {
           "upstreamOwner": "testsuite/src/main/java/io/netty/testsuite/transport/socket/DatagramUnicastTest.java",
           "upstreamMethod": "testSimpleSendWithConnect",
-          "clrMethod": "TestSimpleSendWithConnectAndOriginalDestination",
-          "adaptation": "One [Fact] in DatagramUnicastSourceTest that runs only for the INET fixture on Linux: it enables ChannelOption.IP_RECVORIGDSTADDR on the server bootstrap around the inherited testSimpleSendWithConnect body, with both allocators through the harness."
+          "reason": "IP_RECVORIGDSTADDR ancillary data is unavailable on the managed transport.",
+          "clrEvidence": [
+            "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
+            "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs"
+          ]
         }
       ]
     },
@@ -27044,8 +27034,7 @@
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs",
-          "src/Netty.NET.Transport/Channels/Sockets/LinuxUdpOffload.cs"
+          "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs"
         ]
       },
       "caseMappings": [
@@ -27651,7 +27640,7 @@
           "String message parameters of CLR-only members (logging, test helpers, RejectedExecutionException, OutOfDirectMemoryErrorException, FormattingTuple)",
           "BCL overrides with BCL names (TraceListener.TraceEvent/Write/WriteLine)",
           "AbstractChannelHandlerContext.WriteAndFlushAsync internal dispatch lambda (handler, context) and the other (h, c) dispatch lambdas",
-          "LinuxUdpOffload sendmsg/recvmsg native entry points",
+          "managed UDP send and receive",
           "CLR-only test helpers taking ByteBuf message (LocalChannelWriteSourceTest.WriteThenOnOwner, SocketCancelWriteSourceTest.CancelQueuedWrite)",
           "DefaultChannelGroup.WriteCoreAsync(object message), the CLR helper behind write(Object message)"
         ],

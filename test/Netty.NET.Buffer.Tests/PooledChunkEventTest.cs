@@ -116,14 +116,13 @@ public class PooledChunkEventTest
 
     [Theory]
     [InlineData(false, 0)] [InlineData(true, 0)] [InlineData(true, 64)]
-    public unsafe void HugeChunkReportsUsableNormalizedStorageAndCurrentAlignedAddress(bool direct, int alignment)
+    public void HugeChunkReportsUsableNormalizedStorageAndCurrentAlignedAddress(bool direct, int alignment)
     {
         var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native, alignment: alignment);
         using var listener = Listen(); ByteBuf buffer = Allocate(allocator, direct, 20000);
         int capacity = alignment == 0 ? 20000 : 20480;
         Check(listener.Events[0], 4, capacity, direct, false);
-        using (var pin = buffer.AsReadOnlyMemory(0, buffer.Capacity).Pin())
-            Assert.True(direct ? listener.Events[0].Number("address") == unchecked((long)(nint)pin.Pointer) : listener.Events[0].Number("address") == 0);
+        Assert.Equal(direct ? (long)ManagedMemoryTest.Address(buffer.AsReadOnlyMemory(0, buffer.Capacity)) : 0, listener.Events[0].Number("address"));
         if (alignment != 0) Assert.True(listener.Events[0].Number("address") % alignment == 0);
         buffer.Release(); Assert.Equal(new[] { 4, 1, 2, 5 }, listener.Events.Select(e => e.Id));
         Check(listener.Events[3], 5, capacity, direct, false);
@@ -165,13 +164,13 @@ public class PooledChunkEventTest
     }
 
     [Fact]
-    public void NativePinCanOutliveTheLogicalChunkFreeWithoutDuplicateEvents()
+    public void RuntimePinDoesNotDelayLogicalChunkFreeOrDuplicateEvents()
     {
         var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
         using var listener = Listen((EventKeywords)24); ByteBuf buffer = Allocate(allocator, true, 8192);
         var pin = buffer.AsReadOnlyMemory(0, 8192).Pin();
         buffer.Release(); allocator.Dispose(); Assert.Equal(new[] { 4, 5 }, listener.Events.Select(e => e.Id));
-        Assert.True(native.ReservedBytes > 0); pin.Dispose(); Assert.Equal(0, native.ReservedBytes); Assert.Equal(2, listener.Events.Length);
+        Assert.Equal(0, native.ReservedBytes); pin.Dispose(); Assert.Equal(0, native.ReservedBytes); Assert.Equal(2, listener.Events.Length);
     }
 
     [Fact]

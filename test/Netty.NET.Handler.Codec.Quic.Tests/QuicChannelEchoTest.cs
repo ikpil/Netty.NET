@@ -258,11 +258,21 @@ public class QuicChannelEchoTest : AbstractQuicTest
 
     [Theory(Timeout = TIMEOUT)]
     [MemberData(nameof(Data))]
-    public async Task TestEchoStartedFromClient(bool autoRead, bool directBuffer, bool composite)
-    {
-        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        IByteBufAllocator allocator = GetAllocator(directBuffer);
+    public Task TestEchoStartedFromClient(bool autoRead, bool directBuffer, bool composite) =>
+        EchoStartedFromClient(autoRead, composite, GetAllocator(directBuffer), TestContext.Current.CancellationToken);
 
+    [Theory(Timeout = TIMEOUT)]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AdaptiveMemorySupportsTheRuntimeQuicPin(bool composite)
+    {
+        using var allocator = new AdaptiveByteBufAllocator(preferDirect: true);
+        await EchoStartedFromClient(autoRead: true, composite, allocator, TestContext.Current.CancellationToken);
+    }
+
+    private async Task EchoStartedFromClient(bool autoRead, bool composite, IByteBufAllocator allocator,
+        CancellationToken cancellationToken)
+    {
         EchoHandler sh = new EchoHandler(true, autoRead, allocator);
         EchoHandler ch = new EchoHandler(false, autoRead, allocator);
         QuicChannelValidationHandler serverHandler = new ServerValidationHandler(autoRead, allocator);
