@@ -72,6 +72,7 @@ public class DuplicatedByteBufFactoryTest
             Assert.Equal(Root.WriterIndex, Buffer.WriterIndex);
             Assert.Equal(1, Buffer.RefCnt);
         }
+
         public void Dispose()
         {
             if (Buffer.RefCnt > 0) Buffer.Release(Buffer.RefCnt);

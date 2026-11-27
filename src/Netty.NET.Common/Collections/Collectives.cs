@@ -9,12 +9,14 @@ public static class Collectives
     {
         return Array.Empty<T>();
     }
+
     public static IReadOnlyList<T> SingletonList<T>(T item)
     {
         var l = new List<T>(1);
         l.Add(item);
         return l;
     }
+
     public static List<T> AsList<T>(params T[] items)
     {
         return new List<T>(items);

@@ -54,7 +54,9 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
     /**
      * Create a new instance
      */
-    public NioServerDomainSocketChannel() : this(NewChannel()) { }
+    public NioServerDomainSocketChannel() : this(NewChannel())
+    {
+    }
 
     /**
      * Create a new instance using the given {@link ServerSocketChannel}.
@@ -142,10 +144,12 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
     {
         return null;
     }
+
     protected override IChannelConfig NewConfig()
     {
         return new DefaultServerSocketChannelConfig(this, JavaChannel());
     }
+
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -156,6 +160,7 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
         SetActive(true);
         return Task.CompletedTask;
     }
+
     protected override void DoClose()
     {
         // Obtain the localAddress before we close the channel so it will not return null if we did not retrieve
@@ -164,6 +169,7 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
         base.DoClose();
         JavaChannel().Dispose();
     }
+
     protected override bool DoConnect(EndPoint remoteAddress, EndPoint localAddress)
     {
         throw new NotSupportedException();

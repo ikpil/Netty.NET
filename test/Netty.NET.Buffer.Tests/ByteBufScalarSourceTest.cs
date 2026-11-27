@@ -44,6 +44,7 @@ public class ByteBufScalarSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -127,7 +128,8 @@ public class ByteBufScalarSourceTest
         using var s = new Storage(provider, 8);
         // Clear the buffer so we are sure the reader and writer indices are 0.
         // This is important as we may return a slice from newBuffer(...).
-        s.Root.Clear(); Assert.True(s.Root.Release());
+        s.Root.Clear();
+        Assert.True(s.Root.Release());
         Assert.Throws<IllegalReferenceCountException>(() => ReleasedOperations[operation](s.Root));
         Assert.Equal(0, s.Root.RefCnt);
     }
@@ -158,10 +160,18 @@ public class ByteBufScalarSourceTest
     public void AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices(int provider, int operation, bool negative)
     {
         using var s = new Storage(provider, 4096);
-        int width = operation switch { 0 or 1 => 1, 2 => 2, 3 => 3, 4 => 4, _ => 8 };
+        int width = operation switch
+        {
+            0 or 1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            _ => 8
+        };
         int index = negative ? -1 : s.Root.Capacity - width + 1;
         Assert.Throws<ArgumentOutOfRangeException>(() => GetBoundaryValue(s.Root, operation, index));
-        Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+        Assert.Equal(0, s.Root.ReaderIndex);
+        Assert.Equal(0, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);
     }
 
@@ -178,7 +188,8 @@ public class ByteBufScalarSourceTest
         s.Root.WriteByte(0);
         Assert.Equal(0, s.Root.ReadByte());
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReadByte());
-        Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(1, s.Root.WriterIndex);
+        Assert.Equal(1, s.Root.ReaderIndex);
+        Assert.Equal(1, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);
     }
 
@@ -186,10 +197,12 @@ public class ByteBufScalarSourceTest
     {
         return operation switch { 0 => 1, 1 or 2 => 2, 3 or 4 => 3, 5 or 6 => 4, _ => 8 };
     }
+
     private static bool LittleEndian(int operation)
     {
         return operation is 2 or 4 or 6 or 8;
     }
+
     private static void Set(ByteBuf b, int operation, ulong bits)
     {
         int value = unchecked((int)bits);
@@ -206,6 +219,7 @@ public class ByteBufScalarSourceTest
             default: b.SetLongLE(15, unchecked((long)bits)); break;
         }
     }
+
     private static long Get(ByteBuf b, int operation)
     {
         return operation switch
@@ -215,6 +229,7 @@ public class ByteBufScalarSourceTest
             5 => b.GetInt(15), 6 => b.GetIntLE(15), 7 => b.GetLong(15), _ => b.GetLongLE(15)
         };
     }
+
     private static long Read(ByteBuf b, int operation)
     {
         return operation switch

@@ -32,8 +32,12 @@ public class ByteBufRelativeTransferDispatchTest
 
         public void Before(ByteBuf peer, int index, int length)
         {
-            ++Count; Peer = peer; Index = index; Length = length;
-            if (Mode is 1 or 5) throw Error;
+            ++Count;
+            Peer = peer;
+            Index = index;
+            Length = length;
+            if (Mode is 1 or 5)
+                throw Error;
         }
 
         public ByteBuf After(ByteBuf result)
@@ -47,14 +51,18 @@ public class ByteBufRelativeTransferDispatchTest
     {
         public override ByteBuf ReadBytes(ByteBuf destination, int length)
         {
-            if (calls.Mode < 4) return base.ReadBytes(destination, length);
-            calls.Before(destination, -1, length); return destination;
+            if (calls.Mode < 4)
+                return base.ReadBytes(destination, length);
+            calls.Before(destination, -1, length);
+            return destination;
         }
 
         public override ByteBuf WriteBytes(ByteBuf source, int length)
         {
-            if (calls.Mode < 4) return base.WriteBytes(source, length);
-            calls.Before(source, -1, length); return source;
+            if (calls.Mode < 4)
+                return base.WriteBytes(source, length);
+            calls.Before(source, -1, length);
+            return source;
         }
 
         public override ByteBuf ReadBytes(ByteBuf destination, int destinationIndex, int length)
@@ -75,14 +83,18 @@ public class ByteBufRelativeTransferDispatchTest
     {
         public override ByteBuf ReadBytes(ByteBuf destination, int length)
         {
-            if (calls.Mode < 4) return base.ReadBytes(destination, length);
-            calls.Before(destination, -1, length); return destination;
+            if (calls.Mode < 4)
+                return base.ReadBytes(destination, length);
+            calls.Before(destination, -1, length);
+            return destination;
         }
 
         public override ByteBuf WriteBytes(ByteBuf source, int length)
         {
-            if (calls.Mode < 4) return base.WriteBytes(source, length);
-            calls.Before(source, -1, length); return source;
+            if (calls.Mode < 4)
+                return base.WriteBytes(source, length);
+            calls.Before(source, -1, length);
+            return source;
         }
 
         public override ByteBuf ReadBytes(ByteBuf destination, int destinationIndex, int length)

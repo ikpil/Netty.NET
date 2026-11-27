@@ -248,10 +248,12 @@ public class SocketLingerCloseContractTest
             Channel.Pipeline.AddLast(new Observe(Loop, Events));
             Loop.RegisterAsync(Channel, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
         }
+
         internal void WaitForClose()
         {
             Assert.True(Channel.CloseEntered.Wait(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
         }
+
         internal void PumpUntil(Func<bool> condition)
         {
             var deadline = DateTime.UtcNow.AddSeconds(5);
@@ -262,6 +264,7 @@ public class SocketLingerCloseContractTest
                 Thread.Sleep(1);
             }
         }
+
         public void Dispose()
         {
             Channel.AllowClose.Set();
@@ -282,10 +285,12 @@ public class SocketLingerCloseContractTest
         {
             JavaChannel().Dispose();
         }
+
         protected override TaskScheduler PrepareToClose()
         {
             return CloseExecutor ?? base.PrepareToClose();
         }
+
         protected override void DoClose()
         {
             Interlocked.Increment(ref CloseCalls);
@@ -306,10 +311,12 @@ public class SocketLingerCloseContractTest
         {
             return Array.Empty<Task>();
         }
+
         protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
         {
             return false;
         }
+
         protected override void QueueTask(Task task)
         {
             throw new RejectedExecutionException("Close worker rejected.");
@@ -319,10 +326,24 @@ public class SocketLingerCloseContractTest
     private sealed class Observe(IEventLoop loop, List<string> events, TaskCompletionSource removed = null) : ChannelInboundHandlerAdapter
     {
         public override void ChannelInactive(IChannelHandlerContext ctx)
-        { Assert.True(loop.InEventLoop()); events.Add("inactive"); ctx.FireChannelInactive(); }
+        {
+            Assert.True(loop.InEventLoop());
+            events.Add("inactive");
+            ctx.FireChannelInactive();
+        }
+
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
-        { Assert.True(loop.InEventLoop()); events.Add("unregistered"); ctx.FireChannelUnregistered(); }
+        {
+            Assert.True(loop.InEventLoop());
+            events.Add("unregistered");
+            ctx.FireChannelUnregistered();
+        }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
-        { Assert.True(loop.InEventLoop()); events.Add("removed"); removed?.SetResult(); }
+        {
+            Assert.True(loop.InEventLoop());
+            events.Add("removed");
+            removed?.SetResult();
+        }
     }
 }

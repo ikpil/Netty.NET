@@ -34,6 +34,7 @@ public class CompositeByteBufOwnershipTest
                 ? new PooledByteBufAllocator(direct, pageSize: 4096, maxOrder: 1, nativeAllocator: Native)
                 : new UnpooledByteBufAllocator(direct, Native);
         }
+
         public void Dispose()
         {
             (Allocator as IDisposable)?.Dispose();
@@ -42,19 +43,24 @@ public class CompositeByteBufOwnershipTest
     }
     private static byte[] Read(ByteBuf buffer, int index, int length)
     {
-        byte[] result = new byte[length]; buffer.GetBytes(index, result); return result;
+        byte[] result = new byte[length];
+        buffer.GetBytes(index, result);
+        return result;
     }
+
     public static IEnumerable<object[]> ReleaseOrders()
     {
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true })
         foreach (bool rootFirst in new[] { false, true }) yield return [pooled, direct, rootFirst];
     }
+
     public static IEnumerable<object[]> Factories()
     {
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
+
     public static IEnumerable<object[]> Removals()
     {
         foreach (bool pooled in new[] { false, true })

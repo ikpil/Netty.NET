@@ -28,7 +28,9 @@ public sealed class SupportedCipherSuiteFilter : ICipherSuiteFilter
 {
     public static readonly SupportedCipherSuiteFilter INSTANCE = new SupportedCipherSuiteFilter();
 
-    private SupportedCipherSuiteFilter() { }
+    private SupportedCipherSuiteFilter()
+    {
+    }
 
     public string[] FilterCipherSuites(IEnumerable<string> ciphers, IList<string> defaultCiphers,
             ISet<string> supportedCiphers)

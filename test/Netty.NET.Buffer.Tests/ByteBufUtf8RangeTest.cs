@@ -118,7 +118,8 @@ public class ByteBufUtf8RangeTest
     [InlineData(0, int.MaxValue)] [InlineData(22, 22)] [InlineData(0, -1)]
     public void InvalidRangesFailBeforeDestinationValidationGrowthOrMutation(int start, int end)
     {
-        string text = "Some UTF-8 like äÄ∏ŒŒ"; AsciiString raw = new(text);
+        string text = "Some UTF-8 like äÄ∏ŒŒ";
+        AsciiString raw = new(text);
         ByteBuf buffer = Unpooled.Buffer(1, 64).WriteByte(99);
         try
         {
@@ -131,7 +132,9 @@ public class ByteBufUtf8RangeTest
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReserveAndWriteUtf8(destination, text, start, end, -1));
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReserveAndWriteUtf8(destination, raw, start, end, -1));
             }
-            Assert.Equal(1, buffer.Capacity); Assert.Equal(1, buffer.WriterIndex); Assert.Equal(99, buffer.GetByte(0));
+            Assert.Equal(1, buffer.Capacity);
+            Assert.Equal(1, buffer.WriterIndex);
+            Assert.Equal(99, buffer.GetByte(0));
         }
         finally { buffer.Release(); }
     }
@@ -201,7 +204,8 @@ public class ByteBufUtf8RangeTest
     public void ReadOnlyAndReleasedDestinationsRejectEmptyAndNonemptyWrites(bool direct)
     {
         ByteBuf owner = direct ? Unpooled.DirectBuffer(4, 16) : Unpooled.Buffer(4, 16);
-        ByteBuf buffer = owner.AsReadOnly(); AsciiString raw = new("AB");
+        ByteBuf buffer = owner.AsReadOnly();
+        AsciiString raw = new("AB");
         try
         {
             foreach (int end in new[] { 0, 1 })
@@ -211,7 +215,8 @@ public class ByteBufUtf8RangeTest
                 Assert.Throws<NotSupportedException>(() => ByteBufUtil.ReserveAndWriteUtf8(buffer, raw, 0, end, end));
                 Assert.Throws<NotSupportedException>(() => ByteBufUtil.ReserveAndWriteUtf8(buffer, "AB", 0, end, end));
             }
-            Assert.Equal(0, owner.WriterIndex); Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(0, owner.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
         }
         finally { owner.Release(); }
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.WriteUtf8(owner, "AB", 0, 0));
@@ -284,11 +289,14 @@ public class ByteBufUtf8RangeTest
             Assert.Throws<InvalidOperationException>(() => ascii
                 ? ByteBufUtil.ReserveAndWriteUtf8(buffer, new AsciiString("ABCD"), 4)
                 : ByteBufUtil.ReserveAndWriteUtf8(buffer, "xABCDz", 1, 5, 4));
-            Assert.Equal(0, buffer.WriterIndex); Assert.Equal(new byte[] { 65, 66 }, ByteBufUtil.GetBytes(first));
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
+            Assert.Equal(0, buffer.WriterIndex);
+            Assert.Equal(new byte[] { 65, 66 }, ByteBufUtil.GetBytes(first));
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
     }
 
     private sealed class FailingHeapBuffer() : UnpooledHeapByteBuf(2, 2)
@@ -305,10 +313,12 @@ public class ByteBufUtf8RangeTest
         {
             throw new InvalidOperationException("Simple writes must not record accesses.");
         }
+
         public void Record(object hint)
         {
             throw new InvalidOperationException("Simple writes must not record hints.");
         }
+
         public bool Close(ByteBuf buffer)
         {
             return true;

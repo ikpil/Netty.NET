@@ -85,19 +85,28 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         return _deadlineNanos;
     }
+
     public long DelayNanos()
     {
         return DelayNanos(_clock());
     }
+
     public long DelayNanos(long now)
     {
         return AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadlineNanos);
     }
+
     public long GetId()
     {
         return _id;
     }
-    public void SetId(long id) { if (_id == 0) _id = id; }
+
+    public void SetId(long id)
+    {
+        if (_id == 0)
+            _id = id;
+    }
+
     public void SetConsumed()
     {
         // Optimization to avoid checking system clock again
@@ -220,7 +229,11 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         }
     }
 
-    private void ReleaseInvocation() { _function = null; _context = null; }
+    private void ReleaseInvocation()
+    {
+        _function = null;
+        _context = null;
+    }
 
     private sealed class Invocation(Func<CancellationToken, T> function, CancellationToken token)
     {
@@ -244,6 +257,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         return _queueIndex;
     }
+
     public void PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue, int index)
     {
         _queueIndex = index;

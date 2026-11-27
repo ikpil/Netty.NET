@@ -43,7 +43,9 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
         Logger.Debug("-Dio.netty.hostsFileRefreshInterval: {}", DefaultRefreshInterval);
     }
 
-    public DefaultHostsFileEntriesResolver() : this(HostsFileEntriesProvider.Parser(), DefaultRefreshInterval) { }
+    public DefaultHostsFileEntriesResolver() : this(HostsFileEntriesProvider.Parser(), DefaultRefreshInterval)
+    {
+    }
 
     // for testing purpose only
     internal DefaultHostsFileEntriesResolver(HostsFileEntriesProvider.IParser hostsFileParser, long refreshInterval)

@@ -300,10 +300,12 @@ public class DatagramWriteBudgetContractTest
             // AbstractUnsafe.bind invokes channelActive later; settle it before counting write turns.
             Loop.RunNow();
         }
+
         internal void PumpUntil(Func<bool> condition)
         {
             DatagramWriteBudgetContractTest.PumpUntil(Loop, condition);
         }
+
         public void Dispose()
         {
             ManualIoEventLoopSourceTest.Terminate(Loop);

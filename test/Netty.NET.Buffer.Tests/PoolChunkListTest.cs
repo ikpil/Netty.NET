@@ -80,7 +80,8 @@ public class PoolChunkListTest
         PoolChunk initial = b.Allocation.Chunk;
         Assert.Equal(0, ListIndex(a.Arena, initial));
         b.Release();
-        Assert.Equal(0, ListIndex(a.Arena, initial)); Assert.Equal(0, initial.Usage);
+        Assert.Equal(0, ListIndex(a.Arena, initial));
+        Assert.Equal(0, initial.Usage);
         var whole = (PooledByteBuf)a.Buffer(initial.ChunkSize);
         try
         {
@@ -90,7 +91,8 @@ public class PoolChunkListTest
         finally { whole.Release(); }
         Assert.Single(a.Arena.ChunkLists[0]);
         Assert.Equal(direct ? initial.ChunkSize : 0, a.Native.ReservedBytes);
-        a.Dispose(); Assert.Equal(0, a.Native.ReservedBytes);
+        a.Dispose();
+        Assert.Equal(0, a.Native.ReservedBytes);
         Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
     }
 
@@ -161,14 +163,19 @@ public class PoolChunkListTest
         IEnumerator nongeneric = ((IEnumerable)list).GetEnumerator();
         var second = a.Buffer(65536);
         Assert.Empty(list);
-        Assert.True(snapshot.MoveNext()); Assert.Same(chunk, snapshot.Current);
-        Assert.Equal(100, snapshot.Current.Usage); Assert.False(snapshot.MoveNext());
-        Assert.True(nongeneric.MoveNext()); Assert.Same(chunk, nongeneric.Current);
+        Assert.True(snapshot.MoveNext());
+        Assert.Same(chunk, snapshot.Current);
+        Assert.Equal(100, snapshot.Current.Usage);
+        Assert.False(snapshot.MoveNext());
+        Assert.True(nongeneric.MoveNext());
+        Assert.Same(chunk, nongeneric.Current);
         (nongeneric as IDisposable)?.Dispose();
         a.Dispose();
         Assert.All(a.Arena.ChunkLists, l => Assert.Empty(l));
         Assert.Equal(direct ? chunk.ChunkSize : 0, a.Native.ReservedBytes);
-        first.Release(); second.Release(); Assert.Equal(0, a.Native.ReservedBytes);
+        first.Release();
+        second.Release();
+        Assert.Equal(0, a.Native.ReservedBytes);
     }
 
     [Fact]
@@ -270,12 +277,17 @@ public class PoolChunkListTest
                 else
                 {
                     ByteBuf b = a.Buffer(new[] { 8192, 32768, 65536, 131072 }[i % 4]);
-                    try { b.AsSpan(0, b.Capacity).Fill((byte)worker); Assert.Equal(-1, b.AsSpan(0, b.Capacity).IndexOfAnyExcept((byte)worker)); }
+                    try
+                    {
+                        b.AsSpan(0, b.Capacity).Fill((byte)worker);
+                        Assert.Equal(-1, b.AsSpan(0, b.Capacity).IndexOfAnyExcept((byte)worker));
+                    }
                     finally { b.Release(); }
                 }
             }
         }, token)));
-        a.Dispose(); Assert.Equal(0, a.Native.ReservedBytes);
+        a.Dispose();
+        Assert.Equal(0, a.Native.ReservedBytes);
         Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
     }
 }

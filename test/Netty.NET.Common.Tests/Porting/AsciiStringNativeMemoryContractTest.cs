@@ -121,15 +121,21 @@ public class AsciiStringNativeMemoryContractTest
         {
             _storage = storage;
         }
+
         public override Span<byte> GetSpan()
         {
             return _storage ?? throw new ObjectDisposedException(nameof(NonArrayMemoryOwner));
         }
+
         public override MemoryHandle Pin(int elementIndex = 0)
         {
             throw new NotSupportedException();
         }
-        public override void Unpin() { }
+
+        public override void Unpin()
+        {
+        }
+
         protected override void Dispose(bool disposing)
         {
             _storage = null;

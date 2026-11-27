@@ -49,6 +49,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.Remove(handler3);
         Assert.Null(pipeline.Get("handler3"));
     }
+
     [Fact]
     public void TestRemoveIfExists()
     {
@@ -64,6 +65,7 @@ public class DefaultChannelPipelineMutationSourceTest
         Assert.NotNull(pipeline.RemoveIfExists(typeof(TestHandler)));
         Assert.Null(pipeline.Get("handler3"));
     }
+
     [Fact]
     public void TestRemoveIfExistsDoesNotThrowException()
     {
@@ -76,6 +78,7 @@ public class DefaultChannelPipelineMutationSourceTest
         Assert.Null(pipeline.RemoveIfExists(typeof(ChannelOutboundHandlerAdapter)));
         Assert.NotNull(pipeline.Get("handler1"));
     }
+
     [Fact]
     public void TestRemoveThrowNoSuchElementException()
     {
@@ -83,6 +86,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.AddLast("handler1", NewHandler());
         Assert.Throws<KeyNotFoundException>(() => pipeline.Remove("handlerXXX"));
     }
+
     [Fact]
     public void TestReplaceChannelHandler()
     {
@@ -102,6 +106,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.Replace("handler2", "handler2", newHandler2);
         Assert.Same(newHandler2, pipeline.Get("handler2"));
     }
+
     [Fact]
     public void TestReplaceHandlerChecksDuplicateNames()
     {
@@ -109,6 +114,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.AddLast("handler1", NewHandler()).AddLast("handler2", NewHandler());
         Assert.Throws<ArgumentException>(() => pipeline.Replace("handler1", "handler2", NewHandler()));
     }
+
     [Fact]
     public void TestReplaceNameWithGenerated()
     {
@@ -122,6 +128,7 @@ public class DefaultChannelPipelineMutationSourceTest
         Assert.Same(replacement, pipeline.Get("DefaultChannelPipelineMutationSourceTest+TestHandler#0"));
         Assert.Null(pipeline.Get("handler1"));
     }
+
     [Fact]
     public void TestRenameChannelHandler()
     {
@@ -144,6 +151,7 @@ public class DefaultChannelPipelineMutationSourceTest
         Assert.Same(newHandler2, pipeline.Get("newHandler2"));
         Assert.Null(pipeline.Get("handler2"));
     }
+
     [Fact]
     public void TestChannelHandlerContextNavigation()
     {
@@ -155,6 +163,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.AddLast(lastHandlers);
         VerifyContextNumber(pipeline, HANDLER_ARRAY_LEN * 2);
     }
+
     [Fact]
     public void TestPipelineOperation()
     {
@@ -175,6 +184,7 @@ public class DefaultChannelPipelineMutationSourceTest
                 pipeline.AddAfter(prefixX + i, i.ToString(), handlers2[i]);
         VerifyContextNumber(pipeline, handlerNum * 2);
     }
+
     [Fact]
     public void TestChannelHandlerContextOrder()
     {
@@ -196,26 +206,31 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         VerifyContextNumber(pipeline, 8);
     }
+
     [Fact]
     public void TestFirstContextEmptyPipeline()
     {
         Assert.Null(new LocalChannel().Pipeline.FirstContext);
     }
+
     [Fact]
     public void TestLastContextEmptyPipeline()
     {
         Assert.Null(new LocalChannel().Pipeline.LastContext);
     }
+
     [Fact]
     public void TestFirstHandlerEmptyPipeline()
     {
         Assert.Null(new LocalChannel().Pipeline.First);
     }
+
     [Fact]
     public void TestLastHandlerEmptyPipeline()
     {
         Assert.Null(new LocalChannel().Pipeline.Last);
     }
+
     [Fact]
     public void TestNullName()
     {
@@ -228,6 +243,7 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.AddAfter("test", null, NewHandler());
         pipeline.AddBefore("test", null, NewHandler());
     }
+
     [Fact]
     public async Task TestPinExecutor()
     {
@@ -249,6 +265,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
     }
+
     [Fact]
     public async Task TestNotPinExecutor()
     {
@@ -266,6 +283,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestLifeCycleAwareness()
     {
@@ -302,6 +320,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         await Task.WhenAll(removes);
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestRemoveAndForwardInbound()
     {
@@ -318,6 +337,7 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.Equal(8, handler2.InboundBuffer.Peek());
         }).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestRemoveAndForwardOutbound()
     {
@@ -334,6 +354,7 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.Equal(8, handler1.OutboundBuffer.Peek());
         }).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestReplaceAndForwardOutbound()
     {
@@ -349,6 +370,7 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.Equal(8, handler2.OutboundBuffer.Peek());
         }).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestReplaceAndForwardInboundAndOutbound()
     {
@@ -368,6 +390,7 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.Equal(8, handler2.InboundBuffer.Peek());
         }).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestRemoveAndForwardInboundOutbound()
     {
@@ -388,6 +411,7 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.Equal(8, handler1.OutboundBuffer.Peek());
         }).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestAddHandlerBeforeRegisteredThenRemove()
     {
@@ -406,6 +430,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestAddHandlerBeforeRegisteredThenReplace()
     {
@@ -426,6 +451,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact]
     public void TestAddRemoveHandlerNotRegistered()
     {
@@ -437,6 +463,7 @@ public class DefaultChannelPipelineMutationSourceTest
         if (error != null)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
     }
+
     [Fact]
     public void TestAddReplaceHandlerNotRegistered()
     {
@@ -448,6 +475,7 @@ public class DefaultChannelPipelineMutationSourceTest
         if (error != null)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestAddRemoveHandlerCalledOnceRegistered()
     {
@@ -468,6 +496,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestAddReplaceHandlerCalledOnceRegistered()
     {
@@ -496,6 +525,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestHandlerAddedAndRemovedCalledInCorrectOrder()
     {
@@ -531,6 +561,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel.CloseAsync(); await Task.WhenAll(group.StopAsync(), group1.StopAsync(), group2.StopAsync()); }
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestAddBefore()
     {
@@ -553,6 +584,7 @@ public class DefaultChannelPipelineMutationSourceTest
         }
         finally { await channel1.CloseAsync(); await channel2.CloseAsync(); await defaultGroup.StopAsync(); }
     }
+
     private static void VerifyContextNumber(IChannelPipeline pipeline, int expectedNumber)
     {
         var context = (AbstractChannelHandlerContext)pipeline.FirstContext;
@@ -561,16 +593,23 @@ public class DefaultChannelPipelineMutationSourceTest
         { number++; context = context.Next; }
         Assert.Equal(expectedNumber, number);
     }
+
     private static int Next(AbstractChannelHandlerContext ctx)
     {
         return ctx.Next == null ? int.MaxValue : ToInt(ctx.Next.Name);
     }
+
     private static int ToInt(string name)
     {
         return int.TryParse(name, out int value) ? value : -1;
     }
+
     private static IChannelHandler[] NewHandlers(int number)
-    { Assert.True(number > 0); return Enumerable.Range(0, number).Select(_ => (IChannelHandler)NewHandler()).ToArray(); }
+    {
+        Assert.True(number > 0);
+        return Enumerable.Range(0, number).Select(_ => (IChannelHandler)NewHandler()).ToArray();
+    }
+
     private static TestHandler NewHandler()
     {
         return new();
@@ -583,11 +622,16 @@ public class DefaultChannelPipelineMutationSourceTest
         internal readonly Queue<object> OutboundBuffer = new();
         // The original buffered write stores only the message and deliberately leaves its completion pending.
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
-        { OutboundBuffer.Enqueue(msg); return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task; }
+        {
+            OutboundBuffer.Enqueue(msg);
+            return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task;
+        }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             InboundBuffer.Enqueue(msg);
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             if (InboundBuffer.Count != 0)
@@ -610,10 +654,24 @@ public class DefaultChannelPipelineMutationSourceTest
         {
             Name = name;
         }
+
         internal void Validate(bool afterAdd, bool afterRemove)
-        { Assert.True(afterAdd == _afterAdd, Name); Assert.True(afterRemove == _afterRemove, Name); }
-        public override void HandlerAdded(IChannelHandlerContext ctx) { Validate(false, false); _afterAdd = true; }
-        public override void HandlerRemoved(IChannelHandlerContext ctx) { Validate(true, false); _afterRemove = true; }
+        {
+            Assert.True(afterAdd == _afterAdd, Name);
+            Assert.True(afterRemove == _afterRemove, Name);
+        }
+
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            Validate(false, false);
+            _afterAdd = true;
+        }
+
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Validate(true, false);
+            _afterRemove = true;
+        }
     }
     private sealed class CheckEventExecutorHandler(IEventExecutor executor) : ChannelHandlerAdapter
     {
@@ -623,12 +681,19 @@ public class DefaultChannelPipelineMutationSourceTest
         {
             AssertExecutor(ctx, Added);
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             AssertExecutor(ctx, Removed);
         }
+
         private void AssertExecutor(IChannelHandlerContext ctx, TaskCompletionSource promise)
-        { if (ReferenceEquals(executor, ctx.Executor)) promise.SetResult(); else promise.SetException(new InvalidOperationException("EventExecutor not the same")); }
+        {
+            if (ReferenceEquals(executor, ctx.Executor))
+                promise.SetResult();
+            else
+                promise.SetException(new InvalidOperationException("EventExecutor not the same"));
+        }
     }
     private sealed class AddedSignal(TaskCompletionSource signal) : ChannelHandlerAdapter
     {
@@ -643,6 +708,7 @@ public class DefaultChannelPipelineMutationSourceTest
         {
             error(new InvalidOperationException());
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             error(new InvalidOperationException());
@@ -660,6 +726,7 @@ public class DefaultChannelPipelineMutationSourceTest
             else if (Removed.Task.IsCompletedSuccessfully && Removed.Task.Result)
                 _error = new InvalidOperationException("handlerRemoved(...) called before handlerAdded(...): " + ctx.Name);
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             if (!Removed.TrySetResult(true))
@@ -667,22 +734,50 @@ public class DefaultChannelPipelineMutationSourceTest
             else if (Added.Task.IsCompletedSuccessfully && !Added.Task.Result)
                 _error = new InvalidOperationException("handlerRemoved(...) called before handlerAdded(...): " + ctx.Name);
         }
-        internal void CheckError() { if (_error != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw(); }
+
+        internal void CheckError()
+        {
+            if (_error != null)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw();
+        }
     }
     private sealed class CheckOrderHandler(Channel<CheckOrderHandler> addedQueue, Channel<CheckOrderHandler> removedQueue) : ChannelHandlerAdapter
     {
         private Exception _error;
-        public override void HandlerAdded(IChannelHandlerContext ctx) { addedQueue.Writer.TryWrite(this); CheckExecutor(ctx); }
-        public override void HandlerRemoved(IChannelHandlerContext ctx) { removedQueue.Writer.TryWrite(this); CheckExecutor(ctx); }
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            addedQueue.Writer.TryWrite(this);
+            CheckExecutor(ctx);
+        }
+
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            removedQueue.Writer.TryWrite(this);
+            CheckExecutor(ctx);
+        }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             _error = cause;
         }
-        private void CheckExecutor(IChannelHandlerContext ctx) { if (!ctx.Executor.InEventLoop()) _error = new InvalidOperationException(); }
-        internal void CheckError() { if (_error != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw(); }
+
+        private void CheckExecutor(IChannelHandlerContext ctx)
+        {
+            if (!ctx.Executor.InEventLoop())
+                _error = new InvalidOperationException();
+        }
+
+        internal void CheckError()
+        {
+            if (_error != null)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw();
+        }
     }
     private static void AssertHandler(CheckOrderHandler actual, params CheckOrderHandler[] handlers)
-    { Assert.Contains(actual, handlers); actual.CheckError(); }
+    {
+        Assert.Contains(actual, handlers);
+        actual.CheckError();
+    }
     private sealed class Connection : IAsyncDisposable
     {
         private readonly MultiThreadIoEventLoopGroup _group = new(1, LocalIoHandler.NewFactory());
@@ -704,6 +799,7 @@ public class DefaultChannelPipelineMutationSourceTest
             }
             catch { await connection.DisposeAsync(); throw; }
         }
+
         public async ValueTask DisposeAsync()
         {
             if (Peer != null)
@@ -721,6 +817,7 @@ public class DefaultChannelPipelineMutationSourceTest
         {
             peer.TrySetResult(ctx.Channel);
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ReferenceCountUtil.Release(msg);

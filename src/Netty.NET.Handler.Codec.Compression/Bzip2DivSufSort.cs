@@ -2492,7 +2492,8 @@ internal sealed class Bzip2DivSufSort
 
         TrSort(ISAb, m, 1);
 
-        i = n - 1; j = m;
+        i = n - 1;
+        j = m;
         if ((T[i] & 0xff) < (T[0] & 0xff) || (T[i] == T[0] && flag != 0))
         {
             if (flag == 0)

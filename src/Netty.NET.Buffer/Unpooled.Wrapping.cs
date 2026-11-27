@@ -27,6 +27,7 @@ public static partial class Unpooled
     {
         return EmptyBuffer;
     }
+
     /// <summary>Returns the shared empty buffer when no inputs are supplied.</summary>
     public static ByteBuf WrappedBuffer(int maxNumComponents)
     {

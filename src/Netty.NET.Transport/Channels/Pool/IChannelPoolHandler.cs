@@ -28,6 +28,7 @@ public interface IChannelPoolHandler
      * This method will be called by the {@link EventLoop} of the {@link Channel}.
      */
     void ChannelReleased(IChannel channel);
+
     /**
      * Called once a {@link Channel} was acquired by calling {@link ChannelPool#acquire()} or
      * {@link ChannelPool#acquire(Promise)}.
@@ -35,6 +36,7 @@ public interface IChannelPoolHandler
      * This method will be called by the {@link EventLoop} of the {@link Channel}.
      */
     void ChannelAcquired(IChannel channel);
+
     /**
      * Called once a new {@link Channel} is created in the {@link ChannelPool}.
      *

@@ -72,7 +72,9 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
         }
     }
 
-    protected HttpHeaders() { }
+    protected HttpHeaders()
+    {
+    }
 
     /**
      * @see #get(CharSequence)

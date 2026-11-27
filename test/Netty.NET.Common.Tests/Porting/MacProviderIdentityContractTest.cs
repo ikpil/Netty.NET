@@ -105,7 +105,12 @@ public class MacProviderIdentityContractTest
             properties = ip.Object;
         }
 
-        public override IPInterfaceProperties GetIPProperties() { AddressCalls++; return properties; }
+        public override IPInterfaceProperties GetIPProperties()
+        {
+            AddressCalls++;
+            return properties;
+        }
+
         public override PhysicalAddress GetPhysicalAddress()
         {
             HardwareCalls++;

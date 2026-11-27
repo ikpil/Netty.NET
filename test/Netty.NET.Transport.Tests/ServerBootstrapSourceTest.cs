@@ -44,6 +44,7 @@ public class ServerBootstrapSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestHandlerRegister()
     {
@@ -64,16 +65,19 @@ public class ServerBootstrapSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact(Timeout = 3000)]
     public Task TestParentHandler()
     {
         return ParentHandlerCase(false, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 3000)]
     public Task TestParentHandlerViaChannelInitializer()
     {
         return ParentHandlerCase(true, TestContext.Current.CancellationToken);
     }
+
     private static async Task ParentHandlerCase(bool initializer, CancellationToken timeout)
     {
         var address = new LocalAddress(Guid.NewGuid().ToString());
@@ -99,6 +103,7 @@ public class ServerBootstrapSourceTest
             await group.StopAsync();
         }
     }
+
     [Fact]
     public async Task OptionsAndAttributesMustBeAvailableOnChildChannelInit()
     {
@@ -135,8 +140,12 @@ public class ServerBootstrapSourceTest
         {
             added(ctx);
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { read?.Invoke(ctx, msg); base.ChannelRead(ctx, msg); }
+        {
+            read?.Invoke(ctx, msg);
+            base.ChannelRead(ctx, msg);
+        }
     }
 
     [Fact]

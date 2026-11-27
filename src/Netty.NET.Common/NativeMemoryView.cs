@@ -83,6 +83,7 @@ public sealed class NativeMemoryView : IDisposable
         {
             throw new NotSupportedException("Dispose the returned MemoryHandle.");
         }
+
         protected override void Dispose(bool disposing)
         {
             lock (_sync)

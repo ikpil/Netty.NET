@@ -190,17 +190,23 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         ByteBuf unused = allocator.DirectBuffer(chunk), live = allocator.DirectBuffer(17, 100);
         ByteBuf huge = allocator.DirectBuffer(chunk + 1);
         ByteBuf view = live.RetainedSlice(0, 17);
-        unused.Release(); live.SetByte(0, 42);
+        unused.Release();
+        live.SetByte(0, 42);
         Assert.Equal(2L * chunk + 1, allocator.Native.ReservedBytes);
-        allocator.Arena.Dispose(); allocator.Arena.Dispose();
+        allocator.Arena.Dispose();
+        allocator.Arena.Dispose();
         Assert.Equal(2L * chunk + 1, allocator.Native.ReservedBytes);
         Assert.Equal(42, view.GetByte(0));
         live.Capacity = 32;
         Assert.Throws<ObjectDisposedException>(() => live.Capacity = 65);
-        Assert.Equal(32, live.Capacity); Assert.Equal(42, live.GetByte(0));
-        Assert.False(live.Release()); Assert.Equal(42, view.GetByte(0));
-        huge.Release(); Assert.Equal(chunk, allocator.Native.ReservedBytes);
-        view.Release(); Assert.Equal(0, allocator.Native.ReservedBytes);
+        Assert.Equal(32, live.Capacity);
+        Assert.Equal(42, live.GetByte(0));
+        Assert.False(live.Release());
+        Assert.Equal(42, view.GetByte(0));
+        huge.Release();
+        Assert.Equal(chunk, allocator.Native.ReservedBytes);
+        view.Release();
+        Assert.Equal(0, allocator.Native.ReservedBytes);
     }
 
     [Fact]
@@ -209,9 +215,12 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         using var allocator = NewAllocator();
         ByteBuf pooled = allocator.DirectBuffer(48), huge = allocator.DirectBuffer(131073);
         Assert.Equal(262145, allocator.Native.ReservedBytes);
-        huge.Release(); Assert.Equal(131072, allocator.Native.ReservedBytes);
-        pooled.Release(); Assert.Equal(131072, allocator.Native.ReservedBytes);
-        allocator.Arena.Dispose(); Assert.Equal(0, allocator.Native.ReservedBytes);
+        huge.Release();
+        Assert.Equal(131072, allocator.Native.ReservedBytes);
+        pooled.Release();
+        Assert.Equal(131072, allocator.Native.ReservedBytes);
+        allocator.Arena.Dispose();
+        Assert.Equal(0, allocator.Native.ReservedBytes);
         Assert.Throws<ObjectDisposedException>(() => allocator.DirectBuffer(0, 1));
     }
 

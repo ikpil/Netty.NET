@@ -269,18 +269,23 @@ public class ByteBufRelativeTransferTest
             // For default Get/Read, move the boundary into the destination's writable range.
             if (operation is 0 or 4)
             {
-                destination.Release(); first = Unpooled.WrappedBuffer(new byte[22]); last = new FailingHeapBuffer(2);
+                destination.Release();
+                first = Unpooled.WrappedBuffer(new byte[22]);
+                last = new FailingHeapBuffer(2);
                 destination = Unpooled.CompositeBuffer().AddComponent(first, true).AddComponent(last, true).SetIndex(0, writer);
             }
             Assert.Throws<InvalidOperationException>(() => Invoke(operation, source, destination));
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(5, source.WriterIndex);
-            Assert.Equal(writer, destination.WriterIndex); Assert.Equal(0, destination.ReaderIndex);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(5, source.WriterIndex);
+            Assert.Equal(writer, destination.WriterIndex);
+            Assert.Equal(0, destination.ReaderIndex);
             int copied = operation is 0 or 4 or 6 or 7 or 1 ? writer : 3;
             int from = operation is 0 or 1 or 7 ? 12 : 2;
             Assert.Equal(source.GetByte(from), destination.GetByte(copied));
         }
         finally { source.Release(); destination.Release(); }
-        Assert.Equal(0, first.RefCnt); Assert.Equal(0, last.RefCnt);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, last.RefCnt);
     }
 
     [Fact]
@@ -309,6 +314,7 @@ public class ByteBufRelativeTransferTest
         {
             WriterIndex = capacity;
         }
+
         protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
         {
             throw new InvalidOperationException("Deliberate partial composite write failure.");
@@ -321,10 +327,12 @@ public class ByteBufRelativeTransferTest
         {
             throw new InvalidOperationException("Simple transfer must not record.");
         }
+
         public void Record(object hint)
         {
             throw new InvalidOperationException("Simple transfer must not record.");
         }
+
         public bool Close(ByteBuf buffer)
         {
             return true;

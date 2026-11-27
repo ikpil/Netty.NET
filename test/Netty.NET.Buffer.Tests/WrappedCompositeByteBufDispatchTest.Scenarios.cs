@@ -39,8 +39,10 @@ public partial class WrappedCompositeByteBufDispatchTest
             3 => new SimpleLeakAwareCompositeByteBuf(new WrappedCompositeByteBuf(root), tracker),
             _ => new AdvancedLeakAwareCompositeByteBuf(root, tracker)
         };
-        tracker.Expected = result.Unwrap(); return result;
+        tracker.Expected = result.Unwrap();
+        return result;
     }
+
     private static ByteBuf Data(IByteBufAllocator allocator, int count)
     {
         ByteBuf b = allocator.Buffer(count, Math.Max(count, 1));
@@ -56,13 +58,37 @@ public partial class WrappedCompositeByteBufDispatchTest
         {
             throw new InvalidOperationException("Public primitive trap");
         }
+
         private void Visit(string name, int index, int width, bool little)
-        { Calls.Add((name, index, width, little)); throw Failure; }
-        internal override byte ReadByteCore(int index) { Visit("ReadByte", index, 1, false); return 0; }
-        internal override void WriteByteCore(int index, int value) { Assert.Equal(17, value); Visit("WriteByte", index, 1, false); }
-        internal override ulong ReadWord(int index, int width, bool little) { Visit("ReadWord", index, width, little); return 0; }
+        {
+            Calls.Add((name, index, width, little));
+            throw Failure;
+        }
+
+        internal override byte ReadByteCore(int index)
+        {
+            Visit("ReadByte", index, 1, false);
+            return 0;
+        }
+
+        internal override void WriteByteCore(int index, int value)
+        {
+            Assert.Equal(17, value);
+            Visit("WriteByte", index, 1, false);
+        }
+
+        internal override ulong ReadWord(int index, int width, bool little)
+        {
+            Visit("ReadWord", index, width, little);
+            return 0;
+        }
+
         internal override ByteBuf SetWord(int index, ulong value, int width, bool little)
-        { Assert.Equal(17UL, value); Visit("SetWord", index, width, little); return this; }
+        {
+            Assert.Equal(17UL, value);
+            Visit("SetWord", index, width, little);
+            return this;
+        }
     }
     public static IEnumerable<object[]> KernelCases()
     {
@@ -70,33 +96,56 @@ public partial class WrappedCompositeByteBufDispatchTest
         for (int form = 0; form < 3; ++form)
         for (int operation = 0; operation < 6; ++operation) yield return [direct, form, operation];
     }
+
     [Theory]
     [MemberData(nameof(KernelCases))]
     public void InternalPrimitivesKeepWrappedKernelsSeparateFromPublicOverrides(bool direct, int form, int operation)
     {
-        var native = new NativeMemoryAllocator(); var allocator = new UnpooledByteBufAllocator(direct, native);
-        ByteBuf data = Data(allocator, 32); var root = new KernelProbe(allocator, direct, [data]);
-        var tracker = new Tracker(); CompositeByteBuf b = Wrap(root, form, tracker);
+        var native = new NativeMemoryAllocator();
+        var allocator = new UnpooledByteBufAllocator(direct, native);
+        ByteBuf data = Data(allocator, 32);
+        var root = new KernelProbe(allocator, direct, [data]);
+        var tracker = new Tracker();
+        CompositeByteBuf b = Wrap(root, form, tracker);
         try
         {
             void Request()
             {
                 switch (operation)
                 {
-                    case 0: b.ReadByteCore(3); break;
-                    case 1: b.WriteByteCore(3, 17); break;
-                    case 2: b.ReadWord(3, 8, false); break;
-                    case 3: b.ReadWord(3, 8, true); break;
-                    case 4: b.SetWord(3, 17, 4, false); break;
-                    default: b.SetWord(3, 17, 4, true); break;
+                    case 0:
+                        b.ReadByteCore(3);
+                        break;
+                    case 1:
+                        b.WriteByteCore(3, 17);
+                        break;
+                    case 2:
+                        b.ReadWord(3, 8, false);
+                        break;
+                    case 3:
+                        b.ReadWord(3, 8, true);
+                        break;
+                    case 4:
+                        b.SetWord(3, 17, 4, false);
+                        break;
+                    default:
+                        b.SetWord(3, 17, 4, true);
+                        break;
                 }
             }
             Assert.Same(root.Failure, Assert.Throws<DispatchFailure>(() => Request()));
             var call = Assert.Single(root.Calls);
-            Assert.Equal(operation switch { 0 => "ReadByte", 1 => "WriteByte", 2 or 3 => "ReadWord", _ => "SetWord" }, call.Method);
+            Assert.Equal(operation switch
+            {
+                0 => "ReadByte",
+                1 => "WriteByte",
+                2 or 3 => "ReadWord",
+                _ => "SetWord"
+            }, call.Method);
             Assert.Equal((3, operation < 2 ? 1 : operation < 4 ? 8 : 4, operation is 3 or 5), (call.Index, call.Width, call.Little));
             Assert.Equal((0, 32, 1), (root.ReaderIndex, root.WriterIndex, root.RefCnt));
-            Assert.Equal(4, data.GetByte(3)); Assert.Equal(0, tracker.Records);
+            Assert.Equal(4, data.GetByte(3));
+            Assert.Equal(0, tracker.Records);
         }
         finally { b.Release(); Assert.Equal(0, native.ReservedBytes); }
         Assert.Equal(form == 1 ? 1 : 0, tracker.Closes);
@@ -113,17 +162,28 @@ public partial class WrappedCompositeByteBufDispatchTest
         {
             _core.SetResult(value);
         }
+
         internal void Fail(Exception failure)
         {
             _core.SetException(failure);
         }
-        public int GetResult(short token) { ++Consumptions; return _core.GetResult(token); }
+
+        public int GetResult(short token)
+        {
+            ++Consumptions;
+            return _core.GetResult(token);
+        }
+
         public ValueTaskSourceStatus GetStatus(short token)
         {
             return _core.GetStatus(token);
         }
+
         public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
-        { ++Continuations; _core.OnCompleted(continuation, state, token, flags); }
+        {
+            ++Continuations;
+            _core.OnCompleted(continuation, state, token, flags);
+        }
     }
     private sealed class PendingProbe(IByteBufAllocator allocator, bool direct, ByteBuf[] components)
         : CompositeByteBuf(allocator, direct, 16, components)
@@ -136,27 +196,42 @@ public partial class WrappedCompositeByteBufDispatchTest
         internal long Position;
         internal CancellationToken Token;
         private ValueTask<int> Begin(string method, object peer, int index, long position, int length, CancellationToken token)
-        { ++Calls; Method = method; Peer = peer; Index = index; Position = position; Length = length; Token = token; return Result.Task; }
+        {
+            ++Calls;
+            Method = method;
+            Peer = peer;
+            Index = index;
+            Position = position;
+            Length = length;
+            Token = token;
+            return Result.Task;
+        }
+
         public override ValueTask<int> SetBytesAsync(int index, Stream source, int length, CancellationToken token = default)
         {
             return Begin("SetStream", source, index, 0, length, token);
         }
+
         public override ValueTask<int> WriteBytesAsync(Stream source, int length, CancellationToken token = default)
         {
             return Begin("WriteStream", source, WriterIndex, 0, length, token);
         }
+
         public override ValueTask<int> GetBytesAsync(int index, Socket destination, int length, CancellationToken token = default)
         {
             return Begin("GetSocket", destination, index, 0, length, token);
         }
+
         public override ValueTask<int> ReadBytesAsync(Socket destination, int length, CancellationToken token = default)
         {
             return Begin("ReadSocket", destination, ReaderIndex, 0, length, token);
         }
+
         public override ValueTask<int> SetBytesAsync(int index, SafeFileHandle source, long position, int length, CancellationToken token = default)
         {
             return Begin("SetFile", source, index, position, length, token);
         }
+
         public override ValueTask<int> WriteBytesAsync(SafeFileHandle source, long position, int length, CancellationToken token = default)
         {
             return Begin("WriteFile", source, WriterIndex, position, length, token);
@@ -169,17 +244,23 @@ public partial class WrappedCompositeByteBufDispatchTest
         for (int operation = 0; operation < 6; ++operation)
         for (int mode = 0; mode < 3; ++mode) yield return [direct, form, operation, mode];
     }
+
     [Theory]
     [MemberData(nameof(PendingCases))]
     public async Task AsyncForwardingPreservesSingleCompletionRelativeStateAndCancellation(bool direct, int form, int operation, int mode)
     {
-        var native = new NativeMemoryAllocator(); var allocator = new UnpooledByteBufAllocator(direct, native);
-        var root = new PendingProbe(allocator, direct, [Data(allocator, 32)]); root.SetIndex(3, 10);
-        var tracker = new Tracker(); CompositeByteBuf b = Wrap(root, form, tracker);
+        var native = new NativeMemoryAllocator();
+        var allocator = new UnpooledByteBufAllocator(direct, native);
+        var root = new PendingProbe(allocator, direct, [Data(allocator, 32)]);
+        root.SetIndex(3, 10);
+        var tracker = new Tracker();
+        CompositeByteBuf b = Wrap(root, form, tracker);
         using var stream = new MemoryStream(new byte[64]);
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        using var file = new SafeFileHandle(nint.Zero, false); using var cancellation = new CancellationTokenSource();
-        if (mode == 2) cancellation.Cancel();
+        using var file = new SafeFileHandle(nint.Zero, false);
+        using var cancellation = new CancellationTokenSource();
+        if (mode == 2)
+            cancellation.Cancel();
         try
         {
             CancellationToken token = cancellation.Token;
@@ -192,27 +273,42 @@ public partial class WrappedCompositeByteBufDispatchTest
                 4 => b.SetBytesAsync(5, file, 11, 4, token),
                 _ => b.WriteBytesAsync(file, 11, 4, token)
             };
-            Assert.False(pending.IsCompleted); Assert.Equal(1, root.Calls);
+            Assert.False(pending.IsCompleted);
+            Assert.Equal(1, root.Calls);
             Assert.Equal(new[] { "SetStream", "WriteStream", "GetSocket", "ReadSocket", "SetFile", "WriteFile" }[operation], root.Method);
             Assert.Same(operation < 2 ? stream : operation < 4 ? (object)socket : file, root.Peer);
             Assert.Equal(operation is 1 or 5 ? 10 : operation == 3 ? 3 : 5, root.Index);
-            Assert.Equal(operation >= 4 ? 11 : 0, root.Position); Assert.Equal(4, root.Length); Assert.Equal(token, root.Token);
-            Task<int> task = pending.AsTask(); Assert.False(task.IsCompleted);
+            Assert.Equal(operation >= 4 ? 11 : 0, root.Position);
+            Assert.Equal(4, root.Length);
+            Assert.Equal(token, root.Token);
+            Task<int> task = pending.AsTask();
+            Assert.False(task.IsCompleted);
             Assert.Equal((3, 10), (b.ReaderIndex, b.WriterIndex));
             if (mode == 0)
             {
                 // The wrapped operation owns index publication. The wrapper must not advance twice.
-                if (operation is 1 or 5) root.WriterIndex += 2;
-                if (operation == 3) root.ReaderIndex += 2;
-                root.Result.Complete(2); Assert.Equal(2, await task);
+                if (operation is 1 or 5)
+                    root.WriterIndex += 2;
+                if (operation == 3)
+                    root.ReaderIndex += 2;
+                root.Result.Complete(2);
+                Assert.Equal(2, await task);
             }
             else if (mode == 1)
-            { root.Result.Fail(root.Failure); Assert.Same(root.Failure, await Assert.ThrowsAsync<DispatchFailure>(() => task)); }
+            {
+                root.Result.Fail(root.Failure);
+                Assert.Same(root.Failure, await Assert.ThrowsAsync<DispatchFailure>(() => task));
+            }
             else
-            { root.Result.Fail(new OperationCanceledException(token)); Assert.Equal(token, (await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task)).CancellationToken); }
+            {
+                root.Result.Fail(new OperationCanceledException(token));
+                Assert.Equal(token, (await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task)).CancellationToken);
+            }
             Assert.Equal((mode == 0 && operation == 3 ? 5 : 3, mode == 0 && operation is 1 or 5 ? 12 : 10), (b.ReaderIndex, b.WriterIndex));
-            Assert.Equal(1, root.Result.Consumptions); Assert.Equal(1, root.Result.Continuations);
-            Assert.Equal(form == 4 ? 1 : 0, tracker.Records); Assert.Equal(0, tracker.Closes);
+            Assert.Equal(1, root.Result.Consumptions);
+            Assert.Equal(1, root.Result.Continuations);
+            Assert.Equal(form == 4 ? 1 : 0, tracker.Records);
+            Assert.Equal(0, tracker.Closes);
         }
         finally { b.Release(); Assert.Equal(0, native.ReservedBytes); }
         Assert.Equal(form is 1 or 3 or 4 ? 1 : 0, tracker.Closes);
@@ -224,34 +320,69 @@ public partial class WrappedCompositeByteBufDispatchTest
         for (int form = 0; form < 3; ++form)
         for (int operation = 0; operation < 10; ++operation) yield return [direct, form, operation];
     }
+
     [Theory]
     [MemberData(nameof(NestedCases))]
     public async Task OrdinaryOuterWrapperPreservesInnerAdvancedTrackerAndFluentOwner(bool direct, int form, int operation)
     {
-        var native = new NativeMemoryAllocator(); var allocator = new UnpooledByteBufAllocator(direct, native);
-        var root = new CompositeByteBuf(allocator, direct, 16, Data(allocator, 8), Data(allocator, 24)); root.SetIndex(3, 16);
-        var innerTracker = new Tracker { Expected = root }; var inner = new AdvancedLeakAwareCompositeByteBuf(root, innerTracker);
-        var outerTracker = new Tracker(); CompositeByteBuf b = Wrap(inner, form, outerTracker);
+        var native = new NativeMemoryAllocator();
+        var allocator = new UnpooledByteBufAllocator(direct, native);
+        var root = new CompositeByteBuf(allocator, direct, 16, Data(allocator, 8), Data(allocator, 24));
+        root.SetIndex(3, 16);
+        var innerTracker = new Tracker { Expected = root };
+        var inner = new AdvancedLeakAwareCompositeByteBuf(root, innerTracker);
+        var outerTracker = new Tracker();
+        CompositeByteBuf b = Wrap(inner, form, outerTracker);
         using var stream = new MemoryStream(new byte[] { 41, 42, 43, 44 });
         try
         {
             switch (operation)
             {
-                case 0: Assert.Equal(4, b.GetByte(3)); break;
-                case 1: Assert.Same(b, b.SetIntLE(3, 0x01020304)); break;
-                case 2: byte[] bytes = new byte[4]; Assert.Same(b, b.GetBytes(3, bytes.AsSpan())); Assert.Equal(new byte[] { 4, 5, 6, 7 }, bytes); break;
-                case 3: Assert.Equal(4, b.ReadByte()); Assert.Equal(4, b.ReaderIndex); break;
-                case 4: Assert.Same(b, b.WriteByte(17)); Assert.Equal(17, b.WriterIndex); break;
-                case 5: Assert.Equal(new byte[] { 4, 5, 6, 7 }, b.AsReadOnlySequence(3, 4).ToArray()); break;
-                case 6: Assert.Equal(4, await b.SetBytesAsync(3, stream, 4, TestContext.Current.CancellationToken)); break;
-                case 7: Assert.Same(b, b.AddComponent(Data(allocator, 4), true)); Assert.Equal(36, b.Capacity); break;
-                case 8: Assert.Same(b, b.Consolidate()); Assert.Equal(1, b.NumComponents); break;
-                default: Assert.Same(b, b.RemoveComponent(0)); Assert.Equal(24, b.Capacity); break;
+                case 0:
+                    Assert.Equal(4, b.GetByte(3));
+                    break;
+                case 1:
+                    Assert.Same(b, b.SetIntLE(3, 0x01020304));
+                    break;
+                case 2:
+                    byte[] bytes = new byte[4];
+                    Assert.Same(b, b.GetBytes(3, bytes.AsSpan()));
+                    Assert.Equal(new byte[] { 4, 5, 6, 7 }, bytes);
+                    break;
+                case 3:
+                    Assert.Equal(4, b.ReadByte());
+                    Assert.Equal(4, b.ReaderIndex);
+                    break;
+                case 4:
+                    Assert.Same(b, b.WriteByte(17));
+                    Assert.Equal(17, b.WriterIndex);
+                    break;
+                case 5:
+                    Assert.Equal(new byte[] { 4, 5, 6, 7 }, b.AsReadOnlySequence(3, 4).ToArray());
+                    break;
+                case 6:
+                    Assert.Equal(4, await b.SetBytesAsync(3, stream, 4, TestContext.Current.CancellationToken));
+                    break;
+                case 7:
+                    Assert.Same(b, b.AddComponent(Data(allocator, 4), true));
+                    Assert.Equal(36, b.Capacity);
+                    break;
+                case 8:
+                    Assert.Same(b, b.Consolidate());
+                    Assert.Equal(1, b.NumComponents);
+                    break;
+                default:
+                    Assert.Same(b, b.RemoveComponent(0));
+                    Assert.Equal(24, b.Capacity);
+                    break;
             }
-            Assert.Equal(1, innerTracker.Records); Assert.Equal(0, outerTracker.Records);
-            Assert.Equal(0, innerTracker.Closes); Assert.Equal(0, outerTracker.Closes);
+            Assert.Equal(1, innerTracker.Records);
+            Assert.Equal(0, outerTracker.Records);
+            Assert.Equal(0, innerTracker.Closes);
+            Assert.Equal(0, outerTracker.Closes);
         }
         finally { b.Release(); Assert.Equal(0, native.ReservedBytes); }
-        Assert.Equal(1, innerTracker.Closes); Assert.Equal(form == 1 ? 1 : 0, outerTracker.Closes);
+        Assert.Equal(1, innerTracker.Closes);
+        Assert.Equal(form == 1 ? 1 : 0, outerTracker.Closes);
     }
 }

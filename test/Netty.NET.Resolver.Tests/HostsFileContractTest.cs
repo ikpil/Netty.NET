@@ -158,6 +158,7 @@ public class HostsFileContractTest
         {
             return failRead ? throw new IOException("read") : base.ReadLine();
         }
+
         protected override void Dispose(bool disposing)
         {
             Closed = true;

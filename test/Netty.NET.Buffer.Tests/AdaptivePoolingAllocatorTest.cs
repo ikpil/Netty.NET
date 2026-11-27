@@ -37,6 +37,7 @@ public class AdaptivePoolingAllocatorTest
         // beyond the last size class, we return the size class array's length
         AssertSizeClassOf(sizeClasses.Length, sizeClasses[^1] + 1, sizeClasses[^1] + 1);
     }
+
     private static void AssertSizeClassOf(int expectedSizeClass, int previousSizeIncluded, int maxSizeIncluded)
     {
         for (int size = previousSizeIncluded; size <= maxSizeIncluded; size++)
@@ -71,32 +72,40 @@ public class AdaptivePoolingAllocatorTest
     {
         using var pool = TestChunkAllocator.Pool(lowMemory);
         int requested = index == 0 ? 0 : Segments[index - 1] + 1;
-        Assert.True(requested <= pool.MaxPooledBufSize); Assert.Equal(index, AdaptivePoolingAllocator.SizeClassIndexOf(requested));
+        Assert.True(requested <= pool.MaxPooledBufSize);
+        Assert.Equal(index, AdaptivePoolingAllocator.SizeClassIndexOf(requested));
         Magazine magazine = pool.SizeClassedMagazineGroups[index].Magazines[0];
         SizeClassChunkController controller = TestChunkAllocator.SizeClassController(pool, index);
         Assert.Same(controller, magazine.ChunkController);
         Assert.Equal(Segments[index], controller.ComputeBufferCapacity(requested, int.MaxValue, false));
         Assert.Equal(requested, controller.ComputeBufferCapacity(requested, requested, false));
-        Assert.Equal(Segments[index], controller.SegmentSize); Assert.Equal(ChunkSizes[index], controller.ChunkSize);
+        Assert.Equal(Segments[index], controller.SegmentSize);
+        Assert.Equal(ChunkSizes[index], controller.ChunkSize);
         Chunk chunk = controller.NewChunkAllocation(requested, magazine);
         try
         {
             Assert.IsType<SizeClassedChunk>(chunk);
-            Assert.Equal(ChunkSizes[index], chunk.Capacity); Assert.Equal(ChunkSizes[index], pool.UsedMemory);
+            Assert.Equal(ChunkSizes[index], chunk.Capacity);
+            Assert.Equal(ChunkSizes[index], pool.UsedMemory);
         }
         finally { chunk.Dispose(); }
         Assert.Equal(0, pool.UsedMemory);
         Assert.True(ChunkSizes[index] / Segments[index] >= 32);
     }
+
     [Fact]
     public void SizeClassSnapshotsAreIndependentAndLargeInputCannotOverflowTheLookup()
     {
         int[] first = AdaptivePoolingAllocator.GetSizeClasses(), second = AdaptivePoolingAllocator.GetSizeClasses();
-        Assert.Equal(Segments, first); Assert.NotSame(first, second);
-        first[0] = 999; Assert.Equal(32, second[0]); Assert.Equal(32, AdaptivePoolingAllocator.GetSizeClasses()[0]);
+        Assert.Equal(Segments, first);
+        Assert.NotSame(first, second);
+        first[0] = 999;
+        Assert.Equal(32, second[0]);
+        Assert.Equal(32, AdaptivePoolingAllocator.GetSizeClasses()[0]);
         Assert.Equal(16, AdaptivePoolingAllocator.SizeClassIndexOf(int.MaxValue));
         Assert.Throws<ArgumentOutOfRangeException>(() => AdaptivePoolingAllocator.SizeClassIndexOf(-1));
     }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void LowMemoryAndMaximumPoolCutoffsSelectOriginalDedicatedFallback(bool lowMemory)
@@ -104,12 +113,14 @@ public class AdaptivePoolingAllocatorTest
         using var pool = TestChunkAllocator.Pool(lowMemory);
         Assert.Equal(lowMemory ? 2097152 : 8388608, pool.MaxChunkSize);
         Assert.Equal(lowMemory ? 262144 : 1048576, pool.MaxPooledBufSize);
-        AssertRouting(pool, 16896, true); AssertRouting(pool, 16897, !lowMemory);
+        AssertRouting(pool, 16896, true);
+        AssertRouting(pool, 16897, !lowMemory);
         AssertRouting(pool, pool.MaxPooledBufSize, !lowMemory);
         // A dedicated fallback chunk reserves exactly the requested size.
         AssertRouting(pool, pool.MaxPooledBufSize + 1, false);
         Assert.Equal(AdaptivePoolingAllocator.GetSizeClasses().Length, AdaptivePoolingAllocator.SizeClassIndexOf(int.MaxValue));
     }
+
     [Fact]
     public void BuddyControllersRememberLargerChunksWithoutClampingTheRawReservation()
     {
@@ -140,22 +151,35 @@ public class AdaptivePoolingAllocatorTest
         }
         Assert.Equal(0, pool.UsedMemory);
     }
+
     [Fact]
     public void LowMemorySkipsBuddyPoolingAndDoesNotAffectOtherPolicyInstances()
     {
-        using var low = TestChunkAllocator.Pool(true); using var normal = TestChunkAllocator.Pool(false);
+        using var low = TestChunkAllocator.Pool(true);
+        using var normal = TestChunkAllocator.Pool(false);
         var buffer = (AdaptiveByteBuf)low.Allocate(32769, 40000);
-        try { Assert.False(buffer.Allocation.IsPooled); Assert.Equal(32769, buffer.Allocation.Length); }
+        try
+        {
+            Assert.False(buffer.Allocation.IsPooled);
+            Assert.Equal(32769, buffer.Allocation.Length);
+        }
         finally { buffer.Release(); }
         Assert.Equal(0, low.UsedMemory);
         Chunk chunk = TestChunkAllocator.BuddyController(normal).NewChunkAllocation(32769, normal.LargeBufferMagazineGroup.Magazines[0]);
-        try { Assert.Equal(524288, chunk.Capacity); }
+        try
+        {
+            Assert.Equal(524288, chunk.Capacity);
+        }
         finally { chunk.Dispose(); }
         using var separate = TestChunkAllocator.Pool(false);
         chunk = TestChunkAllocator.BuddyController(separate).NewChunkAllocation(16897, separate.LargeBufferMagazineGroup.Magazines[0]);
-        try { Assert.Equal(262144, chunk.Capacity); }
+        try
+        {
+            Assert.Equal(262144, chunk.Capacity);
+        }
         finally { chunk.Dispose(); }
     }
+
     [Fact]
     public void InvalidRequestsFailBeforeMutatingRememberedChunkSizing()
     {

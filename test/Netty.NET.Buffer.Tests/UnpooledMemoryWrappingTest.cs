@@ -122,15 +122,24 @@ public class UnpooledMemoryWrappingTest
     [InlineData(false)] [InlineData(true)]
     public void RepeatedRangesShareBytesButOwnIndependentWrapperReferences(bool readOnly)
     {
-        using var storage = new ExternalStorage(1, 4); storage.Memory.Span.Fill(7);
+        using var storage = new ExternalStorage(1, 4);
+        storage.Memory.Span.Fill(7);
         ByteBuf result = Wrap(new[] { storage.Memory, storage.Memory }, readOnly);
         var composite = Assert.IsType<CompositeByteBuf>(result);
         ByteBuf first = composite.Component(0), second = composite.Component(1);
-        Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
-        storage.Memory.Span[0] = 99; Assert.Equal(99, result.GetByte(0)); Assert.Equal(99, result.GetByte(4));
-        ByteBuf retained = result.RetainedSlice(1, 6); Assert.False(result.Release());
-        Assert.Equal(1, retained.RefCnt); Assert.Equal(99, retained.GetByte(3)); retained.Release();
-        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt); Assert.Equal(99, storage.Memory.Span[0]);
+        Assert.Equal(1, first.RefCnt);
+        Assert.Equal(1, second.RefCnt);
+        storage.Memory.Span[0] = 99;
+        Assert.Equal(99, result.GetByte(0));
+        Assert.Equal(99, result.GetByte(4));
+        ByteBuf retained = result.RetainedSlice(1, 6);
+        Assert.False(result.Release());
+        Assert.Equal(1, retained.RefCnt);
+        Assert.Equal(99, retained.GetByte(3));
+        retained.Release();
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
+        Assert.Equal(99, storage.Memory.Span[0]);
     }
 
     [Theory]
@@ -156,15 +165,24 @@ public class UnpooledMemoryWrappingTest
     [InlineData(false)] [InlineData(true)]
     public void FailedConsolidationPreservesExternalOwnershipAndCanBeRetried(bool readOnly)
     {
-        using var first = new ArrayMemoryManager(4); using var second = new ArrayMemoryManager(4);
-        Memory<byte> a = first.Range, b = second.Range; a.Span.Fill(1); b.Span.Fill(2); second.FailAccess = true;
+        using var first = new ArrayMemoryManager(4);
+        using var second = new ArrayMemoryManager(4);
+        Memory<byte> a = first.Range, b = second.Range;
+        a.Span.Fill(1);
+        b.Span.Fill(2);
+        second.FailAccess = true;
         Assert.Throws<InvalidOperationException>(() => Wrap(new[] { a, b }, readOnly, 1));
-        Assert.Equal(0, first.DisposeCalls); Assert.Equal(0, second.DisposeCalls);
+        Assert.Equal(0, first.DisposeCalls);
+        Assert.Equal(0, second.DisposeCalls);
         second.FailAccess = false;
         ByteBuf recovered = Wrap(new[] { a, b }, readOnly, 1);
-        try { Assert.Equal(new byte[] { 1, 1, 1, 1, 2, 2, 2, 2 }, ByteBufUtil.GetBytes(recovered)); }
+        try
+        {
+            Assert.Equal(new byte[] { 1, 1, 1, 1, 2, 2, 2, 2 }, ByteBufUtil.GetBytes(recovered));
+        }
         finally { recovered.Release(); }
-        Assert.Equal(0, first.DisposeCalls); Assert.Equal(0, second.DisposeCalls);
+        Assert.Equal(0, first.DisposeCalls);
+        Assert.Equal(0, second.DisposeCalls);
     }
 
     [Theory]
@@ -174,19 +192,24 @@ public class UnpooledMemoryWrappingTest
         using var first = new ReportedLengthMemoryManager(int.MaxValue);
         using var second = new ReportedLengthMemoryManager(1);
         Assert.Throws<ArgumentOutOfRangeException>(() => Wrap(new[] { first.Range, second.Range }, readOnly));
-        Assert.Equal(0, first.SpanCalls); Assert.Equal(0, second.SpanCalls);
-        Assert.Equal(0, first.DisposeCalls); Assert.Equal(0, second.DisposeCalls);
+        Assert.Equal(0, first.SpanCalls);
+        Assert.Equal(0, second.SpanCalls);
+        Assert.Equal(0, first.DisposeCalls);
+        Assert.Equal(0, second.DisposeCalls);
     }
 
     [Fact]
     public void ExplicitByteBufWrappingCanMixWritableAndReadOnlyExternalRanges()
     {
-        Memory<byte> first = new byte[] { 1, 2 }; ReadOnlyMemory<byte> second = new byte[] { 3, 4 };
+        Memory<byte> first = new byte[] { 1, 2 };
+        ReadOnlyMemory<byte> second = new byte[] { 3, 4 };
         ByteBuf result = Unpooled.WrappedBuffer(Unpooled.WrappedBuffer(first), Unpooled.WrappedBuffer(second));
         try
         {
-            result.SetByte(0, 99); Assert.Equal(99, first.Span[0]);
-            Assert.Throws<NotSupportedException>(() => result.SetByte(2, 42)); Assert.Equal(3, result.GetByte(2));
+            result.SetByte(0, 99);
+            Assert.Equal(99, first.Span[0]);
+            Assert.Throws<NotSupportedException>(() => result.SetByte(2, 42));
+            Assert.Equal(3, result.GetByte(2));
         }
         finally { result.Release(); }
     }
@@ -209,7 +232,12 @@ public class UnpooledMemoryWrappingTest
             else if (kind == 2) { _manager = new ArrayMemoryManager(length); Memory = _manager.Range; }
             else Memory = new byte[length];
         }
-        public void Dispose() { _native?.Dispose(); ((IDisposable)_manager)?.Dispose(); }
+
+        public void Dispose()
+        {
+            _native?.Dispose();
+            ((IDisposable)_manager)?.Dispose();
+        }
     }
 
     private sealed class ArrayMemoryManager : MemoryManager<byte>
@@ -222,17 +250,27 @@ public class UnpooledMemoryWrappingTest
         {
             _array = new byte[length];
         }
+
         public override Span<byte> GetSpan()
         {
             if (FailAccess) throw new InvalidOperationException("Source access failed.");
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
+
         public override MemoryHandle Pin(int elementIndex = 0)
         {
             return _array.AsMemory(elementIndex).Pin();
         }
-        public override void Unpin() { }
-        protected override void Dispose(bool disposing) { DisposeCalls++; _array = null; }
+
+        public override void Unpin()
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            DisposeCalls++;
+            _array = null;
+        }
     }
 
     private sealed class ReportedLengthMemoryManager : MemoryManager<byte>
@@ -245,12 +283,25 @@ public class UnpooledMemoryWrappingTest
         {
             _length = length;
         }
-        public override Span<byte> GetSpan() { SpanCalls++; throw new InvalidOperationException("Must not access memory."); }
+
+        public override Span<byte> GetSpan()
+        {
+            SpanCalls++;
+            throw new InvalidOperationException("Must not access memory.");
+        }
+
         public override MemoryHandle Pin(int elementIndex = 0)
         {
             throw new NotSupportedException();
         }
-        public override void Unpin() { }
-        protected override void Dispose(bool disposing) { DisposeCalls++; }
+
+        public override void Unpin()
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            DisposeCalls++;
+        }
     }
 }

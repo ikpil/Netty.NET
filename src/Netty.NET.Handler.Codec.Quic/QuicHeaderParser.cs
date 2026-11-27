@@ -202,6 +202,7 @@ public sealed class QuicHeaderParser : IDisposable
                 return Unpooled.EmptyBuffer;
         }
     }
+
     private static QuicException NewProtocolViolationException(string message)
     {
         return new QuicException(message, QuicTransportError.PROTOCOL_VIOLATION);

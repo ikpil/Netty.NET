@@ -58,7 +58,10 @@ public class BitapSearchProcessorFactory : AbstractSearchProcessorFactory
         private ulong _currentMask;
 
         internal Processor(ulong[] bitMasks, ulong successBit)
-        { _bitMasks = bitMasks; _successBit = successBit; }
+        {
+            _bitMasks = bitMasks;
+            _successBit = successBit;
+        }
 
         public bool Process(byte value)
         {

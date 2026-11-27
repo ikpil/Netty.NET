@@ -223,6 +223,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         {
             throw new NotSupportedException("Dispose the returned MemoryHandle.");
         }
+
         protected override void Dispose(bool disposing)
         {
             owner.Dispose();

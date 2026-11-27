@@ -48,6 +48,7 @@ public class ChannelOutboundBufferTest
         Assert.Equal(0, buffer.NioBufferCount);
         Release(buffer);
     }
+
     [Fact]
     public void TestNioBuffersCancelledRemoveBytes()
     {
@@ -80,6 +81,7 @@ public class ChannelOutboundBufferTest
         Assert.True(p3.IsCompletedSuccessfully);
         Release(buffer);
     }
+
     [Fact]
     public void TestNioBuffersSingleBacked()
     {
@@ -101,6 +103,7 @@ public class ChannelOutboundBufferTest
                 Assert.True(buffers[i].IsEmpty);
         Release(buffer);
     }
+
     [Fact]
     public void TestNioBuffersExpand()
     {
@@ -118,6 +121,7 @@ public class ChannelOutboundBufferTest
         Release(buffer);
         buf.Release();
     }
+
     [Fact]
     public void TestNioBuffersExpand2()
     {
@@ -140,6 +144,7 @@ public class ChannelOutboundBufferTest
         Release(buffer);
         buf.Release();
     }
+
     [Fact]
     public void TestNioBuffersMaxCount()
     {
@@ -164,6 +169,7 @@ public class ChannelOutboundBufferTest
         Release(buffer);
         buf.Release();
     }
+
     [Fact]
     public void TestWritability()
     {
@@ -186,6 +192,7 @@ public class ChannelOutboundBufferTest
         Assert.Equal("false true ", text.ToString());
         SafeClose(channel);
     }
+
     [Fact]
     public void TestUserDefinedWritability()
     {
@@ -207,6 +214,7 @@ public class ChannelOutboundBufferTest
         Assert.Equal("false true ", text.ToString());
         SafeClose(channel);
     }
+
     [Fact]
     public void TestUserDefinedWritability2()
     {
@@ -234,6 +242,7 @@ public class ChannelOutboundBufferTest
         Assert.Equal("false true ", text.ToString());
         SafeClose(channel);
     }
+
     [Fact]
     public void TestMixedWritability()
     {
@@ -260,6 +269,7 @@ public class ChannelOutboundBufferTest
         Assert.Equal("false true ", text.ToString());
         SafeClose(channel);
     }
+
     [Fact]
     public void TestWriteAndFlushFromWritabilityChangedCausedByCancelledWrite()
     {
@@ -293,6 +303,7 @@ public class ChannelOutboundBufferTest
         Assert.False(channel.Finish());
         Assert.False(channel.IsOpen);
     }
+
     [Fact]
     public async Task TestCloseFromWritabilityChangedCausedByCancelledWrite()
     {
@@ -323,6 +334,7 @@ public class ChannelOutboundBufferTest
         Assert.Null(channel.ReadOutbound());
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestMultipleCancelledWritesWithEarlierFlush()
     {
@@ -380,6 +392,7 @@ public class ChannelOutboundBufferTest
         foreach (var cancellation in cancellations)
             cancellation.Dispose();
     }
+
     [Fact]
     public void TestWriteAndFlushFromReleaseOfCancelledWrite()
     {
@@ -412,6 +425,7 @@ public class ChannelOutboundBufferTest
         Assert.False(channel.Finish());
         Assert.False(channel.IsOpen);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestWriteTaskRejected()
     {
@@ -452,14 +466,27 @@ public class ChannelOutboundBufferTest
         }
         finally { execute.Set(); await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
     }
+
     private static EmbeddedChannel NewRecordingChannel(StringBuilder text)
     {
         return new(new WritabilityHandler(ctx =>
         { text.Append(ctx.Channel.IsWritable ? "true" : "false").Append(' '); }));
     }
-    private static void Release(ChannelOutboundBuffer buffer) { while (buffer.Remove()) { } }
+
+    private static void Release(ChannelOutboundBuffer buffer)
+    {
+        while (buffer.Remove())
+        {
+        }
+    }
+
     private static void SafeClose(EmbeddedChannel channel)
-    { channel.Finish(); while (channel.ReadOutbound<ByteBuf>() is { } message) message.Release(); }
+    {
+        channel.Finish();
+        while (channel.ReadOutbound<ByteBuf>() is { } message)
+            message.Release();
+    }
+
     private static void AssertOutbound(EmbeddedChannel channel, int expected)
     {
         var buffer = channel.ReadOutbound<ByteBuf>();
@@ -474,7 +501,12 @@ public class ChannelOutboundBufferTest
         {
             callback(ctx);
         }
-        public override void ChannelInactive(IChannelHandlerContext ctx) { inactive?.Invoke(); ctx.FireChannelInactive(); }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            inactive?.Invoke();
+            ctx.FireChannelInactive();
+        }
     }
     private sealed class ReentrantMessage(Action deallocate) : AbstractReferenceCounted
     {
@@ -482,6 +514,7 @@ public class ChannelOutboundBufferTest
         {
             deallocate();
         }
+
         public override IReferenceCounted Touch(object hint)
         {
             return this;
@@ -493,10 +526,12 @@ public class ChannelOutboundBufferTest
         {
             return Task.FromException(new InvalidOperationException("Should not be called"));
         }
+
         public override void HandlerAdded(IChannelHandlerContext ctx)
         {
             handlerAddedLatch.Signal();
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             handlerRemovedLatch.Signal();
@@ -508,6 +543,7 @@ public class ChannelOutboundBufferTest
         {
             return base.NewTaskQueue(1);
         }
+
         protected override void Run()
         {
             do
@@ -516,35 +552,46 @@ public class ChannelOutboundBufferTest
     }
     private sealed class TestChannel : AbstractChannel
     {
-        internal TestChannel() : base(null, new ChannelMetadata(false)) { SetActive(true); }
+        internal TestChannel() : base(null, new ChannelMetadata(false))
+        {
+            SetActive(true);
+        }
+
         protected override EndPoint LocalAddress0()
         {
             throw new NotSupportedException();
         }
+
         protected override EndPoint RemoteAddress0()
         {
             throw new NotSupportedException();
         }
+
         protected override bool IsCompatible(IEventLoop loop)
         {
             return false;
         }
+
         protected override Task DoBindAsync(EndPoint address, CancellationToken token)
         {
             throw new NotSupportedException();
         }
+
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
         {
             throw new NotSupportedException();
         }
+
         protected override void DoClose()
         {
             throw new NotSupportedException();
         }
+
         protected override void DoBeginRead()
         {
             throw new NotSupportedException();
         }
+
         protected override Task DoWrite(object msg)
         {
             throw new NotSupportedException();

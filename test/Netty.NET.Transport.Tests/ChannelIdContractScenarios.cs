@@ -13,7 +13,11 @@ internal static class ChannelIdContractScenarios
 {
     internal const int Count = 9;
     private static void Check(bool condition, string message)
-    { if (!condition) throw new InvalidOperationException(message); }
+    {
+        if (!condition)
+            throw new InvalidOperationException(message);
+    }
+
     internal static void Run(int scenario)
     {
         switch (scenario)
@@ -95,12 +99,14 @@ internal static class ChannelIdContractScenarios
             default: throw new ArgumentOutOfRangeException(nameof(scenario));
         }
     }
+
     private static void RejectNull(Action action)
     {
         try { action(); }
         catch (ArgumentNullException) { return; }
         throw new InvalidOperationException("An explicitly null channelId was accepted.");
     }
+
     private static void Reject(Action action)
     {
         try { action(); }

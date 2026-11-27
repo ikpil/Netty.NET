@@ -31,7 +31,8 @@ public class ReferenceCountUtilContractTest : IDisposable
         Assert.False(ReferenceCountUtil.Release(null));
         Assert.Equal(-1, ReferenceCountUtil.GetReferenceCount(null));
         Assert.Equal(3, ReferenceCountUtil.Retain(3));
-        ReferenceCountUtil.SafeRelease(value); ReferenceCountUtil.SafeRelease(null);
+        ReferenceCountUtil.SafeRelease(value);
+        ReferenceCountUtil.SafeRelease(null);
     }
 
     [Theory]
@@ -54,14 +55,35 @@ public class ReferenceCountUtilContractTest : IDisposable
         internal Exception Failure;
         internal int Count = 4;
         public int RefCnt => Count;
-        public IReferenceCounted Retain() { Increment = 1; return Result ?? this; }
-        public IReferenceCounted Retain(int increment) { Increment = increment; return Result ?? this; }
-        public IReferenceCounted Touch() { Hint = null; return Result ?? this; }
-        public IReferenceCounted Touch(object hint) { Hint = hint; return Result ?? this; }
+        public IReferenceCounted Retain()
+        {
+            Increment = 1;
+            return Result ?? this;
+        }
+
+        public IReferenceCounted Retain(int increment)
+        {
+            Increment = increment;
+            return Result ?? this;
+        }
+
+        public IReferenceCounted Touch()
+        {
+            Hint = null;
+            return Result ?? this;
+        }
+
+        public IReferenceCounted Touch(object hint)
+        {
+            Hint = hint;
+            return Result ?? this;
+        }
+
         public bool Release()
         {
             return Release(1);
         }
+
         public bool Release(int decrement)
         {
             Decrement = decrement;
@@ -113,7 +135,12 @@ public class ReferenceCountUtilContractTest : IDisposable
         {
             return this;
         }
-        protected override void Deallocate() { Deallocator = Thread.CurrentThread; Interlocked.Increment(ref Deallocations); }
+
+        protected override void Deallocate()
+        {
+            Deallocator = Thread.CurrentThread;
+            Interlocked.Increment(ref Deallocations);
+        }
     }
     [Fact]
     public void ReleaseLaterRunsOnlyAfterCallerTerminatesAndPreservesRequestedDecrements()
@@ -160,7 +187,8 @@ public class ReferenceCountUtilContractTest : IDisposable
         var bad = new Stub { Failure = new InvalidOperationException("deferred failure") };
         var good = new Counted();
         var caller = new Thread(() => { ReferenceCountUtil.ReleaseLater(bad); ReferenceCountUtil.ReleaseLater(good); }) { IsBackground = true };
-        caller.Start(); Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
+        caller.Start();
+        Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
         Assert.Equal(1, bad.Decrement);
         Assert.Equal(1, good.Deallocations);

@@ -225,7 +225,11 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
             catch { _peer?.Dispose(); Socket.Dispose(); throw; }
         }
 
-        internal void Close() { _peer.Dispose(); Socket.Dispose(); }
+        internal void Close()
+        {
+            _peer.Dispose();
+            Socket.Dispose();
+        }
     }
 
     [Theory]
@@ -505,14 +509,22 @@ public class AdaptiveByteBufAllocatorClrContractTest
         ByteBuf normal = allocator.Buffer(7, 100), heap = allocator.HeapBuffer(7, 100), direct = allocator.IoBuffer(7, 100);
         try
         {
-            Assert.Equal(preferDirect, normal.IsDirect); Assert.False(heap.IsDirect); Assert.True(direct.IsDirect);
-            Assert.Same(allocator, normal.Alloc()); Assert.Same(allocator, allocator.Metric);
-            Assert.Equal(131072, allocator.UsedHeapMemory); Assert.Equal(131072, allocator.UsedDirectMemory);
-            Assert.Equal(131072, native.ReservedBytes); Assert.True(allocator.IsDirectBufferPooled);
-            Assert.Null(AdaptiveByteBufAllocatorTest.Root(normal).Unwrap()); Assert.Equal(7, normal.Capacity);
+            Assert.Equal(preferDirect, normal.IsDirect);
+            Assert.False(heap.IsDirect);
+            Assert.True(direct.IsDirect);
+            Assert.Same(allocator, normal.Alloc());
+            Assert.Same(allocator, allocator.Metric);
+            Assert.Equal(131072, allocator.UsedHeapMemory);
+            Assert.Equal(131072, allocator.UsedDirectMemory);
+            Assert.Equal(131072, native.ReservedBytes);
+            Assert.True(allocator.IsDirectBufferPooled);
+            Assert.Null(AdaptiveByteBufAllocatorTest.Root(normal).Unwrap());
+            Assert.Equal(7, normal.Capacity);
         }
         finally { normal.Release(); heap.Release(); direct.Release(); }
-        allocator.Dispose(); Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
@@ -538,17 +550,22 @@ public class AdaptiveByteBufAllocatorClrContractTest
     [InlineData(false)] [InlineData(true)]
     public void AdaptiveChunkReuseForBothStorageKinds(bool direct)
     {
-        using var allocator = Allocator(); var live = new List<ByteBuf>();
+        using var allocator = Allocator();
+        var live = new List<ByteBuf>();
         ByteBuf NewBuffer()
         {
             return direct ? allocator.DirectBuffer(256) : allocator.HeapBuffer(256);
         }
         try
         {
-            for (int i = 0; i < 513; i++) live.Add(NewBuffer());
+            for (int i = 0; i < 513; i++)
+                live.Add(NewBuffer());
             Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
-            foreach (var b in live) b.Release(); live.Clear();
-            for (int i = 0; i < 1024; i++) live.Add(NewBuffer());
+            foreach (var b in live)
+                b.Release();
+            live.Clear();
+            for (int i = 0; i < 1024; i++)
+                live.Add(NewBuffer());
             Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
         }
         finally { foreach (var b in live) b.Release(); }
@@ -585,7 +602,8 @@ public class AdaptiveByteBufAllocatorClrContractTest
     [InlineData(false, false)] [InlineData(false, true)] [InlineData(true, false)] [InlineData(true, true)]
     public void DedicatedCutoffsAndLowMemoryDoNotRetainFallbackChunks(bool direct, bool lowMemory)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = Allocator(lowMemory, native);
+        var native = new NativeMemoryAllocator();
+        using var allocator = Allocator(lowMemory, native);
         int[] sizes = [16897, 32769, 262145, 1048576, 1048577];
         // Buddy reservations are the next power of two; low memory and sizes above the 1 MiB
         // pooled maximum use a dedicated chunk of exactly the requested size.
@@ -598,34 +616,46 @@ public class AdaptiveByteBufAllocatorClrContractTest
             AdaptiveChunkAllocation reservation = AdaptiveByteBufAllocatorTest.Root(b).Allocation;
             bool pooled = !lowMemory && buddy[i] != 0;
             Assert.Equal(pooled, reservation.IsPooled);
-            b.SetInt(0, 12345); Assert.Equal(12345, b.GetInt(0)); b.Release();
+            b.SetInt(0, 12345);
+            Assert.Equal(12345, b.GetInt(0));
+            b.Release();
             long after = direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory;
-            if (!pooled) Assert.Equal(before, after);
+            if (!pooled)
+                Assert.Equal(before, after);
             Assert.Equal(pooled ? buddy[i] : size, reservation.Length);
         }
-        allocator.Dispose(); Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void BuddyAllocationConsistencyForBothStorageKinds(bool direct)
     {
-        using var allocator = Allocator(); var random = new Random(91);
+        using var allocator = Allocator();
+        var random = new Random(91);
         for (int iteration = 0; iteration < 100; iteration++)
         {
             int[] sizes = [32768,32768,32768,32768,32768,32768,32768,32768,65536,65536,65536,65536,131072,131072];
-            random.Shuffle(sizes); ByteBuf[] buffers = new ByteBuf[sizes.Length];
+            random.Shuffle(sizes);
+            ByteBuf[] buffers = new ByteBuf[sizes.Length];
             try
             {
-                for (int i = 0; i < sizes.Length; i++) buffers[i] = direct ? allocator.DirectBuffer(sizes[i], sizes[i]) : allocator.HeapBuffer(sizes[i], sizes[i]);
+                for (int i = 0; i < sizes.Length; i++)
+                    buffers[i] = direct ? allocator.DirectBuffer(sizes[i], sizes[i]) : allocator.HeapBuffer(sizes[i], sizes[i]);
                 random.Shuffle(buffers);
                 for (int i = 0; i < buffers.Length / 2; i++)
                 {
-                    int size = buffers[i].Capacity; buffers[i].Release(); buffers[i] = null;
+                    int size = buffers[i].Capacity;
+                    buffers[i].Release();
+                    buffers[i] = null;
                     buffers[i] = direct ? allocator.DirectBuffer(size, size) : allocator.HeapBuffer(size, size);
                 }
-                for (int i = 0; i < buffers.Length; i++) buffers[i].AsSpan(0, buffers[i].Capacity).Fill((byte)(i + 1));
-                for (int i = 0; i < buffers.Length; i++) Assert.True(buffers[i].AsSpan(0, buffers[i].Capacity).IndexOfAnyExcept((byte)(i + 1)) < 0);
+                for (int i = 0; i < buffers.Length; i++)
+                    buffers[i].AsSpan(0, buffers[i].Capacity).Fill((byte)(i + 1));
+                for (int i = 0; i < buffers.Length; i++)
+                    Assert.True(buffers[i].AsSpan(0, buffers[i].Capacity).IndexOfAnyExcept((byte)(i + 1)) < 0);
             }
             finally { foreach (var buffer in buffers) buffer?.Release(); }
         }
@@ -635,7 +665,8 @@ public class AdaptiveByteBufAllocatorClrContractTest
     [InlineData(false)] [InlineData(true)]
     public async Task AllocateWithoutLockKeepsRetainedViewsAndCounters(bool lowMemory)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = Allocator(lowMemory, native);
+        var native = new NativeMemoryAllocator();
+        using var allocator = Allocator(lowMemory, native);
         await Task.WhenAll(Enumerable.Range(0, 16).Select(worker => Task.Run(() =>
         {
             var random = new Random(worker);
@@ -644,13 +675,19 @@ public class AdaptiveByteBufAllocatorClrContractTest
                 ByteBuf b = allocator.DirectBuffer(128, 65536);
                 try
                 {
-                    b.WriteInt(worker); b.EnsureWritable(random.Next(512, 32769)); Assert.Equal(worker, b.GetInt(0));
-                    ByteBuf retained = b.RetainedSlice(0, 4); Assert.Equal(2, b.RefCnt); retained.Release();
+                    b.WriteInt(worker);
+                    b.EnsureWritable(random.Next(512, 32769));
+                    Assert.Equal(worker, b.GetInt(0));
+                    ByteBuf retained = b.RetainedSlice(0, 4);
+                    Assert.Equal(2, b.RefCnt);
+                    retained.Release();
                 }
                 finally { b.Release(); }
             }
         }, TestContext.Current.CancellationToken)));
-        allocator.Dispose(); Assert.Equal(0, allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, allocator.UsedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
@@ -659,9 +696,11 @@ public class AdaptiveByteBufAllocatorClrContractTest
     {
         using var allocator = Allocator(stripes: stripes);
         Magazine magazine = allocator.HeapPool.SizeClassedMagazineGroups[0].Magazines[0];
-        using var locked = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
+        using var locked = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
         var holder = new Thread(() => { lock (magazine.AllocationLock) { locked.Set(); release.Wait(); } });
-        holder.Start(); locked.Wait(TestContext.Current.CancellationToken);
+        holder.Start();
+        locked.Wait(TestContext.Current.CancellationToken);
         try
         {
             Task<ByteBuf> allocation = Task.Run(() => allocator.HeapBuffer(7, 100), TestContext.Current.CancellationToken);
@@ -687,48 +726,68 @@ public class AdaptiveByteBufAllocatorClrContractTest
     [InlineData(false)] [InlineData(true)]
     public void DisposePreservesLiveViewsAndLeasesButClosesReallocation(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = Allocator(native: native);
-        ByteBuf b = direct ? allocator.DirectBuffer(7, 100) : allocator.HeapBuffer(7, 100); b.SetInt(0, 12345);
-        ByteBuf child = b.RetainedSlice(0, 4); using var lease = child.AcquireReadLease();
-        b.Release(); allocator.Dispose(); Assert.Equal(12345, child.GetInt(0));
-        AdaptiveByteBuf root = AdaptiveByteBufAllocatorTest.Root(child); root.Capacity = 32;
+        var native = new NativeMemoryAllocator();
+        using var allocator = Allocator(native: native);
+        ByteBuf b = direct ? allocator.DirectBuffer(7, 100) : allocator.HeapBuffer(7, 100);
+        b.SetInt(0, 12345);
+        ByteBuf child = b.RetainedSlice(0, 4);
+        using var lease = child.AcquireReadLease();
+        b.Release();
+        allocator.Dispose();
+        Assert.Equal(12345, child.GetInt(0));
+        AdaptiveByteBuf root = AdaptiveByteBufAllocatorTest.Root(child);
+        root.Capacity = 32;
         Assert.Throws<ObjectDisposedException>(() => root.Capacity = 33);
         Assert.Throws<ObjectDisposedException>(() => allocator.HeapBuffer(1));
         Assert.Throws<ObjectDisposedException>(() => allocator.DirectBuffer(1));
-        child.Release(); Assert.Equal(131072, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
-        lease.Dispose(); Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        child.Release();
+        Assert.Equal(131072, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
+        lease.Dispose();
+        Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void NativeAllocationFailureLeavesExistingBuffersUsableAndCountersBalanced()
     {
-        var native = new NativeMemoryAllocator(131072); using var allocator = Allocator(native: native);
-        ByteBuf b = allocator.DirectBuffer(7, 100); b.SetInt(0, 12345);
+        var native = new NativeMemoryAllocator(131072);
+        using var allocator = Allocator(native: native);
+        ByteBuf b = allocator.DirectBuffer(7, 100);
+        b.SetInt(0, 12345);
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 33);
-            Assert.Equal(7, b.Capacity); Assert.Equal(12345, b.GetInt(0)); Assert.Equal(131072, allocator.UsedDirectMemory);
+            Assert.Equal(7, b.Capacity);
+            Assert.Equal(12345, b.GetInt(0));
+            Assert.Equal(131072, allocator.UsedDirectMemory);
         }
         finally { b.Release(); }
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void CompositeConsolidationUsesTheSameAllocatorAndNativeReservationDomain(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = Allocator(native: native);
+        var native = new NativeMemoryAllocator();
+        using var allocator = Allocator(native: native);
         CompositeByteBuf composite = direct ? allocator.CompositeDirectBuffer(1) : allocator.CompositeHeapBuffer(1);
         try
         {
             ByteBuf first = direct ? allocator.DirectBuffer(4, 100) : allocator.HeapBuffer(4, 100);
             ByteBuf second = direct ? allocator.DirectBuffer(4, 100) : allocator.HeapBuffer(4, 100);
-            first.WriteInt(12345); second.WriteInt(67890);
+            first.WriteInt(12345);
+            second.WriteInt(67890);
             composite.AddComponent(first, true).AddComponent(second, true);
-            Assert.Equal(12345, composite.GetInt(0)); Assert.Equal(67890, composite.GetInt(4));
-            Assert.Same(allocator, composite.Alloc()); Assert.Equal(direct, composite.IsDirect);
+            Assert.Equal(12345, composite.GetInt(0));
+            Assert.Equal(67890, composite.GetInt(4));
+            Assert.Same(allocator, composite.Alloc());
+            Assert.Equal(direct, composite.IsDirect);
         }
         finally { composite.Release(); }
-        allocator.Dispose(); Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
     }
 }

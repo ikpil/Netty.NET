@@ -60,26 +60,33 @@ public class PooledByteBufAllocatorThreadBindingTest
     public async Task OriginalThreadToArenaMappingsAndBindingCountsRecoverReleasedArena(int heap, int direct)
     {
         using var a = NewAllocator(heap, direct);
-        using var w0 = new Worker(); using var w1 = new Worker(); using var w2 = new Worker();
+        using var w0 = new Worker();
+        using var w1 = new Worker();
+        using var w2 = new Worker();
         bool useDirect = heap == 0;
         await w0.InvokeAsync(() => AllocateAndRelease(a, useDirect));
         Assert.Equal(1, a.Metric.NumThreadLocalCaches);
         foreach (var arenas in new[] { a.Metric.HeapArenas, a.Metric.DirectArenas })
-            if (arenas.Count != 0) Assert.Equal(new[] { 1, 0 }, arenas.Select(m => m.NumThreadCaches));
+            if (arenas.Count != 0)
+                Assert.Equal(new[] { 1, 0 }, arenas.Select(m => m.NumThreadCaches));
         await w1.InvokeAsync(() => AllocateAndRelease(a, useDirect));
         Assert.Equal(2, a.Metric.NumThreadLocalCaches);
-        foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas)) Assert.Equal(1, m.NumThreadCaches);
+        foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
+            Assert.Equal(1, m.NumThreadCaches);
         await w1.InvokeAsync(() => Assert.True(a.ReleaseCurrentThreadBinding()));
         Assert.Equal(1, a.Metric.NumThreadLocalCaches);
         foreach (var arenas in new[] { a.Metric.HeapArenas, a.Metric.DirectArenas })
-            if (arenas.Count != 0) Assert.Equal(new[] { 1, 0 }, arenas.Select(m => m.NumThreadCaches));
+            if (arenas.Count != 0)
+                Assert.Equal(new[] { 1, 0 }, arenas.Select(m => m.NumThreadCaches));
         await w2.InvokeAsync(() => AllocateAndRelease(a, useDirect));
         Assert.Equal(2, a.Metric.NumThreadLocalCaches);
-        foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas)) Assert.Equal(1, m.NumThreadCaches);
+        foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
+            Assert.Equal(1, m.NumThreadCaches);
         await w0.InvokeAsync(() => Assert.True(a.ReleaseCurrentThreadBinding()));
         await w2.InvokeAsync(() => Assert.True(a.ReleaseCurrentThreadBinding()));
         Assert.Equal(0, a.Metric.NumThreadLocalCaches);
-        foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas)) Assert.Equal(0, m.NumThreadCaches);
+        foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
+            Assert.Equal(0, m.NumThreadCaches);
     }
 
     [Theory]
@@ -114,13 +121,15 @@ public class PooledByteBufAllocatorThreadBindingTest
             }
             Assert.Equal(a.Metric.HeapArenas.Sum(m => m.NumActiveBytes), a.Metric.UsedHeapMemory);
             Assert.Equal(a.Metric.DirectArenas.Sum(m => m.NumActiveBytes), a.Metric.UsedDirectMemory);
-            Assert.Equal(0, a.PinnedHeapMemory); Assert.Equal(0, a.PinnedDirectMemory);
+            Assert.Equal(0, a.PinnedHeapMemory);
+            Assert.Equal(0, a.PinnedDirectMemory);
         }
         finally { foreach (Worker w in workers) w.Dispose(); }
         Assert.Equal(7, a.ReleaseTerminatedThreadBindings());
         Assert.Equal(0, a.ReleaseTerminatedThreadBindings());
         Assert.Equal(0, a.Metric.NumThreadLocalCaches);
-        a.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        a.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
@@ -128,7 +137,9 @@ public class PooledByteBufAllocatorThreadBindingTest
     public async Task RebindingChangesNewBufferArenaWhileResizeKeepsTheLiveBufferOwner(bool direct)
     {
         using var a = NewAllocator(direct ? 0 : 2, direct ? 2 : 0);
-        using var w0 = new Worker(); using var w1 = new Worker(); using var w2 = new Worker();
+        using var w0 = new Worker();
+        using var w1 = new Worker();
+        using var w2 = new Worker();
         ByteBuf original = null;
         try
         {
@@ -142,11 +153,17 @@ public class PooledByteBufAllocatorThreadBindingTest
             await w1.InvokeAsync(() => Assert.True(a.ReleaseCurrentThreadBinding()));
             await w0.InvokeAsync(() =>
             {
-                Assert.True(a.ReleaseCurrentThreadBinding()); Assert.False(a.ReleaseCurrentThreadBinding());
-                original.Capacity = 65536; Assert.Equal(42, original.GetInt(0));
+                Assert.True(a.ReleaseCurrentThreadBinding());
+                Assert.False(a.ReleaseCurrentThreadBinding());
+                original.Capacity = 65536;
+                Assert.Equal(42, original.GetInt(0));
                 Assert.Equal(0, ArenaIndex(a, original));
                 ByteBuf copy = original.Copy();
-                try { Assert.Equal(1, ArenaIndex(a, copy)); Assert.Equal(42, copy.GetInt(0)); }
+                try
+                {
+                    Assert.Equal(1, ArenaIndex(a, copy));
+                    Assert.Equal(42, copy.GetInt(0));
+                }
                 finally { copy.Release(); }
             });
             Assert.Equal(new[] { 1, 1 }, Arenas(a, direct).Select(m => m.NumThreadCaches));
@@ -204,7 +221,8 @@ public class PooledByteBufAllocatorThreadBindingTest
         ByteBuf orphan = null;
         try
         {
-            using (var exiting = new Worker()) await exiting.InvokeAsync(() =>
+            using (var exiting = new Worker())
+                await exiting.InvokeAsync(() =>
             {
                 orphan = (direct ? a.DirectBuffer(48) : a.HeapBuffer(48)).WriteInt(42);
                 Assert.Equal(1, ArenaIndex(a, orphan));
@@ -212,36 +230,47 @@ public class PooledByteBufAllocatorThreadBindingTest
             Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
             Assert.Equal(1, a.Metric.NumThreadLocalCaches);
             orphan.Capacity = 65536;
-            Assert.Equal(1, ArenaIndex(a, orphan)); Assert.Equal(42, orphan.GetInt(0));
+            Assert.Equal(1, ArenaIndex(a, orphan));
+            Assert.Equal(42, orphan.GetInt(0));
             Assert.Equal(2, a.Metric.NumThreadLocalCaches);
             Assert.Equal(1, Arenas(a, direct)[1].NumActiveAllocations);
             Assert.Equal(65536, direct ? a.PinnedDirectMemory : a.PinnedHeapMemory);
         }
         finally { orphan?.Release(); }
-        a.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        a.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public async Task ExecutionContextFlowDoesNotSharePhysicalThreadArenaBinding()
     {
         using var a = NewAllocator(2, 2);
-        using var w0 = new Worker(); using var w1 = new Worker();
-        var marker = new AsyncLocal<string>(); ExecutionContext context = null;
+        using var w0 = new Worker();
+        using var w1 = new Worker();
+        var marker = new AsyncLocal<string>();
+        ExecutionContext context = null;
         await w0.InvokeAsync(() =>
         {
-            marker.Value = "flowed"; AllocateAndRelease(a, false); context = ExecutionContext.Capture();
+            marker.Value = "flowed";
+            AllocateAndRelease(a, false);
+            context = ExecutionContext.Capture();
         });
         Assert.NotNull(context);
         await w1.InvokeAsync(() => ExecutionContext.Run(context, _ =>
         {
             Assert.Equal("flowed", marker.Value);
             ByteBuf b = a.HeapBuffer(48);
-            try { Assert.Equal(1, ArenaIndex(a, b)); }
+            try
+            {
+                Assert.Equal(1, ArenaIndex(a, b));
+            }
             finally { b.Release(); }
         }, null));
         Assert.Equal(2, a.Metric.NumThreadLocalCaches);
         Assert.Equal(new[] { 1, 1 }, a.Metric.HeapArenas.Select(m => m.NumThreadCaches));
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         await w0.InvokeAsync(() => AllocateAndRelease(a, false));
         await w1.InvokeAsync(() => AllocateAndRelease(a, false));
         Assert.Equal(new long[] { 2, 2 }, a.Metric.HeapArenas.Select(m => m.NumAllocations));
@@ -253,7 +282,8 @@ public class PooledByteBufAllocatorThreadBindingTest
     {
         var native = new NativeMemoryAllocator(131072 + alignment);
         using var a = NewAllocator(2, 2, alignment, native);
-        using var w0 = new Worker(); using var w1 = new Worker();
+        using var w0 = new Worker();
+        using var w1 = new Worker();
         ByteBuf held = null;
         try
         {
@@ -263,17 +293,23 @@ public class PooledByteBufAllocatorThreadBindingTest
             Assert.Equal(0, a.Metric.DirectArenas[1].NumAllocations);
             Assert.Equal(0, a.Metric.DirectArenas[1].NumActiveBytes);
             Assert.Equal(1, a.Metric.DirectArenas[1].NumThreadCaches);
-            Assert.Equal(42, held.GetInt(0)); held.Release(); held = null;
+            Assert.Equal(42, held.GetInt(0));
+            held.Release();
+            held = null;
             await w1.InvokeAsync(() =>
             {
                 ByteBuf b = a.DirectBuffer(48);
-                try { Assert.Equal(1, ArenaIndex(a, b)); }
+                try
+                {
+                    Assert.Equal(1, ArenaIndex(a, b));
+                }
                 finally { b.Release(); }
             });
             Assert.Equal(1, a.Metric.DirectArenas[1].NumAllocations);
         }
         finally { held?.Release(); }
-        a.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        a.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
@@ -283,7 +319,8 @@ public class PooledByteBufAllocatorThreadBindingTest
         var native = new NativeMemoryAllocator();
         using var a = NewAllocator(3, 3, alignment, native);
         var workers = Enumerable.Range(0, 3).Select(_ => new Worker()).ToArray();
-        var buffers = new ByteBuf[3]; var leases = new BufferMemoryLease[3];
+        var buffers = new ByteBuf[3];
+        var leases = new BufferMemoryLease[3];
         try
         {
             for (int i = 0; i < 3; ++i)
@@ -299,11 +336,15 @@ public class PooledByteBufAllocatorThreadBindingTest
             Assert.Equal(a.Metric.DirectArenas.Sum(m => m.NumActiveBytes), a.Metric.UsedDirectMemory);
             Assert.Equal(a.Metric.DirectArenas.Cast<PoolArena>().Sum(m => m.NumPinnedBytes), a.PinnedDirectMemory);
             long pinned = a.PinnedDirectMemory;
-            a.Dispose(); a.Dispose(); Assert.Equal(0, a.Metric.NumThreadLocalCaches);
+            a.Dispose();
+            a.Dispose();
+            Assert.Equal(0, a.Metric.NumThreadLocalCaches);
             Assert.All(a.Metric.HeapArenas.Concat(a.Metric.DirectArenas), m => Assert.Equal(0, m.NumThreadCaches));
             for (int i = 0; i < 3; ++i)
             {
-                Assert.Equal(i + 1, buffers[i].GetInt(0)); buffers[i].Release(); buffers[i] = null;
+                Assert.Equal(i + 1, buffers[i].GetInt(0));
+                buffers[i].Release();
+                buffers[i] = null;
                 await workers[i].InvokeAsync(() =>
                 {
                     Assert.False(a.ReleaseCurrentThreadBinding());
@@ -315,11 +356,15 @@ public class PooledByteBufAllocatorThreadBindingTest
         }
         finally
         {
-            foreach (ByteBuf b in buffers) b?.Release();
-            foreach (BufferMemoryLease lease in leases) lease.Dispose();
-            foreach (Worker w in workers) w.Dispose();
+            foreach (ByteBuf b in buffers)
+                b?.Release();
+            foreach (BufferMemoryLease lease in leases)
+                lease.Dispose();
+            foreach (Worker w in workers)
+                w.Dispose();
         }
-        Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, a.PinnedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(0, a.PinnedDirectMemory);
         Assert.Equal(0, a.Metric.UsedDirectMemory);
         Assert.All(a.Metric.DirectArenas, m => Assert.Equal(m.NumAllocations, m.NumDeallocations));
     }
@@ -377,10 +422,13 @@ public class PooledByteBufAllocatorThreadBindingTest
     public void FullyUnpooledConfigurationNeedsNoThreadBinding()
     {
         using var a = NewAllocator(0, 0);
-        AllocateAndRelease(a, false); AllocateAndRelease(a, true);
+        AllocateAndRelease(a, false);
+        AllocateAndRelease(a, true);
         Assert.Equal(0, a.Metric.NumThreadLocalCaches);
-        Assert.False(a.ReleaseCurrentThreadBinding()); Assert.Equal(0, a.ReleaseTerminatedThreadBindings());
-        Assert.Equal(-1, a.Metric.UsedHeapMemory); Assert.Equal(-1, a.Metric.UsedDirectMemory);
+        Assert.False(a.ReleaseCurrentThreadBinding());
+        Assert.Equal(0, a.ReleaseTerminatedThreadBindings());
+        Assert.Equal(-1, a.Metric.UsedHeapMemory);
+        Assert.Equal(-1, a.Metric.UsedDirectMemory);
     }
 
     // A dedicated live thread makes affinity and termination deterministic; no sleeps/GC
@@ -401,12 +449,14 @@ public class PooledByteBufAllocatorThreadBindingTest
             }) { IsBackground = true };
             _thread.Start();
         }
+
         internal Task InvokeAsync(Action action)
         {
             var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _queue.Add((action, completion));
             return completion.Task.WaitAsync(TimeSpan.FromSeconds(10));
         }
+
         public void Dispose()
         {
             _queue.CompleteAdding();

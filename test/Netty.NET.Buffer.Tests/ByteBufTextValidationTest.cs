@@ -66,10 +66,14 @@ public class ByteBufTextValidationTest
     [InlineData(4)] [InlineData(5)] [InlineData(6)]
     public void OriginalUtf8AsciiAndGeneralDecoderVectors(int kind)
     {
-        foreach (string hex in OriginalValidUtf8) Check(kind, hex, Encoding.UTF8, true);
-        foreach (string hex in OriginalInvalidUtf8) Check(kind, hex, Encoding.UTF8, false);
-        Check(kind, "0001377F", Encoding.ASCII, true); Check(kind, "80FF", Encoding.ASCII, false);
-        Check(kind, "01D837DC", Encoding.Unicode, true); Check(kind, "01D8", Encoding.Unicode, false);
+        foreach (string hex in OriginalValidUtf8)
+            Check(kind, hex, Encoding.UTF8, true);
+        foreach (string hex in OriginalInvalidUtf8)
+            Check(kind, hex, Encoding.UTF8, false);
+        Check(kind, "0001377F", Encoding.ASCII, true);
+        Check(kind, "80FF", Encoding.ASCII, false);
+        Check(kind, "01D837DC", Encoding.Unicode, true);
+        Check(kind, "01D8", Encoding.Unicode, false);
     }
 
     private static void Check(int kind, string hex, Encoding encoding, bool expected)
@@ -157,11 +161,16 @@ public class ByteBufTextValidationTest
         var encoding = (Encoding)Encoding.UTF8.Clone();
         encoding.DecoderFallback = new DecoderReplacementFallback("replacement");
         DecoderFallback fallback = encoding.DecoderFallback;
-        Check(kind, "E282", encoding, false); Check(kind, "41", encoding, true);
-        Check(kind, "80", encoding, false); Check(kind, "F0908D88", encoding, true);
-        Assert.Same(fallback, encoding.DecoderFallback); Assert.Equal("replacement", encoding.GetString(new byte[] { 128 }));
-        var ascii = (Encoding)Encoding.ASCII.Clone(); ascii.DecoderFallback = new DecoderReplacementFallback("x");
-        Check(kind, "FF", ascii, false); Assert.Equal("x", ascii.GetString(new byte[] { 255 }));
+        Check(kind, "E282", encoding, false);
+        Check(kind, "41", encoding, true);
+        Check(kind, "80", encoding, false);
+        Check(kind, "F0908D88", encoding, true);
+        Assert.Same(fallback, encoding.DecoderFallback);
+        Assert.Equal("replacement", encoding.GetString(new byte[] { 128 }));
+        var ascii = (Encoding)Encoding.ASCII.Clone();
+        ascii.DecoderFallback = new DecoderReplacementFallback("x");
+        Check(kind, "FF", ascii, false);
+        Assert.Equal("x", ascii.GetString(new byte[] { 255 }));
         Check(kind, "00FF80", Encoding.Latin1, true);
     }
 
@@ -206,18 +215,22 @@ public class ByteBufTextValidationTest
     {
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.IsText(null, Encoding.UTF8));
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.IsText(Unpooled.EmptyBuffer, null));
-        ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 255, 65 }); ByteBuf wrapper = Unpooled.UnreleasableBuffer(b);
+        ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 255, 65 });
+        ByteBuf wrapper = Unpooled.UnreleasableBuffer(b);
         try
         {
-            wrapper.ReaderIndex = 1; Assert.True(ByteBufUtil.IsText(wrapper, Encoding.ASCII));
+            wrapper.ReaderIndex = 1;
+            Assert.True(ByteBufUtil.IsText(wrapper, Encoding.ASCII));
             Assert.False(ByteBufUtil.IsText(wrapper, 0, 2, Encoding.ASCII));
-            Assert.Equal(1, b.ReaderIndex); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(1, b.ReaderIndex);
+            Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
         foreach (Encoding encoding in new[] { Encoding.UTF8, Encoding.ASCII, Encoding.Unicode, Encoding.Latin1 })
         {
             Assert.True(ByteBufUtil.IsText(Unpooled.EmptyBuffer, encoding));
-            ByteBuf dead = Unpooled.Buffer(1); dead.Release();
+            ByteBuf dead = Unpooled.Buffer(1);
+            dead.Release();
             Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.IsText(dead, encoding));
             Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.IsText(dead, 0, 0, encoding));
         }
@@ -241,7 +254,11 @@ public class ByteBufTextValidationTest
     private sealed class AsciiDecoderEncoding : UTF8Encoding
     {
         public int Calls;
-        public override Decoder GetDecoder() { Calls++; return Encoding.ASCII.GetDecoder(); }
+        public override Decoder GetDecoder()
+        {
+            Calls++;
+            return Encoding.ASCII.GetDecoder();
+        }
     }
 
     [Fact]
@@ -277,11 +294,16 @@ public class ByteBufTextValidationTest
         {
             throw new NotSupportedException();
         }
+
         public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex)
         {
             throw new NotSupportedException();
         }
+
         public override void Convert(ReadOnlySpan<byte> bytes, Span<char> chars, bool flush, out int bytesUsed, out int charsUsed, out bool completed)
-        { bytesUsed = charsUsed = 0; completed = false; }
+        {
+            bytesUsed = charsUsed = 0;
+            completed = false;
+        }
     }
 }

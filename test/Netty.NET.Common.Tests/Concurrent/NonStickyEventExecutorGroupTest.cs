@@ -149,30 +149,37 @@ public class NonStickyEventExecutorGroupTest
             this.underlying = underlying;
             executor = new RejectSecondExecutor(this, underlying);
         }
+
         public override IEventExecutor Next()
         {
             return executor;
         }
+
         public override IEnumerable<IEventExecutor> Iterator()
         {
             return new[] { executor };
         }
+
         public override void Shutdown()
         {
             underlying.ShutdownGracefullyAsync();
         }
+
         public override bool IsShuttingDown()
         {
             return underlying.IsShuttingDown();
         }
+
         public override bool IsShutdown()
         {
             return underlying.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return underlying.IsTerminated();
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return underlying.AwaitTermination(timeout);
@@ -192,26 +199,32 @@ public class NonStickyEventExecutorGroupTest
         {
             this.underlying = underlying;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return underlying.InEventLoop(thread);
         }
+
         public override void Shutdown()
         {
             underlying.ShutdownGracefullyAsync();
         }
+
         public override bool IsShuttingDown()
         {
             return underlying.IsShuttingDown();
         }
+
         public override bool IsShutdown()
         {
             return underlying.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return underlying.IsTerminated();
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return underlying.AwaitTermination(timeout);
@@ -221,6 +234,7 @@ public class NonStickyEventExecutorGroupTest
         {
             return underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
+
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
@@ -272,6 +286,7 @@ public class NonStickyEventExecutorGroupTest
         }
         finally { Stop(nonStickyGroup); Stop(underlying); }
     }
+
     private static void Execute(IEventExecutorGroup group, CountdownEvent startLatch)
     {
         IEventExecutor executor = group.Next();

@@ -32,12 +32,14 @@ public interface IAddressResolver<T> : IDisposable where T : EndPoint
    * Returns {@code true} if and only if the specified address is supported by this resolved.
    */
     bool IsSupported(EndPoint address);
+
     /**
    * Returns {@code true} if and only if the specified address has been resolved.
    *
    * @throws UnsupportedAddressTypeException if the specified address is not supported by this resolver
    */
     bool IsResolved(EndPoint address);
+
     /**
    * Resolves the specified address. If the specified address is resolved already, this method does nothing
    * but returning the original address.
@@ -57,6 +59,7 @@ public interface IAddressResolver<T> : IDisposable where T : EndPoint
    */
     // CLR: Task owns completion, with cooperative CancellationToken cancellation.
     Task<T> ResolveAsync(EndPoint address, CancellationToken cancellationToken = default);
+
     /**
    * Resolves the specified address. If the specified address is resolved already, this method does nothing
    * but returning the original address.
@@ -75,6 +78,7 @@ public interface IAddressResolver<T> : IDisposable where T : EndPoint
    * @return the list of the {@link SocketAddress}es as the result of the resolution
    */
     Task<IReadOnlyList<T>> ResolveAllAsync(EndPoint address, CancellationToken cancellationToken = default);
+
     /**
    * Closes all the resources allocated and used by this resolver.
    */

@@ -33,6 +33,7 @@ public class SimpleUserEventChannelHandlerTest
         allEventCatcher = new AllEventCatcher();
         channel = new EmbeddedChannel(fooEventCatcher, allEventCatcher);
     }
+
     [Fact]
     public void TestTypeMatch()
     {
@@ -43,6 +44,7 @@ public class SimpleUserEventChannelHandlerTest
         Assert.Equal(0, fooEvent.RefCnt);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestTypeMismatch()
     {

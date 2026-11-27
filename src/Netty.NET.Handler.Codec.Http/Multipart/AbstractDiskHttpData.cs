@@ -68,21 +68,25 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
      * @return the real DiskFilename (basename)
      */
     protected abstract string GetDiskFilename();
+
     /**
      *
      * @return the default prefix
      */
     protected abstract string GetPrefix();
+
     /**
      *
      * @return the default base Directory
      */
     protected internal abstract string GetBaseDirectory();
+
     /**
      *
      * @return the default postfix
      */
     protected abstract string GetPostfix();
+
     /**
      *
      * @return True if the file should be deleted on Exit by default

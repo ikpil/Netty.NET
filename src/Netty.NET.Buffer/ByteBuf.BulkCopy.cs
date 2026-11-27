@@ -24,7 +24,10 @@ public abstract partial class ByteBuf
     // A composite's physical contiguous borrow does not substitute for its logical bulk kernel.
     internal virtual bool SupportsDirectBulkCopy => true;
     internal virtual ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
-    { CheckIndex(index, length); return GetReadOnlySequenceCore(index, length); }
+    {
+        CheckIndex(index, length);
+        return GetReadOnlySequenceCore(index, length);
+    }
 
     internal static bool BulkRangesOverlap(ByteBuf source, int sourceIndex, ByteBuf destination, int destinationIndex, int length)
     {

@@ -233,7 +233,11 @@ public class ByteBufSearchSourceTest
     private sealed class ObservedComposite : CompositeByteBuf
     {
         public int Gets;
-        public override byte GetByte(int index) { ++Gets; throw new Failure(); }
+        public override byte GetByte(int index)
+        {
+            ++Gets;
+            throw new Failure();
+        }
     }
 
     public static IEnumerable<object[]> KernelCases()
@@ -296,8 +300,12 @@ public class ByteBufSearchSourceTest
         public readonly Failure Error = new();
         public int Invoke(int from, int to, byte value)
         {
-            ++Count; From = from; To = to; Value = value;
-            if (outcome == 2) throw Error;
+            ++Count;
+            From = from;
+            To = to;
+            Value = value;
+            if (outcome == 2)
+                throw Error;
             return outcome == 0 ? 6 : -1;
         }
     }

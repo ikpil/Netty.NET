@@ -109,13 +109,23 @@ public class ByteBufSizePredicateTest
         var tracker = new Tracker();
         ByteBuf b = kind switch
         {
-            0 => empty, 1 => new PlainWrapper(empty), 2 => new SimpleLeakAwareByteBuf(empty, tracker),
-            3 => new AdvancedLeakAwareByteBuf(empty, tracker), 4 => Unpooled.UnreleasableBuffer(empty),
+            0 => empty,
+            1 => new PlainWrapper(empty),
+            2 => new SimpleLeakAwareByteBuf(empty, tracker),
+            3 => new AdvancedLeakAwareByteBuf(empty, tracker),
+            4 => Unpooled.UnreleasableBuffer(empty),
             _ => new PlainWrapper(new AdvancedLeakAwareByteBuf(empty, tracker))
         };
-        foreach (int count in Counts) { Assert.False(b.IsReadable(count)); Assert.False(b.IsWritable(count)); }
-        Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex);
-        Assert.Equal(1, b.RefCnt); Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
+        foreach (int count in Counts)
+        {
+            Assert.False(b.IsReadable(count));
+            Assert.False(b.IsWritable(count));
+        }
+        Assert.Equal(0, b.ReaderIndex);
+        Assert.Equal(0, b.WriterIndex);
+        Assert.Equal(1, b.RefCnt);
+        Assert.Equal(0, tracker.Records);
+        Assert.Equal(0, tracker.Closes);
     }
 
     [Theory]
@@ -134,32 +144,44 @@ public class ByteBufSizePredicateTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)]
     public void OrdinaryWrappersForwardVirtualQueriesWithoutLeakRecording(int kind)
     {
-        var root = new PredicateBuffer(); var tracker = new Tracker();
+        var root = new PredicateBuffer();
+        var tracker = new Tracker();
         ByteBuf b = kind switch
         {
-            0 => new PlainWrapper(root), 1 => new SimpleLeakAwareByteBuf(root, tracker),
-            2 => new AdvancedLeakAwareByteBuf(root, tracker), 3 => Unpooled.UnreleasableBuffer(root),
+            0 => new PlainWrapper(root),
+            1 => new SimpleLeakAwareByteBuf(root, tracker),
+            2 => new AdvancedLeakAwareByteBuf(root, tracker),
+            3 => Unpooled.UnreleasableBuffer(root),
             _ => new PlainWrapper(new AdvancedLeakAwareByteBuf(root, tracker))
         };
-        Assert.True(b.IsReadable(123)); Assert.False(b.IsReadable(0));
-        Assert.True(b.IsWritable(456)); Assert.False(b.IsWritable(0));
-        Assert.Equal(2, root.ReadQueries); Assert.Equal(2, root.WriteQueries);
-        Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
+        Assert.True(b.IsReadable(123));
+        Assert.False(b.IsReadable(0));
+        Assert.True(b.IsWritable(456));
+        Assert.False(b.IsWritable(0));
+        Assert.Equal(2, root.ReadQueries);
+        Assert.Equal(2, root.WriteQueries);
+        Assert.Equal(0, tracker.Records);
+        Assert.Equal(0, tracker.Closes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void CompositeWrappersForwardVirtualQueriesWithoutLeakRecording(bool advanced)
     {
-        var root = new PredicateComposite(); var tracker = new Tracker();
+        var root = new PredicateComposite();
+        var tracker = new Tracker();
         CompositeByteBuf b = advanced ? new AdvancedLeakAwareCompositeByteBuf(root, tracker)
             : new SimpleLeakAwareCompositeByteBuf(root, tracker);
         try
         {
-            Assert.True(b.IsReadable(123)); Assert.False(b.IsReadable(0));
-            Assert.True(b.IsWritable(456)); Assert.False(b.IsWritable(0));
-            Assert.Equal(2, root.ReadQueries); Assert.Equal(2, root.WriteQueries);
-            Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
+            Assert.True(b.IsReadable(123));
+            Assert.False(b.IsReadable(0));
+            Assert.True(b.IsWritable(456));
+            Assert.False(b.IsWritable(0));
+            Assert.Equal(2, root.ReadQueries);
+            Assert.Equal(2, root.WriteQueries);
+            Assert.Equal(0, tracker.Records);
+            Assert.Equal(0, tracker.Closes);
         }
         finally { b.Release(); }
     }
@@ -193,11 +215,18 @@ public class ByteBufSizePredicateTest
         {
             Records++;
         }
+
         public void Record(object hint)
         {
             Records++;
         }
-        public bool Close(ByteBuf b) { Closes++; return true; }
+
+        public bool Close(ByteBuf b)
+        {
+            Closes++;
+            return true;
+        }
+
         public Exception GetCloseStackTraceIfAny()
         {
             return null;
@@ -206,14 +235,32 @@ public class ByteBufSizePredicateTest
     private sealed class PredicateBuffer : IndicesOnlyBuffer
     {
         internal int ReadQueries, WriteQueries;
-        public override bool IsReadable(int count) { ReadQueries++; return count == 123; }
-        public override bool IsWritable(int count) { WriteQueries++; return count == 456; }
+        public override bool IsReadable(int count)
+        {
+            ReadQueries++;
+            return count == 123;
+        }
+
+        public override bool IsWritable(int count)
+        {
+            WriteQueries++;
+            return count == 456;
+        }
     }
     private sealed class PredicateComposite : CompositeByteBuf
     {
         internal int ReadQueries, WriteQueries;
-        public override bool IsReadable(int count) { ReadQueries++; return count == 123; }
-        public override bool IsWritable(int count) { WriteQueries++; return count == 456; }
+        public override bool IsReadable(int count)
+        {
+            ReadQueries++;
+            return count == 123;
+        }
+
+        public override bool IsWritable(int count)
+        {
+            WriteQueries++;
+            return count == 456;
+        }
     }
     private class IndicesOnlyBuffer() : ByteBuf(64)
     {
@@ -224,10 +271,12 @@ public class ByteBufSizePredicateTest
         {
             throw new Exception("Content accessed");
         }
+
         public override ByteBuf Retain(int increment = 1)
         {
             throw new NotSupportedException();
         }
+
         public override bool Release(int decrement = 1)
         {
             throw new NotSupportedException();

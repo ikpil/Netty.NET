@@ -28,6 +28,7 @@ public class UnorderedExecutorContractTest
         {
             this.create = create;
         }
+
         public Thread NewThread(Action task)
         {
             return create(task);
@@ -397,6 +398,7 @@ public class UnorderedExecutorContractTest
         }
         finally { Stop(executor); }
     }
+
     [Fact]
     public void ClosingAdmissionStopsPeriodicReentryAfterItsRunningInvocation()
     {

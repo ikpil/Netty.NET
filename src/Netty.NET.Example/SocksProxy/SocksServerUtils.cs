@@ -39,5 +39,7 @@ public sealed class SocksServerUtils
         }
     }
 
-    private SocksServerUtils() { }
+    private SocksServerUtils()
+    {
+    }
 }

@@ -198,6 +198,7 @@ public class ObjectCleanerNativeContractTest
         {
             return obj is EqualTarget;
         }
+
         public override int GetHashCode()
         {
             return 1;

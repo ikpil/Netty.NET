@@ -29,10 +29,12 @@ public class ChannelInitializerExtensionContractTest
         var registration = ChannelInitializerExtension.Register(extension);
         var snapshot = ChannelInitializerExtensions.Snapshot();
         Assert.Same(extension, Assert.Single(snapshot));
-        registration.Dispose(); registration.Dispose();
+        registration.Dispose();
+        registration.Dispose();
         Assert.Empty(ChannelInitializerExtensions.Snapshot());
         Assert.Same(extension, Assert.Single(snapshot));
     }
+
     [Fact]
     public async Task PrioritiesFollowSourceDoubleOrderAndOneFailureDoesNotSuppressOtherExtensions()
     {
@@ -55,6 +57,7 @@ public class ChannelInitializerExtensionContractTest
             foreach (var registration in registrations) registration.Dispose();
         }
     }
+
     [Fact]
     public async Task ExistingListenerRetainsItsSourceExtensionSnapshotForFutureChildren()
     {
@@ -80,6 +83,7 @@ public class ChannelInitializerExtensionContractTest
             await group.StopAsync();
         }
     }
+
     [Fact]
     public async Task AttributeRemovalAndCloneSnapshotsKeepTypedNativeKeys()
     {
@@ -111,6 +115,7 @@ public class ChannelInitializerExtensionContractTest
             await group.StopAsync();
         }
     }
+
     [Fact]
     public async Task ConcurrentBuilderSnapshotsKeepOriginalOrderAndTypedAttributeState()
     {
@@ -141,11 +146,19 @@ public class ChannelInitializerExtensionContractTest
     {
         public override double Priority => priority;
         public override void PostInitializeClientChannel(IChannel channel)
-        { Assert.False(channel.IsRegistered); calls.Add(name); if (throws) throw new InvalidOperationException("extension failure"); }
+        {
+            Assert.False(channel.IsRegistered);
+            calls.Add(name);
+            if (throws)
+                throw new InvalidOperationException("extension failure");
+        }
     }
     private sealed class ChildObserver(Action observed) : ChannelInitializerExtension
     {
         public override void PostInitializeServerChildChannel(IChannel channel)
-        { Assert.False(channel.IsRegistered); observed(); }
+        {
+            Assert.False(channel.IsRegistered);
+            observed();
+        }
     }
 }

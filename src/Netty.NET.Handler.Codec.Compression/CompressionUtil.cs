@@ -31,7 +31,9 @@ internal sealed class CompressionUtil
     internal static readonly int DEFAULT_MAX_FORWARD_BYTES = SystemPropertyUtil.GetInt(
             "io.netty.compression.defaultMaxForwardBytes", 64 * 1024);
 
-    private CompressionUtil() { }
+    private CompressionUtil()
+    {
+    }
 
     internal static void CheckChecksum(ByteBufChecksum checksum, ByteBuf uncompressed, int currentChecksum)
     {

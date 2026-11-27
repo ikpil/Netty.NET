@@ -15,26 +15,32 @@ public class NonStickyActionContractTest
         {
             Pending.Enqueue(command);
         }
+
         internal void RunNext()
         {
             Pending.Dequeue()();
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return false;
         }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         [Obsolete]
         public override void Shutdown()
         {
@@ -45,6 +51,7 @@ public class NonStickyActionContractTest
         {
             throw new NotSupportedException();
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
@@ -57,9 +64,23 @@ public class NonStickyActionContractTest
         internal Task Result => source.Task;
         internal int Runs, Cancellations, Rejections;
         public bool IsCanceled => source.Task.IsCanceled;
-        public void Run() { Runs++; source.TrySetResult(); }
-        public void CancelForShutdown() { Cancellations++; source.TrySetCanceled(); }
-        public void Reject(Exception error) { Rejections++; source.TrySetException(error); }
+        public void Run()
+        {
+            Runs++;
+            source.TrySetResult();
+        }
+
+        public void CancelForShutdown()
+        {
+            Cancellations++;
+            source.TrySetCanceled();
+        }
+
+        public void Reject(Exception error)
+        {
+            Rejections++;
+            source.TrySetException(error);
+        }
     }
 
     [Theory]

@@ -118,7 +118,8 @@ public class SearchProcessorTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void TestLongInputs(int algorithm)
     {
-        byte[] haystackBytes = new byte[1024]; haystackBytes[^1] = 1;
+        byte[] haystackBytes = new byte[1024];
+        haystackBytes[^1] = 1;
         ByteBuf haystack = Unpooled.CopiedBuffer(haystackBytes); // 00000...00001
         try
         {
@@ -128,7 +129,8 @@ public class SearchProcessorTest
             Assert.Equal(1023, haystack.ForEachByte(Factory(algorithm, needleBytes).NewSearchProcessor().Process));
             needleBytes[^1] = 2; // 000...002
             Assert.Equal(-1, haystack.ForEachByte(Factory(algorithm, needleBytes).NewSearchProcessor().Process));
-            needleBytes[^1] = 0; needleBytes[0] = 1; // 100...000
+            needleBytes[^1] = 0;
+            needleBytes[0] = 1; // 100...000
             Assert.Equal(-1, haystack.ForEachByte(Factory(algorithm, needleBytes).NewSearchProcessor().Process));
         }
         finally { haystack.Release(); }
@@ -155,11 +157,13 @@ public class SearchProcessorTest
     [MemberData(nameof(Layouts))]
     public void SessionSpansEveryBufferBoundaryAndPreservesIndicesAndMarks(int algorithm, int layout)
     {
-        byte[] needle = { 0xff, 0, 0x80, 0xff, 0 }; byte[] wire = needle.Concat(needle).ToArray();
+        byte[] needle = { 0xff, 0, 0x80, 0xff, 0 };
+        byte[] wire = needle.Concat(needle).ToArray();
         for (int split = 0; split <= wire.Length; split++)
         {
             ISearchProcessor processor = Factory(algorithm, needle).NewSearchProcessor();
-            var matches = new List<int>(); int consumed = 0;
+            var matches = new List<int>();
+            int consumed = 0;
             foreach (byte[] chunk in new[] { wire[..split], Array.Empty<byte>(), wire[split..] })
             {
                 var (buffer, owner) = Buffer(chunk, layout);
@@ -168,9 +172,13 @@ public class SearchProcessorTest
                     buffer.MarkReaderIndex().MarkWriterIndex();
                     int start = 0, found;
                     while ((found = buffer.ForEachByte(start, chunk.Length - start, processor.Process)) >= 0)
-                    { matches.Add(consumed + found); start = found + 1; }
+                    {
+                        matches.Add(consumed + found);
+                        start = found + 1;
+                    }
                     buffer.ResetReaderIndex().ResetWriterIndex();
-                    Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(chunk.Length, buffer.WriterIndex);
+                    Assert.Equal(0, buffer.ReaderIndex);
+                    Assert.Equal(chunk.Length, buffer.WriterIndex);
                     Assert.Equal(1, owner.RefCnt);
                 }
                 finally { owner.Release(); }
@@ -184,16 +192,26 @@ public class SearchProcessorTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void FactoryCopiesPatternAndProcessorsHaveIndependentResettableState(int algorithm)
     {
-        byte[] needle = { 1, 2, 1 }; ISearchProcessorFactory factory = Factory(algorithm, needle);
+        byte[] needle = { 1, 2, 1 };
+        ISearchProcessorFactory factory = Factory(algorithm, needle);
         Array.Fill(needle, (byte)99);
         ISearchProcessor first = factory.NewSearchProcessor(), second = factory.NewSearchProcessor();
         Assert.NotSame(first, second);
-        Assert.True(first.Process(1)); Assert.True(first.Process(2));
-        Assert.True(second.Process(1)); Assert.False(first.Process(1));
-        Assert.True(second.Process(2)); Assert.False(second.Process(1));
-        first.Reset(); first.Reset(); Assert.True(first.Process(2)); Assert.True(first.Process(1));
-        Assert.True(first.Process(2)); Assert.False(first.Process(1));
-        Assert.True(first.Process(2)); first.Reset(); Assert.True(first.Process(1));
+        Assert.True(first.Process(1));
+        Assert.True(first.Process(2));
+        Assert.True(second.Process(1));
+        Assert.False(first.Process(1));
+        Assert.True(second.Process(2));
+        Assert.False(second.Process(1));
+        first.Reset();
+        first.Reset();
+        Assert.True(first.Process(2));
+        Assert.True(first.Process(1));
+        Assert.True(first.Process(2));
+        Assert.False(first.Process(1));
+        Assert.True(first.Process(2));
+        first.Reset();
+        Assert.True(first.Process(1));
     }
 
     [Theory]
@@ -239,7 +257,9 @@ public class SearchProcessorTest
             : AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(needle);
         needle.Clear();
         ISearchProcessor processor = factory.NewSearchProcessor();
-        Assert.True(processor.Process(255)); Assert.True(processor.Process(128)); Assert.False(processor.Process(0));
+        Assert.True(processor.Process(255));
+        Assert.True(processor.Process(128));
+        Assert.False(processor.Process(0));
         Assert.Throws<ArgumentNullException>(() => Factory(algorithm, null));
         Assert.Throws<ArgumentException>(() => Factory(algorithm, Array.Empty<byte>()));
         Assert.Throws<ArgumentException>(() => EmptySpanFactory(algorithm));
@@ -261,8 +281,14 @@ public class SearchProcessorTest
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
-        public void Record() { }
-        public void Record(object hint) { }
+        public void Record()
+        {
+        }
+
+        public void Record(object hint)
+        {
+        }
+
         public bool Close(ByteBuf buffer)
         {
             return true;

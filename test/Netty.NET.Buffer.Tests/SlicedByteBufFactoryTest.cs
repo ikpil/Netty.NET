@@ -68,6 +68,7 @@ public class SlicedByteBufFactoryTest
             Assert.Equal(1, View.RefCnt);
             Assert.Equal(Root.RefCnt, View.RefCnt);
         }
+
         public void Dispose()
         {
             if (View.RefCnt > 0) View.Release(View.RefCnt);
@@ -176,7 +177,8 @@ public class SlicedByteBufFactoryTest
     {
         using var s = new Storage(provider, retained, offset);
         // Ensure destination buffer is bigger then what is wrapped in the ByteBuf.
-        byte[] destination = new byte[9]; Array.Fill(destination, (byte)0xcc);
+        byte[] destination = new byte[9];
+        Array.Fill(destination, (byte)0xcc);
         ByteBuf wrappedBuffer = s.View;
         // CLR: the array converts to the Span destination that replaces ByteBuffer; ArgumentOutOfRangeException
         // replaces IndexOutOfBoundsException. The root has capacity beyond the slice.

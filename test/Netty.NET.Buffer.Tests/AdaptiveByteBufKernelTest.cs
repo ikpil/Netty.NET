@@ -41,40 +41,138 @@ public partial class AdaptiveByteBufKernelTest
     private sealed class HeapProbe(Observation o, int size, int max) : UnpooledHeapByteBuf(size, max)
     {
         public override bool IsContiguous => false;
-        public override byte GetByte(int index) { o.Visit("PublicByte", index, 1); return base.GetByte(index); }
-        internal override byte ReadByteCore(int index) { o.Visit("Byte", index, 1); return base.ReadByteCore(index); }
-        internal override void WriteByteCore(int index, int value) { o.Visit("SetByte", index, 1); base.WriteByteCore(index, value); }
-        internal override ulong ReadWord(int index, int width, bool little) { o.Visit("Word", index, width); return base.ReadWord(index, width, little); }
-        internal override ByteBuf SetWord(int index, ulong value, int width, bool little) { o.Visit("SetWord", index, width); return base.SetWord(index, value, width, little); }
+        public override byte GetByte(int index)
+        {
+            o.Visit("PublicByte", index, 1);
+            return base.GetByte(index);
+        }
+
+        internal override byte ReadByteCore(int index)
+        {
+            o.Visit("Byte", index, 1);
+            return base.ReadByteCore(index);
+        }
+
+        internal override void WriteByteCore(int index, int value)
+        {
+            o.Visit("SetByte", index, 1);
+            base.WriteByteCore(index, value);
+        }
+
+        internal override ulong ReadWord(int index, int width, bool little)
+        {
+            o.Visit("Word", index, width);
+            return base.ReadWord(index, width, little);
+        }
+
+        internal override ByteBuf SetWord(int index, ulong value, int width, bool little)
+        {
+            o.Visit("SetWord", index, width);
+            return base.SetWord(index, value, width, little);
+        }
+
         public override ByteBuf GetBytes(int index, Span<byte> destination)
-        { o.Visit("Span", index, destination.Length); if (o.ReadFill is byte fill) { destination.Fill(fill); return this; } return base.GetBytes(index, destination); }
+        {
+            o.Visit("Span", index, destination.Length);
+            if (o.ReadFill is byte fill)
+            {
+                destination.Fill(fill);
+                return this;
+            }
+            return base.GetBytes(index, destination);
+        }
+
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
-        { o.Visit("Buffer", index, length, destination); return base.GetBytes(index, destination, destinationIndex, length); }
+        {
+            o.Visit("Buffer", index, length, destination);
+            return base.GetBytes(index, destination, destinationIndex, length);
+        }
+
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
-        { o.Visit("Asc", index, length, processor); return o.IterationResult ?? base.ForEachByte(index, length, processor); }
+        {
+            o.Visit("Asc", index, length, processor);
+            return o.IterationResult ?? base.ForEachByte(index, length, processor);
+        }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
-        { o.Visit("Desc", index, length, processor); return o.IterationResult ?? base.ForEachByteDesc(index, length, processor); }
+        {
+            o.Visit("Desc", index, length, processor);
+            return o.IterationResult ?? base.ForEachByteDesc(index, length, processor);
+        }
+
         public override ByteBuf SetZero(int index, int length)
-        { o.Visit("Zero", index, length); return base.SetZero(index, length); }
+        {
+            o.Visit("Zero", index, length);
+            return base.SetZero(index, length);
+        }
     }
     private sealed class NativeProbe(Observation o, int size, int max, NativeMemoryAllocator native) : UnpooledDirectByteBuf(size, max, native)
     {
         public override bool IsContiguous => false;
-        public override byte GetByte(int index) { o.Visit("PublicByte", index, 1); return base.GetByte(index); }
-        internal override byte ReadByteCore(int index) { o.Visit("Byte", index, 1); return base.ReadByteCore(index); }
-        internal override void WriteByteCore(int index, int value) { o.Visit("SetByte", index, 1); base.WriteByteCore(index, value); }
-        internal override ulong ReadWord(int index, int width, bool little) { o.Visit("Word", index, width); return base.ReadWord(index, width, little); }
-        internal override ByteBuf SetWord(int index, ulong value, int width, bool little) { o.Visit("SetWord", index, width); return base.SetWord(index, value, width, little); }
+        public override byte GetByte(int index)
+        {
+            o.Visit("PublicByte", index, 1);
+            return base.GetByte(index);
+        }
+
+        internal override byte ReadByteCore(int index)
+        {
+            o.Visit("Byte", index, 1);
+            return base.ReadByteCore(index);
+        }
+
+        internal override void WriteByteCore(int index, int value)
+        {
+            o.Visit("SetByte", index, 1);
+            base.WriteByteCore(index, value);
+        }
+
+        internal override ulong ReadWord(int index, int width, bool little)
+        {
+            o.Visit("Word", index, width);
+            return base.ReadWord(index, width, little);
+        }
+
+        internal override ByteBuf SetWord(int index, ulong value, int width, bool little)
+        {
+            o.Visit("SetWord", index, width);
+            return base.SetWord(index, value, width, little);
+        }
+
         public override ByteBuf GetBytes(int index, Span<byte> destination)
-        { o.Visit("Span", index, destination.Length); if (o.ReadFill is byte fill) { destination.Fill(fill); return this; } return base.GetBytes(index, destination); }
+        {
+            o.Visit("Span", index, destination.Length);
+            if (o.ReadFill is byte fill)
+            {
+                destination.Fill(fill);
+                return this;
+            }
+            return base.GetBytes(index, destination);
+        }
+
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
-        { o.Visit("Buffer", index, length, destination); return base.GetBytes(index, destination, destinationIndex, length); }
+        {
+            o.Visit("Buffer", index, length, destination);
+            return base.GetBytes(index, destination, destinationIndex, length);
+        }
+
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
-        { o.Visit("Asc", index, length, processor); return o.IterationResult ?? base.ForEachByte(index, length, processor); }
+        {
+            o.Visit("Asc", index, length, processor);
+            return o.IterationResult ?? base.ForEachByte(index, length, processor);
+        }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
-        { o.Visit("Desc", index, length, processor); return o.IterationResult ?? base.ForEachByteDesc(index, length, processor); }
+        {
+            o.Visit("Desc", index, length, processor);
+            return o.IterationResult ?? base.ForEachByteDesc(index, length, processor);
+        }
+
         public override ByteBuf SetZero(int index, int length)
-        { o.Visit("Zero", index, length); return base.SetZero(index, length); }
+        {
+            o.Visit("Zero", index, length);
+            return base.SetZero(index, length);
+        }
     }
     private sealed class Storage : IDisposable
     {
@@ -97,11 +195,16 @@ public partial class AdaptiveByteBufKernelTest
             Guard = direct ? Allocator.DirectBuffer(size, max) : Allocator.HeapBuffer(size, max);
             Buffer = (AdaptiveByteBuf)(direct ? Allocator.DirectBuffer(size, max) : Allocator.HeapBuffer(size, max));
         }
+
         public void Dispose()
         {
             Observation.Enabled = false;
-            if (Buffer.RefCnt > 0) Buffer.Release(); if (Guard.RefCnt > 0) Guard.Release();
-            Allocator.Dispose(); Assert.Equal(0, Allocator.Native.ReservedBytes);
+            if (Buffer.RefCnt > 0)
+                Buffer.Release();
+            if (Guard.RefCnt > 0)
+                Guard.Release();
+            Allocator.Dispose();
+            Assert.Equal(0, Allocator.Native.ReservedBytes);
         }
     }
     public static IEnumerable<object[]> Cases()
@@ -110,17 +213,24 @@ public partial class AdaptiveByteBufKernelTest
         for (int profile = 0; profile < 5; ++profile)
         for (int operation = 0; operation < 14; ++operation) yield return [direct, profile, operation];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void RootKernelsReceiveCapturedCoordinatesAndRelativeFailureDoesNotPublishIndices(bool direct, int profile, int operation)
     {
-        using var s = new Storage(direct, profile); ByteBuf b = s.Buffer;
+        using var s = new Storage(direct, profile);
+        ByteBuf b = s.Buffer;
         int offset = s.Buffer.Allocation.Offset;
-        ByteBuf peer = new UnpooledHeapByteBuf(8); Func<byte, bool> visitor = _ => true;
-        if (operation is 9 or 13) b.SetIndex(1, 3);
-        else if (operation >= 10) b.SetIndex(3, 7);
-        else b.SetIndex(1, 2);
-        int reader = b.ReaderIndex, writer = b.WriterIndex; b.MarkReaderIndex().MarkWriterIndex();
+        ByteBuf peer = new UnpooledHeapByteBuf(8);
+        Func<byte, bool> visitor = _ => true;
+        if (operation is 9 or 13)
+            b.SetIndex(1, 3);
+        else if (operation >= 10)
+            b.SetIndex(3, 7);
+        else
+            b.SetIndex(1, 2);
+        int reader = b.ReaderIndex, writer = b.WriterIndex;
+        b.MarkReaderIndex().MarkWriterIndex();
         s.Observation.Enabled = true;
         try
         {
@@ -128,25 +238,77 @@ public partial class AdaptiveByteBufKernelTest
             {
                 switch (operation)
                 {
-                    case 0: b.GetByte(3); break; case 1: b.GetLongLE(3); break;
-                    case 2: b.SetByte(3, 17); break; case 3: b.SetIntLE(3, 17); break;
-                    case 4: b.GetBytes(3, new byte[4].AsSpan()); break; case 5: b.GetBytes(3, peer, 1, 4); break;
-                    case 6: b.ForEachByte(3, 4, visitor); break; case 7: b.ForEachByteDesc(3, 4, visitor); break;
-                    case 8: b.SetZero(3, 4); break; case 9: b.WriteZero(4); break;
-                    case 10: b.ReadBytes(new byte[4].AsSpan()); break; case 11: b.ReadBytes(peer, 1, 4); break;
-                    case 12: b.ReadByte(); break; case 13: b.WriteLongLE(17); break;
+                    case 0:
+                        b.GetByte(3);
+                        break;
+                    case 1:
+                        b.GetLongLE(3);
+                        break;
+                    case 2:
+                        b.SetByte(3, 17);
+                        break;
+                    case 3:
+                        b.SetIntLE(3, 17);
+                        break;
+                    case 4:
+                        b.GetBytes(3, new byte[4].AsSpan());
+                        break;
+                    case 5:
+                        b.GetBytes(3, peer, 1, 4);
+                        break;
+                    case 6:
+                        b.ForEachByte(3, 4, visitor);
+                        break;
+                    case 7:
+                        b.ForEachByteDesc(3, 4, visitor);
+                        break;
+                    case 8:
+                        b.SetZero(3, 4);
+                        break;
+                    case 9:
+                        b.WriteZero(4);
+                        break;
+                    case 10:
+                        b.ReadBytes(new byte[4].AsSpan());
+                        break;
+                    case 11:
+                        b.ReadBytes(peer, 1, 4);
+                        break;
+                    case 12:
+                        b.ReadByte();
+                        break;
+                    case 13:
+                        b.WriteLongLE(17);
+                        break;
                 }
             }
             Assert.Same(s.Observation.Failure, Assert.Throws<KernelFailure>(() => Request()));
             var call = Assert.Single(s.Observation.Calls);
-            string expected = operation switch { 0 or 12 => "Byte", 1 => "Word", 2 => "SetByte", 3 or 13 => "SetWord", 4 or 10 => "Span", 5 or 11 => "Buffer", 6 => "Asc", 7 => "Desc", _ => "Zero" };
-            Assert.Equal(expected, call.Method); Assert.Equal(offset + 3, call.Index);
+            string expected = operation switch
+            {
+                0 or 12 => "Byte",
+                1 => "Word",
+                2 => "SetByte",
+                3 or 13 => "SetWord",
+                4 or 10 => "Span",
+                5 or 11 => "Buffer",
+                6 => "Asc",
+                7 => "Desc",
+                _ => "Zero"
+            };
+            Assert.Equal(expected, call.Method);
+            Assert.Equal(offset + 3, call.Index);
             Assert.Equal(operation is 0 or 2 or 12 ? 1 : operation is 1 or 13 ? 8 : 4, call.Width);
-            if (operation is 5 or 11) Assert.Same(peer, call.Peer);
-            if (operation is 6 or 7) Assert.Same(visitor, call.Peer);
-            Assert.Equal(reader, b.ReaderIndex); Assert.Equal(writer, b.WriterIndex);
-            Assert.Equal(0, peer.ReaderIndex); Assert.Equal(0, peer.WriterIndex);
-            Assert.Equal(1, b.RefCnt); Assert.Equal(1, s.Guard.RefCnt);
+            if (operation is 5 or 11)
+                Assert.Same(peer, call.Peer);
+            if (operation is 6 or 7)
+                Assert.Same(visitor, call.Peer);
+            Assert.Equal(reader, b.ReaderIndex);
+            Assert.Equal(writer, b.WriterIndex);
+            Assert.Equal(0, peer.ReaderIndex);
+            Assert.Equal(0, peer.WriterIndex);
+            Assert.Equal(1, b.RefCnt);
+            Assert.Equal(1, s.Guard.RefCnt);
             Assert.Equal(1, s.Raw[^1].RefCnt);
         }
         finally { s.Observation.Enabled = false; peer.Release(); }

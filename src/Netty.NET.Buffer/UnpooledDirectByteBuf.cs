@@ -53,12 +53,16 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     public UnpooledDirectByteBuf(int initialCapacity = 256, int maxCapacity = int.MaxValue,
         NativeMemoryAllocator allocator = null)
         : this(allocator == null ? UnpooledByteBufAllocator.Default : new UnpooledByteBufAllocator(true, allocator),
-            initialCapacity, maxCapacity, allocator) { }
+            initialCapacity, maxCapacity, allocator)
+    {
+    }
 
     /// <summary>Creates native storage with an explicit buffer allocation policy and optional reservation domain.</summary>
     public UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, int initialCapacity, int maxCapacity,
         NativeMemoryAllocator nativeAllocator = null)
-        : this(bufferAllocator, initialCapacity, maxCapacity, nativeAllocator, null) { }
+        : this(bufferAllocator, initialCapacity, maxCapacity, nativeAllocator, null)
+    {
+    }
 
     /**
      * Allocate a new direct {@link ByteBuffer} with the given initialCapacity.
@@ -80,6 +84,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         _metric = metric;
         _metric?.AddDirect(initialCapacity);
     }
+
     /**
      * Creates a new direct buffer by wrapping the specified initial buffer.
      *
@@ -119,6 +124,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     {
         return _memory.Slice(index, length);
     }
+
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
@@ -159,6 +165,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         try { return result.WriteBytes(source); }
         catch { result.Release(); throw; }
     }
+
     /**
      * Free a direct {@link ByteBuffer}
      * @deprecated Use {@link #allocateDirectBuffer(int)} instead.

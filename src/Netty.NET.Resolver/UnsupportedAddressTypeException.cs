@@ -9,5 +9,7 @@ namespace Netty.NET.Resolver;
 // and no message. The BCL has no such type, so this one keeps the same base type and shape.
 public class UnsupportedAddressTypeException : ArgumentException
 {
-    public UnsupportedAddressTypeException() : base((string)null) { }
+    public UnsupportedAddressTypeException() : base((string)null)
+    {
+    }
 }

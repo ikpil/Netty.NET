@@ -31,6 +31,7 @@ public class NativeExecutorTaskContractTest
             LastSubmission = command;
             _queue.Enqueue(command);
         }
+
         internal void RunNext()
         {
             Action command = _queue.Dequeue();
@@ -38,26 +39,32 @@ public class NativeExecutorTaskContractTest
             try { command(); }
             finally { _executingThread = null; }
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return ReferenceEquals(thread, _executingThread);
         }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override void Shutdown()
         {
             throw new NotSupportedException("Test harness has no worker lifecycle");
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             throw new NotSupportedException("Test harness has no worker lifecycle");
@@ -79,12 +86,14 @@ public class NativeExecutorTaskContractTest
         {
             _children = children;
         }
+
         public override IEventExecutor Next()
         {
             int selection = Selections++;
             if (SelectionFailure != null) throw SelectionFailure;
             return _children[selection % _children.Length];
         }
+
         public override IEnumerable<IEventExecutor> Iterator()
         {
             return _children;
@@ -94,19 +103,26 @@ public class NativeExecutorTaskContractTest
         {
             return Task.CompletedTask;
         }
-        public override void Shutdown() { }
+
+        public override void Shutdown()
+        {
+        }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
@@ -348,22 +364,27 @@ public class NativeExecutorTaskContractTest
             ArgumentNullException.ThrowIfNull(command);
             underlying.Execute(command);
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return underlying.InEventLoop(thread);
         }
+
         public override bool IsShuttingDown()
         {
             return underlying.IsShuttingDown();
         }
+
         public override bool IsShutdown()
         {
             return underlying.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return underlying.IsTerminated();
         }
+
         public override void Shutdown()
         {
             underlying.Shutdown();
@@ -373,6 +394,7 @@ public class NativeExecutorTaskContractTest
         {
             return underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return underlying.AwaitTermination(timeout);

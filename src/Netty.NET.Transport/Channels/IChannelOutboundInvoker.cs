@@ -42,6 +42,7 @@ public interface IChannelOutboundInvoker
      * {@link Channel}.
      */
     Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default);
+
     /**
      * Request to connect to the given {@link SocketAddress} and notify the {@link ChannelFuture} once the operation
      * completes, either because the operation was successful or because of an error.
@@ -94,6 +95,7 @@ public interface IChannelOutboundInvoker
      * {@link Channel}.
      */
     Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default);
+
     /**
      * Request to disconnect from the remote peer and notify the {@link ChannelFuture} once the operation completes,
      * either because the operation was successful or because of an error.
@@ -115,6 +117,7 @@ public interface IChannelOutboundInvoker
      * {@link Channel}.
      */
     Task DisconnectAsync(CancellationToken cancellationToken = default);
+
     /**
      * Request to close the {@link Channel} and notify the {@link ChannelFuture} once the operation completes,
      * either because the operation was successful or because of
@@ -141,6 +144,7 @@ public interface IChannelOutboundInvoker
      * {@link Channel}.
      */
     Task CloseAsync(CancellationToken cancellationToken = default);
+
     /**
      * Request to deregister from the previous assigned {@link EventExecutor} and notify the
      * {@link ChannelFuture} once the operation completes, either because the operation was successful or because of
@@ -165,12 +169,14 @@ public interface IChannelOutboundInvoker
      * {@link Channel}.
      */
     Task DeregisterAsync(CancellationToken cancellationToken = default);
+
     /**
      * Request to write a message via this {@link ChannelHandlerContext} through the {@link ChannelPipeline}.
      * This method will not request to actual flush, so be sure to call {@link #flush()}
      * once you want to request to flush all pending data to the actual transport.
      */
     Task WriteAsync(object msg, CancellationToken cancellationToken = default);
+
     /**
      * Shortcut for call {@link #write(Object, ChannelPromise)} and {@link #flush()}.
      */
@@ -178,6 +184,7 @@ public interface IChannelOutboundInvoker
      * Shortcut for call {@link #write(Object)} and {@link #flush()}.
      */
     Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default);
+
     /**
      * Request to Read data from the {@link Channel} into the first inbound buffer, triggers an
      * {@link ChannelInboundHandler#channelRead(ChannelHandlerContext, Object)} event if data was
@@ -191,6 +198,7 @@ public interface IChannelOutboundInvoker
      * {@link Channel}.
      */
     IChannelOutboundInvoker Read();
+
     /**
      * Request to flush all pending messages via this ChannelOutboundInvoker.
      */

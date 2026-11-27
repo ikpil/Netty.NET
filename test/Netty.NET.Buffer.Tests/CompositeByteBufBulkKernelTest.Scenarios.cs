@@ -28,17 +28,26 @@ public partial class CompositeByteBufBulkKernelTest
 {
     private sealed class MetadataTrap : WrappedByteBuf
     {
-        public MetadataTrap(ByteBuf buffer) : base(buffer) { }
+        public MetadataTrap(ByteBuf buffer) : base(buffer)
+        {
+        }
+
         public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
         {
             throw new InvalidOperationException("Bulk overlap checks must not call public memory accessors.");
         }
+
         public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
         {
             throw new InvalidOperationException("Bulk overlap checks must not call public sequence accessors.");
         }
     }
-    private sealed class Wrapper : WrappedByteBuf { public Wrapper(ByteBuf b) : base(b) { } }
+    private sealed class Wrapper : WrappedByteBuf
+    {
+        public Wrapper(ByteBuf b) : base(b)
+        {
+        }
+    }
     public static IEnumerable<object[]> Aliases()
     {
         foreach (bool direct in new[] { false, true })
@@ -46,6 +55,7 @@ public partial class CompositeByteBufBulkKernelTest
         for (int range = 0; range < 3; ++range)
         for (int operation = 0; operation < 6; ++operation) yield return [direct, wrapped, range, operation];
     }
+
     [Theory]
     [MemberData(nameof(Aliases))]
     public void OverlappingCopiesPreserveSnapshotBytesWithoutPublicMetadataAccess(bool direct, bool wrapped, int range, int operation)
@@ -87,11 +97,13 @@ public partial class CompositeByteBufBulkKernelTest
         foreach (bool fixedComposite in new[] { false, true })
         for (int endpoint = 0; endpoint < 6; ++endpoint) yield return [direct, fixedComposite, endpoint];
     }
+
     [Theory]
     [MemberData(nameof(Outputs))]
     public async Task OutputStagingReadsLogicalComponentBytesForStreamFileAndSocket(bool direct, bool fixedComposite, int endpoint)
     {
-        var native = new NativeMemoryAllocator(); var observation = new Observation { Fail = false };
+        var native = new NativeMemoryAllocator();
+        var observation = new Observation { Fail = false };
         var cancellation = TestContext.Current.CancellationToken;
         ByteBuf first = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf second = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
@@ -100,56 +112,85 @@ public partial class CompositeByteBufBulkKernelTest
         try
         {
             byte[] a = new byte[32], b = new byte[32];
-            for (int i = 0; i < 32; ++i) { a[i] = (byte)(i + 1); b[i] = (byte)(i + 33); }
-            first.SetBytes(0, a).SetIndex(5, 21); second.SetBytes(0, b).SetIndex(3, 19);
+            for (int i = 0; i < 32; ++i)
+            {
+                a[i] = (byte)(i + 1);
+                b[i] = (byte)(i + 33);
+            }
+            first.SetBytes(0, a).SetIndex(5, 21);
+            second.SetBytes(0, b).SetIndex(3, 19);
             owner = fixedComposite ? Unpooled.WrappedUnmodifiableBuffer(first, second)
                 : new CompositeByteBuf().AddComponent(first, true).AddComponent(second, true);
             owner.SetIndex(1, 3).MarkReaderIndex().MarkWriterIndex();
             byte[] expected = fixedComposite ? [15, 16, 33, 34] : [20, 21, 36, 37];
-            for (int i = 0; i < expected.Length; ++i) expected[i] ^= 0x5A;
+            for (int i = 0; i < expected.Length; ++i)
+                expected[i] ^= 0x5A;
             if (endpoint < 2)
             {
                 using var output = new MemoryStream();
-                if (endpoint == 0) owner.GetBytes(14, output, 4); else await owner.GetBytesAsync(14, output, 4, cancellation);
-                Assert.Equal(expected, output.ToArray()); Assert.True(output.CanWrite);
+                if (endpoint == 0)
+                    owner.GetBytes(14, output, 4);
+                else
+                    await owner.GetBytesAsync(14, output, 4, cancellation);
+                Assert.Equal(expected, output.ToArray());
+                Assert.True(output.CanWrite);
             }
             else if (endpoint < 4)
             {
                 path = Path.GetTempFileName();
                 using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                 int count = endpoint == 2 ? owner.GetBytes(14, handle, 7, 4) : await owner.GetBytesAsync(14, handle, 7, 4, cancellation);
-                byte[] actual = new byte[4]; Assert.Equal(4, count); Assert.Equal(4, RandomAccess.Read(handle, actual, 7));
-                Assert.Equal(expected, actual); Assert.False(handle.IsClosed);
+                byte[] actual = new byte[4];
+                Assert.Equal(4, count);
+                Assert.Equal(4, RandomAccess.Read(handle, actual, 7));
+                Assert.Equal(expected, actual);
+                Assert.False(handle.IsClosed);
             }
             else
             {
-                var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();
+                var listener = new TcpListener(IPAddress.Loopback, 0);
+                listener.Start();
                 using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 try
                 {
                     ValueTask connect = sender.ConnectAsync(listener.LocalEndpoint, cancellation);
-                    using Socket receiver = await listener.AcceptSocketAsync(cancellation); await connect;
+                    using Socket receiver = await listener.AcceptSocketAsync(cancellation);
+                    await connect;
                     int count = endpoint == 4 ? owner.GetBytes(14, sender, 4) : await owner.GetBytesAsync(14, sender, 4, cancellation);
-                    Assert.InRange(count, 1, 4); byte[] actual = new byte[count];
+                    Assert.InRange(count, 1, 4);
+                    byte[] actual = new byte[count];
                     for (int offset = 0; offset < count;)
-                    { int read = await receiver.ReceiveAsync(actual.AsMemory(offset), SocketFlags.None, cancellation); Assert.True(read > 0); offset += read; }
+                    {
+                        int read = await receiver.ReceiveAsync(actual.AsMemory(offset), SocketFlags.None, cancellation);
+                        Assert.True(read > 0);
+                        offset += read;
+                    }
                     Assert.Equal(expected[..count], actual);
                 }
                 finally { listener.Stop(); }
             }
             Assert.Equal(2, observation.Visits.Count);
             Assert.All(observation.Visits, visit => { Assert.Equal("GetSpan", visit.Method); Assert.Equal(2, visit.Length); });
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
             owner.SetIndex(0, owner.Capacity).ResetWriterIndex().ResetReaderIndex();
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
-            Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray()); Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray());
+            Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
         }
         finally
         {
-            if (owner?.RefCnt > 0) owner.Release();
-            if (first.RefCnt > 0) first.Release(); if (second.RefCnt > 0) second.Release();
-            if (path != null) File.Delete(path);
+            if (owner?.RefCnt > 0)
+                owner.Release();
+            if (first.RefCnt > 0)
+                first.Release();
+            if (second.RefCnt > 0)
+                second.Release();
+            if (path != null)
+                File.Delete(path);
             Assert.Equal(0, native.ReservedBytes);
         }
     }

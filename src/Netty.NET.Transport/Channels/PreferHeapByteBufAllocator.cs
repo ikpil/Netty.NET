@@ -30,30 +30,37 @@ public sealed class PreferHeapByteBufAllocator : IByteBufAllocator
     {
         _allocator = allocator ?? throw new ArgumentNullException(nameof(allocator));
     }
+
     public ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
     {
         return _allocator.HeapBuffer(initialCapacity, maxCapacity);
     }
+
     public ByteBuf IoBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
     {
         return _allocator.HeapBuffer(initialCapacity, maxCapacity);
     }
+
     public ByteBuf HeapBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
     {
         return _allocator.HeapBuffer(initialCapacity, maxCapacity);
     }
+
     public ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
     {
         return _allocator.DirectBuffer(initialCapacity, maxCapacity);
     }
+
     public CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
     {
         return _allocator.CompositeHeapBuffer(maxNumComponents);
     }
+
     public CompositeByteBuf CompositeHeapBuffer(int maxNumComponents = 16)
     {
         return _allocator.CompositeHeapBuffer(maxNumComponents);
     }
+
     public CompositeByteBuf CompositeDirectBuffer(int maxNumComponents = 16)
     {
         return _allocator.CompositeDirectBuffer(maxNumComponents);

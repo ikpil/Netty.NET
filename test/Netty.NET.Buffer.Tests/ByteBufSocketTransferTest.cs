@@ -36,14 +36,17 @@ public class ByteBufSocketTransferTest
     {
         return async ? b.GetBytesAsync(index, s, length, t) : ValueTask.FromResult(b.GetBytes(index, s, length));
     }
+
     private static ValueTask<int> Set(ByteBuf b, bool async, int index, Socket s, int length, CancellationToken t)
     {
         return async ? b.SetBytesAsync(index, s, length, t) : ValueTask.FromResult(b.SetBytes(index, s, length));
     }
+
     private static ValueTask<int> Read(ByteBuf b, bool async, Socket s, int length, CancellationToken t)
     {
         return async ? b.ReadBytesAsync(s, length, t) : ValueTask.FromResult(b.ReadBytes(s, length));
     }
+
     private static ValueTask<int> Write(ByteBuf b, bool async, Socket s, int length, CancellationToken t)
     {
         return async ? b.WriteBytesAsync(s, length, t) : ValueTask.FromResult(b.WriteBytes(s, length));
@@ -55,18 +58,22 @@ public class ByteBufSocketTransferTest
         using var scope = new Owner(kind);
         using var pair = new Pair();
         ByteBuf b = scope.Buffer;
-        for (int i = 0; i < 24; i++) b.SetByte(i, 20 + i);
+        for (int i = 0; i < 24; i++)
+            b.SetByte(i, 20 + i);
         b.SetIndex(2, 18).MarkReaderIndex().MarkWriterIndex();
         int sent = await Get(b, async, 7, pair.Local, 9, pair.Token);
         Assert.InRange(sent, 1, 9);
         Assert.Equal(ByteBufUtil.GetBytes(b, 7, sent), pair.Receive(sent));
-        Assert.Equal(2, b.ReaderIndex); Assert.Equal(18, b.WriterIndex);
+        Assert.Equal(2, b.ReaderIndex);
+        Assert.Equal(18, b.WriterIndex);
         sent = await Read(b, async, pair.Local, 12, pair.Token);
         Assert.InRange(sent, 1, 12);
         Assert.Equal(ByteBufUtil.GetBytes(b, 2, sent), pair.Receive(sent));
-        Assert.Equal(2 + sent, b.ReaderIndex); Assert.Equal(18, b.WriterIndex);
+        Assert.Equal(2 + sent, b.ReaderIndex);
+        Assert.Equal(18, b.WriterIndex);
         b.ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(2, b.ReaderIndex); Assert.Equal(18, b.WriterIndex);
+        Assert.Equal(2, b.ReaderIndex);
+        Assert.Equal(18, b.WriterIndex);
         Assert.Equal(1, b.RefCnt);
         Assert.False(pair.Local.SafeHandle.IsClosed);
     }
@@ -84,7 +91,8 @@ public class ByteBufSocketTransferTest
             int count = await Set(b, async, 7 + total, pair.Local, 12 - total, pair.Token);
             Assert.InRange(count, 1, 3 - total);
             total += count;
-            Assert.Equal(2, b.ReaderIndex); Assert.Equal(5, b.WriterIndex);
+            Assert.Equal(2, b.ReaderIndex);
+            Assert.Equal(5, b.WriterIndex);
         }
         Assert.Equal(new byte[] { 91, 92, 93 }, ByteBufUtil.GetBytes(b, 7, 3));
         Assert.Equal(0, b.GetByte(10));
@@ -105,7 +113,8 @@ public class ByteBufSocketTransferTest
         Assert.Equal(new byte[] { 81, 82, 83 }, ByteBufUtil.GetBytes(b, 5, 3));
         Assert.Equal(0, await Write(b, async, second.Local, 12, second.Token));
         b.ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(2, b.ReaderIndex); Assert.Equal(5, b.WriterIndex);
+        Assert.Equal(2, b.ReaderIndex);
+        Assert.Equal(5, b.WriterIndex);
         Assert.Equal(1, b.RefCnt);
     }
 
@@ -120,7 +129,8 @@ public class ByteBufSocketTransferTest
         Assert.Equal(0, b.SetBytes(7, pair.Local, 12));
         Assert.Equal(0, b.WriteBytes(pair.Local, 12));
         Assert.Equal(new byte[24], ByteBufUtil.GetBytes(b, 0, 24));
-        Assert.Equal(2, b.ReaderIndex); Assert.Equal(5, b.WriterIndex);
+        Assert.Equal(2, b.ReaderIndex);
+        Assert.Equal(5, b.WriterIndex);
     }
 
     [Theory]
@@ -169,7 +179,8 @@ public class ByteBufSocketTransferTest
         Assert.Equal(0, await Set(b, async, 24, pair.Local, 0, pair.Token));
         await Assert.ThrowsAsync<ObjectDisposedException>(async () => await Get(b, async, 0, pair.Local, 1, pair.Token));
         await Assert.ThrowsAsync<ObjectDisposedException>(async () => await Write(b, async, pair.Local, 1, pair.Token));
-        Assert.Equal(2, b.ReaderIndex); Assert.Equal(5, b.WriterIndex);
+        Assert.Equal(2, b.ReaderIndex);
+        Assert.Equal(5, b.WriterIndex);
         Assert.Equal(new byte[24], ByteBufUtil.GetBytes(b, 0, 24));
     }
 
@@ -180,12 +191,14 @@ public class ByteBufSocketTransferTest
         using var scope = new Owner(kind);
         using var pair = new Pair();
         ByteBuf b = scope.Buffer.SetIndex(0, 24);
-        using var canceled = new CancellationTokenSource(); canceled.Cancel();
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await b.WriteBytesAsync(pair.Local, 8, canceled.Token));
         Assert.Equal(24, b.Capacity);
         pair.SendAndFinish([]);
         Assert.Equal(0, b.WriteBytes(pair.Local, 8));
-        Assert.True(b.Capacity >= 32); Assert.Equal(24, b.WriterIndex);
+        Assert.True(b.Capacity >= 32);
+        Assert.Equal(24, b.WriterIndex);
     }
 
     [Theory]
@@ -200,11 +213,13 @@ public class ByteBufSocketTransferTest
         Assert.False(pending.IsCompleted);
         canceled.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await pending);
-        Assert.Equal(2, b.ReaderIndex); Assert.Equal(5, b.WriterIndex);
+        Assert.Equal(2, b.ReaderIndex);
+        Assert.Equal(5, b.WriterIndex);
         Assert.Equal(new byte[24], ByteBufUtil.GetBytes(b, 0, 24));
         pair.SendAndFinish([76]);
         Assert.Equal(1, await b.WriteBytesAsync(pair.Local, 12, pair.Token));
-        Assert.Equal(76, b.GetByte(5)); Assert.Equal(6, b.WriterIndex);
+        Assert.Equal(76, b.GetByte(5));
+        Assert.Equal(6, b.WriterIndex);
     }
 
     [Theory]
@@ -218,24 +233,36 @@ public class ByteBufSocketTransferTest
         ByteBuf b = composite ? new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)origin, tracker)
             : new AdvancedLeakAwareByteBuf(origin, tracker);
         pair.SendAndFinish([]);
-        Assert.Equal(0, await Get(b, async, 0, pair.Local, 0, pair.Token)); Assert.Equal(1, tracker.Records);
-        Assert.Equal(0, await Set(b, async, 0, pair.Local, 1, pair.Token)); Assert.Equal(2, tracker.Records);
-        Assert.Equal(0, await Read(b, async, pair.Local, 0, pair.Token)); Assert.Equal(3, tracker.Records);
-        Assert.Equal(0, await Write(b, async, pair.Local, 1, pair.Token)); Assert.Equal(4, tracker.Records);
+        Assert.Equal(0, await Get(b, async, 0, pair.Local, 0, pair.Token));
+        Assert.Equal(1, tracker.Records);
+        Assert.Equal(0, await Set(b, async, 0, pair.Local, 1, pair.Token));
+        Assert.Equal(2, tracker.Records);
+        Assert.Equal(0, await Read(b, async, pair.Local, 0, pair.Token));
+        Assert.Equal(3, tracker.Records);
+        Assert.Equal(0, await Write(b, async, pair.Local, 1, pair.Token));
+        Assert.Equal(4, tracker.Records);
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await Get(b, async, -1, pair.Local, 1, pair.Token));
         Assert.Equal(5, tracker.Records);
         int count = await Get(b, async, 7, pair.Local, 3, pair.Token);
-        Assert.Equal(new byte[count], pair.Receive(count)); Assert.Equal(6, tracker.Records);
+        Assert.Equal(new byte[count], pair.Receive(count));
+        Assert.Equal(6, tracker.Records);
         count = await Read(b, async, pair.Local, 3, pair.Token);
-        Assert.Equal(new byte[count], pair.Receive(count)); Assert.Equal(7, tracker.Records);
+        Assert.Equal(new byte[count], pair.Receive(count));
+        Assert.Equal(7, tracker.Records);
         Assert.Equal(2 + count, origin.ReaderIndex);
-        using var input = new Pair(); input.SendAndFinish([68]);
-        Assert.Equal(1, await Set(b, async, 7, input.Local, 3, input.Token)); Assert.Equal(8, tracker.Records);
+        using var input = new Pair();
+        input.SendAndFinish([68]);
+        Assert.Equal(1, await Set(b, async, 7, input.Local, 3, input.Token));
+        Assert.Equal(8, tracker.Records);
         Assert.Equal(68, origin.GetByte(7));
-        using var relativeInput = new Pair(); relativeInput.SendAndFinish([69]);
-        Assert.Equal(1, await Write(b, async, relativeInput.Local, 3, relativeInput.Token)); Assert.Equal(9, tracker.Records);
-        Assert.Equal(69, origin.GetByte(5)); Assert.Equal(6, origin.WriterIndex);
-        Assert.True(b.Release()); Assert.Equal(1, tracker.Closes);
+        using var relativeInput = new Pair();
+        relativeInput.SendAndFinish([69]);
+        Assert.Equal(1, await Write(b, async, relativeInput.Local, 3, relativeInput.Token));
+        Assert.Equal(9, tracker.Records);
+        Assert.Equal(69, origin.GetByte(5));
+        Assert.Equal(6, origin.WriterIndex);
+        Assert.True(b.Release());
+        Assert.Equal(1, tracker.Closes);
     }
 
     [Theory, MemberData(nameof(Modes))]
@@ -243,7 +270,8 @@ public class ByteBufSocketTransferTest
     {
         using var scope = new Owner(kind);
         using var pair = new Pair();
-        ByteBuf b = scope.Buffer; b.Release();
+        ByteBuf b = scope.Buffer;
+        b.Release();
         await Assert.ThrowsAsync<IllegalReferenceCountException>(async () => await Get(b, async, 0, pair.Local, 1, pair.Token));
         await Assert.ThrowsAsync<IllegalReferenceCountException>(async () => await Set(b, async, 0, pair.Local, 1, pair.Token));
         await Assert.ThrowsAsync<IllegalReferenceCountException>(async () => await Read(b, async, pair.Local, 1, pair.Token));
@@ -276,6 +304,7 @@ public class ByteBufSocketTransferTest
                 _ => new UnpooledDirectByteBuf(28, 28, _native).Slice(2, 24)
             };
         }
+
         public void Dispose()
         {
             if (Buffer.RefCnt != 0) Buffer.Release(Buffer.RefCnt);
@@ -291,11 +320,17 @@ public class ByteBufSocketTransferTest
         {
             Records++;
         }
+
         public void Record(object hint)
         {
             Records++;
         }
-        public bool Close(ByteBuf b) { Assert.Same(expected, b); return ++Closes == 1; }
+
+        public bool Close(ByteBuf b)
+        {
+            Assert.Same(expected, b);
+            return ++Closes == 1;
+        }
     }
 
     private sealed class Pair : IDisposable
@@ -308,12 +343,14 @@ public class ByteBufSocketTransferTest
         {
             _timeout.CancelAfter(TimeSpan.FromSeconds(10));
             using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listener.Bind(new IPEndPoint(IPAddress.Loopback, 0)); listener.Listen(1);
+            listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            listener.Listen(1);
             Local = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             Local.Connect(listener.LocalEndPoint);
             Peer = listener.Accept();
             Local.ReceiveTimeout = Local.SendTimeout = Peer.ReceiveTimeout = Peer.SendTimeout = 5000;
         }
+
         internal byte[] Receive(int length)
         {
             var bytes = new byte[length];
@@ -324,11 +361,18 @@ public class ByteBufSocketTransferTest
             }
             return bytes;
         }
+
         internal void SendAndFinish(byte[] bytes)
         {
             for (int offset = 0; offset < bytes.Length;) offset += Peer.Send(bytes.AsSpan(offset));
             Peer.Shutdown(SocketShutdown.Send);
         }
-        public void Dispose() { Local.Dispose(); Peer.Dispose(); _timeout.Dispose(); }
+
+        public void Dispose()
+        {
+            Local.Dispose();
+            Peer.Dispose();
+            _timeout.Dispose();
+        }
     }
 }

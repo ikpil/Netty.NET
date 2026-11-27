@@ -14,6 +14,7 @@ public class ReferenceCountContractTest
         {
             Interlocked.Increment(ref Deallocations);
         }
+
         public override IReferenceCounted Touch(object hint)
         {
             return this;

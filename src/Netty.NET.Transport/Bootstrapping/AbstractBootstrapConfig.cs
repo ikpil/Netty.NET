@@ -60,24 +60,36 @@ public abstract class AbstractBootstrapConfig
         foreach (var pair in values) snapshot.Add(pair.Key, pair.Value);
         return new ReadOnlyDictionary<TKey, object>(snapshot);
     }
+
     private static string Value(object value)
     {
         return value is bool boolean ? boolean ? "true" : "false"
             : value is IFormattable formattable ? formattable.ToString(null, CultureInfo.InvariantCulture) : value?.ToString();
     }
+
     protected static string Map<TKey>(IReadOnlyDictionary<TKey, object> values)
     {
         return "{" + string.Join(", ", values.Select(pair => pair.Key + "=" + Value(pair.Value))) + "}";
     }
+
     protected virtual void Describe(List<string> values)
     {
-        if (Group != null) values.Add("group: " + StringUtil.SimpleClassName(Group));
-        if (ChannelFactory != null) values.Add("channelFactory: " + ChannelFactory);
-        if (LocalAddress != null) values.Add("localAddress: " + LocalAddress);
-        var options = Options; if (options.Count != 0) values.Add("options: " + Map(options));
-        var attrs = Attributes; if (attrs.Count != 0) values.Add("attrs: " + Map(attrs));
-        if (Handler != null) values.Add("handler: " + Handler);
+        if (Group != null)
+            values.Add("group: " + StringUtil.SimpleClassName(Group));
+        if (ChannelFactory != null)
+            values.Add("channelFactory: " + ChannelFactory);
+        if (LocalAddress != null)
+            values.Add("localAddress: " + LocalAddress);
+        var options = Options;
+        if (options.Count != 0)
+            values.Add("options: " + Map(options));
+        var attrs = Attributes;
+        if (attrs.Count != 0)
+            values.Add("attrs: " + Map(attrs));
+        if (Handler != null)
+            values.Add("handler: " + Handler);
     }
+
     public override string ToString()
     {
         var values = new List<string>();

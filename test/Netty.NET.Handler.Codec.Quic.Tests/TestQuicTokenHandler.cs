@@ -47,5 +47,7 @@ internal sealed class TestQuicTokenHandler : IQuicTokenHandler
         return InsecureQuicTokenHandler.INSTANCE.MaxTokenLength();
     }
 
-    private TestQuicTokenHandler() { }
+    private TestQuicTokenHandler()
+    {
+    }
 }

@@ -29,7 +29,9 @@ public sealed class MqttUnacceptableProtocolVersionException : DecoderException
     /**
      * Creates a new instance
      */
-    public MqttUnacceptableProtocolVersionException() { }
+    public MqttUnacceptableProtocolVersionException()
+    {
+    }
 
     /**
      * Creates a new instance

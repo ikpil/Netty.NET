@@ -77,6 +77,7 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
     {
         return _linkedList.GetEnumerator();
     }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

@@ -95,10 +95,12 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
     {
         throw new NotSupportedException();
     }
+
     internal void Release()
     {
         Dispose(true);
     }
+
     protected override void Dispose(bool disposing)
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 0) ReleaseClaim();
@@ -123,12 +125,14 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
         {
             _allocation = allocation;
         }
+
         public void Dispose()
         {
             ThreadLocalDirectAllocation allocation = Interlocked.Exchange(ref _allocation, null);
             allocation?.ReleaseClaim();
             GC.SuppressFinalize(this);
         }
+
         ~Claim()
         {
             Dispose();

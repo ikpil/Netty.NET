@@ -68,12 +68,16 @@ public class ByteBufDiagnosticsTest
 
     private static ByteBuf Owner(int kind, int max, NativeMemoryAllocator native, out IDisposable disposable)
     {
-        disposable = null; var a = new UnpooledByteBufAllocator(false, native);
-        if (kind == 0) return new UnpooledHeapByteBuf(a, 16, max);
-        if (kind == 1) return new UnpooledDirectByteBuf(a, 16, max, native);
+        disposable = null;
+        var a = new UnpooledByteBufAllocator(false, native);
+        if (kind == 0)
+            return new UnpooledHeapByteBuf(a, 16, max);
+        if (kind == 1)
+            return new UnpooledDirectByteBuf(a, 16, max, native);
         if (kind is 2 or 3)
         {
-            var pooled = new PooledByteBufAllocator(false, maxOrder: 1, nativeAllocator: native); disposable = pooled;
+            var pooled = new PooledByteBufAllocator(false, maxOrder: 1, nativeAllocator: native);
+            disposable = pooled;
             return kind == 2 ? pooled.HeapBuffer(16, max) : pooled.DirectBuffer(16, max);
         }
         ByteBuf first = Unpooled.WrappedBuffer(new byte[8]), second = Unpooled.WrappedBuffer(new byte[8]);
@@ -84,14 +88,25 @@ public class ByteBufDiagnosticsTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)]
     public void OrdinaryWrappersShowTheirTypeAndWrappedDiagnosticWithoutRecording(int kind)
     {
-        ByteBuf root = new UnpooledHeapByteBuf(16, 64); root.SetIndex(3, 13); var tracker = new Tracker();
+        ByteBuf root = new UnpooledHeapByteBuf(16, 64);
+        root.SetIndex(3, 13);
+        var tracker = new Tracker();
         ByteBuf wrapper = kind switch
         {
-            0 => new PlainWrapper(root), 1 => new SimpleLeakAwareByteBuf(root, tracker),
-            2 => new AdvancedLeakAwareByteBuf(root, tracker), 3 => Unpooled.UnreleasableBuffer(root),
+            0 => new PlainWrapper(root),
+            1 => new SimpleLeakAwareByteBuf(root, tracker),
+            2 => new AdvancedLeakAwareByteBuf(root, tracker),
+            3 => Unpooled.UnreleasableBuffer(root),
             _ => new SimpleLeakAwareByteBuf(new AdvancedLeakAwareByteBuf(root, tracker), new Tracker())
         };
-        string name = kind switch { 0 => "ByteBufDiagnosticsTest+PlainWrapper", 1 => "SimpleLeakAwareByteBuf", 2 => "AdvancedLeakAwareByteBuf", 3 => "UnreleasableByteBuf", _ => "SimpleLeakAwareByteBuf" };
+        string name = kind switch
+        {
+            0 => "ByteBufDiagnosticsTest+PlainWrapper",
+            1 => "SimpleLeakAwareByteBuf",
+            2 => "AdvancedLeakAwareByteBuf",
+            3 => "UnreleasableByteBuf",
+            _ => "SimpleLeakAwareByteBuf"
+        };
         string Parent(string raw)
         {
             return kind == 4 ? "AdvancedLeakAwareByteBuf(" + raw + ")" : raw;
@@ -99,8 +114,12 @@ public class ByteBufDiagnosticsTest
         try
         {
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)") + ')', wrapper.ToString());
-            Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
-            if (kind == 3) root.Release(); else wrapper.Release();
+            Assert.Equal(0, tracker.Records);
+            Assert.Equal(0, tracker.Closes);
+            if (kind == 3)
+                root.Release();
+            else
+                wrapper.Release();
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(freed)") + ')', wrapper.ToString());
             Assert.Equal(kind is 2 or 4 ? 1 : 0, tracker.Records); // Only advanced Release records.
         }
@@ -112,14 +131,19 @@ public class ByteBufDiagnosticsTest
     public void CompositeWrappersDelegateWithoutAddingWrapperNamesOrAccessRecords(bool advanced, bool nested)
     {
         var root = new CompositeByteBuf().AddComponents([Unpooled.WrappedBuffer(new byte[8]), Unpooled.WrappedBuffer(new byte[8])], true);
-        root.SetIndex(3, 13); var tracker = new Tracker();
+        root.SetIndex(3, 13);
+        var tracker = new Tracker();
         CompositeByteBuf wrapper = advanced ? new AdvancedLeakAwareCompositeByteBuf(root, tracker) : new SimpleLeakAwareCompositeByteBuf(root, tracker);
-        if (nested) wrapper = new AdvancedLeakAwareCompositeByteBuf(wrapper, new Tracker());
+        if (nested)
+            wrapper = new AdvancedLeakAwareCompositeByteBuf(wrapper, new Tracker());
         try
         {
-            Assert.Equal("CompositeByteBuf(ridx: 3, widx: 13, cap: 16, components=2)", wrapper.ToString()); Assert.Equal(0, tracker.Records);
-            Assert.True(wrapper.Release()); Assert.Equal("CompositeByteBuf(freed, components=2)", wrapper.ToString());
-            Assert.Equal(advanced ? 1 : 0, tracker.Records); Assert.Equal(1, tracker.Closes);
+            Assert.Equal("CompositeByteBuf(ridx: 3, widx: 13, cap: 16, components=2)", wrapper.ToString());
+            Assert.Equal(0, tracker.Records);
+            Assert.True(wrapper.Release());
+            Assert.Equal("CompositeByteBuf(freed, components=2)", wrapper.ToString());
+            Assert.Equal(advanced ? 1 : 0, tracker.Records);
+            Assert.Equal(1, tracker.Closes);
             // CLR clears component references; the freed diagnostic preserves the original count.
             Assert.Equal(0, root.NumComponents);
         }
@@ -129,8 +153,11 @@ public class ByteBufDiagnosticsTest
     [Fact]
     public void EmptySentinelUsesTheOriginalBigEndianNameAfterIgnoredOwnershipOperations()
     {
-        ByteBuf empty = Unpooled.EmptyBuffer; Assert.Equal("EmptyByteBufBE", empty.ToString());
-        Assert.False(empty.Release()); Assert.Same(empty, empty.Retain(0)); Assert.Equal("EmptyByteBufBE", empty.ToString());
+        ByteBuf empty = Unpooled.EmptyBuffer;
+        Assert.Equal("EmptyByteBufBE", empty.ToString());
+        Assert.False(empty.Release());
+        Assert.Same(empty, empty.Retain(0));
+        Assert.Equal("EmptyByteBufBE", empty.ToString());
     }
 
     [Theory]
@@ -145,8 +172,13 @@ public class ByteBufDiagnosticsTest
     [Fact]
     public void DecimalMetadataKeepsTheOriginalFormatUnderCallerCulture()
     {
-        CultureInfo previous = CultureInfo.CurrentCulture; ByteBuf b = new UnpooledHeapByteBuf(16, 64).SetIndex(3, 13);
-        try { CultureInfo.CurrentCulture = new CultureInfo("fa-IR"); Assert.Equal("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)", b.ToString()); }
+        CultureInfo previous = CultureInfo.CurrentCulture;
+        ByteBuf b = new UnpooledHeapByteBuf(16, 64).SetIndex(3, 13);
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("fa-IR");
+            Assert.Equal("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)", b.ToString());
+        }
         finally { CultureInfo.CurrentCulture = previous; b.Release(); }
     }
 
@@ -158,11 +190,18 @@ public class ByteBufDiagnosticsTest
         {
             Records++;
         }
+
         public void Record(object hint)
         {
             Records++;
         }
-        public bool Close(ByteBuf b) { Closes++; return true; }
+
+        public bool Close(ByteBuf b)
+        {
+            Closes++;
+            return true;
+        }
+
         public Exception GetCloseStackTraceIfAny()
         {
             return null;
@@ -178,11 +217,18 @@ public class ByteBufDiagnosticsTest
         {
             return !freed ? null : throw new Exception("Freed unwrap accessed");
         }
-        protected override Memory<byte> GetMemoryCore(int index, int length) { StorageReads++; throw new Exception("Content accessed"); }
+
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            StorageReads++;
+            throw new Exception("Content accessed");
+        }
+
         public override ByteBuf Retain(int increment = 1)
         {
             throw new NotSupportedException();
         }
+
         public override bool Release(int decrement = 1)
         {
             throw new NotSupportedException();

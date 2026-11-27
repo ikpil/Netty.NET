@@ -58,6 +58,7 @@ public class LoggingHandler : ChannelDuplexHandler
     public LoggingHandler() : this(DEFAULT_LEVEL)
     {
     }
+
     /**
      * Creates a new instance whose logger name is the fully qualified class
      * name of the instance.

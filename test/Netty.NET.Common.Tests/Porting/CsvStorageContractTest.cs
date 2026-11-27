@@ -11,6 +11,7 @@ public class CsvStorageContractTest : IDisposable
     {
         FastThreadLocal.RemoveAll();
     }
+
     public void Dispose()
     {
         FastThreadLocal.RemoveAll();

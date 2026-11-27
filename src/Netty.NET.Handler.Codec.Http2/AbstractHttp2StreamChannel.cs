@@ -1464,6 +1464,8 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
     }
 
     protected abstract bool IsParentReadInProgress();
+
     protected abstract void AddChannelToReadCompletePendingQueue();
+
     protected abstract IChannelHandlerContext ParentContext();
 }

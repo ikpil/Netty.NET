@@ -68,6 +68,7 @@ public class DerivedByteBufTextDispatchTest
             {
                 return Own(PooledDerivedByteBuf.NewSlice(Root, Root, 2, 30));
             }
+
             ByteBuf Duplicate()
             {
                 return Own(PooledDerivedByteBuf.NewDuplicate(Root, Root, 3, 40));
@@ -88,7 +89,13 @@ public class DerivedByteBufTextDispatchTest
             Forward = form is 0 or 6 or 8 or 11 or 12 or 14;
             View.SetIndex(1, 9).MarkReaderIndex().MarkWriterIndex();
         }
-        private ByteBuf Own(ByteBuf b) { _owners.Add(b); return b; }
+
+        private ByteBuf Own(ByteBuf b)
+        {
+            _owners.Add(b);
+            return b;
+        }
+
         public void Dispose()
         {
             for (int i = _owners.Count - 1; i >= 0; --i) if (_owners[i].RefCnt > 0) _owners[i].Release();
@@ -105,6 +112,7 @@ public class DerivedByteBufTextDispatchTest
         foreach (bool fail in new[] { false, true })
         foreach (bool empty in new[] { false, true }) yield return [direct, form, operation, encoding, fail, empty];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void TextReadsKeepSliceParentDispatchSeparateFromOwnedAndReadOnlyLocalDecoding(bool direct, int form, int operation, int encoding, bool fail, bool empty)
@@ -112,7 +120,8 @@ public class DerivedByteBufTextDispatchTest
         using var c = new Context(direct, form);
         Encoding codec = encoding == 0 ? Encoding.UTF8 : encoding == 1 ? Encoding.ASCII : Encoding.Latin1;
         c.Observation.Fail = fail;
-        if (empty && operation != 0) c.View.SetIndex(9, 9).MarkReaderIndex().MarkWriterIndex();
+        if (empty && operation != 0)
+            c.View.SetIndex(9, 9).MarkReaderIndex().MarkWriterIndex();
         int reader = c.View.ReaderIndex, writer = c.View.WriterIndex, claims = c.Root.RefCnt;
         int index = operation is 0 or 3 ? empty ? c.View.Capacity : 2 : reader;
         int length = empty ? 0 : operation == 1 ? writer - reader : 5;
@@ -130,7 +139,8 @@ public class DerivedByteBufTextDispatchTest
             };
         }
         bool forward = c.Forward && operation is 0 or 2;
-        if (forward && fail) Assert.Same(c.Observation.Failure, Assert.Throws<TextFailure>(() => Request()));
+        if (forward && fail)
+            Assert.Same(c.Observation.Failure, Assert.Throws<TextFailure>(() => Request()));
         else
         {
             string actual = Request();
@@ -141,19 +151,25 @@ public class DerivedByteBufTextDispatchTest
         if (forward)
         {
             var call = Assert.Single(c.Observation.Calls);
-            Assert.Equal((c.Offset + index, length), (call.Index, call.Length)); Assert.Same(codec, call.Encoding);
+            Assert.Equal((c.Offset + index, length), (call.Index, call.Length));
+            Assert.Same(codec, call.Encoding);
         }
-        else Assert.Empty(c.Observation.Calls);
+        else
+            Assert.Empty(c.Observation.Calls);
         Assert.Equal(reader + (operation is 2 or 4 && !(forward && fail) ? length : 0), c.View.ReaderIndex);
-        Assert.Equal(writer, c.View.WriterIndex); Assert.Equal((3, 40, claims), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.RefCnt));
-        c.View.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((reader, writer), (c.View.ReaderIndex, c.View.WriterIndex));
+        Assert.Equal(writer, c.View.WriterIndex);
+        Assert.Equal((3, 40, claims), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.RefCnt));
+        c.View.ResetWriterIndex().ResetReaderIndex();
+        Assert.Equal((reader, writer), (c.View.ReaderIndex, c.View.WriterIndex));
     }
+
     public static IEnumerable<object[]> BoundsCases()
     {
         foreach (bool direct in new[] { false, true })
         for (int form = 0; form < 16; ++form)
         for (int range = 0; range < 4; ++range) yield return [direct, form, range];
     }
+
     [Theory]
     [MemberData(nameof(BoundsCases))]
     public void TextRangeGuardsPrecedeCustomParentDispatch(bool direct, int form, int range)
@@ -162,29 +178,42 @@ public class DerivedByteBufTextDispatchTest
         int index = range == 0 ? -1 : range == 1 ? c.View.Capacity : range == 2 ? 0 : int.MaxValue;
         int length = range == 2 ? -1 : 1;
         Assert.Throws<ArgumentOutOfRangeException>(() => c.View.GetCharSequence(index, length, Encoding.UTF8));
-        Assert.Empty(c.Observation.Calls); Assert.Equal((1, 9), (c.View.ReaderIndex, c.View.WriterIndex));
+        Assert.Empty(c.Observation.Calls);
+        Assert.Equal((1, 9), (c.View.ReaderIndex, c.View.WriterIndex));
     }
+
     [Theory]
     [MemberData(nameof(Forms))]
     public void NullEncodingDoesNotReachTheCustomParent(bool direct, int form)
     {
         using var c = new Context(direct, form);
         Assert.Throws<ArgumentNullException>(() => c.View.GetCharSequence(2, 5, null));
-        Assert.Empty(c.Observation.Calls); Assert.Equal((1, 9), (c.View.ReaderIndex, c.View.WriterIndex));
+        Assert.Empty(c.Observation.Calls);
+        Assert.Equal((1, 9), (c.View.ReaderIndex, c.View.WriterIndex));
     }
+
     public static IEnumerable<object[]> Forms()
-    { foreach (bool direct in new[] { false, true }) for (int form = 0; form < 16; ++form) yield return [direct, form]; }
+    {
+        foreach (bool direct in new[] { false, true })
+        for (int form = 0; form < 16; ++form)
+            yield return [direct, form];
+    }
+
     [Theory]
     [InlineData(false, false)] [InlineData(false, true)] [InlineData(true, false)] [InlineData(true, true)]
     public void DeadBorrowedViewsCannotReadThroughTheirStillLiveRoot(bool direct, bool sliced)
     {
-        var native = new NativeMemoryAllocator(); var observation = new Observation();
+        var native = new NativeMemoryAllocator();
+        var observation = new Observation();
         ByteBuf root = direct ? new Direct(observation, native) : new Heap(observation);
-        root.WriteZero(64); ByteBuf owner = PooledDerivedByteBuf.NewDuplicate(root, root, 0, 64);
+        root.WriteZero(64);
+        ByteBuf owner = PooledDerivedByteBuf.NewDuplicate(root, root, 0, 64);
         ByteBuf view = sliced ? owner.Slice(4, 16) : owner.Duplicate();
         try
         {
-            Assert.True(owner.Release()); Assert.Equal(1, root.RefCnt); Assert.Equal(0, view.RefCnt);
+            Assert.True(owner.Release());
+            Assert.Equal(1, root.RefCnt);
+            Assert.Equal(0, view.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => view.GetCharSequence(0, 5, Encoding.UTF8));
             Assert.Empty(observation.Calls);
         }

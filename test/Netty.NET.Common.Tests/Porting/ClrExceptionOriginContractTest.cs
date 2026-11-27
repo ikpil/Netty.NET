@@ -72,6 +72,7 @@ public class ClrExceptionOriginContractTest
             Initializations++;
             return !failRemoval && Initializations == 1 ? ThrowAtOrigin(original) : "ready";
         }
+
         protected override void OnRemoval(string value)
         {
             Removals++;

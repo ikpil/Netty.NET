@@ -27,5 +27,7 @@ internal sealed class StompConstants
     internal const byte NUL = 0;
     internal const byte COLON = 58;
 
-    private StompConstants() { }
+    private StompConstants()
+    {
+    }
 }

@@ -31,13 +31,17 @@ public static partial class ByteBufUtil
         // We should always prefer direct buffers by default if we can use a Cleaner to release direct buffers.
         // CLR: SafeHandle-backed native owners provide reliable release without JVM Cleaner detection.
         internal static readonly bool Value = !SystemPropertyUtil.GetBoolean("io.netty.noPreferDirect", false);
-        static DirectPreference() { }
+        static DirectPreference()
+        {
+        }
     }
 
     private static class DefaultAllocatorHolder
     {
         internal static readonly IByteBufAllocator Instance = Create();
-        static DefaultAllocatorHolder() { }
+        static DefaultAllocatorHolder()
+        {
+        }
 
         private static IByteBufAllocator Create()
         {

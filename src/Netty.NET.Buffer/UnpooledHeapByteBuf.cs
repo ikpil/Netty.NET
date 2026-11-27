@@ -33,6 +33,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     {
         return _bufferAllocator;
     }
+
 /**
      * Creates a new heap buffer with a newly allocated byte array.
      *
@@ -40,10 +41,14 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
      * @param maxCapacity the max capacity of the underlying byte array
      */
     public UnpooledHeapByteBuf(int initialCapacity = 256, int maxCapacity = int.MaxValue)
-        : this(UnpooledByteBufAllocator.Default, initialCapacity, maxCapacity) { }
+        : this(UnpooledByteBufAllocator.Default, initialCapacity, maxCapacity)
+    {
+    }
 
     public UnpooledHeapByteBuf(IByteBufAllocator allocator, int initialCapacity, int maxCapacity)
-        : this(allocator, initialCapacity, maxCapacity, null) { }
+        : this(allocator, initialCapacity, maxCapacity, null)
+    {
+    }
 
     internal UnpooledHeapByteBuf(IByteBufAllocator allocator, int initialCapacity, int maxCapacity,
         UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric metric) : base(maxCapacity)
@@ -56,6 +61,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
         _metric = metric;
         _metric?.AddHeap(_array.Length);
     }
+
 /**
      * Creates a new heap buffer with an existing byte array.
      *
@@ -68,8 +74,13 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
         _array = initialArray;
         SetIndex(0, initialArray.Length);
     }
+
     private static int GetLength(byte[] array)
-    { ArgumentNullException.ThrowIfNull(array); return array.Length; }
+    {
+        ArgumentNullException.ThrowIfNull(array);
+        return array.Length;
+    }
+
     protected override Memory<byte> GetMemoryCore(int index, int length)
     {
         return _array.AsMemory(index, length);

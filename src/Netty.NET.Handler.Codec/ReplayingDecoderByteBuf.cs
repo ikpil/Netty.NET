@@ -69,7 +69,9 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     }
 
     // CLR: the indices are bounded by Capacity, which is int.MaxValue while not terminated.
-    internal ReplayingDecoderByteBuf() : base(int.MaxValue) { }
+    internal ReplayingDecoderByteBuf() : base(int.MaxValue)
+    {
+    }
 
     internal ReplayingDecoderByteBuf(ByteBuf buffer) : base(int.MaxValue)
     {

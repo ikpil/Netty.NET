@@ -10,35 +10,45 @@ public class NativeLazySchedulingContractTest
 {
     private sealed class ManualLoop : SingleThreadEventExecutor
     {
-        internal ManualLoop() : base(null, _ => throw new Exception("unexpected worker start"), true) { }
+        internal ManualLoop() : base(null, _ => throw new Exception("unexpected worker start"), true)
+        {
+        }
+
         public override bool InEventLoop(Thread thread)
         {
             return true;
         }
+
         protected override void Run()
         {
             throw new Exception("unexpected worker loop");
         }
+
         internal void EnqueueWakeup()
         {
             AddTask(WAKEUP_TASK);
         }
+
         internal Action CopyWakeup()
         {
             return (Action)WAKEUP_TASK.Clone();
         }
+
         internal void Enqueue(Action task)
         {
             AddTask(task);
         }
+
         internal Action Poll()
         {
             return PollTask();
         }
+
         internal Action Take()
         {
             return TakeTask();
         }
+
         internal bool Drain()
         {
             return RunAllTasks();
@@ -77,20 +87,43 @@ public class NativeLazySchedulingContractTest
         {
             return _clock;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return _inLoop;
         }
-        public override void Execute(Action task) { Hooks.Add("execute"); Ready.Add(task); }
-        public override void LazyExecute(Action task) { Hooks.Add("lazy"); Ready.Add(task); }
-        protected override bool BeforeScheduledTaskSubmitted(long deadline) { Hooks.Add("before:" + deadline); return before; }
-        protected override bool AfterScheduledTaskSubmitted(long deadline) { Hooks.Add("after:" + deadline); return after; }
+
+        public override void Execute(Action task)
+        {
+            Hooks.Add("execute");
+            Ready.Add(task);
+        }
+
+        public override void LazyExecute(Action task)
+        {
+            Hooks.Add("lazy");
+            Ready.Add(task);
+        }
+
+        protected override bool BeforeScheduledTaskSubmitted(long deadline)
+        {
+            Hooks.Add("before:" + deadline);
+            return before;
+        }
+
+        protected override bool AfterScheduledTaskSubmitted(long deadline)
+        {
+            Hooks.Add("after:" + deadline);
+            return after;
+        }
+
         internal void Drain()
         {
             _inLoop = true;
             try { foreach (Action task in Ready) task(); Ready.Clear(); }
             finally { _inLoop = false; }
         }
+
         internal void RunDue()
         {
             _inLoop = true;
@@ -106,23 +139,28 @@ public class NativeLazySchedulingContractTest
         {
             return TerminationFuture;
         }
+
         [Obsolete]
         public override void Shutdown()
         {
             CancelScheduledTasks();
         }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;

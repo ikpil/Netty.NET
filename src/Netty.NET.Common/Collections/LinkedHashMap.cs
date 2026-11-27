@@ -36,6 +36,7 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
             Add(pair.Key, pair.Value);
         }
     }
+
     public void Clear()
     {
         _dictionary.Clear();

@@ -45,7 +45,10 @@ public class DefaultChannelConfig : IChannelConfig
         get => Volatile.Read(ref _writeProgress);
         set => Volatile.Write(ref _writeProgress, value);
     }
-    public DefaultChannelConfig(IChannel channel) : this(channel, new AdaptiveRecvByteBufAllocator()) { }
+    public DefaultChannelConfig(IChannel channel) : this(channel, new AdaptiveRecvByteBufAllocator())
+    {
+    }
+
     protected DefaultChannelConfig(IChannel channel, IRecvByteBufAllocator allocator)
     {
         ArgumentNullException.ThrowIfNull(channel);
@@ -68,6 +71,7 @@ public class DefaultChannelConfig : IChannelConfig
                 result.Add(option, value);
         return result;
     }
+
     public virtual bool SetOptions(IEnumerable<KeyValuePair<ChannelOption, object>> options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -81,6 +85,7 @@ public class DefaultChannelConfig : IChannelConfig
         }
         return all;
     }
+
     public virtual bool TryGetOption<T>(ChannelOption<T> option, out T value)
     {
         ArgumentNullException.ThrowIfNull(option);
@@ -89,6 +94,7 @@ public class DefaultChannelConfig : IChannelConfig
         value = default;
         return false;
     }
+
     protected virtual bool TryGetValue(ChannelOption option, out object value)
     {
         if (ReferenceEquals(option, ChannelOption.CONNECT_TIMEOUT_MILLIS))
@@ -121,12 +127,14 @@ public class DefaultChannelConfig : IChannelConfig
         { value = null; return false; }
         return true;
     }
+
     public virtual bool SetOption<T>(ChannelOption<T> option, T value)
     {
         ArgumentNullException.ThrowIfNull(option);
         option.Validate(value);
         return SetValue(option, value);
     }
+
     protected virtual bool SetValue(ChannelOption option, object value)
     {
         if (ReferenceEquals(option, ChannelOption.CONNECT_TIMEOUT_MILLIS))
@@ -161,12 +169,19 @@ public class DefaultChannelConfig : IChannelConfig
             return false;
         return true;
     }
+
     public int GetConnectTimeoutMillis()
     {
         return Volatile.Read(ref _connectTimeoutMillis);
     }
+
     public virtual IChannelConfig SetConnectTimeoutMillis(int value)
-    { ArgumentOutOfRangeException.ThrowIfNegative(value); Volatile.Write(ref _connectTimeoutMillis, value); return this; }
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(value);
+        Volatile.Write(ref _connectTimeoutMillis, value);
+        return this;
+    }
+
     [Obsolete("Use the receive allocator's MaxMessagesPerRead.")]
     /**
      * {@inheritDoc}
@@ -178,9 +193,16 @@ public class DefaultChannelConfig : IChannelConfig
     {
         return _receiveAllocator is IMaxMessagesRecvByteBufAllocator allocator ? allocator.MaxMessagesPerRead() : throw new InvalidOperationException("getRecvByteBufAllocator() must return an object of type MaxMessagesRecvByteBufAllocator");
     }
+
     [Obsolete("Use the receive allocator's MaxMessagesPerRead.")]
     public IChannelConfig SetMaxMessagesPerRead(int value)
-    { if (_receiveAllocator is not IMaxMessagesRecvByteBufAllocator allocator) throw new InvalidOperationException("getRecvByteBufAllocator() must return an object of type MaxMessagesRecvByteBufAllocator"); allocator.MaxMessagesPerRead(value); return this; }
+    {
+        if (_receiveAllocator is not IMaxMessagesRecvByteBufAllocator allocator)
+            throw new InvalidOperationException("getRecvByteBufAllocator() must return an object of type MaxMessagesRecvByteBufAllocator");
+        allocator.MaxMessagesPerRead(value);
+        return this;
+    }
+
 #pragma warning restore CS0612, CS0618
     /**
      * Get the maximum number of message to write per eventloop run. Once this limit is
@@ -190,16 +212,23 @@ public class DefaultChannelConfig : IChannelConfig
     {
         return Volatile.Read(ref _maxMessagesPerWrite);
     }
+
     /**
      * Set the maximum number of message to write per eventloop run. Once this limit is
      * reached we will continue to process other events before trying to write the remaining messages.
      */
     public virtual IChannelConfig SetMaxMessagesPerWrite(int value)
-    { ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value); Volatile.Write(ref _maxMessagesPerWrite, value); return this; }
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+        Volatile.Write(ref _maxMessagesPerWrite, value);
+        return this;
+    }
+
     public int GetWriteSpinCount()
     {
         return Volatile.Read(ref _writeSpinCount);
     }
+
     public virtual IChannelConfig SetWriteSpinCount(int writeSpinCount)
     {
         ObjectUtil.CheckPositive(writeSpinCount, "writeSpinCount");
@@ -214,18 +243,30 @@ public class DefaultChannelConfig : IChannelConfig
         Volatile.Write(ref _writeSpinCount, writeSpinCount);
         return this;
     }
+
     public IByteBufAllocator GetAllocator()
     {
         return Volatile.Read(ref _allocator);
     }
+
     public virtual IChannelConfig SetAllocator(IByteBufAllocator value)
-    { ArgumentNullException.ThrowIfNull(value); Volatile.Write(ref _allocator, value); return this; }
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        Volatile.Write(ref _allocator, value);
+        return this;
+    }
+
     public IRecvByteBufAllocator GetRecvByteBufAllocator()
     {
         return Volatile.Read(ref _receiveAllocator);
     }
+
     public virtual IChannelConfig SetRecvByteBufAllocator(IRecvByteBufAllocator value)
-    { ArgumentNullException.ThrowIfNull(value); Volatile.Write(ref _receiveAllocator, value); return this; }
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        Volatile.Write(ref _receiveAllocator, value);
+        return this;
+    }
 
     /**
      * Set the {@link RecvByteBufAllocator} which is used for the channel to allocate receive buffers.
@@ -243,10 +284,12 @@ public class DefaultChannelConfig : IChannelConfig
         }
         SetRecvByteBufAllocator(allocator);
     }
+
     public bool IsAutoRead()
     {
         return Volatile.Read(ref _autoRead) == 1;
     }
+
     public virtual IChannelConfig SetAutoRead(bool value)
     {
         bool old = Interlocked.Exchange(ref _autoRead, value ? 1 : 0) == 1;
@@ -256,20 +299,31 @@ public class DefaultChannelConfig : IChannelConfig
             AutoReadCleared();
         return this;
     }
+
     /**
      * Is called once {@link #setAutoRead(boolean)} is called with {@code false} and {@link #isAutoRead()} was
      * {@code true} before.
      */
-    protected virtual void AutoReadCleared() { }
+    protected virtual void AutoReadCleared()
+    {
+    }
+
     public bool IsAutoClose()
     {
         return _autoClose;
     }
-    public virtual IChannelConfig SetAutoClose(bool value) { _autoClose = value; return this; }
+
+    public virtual IChannelConfig SetAutoClose(bool value)
+    {
+        _autoClose = value;
+        return this;
+    }
+
     public int GetWriteBufferHighWaterMark()
     {
         return Volatile.Read(ref _waterMark).High();
     }
+
     public virtual IChannelConfig SetWriteBufferHighWaterMark(int value)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(value);
@@ -283,10 +337,12 @@ public class DefaultChannelConfig : IChannelConfig
                 return this;
         }
     }
+
     public int GetWriteBufferLowWaterMark()
     {
         return Volatile.Read(ref _waterMark).Low();
     }
+
     public virtual IChannelConfig SetWriteBufferLowWaterMark(int value)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(value);
@@ -300,16 +356,28 @@ public class DefaultChannelConfig : IChannelConfig
                 return this;
         }
     }
+
     public WriteBufferWaterMark GetWriteBufferWaterMark()
     {
         return Volatile.Read(ref _waterMark);
     }
+
     public virtual IChannelConfig SetWriteBufferWaterMark(WriteBufferWaterMark value)
-    { ArgumentNullException.ThrowIfNull(value); Volatile.Write(ref _waterMark, value); return this; }
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        Volatile.Write(ref _waterMark, value);
+        return this;
+    }
+
     public IMessageSizeEstimator GetMessageSizeEstimator()
     {
         return Volatile.Read(ref _estimator);
     }
+
     public virtual IChannelConfig SetMessageSizeEstimator(IMessageSizeEstimator value)
-    { ArgumentNullException.ThrowIfNull(value); Volatile.Write(ref _estimator, value); return this; }
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        Volatile.Write(ref _estimator, value);
+        return this;
+    }
 }

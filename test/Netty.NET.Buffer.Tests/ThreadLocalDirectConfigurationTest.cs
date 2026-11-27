@@ -34,35 +34,46 @@ public partial class DefaultByteBufAllocatorTest
         Assert.Equal(enabled, b != null);
         if (b != null)
         {
-            Assert.True(Property<bool>(b, "IsDirect")); Assert.Equal(256, Property<int>(b, "Capacity"));
-            Assert.Equal(1, Property<int>(b, "RefCnt")); Call(b, "Release", 1);
+            Assert.True(Property<bool>(b, "IsDirect"));
+            Assert.Equal(256, Property<int>(b, "Capacity"));
+            Assert.Equal(1, Property<int>(b, "RefCnt"));
+            Call(b, "Release", 1);
             Assert.Equal(0, scope.NativeBytes); // Ordinary threads do not retain idle storage.
         }
         scope.Set("io.netty.threadLocalDirectBufferSize", enabled ? "0" : "1024");
         object again = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
-        Assert.Equal(enabled, again != null); if (again != null) Call(again, "Release", 1);
+        Assert.Equal(enabled, again != null);
+        if (again != null)
+            Call(again, "Release", 1);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void ThreadLocalDirectGuaranteedFastScopeCachesAndDrainsOnSuccessOrFailure(bool fail)
     {
-        using var scope = new Scope(null, null); scope.Set("io.netty.threadLocalDirectBufferSize", "1024");
+        using var scope = new Scope(null, null);
+        scope.Set("io.netty.threadLocalDirectBufferSize", "1024");
         Action action = () =>
         {
             object first = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
-            Call(first, "SetByte", 0, 72); Call(first, "Release", 1); Assert.Equal(256, scope.NativeBytes);
+            Call(first, "SetByte", 0, 72);
+            Call(first, "Release", 1);
+            Assert.Equal(256, scope.NativeBytes);
             object next = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
-            Assert.NotSame(first, next); Assert.Equal((byte)72, Call(next, "GetByte", 0));
+            Assert.NotSame(first, next);
+            Assert.Equal((byte)72, Call(next, "GetByte", 0));
             Call(next, "Release", 1);
-            if (fail) throw new InvalidOperationException("scope failure");
+            if (fail)
+                throw new InvalidOperationException("scope failure");
         };
         Exception error = Record.Exception(() => scope.CommonTypeCall("Concurrent.FastThreadLocalThread", "RunWithFastThreadLocal", action));
-        Assert.Equal(fail, error != null); Assert.Equal(0, scope.NativeBytes);
+        Assert.Equal(fail, error != null);
+        Assert.Equal(0, scope.NativeBytes);
         scope.CommonTypeCall("Concurrent.FastThreadLocalThread", "RunWithFastThreadLocal", (Action)(() =>
         {
             object b = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
-            Assert.Equal((byte)0, Call(b, "GetByte", 0)); Call(b, "Release", 1);
+            Assert.Equal((byte)0, Call(b, "GetByte", 0));
+            Call(b, "Release", 1);
         }));
         Assert.Equal(0, scope.NativeBytes);
     }
@@ -70,23 +81,31 @@ public partial class DefaultByteBufAllocatorTest
     [Fact]
     public void ThreadLocalDirectActualFastThreadTerminationDrainsIdleStorageButKeepsLiveResultValid()
     {
-        using var scope = new Scope(null, null); scope.Set("io.netty.threadLocalDirectBufferSize", "1024");
-        object live = null; Exception failure = null;
+        using var scope = new Scope(null, null);
+        scope.Set("io.netty.threadLocalDirectBufferSize", "1024");
+        object live = null;
+        Exception failure = null;
         Action work = () =>
         {
             try
             {
                 object idle = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
                 live = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
-                Call(idle, "Release", 1); Call(live, "WriteByte", 71); Assert.Equal(512, scope.NativeBytes);
+                Call(idle, "Release", 1);
+                Call(live, "WriteByte", 71);
+                Assert.Equal(512, scope.NativeBytes);
             }
             catch (Exception e) { failure = e; }
         };
         Type type = scope._common.GetType("Netty.NET.Common.Concurrent.FastThreadLocalThread", true);
         object fast = Activator.CreateInstance(type, work, null, 0, null);
         Thread thread = (Thread)type.GetProperty("Thread").GetValue(fast);
-        thread.Start(); Assert.True(thread.Join(TimeSpan.FromSeconds(10))); Assert.Null(failure);
-        Assert.Equal(256, scope.NativeBytes); Assert.Equal((byte)71, Call(live, "ReadByte")); Call(live, "Release", 1);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
+        Assert.Null(failure);
+        Assert.Equal(256, scope.NativeBytes);
+        Assert.Equal((byte)71, Call(live, "ReadByte"));
+        Call(live, "Release", 1);
         Assert.Equal(0, scope.NativeBytes);
     }
 }

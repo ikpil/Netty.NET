@@ -30,11 +30,13 @@ internal sealed class CountingChannelPoolHandler : IChannelPoolHandler
     {
         Interlocked.Increment(ref _channelCount);
     }
+
     public void ChannelReleased(IChannel channel)
     {
         if (Interlocked.Increment(ref _releasedCount) == 2)
             SecondRelease.TrySetResult();
     }
+
     public void ChannelAcquired(IChannel channel)
     {
         Interlocked.Increment(ref _acquiredCount);

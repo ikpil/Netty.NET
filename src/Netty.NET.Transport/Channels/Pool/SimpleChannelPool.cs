@@ -71,7 +71,9 @@ public class SimpleChannelPool : IChannelPool
      * @param handler           the {@link ChannelPoolHandler} that will be notified for the different pool actions
      */
     public SimpleChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler)
-        : this(bootstrap, handler, ChannelHealthChecker.Active) { }
+        : this(bootstrap, handler, ChannelHealthChecker.Active)
+    {
+    }
 
     /**
      * Creates a new instance.
@@ -82,7 +84,9 @@ public class SimpleChannelPool : IChannelPool
      *                          still healthy when obtain from the {@link ChannelPool}
      */
     public SimpleChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler, Func<IChannel, Task<bool>> healthCheck)
-        : this(bootstrap, handler, healthCheck, true) { }
+        : this(bootstrap, handler, healthCheck, true)
+    {
+    }
 
     /**
      * Creates a new instance.
@@ -96,7 +100,9 @@ public class SimpleChannelPool : IChannelPool
      */
     public SimpleChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler, Func<IChannel, Task<bool>> healthCheck,
         bool releaseHealthCheck)
-        : this(bootstrap, handler, healthCheck, releaseHealthCheck, true) { }
+        : this(bootstrap, handler, healthCheck, releaseHealthCheck, true)
+    {
+    }
 
     /**
      * Creates a new instance.
@@ -329,10 +335,12 @@ public class SimpleChannelPool : IChannelPool
     {
         CloseAsync().GetAwaiter().GetResult();
     }
+
     public void Dispose()
     {
         Close();
     }
+
     public ValueTask DisposeAsync()
     {
         return new(CloseAsync());

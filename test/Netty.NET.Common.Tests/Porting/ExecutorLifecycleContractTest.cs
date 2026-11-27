@@ -28,15 +28,20 @@ public class ExecutorLifecycleContractTest
         internal Exception stopFailure;
         internal readonly List<TimeSpan> waits = new();
         private bool running;
-        internal Child(IEventExecutorGroup parent = null) : base(parent) { }
+        internal Child(IEventExecutorGroup parent = null) : base(parent)
+        {
+        }
+
         internal IScheduledWork FirstScheduled()
         {
             return PeekScheduledTask();
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return running && thread == Thread.CurrentThread;
         }
+
         public override void Execute(Action command)
         {
             if (++executions == rejectExecution)
@@ -50,6 +55,7 @@ public class ExecutorLifecycleContractTest
                     .FirstOrDefault(work => ReferenceEquals(work.QueueCallback, command)) ?? scheduledSubmission;
             }
         }
+
         internal void Run(Action command)
         {
             running = true;
@@ -65,7 +71,12 @@ public class ExecutorLifecycleContractTest
             if (completeOnShutdown) termination.TrySetResult();
             return termination.Task;
         }
-        public override void Shutdown() { shuttingDown = stopped = true; }
+
+        public override void Shutdown()
+        {
+            shuttingDown = stopped = true;
+        }
+
         public override Task StopAsync()
         {
             ++stopRequests;
@@ -73,18 +84,22 @@ public class ExecutorLifecycleContractTest
             if (stopFailure != null) throw stopFailure;
             return TerminationFuture;
         }
+
         public override bool IsShuttingDown()
         {
             return shuttingDown;
         }
+
         public override bool IsShutdown()
         {
             return stopped;
         }
+
         public override bool IsTerminated()
         {
             return termination.Task.IsCompleted;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             waits.Add(timeout);
@@ -100,11 +115,18 @@ public class ExecutorLifecycleContractTest
         {
             this.child = child;
         }
-        public override IEventExecutor Next() { ++selections; return child; }
+
+        public override IEventExecutor Next()
+        {
+            ++selections;
+            return child;
+        }
+
         public override IEnumerable<IEventExecutor> Iterator()
         {
             return new[] { child };
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             return child.ShutdownGracefullyAsync(quietPeriod, timeout);
@@ -114,18 +136,22 @@ public class ExecutorLifecycleContractTest
         {
             child.Shutdown();
         }
+
         public override bool IsShuttingDown()
         {
             return child.IsShuttingDown();
         }
+
         public override bool IsShutdown()
         {
             return child.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return child.IsTerminated();
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return child.AwaitTermination(timeout);
@@ -134,9 +160,15 @@ public class ExecutorLifecycleContractTest
 
     private sealed class ManualGroup : MultithreadEventExecutorGroup
     {
-        internal ManualGroup(params Child[] children) : this(DefaultEventExecutorChooserFactory.INSTANCE, children) { }
+        internal ManualGroup(params Child[] children) : this(DefaultEventExecutorChooserFactory.INSTANCE, children)
+        {
+        }
+
         internal ManualGroup(IEventExecutorChooserFactory factory, params Child[] children)
-            : base(children.Length, command => command(), factory, (object)children) { }
+            : base(children.Length, command => command(), factory, (object)children)
+        {
+        }
+
         protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
         {
             return ((Child[])args[0])[iteratorIndex++];
@@ -154,14 +186,17 @@ public class ExecutorLifecycleContractTest
             metrics = Array.AsReadOnly(executors.Select(executor => new AutoScalingUtilizationMetric(executor)).ToArray());
             return this;
         }
+
         public IEventExecutor Next()
         {
             return children[0];
         }
+
         public int ActiveExecutorCount()
         {
             return 1;
         }
+
         public IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations()
         {
             return metrics;
@@ -171,7 +206,10 @@ public class ExecutorLifecycleContractTest
     private sealed class FailingGroup : MultithreadEventExecutorGroup
     {
         internal FailingGroup(List<Child> created, Exception failure)
-            : base(3, command => command(), created, failure) { }
+            : base(3, command => command(), created, failure)
+        {
+        }
+
         protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
         {
             var created = (List<Child>)args[0];
@@ -199,6 +237,7 @@ public class ExecutorLifecycleContractTest
         {
             this.failure = failure;
         }
+
         protected override void Run()
         {
             throw failure;

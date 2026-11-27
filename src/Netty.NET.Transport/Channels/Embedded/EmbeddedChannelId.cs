@@ -27,27 +27,35 @@ namespace Netty.NET.Transport.Channels.Embedded;
 internal sealed class EmbeddedChannelId : IChannelId
 {
     internal static readonly IChannelId Instance = new EmbeddedChannelId();
-    private EmbeddedChannelId() { }
+    private EmbeddedChannelId()
+    {
+    }
+
     public string AsShortText()
     {
         return ToString();
     }
+
     public string AsLongText()
     {
         return ToString();
     }
+
     public int CompareTo(IChannelId o)
     {
         return o is EmbeddedChannelId ? 0 : string.CompareOrdinal(AsLongText(), o?.AsLongText());
     }
+
     public override int GetHashCode()
     {
         return 0;
     }
+
     public override bool Equals(object obj)
     {
         return obj is EmbeddedChannelId;
     }
+
     public override string ToString()
     {
         return "embedded";
@@ -56,13 +64,17 @@ internal sealed class EmbeddedChannelId : IChannelId
     // CLR: concrete-type JSON round trips preserve the original value equality, hash and comparison across distinct instances.
     public sealed class Converter : JsonConverter<EmbeddedChannelId>
     {
-        public Converter() { }
+        public Converter()
+        {
+        }
+
         public override EmbeddedChannelId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.String || reader.GetString() != "embedded")
                 throw new JsonException("Expected the embedded channel identity.");
             return new EmbeddedChannelId();
         }
+
         public override void Write(Utf8JsonWriter writer, EmbeddedChannelId value, JsonSerializerOptions options)
         {
             writer.WriteStringValue(value.AsLongText());

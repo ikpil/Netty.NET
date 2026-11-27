@@ -92,12 +92,20 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     /**
      * Removes the {@link ChannelInboundHandler} that was combined in this {@link CombinedChannelDuplexHandler}.
      */
-    public void RemoveInboundHandler() { CheckAdded(); _inboundCtx.Remove(); }
+    public void RemoveInboundHandler()
+    {
+        CheckAdded();
+        _inboundCtx.Remove();
+    }
 
     /**
      * Removes the {@link ChannelOutboundHandler} that was combined in this {@link CombinedChannelDuplexHandler}.
      */
-    public void RemoveOutboundHandler() { CheckAdded(); _outboundCtx.Remove(); }
+    public void RemoveOutboundHandler()
+    {
+        CheckAdded();
+        _outboundCtx.Remove();
+    }
 
     public override void HandlerAdded(IChannelHandlerContext ctx)
     {
@@ -295,6 +303,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
         {
             _owner = owner;
         }
+
         public override IChannelInboundInvoker FireExceptionCaught(Exception cause)
         {
             _owner.ForwardInboundException(cause);
@@ -322,53 +331,118 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
         {
             return Ctx.Alloc();
         }
+
         public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
         {
             return Ctx.Channel.Attr(key);
         }
+
         public bool HasAttr<T>(AttributeKey<T> key) where T : class
         {
             return Ctx.Channel.HasAttr(key);
         }
-        public IChannelInboundInvoker FireChannelRegistered() { Ctx.FireChannelRegistered(); return this; }
-        public IChannelInboundInvoker FireChannelUnregistered() { Ctx.FireChannelUnregistered(); return this; }
-        public IChannelInboundInvoker FireChannelActive() { Ctx.FireChannelActive(); return this; }
-        public IChannelInboundInvoker FireChannelInactive() { Ctx.FireChannelInactive(); return this; }
-        public virtual IChannelInboundInvoker FireExceptionCaught(Exception cause) { Ctx.FireExceptionCaught(cause); return this; }
-        public IChannelInboundInvoker FireUserEventTriggered(object @event) { Ctx.FireUserEventTriggered(@event); return this; }
-        public IChannelInboundInvoker FireChannelRead(object msg) { Ctx.FireChannelRead(msg); return this; }
-        public IChannelInboundInvoker FireChannelReadComplete() { Ctx.FireChannelReadComplete(); return this; }
-        public IChannelInboundInvoker FireChannelWritabilityChanged() { Ctx.FireChannelWritabilityChanged(); return this; }
+
+        public IChannelInboundInvoker FireChannelRegistered()
+        {
+            Ctx.FireChannelRegistered();
+            return this;
+        }
+
+        public IChannelInboundInvoker FireChannelUnregistered()
+        {
+            Ctx.FireChannelUnregistered();
+            return this;
+        }
+
+        public IChannelInboundInvoker FireChannelActive()
+        {
+            Ctx.FireChannelActive();
+            return this;
+        }
+
+        public IChannelInboundInvoker FireChannelInactive()
+        {
+            Ctx.FireChannelInactive();
+            return this;
+        }
+
+        public virtual IChannelInboundInvoker FireExceptionCaught(Exception cause)
+        {
+            Ctx.FireExceptionCaught(cause);
+            return this;
+        }
+
+        public IChannelInboundInvoker FireUserEventTriggered(object @event)
+        {
+            Ctx.FireUserEventTriggered(@event);
+            return this;
+        }
+
+        public IChannelInboundInvoker FireChannelRead(object msg)
+        {
+            Ctx.FireChannelRead(msg);
+            return this;
+        }
+
+        public IChannelInboundInvoker FireChannelReadComplete()
+        {
+            Ctx.FireChannelReadComplete();
+            return this;
+        }
+
+        public IChannelInboundInvoker FireChannelWritabilityChanged()
+        {
+            Ctx.FireChannelWritabilityChanged();
+            return this;
+        }
+
         public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
         {
             return Ctx.BindAsync(localAddress, cancellationToken);
         }
+
         public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default)
         {
             return Ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
         }
+
         public Task DisconnectAsync(CancellationToken cancellationToken = default)
         {
             return Ctx.DisconnectAsync(cancellationToken);
         }
+
         public Task CloseAsync(CancellationToken cancellationToken = default)
         {
             return Ctx.CloseAsync(cancellationToken);
         }
+
         public Task DeregisterAsync(CancellationToken cancellationToken = default)
         {
             return Ctx.DeregisterAsync(cancellationToken);
         }
+
         public Task WriteAsync(object msg, CancellationToken cancellationToken = default)
         {
             return Ctx.WriteAsync(msg, cancellationToken);
         }
+
         public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
         {
             return Ctx.WriteAndFlushAsync(msg, cancellationToken);
         }
-        public IChannelOutboundInvoker Read() { Ctx.Read(); return this; }
-        public IChannelOutboundInvoker Flush() { Ctx.Flush(); return this; }
+
+        public IChannelOutboundInvoker Read()
+        {
+            Ctx.Read();
+            return this;
+        }
+
+        public IChannelOutboundInvoker Flush()
+        {
+            Ctx.Flush();
+            return this;
+        }
+
         // CLR: keeps the text of the delegated context, as this context formerly inherited its toString().
         public override string ToString()
         {
@@ -382,6 +456,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
             else
                 Executor.Execute(RemoveOnExecutor);
         }
+
         private void RemoveOnExecutor()
         {
             if (Removed)

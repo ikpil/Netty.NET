@@ -16,6 +16,7 @@ public class RecyclerContractTest
         {
             return obj is Item;
         }
+
         public override int GetHashCode()
         {
             return 0;
@@ -23,9 +24,18 @@ public class RecyclerContractTest
     }
     private sealed class Pool : Recycler<Item>
     {
-        internal Pool(int capacity, bool unguarded) : base(capacity, unguarded) { }
-        internal Pool(Thread owner, bool unguarded) : base(4, 0, 2, owner, unguarded) { }
-        internal Pool(bool unguarded) : base(4, 0, 2, unguarded) { }
+        internal Pool(int capacity, bool unguarded) : base(capacity, unguarded)
+        {
+        }
+
+        internal Pool(Thread owner, bool unguarded) : base(4, 0, 2, owner, unguarded)
+        {
+        }
+
+        internal Pool(bool unguarded) : base(4, 0, 2, unguarded)
+        {
+        }
+
         protected override Item NewObject(IRecyclerHandle<Item> handle)
         {
             return new(handle);
@@ -70,8 +80,10 @@ public class RecyclerContractTest
         Assert.Throws<ArgumentNullException>(() => new Pool(null, false));
         var pool = new Pool(Thread.CurrentThread, false);
         Item a = pool.Get(), b = pool.Get(), c = pool.Get(), d = pool.Get();
-        a.Handle.Recycle(a); b.Handle.Recycle(b);
-        c.Handle.Recycle(c); d.Handle.Recycle(d);
+        a.Handle.Recycle(a);
+        b.Handle.Recycle(b);
+        c.Handle.Recycle(c);
+        d.Handle.Recycle(d);
         Assert.Equal(4, pool.ThreadLocalSize());
         Assert.Same(b, pool.Get());
         Assert.Same(a, pool.Get());

@@ -12,7 +12,11 @@ namespace Netty.NET.Transport.Channels;
 // types that attach a cause pass it to the protected constructor.
 public class ClosedChannelException : IOException
 {
-    public ClosedChannelException() : base(null, null) { }
+    public ClosedChannelException() : base(null, null)
+    {
+    }
 
-    protected ClosedChannelException(Exception cause) : base(null, cause) { }
+    protected ClosedChannelException(Exception cause) : base(null, cause)
+    {
+    }
 }

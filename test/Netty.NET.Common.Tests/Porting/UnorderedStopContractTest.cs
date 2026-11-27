@@ -30,6 +30,7 @@ public class UnorderedStopContractTest
         {
             _remove = remove;
         }
+
         public void CancelForShutdown()
         {
             if (!_completion.TrySetCanceled()) return;
@@ -37,10 +38,12 @@ public class UnorderedStopContractTest
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
         }
+
         public void Reject(Exception error)
         {
             _completion.TrySetException(error);
         }
+
         public void Run()
         {
             Assert.Fail("Removed reservation ran");

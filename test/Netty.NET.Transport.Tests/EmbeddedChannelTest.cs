@@ -43,6 +43,7 @@ public class EmbeddedChannelTest
         Assert.False(channel.Finish());
         Assert.False(parent.Finish());
     }
+
     [Fact]
     public void TestNotRegistered()
     {
@@ -52,6 +53,7 @@ public class EmbeddedChannelTest
         Assert.True(channel.IsRegistered);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestRegistered()
     {
@@ -60,6 +62,7 @@ public class EmbeddedChannelTest
         Assert.Throws<InvalidOperationException>(channel.Register);
         Assert.False(channel.Finish());
     }
+
     [Fact(Timeout = 2000)]
     public async Task PromiseDoesNotInfiniteLoop()
     {
@@ -69,6 +72,7 @@ public class EmbeddedChannelTest
         await channel.CloseAsync();
         await listener;
     }
+
     [Fact]
     public void TestConstructWithChannelInitializer()
     {
@@ -82,6 +86,7 @@ public class EmbeddedChannelTest
         Assert.Same(second, channel.ReadInbound());
         Assert.Null(channel.ReadInbound());
     }
+
     [Fact]
     public async Task TestScheduling()
     {
@@ -99,6 +104,7 @@ public class EmbeddedChannelTest
         Assert.True(latch.Wait(TimeSpan.FromSeconds(3)));
         await listener;
     }
+
     [Fact]
     public void TestScheduledCancelled()
     {
@@ -107,6 +113,7 @@ public class EmbeddedChannelTest
         channel.Finish();
         Assert.True(future.IsCanceled);
     }
+
     [Fact(Timeout = 3000)]
     public void TestHandlerAddedExecutedInEventLoop()
     {
@@ -125,6 +132,7 @@ public class EmbeddedChannelTest
         if (error != null)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
     }
+
     [Fact]
     public void TestConstructWithOutHandler()
     {
@@ -138,6 +146,7 @@ public class EmbeddedChannelTest
         Assert.Same(output, channel.ReadOutbound());
         Assert.Null(channel.ReadOutbound());
     }
+
     [Fact]
     public void TestConstructWithChannelId()
     {
@@ -145,6 +154,7 @@ public class EmbeddedChannelTest
         var channel = new EmbeddedChannel(id);
         Assert.Same(id, channel.Id);
     }
+
     // See https://github.com/netty/netty/issues/4316.
     [Fact(Timeout = 2000)]
     public async Task TestFireChannelInactiveAndUnregisteredOnClose()
@@ -153,12 +163,14 @@ public class EmbeddedChannelTest
         await TestFireChannelInactiveAndUnregistered(ch => ch.CloseAsync());
         await TestFireChannelInactiveAndUnregistered(ch => ch.CloseAsync(CancellationToken.None));
     }
+
     [Fact(Timeout = 2000)]
     public async Task TestFireChannelInactiveAndUnregisteredOnDisconnect()
     {
         await TestFireChannelInactiveAndUnregistered(ch => ch.DisconnectAsync());
         await TestFireChannelInactiveAndUnregistered(ch => ch.DisconnectAsync(CancellationToken.None));
     }
+
     private static async Task TestFireChannelInactiveAndUnregistered(Func<IChannel, Task> action)
     {
         using var latch = new CountdownEvent(3);
@@ -178,6 +190,7 @@ public class EmbeddedChannelTest
         await action(channel);
         Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
     }
+
     [Fact]
     public async Task TestHasDisconnect()
     {
@@ -189,6 +202,7 @@ public class EmbeddedChannelTest
         Assert.Equal(EventOutboundHandler.CLOSE, handler.PollEvent());
         Assert.Null(handler.PollEvent());
     }
+
     [Fact]
     public async Task TestHasNoDisconnect()
     {
@@ -200,12 +214,14 @@ public class EmbeddedChannelTest
         Assert.Equal(EventOutboundHandler.CLOSE, handler.PollEvent());
         Assert.Null(handler.PollEvent());
     }
+
     [Fact]
     public async Task TestHasNoDisconnectSkipDisconnect()
     {
         var channel = new EmbeddedChannel(false, new FailingCloseHandler());
         await Assert.ThrowsAsync<Exception>(() => channel.DisconnectAsync());
     }
+
     [Fact]
     public void TestFinishAndReleaseAll()
     {
@@ -226,6 +242,7 @@ public class EmbeddedChannelTest
         }
         finally { Release(input, output); }
     }
+
     [Fact]
     public void TestReleaseInbound()
     {
@@ -250,6 +267,7 @@ public class EmbeddedChannelTest
         }
         finally { Release(input, output); }
     }
+
     [Fact]
     public void TestReleaseOutbound()
     {
@@ -274,6 +292,7 @@ public class EmbeddedChannelTest
         }
         finally { Release(input, output); }
     }
+
     [Fact]
     public void TestWriteLater()
     {
@@ -284,6 +303,7 @@ public class EmbeddedChannelTest
         Assert.Same(message, channel.ReadOutbound());
         Assert.Null(channel.ReadOutbound());
     }
+
     [Fact]
     public async Task TestWriteScheduled()
     {
@@ -296,6 +316,7 @@ public class EmbeddedChannelTest
         Assert.Same(message, channel.ReadOutbound());
         Assert.Null(channel.ReadOutbound());
     }
+
     [Fact]
     public void TestFlushInbound()
     {
@@ -304,6 +325,7 @@ public class EmbeddedChannelTest
         channel.FlushInbound();
         Assert.True(latch.Wait(TimeSpan.FromSeconds(1)), "Nobody called #channelReadComplete() in time.");
     }
+
     [Fact]
     public async Task TestWriteOneInbound()
     {
@@ -321,6 +343,7 @@ public class EmbeddedChannelTest
         // #channelReadComplete()
         Assert.Equal(0, flushCount);
     }
+
     [Fact]
     public void TestFlushOutbound()
     {
@@ -329,6 +352,7 @@ public class EmbeddedChannelTest
         channel.FlushOutbound();
         Assert.True(latch.Wait(TimeSpan.FromSeconds(1)), "Nobody called #flush() in time.");
     }
+
     [Fact]
     public async Task TestWriteOneOutbound()
     {
@@ -348,6 +372,7 @@ public class EmbeddedChannelTest
         // Observe the native Task representing the unflushed write failed by close.
         await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
     }
+
     [Fact]
     public async Task TestEnsureOpen()
     {
@@ -356,6 +381,7 @@ public class EmbeddedChannelTest
         Assert.ThrowsAny<ClosedChannelException>(() => channel.WriteOutbound("Hello, Netty!"));
         Assert.ThrowsAny<ClosedChannelException>(() => channel.WriteInbound("Hello, Netty!"));
     }
+
     [Fact]
     public async Task TestHandleInboundMessage()
     {
@@ -364,6 +390,7 @@ public class EmbeddedChannelTest
         await channel.WriteOneInboundAsync("Hello, Netty!");
         Assert.True(latch.Wait(TimeSpan.FromSeconds(1)), "Nobody called #handleInboundMessage() in time.");
     }
+
     [Fact]
     public void TestHandleOutboundMessage()
     {
@@ -375,6 +402,7 @@ public class EmbeddedChannelTest
         Assert.True(latch.Wait(TimeSpan.FromSeconds(1)), "Nobody called #handleOutboundMessage() in time.");
         Assert.True(write.IsCompletedSuccessfully);
     }
+
     [Fact(Timeout = 5000)]
     public void TestChannelInactiveFired()
     {
@@ -384,6 +412,7 @@ public class EmbeddedChannelTest
         channel.Pipeline.FireExceptionCaught(new InvalidOperationException());
         Assert.True(inactive);
     }
+
     [Fact]
     public async Task TestReRegisterEventLoop()
     {
@@ -401,6 +430,7 @@ public class EmbeddedChannelTest
         channel.RunPendingTasks();
         Assert.True(taskLatch.Wait(TimeSpan.FromSeconds(5)), "Task was not executed in time.");
     }
+
     [Fact]
     public void TestRunPendingTasksForNotRegisteredChannel()
     {
@@ -410,6 +440,7 @@ public class EmbeddedChannelTest
         channel.RunPendingTasks();
         channel.CheckException();
     }
+
     [Fact(Timeout = 30000)] // generous timeout, just make sure we don't actually wait for the full 10 mins...
     public void TestAdvanceTime()
     {
@@ -424,6 +455,7 @@ public class EmbeddedChannelTest
         Assert.True(future10.IsCompleted);
         Assert.False(future20.IsCompleted);
     }
+
     [Fact(Timeout = 30000)] // generous timeout, just make sure we don't actually wait for the full 10 mins...
     public void TestFreezeTime()
     {
@@ -450,6 +482,7 @@ public class EmbeddedChannelTest
         Assert.True(future101.IsCompleted);
         Assert.False(future20.IsCompleted);
     }
+
     [Fact(Timeout = 30000)] // generous timeout, just make sure we don't actually wait for the full 10 mins...
     public void TestCustomTicker()
     {
@@ -476,12 +509,14 @@ public class EmbeddedChannelTest
         Assert.True(future101.IsCompleted);
         Assert.False(future20.IsCompleted);
     }
+
     [Fact]
     public void TestDefaultTickerCannotSleep()
     {
         var ticker = new EmbeddedChannel().EventLoop.Ticker();
         Assert.Throws<NotSupportedException>(() => ticker.Sleep(TimeSpan.FromSeconds(1)));
     }
+
     [Fact]
     public void TestHasPendingTasks()
     {
@@ -503,6 +538,7 @@ public class EmbeddedChannelTest
         channel.RunPendingTasks();
         Assert.False(channel.HasPendingTasks());
     }
+
     [Fact]
     public void TestReentrantClose()
     {
@@ -510,8 +546,13 @@ public class EmbeddedChannelTest
         channel.WriteInbound("foo");
         channel.CheckException();
     }
+
     private static void Release(params ByteBuf[] buffers)
-    { foreach (var buffer in buffers) if (buffer.RefCnt > 0) buffer.Release(); }
+    {
+        foreach (var buffer in buffers)
+        if (buffer.RefCnt > 0)
+            buffer.Release();
+    }
     private sealed class InboundActions : ChannelInboundHandlerAdapter
     {
         internal Action<IChannelHandlerContext, object> ReadAction;
@@ -521,11 +562,46 @@ public class EmbeddedChannelTest
         {
             ReadAction(ctx, msg);
         }
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) { if (ReadComplete == null) base.ChannelReadComplete(ctx); else ReadComplete(ctx); }
-        public override void ChannelInactive(IChannelHandlerContext ctx) { if (Inactive == null) base.ChannelInactive(ctx); else Inactive(ctx); }
-        public override void ChannelRegistered(IChannelHandlerContext ctx) { if (Registered == null) base.ChannelRegistered(ctx); else Registered(ctx); }
-        public override void ChannelUnregistered(IChannelHandlerContext ctx) { if (Unregistered == null) base.ChannelUnregistered(ctx); else Unregistered(ctx); }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { if (ExceptionAction == null) base.ExceptionCaught(ctx, cause); else ExceptionAction(ctx, cause); }
+
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            if (ReadComplete == null)
+                base.ChannelReadComplete(ctx);
+            else
+                ReadComplete(ctx);
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            if (Inactive == null)
+                base.ChannelInactive(ctx);
+            else
+                Inactive(ctx);
+        }
+
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            if (Registered == null)
+                base.ChannelRegistered(ctx);
+            else
+                Registered(ctx);
+        }
+
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            if (Unregistered == null)
+                base.ChannelUnregistered(ctx);
+            else
+                Unregistered(ctx);
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            if (ExceptionAction == null)
+                base.ExceptionCaught(ctx, cause);
+            else
+                ExceptionAction(ctx, cause);
+        }
     }
     private sealed class AddedHandler(Action<IChannelHandlerContext> callback) : ChannelHandlerAdapter
     {
@@ -542,6 +618,7 @@ public class EmbeddedChannelTest
         {
             return WriteAction(ctx, msg, token);
         }
+
         public override void Flush(IChannelHandlerContext ctx)
         {
             FlushAction(ctx);
@@ -569,8 +646,18 @@ public class EmbeddedChannelTest
     {
         internal const int DISCONNECT = 0, CLOSE = 1;
         private readonly Queue<int> _queue = new();
-        public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(DISCONNECT); return Task.CompletedTask; }
-        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(CLOSE); return Task.CompletedTask; }
+        public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken token)
+        {
+            _queue.Enqueue(DISCONNECT);
+            return Task.CompletedTask;
+        }
+
+        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token)
+        {
+            _queue.Enqueue(CLOSE);
+            return Task.CompletedTask;
+        }
+
         internal int? PollEvent()
         {
             return _queue.TryDequeue(out var result) ? result : null;
@@ -585,16 +672,40 @@ public class EmbeddedChannelTest
     }
     private sealed class MessageHandlingChannel(bool inbound, CountdownEvent latch) : EmbeddedChannel
     {
-        protected override void HandleInboundMessage(object msg) { if (inbound) latch.Signal(); else base.HandleInboundMessage(msg); }
-        protected override void HandleOutboundMessage(object msg) { if (!inbound) latch.Signal(); else base.HandleOutboundMessage(msg); }
+        protected override void HandleInboundMessage(object msg)
+        {
+            if (inbound)
+                latch.Signal();
+            else
+                base.HandleInboundMessage(msg);
+        }
+
+        protected override void HandleOutboundMessage(object msg)
+        {
+            if (!inbound)
+                latch.Signal();
+            else
+                base.HandleOutboundMessage(msg);
+        }
     }
     private sealed class ReentrantCloseHandler : ChannelInboundHandlerAdapter
     {
         private bool _runningRead;
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { _runningRead = true; try { _ = ctx.Channel.CloseAsync(); } finally { _runningRead = false; } }
+        {
+            _runningRead = true;
+            try
+            {
+                _ = ctx.Channel.CloseAsync();
+            }
+            finally { _runningRead = false; }
+        }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
-        { if (_runningRead) throw new InvalidOperationException("Reentrant handlerRemoved"); }
+        {
+            if (_runningRead)
+                throw new InvalidOperationException("Reentrant handlerRemoved");
+        }
     }
 }
 #pragma warning restore xUnit1051, xUnit1069

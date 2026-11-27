@@ -45,7 +45,9 @@ namespace Netty.NET.Handler.Codec.Http3.Example;
 // Http3ServerExample.PORT is 9999 unless the CLR-only -Dport=<port> property of the launcher gives another one.
 public sealed class Http3ClientExample
 {
-    private Http3ClientExample() { }
+    private Http3ClientExample()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

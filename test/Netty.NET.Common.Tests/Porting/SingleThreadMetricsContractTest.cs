@@ -21,24 +21,34 @@ public class SingleThreadMetricsContractTest
             clock.Advance(1000);
             return clock;
         }
+
         internal ActivityClockExecutor()
             : base(null, _ => throw new Exception("must not start"), false, true,
-                int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+                int.MaxValue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         internal ActivityClockExecutor(IQueue<Action> queue)
             : base(null, _ => throw new Exception("must not start"), false, true,
-                queue, RejectedExecutionHandlers.Reject()) { }
+                queue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         public override Ticker Ticker()
         {
             return clock;
         }
+
         protected override void Run()
         {
             throw new Exception("must not run");
         }
+
         internal long LastActivity()
         {
             return GetLastActivityTimeNanos();
         }
+
         internal void UpdateActivity()
         {
             UpdateLastExecutionTime();
@@ -66,55 +76,70 @@ public class SingleThreadMetricsContractTest
         internal readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         internal ManualExecutor(bool support = false)
             : base(null, _ => throw new Exception("must not start"), false, support,
-                int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+                int.MaxValue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         public override bool InEventLoop(Thread thread)
         {
             return thread == Thread.CurrentThread;
         }
+
         public override Ticker Ticker()
         {
             return clock;
         }
+
         protected override void Run()
         {
             throw new Exception("must not run");
         }
+
         internal bool Drain(long nanos)
         {
             return RunAllTasks(nanos);
         }
+
         internal long ResetActive()
         {
             return GetAndResetAccumulatedActiveTimeNanos();
         }
+
         internal long LastActivity()
         {
             return GetLastActivityTimeNanos();
         }
+
         internal void Io(long nanos)
         {
             ReportActiveIoTime(nanos);
         }
+
         internal int Idle()
         {
             return GetAndIncrementIdleCycles();
         }
+
         internal int Busy()
         {
             return GetAndIncrementBusyCycles();
         }
+
         internal void ResetIdle()
         {
             ResetIdleCycles();
         }
+
         internal void ResetBusy()
         {
             ResetBusyCycles();
         }
+
         internal int Channels()
         {
             return GetNumOfRegisteredChannels();
         }
+
         internal bool SupportsSuspension()
         {
             return IsSuspensionSupported();
@@ -214,19 +239,25 @@ public class SingleThreadMetricsContractTest
     private sealed class CountingStartExecutor : SingleThreadEventExecutor
     {
         internal CountingStartExecutor(Action<Action> executor)
-            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         protected override void Run()
         {
             throw new Exception("must not run");
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return false;
         }
+
         internal int Idle()
         {
             return GetAndIncrementIdleCycles();
         }
+
         internal int Busy()
         {
             return GetAndIncrementBusyCycles();

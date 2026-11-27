@@ -49,6 +49,7 @@ public class CombinedChannelDuplexHandlerSourceTest
             new ChannelInboundHandlerAdapter(), new ChannelOutboundHandlerAdapter());
         Assert.Throws<InvalidOperationException>(handler.RemoveInboundHandler);
     }
+
     [Fact]
     public void TestOutboundRemoveBeforeAdded()
     {
@@ -56,6 +57,7 @@ public class CombinedChannelDuplexHandlerSourceTest
             new ChannelInboundHandlerAdapter(), new ChannelOutboundHandlerAdapter());
         Assert.Throws<InvalidOperationException>(handler.RemoveOutboundHandler);
     }
+
     [Fact]
     public void TestInboundHandlerImplementsOutboundHandler()
     {
@@ -63,6 +65,7 @@ public class CombinedChannelDuplexHandlerSourceTest
             new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
                 new ChannelDuplexHandler(), new ChannelOutboundHandlerAdapter()));
     }
+
     [Fact]
     public void TestOutboundHandlerImplementsInboundHandler()
     {
@@ -70,11 +73,13 @@ public class CombinedChannelDuplexHandlerSourceTest
             new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
                 new ChannelInboundHandlerAdapter(), new ChannelDuplexHandler()));
     }
+
     [Fact]
     public void TestInitNotCalledBeforeAdded()
     {
         Assert.Throws<InvalidOperationException>(() => new UninitializedCombined().HandlerAdded(null));
     }
+
     [Fact]
     public void TestNotSharable()
     {
@@ -120,6 +125,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     [Fact]
     public void TestInboundEvents()
     {
@@ -147,6 +153,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     [Fact]
     public async Task TestOutboundEvents()
     {
@@ -173,6 +180,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     private static async Task DoOutboundOperations(IChannel channel)
     {
         await channel.Pipeline.BindAsync(LocalAddress);
@@ -184,6 +192,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         await channel.Pipeline.CloseAsync();
         await channel.Pipeline.DeregisterAsync();
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestPromisesPassed()
     {
@@ -205,6 +214,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     private static void DoInboundOperations(IChannel channel)
     {
         channel.Pipeline.FireChannelRegistered();
@@ -224,46 +234,57 @@ public class CombinedChannelDuplexHandlerSourceTest
         {
             return _queue.TryDequeue(out var evt) ? evt : null;
         }
+
         public override void HandlerAdded(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.HandlerAdded);
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.HandlerRemoved);
         }
+
         public override void ChannelRegistered(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.Registered);
         }
+
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.Unregistered);
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.Active);
         }
+
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.Inactive);
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             _queue.Enqueue(Event.ChannelRead);
         }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.ChannelReadComplete);
         }
+
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             _queue.Enqueue(Event.UserEventTriggered);
         }
+
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.ChannelWritabilityChanged);
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             _queue.Enqueue(Event.ExceptionCaught);
@@ -276,30 +297,62 @@ public class CombinedChannelDuplexHandlerSourceTest
         {
             return _queue.TryDequeue(out var evt) ? evt : null;
         }
+
         public override void HandlerAdded(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.HandlerAdded);
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.HandlerRemoved);
         }
+
         public override Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken)
-        { Assert.Same(LocalAddress, localAddress); _queue.Enqueue(Event.Bind); return Task.CompletedTask; }
+        {
+            Assert.Same(LocalAddress, localAddress);
+            _queue.Enqueue(Event.Bind);
+            return Task.CompletedTask;
+        }
+
         public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
-        { Assert.Same(RemoteAddress, remoteAddress); Assert.Same(LocalAddress, localAddress); _queue.Enqueue(Event.Connect); return Task.CompletedTask; }
+        {
+            Assert.Same(RemoteAddress, remoteAddress);
+            Assert.Same(LocalAddress, localAddress);
+            _queue.Enqueue(Event.Connect);
+            return Task.CompletedTask;
+        }
+
         public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
-        {  _queue.Enqueue(Event.Disconnect); return Task.CompletedTask; }
+        {
+            _queue.Enqueue(Event.Disconnect);
+            return Task.CompletedTask;
+        }
+
         public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
-        {  _queue.Enqueue(Event.Close); return Task.CompletedTask; }
+        {
+            _queue.Enqueue(Event.Close);
+            return Task.CompletedTask;
+        }
+
         public override Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
-        {  _queue.Enqueue(Event.Deregister); return Task.CompletedTask; }
+        {
+            _queue.Enqueue(Event.Deregister);
+            return Task.CompletedTask;
+        }
+
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
-        { Assert.Same(Msg, msg); _queue.Enqueue(Event.Write); return Task.CompletedTask; }
+        {
+            Assert.Same(Msg, msg);
+            _queue.Enqueue(Event.Write);
+            return Task.CompletedTask;
+        }
+
         public override void Read(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.Read);
         }
+
         public override void Flush(IChannelHandlerContext ctx)
         {
             _queue.Enqueue(Event.Flush);

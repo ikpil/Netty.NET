@@ -43,7 +43,9 @@ internal sealed class ThreadLocalInsecureRandom : RandomNumberGenerator
         return INSTANCE;
     }
 
-    private ThreadLocalInsecureRandom() { }
+    private ThreadLocalInsecureRandom()
+    {
+    }
 
     public override void GetBytes(byte[] bytes)
     {

@@ -36,7 +36,9 @@ public interface IIoHandler
     /**
      * Initialize this {@link IoHandler}.
      */
-    void Initialize() { }
+    void Initialize()
+    {
+    }
 
     /**
      * Run the IO handled by this {@link IoHandler}. The {@link IoHandlerContext} should be used
@@ -54,13 +56,17 @@ public interface IIoHandler
      * Prepare to destroy this {@link IoHandler}. This method will be called before {@link #destroy()} and may be
      * called multiple times.
      */
-    void PrepareToDestroy() { }
+    void PrepareToDestroy()
+    {
+    }
 
     /**
      * Destroy the {@link IoHandler} and free all its resources. Once destroyed using the {@link IoHandler} will
      * cause undefined behaviour.
      */
-    void Destroy() { }
+    void Destroy()
+    {
+    }
 
     /**
      * Register a {@link IoHandle} for IO.

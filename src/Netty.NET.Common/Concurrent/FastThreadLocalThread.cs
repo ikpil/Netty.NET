@@ -48,10 +48,14 @@ public class FastThreadLocalThread
 
     // Targetless construction supports subclasses that implement Run and own their cleanup policy.
     public FastThreadLocalThread(string name = null, int maxStackSize = 0, ThreadGroup group = null)
-        : this(null, name, maxStackSize, false, group) { }
+        : this(null, name, maxStackSize, false, group)
+    {
+    }
 
     public FastThreadLocalThread(Action target, string name = null, int maxStackSize = 0, ThreadGroup group = null)
-        : this(target ?? throw new ArgumentNullException(nameof(target)), name, maxStackSize, true, group) { }
+        : this(target ?? throw new ArgumentNullException(nameof(target)), name, maxStackSize, true, group)
+    {
+    }
 
     // CLR ThreadGroup identity uses weak metadata and inherits the creator group.
     // Stack size is a CLR hint and must fit its Int32 parameter.

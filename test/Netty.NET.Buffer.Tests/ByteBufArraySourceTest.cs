@@ -44,6 +44,7 @@ public class ByteBufArraySourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -159,41 +160,67 @@ public class ByteBufArraySourceTest
     {
         using var s = new Storage(provider, 32);
         byte[] bytes = new byte[32];
-        for (int i = 0; i < bytes.Length; ++i) bytes[i] = (byte)(i * 7);
+        for (int i = 0; i < bytes.Length; ++i)
+            bytes[i] = (byte)(i * 7);
         byte[] source = [99, 99, 83, 91, 113, 127, 99, 99];
         byte[] destination = [199, 199, 199, 199, 199, 199, 199, 199];
         byte[] expectedSource = (byte[])source.Clone(), expectedDestination = (byte[])destination.Clone();
         byte[] expectedContent = (byte[])bytes.Clone();
         ByteBuf buffer = s.Root;
         buffer.SetBytes(0, bytes).SetIndex(3, 25).MarkReaderIndex().MarkWriterIndex();
-        if (operation == 2) buffer.SetIndex(15, 25);
-        if (operation == 3) buffer.SetIndex(3, 15);
+        if (operation == 2)
+            buffer.SetIndex(15, 25);
+        if (operation == 3)
+            buffer.SetIndex(3, 15);
         int reader = buffer.ReaderIndex, writer = buffer.WriterIndex;
         switch (operation)
         {
-            case 0: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(15, destination.AsSpan(-1, 4))); break;
-            case 1: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.SetBytes(15, source.AsSpan(-1, 4))); break;
-            case 2: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadBytes(destination.AsSpan(-1, 4))); break;
-            default: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteBytes(source.AsSpan(-1, 4))); break;
+            case 0:
+                Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(15, destination.AsSpan(-1, 4)));
+                break;
+            case 1:
+                Assert.Throws<ArgumentOutOfRangeException>(() => buffer.SetBytes(15, source.AsSpan(-1, 4)));
+                break;
+            case 2:
+                Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadBytes(destination.AsSpan(-1, 4)));
+                break;
+            default:
+                Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteBytes(source.AsSpan(-1, 4)));
+                break;
         }
-        Assert.Equal(reader, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
+        Assert.Equal(reader, buffer.ReaderIndex);
+        Assert.Equal(writer, buffer.WriterIndex);
         Assert.Equal(bytes, ByteBufUtil.GetBytes(buffer, 0, 32));
-        Assert.Equal(expectedSource, source); Assert.Equal(expectedDestination, destination);
+        Assert.Equal(expectedSource, source);
+        Assert.Equal(expectedDestination, destination);
         switch (operation)
         {
-            case 0: Assert.Same(buffer, buffer.GetBytes(15, destination.AsSpan(2, 4))); break;
-            case 1: Assert.Same(buffer, buffer.SetBytes(15, source.AsSpan(2, 4))); break;
-            case 2: Assert.Same(buffer, buffer.ReadBytes(destination.AsSpan(2, 4))); break;
-            default: Assert.Same(buffer, buffer.WriteBytes(source.AsSpan(2, 4))); break;
+            case 0:
+                Assert.Same(buffer, buffer.GetBytes(15, destination.AsSpan(2, 4)));
+                break;
+            case 1:
+                Assert.Same(buffer, buffer.SetBytes(15, source.AsSpan(2, 4)));
+                break;
+            case 2:
+                Assert.Same(buffer, buffer.ReadBytes(destination.AsSpan(2, 4)));
+                break;
+            default:
+                Assert.Same(buffer, buffer.WriteBytes(source.AsSpan(2, 4)));
+                break;
         }
-        if (operation is 0 or 2) Array.Copy(bytes, 15, expectedDestination, 2, 4);
-        else Array.Copy(source, 2, expectedContent, 15, 4);
-        Assert.Equal(expectedSource, source); Assert.Equal(expectedDestination, destination);
+        if (operation is 0 or 2)
+            Array.Copy(bytes, 15, expectedDestination, 2, 4);
+        else
+            Array.Copy(source, 2, expectedContent, 15, 4);
+        Assert.Equal(expectedSource, source);
+        Assert.Equal(expectedDestination, destination);
         Assert.Equal(expectedContent, ByteBufUtil.GetBytes(buffer, 0, 32));
         Assert.Equal(operation == 2 ? 19 : reader, buffer.ReaderIndex);
         Assert.Equal(operation == 3 ? 19 : writer, buffer.WriterIndex);
-        Assert.Equal(32, buffer.Capacity); Assert.Equal(1, buffer.RefCnt);
+        Assert.Equal(32, buffer.Capacity);
+        Assert.Equal(1, buffer.RefCnt);
         buffer.SetIndex(0, 32).ResetWriterIndex().ResetReaderIndex();
-        Assert.Equal(3, buffer.ReaderIndex); Assert.Equal(25, buffer.WriterIndex);
+        Assert.Equal(3, buffer.ReaderIndex);
+        Assert.Equal(25, buffer.WriterIndex);
     }
 }

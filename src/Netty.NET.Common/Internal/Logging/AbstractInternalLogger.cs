@@ -43,10 +43,15 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     public abstract bool IsTraceEnabled();
+
     public abstract void Trace(string msg);
+
     public abstract void Trace(string format, object arg);
+
     public abstract void Trace(string format, object argA, object argB);
+
     public abstract void Trace(string format, params object[] arguments);
+
     public abstract void Trace(string msg, Exception t);
 
     public bool IsEnabled(InternalLogLevel level)
@@ -74,10 +79,15 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     public abstract bool IsDebugEnabled();
+
     public abstract void Debug(string msg);
+
     public abstract void Debug(string format, object arg);
+
     public abstract void Debug(string format, object argA, object argB);
+
     public abstract void Debug(string format, params object[] arguments);
+
     public abstract void Debug(string msg, Exception t);
 
     public void Debug(Exception t)
@@ -86,10 +96,15 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     public abstract bool IsInfoEnabled();
+
     public abstract void Info(string msg);
+
     public abstract void Info(string format, object arg);
+
     public abstract void Info(string format, object argA, object argB);
+
     public abstract void Info(string format, params object[] arguments);
+
     public abstract void Info(string msg, Exception t);
 
     public void Info(Exception t)
@@ -98,10 +113,15 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     public abstract bool IsWarnEnabled();
+
     public abstract void Warn(string msg);
+
     public abstract void Warn(string format, object arg);
+
     public abstract void Warn(string format, params object[] arguments);
+
     public abstract void Warn(string format, object argA, object argB);
+
     public abstract void Warn(string msg, Exception t);
 
     public void Warn(Exception t)
@@ -110,10 +130,15 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     public abstract bool IsErrorEnabled();
+
     public abstract void Error(string msg);
+
     public abstract void Error(string format, object arg);
+
     public abstract void Error(string format, object argA, object argB);
+
     public abstract void Error(string format, params object[] arguments);
+
     public abstract void Error(string msg, Exception t);
 
     public void Error(Exception t)

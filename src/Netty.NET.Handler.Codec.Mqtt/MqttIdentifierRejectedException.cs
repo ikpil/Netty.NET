@@ -29,7 +29,9 @@ public sealed class MqttIdentifierRejectedException : DecoderException
     /**
      * Creates a new instance
      */
-    public MqttIdentifierRejectedException() { }
+    public MqttIdentifierRejectedException()
+    {
+    }
 
     /**
      * Creates a new instance

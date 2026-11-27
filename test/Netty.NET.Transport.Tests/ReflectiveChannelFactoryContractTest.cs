@@ -64,7 +64,9 @@ public class ReflectiveChannelFactoryContractTest
 
     private sealed class NoDefaultChannel : LocalChannel
     {
-        public NoDefaultChannel(int ignored) { }
+        public NoDefaultChannel(int ignored)
+        {
+        }
     }
 
     private sealed class ThrowingChannel : LocalChannel

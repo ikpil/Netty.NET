@@ -48,7 +48,8 @@ public class ByteBufHexTest
     [InlineData(256)] [InlineData(257)]
     public void OriginalDecodeRandomHexBytesIncludingEverySuffix(int length)
     {
-        byte[] bytes = new byte[length]; new Random(12345).NextBytes(bytes);
+        byte[] bytes = new byte[length];
+        new Random(12345).NextBytes(bytes);
         string hexDump = ByteBufUtil.HexDump(bytes);
         for (int i = 0; i <= length; i++) // going over sub-strings of various lengths including empty byte[].
         {
@@ -72,7 +73,8 @@ public class ByteBufHexTest
     [InlineData(4)] [InlineData(5)] [InlineData(6)]
     public void AllOctetsAndAbsoluteReadableRangesKeepIndicesAndMarks(int kind)
     {
-        byte[] data = Enumerable.Range(0, 256).Select(i => (byte)i).ToArray(); ByteBuf b = Owner(kind, data);
+        byte[] data = Enumerable.Range(0, 256).Select(i => (byte)i).ToArray();
+        ByteBuf b = Owner(kind, data);
         try
         {
             b.SetIndex(3, 200).MarkReaderIndex().MarkWriterIndex();
@@ -89,9 +91,12 @@ public class ByteBufHexTest
                 Assert.Equal(data[i], ByteBufUtil.DecodeHexByte(expected, i * 2));
                 Assert.Equal(data[i], ByteBufUtil.DecodeHexByte(expected.AsSpan(), i * 2));
             }
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(200, b.WriterIndex);
+            Assert.Equal(3, b.ReaderIndex);
+            Assert.Equal(200, b.WriterIndex);
             b.SetIndex(4, 201).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(200, b.WriterIndex); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(3, b.ReaderIndex);
+            Assert.Equal(200, b.WriterIndex);
+            Assert.Equal(1, b.RefCnt);
         }
         finally { b.Release(); }
     }
@@ -102,20 +107,26 @@ public class ByteBufHexTest
     public void PrettyDumpHasExactHeaderPaddingAsciiAndAppendBehavior(int kind)
     {
         byte[] data = new byte[] { 32, 33, 65, 126, 127, 128, 0, 31, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 255 };
-        ByteBuf b = Owner(kind, data); string nl = StringUtil.NEWLINE;
+        ByteBuf b = Owner(kind, data);
+        string nl = StringUtil.NEWLINE;
         string first = "|00000000| 20 21 41 7e 7f 80 00 1f 30 31 32 33 34 35 36 37 | !A~....01234567|";
         string last = "|00000010| 38 39 ff" + new string(' ', 39) + " |89." + new string(' ', 13) + "|";
         string expected = string.Join(nl, Header, Columns, Border, first, last, Border);
         try
         {
             Assert.Equal(expected, ByteBufUtil.PrettyHexDump(b));
-            var builder = new StringBuilder("prefix"); ByteBufUtil.AppendPrettyHexDump(builder, b);
+            var builder = new StringBuilder("prefix");
+            ByteBufUtil.AppendPrettyHexDump(builder, b);
             Assert.Equal("prefix" + expected, builder.ToString());
-            b.ReaderIndex = 1; builder.Clear(); ByteBufUtil.AppendPrettyHexDump(builder, b, 0, data.Length);
+            b.ReaderIndex = 1;
+            builder.Clear();
+            ByteBufUtil.AppendPrettyHexDump(builder, b, 0, data.Length);
             Assert.Equal(expected, builder.ToString());
-            Assert.Equal(1, b.ReaderIndex); Assert.Equal(data.Length, b.WriterIndex);
+            Assert.Equal(1, b.ReaderIndex);
+            Assert.Equal(data.Length, b.WriterIndex);
             b.ReaderIndex = b.WriterIndex;
-            Assert.Equal("", ByteBufUtil.HexDump(b)); Assert.Equal("", ByteBufUtil.PrettyHexDump(b));
+            Assert.Equal("", ByteBufUtil.HexDump(b));
+            Assert.Equal("", ByteBufUtil.PrettyHexDump(b));
         }
         finally { b.Release(); }
     }
@@ -124,14 +135,17 @@ public class ByteBufHexTest
     [InlineData(1)] [InlineData(15)] [InlineData(16)] [InlineData(17)] [InlineData(31)] [InlineData(32)] [InlineData(33)]
     public void PrettyRowsHaveExactByteAndCharacterColumnWidths(int length)
     {
-        ByteBuf b = Owner(2, Enumerable.Repeat((byte)'A', length + 9).ToArray()); b.SetIndex(9, 9 + length);
+        ByteBuf b = Owner(2, Enumerable.Repeat((byte)'A', length + 9).ToArray());
+        b.SetIndex(9, 9 + length);
         try
         {
             string[] lines = ByteBufUtil.PrettyHexDump(b).Split(StringUtil.NEWLINE);
-            int rows = (length + 15) / 16; Assert.Equal(rows + 4, lines.Length);
+            int rows = (length + 15) / 16;
+            Assert.Equal(rows + 4, lines.Length);
             for (int i = 0; i < rows; i++)
             {
-                int count = Math.Min(16, length - i * 16); string line = lines[3 + i];
+                int count = Math.Min(16, length - i * 16);
+                string line = lines[3 + i];
                 Assert.Equal(77, line.Length);
                 Assert.Equal("|" + (i * 16).ToString("x8", CultureInfo.InvariantCulture) + "|", line[..10]);
                 Assert.Equal(string.Concat(Enumerable.Repeat(" 41", count)) + new string(' ', (16 - count) * 3), line[10..58]);
@@ -161,11 +175,14 @@ public class ByteBufHexTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
     public void InvalidAndReleasedRangesFailBeforeAppendingIncludingEmptyRanges(int kind)
     {
-        ByteBuf b = Owner(kind, new byte[] { 1, 2, 3 }); var builder = new StringBuilder("prefix");
+        ByteBuf b = Owner(kind, new byte[] { 1, 2, 3 });
+        var builder = new StringBuilder("prefix");
         try
         {
-            Assert.Equal("", ByteBufUtil.HexDump(b, 3, 0)); Assert.Equal("", ByteBufUtil.PrettyHexDump(b, 3, 0));
-            ByteBufUtil.AppendPrettyHexDump(builder, b, 3, 0); Assert.Equal("prefix", builder.ToString());
+            Assert.Equal("", ByteBufUtil.HexDump(b, 3, 0));
+            Assert.Equal("", ByteBufUtil.PrettyHexDump(b, 3, 0));
+            ByteBufUtil.AppendPrettyHexDump(builder, b, 3, 0);
+            Assert.Equal("prefix", builder.ToString());
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.HexDump(b, 4, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.HexDump(b, -1, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.HexDump(b, 1, int.MaxValue));

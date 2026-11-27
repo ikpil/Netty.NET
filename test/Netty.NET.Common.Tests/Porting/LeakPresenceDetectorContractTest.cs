@@ -100,7 +100,9 @@ public class LeakPresenceDetectorContractTest
     public void DisposeIsIdempotentAndNeverReopensAScope()
     {
         var scope = new ResourceScope("closed");
-        scope.Dispose(); scope.Close(); scope.Dispose();
+        scope.Dispose();
+        scope.Close();
+        scope.Dispose();
         var detector = new Scoped<object>(scope);
         var failure = Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => detector.Track(new object()));
         Assert.Contains("already closed", failure.Message);
@@ -216,7 +218,8 @@ public class LeakPresenceDetectorContractTest
         Assert.True(tracker.Close(null));
         scope.Check();
         Assert.False(LeakPresenceDetector.InStaticInitializerFast());
-        initializerScope = null; concurrentTracker = null;
+        initializerScope = null;
+        concurrentTracker = null;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

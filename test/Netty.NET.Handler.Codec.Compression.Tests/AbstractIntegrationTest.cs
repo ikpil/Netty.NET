@@ -48,6 +48,7 @@ public abstract class AbstractIntegrationTest
     protected EmbeddedChannel decoder;
 
     protected abstract EmbeddedChannel CreateEncoder();
+
     protected abstract EmbeddedChannel CreateDecoder();
 
     public virtual void InitChannels()

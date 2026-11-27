@@ -34,7 +34,9 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
     protected readonly IResourceLeakTracker<ByteBuf> _leak;
 
     internal SimpleLeakAwareByteBuf(ByteBuf wrapped, IResourceLeakTracker<ByteBuf> leak)
-        : this(wrapped, wrapped, leak) { }
+        : this(wrapped, wrapped, leak)
+    {
+    }
 
     internal SimpleLeakAwareByteBuf(ByteBuf wrapped, ByteBuf trackedByteBuf, IResourceLeakTracker<ByteBuf> leak)
         : base(wrapped)
@@ -49,18 +51,22 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
     {
         return NewSharedLeakAwareByteBuf(base.Slice());
     }
+
     public override ByteBuf Slice(int index, int length)
     {
         return NewSharedLeakAwareByteBuf(base.Slice(index, length));
     }
+
     public override ByteBuf Duplicate()
     {
         return NewSharedLeakAwareByteBuf(base.Duplicate());
     }
+
     public override ByteBuf ReadSlice(int length)
     {
         return NewSharedLeakAwareByteBuf(base.ReadSlice(length));
     }
+
     public override ByteBuf AsReadOnly()
     {
         return NewSharedLeakAwareByteBuf(base.AsReadOnly());

@@ -42,13 +42,17 @@ public static partial class ByteBufUtil
     private static class ThreadLocalDirectSettings
     {
         internal static readonly int Size = SystemPropertyUtil.GetInt("io.netty.threadLocalDirectBufferSize", 0);
-        static ThreadLocalDirectSettings() { }
+        static ThreadLocalDirectSettings()
+        {
+        }
     }
 
     private static class ThreadLocalDirectCaches
     {
         internal static readonly LocalCache Local = new();
-        static ThreadLocalDirectCaches() { }
+        static ThreadLocalDirectCaches()
+        {
+        }
     }
 
     private sealed class LocalCache : FastThreadLocal<ThreadLocalDirectBufferCache>
@@ -57,6 +61,7 @@ public static partial class ByteBufUtil
         {
             return new(ThreadLocalDirectSettings.Size);
         }
+
         protected override void OnRemoval(ThreadLocalDirectBufferCache cache)
         {
             cache.Dispose();

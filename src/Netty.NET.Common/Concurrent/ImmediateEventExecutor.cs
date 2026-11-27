@@ -52,7 +52,9 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
 
     private readonly Task _terminationTask = Task.FromException(new NotSupportedException());
 
-    private ImmediateEventExecutor() { }
+    private ImmediateEventExecutor()
+    {
+    }
 
     public override bool InEventLoop()
     {

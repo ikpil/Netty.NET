@@ -77,8 +77,10 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
 
     private void LinkSuffixes()
     {
-        var queue = new Queue<int>(); queue.Enqueue(0);
-        int[] suffixLinks = new int[_matchForNeedleId.Length]; Array.Fill(suffixLinks, -1);
+        var queue = new Queue<int>();
+        queue.Enqueue(0);
+        int[] suffixLinks = new int[_matchForNeedleId.Length];
+        Array.Fill(suffixLinks, -1);
         while (queue.Count != 0)
         {
             int v = queue.Dequeue(), vPosition = v >> BitsPerSymbol;
@@ -94,7 +96,8 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
                     suffixLinks[jumpV >> BitsPerSymbol] = v > 0 && jumpU != -1 ? jumpU : 0;
                     queue.Enqueue(jumpV);
                 }
-                else _jumpTable[vIndex] = jumpU != -1 ? jumpU : 0;
+                else
+                    _jumpTable[vIndex] = jumpU != -1 ? jumpU : 0;
             }
         }
     }
@@ -114,7 +117,10 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
         private int _currentPosition;
 
         internal Processor(int[] jumpTable, int[] matchForNeedleId)
-        { _jumpTable = jumpTable; _matchForNeedleId = matchForNeedleId; }
+        {
+            _jumpTable = jumpTable;
+            _matchForNeedleId = matchForNeedleId;
+        }
 
         public bool Process(byte value)
         {
@@ -131,6 +137,7 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
         {
             return _matchForNeedleId[_currentPosition >> BitsPerSymbol];
         }
+
         public void Reset()
         {
             _currentPosition = 0;

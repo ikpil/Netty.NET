@@ -128,7 +128,9 @@ public abstract class AbstractRemoteAddressFilter<T> : ChannelInboundHandlerAdap
      * {@link #accept(ChannelHandlerContext, SocketAddress)}.  You should override it if you would like to handle
      * (e.g. respond to) accepted addresses.
      */
-    protected virtual void ChannelAccepted(IChannelHandlerContext ctx, T remoteAddress) { }
+    protected virtual void ChannelAccepted(IChannelHandlerContext ctx, T remoteAddress)
+    {
+    }
 
     /**
      * This method is called if {@code remoteAddress} gets rejected by

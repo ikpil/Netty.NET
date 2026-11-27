@@ -85,6 +85,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
     private const int initialRemoteStreamWindow = 1024;
 
     protected abstract C NewCodec(TestChannelInitializer childChannelInitializer,  IHttp2FrameWriter frameWriter);
+
     protected abstract IChannelHandler NewMultiplexer(TestChannelInitializer childChannelInitializer);
 
     protected Http2MultiplexTest()

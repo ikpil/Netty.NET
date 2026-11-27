@@ -143,12 +143,14 @@ public class WritableMemoryByteBufTest
     [Fact]
     public void OriginalDirectSliceAddressMapsToPinAtSelectedOffset()
     {
-        var native = new NativeMemoryAllocator(16); using NativeMemoryOwner owner = native.Allocate(16);
+        var native = new NativeMemoryAllocator(16);
+        using NativeMemoryOwner owner = native.Allocate(16);
         ByteBuf b = Unpooled.WrappedBuffer(owner.Memory.Slice(4, 8));
         try
         {
             Assert.Equal(ManagedMemoryTest.Address(owner.Memory) + 4, ManagedMemoryTest.Address(b.AsMemory(0, 8)));
-            b.SetByte(0, 42); Assert.Equal(42, owner.Memory.Span[4]);
+            b.SetByte(0, 42);
+            Assert.Equal(42, owner.Memory.Span[4]);
         }
         finally { b.Release(); }
         Assert.Equal(16, native.ReservedBytes);
@@ -157,61 +159,94 @@ public class WritableMemoryByteBufTest
     [Fact]
     public void WrappedNativeShrinkDetachesWithoutDisposingExternalOwner()
     {
-        var external = new NativeMemoryAllocator(16); using NativeMemoryOwner owner = external.Allocate(12);
-        for (int i = 0; i < 12; i++) owner.Memory.Span[i] = (byte)i;
+        var external = new NativeMemoryAllocator(16);
+        using NativeMemoryOwner owner = external.Allocate(12);
+        for (int i = 0; i < 12; i++)
+            owner.Memory.Span[i] = (byte)i;
         ByteBuf b = Unpooled.WrappedBuffer(owner.Memory.Slice(2, 8));
         try
         {
-            Memory<byte> original = b.AsMemory(0, 8); b.SetIndex(6, 8); b.Capacity = 4;
-            Assert.Equal(4, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(8, b.MaxCapacity);
+            Memory<byte> original = b.AsMemory(0, 8);
+            b.SetIndex(6, 8);
+            b.Capacity = 4;
+            Assert.Equal(4, b.ReaderIndex);
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(8, b.MaxCapacity);
             Assert.Equal(new byte[] { 2, 3, 4, 5 }, b.AsMemory(0, 4).ToArray());
-            b.SetByte(0, 99); Assert.Equal(2, original.Span[0]); owner.Memory.Span[3] = 77; Assert.Equal(3, b.GetByte(1));
-            b.Capacity = 8; Assert.Equal(new byte[] { 99, 3, 4, 5, 0, 0, 0, 0 }, b.AsMemory(0, 8).ToArray());
+            b.SetByte(0, 99);
+            Assert.Equal(2, original.Span[0]);
+            owner.Memory.Span[3] = 77;
+            Assert.Equal(3, b.GetByte(1));
+            b.Capacity = 8;
+            Assert.Equal(new byte[] { 99, 3, 4, 5, 0, 0, 0, 0 }, b.AsMemory(0, 8).ToArray());
             Assert.Equal(12, external.ReservedBytes);
             Assert.Throws<ArgumentOutOfRangeException>(() => b.Capacity = 9);
         }
         finally { b.Release(); }
-        Assert.Equal(12, external.ReservedBytes); Assert.Equal(77, owner.Memory.Span[3]);
+        Assert.Equal(12, external.ReservedBytes);
+        Assert.Equal(77, owner.Memory.Span[3]);
     }
 
     [Fact]
     public void WrappedNativeSameCapacityKeepsAliasingAndRawReplacementIsUncharged()
     {
-        var external = new NativeMemoryAllocator(16); using NativeMemoryOwner owner = external.Allocate(8);
-        var native = new NativeMemoryAllocator(64); var a = new UnpooledByteBufAllocator(true, native);
+        var external = new NativeMemoryAllocator(16);
+        using NativeMemoryOwner owner = external.Allocate(8);
+        var native = new NativeMemoryAllocator(64);
+        var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = new UnpooledDirectByteBuf(a, owner.Memory, 16, native);
         try
         {
-            b.Capacity = 8; b.SetByte(0, 42); Assert.Equal(42, owner.Memory.Span[0]);
-            Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, a.Metric.UsedDirectMemory);
-            b.Capacity = 12; Assert.Equal(12, native.ReservedBytes); Assert.Equal(0, a.Metric.UsedDirectMemory);
+            b.Capacity = 8;
+            b.SetByte(0, 42);
+            Assert.Equal(42, owner.Memory.Span[0]);
+            Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(0, a.Metric.UsedDirectMemory);
+            b.Capacity = 12;
+            Assert.Equal(12, native.ReservedBytes);
+            Assert.Equal(0, a.Metric.UsedDirectMemory);
             ByteBuf copy = b.Copy(0, 4);
             try
             {
-                Assert.Same(a, copy.Alloc()); Assert.Equal(16, copy.MaxCapacity); Assert.Equal(4, a.Metric.UsedDirectMemory);
-                Assert.Equal(16, native.ReservedBytes); Assert.Equal(42, copy.GetByte(0));
+                Assert.Same(a, copy.Alloc());
+                Assert.Equal(16, copy.MaxCapacity);
+                Assert.Equal(4, a.Metric.UsedDirectMemory);
+                Assert.Equal(16, native.ReservedBytes);
+                Assert.Equal(42, copy.GetByte(0));
             }
             finally { copy.Release(); }
-            b.Capacity = 0; Assert.Equal(1, native.ReservedBytes); Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex);
+            b.Capacity = 0;
+            Assert.Equal(1, native.ReservedBytes);
+            Assert.Equal(0, b.ReaderIndex);
+            Assert.Equal(0, b.WriterIndex);
         }
         finally { b.Release(); }
-        Assert.Equal(0, native.ReservedBytes); Assert.Equal(0, a.Metric.UsedDirectMemory); Assert.Equal(8, external.ReservedBytes);
+        Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(0, a.Metric.UsedDirectMemory);
+        Assert.Equal(8, external.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void AllocationFailurePreservesBorrowedStorageAndIndices(bool shrink)
     {
-        var external = new NativeMemoryAllocator(8); using NativeMemoryOwner owner = external.Allocate(8);
-        owner.Memory.Span.Fill(7); var native = new NativeMemoryAllocator(0);
+        var external = new NativeMemoryAllocator(8);
+        using NativeMemoryOwner owner = external.Allocate(8);
+        owner.Memory.Span.Fill(7);
+        var native = new NativeMemoryAllocator(0);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
         try
         {
-            b.SetIndex(6, 8); b.MarkReaderIndex().MarkWriterIndex();
+            b.SetIndex(6, 8);
+            b.MarkReaderIndex().MarkWriterIndex();
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = shrink ? 4 : 12);
-            Assert.Equal(8, b.Capacity); Assert.Equal(6, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
-            b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(7, b.GetByte(0));
-            Assert.Equal(0, native.ReservedBytes); Assert.Equal(8, external.ReservedBytes);
+            Assert.Equal(8, b.Capacity);
+            Assert.Equal(6, b.ReaderIndex);
+            Assert.Equal(8, b.WriterIndex);
+            b.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(7, b.GetByte(0));
+            Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(8, external.ReservedBytes);
         }
         finally { b.Release(); }
     }
@@ -219,52 +254,74 @@ public class WritableMemoryByteBufTest
     [Fact]
     public void FailedCopyOfDisposedBorrowedMemoryReleasesReplacement()
     {
-        var external = new NativeMemoryAllocator(8); NativeMemoryOwner owner = external.Allocate(8);
-        var native = new NativeMemoryAllocator(32); var a = new UnpooledByteBufAllocator(true, native);
+        var external = new NativeMemoryAllocator(8);
+        NativeMemoryOwner owner = external.Allocate(8);
+        var native = new NativeMemoryAllocator(32);
+        var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = new UnpooledDirectByteBuf(a, owner.Memory, 16, native);
         owner.Dispose();
         try
         {
             Assert.Throws<ObjectDisposedException>(() => b.Capacity = 12);
-            Assert.Equal(8, b.Capacity); Assert.Equal(8, b.WriterIndex); Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(8, b.Capacity);
+            Assert.Equal(8, b.WriterIndex);
+            Assert.Equal(0, native.ReservedBytes);
             Assert.Throws<ObjectDisposedException>(() => b.GetByte(0));
         }
         finally { b.Release(); }
-        Assert.Equal(0, external.ReservedBytes); Assert.Equal(0, a.Metric.UsedDirectMemory);
+        Assert.Equal(0, external.ReservedBytes);
+        Assert.Equal(0, a.Metric.UsedDirectMemory);
     }
 
     [Fact]
     public void CapturedSpansPreserveBorrowedAndReplacementStorageAcrossRelease()
     {
-        var external = new NativeMemoryAllocator(8); NativeMemoryOwner owner = external.Allocate(8);
-        owner.Memory.Span.Fill(7); var native = new NativeMemoryAllocator(32);
+        var external = new NativeMemoryAllocator(8);
+        NativeMemoryOwner owner = external.Allocate(8);
+        owner.Memory.Span.Fill(7);
+        var native = new NativeMemoryAllocator(32);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
         ReadOnlySpan<byte> original = b.AsReadOnlySpan(0, 8), replacement = default;
         try
         {
-            b.Capacity = 12; replacement = b.AsReadOnlySpan(0, 12); b.SetByte(0, 99);
-            Assert.Equal(7, original[0]); Assert.Equal(99, replacement[0]);
-            b.Release(); owner.Dispose(); Assert.Equal(0, external.ReservedBytes); Assert.Equal(0, native.ReservedBytes);
-            Assert.Equal(7, original[0]); Assert.Equal(99, replacement[0]);
+            b.Capacity = 12;
+            replacement = b.AsReadOnlySpan(0, 12);
+            b.SetByte(0, 99);
+            Assert.Equal(7, original[0]);
+            Assert.Equal(99, replacement[0]);
+            b.Release();
+            owner.Dispose();
+            Assert.Equal(0, external.ReservedBytes);
+            Assert.Equal(0, native.ReservedBytes);
+            Assert.Equal(7, original[0]);
+            Assert.Equal(99, replacement[0]);
         }
         finally { if (b.RefCnt > 0) b.Release(); owner.Dispose(); }
-        Assert.Equal(0, external.ReservedBytes); Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(0, external.ReservedBytes);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void GrowingAliasedWritePinsInitialAndOwnedStorage(bool detachFirst)
     {
-        var external = new NativeMemoryAllocator(4); using NativeMemoryOwner owner = external.Allocate(4);
+        var external = new NativeMemoryAllocator(4);
+        using NativeMemoryOwner owner = external.Allocate(4);
         new byte[] { 1, 2, 3, 4 }.CopyTo(owner.Memory.Span);
         var native = new NativeMemoryAllocator(32);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
         try
         {
-            if (detachFirst) { b.Capacity = 8; b.Capacity = 4; }
-            ReadOnlySpan<byte> source = b.AsSpan(0, 4); b.Duplicate().WriteBytes(source);
+            if (detachFirst)
+            {
+                b.Capacity = 8;
+                b.Capacity = 4;
+            }
+            ReadOnlySpan<byte> source = b.AsSpan(0, 4);
+            b.Duplicate().WriteBytes(source);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, b.AsMemory(0, 8).ToArray());
-            Assert.Equal(4, b.WriterIndex); Assert.Equal(4, external.ReservedBytes);
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(4, external.ReservedBytes);
         }
         finally { b.Release(); }
         Assert.Equal(0, native.ReservedBytes);
@@ -273,23 +330,30 @@ public class WritableMemoryByteBufTest
     [Fact]
     public void InvalidWrappingArgumentsDoNotAllocateOrDisposeExternalStorage()
     {
-        var native = new NativeMemoryAllocator(8); using NativeMemoryOwner owner = native.Allocate(8);
+        var native = new NativeMemoryAllocator(8);
+        using NativeMemoryOwner owner = native.Allocate(8);
         var a = new UnpooledByteBufAllocator();
         Assert.Throws<ArgumentNullException>(() => new UnpooledDirectByteBuf(null, owner.Memory, 8));
         Assert.Throws<ArgumentException>(() => new UnpooledDirectByteBuf(a, new byte[8].AsMemory(), 8));
         Assert.Throws<ArgumentOutOfRangeException>(() => new UnpooledDirectByteBuf(a, owner.Memory, 7));
         Assert.Throws<ArgumentOutOfRangeException>(() => new UnpooledDirectByteBuf(a, owner.Memory, -1));
-        Assert.Equal(8, native.ReservedBytes); owner.Memory.Span[0] = 42;
+        Assert.Equal(8, native.ReservedBytes);
+        owner.Memory.Span[0] = 42;
     }
 
     [Fact]
     public void UnknownManagerHasFixedCapacityAndFinalReleaseDoesNotDisposeIt()
     {
-        using var storage = new ExternalStorage(2, 8); ByteBuf b = Unpooled.WrappedBuffer(storage.Memory);
-        Assert.False(b.IsDirect); Assert.Throws<NotSupportedException>(() => b.Capacity = 4);
-        Assert.Throws<NotSupportedException>(() => b.Capacity = 8); Assert.Equal(0, b.EnsureWritable(0, false));
-        Assert.Equal(1, b.EnsureWritable(1, true)); b.Release();
-        Assert.Throws<IllegalReferenceCountException>(() => b.SetByte(0, 1)); storage.Memory.Span[0] = 42;
+        using var storage = new ExternalStorage(2, 8);
+        ByteBuf b = Unpooled.WrappedBuffer(storage.Memory);
+        Assert.False(b.IsDirect);
+        Assert.Throws<NotSupportedException>(() => b.Capacity = 4);
+        Assert.Throws<NotSupportedException>(() => b.Capacity = 8);
+        Assert.Equal(0, b.EnsureWritable(0, false));
+        Assert.Equal(1, b.EnsureWritable(1, true));
+        b.Release();
+        Assert.Throws<IllegalReferenceCountException>(() => b.SetByte(0, 1));
+        storage.Memory.Span[0] = 42;
     }
 
     private sealed class ExternalStorage : IDisposable
@@ -303,7 +367,12 @@ public class WritableMemoryByteBufTest
             else if (kind == 2) { _manager = new ArrayMemoryManager(length); Memory = _manager.Memory; }
             else Memory = new byte[length];
         }
-        public void Dispose() { _native?.Dispose(); ((IDisposable)_manager)?.Dispose(); }
+
+        public void Dispose()
+        {
+            _native?.Dispose();
+            ((IDisposable)_manager)?.Dispose();
+        }
     }
 
     private sealed class ArrayMemoryManager : MemoryManager<byte>
@@ -313,15 +382,21 @@ public class WritableMemoryByteBufTest
         {
             _array = new byte[length];
         }
+
         public override Span<byte> GetSpan()
         {
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
+
         public override MemoryHandle Pin(int elementIndex = 0)
         {
             return _array.AsMemory(elementIndex).Pin();
         }
-        public override void Unpin() { }
+
+        public override void Unpin()
+        {
+        }
+
         protected override void Dispose(bool disposing)
         {
             _array = null;

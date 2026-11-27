@@ -48,11 +48,13 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
     {
         return RetainedSlice(ReaderIndex, ReadableBytes);
     }
+
     public override ByteBuf RetainedSlice(int index, int length)
     {
         CheckIndex(index, length);
         return PooledDerivedByteBuf.NewSlice(this, this, index, length);
     }
+
     public override ByteBuf RetainedDuplicate()
     {
         EnsureAccessible();

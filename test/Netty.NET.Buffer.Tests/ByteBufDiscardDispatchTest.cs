@@ -36,6 +36,7 @@ public class ByteBufDiscardDispatchTest
             Range = (destination, sourceIndex, length);
             if (ThrowOnCopy) throw Error;
         }
+
         public void BeforeFull()
         {
             ++Full;
@@ -45,16 +46,32 @@ public class ByteBufDiscardDispatchTest
 
     private sealed class Heap(Calls calls) : UnpooledHeapByteBuf(8, 8)
     {
-        public override ByteBuf DiscardReadBytes() { calls.BeforeFull(); return base.DiscardReadBytes(); }
+        public override ByteBuf DiscardReadBytes()
+        {
+            calls.BeforeFull();
+            return base.DiscardReadBytes();
+        }
+
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
-        { calls.BeforeCopy(this, index, source, sourceIndex, length); return base.SetBytes(index, source, sourceIndex, length); }
+        {
+            calls.BeforeCopy(this, index, source, sourceIndex, length);
+            return base.SetBytes(index, source, sourceIndex, length);
+        }
     }
 
     private sealed class Direct(Calls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 8, native)
     {
-        public override ByteBuf DiscardReadBytes() { calls.BeforeFull(); return base.DiscardReadBytes(); }
+        public override ByteBuf DiscardReadBytes()
+        {
+            calls.BeforeFull();
+            return base.DiscardReadBytes();
+        }
+
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
-        { calls.BeforeCopy(this, index, source, sourceIndex, length); return base.SetBytes(index, source, sourceIndex, length); }
+        {
+            calls.BeforeCopy(this, index, source, sourceIndex, length);
+            return base.SetBytes(index, source, sourceIndex, length);
+        }
     }
 
     public static IEnumerable<object[]> Positions()

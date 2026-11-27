@@ -57,6 +57,7 @@ public class DuplexChannelContractTest
         {
             received.TrySetResult((byte)buffer.ReadByte());
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);

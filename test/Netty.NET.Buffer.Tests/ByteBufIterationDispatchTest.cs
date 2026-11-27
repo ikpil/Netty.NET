@@ -32,11 +32,17 @@ public class ByteBufIterationDispatchTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            ++Closes;
+            return true;
+        }
     }
 
     private sealed class Storage : IDisposable
@@ -118,17 +124,20 @@ public class ByteBufIterationDispatchTest
             : indexed ? new byte[] { 2, 3 } : new byte[] { 1, 2, 3 }, visited);
         Assert.Equal(before + 1, storage.Inner.Records);
 
-        visited.Clear(); before = storage.Inner.Records;
+        visited.Clear();
+        before = storage.Inner.Records;
         Assert.Equal(-1, Scan(buffer, operation, value => { visited.Add(value); return true; }));
         Assert.Equal(descending ? indexed ? new byte[] { 5, 4, 3, 2 } : new byte[] { 6, 5, 4, 3, 2, 1 }
             : indexed ? new byte[] { 2, 3, 4, 5 } : new byte[] { 1, 2, 3, 4, 5, 6 }, visited);
         Assert.Equal(before + 1, storage.Inner.Records);
 
         var failure = new InvalidOperationException("processor failure");
-        int calls = 0; before = storage.Inner.Records;
+        int calls = 0;
+        before = storage.Inner.Records;
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Scan(buffer, operation, _ =>
         {
-            if (++calls == 2) throw failure;
+            if (++calls == 2)
+                throw failure;
             return true;
         })));
         Assert.Equal(2, calls);
@@ -146,9 +155,11 @@ public class ByteBufIterationDispatchTest
         Assert.Equal(0, storage.Outer.Records);
         Assert.Equal(0, storage.Inner.Closes);
         Assert.Equal(1, storage.Root.RefCnt);
-        Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
+        Assert.Equal(1, buffer.ReaderIndex);
+        Assert.Equal(7, buffer.WriterIndex);
         storage.Root.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
+        Assert.Equal(1, buffer.ReaderIndex);
+        Assert.Equal(7, buffer.WriterIndex);
         storage.Dispose();
         before = storage.Inner.Records;
         Assert.Throws<IllegalReferenceCountException>(() => Scan(buffer, operation, _ => throw failure));
@@ -162,7 +173,10 @@ public class ByteBufIterationDispatchTest
         public int Index, Length;
         public int Visit(int operation, Func<byte, bool> processor, int index = -1, int length = -1)
         {
-            ++Calls[operation]; Processor = processor; Index = index; Length = length;
+            ++Calls[operation];
+            Processor = processor;
+            Index = index;
+            Length = length;
             return 40 + operation;
         }
     }
@@ -173,14 +187,17 @@ public class ByteBufIterationDispatchTest
         {
             return observation.Visit(0, processor);
         }
+
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         {
             return observation.Visit(1, processor, index, length);
         }
+
         public override int ForEachByteDesc(Func<byte, bool> processor)
         {
             return observation.Visit(2, processor);
         }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             return observation.Visit(3, processor, index, length);
@@ -193,14 +210,17 @@ public class ByteBufIterationDispatchTest
         {
             return observation.Visit(0, processor);
         }
+
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         {
             return observation.Visit(1, processor, index, length);
         }
+
         public override int ForEachByteDesc(Func<byte, bool> processor)
         {
             return observation.Visit(2, processor);
         }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             return observation.Visit(3, processor, index, length);
@@ -255,6 +275,7 @@ public class ByteBufIterationDispatchTest
         Assert.Equal(descending ? new byte[] { 5, 42 } : new byte[] { 2, 42 }, visited);
         Assert.Equal(1, storage.Inner.Records);
         Assert.Equal(32, storage.Native.ReservedBytes);
-        Assert.Equal(1, storage.Facade.ReaderIndex); Assert.Equal(7, storage.Facade.WriterIndex);
+        Assert.Equal(1, storage.Facade.ReaderIndex);
+        Assert.Equal(7, storage.Facade.WriterIndex);
     }
 }

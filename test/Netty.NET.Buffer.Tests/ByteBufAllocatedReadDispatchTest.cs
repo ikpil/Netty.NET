@@ -33,23 +33,37 @@ public class ByteBufAllocatedReadDispatchTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf trackedObject) { ++Closes; return true; }
+
+        public bool Close(ByteBuf trackedObject)
+        {
+            ++Closes;
+            return true;
+        }
     }
 
     private sealed class Heap(IByteBufAllocator allocator) : UnpooledHeapByteBuf(allocator, 4, 16)
     {
         public int Calls;
-        public override ByteBuf ReadBytes(int length) { ++Calls; return base.ReadBytes(length); }
+        public override ByteBuf ReadBytes(int length)
+        {
+            ++Calls;
+            return base.ReadBytes(length);
+        }
     }
 
     private sealed class Composite(IByteBufAllocator allocator) : CompositeByteBuf(allocator, false, 16)
     {
         public int Calls;
-        public override ByteBuf ReadBytes(int length) { ++Calls; return base.ReadBytes(length); }
+        public override ByteBuf ReadBytes(int length)
+        {
+            ++Calls;
+            return base.ReadBytes(length);
+        }
     }
 
     private static ByteBuf Wrap(ByteBuf owner, Tracker tracker, int kind)

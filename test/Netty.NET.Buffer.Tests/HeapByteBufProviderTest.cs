@@ -38,23 +38,30 @@ public class HeapByteBufProviderTest
             Right = Allocator.HeapBuffer(128, 128);
             Left.SetBytes(0, Enumerable.Repeat((byte)0xa5, 128).ToArray());
             Right.SetBytes(0, Enumerable.Repeat((byte)0x5a, 128).ToArray());
-            Assert.False(Target.IsDirect); Assert.True(Target.IsContiguous);
+            Assert.False(Target.IsDirect);
+            Assert.True(Target.IsContiguous);
             Assert.Same(Allocator, Target.Alloc());
             if (pooled)
             {
                 var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
                 var b = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Target)).Allocation;
                 var c = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Right)).Allocation;
-                Assert.Same(a.Storage, b.Storage); Assert.Same(b.Storage, c.Storage);
-                Assert.True(b.Offset > 0); Assert.NotEqual(a.Offset, b.Offset); Assert.NotEqual(b.Offset, c.Offset);
+                Assert.Same(a.Storage, b.Storage);
+                Assert.Same(b.Storage, c.Storage);
+                Assert.True(b.Offset > 0);
+                Assert.NotEqual(a.Offset, b.Offset);
+                Assert.NotEqual(b.Offset, c.Offset);
             }
-            else Assert.IsAssignableFrom<UnpooledHeapByteBuf>(Owner(Target));
+            else
+                Assert.IsAssignableFrom<UnpooledHeapByteBuf>(Owner(Target));
         }
+
         public void Neighbors()
         {
             Assert.Equal(Enumerable.Repeat((byte)0xa5, 128), ByteBufUtil.GetBytes(Left, 0, 128));
             Assert.Equal(Enumerable.Repeat((byte)0x5a, 128), ByteBufUtil.GetBytes(Right, 0, 128));
         }
+
         public void Dispose()
         {
             foreach (ByteBuf buffer in new[] { Left, Target, Right })
@@ -139,19 +146,23 @@ public class HeapByteBufProviderTest
     public void ZeroFillPreservesIndicesAndNeighborsAcrossOriginalSmallWriteThreshold(bool pooled, int length)
     {
         using var s = new Storage(pooled);
-        byte[] expected = new byte[128]; Array.Fill(expected, (byte)0xcc);
+        byte[] expected = new byte[128];
+        Array.Fill(expected, (byte)0xcc);
         s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = length < 128 ? 1 : 0;
-        if (length > 128) Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetZero(index, length));
+        if (length > 128)
+            Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetZero(index, length));
         else
         {
             Array.Clear(expected, index, length);
             Assert.Same(s.Target, s.Target.SetZero(index, length));
         }
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Target, 0, 128));
-        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+        Assert.Equal(3, s.Target.ReaderIndex);
+        Assert.Equal(100, s.Target.WriterIndex);
         s.Target.SetIndex(0, 128).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+        Assert.Equal(3, s.Target.ReaderIndex);
+        Assert.Equal(100, s.Target.WriterIndex);
         s.Neighbors();
     }
 
@@ -161,16 +172,20 @@ public class HeapByteBufProviderTest
     public void WriteZeroReservesSpaceAndPublishesTheExactWriterAdvance(bool pooled, bool grow)
     {
         using var s = new Storage(pooled);
-        byte[] prefix = new byte[128]; Array.Fill(prefix, (byte)0xcc);
+        byte[] prefix = new byte[128];
+        Array.Fill(prefix, (byte)0xcc);
         int writer = grow ? 120 : 10;
         s.Target.SetBytes(0, prefix).SetIndex(3, writer).MarkReaderIndex().MarkWriterIndex();
         Assert.Same(s.Target, s.Target.WriteZero(16));
         Assert.Equal(grow ? 256 : 128, s.Target.Capacity);
-        byte[] expected = new byte[writer + 16]; Array.Fill(expected, (byte)0xcc, 0, writer);
+        byte[] expected = new byte[writer + 16];
+        Array.Fill(expected, (byte)0xcc, 0, writer);
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Target, 0, writer + 16));
-        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(writer + 16, s.Target.WriterIndex);
+        Assert.Equal(3, s.Target.ReaderIndex);
+        Assert.Equal(writer + 16, s.Target.WriterIndex);
         s.Target.ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(writer, s.Target.WriterIndex);
+        Assert.Equal(3, s.Target.ReaderIndex);
+        Assert.Equal(writer, s.Target.WriterIndex);
         s.Neighbors();
     }
 

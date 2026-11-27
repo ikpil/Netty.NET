@@ -764,10 +764,12 @@ public class SizeClassedChunkCacheTest : IDisposable
     {
         return (SizeClassedChunk[])ChunksField.GetValue(cache);
     }
+
     private static int Head(ThreadLocalSizeClassedChunkCache cache)
     {
         return (int)HeadField.GetValue(cache);
     }
+
     private static int Tail(ThreadLocalSizeClassedChunkCache cache)
     {
         return (int)TailField.GetValue(cache);

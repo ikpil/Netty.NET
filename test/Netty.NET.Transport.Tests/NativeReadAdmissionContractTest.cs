@@ -44,6 +44,7 @@ public class NativeReadAdmissionContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
     }
+
     [Fact]
     public async Task UdpCompletedReceiveWaitsForReadAndPreservesItsDatagram()
     {
@@ -65,6 +66,7 @@ public class NativeReadAdmissionContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
     }
+
     [Fact]
     public async Task TcpCompletedAcceptWaitsForServerReadAfterAutoReadIsDisabled()
     {
@@ -95,6 +97,7 @@ public class NativeReadAdmissionContractTest
             await Stop(group);
         }
     }
+
     [Fact]
     public async Task TcpCompletedReceiveWaitsForRegistrationAndMovesToItsNewWorker()
     {
@@ -125,6 +128,7 @@ public class NativeReadAdmissionContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
     }
+
     private static Task Stop(MultiThreadIoEventLoopGroup group)
     {
         return group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
@@ -142,6 +146,7 @@ public class NativeReadAdmissionContractTest
             if (_bytes.Count >= expectedLength)
                 received.TrySetResult(_bytes.ToArray());
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);
@@ -150,7 +155,12 @@ public class NativeReadAdmissionContractTest
     private sealed class CapturePacket(TaskCompletionSource<byte[]> received) : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
-        { Assert.True(ctx.Channel.IsRegistered); Assert.True(ctx.Executor.InEventLoop()); received.TrySetResult(packet.Content.ReadableMemory.ToArray()); }
+        {
+            Assert.True(ctx.Channel.IsRegistered);
+            Assert.True(ctx.Executor.InEventLoop());
+            received.TrySetResult(packet.Content.ReadableMemory.ToArray());
+        }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);

@@ -45,6 +45,7 @@ public interface IChannelPool : IDisposable, IAsyncDisposable
      * is explicitly closed..</strong>
      */
     Task<IChannel> AcquireAsync(CancellationToken cancellationToken = default);
+
     /**
      * Release a {@link Channel} back to this {@link ChannelPool}. The returned {@link Future} is notified once
      * the release is successful and failed otherwise. When failed the {@link Channel} will automatically closed.
@@ -54,6 +55,8 @@ public interface IChannelPool : IDisposable, IAsyncDisposable
      * the release is successful and failed otherwise. When failed the {@link Channel} will automatically closed.
      */
     Task ReleaseAsync(IChannel channel);
+
     void Close();
+
     Task CloseAsync();
 }

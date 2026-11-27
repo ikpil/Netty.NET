@@ -74,7 +74,10 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
         private bool _disposed;
 
         internal ComponentEnumerator(CompositeByteBuf buffer)
-        { _buffer = buffer; _size = buffer.NumComponents; }
+        {
+            _buffer = buffer;
+            _size = buffer.NumComponents;
+        }
 
         public ByteBuf Current => _current ?? throw new InvalidOperationException("The enumerator is not positioned on a component.");
         object IEnumerator.Current => Current;
@@ -99,6 +102,11 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
         {
             throw new NotSupportedException("Read-Only");
         }
-        public void Dispose() { _current = null; _disposed = true; }
+
+        public void Dispose()
+        {
+            _current = null;
+            _disposed = true;
+        }
     }
 }

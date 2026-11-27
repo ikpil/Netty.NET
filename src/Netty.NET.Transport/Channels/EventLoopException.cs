@@ -22,8 +22,19 @@ namespace Netty.NET.Transport.Channels;
  */
 public class EventLoopException : ChannelException
 {
-    public EventLoopException() { }
-    public EventLoopException(string message) : base(message) { }
-    public EventLoopException(string message, Exception cause) : base(message, cause) { }
-    public EventLoopException(Exception cause) : base(cause) { }
+    public EventLoopException()
+    {
+    }
+
+    public EventLoopException(string message) : base(message)
+    {
+    }
+
+    public EventLoopException(string message, Exception cause) : base(message, cause)
+    {
+    }
+
+    public EventLoopException(Exception cause) : base(cause)
+    {
+    }
 }

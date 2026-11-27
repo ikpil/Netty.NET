@@ -45,6 +45,7 @@ internal static class ChannelHandlerMask
         Type clazz = handler.GetType();
         return Masks.GetOrAdd(clazz, static (handlerType, handler) => new CachedMask(Mask0(handlerType, handler)), handler).Value;
     }
+
     /**
      * Calculate the {@code executionMask}.
      */
@@ -93,6 +94,7 @@ internal static class ChannelHandlerMask
 
         return mask;
     }
+
     private static bool IsSkippable(Delegate method)
     {
         // CLR: handler annotations preserve method metadata; binding selects the actual interface implementation.

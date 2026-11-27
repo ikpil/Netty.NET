@@ -31,12 +31,16 @@ public partial class PooledByteBufAllocator
     private static class Configuration
     {
         internal static readonly RuntimeDefaults Value = new();
-        static Configuration() { }
+        static Configuration()
+        {
+        }
     }
     private static class DefaultInstance
     {
         internal static readonly PooledByteBufAllocator Value = new(ByteBufUtil.PreferDirect);
-        static DefaultInstance() { }
+        static DefaultInstance()
+        {
+        }
     }
 
     /**
@@ -129,11 +133,13 @@ public partial class PooledByteBufAllocator
             if (page < 4096 || !BitOperations.IsPow2(page) || alignment > page)
             {
                 logger.Debug("Invalid pooled page size/alignment; using pageSize 8192 and alignment 0");
-                page = 8192; alignment = 0;
+                page = 8192;
+                alignment = 0;
             }
             // Java validates alignment shape when constructing the allocator, after
             // its page fallback. Preserve that timing instead of silently correcting it.
-            PageSize = page; Alignment = alignment;
+            PageSize = page;
+            Alignment = alignment;
             // 8192 << 9 = 4 MiB per chunk
             int order = SystemPropertyUtil.GetInt("io.netty.allocator.maxOrder", 9);
             if (order < 0 || order > 14 || ((long)page << order) > 1 << 30)
@@ -187,9 +193,11 @@ public partial class PooledByteBufAllocator
                     // Both system properties are specified. Use the non-deprecated one.
                     milliseconds = SystemPropertyUtil.GetLong("io.netty.allocator.cacheTrimIntervalMillis", 0);
                 }
-                else milliseconds = SystemPropertyUtil.GetLong("io.netty.allocation.cacheTrimIntervalMillis", 0);
+                else
+                    milliseconds = SystemPropertyUtil.GetLong("io.netty.allocation.cacheTrimIntervalMillis", 0);
             }
-            else milliseconds = SystemPropertyUtil.GetLong("io.netty.allocator.cacheTrimIntervalMillis", 0);
+            else
+                milliseconds = SystemPropertyUtil.GetLong("io.netty.allocator.cacheTrimIntervalMillis", 0);
             // CLR TimeSpan has a narrower range than Java's long millisecond delays.
             TrimPeriod = milliseconds <= 0 ? TimeSpan.Zero : TimeSpan.FromTicks(
                 Math.Min(milliseconds, long.MaxValue / TimeSpan.TicksPerMillisecond) * TimeSpan.TicksPerMillisecond);

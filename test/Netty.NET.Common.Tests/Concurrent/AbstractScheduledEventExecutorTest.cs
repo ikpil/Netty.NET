@@ -126,14 +126,17 @@ public class AbstractScheduledEventExecutorTest
         {
             return false;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return true;
         }
+
         public override void Shutdown()
         {
             // NOOP
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             throw new NotSupportedException();
@@ -143,14 +146,17 @@ public class AbstractScheduledEventExecutorTest
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
         }
+
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);

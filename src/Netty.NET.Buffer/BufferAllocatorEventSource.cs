@@ -36,7 +36,9 @@ namespace Netty.NET.Buffer;
 public sealed class BufferAllocatorEventSource : EventSource
 {
     public static readonly BufferAllocatorEventSource Log = new();
-    private BufferAllocatorEventSource() : base(SourceName(), EventSourceSettings.EtwManifestEventFormat) { }
+    private BufferAllocatorEventSource() : base(SourceName(), EventSourceSettings.EtwManifestEventFormat)
+    {
+    }
 
     [NonEvent]
     private static string SourceName()
@@ -206,18 +208,29 @@ public sealed class BufferAllocatorEventSource : EventSource
     [NonEvent]
     private void Publish(PendingEvent entry)
     {
-        Snapshot value = entry.Buffer; ChunkSnapshot chunk = entry.Chunk;
+        Snapshot value = entry.Buffer;
+        ChunkSnapshot chunk = entry.Chunk;
         string allocatorType = value.Adaptive || chunk.Adaptive ? typeof(AdaptiveByteBufAllocator).FullName : typeof(PooledByteBufAllocator).FullName;
         switch (entry.Id)
         {
-            case 1: AllocateBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity,
-                value.Direct, value.Address, value.ChunkPooled, value.ChunkThreadLocal); break;
-            case 2: FreeBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity, value.Direct, value.Address); break;
-            case 3: ReallocateBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity,
-                value.Direct, value.Address, entry.NewCapacity); break;
+            case 1:
+                AllocateBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity,
+                value.Direct, value.Address, value.ChunkPooled, value.ChunkThreadLocal);
+                break;
+            case 2:
+                FreeBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity, value.Direct, value.Address);
+                break;
+            case 3:
+                ReallocateBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity,
+                value.Direct, value.Address, entry.NewCapacity);
+                break;
             // Chunks in the pooled allocator are always shared.
-            case 4: AllocateChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled, chunk.ThreadLocal); break;
-            case 5: FreeChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled); break;
+            case 4:
+                AllocateChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled, chunk.ThreadLocal);
+                break;
+            case 5:
+                FreeChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled);
+                break;
         }
     }
 

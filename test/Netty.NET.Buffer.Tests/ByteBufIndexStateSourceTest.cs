@@ -44,6 +44,7 @@ public class ByteBufIndexStateSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();

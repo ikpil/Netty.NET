@@ -46,10 +46,13 @@ public class UnsafeByteBufUtilTest
             };
             Target.SetZero(0, length);
         }
+
         public void Dispose()
         {
-            if (Target.RefCnt > 0) Assert.True(Target.Release());
-            Pool?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
+            if (Target.RefCnt > 0)
+                Assert.True(Target.Release());
+            Pool?.Dispose();
+            Assert.Equal(0, Native.ReservedBytes);
         }
     }
 
@@ -70,12 +73,14 @@ public class UnsafeByteBufUtilTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void TestSetBytesOnReadOnlyByteBuffer(int provider)
     {
-        byte[] data = Data(); ReadOnlyMemory<byte> readOnly = data;
+        byte[] data = Data();
+        ReadOnlyMemory<byte> readOnly = data;
         using var s = new Storage(provider, data.Length);
         s.Target.SetBytes(0, readOnly.Span);
         Assert.Equal(data, ByteBufUtil.GetBytes(s.Target, 0, data.Length));
         Assert.Equal(data, readOnly.ToArray());
-        Assert.Equal(0, s.Target.ReaderIndex); Assert.Equal(0, s.Target.WriterIndex);
+        Assert.Equal(0, s.Target.ReaderIndex);
+        Assert.Equal(0, s.Target.WriterIndex);
         Assert.Equal(1, s.Target.RefCnt);
     }
 
@@ -108,25 +113,31 @@ public class UnsafeByteBufUtilTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void TestSetBytesWithByteArray(int provider)
     {
-        byte[] data = Data(); using var s = new Storage(provider, data.Length);
+        byte[] data = Data();
+        using var s = new Storage(provider, data.Length);
         s.Target.SetIndex(2, 7).MarkReaderIndex().MarkWriterIndex();
         Assert.Same(s.Target, s.Target.SetBytes(0, data.AsSpan()));
         Assert.Equal(data, ByteBufUtil.GetBytes(s.Target, 0, data.Length));
-        Assert.Equal(2, s.Target.ReaderIndex); Assert.Equal(7, s.Target.WriterIndex);
+        Assert.Equal(2, s.Target.ReaderIndex);
+        Assert.Equal(7, s.Target.WriterIndex);
         s.Target.SetIndex(0, 10).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(2, s.Target.ReaderIndex); Assert.Equal(7, s.Target.WriterIndex);
+        Assert.Equal(2, s.Target.ReaderIndex);
+        Assert.Equal(7, s.Target.WriterIndex);
     }
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void TestSetBytesWithZeroLength(int provider)
     {
-        byte[] data = Data(); using var s = new Storage(provider, data.Length);
-        s.Target.SetBytes(0, data); s.Target.SetIndex(2, 7);
+        byte[] data = Data();
+        using var s = new Storage(provider, data.Length);
+        s.Target.SetBytes(0, data);
+        s.Target.SetIndex(2, 7);
         byte[] before = ByteBufUtil.GetBytes(s.Target, 0, 10);
         Assert.Same(s.Target, s.Target.SetBytes(0, data.AsSpan(0, 0)));
         Assert.Equal(before, ByteBufUtil.GetBytes(s.Target, 0, 10));
-        Assert.Equal(2, s.Target.ReaderIndex); Assert.Equal(7, s.Target.WriterIndex);
+        Assert.Equal(2, s.Target.ReaderIndex);
+        Assert.Equal(7, s.Target.WriterIndex);
     }
 
     [Fact]
@@ -140,7 +151,8 @@ public class UnsafeByteBufUtilTest
         Assert.Same(s.Target, s.Target.SetBytes(0, missing.AsSpan()));
         Assert.Same(s.Target, s.Target.SetBytes(8, default(ReadOnlySpan<byte>)));
         Assert.Equal(new byte[8], ByteBufUtil.GetBytes(s.Target, 0, 8));
-        Assert.Equal(0, s.Target.ReaderIndex); Assert.Equal(0, s.Target.WriterIndex);
+        Assert.Equal(0, s.Target.ReaderIndex);
+        Assert.Equal(0, s.Target.WriterIndex);
     }
 
     public static IEnumerable<object[]> InvalidRanges()
@@ -165,13 +177,16 @@ public class UnsafeByteBufUtilTest
     public void TestSetBytesOutOfBounds(int provider, int capacity, int sourceLength, int index, int sourceIndex, int length)
     {
         using var s = new Storage(provider, capacity);
-        byte[] data = new byte[sourceLength]; Array.Fill(data, (byte)0xee);
+        byte[] data = new byte[sourceLength];
+        Array.Fill(data, (byte)0xee);
         s.Target.SetIndex(1, capacity - 1).MarkReaderIndex().MarkWriterIndex();
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetBytes(index, data.AsSpan(sourceIndex, length)));
         Assert.Equal(new byte[capacity], ByteBufUtil.GetBytes(s.Target, 0, capacity));
-        Assert.Equal(1, s.Target.ReaderIndex); Assert.Equal(capacity - 1, s.Target.WriterIndex);
+        Assert.Equal(1, s.Target.ReaderIndex);
+        Assert.Equal(capacity - 1, s.Target.WriterIndex);
         s.Target.SetIndex(0, capacity).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(1, s.Target.ReaderIndex); Assert.Equal(capacity - 1, s.Target.WriterIndex);
+        Assert.Equal(1, s.Target.ReaderIndex);
+        Assert.Equal(capacity - 1, s.Target.WriterIndex);
         Assert.Equal(1, s.Target.RefCnt);
     }
 
@@ -226,14 +241,19 @@ public class UnsafeByteBufUtilTest
         byte[] data = Enumerable.Range(0, length + 16).Select(i => unchecked((byte)(i * 7 + 1))).ToArray();
         s.Target.SetBytes(0, data).SetIndex(3, length + 11).MarkReaderIndex().MarkWriterIndex();
         using var output = new Output(fail);
-        if (fail) Assert.Throws<IOException>(() => s.Target.GetBytes(5, output, length));
-        else Assert.Same(s.Target, s.Target.GetBytes(5, output, length));
+        if (fail)
+            Assert.Throws<IOException>(() => s.Target.GetBytes(5, output, length));
+        else
+            Assert.Same(s.Target, s.Target.GetBytes(5, output, length));
         Assert.Equal(data.Skip(5).Take(fail ? 17 : length), output.ToArray());
-        Assert.Equal(1, output.Calls); Assert.True(output.CanWrite);
+        Assert.Equal(1, output.Calls);
+        Assert.True(output.CanWrite);
         Assert.Equal(data, ByteBufUtil.GetBytes(s.Target, 0, data.Length));
-        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(length + 11, s.Target.WriterIndex);
+        Assert.Equal(3, s.Target.ReaderIndex);
+        Assert.Equal(length + 11, s.Target.WriterIndex);
         s.Target.SetIndex(0, data.Length).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(length + 11, s.Target.WriterIndex);
+        Assert.Equal(3, s.Target.ReaderIndex);
+        Assert.Equal(length + 11, s.Target.WriterIndex);
     }
 
     public static IEnumerable<object[]> FactorySizes()

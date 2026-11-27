@@ -32,6 +32,7 @@ internal sealed class PendingBytesTracker
         _pipeline = (DefaultChannelPipeline)channel.Pipeline;
         _estimator = _pipeline.EstimatorHandle() ?? throw new InvalidOperationException("Message size estimator returned a null handle.");
     }
+
     internal int Size(object msg)
     {
         return _estimator.Size(msg);
@@ -54,6 +55,7 @@ internal sealed class PendingBytesTracker
     {
         Buffer?.IncrementPendingOutboundBytes(bytes);
     }
+
     internal void DecrementPendingOutboundBytes(long bytes)
     {
         Buffer?.DecrementPendingOutboundBytes(bytes);

@@ -49,7 +49,10 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
     }
 
     protected override void AutoReadCleared()
-    { if (Channel is AbstractChannel channel) channel.ClearReadPending(); }
+    {
+        if (Channel is AbstractChannel channel)
+            channel.ClearReadPending();
+    }
 
     private static readonly ChannelOption[] ListenerOptions = {
         ChannelOption.SO_RCVBUF, ChannelOption.SO_REUSEADDR, ChannelOption.SO_BACKLOG

@@ -86,5 +86,7 @@ internal sealed class HAProxyConstants
             (byte) 'Y',
     };
 
-    private HAProxyConstants() { }
+    private HAProxyConstants()
+    {
+    }
 }

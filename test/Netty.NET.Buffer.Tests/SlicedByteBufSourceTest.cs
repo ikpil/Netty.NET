@@ -48,6 +48,7 @@ public class SlicedByteBufSourceTest
             Parent = path >= 5 ? Root.RetainedSlice(0, 32) : Root;
             View = Parent.Slice(offset, 16);
         }
+
         public void Dispose()
         {
             if (!ReferenceEquals(Parent, Root) && Parent.RefCnt > 0) Parent.Release(Parent.RefCnt);
@@ -116,11 +117,17 @@ public class SlicedByteBufSourceTest
     public void FixedLengthIndependentMarksAndOwnershipSurviveParentCapacityChanges(int path, int offset)
     {
         using var s = new Storage(path, offset);
-        Assert.Equal(0, s.View.ReaderIndex); Assert.Equal(16, s.View.WriterIndex);
-        s.View.ReaderIndex = 1; s.View.ResetReaderIndex(); Assert.Equal(0, s.View.ReaderIndex);
-        s.View.WriterIndex = 15; s.View.ResetWriterIndex(); Assert.Equal(0, s.View.WriterIndex);
+        Assert.Equal(0, s.View.ReaderIndex);
+        Assert.Equal(16, s.View.WriterIndex);
+        s.View.ReaderIndex = 1;
+        s.View.ResetReaderIndex();
+        Assert.Equal(0, s.View.ReaderIndex);
+        s.View.WriterIndex = 15;
+        s.View.ResetWriterIndex();
+        Assert.Equal(0, s.View.WriterIndex);
         // Run ensureWritable and verify this doesn't change any indexes.
-        s.View.EnsureWritable(16); Assert.Equal(0, s.View.WriterIndex);
+        s.View.EnsureWritable(16);
+        Assert.Equal(0, s.View.WriterIndex);
         s.View.WriterIndex = 16;
         Assert.Throws<ArgumentOutOfRangeException>(() => s.View.EnsureWritable(1));
         Assert.Throws<NotSupportedException>(() => s.View.Capacity = 16);
@@ -136,21 +143,28 @@ public class SlicedByteBufSourceTest
         Assert.Equal(path >= 5 ? 32 : 16, duplicate.Capacity);
         Assert.Equal(path >= 5 ? 64 : 16, duplicate.MaxCapacity);
         int count = s.View.RefCnt;
-        s.View.Retain(); Assert.Equal(count + 1, nested.RefCnt);
-        Assert.False(nested.Release()); Assert.Equal(count, s.View.RefCnt);
+        s.View.Retain();
+        Assert.Equal(count + 1, nested.RefCnt);
+        Assert.False(nested.Release());
+        Assert.Equal(count, s.View.RefCnt);
         Assert.Equal(path >= 5 ? 2 : 1, s.Root.RefCnt);
-        Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(31, s.Root.WriterIndex);
+        Assert.Equal(1, s.Root.ReaderIndex);
+        Assert.Equal(31, s.Root.WriterIndex);
         s.Root.ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(1, s.Root.ReaderIndex); Assert.Equal(31, s.Root.WriterIndex);
+        Assert.Equal(1, s.Root.ReaderIndex);
+        Assert.Equal(31, s.Root.WriterIndex);
 
         s.Root.Capacity = offset + 4;
         Assert.Equal(16, s.View.Capacity);
         Assert.Equal(path >= 5 ? offset + 4 : 16, duplicate.Capacity);
-        Assert.Equal(10, nested.Capacity); Assert.Equal(0, s.View.GetByte(3));
+        Assert.Equal(10, nested.Capacity);
+        Assert.Equal(0, s.View.GetByte(3));
         // CLR safety: validate the live parent's capacity even if pooled physical storage is larger.
         Assert.Throws<ArgumentOutOfRangeException>(() => s.View.GetLong(0));
         s.Root.Capacity = 32;
-        s.View.SetByte(4, 99); Assert.Equal(99, s.Root.GetByte(offset + 4));
-        Assert.Equal(16, s.View.Capacity); Assert.Equal(16, s.View.WriterIndex);
+        s.View.SetByte(4, 99);
+        Assert.Equal(99, s.Root.GetByte(offset + 4));
+        Assert.Equal(16, s.View.Capacity);
+        Assert.Equal(16, s.View.WriterIndex);
     }
 }

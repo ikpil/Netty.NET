@@ -27,32 +27,42 @@ internal sealed class SourceTestChannel : AbstractChannel
     {
         SetActive(true);
     }
+
     protected override EndPoint LocalAddress0()
     {
         return null;
     }
+
     protected override EndPoint RemoteAddress0()
     {
         return null;
     }
+
     protected override IChannelConfig NewConfig()
     {
         return new TestConfig(this);
     }
+
     protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
     {
         return Task.CompletedTask;
     }
+
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
     {
         // NOOP
         return Task.CompletedTask;
     }
-    protected override void DoClose() { }
+
+    protected override void DoClose()
+    {
+    }
+
     protected override void DoBeginRead()
     {
         // NOOP
     }
+
     protected override Task DoWrite(object msg)
     {
         // NOOP

@@ -37,15 +37,18 @@ public class SingleThreadEventExecutorTest
         {
             thread = new Thread(() => { runLatch.Signal(); task(); }) { IsBackground = true };
         }
+
         internal void AwaitStarted()
         {
             Assert.True(SpinWait.SpinUntil(() => (thread.ThreadState & System.Threading.ThreadState.Unstarted) == 0,
                 TimeSpan.FromSeconds(5)));
         }
+
         internal void AwaitRunnableExecution()
         {
             Assert.True(runLatch.Wait(TimeSpan.FromSeconds(5)));
         }
+
         internal void Join()
         {
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -60,20 +63,35 @@ public class SingleThreadEventExecutorTest
             threads.Add(wrapper);
             return wrapper.thread;
         }
+
         internal TestThread Take()
         {
             Assert.True(threads.TryTake(out var thread, TimeSpan.FromSeconds(5)));
             return thread;
         }
-        internal void Drain() { while (threads.TryTake(out var thread)) thread.Join(); }
+
+        internal void Drain()
+        {
+            while (threads.TryTake(out var thread))
+                thread.Join();
+        }
     }
     private class LoopExecutor : SingleThreadEventExecutor
     {
         internal Action started;
-        internal LoopExecutor(IThreadFactory factory, bool wake = true) : base(null, factory, wake) { }
-        internal LoopExecutor(Action<Action> executor, bool wake = true) : base(null, executor, wake) { }
+        internal LoopExecutor(IThreadFactory factory, bool wake = true) : base(null, factory, wake)
+        {
+        }
+
+        internal LoopExecutor(Action<Action> executor, bool wake = true) : base(null, executor, wake)
+        {
+        }
+
         internal LoopExecutor(Action<Action> executor, IQueue<Action> queue)
-            : base(null, executor, false, queue, RejectedExecutionHandlers.Reject()) { }
+            : base(null, executor, false, queue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         protected override void Run()
         {
             started?.Invoke();
@@ -87,11 +105,15 @@ public class SingleThreadEventExecutorTest
     private sealed class SuspendingSingleThreadEventExecutor : SingleThreadEventExecutor
     {
         internal SuspendingSingleThreadEventExecutor(IThreadFactory factory)
-            : base(null, factory, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+            : base(null, factory, false, true, int.MaxValue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         protected override void Run()
         {
             while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Invoke();
         }
+
         protected internal override void Wakeup(bool inEventLoop)
         {
             InterruptThread();
@@ -100,7 +122,10 @@ public class SingleThreadEventExecutorTest
     private sealed class CountingExecutor : SingleThreadEventExecutor
     {
         internal CountingExecutor(Action<Action> executor)
-            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject())
+        {
+        }
+
         protected override void Run()
         {
             throw new Exception("must not run");
@@ -113,6 +138,7 @@ public class SingleThreadEventExecutorTest
         {
             latch.Signal();
         }
+
         internal void Await()
         {
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
@@ -123,10 +149,12 @@ public class SingleThreadEventExecutorTest
     {
         executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     }
+
     private static void Sync(Task future)
     {
         future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     }
+
     private static void Suspend(SingleThreadEventExecutor executor, int sleep = 50)
     {
         var time = Stopwatch.StartNew();
@@ -383,6 +411,7 @@ public class SingleThreadEventExecutorTest
             executor.ShutdownGracefullyAsync().GetAwaiter().GetResult());
         Assert.True(executor.IsShutdown());
     }
+
     private static void ExecuteShouldFail(IExecutor executor)
     {
         Assert.Throws<RejectedExecutionException>(() => executor.Execute(() =>
@@ -421,18 +450,22 @@ public class SingleThreadEventExecutorTest
     {
         return TestInvokeInEventLoop(true, false);
     }
+
     [Fact] public Task TestInvokeAnyInEventLoopWithTimeout()
     {
         return TestInvokeInEventLoop(true, true);
     }
+
     [Fact] public Task TestInvokeAllInEventLoop()
     {
         return TestInvokeInEventLoop(false, false);
     }
+
     [Fact] public Task TestInvokeAllInEventLoopWithTimeout()
     {
         return TestInvokeInEventLoop(false, true);
     }
+
     private static async Task TestInvokeInEventLoop(bool any, bool timeout)
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("compose"));
@@ -463,11 +496,15 @@ public class SingleThreadEventExecutorTest
     }
     private sealed class LazyExecutor : LoopExecutor
     {
-        internal LazyExecutor() : base(new DefaultThreadFactory("lazy"), false) { }
+        internal LazyExecutor() : base(new DefaultThreadFactory("lazy"), false)
+        {
+        }
+
         protected override bool WakesUpForTask(Action task)
         {
             return task.Target is not LazyLatchTask;
         }
+
         protected override void Run()
         {
             while (!ConfirmShutdown())
@@ -476,6 +513,7 @@ public class SingleThreadEventExecutorTest
                 RunAllTasks();
             }
         }
+
         protected internal override void Wakeup(bool inEventLoop)
         {
             if (!inEventLoop) { lock (this) Monitor.PulseAll(this); }
@@ -519,7 +557,10 @@ public class SingleThreadEventExecutorTest
 
     private sealed class NoRemoveQueue : LinkedBlockingQueue<Action>
     {
-        internal NoRemoveQueue() : base(int.MaxValue) { }
+        internal NoRemoveQueue() : base(int.MaxValue)
+        {
+        }
+
         public override bool TryRemove(Action task)
         {
             throw new NotSupportedException();
@@ -531,7 +572,10 @@ public class SingleThreadEventExecutorTest
         internal int rejects;
         internal readonly ConcurrentQueue<Task> submittedTasks = new();
         internal AfterShutdownExecutor(IQueue<Action> queue)
-            : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")).Execute, queue) { }
+            : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")).Execute, queue)
+        {
+        }
+
         protected override bool ConfirmShutdown()
         {
             bool result = base.ConfirmShutdown();
@@ -604,6 +648,7 @@ public class SingleThreadEventExecutorTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void TestTakeTaskAlwaysHasTask()
     {
@@ -631,6 +676,7 @@ public class SingleThreadEventExecutorTest
         {
             this.exception = exception;
         }
+
         protected override void Run()
         {
             throw exception;

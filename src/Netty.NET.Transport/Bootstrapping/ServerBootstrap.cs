@@ -51,12 +51,23 @@ public class ServerBootstrap : AbstractBootstrap
     internal IChannelHandler ConfiguredHandler => _handler;
     internal IChannelHandler ConfiguredChildHandler => _childHandler;
     internal EndPoint ConfiguredLocalAddress => _local;
-    internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
-    internal KeyValuePair<ChannelOption, object>[] NewChildOptionsArray() { lock (_optionsGate) return _childOptions.ToArray(); }
+    internal KeyValuePair<ChannelOption, object>[] NewOptionsArray()
+    {
+        lock (_optionsGate)
+            return _options.ToArray();
+    }
+
+    internal KeyValuePair<ChannelOption, object>[] NewChildOptionsArray()
+    {
+        lock (_optionsGate)
+            return _childOptions.ToArray();
+    }
+
     internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
     {
         return _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
     }
+
     internal KeyValuePair<IAttributeKey, object>[] NewChildAttributesArray()
     {
         return _childAttributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
@@ -108,6 +119,7 @@ public class ServerBootstrap : AbstractBootstrap
         _childGroup = ObjectUtil.CheckNotNull(childGroup, "childGroup");
         return this;
     }
+
     /**
      * @deprecated Use {@link #channelFactory(io.netty.channel.ChannelFactory)} instead.
      */
@@ -129,6 +141,7 @@ public class ServerBootstrap : AbstractBootstrap
         _factory = channelFactory;
         return this;
     }
+
     /**
      * The {@link Class} which is used to create {@link Channel} instances from.
      * You either use this or {@link #channelFactory(io.netty.channel.ChannelFactory)} if your
@@ -142,12 +155,14 @@ public class ServerBootstrap : AbstractBootstrap
         ObjectUtil.CheckNotNull(channelClass, "channelClass");
         return ChannelFactory(new ReflectiveChannelFactory<IServerChannel>(channelClass).NewChannel);
     }
+
     // CLR: the generic form supplies the class at compile time and uses the same reflective factory.
     public ServerBootstrap Channel<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>()
         where T : IServerChannel, new()
     {
         return Channel(typeof(T));
     }
+
     /**
      * the {@link ChannelHandler} to use for serving the requests.
      */
@@ -156,6 +171,7 @@ public class ServerBootstrap : AbstractBootstrap
         _handler = ObjectUtil.CheckNotNull(handler, "handler");
         return this;
     }
+
     /**
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
      */
@@ -164,6 +180,7 @@ public class ServerBootstrap : AbstractBootstrap
         _childHandler = ObjectUtil.CheckNotNull(childHandler, "childHandler");
         return this;
     }
+
     /**
      * The {@link SocketAddress} which is used to bind the local "end" to.
      */
@@ -172,6 +189,7 @@ public class ServerBootstrap : AbstractBootstrap
         _local = localAddress;
         return this;
     }
+
     /**
      * @see #localAddress(SocketAddress)
      */
@@ -180,6 +198,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         return LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
     }
+
     /**
      * @see #localAddress(SocketAddress)
      */
@@ -187,6 +206,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         return LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
     }
+
     /**
      * @see #localAddress(SocketAddress)
      */
@@ -194,6 +214,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         return LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
     }
+
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
@@ -214,6 +235,7 @@ public class ServerBootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they get created
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
@@ -235,6 +257,7 @@ public class ServerBootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Allow to specify an initial attribute of the newly created {@link Channel}.  If the {@code value} is
      * {@code null}, the attribute of the specified {@code key} is removed.
@@ -252,6 +275,7 @@ public class ServerBootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Set the specific {@link AttributeKey} with the given value on every child {@link Channel}. If the value is
      * {@code null} the {@link AttributeKey} is removed
@@ -269,6 +293,7 @@ public class ServerBootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Validate all the parameters. Sub-classes may override this, but should
      * call the super method in that case.
@@ -295,6 +320,7 @@ public class ServerBootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Returns a deep clone of this bootstrap which has the identical configuration.  This method is useful when making
      * multiple {@link Channel}s with similar settings.  Please note that this method does not clone the
@@ -312,6 +338,7 @@ public class ServerBootstrap : AbstractBootstrap
         foreach (var pair in _childAttributes) copy._childAttributes[pair.Key] = pair.Value;
         return copy;
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -325,6 +352,7 @@ public class ServerBootstrap : AbstractBootstrap
         }
         return BindAsync(localAddress, cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -334,6 +362,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         return BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -341,6 +370,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         return BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -348,6 +378,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         return BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -363,6 +394,7 @@ public class ServerBootstrap : AbstractBootstrap
         Task regFuture = InitAndRegister(cancellationToken, out IChannel channel);
         return AbstractBootstrap.DoBind(regFuture, channel, address, cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and register it with an {@link EventLoop}.
      */

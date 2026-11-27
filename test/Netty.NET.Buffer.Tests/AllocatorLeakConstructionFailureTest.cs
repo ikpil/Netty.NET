@@ -32,6 +32,7 @@ public class AllocatorLeakConstructionFailureTest
         for (int mode = 0; mode < 2; ++mode)
             if (provider != 0 || method != 1) yield return [provider, method, mode];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void DetectorFailureReleasesFactoryOwnedBufferAndPreservesOriginalException(int provider, int method, int mode)
@@ -70,6 +71,7 @@ public class AllocatorLeakConstructionFailureTest
             if (mode == 0) throw state.Failure;
             return new Tracker(state);
         }
+
         public override bool IsRecordEnabled()
         {
             throw state.Failure;
@@ -77,22 +79,33 @@ public class AllocatorLeakConstructionFailureTest
     }
     private sealed class Tracker(FailureFactory state) : IResourceLeakTracker<ByteBuf>
     {
-        public void Record() { }
-        public void Record(object hint) { }
+        public void Record()
+        {
+        }
+
+        public void Record(object hint)
+        {
+        }
+
         public bool Close(ByteBuf value)
         {
-            Assert.Same(state.Tracked, value); ++state.Closes;
-            if (state.FailClose) throw new InvalidOperationException("secondary close failure");
+            Assert.Same(state.Tracked, value);
+            ++state.Closes;
+            if (state.FailClose)
+                throw new InvalidOperationException("secondary close failure");
             return true;
         }
     }
     // Runs in a fresh collectible context so the process-wide detector is installed before ByteBuf initializes.
     private static void Reproduce(int provider, int method, int mode)
     {
-        var factory = new FailureFactory(mode); ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory);
+        var factory = new FailureFactory(mode);
+        ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory);
         foreach (bool failClose in new[] { false, true })
         {
-            factory.FailClose = failClose; factory.Tracked = null; factory.Closes = 0;
+            factory.FailClose = failClose;
+            factory.Tracked = null;
+            factory.Closes = 0;
             var native = new NativeMemoryAllocator();
             IByteBufAllocator allocator = provider switch
             {
@@ -107,23 +120,36 @@ public class AllocatorLeakConstructionFailureTest
                 {
                     return method switch
                     {
-                        0 => allocator.DirectBuffer(64, 128), 1 => allocator.HeapBuffer(64, 128),
-                        2 => allocator.CompositeHeapBuffer(2), 3 => allocator.CompositeDirectBuffer(2),
-                        4 => allocator.Buffer(64, 128), 5 => allocator.IoBuffer(64, 128), _ => allocator.CompositeBuffer(2)
+                        0 => allocator.DirectBuffer(64, 128),
+                        1 => allocator.HeapBuffer(64, 128),
+                        2 => allocator.CompositeHeapBuffer(2),
+                        3 => allocator.CompositeDirectBuffer(2),
+                        4 => allocator.Buffer(64, 128),
+                        5 => allocator.IoBuffer(64, 128),
+                        _ => allocator.CompositeBuffer(2)
                     };
                 }
                 Assert.Same(factory.Failure, Assert.Throws<InvalidOperationException>(() => Request()));
-                Assert.NotNull(factory.Tracked); Assert.Equal(0, factory.Tracked.RefCnt);
+                Assert.NotNull(factory.Tracked);
+                Assert.Equal(0, factory.Tracked.RefCnt);
                 Assert.Equal(mode == 0 ? 0 : 1, factory.Closes);
                 if (allocator is PooledByteBufAllocator pooled)
-                { Assert.True(pooled.PinnedHeapMemory <= 0); Assert.True(pooled.PinnedDirectMemory <= 0); }
+                {
+                    Assert.True(pooled.PinnedHeapMemory <= 0);
+                    Assert.True(pooled.PinnedDirectMemory <= 0);
+                }
                 if (allocator is UnpooledByteBufAllocator unpooled)
-                { Assert.Equal(0, unpooled.Metric.UsedHeapMemory); Assert.Equal(0, unpooled.Metric.UsedDirectMemory); }
+                {
+                    Assert.Equal(0, unpooled.Metric.UsedHeapMemory);
+                    Assert.Equal(0, unpooled.Metric.UsedDirectMemory);
+                }
             }
             finally
             {
-                if (factory.Tracked?.RefCnt > 0) factory.Tracked.Release();
-                (allocator as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
+                if (factory.Tracked?.RefCnt > 0)
+                    factory.Tracked.Release();
+                (allocator as IDisposable)?.Dispose();
+                Assert.Equal(0, native.ReservedBytes);
             }
         }
     }

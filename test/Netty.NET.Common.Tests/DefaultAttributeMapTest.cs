@@ -22,17 +22,20 @@ public class DefaultAttributeMapTest {
 
     private DefaultAttributeMap map;
 
-    public DefaultAttributeMapTest() {
+    public DefaultAttributeMapTest()
+    {
         map = new DefaultAttributeMap();
     }
 
     [Fact]
-    public void TestMapExists() {
+    public void TestMapExists()
+    {
         Assert.NotNull(map);
     }
 
     [Fact]
-    public void TestGetSetString() {
+    public void TestGetSetString()
+    {
         AttributeKey<string> key = AttributeKey.ValueOf<string>("Nothing");
         IAttribute<string> one = map.Attr(key);
 
@@ -49,7 +52,8 @@ public class DefaultAttributeMapTest {
     }
 
     [Fact]
-    public void TestGetSetInt() {
+    public void TestGetSetInt()
+    {
         AttributeKey<object> key = AttributeKey.ValueOf<object>("Nada");
         IAttribute<object> one = map.Attr(key);
 
@@ -67,7 +71,8 @@ public class DefaultAttributeMapTest {
 
     // See https://github.com/netty/netty/issues/2523
     [Fact]
-    public void TestSetRemove() {
+    public void TestSetRemove()
+    {
         AttributeKey<object> key = AttributeKey.ValueOf<object>("key");
 
         IAttribute<object> attr = map.Attr(key);
@@ -83,24 +88,30 @@ public class DefaultAttributeMapTest {
     }
 
     [Fact]
-    public void TestHasAttrRemoved() {
+    public void TestHasAttrRemoved()
+    {
         AttributeKey<object>[] keys = new AttributeKey<object>[20];
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 20; i++)
+        {
             keys[i] = AttributeKey.ValueOf<object>(i.ToString());
         }
-        for (int i = 10; i < 20; i++) {
+        for (int i = 10; i < 20; i++)
+        {
             map.Attr(keys[i]);
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             map.Attr(keys[i]);
         }
-        for (int i = 10; i < 20; i++) {
+        for (int i = 10; i < 20; i++)
+        {
             AttributeKey<object> key = AttributeKey.ValueOf<object>(i.ToString());
             Assert.True(map.HasAttr(key));
             map.Attr(key).Remove();
             Assert.False(map.HasAttr(key));
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             AttributeKey<object> key = AttributeKey.ValueOf<object>(i.ToString());
             Assert.True(map.HasAttr(key));
             map.Attr(key).Remove();
@@ -109,7 +120,8 @@ public class DefaultAttributeMapTest {
     }
 
     [Fact]
-    public void TestGetAndSetWithNull() {
+    public void TestGetAndSetWithNull()
+    {
         AttributeKey<object> key = AttributeKey.ValueOf<object>("key");
 
         IAttribute<object> attr = map.Attr(key);

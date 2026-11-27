@@ -39,12 +39,16 @@ public class ConsolidationTest
             ByteBuf Segment(string text)
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(text);
-                if (padded) bytes = new byte[] { 170 }.Concat(bytes).Append((byte)187).ToArray();
+                if (padded)
+                    bytes = new byte[] { 170 }.Concat(bytes).Append((byte)187).ToArray();
                 bool direct = kind == 1 || kind == 2 && Leaves.Count % 2 == 1;
                 ByteBuf b = direct ? new UnpooledDirectByteBuf(bytes.Length, bytes.Length, Native).WriteBytes(bytes) : Unpooled.WrappedBuffer(bytes);
-                if (padded) b.SetIndex(1, bytes.Length - 1);
-                Leaves.Add(b); return b;
+                if (padded)
+                    b.SetIndex(1, bytes.Length - 1);
+                Leaves.Add(b);
+                return b;
             }
+
             void Wrap(params ByteBuf[] components)
             {
                 Current = (CompositeByteBuf)(limit.HasValue ? Unpooled.WrappedBuffer(limit.Value, components) : Unpooled.WrappedBuffer(components));
@@ -58,27 +62,38 @@ public class ConsolidationTest
             }
             Expected = string.Concat(Enumerable.Range(0, pairs).Select(pair => $"{(char)('a' + pair)}={pair + 1}&"));
         }
+
         public void Dispose()
         {
-            if (Current.RefCnt > 0) Current.Release();
+            if (Current.RefCnt > 0)
+                Current.Release();
             Assert.All(Leaves, leaf => Assert.Equal(0, leaf.RefCnt));
-            Assert.All(Nodes, node => Assert.Equal(0, node.RefCnt)); Assert.Equal(0, Native.ReservedBytes);
+            Assert.All(Nodes, node => Assert.Equal(0, node.RefCnt));
+            Assert.Equal(0, Native.ReservedBytes);
         }
     }
 
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ShouldWrapInSequence(int kind)
     {
-        using var graph = new Graph(kind, 1); ByteBuf copy = graph.Current.Copy();
-        try { Assert.Equal("a=1&", copy.ToString(Encoding.ASCII)); }
+        using var graph = new Graph(kind, 1);
+        ByteBuf copy = graph.Current.Copy();
+        try
+        {
+            Assert.Equal("a=1&", copy.ToString(Encoding.ASCII));
+        }
         finally { copy.Release(); }
     }
 
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ShouldConsolidationInSequence(int kind)
     {
-        using var graph = new Graph(kind, 5); ByteBuf copy = graph.Current.Copy();
-        try { Assert.Equal("a=1&b=2&c=3&d=4&e=5&", copy.ToString(Encoding.ASCII)); }
+        using var graph = new Graph(kind, 5);
+        ByteBuf copy = graph.Current.Copy();
+        try
+        {
+            Assert.Equal("a=1&b=2&c=3&d=4&e=5&", copy.ToString(Encoding.ASCII));
+        }
         finally { copy.Release(); }
     }
 
@@ -90,16 +105,22 @@ public class ConsolidationTest
     [Theory] [MemberData(nameof(Limits))]
     public void ComponentLimitDeterminesWhenNestedOwnersAreCopiedAndReleased(int kind, int limit)
     {
-        using var graph = new Graph(kind, 5, limit); CompositeByteBuf current = graph.Current;
-        Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII)); Assert.Equal(limit <= 2 ? 1 : 3, current.NumComponents);
-        Assert.Equal(limit, current.MaxNumComponents); Assert.Equal(0, current.ReaderIndex); Assert.Equal(20, current.WriterIndex);
+        using var graph = new Graph(kind, 5, limit);
+        CompositeByteBuf current = graph.Current;
+        Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII));
+        Assert.Equal(limit <= 2 ? 1 : 3, current.NumComponents);
+        Assert.Equal(limit, current.MaxNumComponents);
+        Assert.Equal(0, current.ReaderIndex);
+        Assert.Equal(20, current.WriterIndex);
         Assert.All(graph.Leaves, leaf => Assert.Equal(limit <= 2 ? 0 : 1, leaf.RefCnt));
         Assert.All(graph.Nodes.Take(graph.Nodes.Count - 1), node => Assert.Equal(limit <= 2 ? 0 : 1, node.RefCnt));
         ByteBuf copy = current.Copy();
         try
         {
-            Assert.False(copy.IsDirect); current.SetByte(0, 'z');
-            Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII)); Assert.Equal((byte)'z', current.GetByte(0));
+            Assert.False(copy.IsDirect);
+            current.SetByte(0, 'z');
+            Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII));
+            Assert.Equal((byte)'z', current.GetByte(0));
         }
         finally { copy.Release(); }
     }
@@ -107,18 +128,29 @@ public class ConsolidationTest
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ConsolidationUsesCapturedRangesAndKeepsCursorsMarksAndIndependentCopies(int kind)
     {
-        using var graph = new Graph(kind, 5, padded: true); CompositeByteBuf current = graph.Current;
-        current.SetIndex(2, 18).MarkReaderIndex().MarkWriterIndex(); ByteBuf copy = current.Copy(0, 20);
+        using var graph = new Graph(kind, 5, padded: true);
+        CompositeByteBuf current = graph.Current;
+        current.SetIndex(2, 18).MarkReaderIndex().MarkWriterIndex();
+        ByteBuf copy = current.Copy(0, 20);
         try
         {
-            foreach (ByteBuf leaf in graph.Leaves) leaf.SetIndex(0, 1);
+            foreach (ByteBuf leaf in graph.Leaves)
+                leaf.SetIndex(0, 1);
             Assert.Equal(graph.Expected, current.ToString(0, 20, Encoding.ASCII));
-            graph.Leaves[0].SetByte(1, 'z'); Assert.Equal((byte)'z', current.GetByte(0));
-            Assert.Same(current, current.Consolidate()); Assert.Equal(1, current.NumComponents); Assert.False(current.IsDirect);
+            graph.Leaves[0].SetByte(1, 'z');
+            Assert.Equal((byte)'z', current.GetByte(0));
+            Assert.Same(current, current.Consolidate());
+            Assert.Equal(1, current.NumComponents);
+            Assert.False(current.IsDirect);
             Assert.Equal("z=1&b=2&c=3&d=4&e=5&", current.ToString(0, 20, Encoding.ASCII));
-            Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII)); Assert.All(graph.Leaves, leaf => Assert.Equal(0, leaf.RefCnt));
-            current.SetIndex(3, 17).ResetReaderIndex().ResetWriterIndex(); Assert.Equal(2, current.ReaderIndex); Assert.Equal(18, current.WriterIndex);
-            Assert.Equal(1, current.RefCnt); Assert.Equal(1, copy.RefCnt); Assert.Equal(0, graph.Native.ReservedBytes);
+            Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII));
+            Assert.All(graph.Leaves, leaf => Assert.Equal(0, leaf.RefCnt));
+            current.SetIndex(3, 17).ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(2, current.ReaderIndex);
+            Assert.Equal(18, current.WriterIndex);
+            Assert.Equal(1, current.RefCnt);
+            Assert.Equal(1, copy.RefCnt);
+            Assert.Equal(0, graph.Native.ReservedBytes);
         }
         finally { copy.Release(); }
     }
@@ -126,14 +158,19 @@ public class ConsolidationTest
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void CapturedSpanKeepsBytesAfterConsolidation(int kind)
     {
-        using var graph = new Graph(kind, 5); CompositeByteBuf current = graph.Current;
+        using var graph = new Graph(kind, 5);
+        CompositeByteBuf current = graph.Current;
         ByteBuf leaf = graph.Leaves.FirstOrDefault(value => value.IsDirect) ?? graph.Leaves[0];
-        byte original = leaf.GetByte(0); ReadOnlySpan<byte> captured = leaf.AsReadOnlySpan(0, 1);
+        byte original = leaf.GetByte(0);
+        ReadOnlySpan<byte> captured = leaf.AsReadOnlySpan(0, 1);
         using (var pin = leaf.AsReadOnlyMemory(0, 1).Pin())
         {
-            current.Consolidate(); Assert.All(graph.Leaves, value => Assert.Equal(0, value.RefCnt));
-            Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII)); Assert.Equal(original, captured[0]);
-            current.Release(); Assert.Equal(original, captured[0]);
+            current.Consolidate();
+            Assert.All(graph.Leaves, value => Assert.Equal(0, value.RefCnt));
+            Assert.Equal(graph.Expected, current.ToString(Encoding.ASCII));
+            Assert.Equal(original, captured[0]);
+            current.Release();
+            Assert.Equal(original, captured[0]);
             Assert.Equal(0, graph.Native.ReservedBytes);
         }
         Assert.Equal(0, graph.Native.ReservedBytes);

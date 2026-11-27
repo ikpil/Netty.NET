@@ -14,6 +14,7 @@ public class ThreadLocalCacheContractTest : IDisposable
     {
         FastThreadLocal.RemoveAll();
     }
+
     public void Dispose()
     {
         FastThreadLocal.RemoveAll();
@@ -66,10 +67,12 @@ public class ThreadLocalCacheContractTest : IDisposable
         {
             return other is EquivalentType;
         }
+
         public override bool Equals(object other)
         {
             return other is EquivalentType;
         }
+
         public override int GetHashCode()
         {
             return 1;

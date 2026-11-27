@@ -40,6 +40,7 @@ public sealed class DefaultMessageSizeEstimator : IMessageSizeEstimator
         ArgumentOutOfRangeException.ThrowIfNegative(unknownSize);
         _handle = new HandleImpl(unknownSize);
     }
+
     public IMessageSizeEstimator.IHandle NewHandle()
     {
         return _handle;

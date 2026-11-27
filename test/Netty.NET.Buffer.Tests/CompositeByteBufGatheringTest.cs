@@ -32,18 +32,22 @@ public class CompositeByteBufGatheringTest : IDisposable
     {
         _unpooled = new UnpooledByteBufAllocator(false, _native);
     }
+
     private ByteBuf Buffer(int capacity = 256)
     {
         return _unpooled.HeapBuffer(capacity);
     }
+
     private ByteBuf DirectBuffer(int capacity = 256)
     {
         return _unpooled.DirectBuffer(capacity);
     }
+
     private CompositeByteBuf CompositeBuffer()
     {
         return _unpooled.CompositeHeapBuffer();
     }
+
     public void Dispose()
     {
         _pooled?.Dispose();
@@ -78,6 +82,7 @@ public class CompositeByteBufGatheringTest : IDisposable
             Socket.NoDelay = _peer.NoDelay = true;
             Socket.SendTimeout = _peer.ReceiveTimeout = 5000;
         }
+
         internal byte[] WrittenBytes(int length)
         {
             Socket.Shutdown(SocketShutdown.Send);
@@ -92,7 +97,12 @@ public class CompositeByteBufGatheringTest : IDisposable
             Assert.Equal(length, output.Length);
             return output.ToArray();
         }
-        public void Dispose() { Socket.Dispose(); _peer.Dispose(); }
+
+        public void Dispose()
+        {
+            Socket.Dispose();
+            _peer.Dispose();
+        }
     }
 
     [Fact]

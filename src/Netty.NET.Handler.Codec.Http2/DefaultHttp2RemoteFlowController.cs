@@ -638,13 +638,17 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
          * Called when the writability of the underlying channel changes.
          * @throws Http2Exception If a write occurs and an exception happens in the write operation.
          */
-        internal virtual void ChannelWritabilityChange() { }
+        internal virtual void ChannelWritabilityChange()
+        {
+        }
 
         /**
          * Called when the state is cancelled.
          * @param state the state that was cancelled.
          */
-        internal virtual void StateCancelled(FlowState state) { }
+        internal virtual void StateCancelled(FlowState state)
+        {
+        }
 
         /**
          * Set the initial window size for {@code state}.

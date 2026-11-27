@@ -260,6 +260,7 @@ public class SimpleChannelPoolTest
         {
             return _queue.TryTake(out var channel) ? channel : null;
         }
+
         protected override bool OfferChannel(IChannel channel)
         {
             return _queue.TryAdd(channel);
@@ -269,8 +270,16 @@ public class SimpleChannelPoolTest
     private sealed class CallbackHandler(Action<IChannel> created = null, Action<IChannel> acquired = null, Action<IChannel> released = null)
         : IChannelPoolHandler
     {
-        public void ChannelCreated(IChannel channel) { /* NOOP */ created?.Invoke(channel); }
-        public void ChannelAcquired(IChannel channel) { /* NOOP */ acquired?.Invoke(channel); }
+        public void ChannelCreated(IChannel channel)
+        { /* NOOP */
+            created?.Invoke(channel);
+        }
+
+        public void ChannelAcquired(IChannel channel)
+        { /* NOOP */
+            acquired?.Invoke(channel);
+        }
+
         public void ChannelReleased(IChannel channel)
         {
             released?.Invoke(channel);
@@ -288,6 +297,7 @@ public class SimpleChannelPoolTest
         {
             Client = new Bootstrap().RemoteAddress(address).Group(Group).Channel<LocalChannel>();
         }
+
         internal static async Task<Setup> StartAsync()
         {
             var address = new LocalAddress(ChannelPoolTestUtils.GetLocalAddrId());
@@ -298,6 +308,7 @@ public class SimpleChannelPoolTest
                 .BindAsync(address).WaitAsync(Timeout, TestContext.Current.CancellationToken);
             return setup;
         }
+
         public async ValueTask DisposeAsync()
         {
             if (_server != null)

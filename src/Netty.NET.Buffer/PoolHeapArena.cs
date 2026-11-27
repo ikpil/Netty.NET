@@ -21,7 +21,9 @@ namespace Netty.NET.Buffer;
 
 internal sealed class PoolHeapArena : PoolArena
 {
-    internal PoolHeapArena(IByteBufAllocator parent, SizeClasses sizeClass) : base(parent, sizeClass, false) { }
+    internal PoolHeapArena(IByteBufAllocator parent, SizeClasses sizeClass) : base(parent, sizeClass, false)
+    {
+    }
 
     internal override PooledHeapByteBuf Allocate(int initialCapacity, int maxCapacity, PoolThreadCache cache = null)
     {

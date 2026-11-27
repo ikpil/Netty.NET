@@ -39,6 +39,7 @@ public class ByteBufLifetimeFixtureTest
                 _ => new UnpooledByteBufAllocator(false, true, _native)
             };
         }
+
         public ByteBuf Buffer(int capacity)
         {
             bool direct = (_provider & 1) != 0;
@@ -58,7 +59,12 @@ public class ByteBufLifetimeFixtureTest
             }
             catch { result.Release(); throw; }
         }
-        public void Dispose() { (Allocator as IDisposable)?.Dispose(); Assert.Equal(0, _native.ReservedBytes); }
+
+        public void Dispose()
+        {
+            (Allocator as IDisposable)?.Dispose();
+            Assert.Equal(0, _native.ReservedBytes);
+        }
     }
     private static ByteBuf Entry(ByteBuf root, int form)
     {
@@ -69,6 +75,7 @@ public class ByteBufLifetimeFixtureTest
             _ => root
         };
     }
+
     public static IEnumerable<object[]> StorageCases()
     {
         for (int provider = 0; provider < 8; ++provider)

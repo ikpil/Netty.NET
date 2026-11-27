@@ -105,10 +105,12 @@ public class DomainSocketContractTest
         {
             Active.TrySetResult(ctx.Channel);
         }
+
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
         {
             ByteRead.TrySetResult(msg.ReadByte());
         }
+
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             if (evt is ChannelInputShutdownEvent) InputClosed.TrySetResult();

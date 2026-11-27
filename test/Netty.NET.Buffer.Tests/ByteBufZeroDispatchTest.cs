@@ -31,9 +31,14 @@ public class ByteBufZeroDispatchTest
         public readonly Failure Error = new();
         public void Before(bool write, int index, int length)
         {
-            if (write) ++Write; else ++Set;
-            Index = index; Length = length;
-            if (ThrowOperation || RejectSet && !write) throw Error;
+            if (write)
+                ++Write;
+            else
+                ++Set;
+            Index = index;
+            Length = length;
+            if (ThrowOperation || RejectSet && !write)
+                throw Error;
         }
     }
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
@@ -43,21 +48,40 @@ public class ByteBufZeroDispatchTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            ++Closes;
+            return true;
+        }
     }
     private sealed class Wrapped(ByteBuf buffer) : WrappedByteBuf(buffer);
 
     private sealed class Heap(Calls calls) : UnpooledHeapByteBuf(8, 64)
     {
-        public override ByteBuf EnsureWritable(int length) { ++calls.Ensure; return base.EnsureWritable(length); }
+        public override ByteBuf EnsureWritable(int length)
+        {
+            ++calls.Ensure;
+            return base.EnsureWritable(length);
+        }
+
         public override ByteBuf SetZero(int index, int length)
-        { calls.Before(false, index, length); return base.SetZero(index, length); }
+        {
+            calls.Before(false, index, length);
+            return base.SetZero(index, length);
+        }
+
         public override ByteBuf WriteZero(int length)
-        { calls.Before(true, -1, length); return base.WriteZero(length); }
+        {
+            calls.Before(true, -1, length);
+            return base.WriteZero(length);
+        }
+
         protected override void SetZeroCore(int index, int length)
         {
             if (calls.ThrowCore) { base.SetZeroCore(index, 2); throw calls.Error; }
@@ -67,11 +91,24 @@ public class ByteBufZeroDispatchTest
 
     private sealed class Direct(Calls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 64, native)
     {
-        public override ByteBuf EnsureWritable(int length) { ++calls.Ensure; return base.EnsureWritable(length); }
+        public override ByteBuf EnsureWritable(int length)
+        {
+            ++calls.Ensure;
+            return base.EnsureWritable(length);
+        }
+
         public override ByteBuf SetZero(int index, int length)
-        { calls.Before(false, index, length); return base.SetZero(index, length); }
+        {
+            calls.Before(false, index, length);
+            return base.SetZero(index, length);
+        }
+
         public override ByteBuf WriteZero(int length)
-        { calls.Before(true, -1, length); return base.WriteZero(length); }
+        {
+            calls.Before(true, -1, length);
+            return base.WriteZero(length);
+        }
+
         protected override void SetZeroCore(int index, int length)
         {
             if (calls.ThrowCore) { base.SetZeroCore(index, 2); throw calls.Error; }
@@ -81,11 +118,24 @@ public class ByteBufZeroDispatchTest
 
     private sealed class Composite(Calls calls, NativeMemoryAllocator native) : CompositeByteBuf(16, false, native)
     {
-        public override ByteBuf EnsureWritable(int length) { ++calls.Ensure; return base.EnsureWritable(length); }
+        public override ByteBuf EnsureWritable(int length)
+        {
+            ++calls.Ensure;
+            return base.EnsureWritable(length);
+        }
+
         public override ByteBuf SetZero(int index, int length)
-        { calls.Before(false, index, length); return base.SetZero(index, length); }
+        {
+            calls.Before(false, index, length);
+            return base.SetZero(index, length);
+        }
+
         public override ByteBuf WriteZero(int length)
-        { calls.Before(true, -1, length); return base.WriteZero(length); }
+        {
+            calls.Before(true, -1, length);
+            return base.WriteZero(length);
+        }
+
         protected override void SetZeroCore(int index, int length)
         {
             if (calls.ThrowCore) { base.SetZeroCore(index, 2); throw calls.Error; }
@@ -173,7 +223,8 @@ public class ByteBufZeroDispatchTest
         var native = new NativeMemoryAllocator();
         var calls = new Calls { ThrowOperation = failure };
         ByteBuf owner = Create(backing, calls, native);
-        var inner = new Tracker(); var outer = new Tracker();
+        var inner = new Tracker();
+        var outer = new Tracker();
         ByteBuf tracked = backing == 2 ? new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)owner, inner)
             : new AdvancedLeakAwareByteBuf(owner, inner);
         ByteBuf buffer = facade switch
@@ -190,21 +241,33 @@ public class ByteBufZeroDispatchTest
             {
                 return write ? buffer.WriteZero(7) : buffer.SetZero(1, 5);
             }
-            if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
-            else Assert.Same(buffer, Invoke());
-            Assert.Equal(write ? 1 : 0, calls.Write); Assert.Equal(write ? 0 : 1, calls.Set);
-            Assert.Equal(write ? -1 : 1, calls.Index); Assert.Equal(write ? 7 : 5, calls.Length);
-            Assert.Equal(1, inner.Records); Assert.Equal(0, outer.Records);
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(!failure && write ? 10 : 3, owner.WriterIndex);
-            Assert.Equal(owner.ReaderIndex, buffer.ReaderIndex); Assert.Equal(owner.WriterIndex, buffer.WriterIndex);
-            if (failure) Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
-            else for (int i = write ? 3 : 1; i < (write ? 10 : 6); ++i) Assert.Equal(0, owner.GetByte(i));
+            if (failure)
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
+            else
+                Assert.Same(buffer, Invoke());
+            Assert.Equal(write ? 1 : 0, calls.Write);
+            Assert.Equal(write ? 0 : 1, calls.Set);
+            Assert.Equal(write ? -1 : 1, calls.Index);
+            Assert.Equal(write ? 7 : 5, calls.Length);
+            Assert.Equal(1, inner.Records);
+            Assert.Equal(0, outer.Records);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(!failure && write ? 10 : 3, owner.WriterIndex);
+            Assert.Equal(owner.ReaderIndex, buffer.ReaderIndex);
+            Assert.Equal(owner.WriterIndex, buffer.WriterIndex);
+            if (failure)
+                Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
+            else
+            for (int i = write ? 3 : 1; i < (write ? 10 : 6); ++i)
+                Assert.Equal(0, owner.GetByte(i));
             owner.SetIndex(0, Math.Min(11, owner.Capacity)).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(3, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(3, buffer.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
         }
         finally { Assert.True(facade == 2 ? tracked.Release() : buffer.Release()); }
-        Assert.Equal(1, inner.Closes); Assert.Equal(facade is 1 or 4 ? 1 : 0, outer.Closes);
+        Assert.Equal(1, inner.Closes);
+        Assert.Equal(facade is 1 or 4 ? 1 : 0, outer.Closes);
         Assert.Equal(0, native.ReservedBytes);
     }
 

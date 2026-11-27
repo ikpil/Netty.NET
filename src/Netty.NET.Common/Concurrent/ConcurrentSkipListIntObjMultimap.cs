@@ -829,17 +829,20 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
      */
     internal static bool AddIndices(Index q, int skips, Index x, int noKey)
     {
-        Node z; int key;
+        Node z;
+        int key;
         if (x != null && (z = x.node) != null && (key = z.key) != noKey &&
             q != null)                              // hoist checks
         {
             bool retrying = false;
             for (;;)                                // find splice point
             {
-                Index r, d; int c;
+                Index r, d;
+                int c;
                 if ((r = q.right) != null)
                 {
-                    Node p; int k;
+                    Node p;
+                    int k;
                     if ((p = r.node) == null || (k = p.key) == noKey ||
                         p.val == null)
                     {
@@ -1022,7 +1025,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
      */
     internal IntEntry FindFirstEntry()
     {
-        Node b, n; V v;
+        Node b, n;
+        V v;
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1046,7 +1050,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
      */
     private IntEntry DoRemoveFirstEntry()
     {
-        Node b, n; V v;
+        Node b, n;
+        V v;
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1449,7 +1454,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public bool ContainsValue(object value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        Node b, n; V v;
+        Node b, n;
+        V v;
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1491,7 +1497,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
      */
     public void Clear()
     {
-        Index h, r, d; Node b;
+        Index h, r, d;
+        Node b;
         AcquireFence();
         while ((h = _head) != null)
         {
@@ -1508,7 +1515,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 long count = 0L;
                 if ((b = h.node) != null)      // remove nodes
                 {
-                    Node n; V v;
+                    Node n;
+                    V v;
                     while ((n = b.next) != null)
                     {
                         if ((v = n.val) != null &&
@@ -1819,7 +1827,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
 
         public void Remove()
         {
-            Node n; int k;
+            Node n;
+            int k;
             if ((n = lastReturned) == null || (k = n.key) == _map._noKey)
             {
                 throw new InvalidOperationException();
@@ -1898,7 +1907,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public void ForEach(Action<int, V> action)
     {
         ArgumentNullException.ThrowIfNull(action);
-        Node b, n; V v;
+        Node b, n;
+        V v;
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1915,7 +1925,8 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public void ReplaceAll(Func<int, V, V> function)
     {
         ArgumentNullException.ThrowIfNull(function);
-        Node b, n; V v;
+        Node b, n;
+        V v;
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)

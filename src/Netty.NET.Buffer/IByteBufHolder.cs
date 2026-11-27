@@ -51,7 +51,10 @@ public interface IByteBufHolder : IReferenceCounted
     IByteBufHolder Replace(ByteBuf content);
 
     new IByteBufHolder Retain();
+
     new IByteBufHolder Retain(int increment);
+
     new IByteBufHolder Touch();
+
     new IByteBufHolder Touch(object hint);
 }

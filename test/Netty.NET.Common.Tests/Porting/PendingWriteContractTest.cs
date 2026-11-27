@@ -16,6 +16,7 @@ public class PendingWriteContractTest
         {
             return this;
         }
+
         protected override void Deallocate()
         {
             ++Deallocations;

@@ -1209,15 +1209,18 @@ public class Http2ConnectionHandlerTest : IDisposable
         {
             return false;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return true;
         }
+
         [Obsolete("Overrides the deprecated AbstractEventExecutor.Shutdown().")]
         public override void Shutdown()
         {
             // NOOP
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             throw new NotSupportedException();
@@ -1227,14 +1230,17 @@ public class Http2ConnectionHandlerTest : IDisposable
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
         }
+
         public override void Execute(Action command)
         {
             command();

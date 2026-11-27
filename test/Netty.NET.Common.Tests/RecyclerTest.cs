@@ -33,18 +33,22 @@ public class RecyclerTest
         return type != OwnerType.FAST_THREAD_LOCAL ||
             FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals();
     }
+
     protected static void AssumeIsPooling(OwnerType type)
     {
         Xunit.Assert.SkipUnless(IsPooling(type), "Owner has no automatic thread-local cleanup.");
     }
+
     public static IEnumerable<object[]> OwnerTypeAndUnguarded()
     {
         return Enum.GetValues<OwnerType>().SelectMany(owner => new[] { true, false }.Select(unguarded => new object[] { owner, unguarded }));
     }
+
     public static IEnumerable<object[]> NotNoneOwnerAndUnguarded()
     {
         return OwnerTypeAndUnguarded().Where(row => (OwnerType)row[0] != OwnerType.NONE);
     }
+
     public static IEnumerable<object[]> Owners()
     {
         return Enum.GetValues<OwnerType>().Select(owner => new object[] { owner });
@@ -54,10 +58,12 @@ public class RecyclerTest
     {
         invocation();
     }
+
     protected virtual Thread NewThread(Action invocation)
     {
         return new(invocation.Invoke) { IsBackground = true };
     }
+
     protected Thread Worker(Action invocation)
     {
         return NewThread(() =>
@@ -66,6 +72,7 @@ public class RecyclerTest
             catch (Exception error) { workerFailures.Enqueue(error); }
         });
     }
+
     protected void Join(Thread thread)
     {
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -78,6 +85,7 @@ public class RecyclerTest
         {
             this.handle = handle;
         }
+
         internal void Recycle()
         {
             handle.Recycle(this);
@@ -90,16 +98,19 @@ public class RecyclerTest
         {
             this.onNewObject = onNewObject;
         }
+
         internal Pool(Thread owner, int capacity, int ratio, int chunk, bool unguarded, Action<HandledObject> onNewObject)
             : base(capacity, ratio, chunk, owner, unguarded)
         {
             this.onNewObject = onNewObject;
         }
+
         internal Pool(int capacity, int ratio, int chunk, bool unguarded, Action<HandledObject> onNewObject)
             : base(capacity, ratio, chunk, unguarded)
         {
             this.onNewObject = onNewObject;
         }
+
         protected override HandledObject NewObject(IRecyclerHandle<HandledObject> handle)
         {
             var value = new HandledObject(handle);
@@ -111,14 +122,17 @@ public class RecyclerTest
     {
         return NewRecycler(owner, unguarded, capacity, Recycler.RATIO, capacity >> 1, onNewObject);
     }
+
     protected static Recycler<HandledObject> NewRecycler(bool unguarded, int capacity)
     {
         return NewRecycler(OwnerType.FAST_THREAD_LOCAL, unguarded, capacity);
     }
+
     protected static Recycler<HandledObject> NewRecycler(int capacity)
     {
         return NewRecycler(OwnerType.FAST_THREAD_LOCAL, false, capacity, 8, capacity >> 1);
     }
+
     protected static Recycler<HandledObject> NewRecycler(OwnerType owner, bool unguarded, int capacity, int ratio, int chunk, Action<HandledObject> onNewObject = null)
     {
         // NOTE: ratio and chunk size will be ignored for NONE owner type!
@@ -148,6 +162,7 @@ public class RecyclerTest
         // Null out so it can be collected.
         return weak;
     }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool Collected(WeakReference<Thread> thread)
     {
@@ -309,6 +324,7 @@ public class RecyclerTest
             other.Recycle();
         });
     }
+
     [Theory]
     [MemberData(nameof(OwnerTypeAndUnguarded))]
     public void TestRecycleDisable(OwnerType ownerType, bool unguarded)
@@ -323,6 +339,7 @@ public class RecyclerTest
             other.Recycle();
         });
     }
+
     [Theory]
     [MemberData(nameof(OwnerTypeAndUnguarded))]
     public void TestRecycleDisableDrop(OwnerType ownerType, bool unguarded)
@@ -357,6 +374,7 @@ public class RecyclerTest
             for (int i = 0; i < 50; i++) CheckMaxCapacity(ownerType, unguarded, rand.Next(1000) + 256); // 256 - 1256
         });
     }
+
     private static void CheckMaxCapacity(OwnerType owner, bool unguarded, int capacity)
     {
         Recycler<HandledObject> recycler = NewRecycler(owner, unguarded, capacity);

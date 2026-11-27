@@ -180,11 +180,13 @@ public class FixedChannelPoolMapDeadlockTest
         return new Bootstrap().Channel<LocalChannel>().Group(group)
             .LocalAddress(new LocalAddress(typeof(FixedChannelPoolMapDeadlockTest)));
     }
+
     private static void Await(Barrier barrier)
     {
         if (!barrier.SignalAndWait(TimeSpan.FromSeconds(1)))
             throw new TimeoutException("Timed out waiting at the original worker barrier.");
     }
+
     private static Task Shutdown(params DefaultEventLoopGroup[] groups)
     {
         return Task.WhenAll(groups.Select(group => group.StopAsync()))

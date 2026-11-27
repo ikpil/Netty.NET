@@ -45,6 +45,7 @@ public class ByteBufScalarRoundTripSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -196,30 +197,41 @@ public class ByteBufScalarRoundTripSourceTest
         ByteBuf buffer = s.Root;
         // Initialize otherwise-unused float gaps/medium tails for the independent whole-byte oracle.
         buffer.SetZero(0, capacity);
-        if (sequential) buffer.WriterIndex = 0;
+        if (sequential)
+            buffer.WriterIndex = 0;
         int width = Width(kind), step = kind == 9 ? 8 : width, end = capacity / step * step;
         byte[] expectedWire = new byte[capacity];
         var random = new Random(seed);
         for (int i = 0; i < end; i += step)
         {
             long bits = NextBits(random, kind, sequential);
-            if (sequential) { Assert.Equal(i, buffer.WriterIndex); Assert.True(buffer.IsWritable()); }
+            if (sequential)
+            {
+                Assert.Equal(i, buffer.WriterIndex);
+                Assert.True(buffer.IsWritable());
+            }
             Store(buffer, i, bits, kind, little, sequential);
             Model(expectedWire.AsSpan(i, width), bits, kind, little);
         }
         Assert.Equal(expectedWire, ByteBufUtil.GetBytes(buffer, 0, capacity));
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
         if (sequential)
         {
             Assert.Equal(capacity - end, buffer.WritableBytes);
-            if (width != 3) Assert.False(buffer.IsWritable());
+            if (width != 3)
+                Assert.False(buffer.IsWritable());
         }
         // Each runtime independently reseeds its own PRNG; full signed integer domains use random bytes.
         random = new Random(seed);
         for (int i = 0; i < end; i += step)
         {
             long expected = LogicalValue(NextBits(random, kind, sequential), kind);
-            if (sequential) { Assert.Equal(i, buffer.ReaderIndex); Assert.True(buffer.IsReadable()); }
+            if (sequential)
+            {
+                Assert.Equal(i, buffer.ReaderIndex);
+                Assert.True(buffer.IsReadable());
+            }
             long actual = Load(buffer, i, kind, little, sequential);
             if (kind == 9)
                 Assert.InRange(Math.Abs(BitConverter.Int32BitsToSingle((int)expected) - BitConverter.Int32BitsToSingle((int)actual)), 0, 0.01);
@@ -227,8 +239,14 @@ public class ByteBufScalarRoundTripSourceTest
                 Assert.InRange(Math.Abs(BitConverter.Int64BitsToDouble(expected) - BitConverter.Int64BitsToDouble(actual)), 0, 0.01);
             Assert.Equal(expected, actual);
         }
-        Assert.Equal(sequential ? end : 0, buffer.ReaderIndex); Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
-        if (sequential) { Assert.False(buffer.IsReadable()); Assert.Equal(0, buffer.ReadableBytes); Assert.Equal(capacity - end, buffer.WritableBytes); }
+        Assert.Equal(sequential ? end : 0, buffer.ReaderIndex);
+        Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
+        if (sequential)
+        {
+            Assert.False(buffer.IsReadable());
+            Assert.Equal(0, buffer.ReadableBytes);
+            Assert.Equal(capacity - end, buffer.WritableBytes);
+        }
         Assert.Equal(1, buffer.RefCnt);
     }
 
@@ -249,11 +267,16 @@ public class ByteBufScalarRoundTripSourceTest
         using var s = new Storage(provider, 18);
         ushort[] values = [0, 1, 127, 128, 255, 256, 32767, 32768, 65535];
         byte[] expected = [0, 0, 1, 0, 127, 0, 128, 0, 255, 0, 0, 1, 255, 127, 0, 128, 255, 255];
-        foreach (ushort value in values) s.Root.WriteShortLE(value);
+        foreach (ushort value in values)
+            s.Root.WriteShortLE(value);
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 18));
         for (int i = 0; i < values.Length; ++i)
-        { Assert.Equal(i * 2, s.Root.ReaderIndex); Assert.Equal(values[i], s.Root.ReadUnsignedShortLE()); }
-        Assert.Equal(18, s.Root.ReaderIndex); Assert.Equal(18, s.Root.WriterIndex);
+        {
+            Assert.Equal(i * 2, s.Root.ReaderIndex);
+            Assert.Equal(values[i], s.Root.ReadUnsignedShortLE());
+        }
+        Assert.Equal(18, s.Root.ReaderIndex);
+        Assert.Equal(18, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);
     }
 }

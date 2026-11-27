@@ -159,7 +159,10 @@ internal sealed class PoolThreadCache : IDisposable
 
     private void TrimCore()
     {
-        Trim(_smallDirect); Trim(_normalDirect); Trim(_smallHeap); Trim(_normalHeap);
+        Trim(_smallDirect);
+        Trim(_normalDirect);
+        Trim(_smallHeap);
+        Trim(_normalHeap);
     }
 
     private static void Trim(RegionCache[] caches)

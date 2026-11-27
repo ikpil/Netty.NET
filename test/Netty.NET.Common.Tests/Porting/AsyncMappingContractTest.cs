@@ -27,6 +27,7 @@ public class AsyncMappingContractTest
             ++Releases;
             ReleasedOnLoop = Executor.InEventLoop();
         }
+
         public override IReferenceCounted Touch(object hint)
         {
             return this;

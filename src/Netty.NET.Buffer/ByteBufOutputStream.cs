@@ -48,7 +48,9 @@ public sealed class ByteBufOutputStream : Stream
     /**
      * Creates a new stream which writes data to the specified {@code buffer}.
      */
-    public ByteBufOutputStream(ByteBuf buffer) : this(buffer, false) { }
+    public ByteBufOutputStream(ByteBuf buffer) : this(buffer, false)
+    {
+    }
 
     /**
      * Creates a new stream which writes data to the specified {@code buffer}.
@@ -102,26 +104,68 @@ public sealed class ByteBufOutputStream : Stream
     }
 
     public override void Write(ReadOnlySpan<byte> source)
-    { ThrowIfClosed(); _buffer.WriteBytes(source); }
+    {
+        ThrowIfClosed();
+        _buffer.WriteBytes(source);
+    }
 
     public override void WriteByte(byte value)
-    { ThrowIfClosed(); _buffer.WriteByte(value); }
+    {
+        ThrowIfClosed();
+        _buffer.WriteByte(value);
+    }
 
     public void WriteSByte(sbyte value)
     {
         WriteByte(unchecked((byte)value));
     }
-    public void WriteBoolean(bool value) { ThrowIfClosed(); _buffer.WriteBoolean(value); }
-    public void WriteInt16(int value) { ThrowIfClosed(); _buffer.WriteShort(value); }
+
+    public void WriteBoolean(bool value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteBoolean(value);
+    }
+
+    public void WriteInt16(int value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteShort(value);
+    }
+
     public void WriteUInt16(ushort value)
     {
         WriteInt16(value);
     }
-    public void WriteChar(char value) { ThrowIfClosed(); _buffer.WriteChar(value); }
-    public void WriteInt32(int value) { ThrowIfClosed(); _buffer.WriteInt(value); }
-    public void WriteInt64(long value) { ThrowIfClosed(); _buffer.WriteLong(value); }
-    public void WriteSingle(float value) { ThrowIfClosed(); _buffer.WriteFloat(value); }
-    public void WriteDouble(double value) { ThrowIfClosed(); _buffer.WriteDouble(value); }
+
+    public void WriteChar(char value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteChar(value);
+    }
+
+    public void WriteInt32(int value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteInt(value);
+    }
+
+    public void WriteInt64(long value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteLong(value);
+    }
+
+    public void WriteSingle(float value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteFloat(value);
+    }
+
+    public void WriteDouble(double value)
+    {
+        ThrowIfClosed();
+        _buffer.WriteDouble(value);
+    }
 
     /// <summary>Writes the low eight bits of each UTF-16 code unit, without encoding fallback.</summary>
     public void WriteBytes(string value)
@@ -203,22 +247,27 @@ public sealed class ByteBufOutputStream : Stream
     {
         ObjectDisposedException.ThrowIf(_closed, this);
     }
+
     public override void Flush()
     {
         ThrowIfClosed();
     }
+
     public override int Read(byte[] buffer, int offset, int count)
     {
         throw new NotSupportedException();
     }
+
     public override int Read(Span<byte> buffer)
     {
         throw new NotSupportedException();
     }
+
     public override long Seek(long offset, SeekOrigin origin)
     {
         throw new NotSupportedException();
     }
+
     public override void SetLength(long value)
     {
         throw new NotSupportedException();

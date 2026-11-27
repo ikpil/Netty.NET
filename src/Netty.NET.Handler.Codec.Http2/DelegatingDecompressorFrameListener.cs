@@ -507,6 +507,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                         "Decompressor error detected while delegating data read on streamId %d", stream.Id());
             }
         }
+
         /**
          * Increment the number of bytes received prior to doing any decompression.
          */

@@ -49,10 +49,13 @@ public class ByteBufUtilitySourceTest
             }
             else Root = Buffer(16);
         }
+
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
-            (Allocator as IDisposable)?.Dispose(); Assert.Equal(0, Native.ReservedBytes);
+            if (Root.RefCnt > 0)
+                Root.Release();
+            (Allocator as IDisposable)?.Dispose();
+            Assert.Equal(0, Native.ReservedBytes);
         }
     }
     // Original ByteBufUtilTest strings, including its exact malformed UTF-16 pairs.
@@ -68,6 +71,7 @@ public class ByteBufUtilitySourceTest
         for (int text = 0; text < Texts.Length; ++text)
         for (int mode = 0; mode < 6; ++mode) yield return [provider, form, text, mode];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void OriginalWritersPreserveWireBytesAcrossAllAllocatorProviders(int provider, int form, int text, int mode)
@@ -76,12 +80,15 @@ public class ByteBufUtilitySourceTest
         ByteBuf root = storage.Root;
         ByteBuf b = form switch
         {
-            1 => new Wrapper(root), 2 => Unpooled.UnreleasableBuffer(root),
-            4 => new WrappedCompositeByteBuf((CompositeByteBuf)root), _ => root
+            1 => new Wrapper(root),
+            2 => Unpooled.UnreleasableBuffer(root),
+            4 => new WrappedCompositeByteBuf((CompositeByteBuf)root),
+            _ => root
         };
         int prefix = form >= 3 ? 1 : 0;
         // write some byte so we start writing with an offset.
-        if (prefix != 0) b.WriteByte(1);
+        if (prefix != 0)
+            b.WriteByte(1);
         b.MarkReaderIndex().MarkWriterIndex();
         string value = Texts[text];
         Encoding encoder = Encoding.GetEncoding("utf-8", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback);
@@ -89,18 +96,25 @@ public class ByteBufUtilitySourceTest
         var ascii = new AsciiString(value);
         int written = mode switch
         {
-            0 => ByteBufUtil.WriteUtf8(b, value), 1 => ByteBufUtil.ReserveAndWriteUtf8(b, value, expected.Length),
-            2 => ByteBufUtil.WriteAscii(b, value), 3 => ByteBufUtil.WriteAscii(b, ascii),
-            4 => ByteBufUtil.WriteUtf8(b, ascii), _ => ByteBufUtil.ReserveAndWriteUtf8(b, ascii, expected.Length)
+            0 => ByteBufUtil.WriteUtf8(b, value),
+            1 => ByteBufUtil.ReserveAndWriteUtf8(b, value, expected.Length),
+            2 => ByteBufUtil.WriteAscii(b, value),
+            3 => ByteBufUtil.WriteAscii(b, ascii),
+            4 => ByteBufUtil.WriteUtf8(b, ascii),
+            _ => ByteBufUtil.ReserveAndWriteUtf8(b, ascii, expected.Length)
         };
         Assert.Equal(expected.Length, written);
         Assert.Equal((0, prefix + written, 1), (b.ReaderIndex, b.WriterIndex, b.RefCnt));
-        if (prefix != 0) Assert.Equal(1, b.GetByte(0));
+        if (prefix != 0)
+            Assert.Equal(1, b.GetByte(0));
         // Skip the previously written byte.
         Assert.Equal(expected, ByteBufUtil.GetBytes(b, prefix, written));
-        if (mode <= 1) Assert.Equal(written, ByteBufUtil.Utf8Bytes(value));
-        else if (mode >= 3) Assert.Equal(written, ByteBufUtil.Utf8Bytes(ascii));
-        b.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((0, prefix), (b.ReaderIndex, b.WriterIndex));
+        if (mode <= 1)
+            Assert.Equal(written, ByteBufUtil.Utf8Bytes(value));
+        else if (mode >= 3)
+            Assert.Equal(written, ByteBufUtil.Utf8Bytes(ascii));
+        b.ResetWriterIndex().ResetReaderIndex();
+        Assert.Equal((0, prefix), (b.ReaderIndex, b.WriterIndex));
     }
 
     [Theory]

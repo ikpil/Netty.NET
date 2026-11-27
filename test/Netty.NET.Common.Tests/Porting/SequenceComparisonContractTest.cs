@@ -236,54 +236,67 @@ public class SequenceComparisonContractTest
         {
             return this[index];
         }
+
         public int Length()
         {
             return Count;
         }
+
         public bool RegionMatches(int thisStart, ICharSequence other, int start, int length)
         {
             return CharUtil.RegionMatches(this, thisStart, other, start, length);
         }
+
         public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence other, int start, int length)
         {
             return CharUtil.RegionMatchesIgnoreCase(this, thisStart, other, start, length);
         }
+
         public bool ContentEquals(ICharSequence other)
         {
             return AsciiString.ContentEquals(this, other);
         }
+
         public bool ContentEqualsIgnoreCase(ICharSequence other)
         {
             return other != null && Count == other.Count && CharUtil.RegionMatchesIgnoreCase(this, 0, other, 0, Count);
         }
+
         public ICharSequence SubSequence(int start, int end)
         {
             throw new NotSupportedException();
         }
+
         public ICharSequence SubSequence(int start)
         {
             throw new NotSupportedException();
         }
+
         public int IndexOf(char ch, int start = 0)
         {
             throw new NotSupportedException();
         }
+
         public int HashCode(bool ignoreCase)
         {
             throw new NotSupportedException();
         }
+
         public string ToString(int start)
         {
             throw new NotSupportedException();
         }
+
         public override string ToString()
         {
             throw new NotSupportedException();
         }
+
         public IEnumerator<char> GetEnumerator()
         {
             throw new NotSupportedException();
         }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

@@ -32,33 +32,69 @@ public class ByteBufWritableDispatchTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            ++Closes;
+            return true;
+        }
     }
 
     private sealed class Heap : UnpooledHeapByteBuf
     {
         public int Calls;
-        public Heap() : base(8, 64) { }
-        public override ByteBuf EnsureWritable(int count) { ++Calls; return base.EnsureWritable(count); }
-        public override int EnsureWritable(int count, bool force) { ++Calls; return base.EnsureWritable(count, force); }
+        public Heap() : base(8, 64)
+        {
+        }
+
+        public override ByteBuf EnsureWritable(int count)
+        {
+            ++Calls;
+            return base.EnsureWritable(count);
+        }
+
+        public override int EnsureWritable(int count, bool force)
+        {
+            ++Calls;
+            return base.EnsureWritable(count, force);
+        }
     }
 
     private sealed class Direct(NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 64, native)
     {
         public int Calls;
-        public override ByteBuf EnsureWritable(int count) { ++Calls; return base.EnsureWritable(count); }
-        public override int EnsureWritable(int count, bool force) { ++Calls; return base.EnsureWritable(count, force); }
+        public override ByteBuf EnsureWritable(int count)
+        {
+            ++Calls;
+            return base.EnsureWritable(count);
+        }
+
+        public override int EnsureWritable(int count, bool force)
+        {
+            ++Calls;
+            return base.EnsureWritable(count, force);
+        }
     }
 
     private sealed class Composite : CompositeByteBuf
     {
         public int Calls;
-        public override ByteBuf EnsureWritable(int count) { ++Calls; return base.EnsureWritable(count); }
-        public override int EnsureWritable(int count, bool force) { ++Calls; return base.EnsureWritable(count, force); }
+        public override ByteBuf EnsureWritable(int count)
+        {
+            ++Calls;
+            return base.EnsureWritable(count);
+        }
+
+        public override int EnsureWritable(int count, bool force)
+        {
+            ++Calls;
+            return base.EnsureWritable(count, force);
+        }
     }
 
     private sealed class Storage : IDisposable

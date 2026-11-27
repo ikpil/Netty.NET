@@ -67,28 +67,43 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
 
     public override bool IsReadOnly => true;
     internal override byte ReadByteCore(int index)
-    { CheckIndex(index, 1); return _parent.ReadByteCore(index); }
+    {
+        CheckIndex(index, 1);
+        return _parent.ReadByteCore(index);
+    }
+
     internal override ulong ReadWord(int index, int width, bool littleEndian)
-    { CheckIndex(index, width); return _parent.ReadWord(index, width, littleEndian); }
+    {
+        CheckIndex(index, width);
+        return _parent.ReadWord(index, width, littleEndian);
+    }
+
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
     {
         return _parent.TryGetReadOnlyMemory(index, length, out memory);
     }
+
     protected override void GetBytesCore(int index, Span<byte> destination)
     {
         _parent.GetBytes(index, destination);
     }
+
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
     {
         return _parent.AsReadOnlySequence(index, length);
     }
     internal override bool SupportsDirectBulkCopy => _parent.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
-    { CheckIndex(index, length); return _parent.BorrowCopySequence(index, length); }
+    {
+        CheckIndex(index, length);
+        return _parent.BorrowCopySequence(index, length);
+    }
+
     internal override BufferMemoryLease AcquireReadLease()
     {
         return _parent.AcquireReadLease();
     }
+
     public override IByteBufAllocator Alloc()
     {
         return _parent.Alloc();
@@ -104,14 +119,17 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     {
         return _parent;
     }
+
     protected override Memory<byte> GetMemoryCore(int index, int length)
     {
         throw new NotSupportedException("The buffer is read-only.");
     }
+
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
     {
         return _parent.AsReadOnlyMemory(index, length);
     }
+
     // Preserve parent stream overrides and translated coordinates. CLR view
     // bounds/lifetime guards remain in front of dispatch, including duplicates.
     public override ByteBuf GetBytes(int index, Stream destination, int length)
@@ -121,6 +139,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         _parent.GetBytes(index, destination, length);
         return this;
     }
+
     public override async ValueTask GetBytesAsync(int index, Stream destination, int length,
         CancellationToken cancellationToken = default)
     {
@@ -128,6 +147,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         CheckIndex(index, length);
         await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
     }
+
     // Forward the channel policy with translated buffer coordinates; the file
     // position is independent of the view offset. Keep CLR guards before dispatch.
     public override int GetBytes(int index, Socket destination, int length)
@@ -136,6 +156,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         CheckIndex(index, length);
         return _parent.GetBytes(index, destination, length);
     }
+
     public override async ValueTask<int> GetBytesAsync(int index, Socket destination, int length,
         CancellationToken cancellationToken = default)
     {
@@ -144,12 +165,14 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         cancellationToken.ThrowIfCancellationRequested();
         return await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
     }
+
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     {
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
         return _parent.GetBytes(index, destination, position, length);
     }
+
     public override async ValueTask<int> GetBytesAsync(int index, SafeFileHandle destination, long position, int length,
         CancellationToken cancellationToken = default)
     {
@@ -158,6 +181,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         cancellationToken.ThrowIfCancellationRequested();
         return await _parent.GetBytesAsync(index, destination, position, length, cancellationToken).ConfigureAwait(false);
     }
+
     // Preserve the parent bulk overload and peer identity. Span replaces the
     // Java array/ByteBuffer range; relative operations still own their cursors.
     public override ByteBuf GetBytes(int index, Span<byte> destination)
@@ -166,6 +190,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         _parent.GetBytes(index, destination);
         return this;
     }
+
     public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -173,6 +198,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         _parent.GetBytes(index, destination, destinationIndex, length);
         return this;
     }
+
     // Public absolute scalar dispatch differs from the optimized storage
     // kernel used by relative operations and slices.
     public override byte GetByte(int index)
@@ -180,82 +206,106 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         CheckIndex(index, 1);
         return _parent.GetByte(index);
     }
+
     public override short GetShort(int index)
     {
         CheckIndex(index, 2);
         return _parent.GetShort(index);
     }
+
     public override short GetShortLE(int index)
     {
         CheckIndex(index, 2);
         return _parent.GetShortLE(index);
     }
+
     public override int GetUnsignedMedium(int index)
     {
         CheckIndex(index, 3);
         return _parent.GetUnsignedMedium(index);
     }
+
     public override int GetUnsignedMediumLE(int index)
     {
         CheckIndex(index, 3);
         return _parent.GetUnsignedMediumLE(index);
     }
+
     public override int GetInt(int index)
     {
         CheckIndex(index, 4);
         return _parent.GetInt(index);
     }
+
     public override int GetIntLE(int index)
     {
         CheckIndex(index, 4);
         return _parent.GetIntLE(index);
     }
+
     public override long GetLong(int index)
     {
         CheckIndex(index, 8);
         return _parent.GetLong(index);
     }
+
     public override long GetLongLE(int index)
     {
         CheckIndex(index, 8);
         return _parent.GetLongLE(index);
     }
     public override int RefCnt => _parent.RefCnt;
-    public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
+    public override ByteBuf Retain(int increment = 1)
+    {
+        _parent.Retain(increment);
+        return this;
+    }
+
     public override bool Release(int decrement = 1)
     {
         return _parent.Release(decrement);
     }
-    public override ByteBuf Touch(object hint = null) { _parent.Touch(hint); return this; }
+
+    public override ByteBuf Touch(object hint = null)
+    {
+        _parent.Touch(hint);
+        return this;
+    }
 
     public override ByteBuf Copy(int index, int length)
     {
         return _parent.Copy(index, length);
     }
+
     // Keep readable iteration on the view's own loop, as in AbstractByteBuf.
     public override int ForEachByte(Func<byte, bool> processor)
     {
         return base.ForEachByte(ReaderIndex, ReadableBytes, processor);
     }
+
     public override int ForEachByteDesc(Func<byte, bool> processor)
     {
         return base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
     }
+
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         EnsureAccessible();
         return _parent.ForEachByte(index, length, processor);
     }
+
     public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
     {
         EnsureAccessible();
         return _parent.ForEachByteDesc(index, length, processor);
     }
+
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
         return new ReadOnlyByteBuf(_parent.Slice(index, length));
     }
+
     public override ByteBuf Duplicate()
     {
         EnsureAccessible();

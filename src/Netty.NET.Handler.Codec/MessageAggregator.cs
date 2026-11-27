@@ -438,7 +438,9 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
      * aggregated message already, so that you don't need to.  Use this method to transfer the additional information
      * that the content message provides to {@code aggregated}.
      */
-    protected virtual void Aggregate(O aggregated, C content) { }
+    protected virtual void Aggregate(O aggregated, C content)
+    {
+    }
 
     private void FinishAggregation0(O aggregated)
     {
@@ -449,7 +451,9 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
     /**
      * Invoked when the specified {@code aggregated} message is about to be passed to the next handler in the pipeline.
      */
-    protected virtual void FinishAggregation(O aggregated) { }
+    protected virtual void FinishAggregation(O aggregated)
+    {
+    }
 
     private void InvokeHandleOversizedMessage(IChannelHandlerContext ctx, S oversized)
     {

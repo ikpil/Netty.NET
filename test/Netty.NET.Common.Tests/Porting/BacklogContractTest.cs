@@ -189,7 +189,15 @@ public class BacklogContractTest
     private sealed class OwnedStream : MemoryStream
     {
         internal int DisposeCount;
-        internal OwnedStream(string line) : base(Encoding.UTF8.GetBytes(line)) { }
-        protected override void Dispose(bool disposing) { if (disposing) DisposeCount++; base.Dispose(disposing); }
+        internal OwnedStream(string line) : base(Encoding.UTF8.GetBytes(line))
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                DisposeCount++;
+            base.Dispose(disposing);
+        }
     }
 }

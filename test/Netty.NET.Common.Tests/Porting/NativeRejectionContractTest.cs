@@ -17,6 +17,7 @@ public class NativeRejectionContractTest
             base.Wakeup(inEventLoop);
             if (!inEventLoop && OnWake != null) { WakeCalls++; OnWake(); }
         }
+
         protected override void Run()
         {
             for (;;)

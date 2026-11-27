@@ -190,24 +190,35 @@ public class AbstractChannelTest
         {
             SetActive(active);
         }
+
         protected override EndPoint LocalAddress0()
         {
             return null;
         }
+
         protected override EndPoint RemoteAddress0()
         {
             return null;
         }
+
         protected override Task DoBindAsync(EndPoint address, CancellationToken token)
         {
             return Task.CompletedTask;
         }
+
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
         {
             return Task.FromException(new NotSupportedException());
         }
-        protected override void DoClose() { }
-        protected override void DoBeginRead() { }
+
+        protected override void DoClose()
+        {
+        }
+
+        protected override void DoBeginRead()
+        {
+        }
+
         protected override Task DoWrite(object msg)
         {
             return Task.CompletedTask;
@@ -217,7 +228,11 @@ public class AbstractChannelTest
     private sealed class FailingChannel(IOException error) : TestChannel(false)
     {
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
-        { SetActive(true); return Task.CompletedTask; }
+        {
+            SetActive(true);
+            return Task.CompletedTask;
+        }
+
         protected override Task DoWrite(object msg)
         {
             return Task.FromException(error);
@@ -231,14 +246,17 @@ public class AbstractChannelTest
         {
             Added++;
         }
+
         public override void ChannelRegistered(IChannelHandlerContext ctx)
         {
             Registered++;
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             Active++;
         }
+
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
             Unregistered++;

@@ -27,7 +27,9 @@ public sealed class UnsupportedValueConverter<V> : IValueConverter<V>
     // CLR: the raw-typed INSTANCE and the unchecked cast in instance() become one instance per closed generic type;
     // the converter has no state, so every instance behaves the same.
     private static readonly UnsupportedValueConverter<V> INSTANCE = new UnsupportedValueConverter<V>();
-    private UnsupportedValueConverter() { }
+    private UnsupportedValueConverter()
+    {
+    }
 
     public static UnsupportedValueConverter<V> Instance()
     {

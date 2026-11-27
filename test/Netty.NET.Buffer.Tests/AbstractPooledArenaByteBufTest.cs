@@ -152,7 +152,8 @@ public abstract class AbstractPooledArenaByteBufTest
         var buffer = (PooledByteBuf)allocator.Buffer(oldCapacity);
         byte[] bytes = Enumerable.Range(0, oldCapacity).Select(i => (byte)(i % 251)).ToArray();
         buffer.WriteBytes(bytes).SetIndex(oldCapacity / 3, oldCapacity);
-        buffer.MarkReaderIndex(); buffer.MarkWriterIndex();
+        buffer.MarkReaderIndex();
+        buffer.MarkWriterIndex();
         var before = buffer.Allocation;
         try
         {
@@ -165,8 +166,10 @@ public abstract class AbstractPooledArenaByteBufTest
                 buffer.AsSpan(0, Math.Min(oldCapacity, newCapacity)).ToArray());
             if (oldCapacity <= newCapacity)
             {
-                buffer.ResetReaderIndex(); buffer.ResetWriterIndex();
-                Assert.Equal(oldCapacity / 3, buffer.ReaderIndex); Assert.Equal(oldCapacity, buffer.WriterIndex);
+                buffer.ResetReaderIndex();
+                buffer.ResetWriterIndex();
+                Assert.Equal(oldCapacity / 3, buffer.ReaderIndex);
+                Assert.Equal(oldCapacity, buffer.WriterIndex);
             }
         }
         finally { buffer.Release(); }

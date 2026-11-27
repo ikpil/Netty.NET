@@ -28,15 +28,20 @@ namespace Netty.NET.Resolver;
  */
 public class NoopAddressResolver : AbstractAddressResolver<EndPoint>
 {
-    public NoopAddressResolver(IEventExecutor executor) : base(executor) { }
+    public NoopAddressResolver(IEventExecutor executor) : base(executor)
+    {
+    }
+
     protected override bool DoIsResolved(EndPoint address)
     {
         return true;
     }
+
     protected override Task<EndPoint> DoResolveAsync(EndPoint unresolvedAddress, CancellationToken cancellationToken)
     {
         return Task.FromResult(unresolvedAddress);
     }
+
     protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint unresolvedAddress, CancellationToken cancellationToken)
     {
         return Task.FromResult<IReadOnlyList<EndPoint>>(new[] { unresolvedAddress });

@@ -25,12 +25,23 @@ namespace Netty.NET.Transport.Channels;
 // with it as the Java promise fails with ConnectTimeoutException.
 public class ConnectTimeoutException : TimeoutException
 {
-    public ConnectTimeoutException() { }
-    public ConnectTimeoutException(string msg) : base(msg) { }
-    public ConnectTimeoutException(string msg, Exception innerException) : base(msg, innerException) { }
+    public ConnectTimeoutException()
+    {
+    }
+
+    public ConnectTimeoutException(string msg) : base(msg)
+    {
+    }
+
+    public ConnectTimeoutException(string msg, Exception innerException) : base(msg, innerException)
+    {
+    }
+
     // CLR-only overload (Java's ConnectException has no cause constructor): its message follows the Java Throwable(Throwable)
     // contract, "(cause==null ? null : cause.toString())"
     // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Throwable.html#%3Cinit%3E(java.lang.Throwable)),
     // built by ThrowableUtil.ThrowableToString (owner decision 2026-11-24).
-    public ConnectTimeoutException(Exception cause) : base(Netty.NET.Common.Internal.ThrowableUtil.ThrowableToString(cause), cause) { }
+    public ConnectTimeoutException(Exception cause) : base(Netty.NET.Common.Internal.ThrowableUtil.ThrowableToString(cause), cause)
+    {
+    }
 }

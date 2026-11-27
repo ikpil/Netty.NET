@@ -16,16 +16,24 @@ public class NativeMemoryContractTest
     [InlineData(0)] [InlineData(8)]
     public void OwnerLookupPreservesIdentityForSlicesWithoutAcquiringLifetime(int length)
     {
-        var allocator = new NativeMemoryAllocator(); var owner = allocator.Allocate(length);
+        var allocator = new NativeMemoryAllocator();
+        var owner = allocator.Allocate(length);
         ReadOnlyMemory<byte> memory = owner.Memory;
-        Assert.True(NativeMemoryOwner.TryGetOwner(memory, out var found)); Assert.Same(owner, found);
-        Assert.True(NativeMemoryOwner.TryGetOwner(memory.Slice(length / 2), out found)); Assert.Same(owner, found);
-        Assert.True(NativeMemoryOwner.TryGetOwner(memory.Slice(length, 0), out found)); Assert.Same(owner, found);
-        owner.Dispose(); Assert.Equal(0, allocator.ReservedBytes);
-        Assert.True(NativeMemoryOwner.TryGetOwner(memory, out found)); Assert.Same(owner, found);
+        Assert.True(NativeMemoryOwner.TryGetOwner(memory, out var found));
+        Assert.Same(owner, found);
+        Assert.True(NativeMemoryOwner.TryGetOwner(memory.Slice(length / 2), out found));
+        Assert.Same(owner, found);
+        Assert.True(NativeMemoryOwner.TryGetOwner(memory.Slice(length, 0), out found));
+        Assert.Same(owner, found);
+        owner.Dispose();
+        Assert.Equal(0, allocator.ReservedBytes);
+        Assert.True(NativeMemoryOwner.TryGetOwner(memory, out found));
+        Assert.Same(owner, found);
         Assert.Throws<ObjectDisposedException>(() => _ = memory.Span.Length);
-        Assert.False(NativeMemoryOwner.TryGetOwner(new byte[8], out found)); Assert.Null(found);
-        Assert.False(NativeMemoryOwner.TryGetOwner(ReadOnlyMemory<byte>.Empty, out found)); Assert.Null(found);
+        Assert.False(NativeMemoryOwner.TryGetOwner(new byte[8], out found));
+        Assert.Null(found);
+        Assert.False(NativeMemoryOwner.TryGetOwner(ReadOnlyMemory<byte>.Empty, out found));
+        Assert.Null(found);
     }
 
     [Theory]

@@ -63,13 +63,18 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     // Net.isIPv6Available() ? INET6 : INET) and clears IPV6_V6ONLY; a CLR Socket has no default family, so this opens
     // the same: an IPv6 socket with Socket.DualMode when IPv4 is also available, otherwise IPv4
     // (https://learn.microsoft.com/dotnet/api/system.net.sockets.socket.dualmode).
-    public NioDatagramChannel() : this(DefaultFamily(), Socket.OSSupportsIPv6 && Socket.OSSupportsIPv4) { }
+    public NioDatagramChannel() : this(DefaultFamily(), Socket.OSSupportsIPv6 && Socket.OSSupportsIPv4)
+    {
+    }
 
     private static AddressFamily DefaultFamily()
     {
         return Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
     }
-    public NioDatagramChannel(AddressFamily family) : this(family, false) { }
+
+    public NioDatagramChannel(AddressFamily family) : this(family, false)
+    {
+    }
 
     /**
      * Create a new instance from the given {@link DatagramChannel}.
@@ -99,7 +104,9 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
      */
     [Obsolete("use DatagramChannel(SocketProtocolFamily?)")]
     public NioDatagramChannel(InternetProtocolFamily? ipFamily)
-        : this(ipFamily == null ? null : ipFamily.Value.ToSocketProtocolFamily()) { }
+        : this(ipFamily == null ? null : ipFamily.Value.ToSocketProtocolFamily())
+    {
+    }
 
     /**
      * Create a new instance using the given {@link SocketProtocolFamily}. If {@code null} is used it will depend
@@ -109,7 +116,9 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     // IPv4; INET6 opens IPv6 with IPv4-mapped traffic when IPv4 is available, as OpenJDK Net.socket0 clears
     // IPV6_V6ONLY.
     public NioDatagramChannel(SocketProtocolFamily? protocolFamily)
-        : this(NewSocketFamily(protocolFamily), NewSocketFamily(protocolFamily) == AddressFamily.InterNetworkV6 && Socket.OSSupportsIPv4) { }
+        : this(NewSocketFamily(protocolFamily), NewSocketFamily(protocolFamily) == AddressFamily.InterNetworkV6 && Socket.OSSupportsIPv4)
+    {
+    }
 
     private static AddressFamily NewSocketFamily(SocketProtocolFamily? ipFamily)
     {
@@ -168,18 +177,22 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         try { JavaChannel().SetRawSocketOption((int)level, option, disabled); }
         catch (SocketException error) when (error.SocketErrorCode == SocketError.ProtocolOption) { }
     }
+
     protected override EndPoint LocalAddress0()
     {
         return Normalize(Volatile.Read(ref _linuxLocalAddress) ?? JavaChannel().LocalEndPoint);
     }
+
     protected override EndPoint RemoteAddress0()
     {
         return Volatile.Read(ref _connectedAddress);
     }
+
     protected override IChannelConfig NewConfig()
     {
         return new DefaultDatagramChannelConfig(this, JavaChannel());
     }
+
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
@@ -189,6 +202,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         SetActive(true);
         return Task.CompletedTask;
     }
+
     protected override bool DoConnect(EndPoint remoteAddress, EndPoint localAddress)
     {
         if (localAddress != null)
@@ -308,12 +322,19 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     {
         if (enabled) throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR is unavailable on the managed transport.");
     }
+
     protected override void DoDeregister()
     {
         base.DoDeregister();
         SetActive(JavaChannel().IsBound);
     }
-    protected override void DoClose() { base.DoClose(); _memberships.Clear(); JavaChannel().Dispose(); }
+
+    protected override void DoClose()
+    {
+        base.DoClose();
+        _memberships.Clear();
+        JavaChannel().Dispose();
+    }
     protected override bool ContinueOnWriteError
     {
         get
@@ -557,10 +578,12 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     {
         return ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, true);
     }
+
     public Task LeaveGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null)
     {
         return ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, false);
     }
+
     private Task ChangeIPv4MembershipAsync(IPAddress multicastAddress, IPAddress interfaceAddress, bool join)
     {
         return OnLoopAsync(() =>
@@ -579,33 +602,40 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             ChangeMembership(multicastAddress, networkInterface?.GetIPProperties().GetIPv4Properties()?.Index ?? 0, address, join);
         });
     }
+
     // CLR: the single-address forms of DatagramChannel; this class adds an optional interface address.
     Task IDatagramChannel.JoinGroupAsync(IPAddress multicastAddress)
     {
         return JoinGroupAsync(multicastAddress, null);
     }
+
     Task IDatagramChannel.LeaveGroupAsync(IPAddress multicastAddress)
     {
         return LeaveGroupAsync(multicastAddress, null);
     }
+
     public Task JoinGroupAsync(IPAddress multicastAddress, long interfaceIndex)
     {
         return OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, true));
     }
+
     public Task LeaveGroupAsync(IPAddress multicastAddress, long interfaceIndex)
     {
         return OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, false));
     }
+
     public Task JoinGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
     {
         ArgumentNullException.ThrowIfNull(multicastAddress);
         return ChangeMembershipAsync(multicastAddress.Address, networkInterface, true);
     }
+
     public Task LeaveGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
     {
         ArgumentNullException.ThrowIfNull(multicastAddress);
         return ChangeMembershipAsync(multicastAddress.Address, networkInterface, false);
     }
+
     private Task ChangeMembershipAsync(IPAddress address, NetworkInterface networkInterface, bool join)
     {
         ArgumentNullException.ThrowIfNull(networkInterface);
@@ -654,14 +684,17 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         else
             _memberships.Remove(key);
     }
+
     public Task JoinGroupAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress source)
     {
         return ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, true);
     }
+
     public Task LeaveGroupAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress source)
     {
         return ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, false);
     }
+
     private Task ChangeSourceMembershipAsync(IPAddress group, NetworkInterface networkInterface, IPAddress source, bool join)
     {
         ArgumentNullException.ThrowIfNull(group);
@@ -683,6 +716,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             if (join) _memberships.Add(key, new Membership(address)); else _memberships.Remove(key);
         });
     }
+
     /**
      * Block the given sourceToBlock address for the given multicastAddress on the given networkInterface
      */
@@ -706,6 +740,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             }
         });
     }
+
     /**
      * Block the given sourceToBlock address for the given multicastAddress
      *
@@ -717,6 +752,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             ?? throw new InvalidOperationException("No local multicast interface is selected.");
         return BlockAsync(multicastAddress, networkInterface, sourceToBlock);
     }
+
     private void ValidateSource(IPAddress group, IPAddress source)
     {
         if (!SupportsGroupFamily(group.AddressFamily) || source.AddressFamily != group.AddressFamily)
@@ -734,6 +770,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         if (source.Equals(IPAddress.Any) || source.Equals(IPAddress.Broadcast) || source.GetAddressBytes()[0] is >= 224 and <= 239)
             throw new ArgumentException("A unicast source address is required.", nameof(source));
     }
+
     // The membership key already identifies the interface. Scoped and unscoped
     // forms of the same IPv6 address identify the same membership on that interface.
     private static IPAddress MembershipAddress(IPAddress address)
@@ -797,16 +834,19 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             serialized.Buffer.Span[..serialized.Size].CopyTo(destination);
         }
     }
+
     internal static NetworkInterface FindInterface(IPAddress address)
     {
         return NetworkInterface.GetAllNetworkInterfaces()
             .FirstOrDefault(n => n.GetIPProperties().UnicastAddresses.Any(a => a.Address.Equals(address)));
     }
+
     internal static IPAddress InterfaceAddress(NetworkInterface networkInterface, AddressFamily family)
     {
         return networkInterface.GetIPProperties().UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == family)?.Address
             ?? throw new ArgumentException("The interface has no address for the socket family.", nameof(networkInterface));
     }
+
     internal static int InterfaceIndex(NetworkInterface networkInterface, AddressFamily family)
     {
         return family == AddressFamily.InterNetworkV6 ? networkInterface.GetIPProperties().GetIPv6Properties()?.Index

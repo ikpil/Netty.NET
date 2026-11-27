@@ -30,18 +30,22 @@ public sealed class CustomChannelId(int id) : IChannelId
     {
         return id;
     }
+
     public override bool Equals(object other)
     {
         return other is CustomChannelId custom && custom.Value == id;
     }
+
     public override string ToString()
     {
         return "CustomChannelId " + id;
     }
+
     public string AsShortText()
     {
         return ToString();
     }
+
     public string AsLongText()
     {
         return ToString();

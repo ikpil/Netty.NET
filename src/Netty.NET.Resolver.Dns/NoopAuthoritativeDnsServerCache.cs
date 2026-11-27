@@ -27,7 +27,9 @@ public sealed class NoopAuthoritativeDnsServerCache : IAuthoritativeDnsServerCac
 {
     public static readonly NoopAuthoritativeDnsServerCache INSTANCE = new NoopAuthoritativeDnsServerCache();
 
-    private NoopAuthoritativeDnsServerCache() { }
+    private NoopAuthoritativeDnsServerCache()
+    {
+    }
 
     public IDnsServerAddressStream Get(string hostname)
     {

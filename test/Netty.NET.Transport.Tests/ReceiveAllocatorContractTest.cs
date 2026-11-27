@@ -267,6 +267,7 @@ public class ReceiveAllocatorContractTest
             {
                 return 512;
             }
+
             internal int Total()
             {
                 return TotalBytesRead();

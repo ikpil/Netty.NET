@@ -31,7 +31,9 @@ public abstract class InetNameResolver : SimpleNameResolver<IPAddress>
      * @param executor the {@link EventExecutor} which is used to notify the listeners of the {@link Future} returned
      *                 by {@link #resolve(String)}
      */
-    protected InetNameResolver(IEventExecutor executor) : base(executor) { }
+    protected InetNameResolver(IEventExecutor executor) : base(executor)
+    {
+    }
 
     /**
      * Return a {@link AddressResolver} that will use this name resolver underneath.

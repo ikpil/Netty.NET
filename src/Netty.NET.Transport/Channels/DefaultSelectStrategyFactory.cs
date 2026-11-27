@@ -23,7 +23,9 @@ public sealed class DefaultSelectStrategyFactory : ISelectStrategyFactory
 {
     public static readonly ISelectStrategyFactory INSTANCE = new DefaultSelectStrategyFactory();
 
-    private DefaultSelectStrategyFactory() { }
+    private DefaultSelectStrategyFactory()
+    {
+    }
 
     public ISelectStrategy NewSelectStrategy()
     {

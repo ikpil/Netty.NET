@@ -41,11 +41,13 @@ public interface IRecvByteBufAllocator
          * enough not to waste its space.
          */
         ByteBuf Allocate(IByteBufAllocator alloc);
+
         /**
          * Similar to {@link #allocate(ByteBufAllocator)} except that it does not allocate anything but just tells the
          * capacity.
          */
         int Guess();
+
         /**
          * Reset any counters that have accumulated and recommend how many messages/bytes should be read for the next
          * read loop.
@@ -56,11 +58,13 @@ public interface IRecvByteBufAllocator
          * @param config The channel configuration which may impact this object's behavior.
          */
         void Reset(IChannelConfig config);
+
         /**
          * Increment the number of messages that have been read for the current read loop.
          * @param numMessages The amount to increment by.
          */
         void IncMessagesRead(int numMessages);
+
         /**
          * Set the bytes that have been read for the last read operation.
          * This may be used to increment the number of bytes that have been read.
@@ -70,26 +74,31 @@ public interface IRecvByteBufAllocator
          * to this class and is not required to be enforced in {@link #continueReading()}.
          */
         void LastBytesRead(int bytes);
+
         /**
          * Get the amount of bytes for the previous read operation.
          * @return The amount of bytes for the previous read operation.
          */
         int LastBytesRead();
+
         /**
          * Set how many bytes the read operation will (or did) attempt to read.
          * @param bytes How many bytes the read operation will (or did) attempt to read.
          */
         void AttemptedBytesRead(int bytes);
+
         /**
          * Get how many bytes the read operation will (or did) attempt to read.
          * @return How many bytes the read operation will (or did) attempt to read.
          */
         int AttemptedBytesRead();
+
         /**
          * Determine if the current read loop should continue.
          * @return {@code true} if the read loop should continue reading. {@code false} if the read loop is complete.
          */
         bool ContinueReading();
+
         /**
          * The read has completed.
          */
@@ -114,6 +123,7 @@ public interface IRecvByteBufAllocator
             ArgumentNullException.ThrowIfNull(handle);
             _delegate = handle;
         }
+
         /**
          * Get the {@link Handle} which all methods will be delegated to.
          * @return the {@link Handle} which all methods will be delegated to.
@@ -122,42 +132,52 @@ public interface IRecvByteBufAllocator
         {
             return _delegate;
         }
+
         public virtual ByteBuf Allocate(IByteBufAllocator alloc)
         {
             return _delegate.Allocate(alloc);
         }
+
         public virtual int Guess()
         {
             return _delegate.Guess();
         }
+
         public virtual void Reset(IChannelConfig config)
         {
             _delegate.Reset(config);
         }
+
         public virtual void IncMessagesRead(int numMessages)
         {
             _delegate.IncMessagesRead(numMessages);
         }
+
         public virtual void LastBytesRead(int bytes)
         {
             _delegate.LastBytesRead(bytes);
         }
+
         public virtual int LastBytesRead()
         {
             return _delegate.LastBytesRead();
         }
+
         public virtual void AttemptedBytesRead(int bytes)
         {
             _delegate.AttemptedBytesRead(bytes);
         }
+
         public virtual int AttemptedBytesRead()
         {
             return _delegate.AttemptedBytesRead();
         }
+
         public virtual bool ContinueReading()
         {
             return _delegate.ContinueReading();
         }
+
         public virtual void ReadComplete()
         {
             _delegate.ReadComplete();

@@ -32,7 +32,9 @@ public class SpdyProtocolException : Exception
     /**
      * Creates a new instance.
      */
-    public SpdyProtocolException() { }
+    public SpdyProtocolException()
+    {
+    }
 
     /**
      * Creates a new instance.

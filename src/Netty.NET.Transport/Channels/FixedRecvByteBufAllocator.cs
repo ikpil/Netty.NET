@@ -34,10 +34,12 @@ public class FixedRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocator
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bufferSize);
         _bufferSize = bufferSize;
     }
+
     public override IRecvByteBufAllocator.IHandle NewHandle()
     {
         return new HandleImpl(this, _bufferSize);
     }
+
     public override FixedRecvByteBufAllocator RespectMaybeMoreData(bool respectMaybeMoreData)
     {
         base.RespectMaybeMoreData(respectMaybeMoreData);

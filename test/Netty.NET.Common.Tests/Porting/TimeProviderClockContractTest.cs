@@ -17,14 +17,17 @@ public class TimeProviderClockContractTest
         {
             return Interlocked.Read(ref timestamp);
         }
+
         internal void Advance(long ticks)
         {
             Interlocked.Add(ref timestamp, ticks);
         }
+
         public override DateTimeOffset GetUtcNow()
         {
             throw new InvalidOperationException("Wall time is unrelated to deadlines");
         }
+
         public override System.Threading.ITimer CreateTimer(TimerCallback callback, object state, TimeSpan dueTime, TimeSpan period)
         {
             throw new InvalidOperationException("The executor owns scheduling");
@@ -43,26 +46,32 @@ public class TimeProviderClockContractTest
             Action due;
             while ((due = PollScheduledTask()) != null) due();
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return ReferenceEquals(thread, owner);
         }
+
         public override void Execute(Action task)
         {
             tasks.Enqueue(task);
         }
+
         public override bool IsShutdown()
         {
             return stopped;
         }
+
         public override bool IsShuttingDown()
         {
             return stopped;
         }
+
         public override bool IsTerminated()
         {
             return stopped;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return stopped;
@@ -73,7 +82,13 @@ public class TimeProviderClockContractTest
             Shutdown();
             return TerminationFuture;
         }
-        public override void Shutdown() { stopped = true; CancelScheduledTasks(); }
+
+        public override void Shutdown()
+        {
+            stopped = true;
+            CancelScheduledTasks();
+        }
+
         public void Dispose()
         {
             Shutdown();

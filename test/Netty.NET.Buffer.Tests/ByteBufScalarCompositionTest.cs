@@ -36,45 +36,209 @@ public class ByteBufScalarCompositionTest
         public bool TrapUnsigned;
         public void Visit(string hook, int index = -1, long argument = 0)
         {
-            ++Count; Hook = hook; Index = index; Argument = argument;
-            if (fail) throw Error;
+            ++Count;
+            Hook = hook;
+            Index = index;
+            Argument = argument;
+            if (fail)
+                throw Error;
         }
     }
 
     private sealed class Heap(Observation o) : UnpooledHeapByteBuf(64, 64)
     {
-        public override byte GetByte(int index) { o.Visit("GetByte", index); return unchecked((byte)o.Bits); }
-        public override short GetShort(int index) { o.Visit("GetShort", index); return unchecked((short)o.Bits); }
-        public override short GetShortLE(int index) { o.Visit("GetShortLE", index); return unchecked((short)o.Bits); }
-        public override int GetInt(int index) { o.Visit("GetInt", index); return o.IntBits; }
-        public override int GetIntLE(int index) { o.Visit("GetIntLE", index); return o.IntBits; }
-        public override long GetLong(int index) { o.Visit("GetLong", index); return unchecked((long)o.Bits); }
-        public override long GetLongLE(int index) { o.Visit("GetLongLE", index); return unchecked((long)o.Bits); }
-        public override int GetUnsignedMedium(int index) { o.Visit("GetUnsignedMedium", index); return (int)(o.Bits & 0xffffff); }
-        public override int GetUnsignedMediumLE(int index) { o.Visit("GetUnsignedMediumLE", index); return (int)(o.Bits & 0xffffff); }
-        public override byte ReadByte() { o.Visit("ReadByte", -1); return unchecked((byte)o.Bits); }
-        public override short ReadShort() { o.Visit("ReadShort", -1); return unchecked((short)o.Bits); }
-        public override short ReadShortLE() { o.Visit("ReadShortLE", -1); return unchecked((short)o.Bits); }
-        public override int ReadInt() { o.Visit("ReadInt", -1); return o.IntBits; }
-        public override int ReadIntLE() { o.Visit("ReadIntLE", -1); return o.IntBits; }
-        public override long ReadLong() { o.Visit("ReadLong", -1); return unchecked((long)o.Bits); }
-        public override long ReadLongLE() { o.Visit("ReadLongLE", -1); return unchecked((long)o.Bits); }
-        public override int ReadUnsignedMedium() { o.Visit("ReadUnsignedMedium", -1); return (int)(o.Bits & 0xffffff); }
-        public override int ReadUnsignedMediumLE() { o.Visit("ReadUnsignedMediumLE", -1); return (int)(o.Bits & 0xffffff); }
-        public override ByteBuf SetByte(int index, int value) { o.Visit("SetByte", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetShort(int index, int value) { o.Visit("SetShort", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetShortLE(int index, int value) { o.Visit("SetShortLE", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetInt(int index, int value) { o.Visit("SetInt", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetIntLE(int index, int value) { o.Visit("SetIntLE", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetLong(int index, long value) { o.Visit("SetLong", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetLongLE(int index, long value) { o.Visit("SetLongLE", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteByte(int value) { o.Visit("WriteByte", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteShort(int value) { o.Visit("WriteShort", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteShortLE(int value) { o.Visit("WriteShortLE", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteInt(int value) { o.Visit("WriteInt", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteIntLE(int value) { o.Visit("WriteIntLE", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteLong(long value) { o.Visit("WriteLong", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteLongLE(long value) { o.Visit("WriteLongLE", -1, value); return Unpooled.EmptyBuffer; }
+        public override byte GetByte(int index)
+        {
+            o.Visit("GetByte", index);
+            return unchecked((byte)o.Bits);
+        }
+
+        public override short GetShort(int index)
+        {
+            o.Visit("GetShort", index);
+            return unchecked((short)o.Bits);
+        }
+
+        public override short GetShortLE(int index)
+        {
+            o.Visit("GetShortLE", index);
+            return unchecked((short)o.Bits);
+        }
+
+        public override int GetInt(int index)
+        {
+            o.Visit("GetInt", index);
+            return o.IntBits;
+        }
+
+        public override int GetIntLE(int index)
+        {
+            o.Visit("GetIntLE", index);
+            return o.IntBits;
+        }
+
+        public override long GetLong(int index)
+        {
+            o.Visit("GetLong", index);
+            return unchecked((long)o.Bits);
+        }
+
+        public override long GetLongLE(int index)
+        {
+            o.Visit("GetLongLE", index);
+            return unchecked((long)o.Bits);
+        }
+
+        public override int GetUnsignedMedium(int index)
+        {
+            o.Visit("GetUnsignedMedium", index);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override int GetUnsignedMediumLE(int index)
+        {
+            o.Visit("GetUnsignedMediumLE", index);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override byte ReadByte()
+        {
+            o.Visit("ReadByte", -1);
+            return unchecked((byte)o.Bits);
+        }
+
+        public override short ReadShort()
+        {
+            o.Visit("ReadShort", -1);
+            return unchecked((short)o.Bits);
+        }
+
+        public override short ReadShortLE()
+        {
+            o.Visit("ReadShortLE", -1);
+            return unchecked((short)o.Bits);
+        }
+
+        public override int ReadInt()
+        {
+            o.Visit("ReadInt", -1);
+            return o.IntBits;
+        }
+
+        public override int ReadIntLE()
+        {
+            o.Visit("ReadIntLE", -1);
+            return o.IntBits;
+        }
+
+        public override long ReadLong()
+        {
+            o.Visit("ReadLong", -1);
+            return unchecked((long)o.Bits);
+        }
+
+        public override long ReadLongLE()
+        {
+            o.Visit("ReadLongLE", -1);
+            return unchecked((long)o.Bits);
+        }
+
+        public override int ReadUnsignedMedium()
+        {
+            o.Visit("ReadUnsignedMedium", -1);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override int ReadUnsignedMediumLE()
+        {
+            o.Visit("ReadUnsignedMediumLE", -1);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override ByteBuf SetByte(int index, int value)
+        {
+            o.Visit("SetByte", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetShort(int index, int value)
+        {
+            o.Visit("SetShort", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetShortLE(int index, int value)
+        {
+            o.Visit("SetShortLE", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetInt(int index, int value)
+        {
+            o.Visit("SetInt", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetIntLE(int index, int value)
+        {
+            o.Visit("SetIntLE", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetLong(int index, long value)
+        {
+            o.Visit("SetLong", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetLongLE(int index, long value)
+        {
+            o.Visit("SetLongLE", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteByte(int value)
+        {
+            o.Visit("WriteByte", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteShort(int value)
+        {
+            o.Visit("WriteShort", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteShortLE(int value)
+        {
+            o.Visit("WriteShortLE", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteInt(int value)
+        {
+            o.Visit("WriteInt", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteIntLE(int value)
+        {
+            o.Visit("WriteIntLE", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteLong(long value)
+        {
+            o.Visit("WriteLong", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteLongLE(long value)
+        {
+            o.Visit("WriteLongLE", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
         public override ushort GetUnsignedShort(int index)
         {
             if (o.TrapUnsigned) throw new InvalidOperationException("GetChar must use GetShort directly.");
@@ -84,38 +248,198 @@ public class ByteBufScalarCompositionTest
 
     private sealed class Direct(Observation o, NativeMemoryAllocator native) : UnpooledDirectByteBuf(64, 64, native)
     {
-        public override byte GetByte(int index) { o.Visit("GetByte", index); return unchecked((byte)o.Bits); }
-        public override short GetShort(int index) { o.Visit("GetShort", index); return unchecked((short)o.Bits); }
-        public override short GetShortLE(int index) { o.Visit("GetShortLE", index); return unchecked((short)o.Bits); }
-        public override int GetInt(int index) { o.Visit("GetInt", index); return o.IntBits; }
-        public override int GetIntLE(int index) { o.Visit("GetIntLE", index); return o.IntBits; }
-        public override long GetLong(int index) { o.Visit("GetLong", index); return unchecked((long)o.Bits); }
-        public override long GetLongLE(int index) { o.Visit("GetLongLE", index); return unchecked((long)o.Bits); }
-        public override int GetUnsignedMedium(int index) { o.Visit("GetUnsignedMedium", index); return (int)(o.Bits & 0xffffff); }
-        public override int GetUnsignedMediumLE(int index) { o.Visit("GetUnsignedMediumLE", index); return (int)(o.Bits & 0xffffff); }
-        public override byte ReadByte() { o.Visit("ReadByte", -1); return unchecked((byte)o.Bits); }
-        public override short ReadShort() { o.Visit("ReadShort", -1); return unchecked((short)o.Bits); }
-        public override short ReadShortLE() { o.Visit("ReadShortLE", -1); return unchecked((short)o.Bits); }
-        public override int ReadInt() { o.Visit("ReadInt", -1); return o.IntBits; }
-        public override int ReadIntLE() { o.Visit("ReadIntLE", -1); return o.IntBits; }
-        public override long ReadLong() { o.Visit("ReadLong", -1); return unchecked((long)o.Bits); }
-        public override long ReadLongLE() { o.Visit("ReadLongLE", -1); return unchecked((long)o.Bits); }
-        public override int ReadUnsignedMedium() { o.Visit("ReadUnsignedMedium", -1); return (int)(o.Bits & 0xffffff); }
-        public override int ReadUnsignedMediumLE() { o.Visit("ReadUnsignedMediumLE", -1); return (int)(o.Bits & 0xffffff); }
-        public override ByteBuf SetByte(int index, int value) { o.Visit("SetByte", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetShort(int index, int value) { o.Visit("SetShort", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetShortLE(int index, int value) { o.Visit("SetShortLE", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetInt(int index, int value) { o.Visit("SetInt", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetIntLE(int index, int value) { o.Visit("SetIntLE", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetLong(int index, long value) { o.Visit("SetLong", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf SetLongLE(int index, long value) { o.Visit("SetLongLE", index, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteByte(int value) { o.Visit("WriteByte", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteShort(int value) { o.Visit("WriteShort", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteShortLE(int value) { o.Visit("WriteShortLE", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteInt(int value) { o.Visit("WriteInt", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteIntLE(int value) { o.Visit("WriteIntLE", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteLong(long value) { o.Visit("WriteLong", -1, value); return Unpooled.EmptyBuffer; }
-        public override ByteBuf WriteLongLE(long value) { o.Visit("WriteLongLE", -1, value); return Unpooled.EmptyBuffer; }
+        public override byte GetByte(int index)
+        {
+            o.Visit("GetByte", index);
+            return unchecked((byte)o.Bits);
+        }
+
+        public override short GetShort(int index)
+        {
+            o.Visit("GetShort", index);
+            return unchecked((short)o.Bits);
+        }
+
+        public override short GetShortLE(int index)
+        {
+            o.Visit("GetShortLE", index);
+            return unchecked((short)o.Bits);
+        }
+
+        public override int GetInt(int index)
+        {
+            o.Visit("GetInt", index);
+            return o.IntBits;
+        }
+
+        public override int GetIntLE(int index)
+        {
+            o.Visit("GetIntLE", index);
+            return o.IntBits;
+        }
+
+        public override long GetLong(int index)
+        {
+            o.Visit("GetLong", index);
+            return unchecked((long)o.Bits);
+        }
+
+        public override long GetLongLE(int index)
+        {
+            o.Visit("GetLongLE", index);
+            return unchecked((long)o.Bits);
+        }
+
+        public override int GetUnsignedMedium(int index)
+        {
+            o.Visit("GetUnsignedMedium", index);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override int GetUnsignedMediumLE(int index)
+        {
+            o.Visit("GetUnsignedMediumLE", index);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override byte ReadByte()
+        {
+            o.Visit("ReadByte", -1);
+            return unchecked((byte)o.Bits);
+        }
+
+        public override short ReadShort()
+        {
+            o.Visit("ReadShort", -1);
+            return unchecked((short)o.Bits);
+        }
+
+        public override short ReadShortLE()
+        {
+            o.Visit("ReadShortLE", -1);
+            return unchecked((short)o.Bits);
+        }
+
+        public override int ReadInt()
+        {
+            o.Visit("ReadInt", -1);
+            return o.IntBits;
+        }
+
+        public override int ReadIntLE()
+        {
+            o.Visit("ReadIntLE", -1);
+            return o.IntBits;
+        }
+
+        public override long ReadLong()
+        {
+            o.Visit("ReadLong", -1);
+            return unchecked((long)o.Bits);
+        }
+
+        public override long ReadLongLE()
+        {
+            o.Visit("ReadLongLE", -1);
+            return unchecked((long)o.Bits);
+        }
+
+        public override int ReadUnsignedMedium()
+        {
+            o.Visit("ReadUnsignedMedium", -1);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override int ReadUnsignedMediumLE()
+        {
+            o.Visit("ReadUnsignedMediumLE", -1);
+            return (int)(o.Bits & 0xffffff);
+        }
+
+        public override ByteBuf SetByte(int index, int value)
+        {
+            o.Visit("SetByte", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetShort(int index, int value)
+        {
+            o.Visit("SetShort", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetShortLE(int index, int value)
+        {
+            o.Visit("SetShortLE", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetInt(int index, int value)
+        {
+            o.Visit("SetInt", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetIntLE(int index, int value)
+        {
+            o.Visit("SetIntLE", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetLong(int index, long value)
+        {
+            o.Visit("SetLong", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf SetLongLE(int index, long value)
+        {
+            o.Visit("SetLongLE", index, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteByte(int value)
+        {
+            o.Visit("WriteByte", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteShort(int value)
+        {
+            o.Visit("WriteShort", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteShortLE(int value)
+        {
+            o.Visit("WriteShortLE", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteInt(int value)
+        {
+            o.Visit("WriteInt", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteIntLE(int value)
+        {
+            o.Visit("WriteIntLE", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteLong(long value)
+        {
+            o.Visit("WriteLong", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
+        public override ByteBuf WriteLongLE(long value)
+        {
+            o.Visit("WriteLongLE", -1, value);
+            return Unpooled.EmptyBuffer;
+        }
+
         public override ushort GetUnsignedShort(int index)
         {
             if (o.TrapUnsigned) throw new InvalidOperationException("GetChar must use GetShort directly.");
@@ -189,10 +513,12 @@ public class ByteBufScalarCompositionTest
         var o = new Observation(sample, failure) { TrapUnsigned = operation == 6 };
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = direct ? new Direct(o, native) : new Heap(o);
-        buffer.SetBytes(0, new byte[64]); buffer.SetIndex(3, 32).MarkReaderIndex().MarkWriterIndex();
+        buffer.SetBytes(0, new byte[64]);
+        buffer.SetIndex(3, 32).MarkReaderIndex().MarkWriterIndex();
         try
         {
-            if (failure) Assert.Same(o.Error, Assert.Throws<Failure>(() => Invoke(buffer, o, operation)));
+            if (failure)
+                Assert.Same(o.Error, Assert.Throws<Failure>(() => Invoke(buffer, o, operation)));
             else
             {
                 object result = Invoke(buffer, o, operation);
@@ -212,7 +538,8 @@ public class ByteBufScalarCompositionTest
                     Assert.Equal(expected, Assert.IsType<long>(result));
                 }
             }
-            Assert.Equal(1, o.Count); Assert.Equal(Hooks[operation], o.Hook);
+            Assert.Equal(1, o.Count);
+            Assert.Equal(Hooks[operation], o.Hook);
             Assert.Equal(operation < 18 ? 2 : -1, o.Index);
             long argument = operation switch
             {
@@ -223,11 +550,14 @@ public class ByteBufScalarCompositionTest
                 _ => 0
             };
             Assert.Equal(argument, o.Argument);
-            Assert.Equal(3, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
+            Assert.Equal(3, buffer.ReaderIndex);
+            Assert.Equal(32, buffer.WriterIndex);
             Assert.Equal(new byte[64], ByteBufUtil.GetBytes(buffer, 0, 64));
             buffer.SetIndex(0, 64).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
-            Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
+            Assert.Equal(3, buffer.ReaderIndex);
+            Assert.Equal(32, buffer.WriterIndex);
+            Assert.Equal(1, buffer.RefCnt);
+            Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
         }
         finally { Assert.True(buffer.Release()); }
         Assert.Equal(0, native.ReservedBytes);

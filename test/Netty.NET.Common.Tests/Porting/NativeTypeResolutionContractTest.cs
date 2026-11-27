@@ -16,6 +16,7 @@ public class NativeTypeResolutionContractTest : IDisposable
     {
         FastThreadLocal.RemoveAll();
     }
+
     public void Dispose()
     {
         FastThreadLocal.RemoveAll();

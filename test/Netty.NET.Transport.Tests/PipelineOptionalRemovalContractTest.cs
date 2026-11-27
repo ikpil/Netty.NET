@@ -45,6 +45,7 @@ public class PipelineOptionalRemovalContractTest
             finally { channel.FinishAndReleaseAll(); }
         }
     }
+
     private static void Rendezvous(ref int ready)
     {
         Interlocked.Increment(ref ready);

@@ -16,11 +16,13 @@ public class ReferenceCountFieldContractTest
         {
             SetRefCnt(count);
         }
+
         protected override void Deallocate()
         {
             Interlocked.Increment(ref Deallocations);
             if (DeallocationError != null) throw DeallocationError;
         }
+
         public override IReferenceCounted Touch(object hint)
         {
             return this;

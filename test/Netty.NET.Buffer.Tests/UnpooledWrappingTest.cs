@@ -270,7 +270,8 @@ public class UnpooledWrappingTest
         ByteBuf empty = Unpooled.Buffer(1), a = Unpooled.WrappedBuffer(new byte[] { 1 }), b = Unpooled.WrappedBuffer(new byte[] { 2 });
         Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(0, empty, a, b));
         Assert.Equal(new[] { 0, 1, 1 }, new[] { empty.RefCnt, a.RefCnt, b.RefCnt });
-        a.Release(); b.Release();
+        a.Release();
+        b.Release();
         Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(0, new byte[] { 1 }, new byte[] { 2 }));
     }
 
@@ -332,7 +333,8 @@ public class UnpooledWrappingTest
     {
         var allocator = new NativeMemoryAllocator(64);
         ByteBuf prefix = new UnpooledDirectByteBuf(1, allocator: allocator).WriteByte(1);
-        ByteBuf dead = Unpooled.Buffer(1).WriteByte(2); dead.Release();
+        ByteBuf dead = Unpooled.Buffer(1).WriteByte(2);
+        dead.Release();
         ByteBuf tail = new UnpooledDirectByteBuf(1, allocator: allocator).WriteByte(3);
         Assert.Throws<IllegalReferenceCountException>(() => Unpooled.WrappedBuffer(prefix, dead, tail));
         Assert.Equal(new[] { 0, 0, 0 }, new[] { prefix.RefCnt, dead.RefCnt, tail.RefCnt });
@@ -354,8 +356,10 @@ public class UnpooledWrappingTest
     {
         ByteBuf owner = Unpooled.Buffer(1 << 20).WriteZero(1 << 20);
         ByteBuf leading = Unpooled.Buffer(1);
-        ByteBuf[] inputs = new ByteBuf[2049]; inputs[0] = leading;
-        for (int i = 1; i < inputs.Length; ++i) inputs[i] = owner.RetainedDuplicate();
+        ByteBuf[] inputs = new ByteBuf[2049];
+        inputs[0] = leading;
+        for (int i = 1; i < inputs.Length; ++i)
+            inputs[i] = owner.RetainedDuplicate();
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(inputs));
@@ -373,6 +377,7 @@ public class UnpooledWrappingTest
         {
             WriteByte(1);
         }
+
         protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         {
             if (++_reads == 2) throw Failure;

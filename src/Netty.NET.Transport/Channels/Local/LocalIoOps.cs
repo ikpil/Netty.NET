@@ -26,5 +26,7 @@ public sealed class LocalIoOps : IIoOps
      */
     public static readonly LocalIoOps DEFAULT = new LocalIoOps();
 
-    private LocalIoOps() { }
+    private LocalIoOps()
+    {
+    }
 }

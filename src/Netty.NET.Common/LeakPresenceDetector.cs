@@ -42,11 +42,13 @@ public static class LeakPresenceDetector
         }
         return false;
     }
+
     internal static bool InStaticInitializerFast()
     {
         // This plain field access is safe. The worst that can happen is that we see non-zero where we shouldn't.
         return Volatile.Read(ref staticInitializerCount) != 0 && InStaticInitializerSlow(new StackTrace());
     }
+
     /**
      * Wrap a static initializer so that any resources created inside the block will not be tracked. Example:
      * <pre>{@code
@@ -71,6 +73,7 @@ public static class LeakPresenceDetector
         try { return supplier(); }
         finally { Interlocked.Decrement(ref staticInitializerCount); }
     }
+
     /**
      * Check the current leak presence detector scope for open resources. If any resources remain unclosed, an
      * exception is thrown.
@@ -106,23 +109,27 @@ public static class LeakPresenceDetector
         {
             this.name = name;
         }
+
         internal void CheckOpen()
         {
             if (Volatile.Read(ref open) == 0)
                 throw new AllocationProhibitedException("Resource scope '" + (name ?? "null") + "' already closed");
         }
+
         internal void Track(object tracker)
         {
             CheckOpen();
             Interlocked.Increment(ref openResourceCounter);
             if (TRACK_CREATION_STACK) creationStacks.TryAdd(tracker, new LeakCreation());
         }
+
         internal void Release(object tracker)
         {
             Interlocked.Decrement(ref openResourceCounter);
             if (TRACK_CREATION_STACK) creationStacks.TryRemove(tracker, out _);
             CheckOpen();
         }
+
         internal void Check()
         {
             // Interlocked replaces LongAdder; checks still require quiescent producers.
@@ -147,6 +154,7 @@ public static class LeakPresenceDetector
             throw new InvalidOperationException(message + "Please use paranoid leak detection to get more information, or set " +
                 "environment property " + TRACK_CREATION_STACK_PROPERTY + "=true");
         }
+
         /**
          * Check whether there are any open resources left, and {@link #close()} would throw.
          *
@@ -156,6 +164,7 @@ public static class LeakPresenceDetector
         {
             return Volatile.Read(ref openResourceCounter) > 0;
         }
+
         /**
          * Close this scope. Closing a scope will prevent new resources from being allocated (or released) in this
          * scope. The call also throws an exception if there are any resources left open.
@@ -166,6 +175,7 @@ public static class LeakPresenceDetector
             // Java decrement can become negative and accidentally allow reuse.
             if (Interlocked.Exchange(ref open, 0) != 0) Check();
         }
+
         public void Dispose()
         {
             Close();
@@ -203,7 +213,9 @@ public static class LeakPresenceDetector
      */
     public sealed class AllocationProhibitedException : InvalidOperationException
     {
-        public AllocationProhibitedException(string s) : base(s) { }
+        public AllocationProhibitedException(string s) : base(s)
+        {
+        }
     }
 }
 
@@ -269,7 +281,10 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
      *
      * @param resourceType The resource type
      */
-    public LeakPresenceDetector(Type resourceType) : base(resourceType, 0) { }
+    public LeakPresenceDetector(Type resourceType) : base(resourceType, 0)
+    {
+    }
+
     /**
      * This constructor should not be used directly, it is called reflectively by {@link ResourceLeakDetectorFactory}.
      *
@@ -277,7 +292,10 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
      * @param samplingInterval Ignored
      */
     [Obsolete]
-    public LeakPresenceDetector(Type resourceType, int samplingInterval) : this(resourceType) { }
+    public LeakPresenceDetector(Type resourceType, int samplingInterval) : this(resourceType)
+    {
+    }
+
     /**
      * This constructor should not be used directly, it is called reflectively by {@link ResourceLeakDetectorFactory}.
      *
@@ -285,7 +303,10 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
      * @param samplingInterval Ignored
      * @param maxActive Ignored
      */
-    public LeakPresenceDetector(Type resourceType, int samplingInterval, long maxActive) : this(resourceType) { }
+    public LeakPresenceDetector(Type resourceType, int samplingInterval, long maxActive) : this(resourceType)
+    {
+    }
+
     /**
      * Get the resource scope for the current thread. This is used to assign resources to scopes, and it is used by
      * {@link #check()} to tell which scope to check for open resources. By default, the global scope is returned.
@@ -296,18 +317,22 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
     {
         return LeakPresenceDetector.GLOBAL;
     }
+
     internal LeakPresenceDetector.ResourceScope ScopeForCheck()
     {
         return CurrentScope();
     }
+
     public sealed override IResourceLeakTracker<T> Track(T obj)
     {
         return LeakPresenceDetector.InStaticInitializerFast() ? null : TrackForcibly(obj);
     }
+
     public sealed override IResourceLeakTracker<T> TrackForcibly(T obj)
     {
         return new PresenceTracker(CurrentScope());
     }
+
     public sealed override bool IsRecordEnabled()
     {
         return false;
@@ -321,8 +346,15 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
             this.scope = scope;
             scope.Track(this);
         }
-        public void Record() { }
-        public void Record(object hint) { }
+
+        public void Record()
+        {
+        }
+
+        public void Record(object hint)
+        {
+        }
+
         public bool Close(T trackedObject)
         {
             if (Interlocked.CompareExchange(ref closed, 1, 0) != 0) return false;

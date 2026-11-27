@@ -49,8 +49,13 @@ internal static class NativeAotContractScenarios
             default: throw new ArgumentOutOfRangeException(nameof(scenario));
         }
     }
+
     private static void Check(bool condition, string message)
-    { if (!condition) throw new InvalidOperationException(message); }
+    {
+        if (!condition)
+            throw new InvalidOperationException(message);
+    }
+
     private static void Read(IChannelHandler handler, Func<int> reads, int expected)
     {
         var channel = new EmbeddedChannel(handler);
@@ -62,18 +67,32 @@ internal static class NativeAotContractScenarios
         }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     private static void InheritedSkipDoesNotHideAnOverride()
-    { var handler = new ActiveRead(); Read(handler, () => handler.Reads, 1); }
+    {
+        var handler = new ActiveRead();
+        Read(handler, () => handler.Reads, 1);
+    }
+
     private static void ExplicitSkipUsesTheActualInterfaceTarget()
-    { var handler = new ExplicitSkippedRead(); Read(handler, () => handler.Reads, 0); }
+    {
+        var handler = new ExplicitSkippedRead();
+        Read(handler, () => handler.Reads, 0);
+    }
+
     private static void ExplicitActiveInterfaceTargetIsInvoked()
-    { var handler = new ExplicitRead(); Read(handler, () => handler.Reads, 1); }
+    {
+        var handler = new ExplicitRead();
+        Read(handler, () => handler.Reads, 1);
+    }
+
     private static void AHiddenNewSlotDoesNotReplaceTheInterfaceTarget()
     {
         var handler = new HiddenRead();
         Read(handler, () => handler.Reads, 1);
         Check(handler.HiddenReads == 0, "A hidden new slot replaced the interface implementation.");
     }
+
     private static void OutboundOverridesKeepWriteAndFlush()
     {
         var handler = new ActiveWrite();
@@ -86,14 +105,17 @@ internal static class NativeAotContractScenarios
         }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     private static void CachedMasksDoNotCaptureTheFirstInstance()
     {
-        var first = new ActiveRead(); var second = new ActiveRead();
+        var first = new ActiveRead();
+        var second = new ActiveRead();
         Read(first, () => first.Reads, 1);
         Check(second.Reads == 0, "A cached delegate captured another instance.");
         Read(second, () => second.Reads, 1);
         Check(first.Reads == 1, "The second instance dispatched to the first.");
     }
+
     private static void DefaultForwardersAndActiveMasksStayPrecise()
     {
         Check(ChannelHandlerMask.Mask(new ChannelDuplexHandler()) == 0, "Default forwarders were not skipped.");
@@ -101,6 +123,7 @@ internal static class NativeAotContractScenarios
         Check(ChannelHandlerMask.Mask(new ExplicitSkippedRead()) == 0, "The explicit skip attribute was lost.");
         Check(ChannelHandlerMask.Mask(new ActiveWrite()) == (ChannelHandlerMask.MaskWrite | ChannelHandlerMask.MaskFlush), "Outbound mask changed.");
     }
+
     private static void ExclusionsKeepUnusedPublicAndPrivateMethods()
     {
         ResourceLeakDetector.AddExclusions(typeof(Exclusions), "UnusedPublic", "UnusedPrivate");
@@ -108,13 +131,20 @@ internal static class NativeAotContractScenarios
         catch (ArgumentException) { return; }
         throw new InvalidOperationException("Missing exclusion methods must still be rejected.");
     }
+
     private static void ExceptionOnlyHandlersStillReceiveTheirCause()
     {
-        var handler = new ErrorHandler(); var channel = new EmbeddedChannel(new ChannelInboundHandlerAdapter(), handler);
+        var handler = new ErrorHandler();
+        var channel = new EmbeddedChannel(new ChannelInboundHandlerAdapter(), handler);
         var cause = new Exception("native exception");
-        try { channel.Pipeline.FireExceptionCaught(cause); Check(ReferenceEquals(cause, handler.Cause), "Exception callback was lost."); }
+        try
+        {
+            channel.Pipeline.FireExceptionCaught(cause);
+            Check(ReferenceEquals(cause, handler.Cause), "Exception callback was lost.");
+        }
         finally { channel.FinishAndReleaseAll(); }
     }
+
     private static void StreamWriteOwnershipSurvivesNativeCompilation()
     {
         var inherited = new DerivedSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
@@ -127,8 +157,12 @@ internal static class NativeAotContractScenarios
         }
         finally { inherited.CloseForcibly(); overridden.CloseForcibly(); }
     }
+
     private static void DirectImplementationsKeepTheirMetadata()
-    { var handler = new DirectRead(); Read(handler, () => handler.Reads, 1); }
+    {
+        var handler = new DirectRead();
+        Read(handler, () => handler.Reads, 1);
+    }
 
     private class SkippedRead : ChannelInboundHandlerAdapter
     {
@@ -140,34 +174,63 @@ internal static class NativeAotContractScenarios
     private class ActiveRead : SkippedRead
     {
         internal int Reads;
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            Reads++;
+            ctx.FireChannelRead(msg);
+        }
     }
     private sealed class HiddenRead : ActiveRead
     {
         internal int HiddenReads;
-        [Skip] public new void ChannelRead(IChannelHandlerContext ctx, object msg) { HiddenReads++; ctx.FireChannelRead(msg); }
+        [Skip] public new void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            HiddenReads++;
+            ctx.FireChannelRead(msg);
+        }
     }
     private sealed class ExplicitSkippedRead : ChannelInboundHandlerAdapter, IChannelInboundHandler
     {
         internal int Reads;
-        [Skip] void IChannelInboundHandler.ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
+        [Skip] void IChannelInboundHandler.ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            Reads++;
+            ctx.FireChannelRead(msg);
+        }
     }
     private sealed class ExplicitRead : ChannelInboundHandlerAdapter, IChannelInboundHandler
     {
         internal int Reads;
-        void IChannelInboundHandler.ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
+        void IChannelInboundHandler.ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            Reads++;
+            ctx.FireChannelRead(msg);
+        }
     }
     private sealed class ActiveWrite : ChannelDuplexHandler
     {
         internal int Writes, Flushes;
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
-        { Writes++; return ctx.WriteAsync(msg, cancellationToken); }
-        public override void Flush(IChannelHandlerContext ctx) { Flushes++; ctx.Flush(); }
+        {
+            Writes++;
+            return ctx.WriteAsync(msg, cancellationToken);
+        }
+
+        public override void Flush(IChannelHandlerContext ctx)
+        {
+            Flushes++;
+            ctx.Flush();
+        }
     }
     private sealed class Exclusions
     {
-        public static void UnusedPublic() { }
-        private static void UnusedPrivate() { }
+        public static void UnusedPublic()
+        {
+        }
+
+        private static void UnusedPrivate()
+        {
+        }
     }
     private sealed class ErrorHandler : ChannelHandlerAdapter
     {
@@ -180,37 +243,55 @@ internal static class NativeAotContractScenarios
     private sealed class DirectRead : IChannelInboundHandler
     {
         internal int Reads;
-        public void HandlerAdded(IChannelHandlerContext ctx) { }
-        public void HandlerRemoved(IChannelHandlerContext ctx) { }
+        public void HandlerAdded(IChannelHandlerContext ctx)
+        {
+        }
+
+        public void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+        }
+
         public void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             ctx.FireExceptionCaught(cause);
         }
+
         public void ChannelRegistered(IChannelHandlerContext ctx)
         {
             ctx.FireChannelRegistered();
         }
+
         public void ChannelUnregistered(IChannelHandlerContext ctx)
         {
             ctx.FireChannelUnregistered();
         }
+
         public void ChannelActive(IChannelHandlerContext ctx)
         {
             ctx.FireChannelActive();
         }
+
         public void ChannelInactive(IChannelHandlerContext ctx)
         {
             ctx.FireChannelInactive();
         }
-        public void ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
+
+        public void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            Reads++;
+            ctx.FireChannelRead(msg);
+        }
+
         public void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             ctx.FireChannelReadComplete();
         }
+
         public void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             ctx.FireUserEventTriggered(evt);
         }
+
         public void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             ctx.FireChannelWritabilityChanged();
@@ -224,6 +305,7 @@ internal static class NativeAotContractScenarios
         {
             Called = true;
         }
+
         internal void InvokeDoWrite()
         {
             DoWrite(OutboundBuffer);

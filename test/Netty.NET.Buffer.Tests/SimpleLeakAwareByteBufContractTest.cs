@@ -310,10 +310,12 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.Equal(origin.Capacity, allocator.Metric.UsedDirectMemory);
             wrapper.Capacity = 3;
             Assert.Equal(3, origin.Capacity);
-            Assert.Equal(0, tracker.Closes); Assert.Equal(0, tracker.Records);
+            Assert.Equal(0, tracker.Closes);
+            Assert.Equal(0, tracker.Records);
         }
         finally { wrapper.Release(); }
-        Assert.Equal(1, tracker.Closes); Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(1, tracker.Closes);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
@@ -365,7 +367,11 @@ public class SimpleLeakAwareByteBufContractTest
     private sealed class TouchBuffer() : UnpooledHeapByteBuf(1, 1)
     {
         internal int Touches;
-        public override ByteBuf Touch(object hint = null) { Touches++; return this; }
+        public override ByteBuf Touch(object hint = null)
+        {
+            Touches++;
+            return this;
+        }
     }
     private sealed class Tracker(ByteBuf expected) : IResourceLeakTracker<ByteBuf>
     {
@@ -376,10 +382,12 @@ public class SimpleLeakAwareByteBufContractTest
         {
             Records++;
         }
+
         public void Record(object hint)
         {
             Records++;
         }
+
         public bool Close(ByteBuf trackedObject)
         {
             Assert.Same(expected, trackedObject);
@@ -388,6 +396,7 @@ public class SimpleLeakAwareByteBufContractTest
             Closes++;
             return Closes == 1;
         }
+
         public Exception GetCloseStackTraceIfAny()
         {
             return Closes > 0 ? Trace : null;

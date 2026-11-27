@@ -629,7 +629,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Invoked before returning from {@link #runAllTasks()} and {@link #runAllTasks(long)}.
      */
-    protected virtual void AfterRunningAllTasks() { }
+    protected virtual void AfterRunningAllTasks()
+    {
+    }
 
     /**
      * Returns the amount of time left until the scheduled task with the closest dead line is executed.

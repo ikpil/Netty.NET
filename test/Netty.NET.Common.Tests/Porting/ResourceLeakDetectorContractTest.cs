@@ -16,6 +16,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
     {
         ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
     }
+
     public void Dispose()
     {
         ResourceLeakDetector.SetLevel(previous);
@@ -27,19 +28,43 @@ public class ResourceLeakDetectorContractTest : IDisposable
         internal bool Reporting = true;
         internal int ListenerCalls;
         internal int ReportThread;
-        internal Detector(int sampling = 1) : base(typeof(object), sampling) { }
+        internal Detector(int sampling = 1) : base(typeof(object), sampling)
+        {
+        }
+
         protected override bool NeedReport()
         {
             return Reporting;
         }
+
         protected override object GetInitialHint(string type)
         {
             return Hint;
         }
-        protected override void ReportTracedLeak(string type, string records) { Reports.Add(records); ReportThread = Environment.CurrentManagedThreadId; }
-        protected override void ReportUntracedLeak(string type) { Reports.Add(""); ReportThread = Environment.CurrentManagedThreadId; }
-        public void OnLeak(string type, string records) { Assert.Equal("Object", type); ListenerCalls++; }
-        internal void Flush() { object resource = new(); TrackForcibly(resource).Close(resource); }
+
+        protected override void ReportTracedLeak(string type, string records)
+        {
+            Reports.Add(records);
+            ReportThread = Environment.CurrentManagedThreadId;
+        }
+
+        protected override void ReportUntracedLeak(string type)
+        {
+            Reports.Add("");
+            ReportThread = Environment.CurrentManagedThreadId;
+        }
+
+        public void OnLeak(string type, string records)
+        {
+            Assert.Equal("Object", type);
+            ListenerCalls++;
+        }
+
+        internal void Flush()
+        {
+            object resource = new();
+            TrackForcibly(resource).Close(resource);
+        }
     }
     private sealed class MutableHint : IResourceLeakHint
     {
@@ -56,11 +81,13 @@ public class ResourceLeakDetectorContractTest : IDisposable
         resource = new WeakReference<object>(value);
         return detector.TrackForcibly(value);
     }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool IsCollected(WeakReference<object> resource)
     {
         return !resource.TryGetTarget(out _);
     }
+
     private static void CollectUntil(Action visit, Func<bool> done)
     {
         var elapsed = Stopwatch.StartNew();
@@ -129,7 +156,9 @@ public class ResourceLeakDetectorContractTest : IDisposable
         var detector = new Detector();
         object resource = new();
         var tracker = detector.TrackForcibly(resource);
-        GC.Collect(); GC.WaitForPendingFinalizers(); detector.Flush();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        detector.Flush();
         Assert.Empty(detector.Reports);
         Assert.Null(tracker.GetCloseStackTraceIfAny());
         Assert.True(tracker.Close(resource));
@@ -139,7 +168,8 @@ public class ResourceLeakDetectorContractTest : IDisposable
             Assert.NotNull(close);
             Assert.Contains(nameof(LiveResourceAndExplicitCloseSuppressReportsAndPreserveFirstCloseStack), close.StackTrace);
         }
-        else Assert.Null(close);
+        else
+            Assert.Null(close);
         Assert.False(tracker.Close(resource));
         Assert.Same(close, tracker.GetCloseStackTraceIfAny());
         tracker.Record(new ThrowingHint());
@@ -158,6 +188,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
     {
         tracker.Record(hint);
     }
+
     [Fact]
     public void RecordsSnapshotHintAndAccessCallerRatherThanReportGenerationStack()
     {
@@ -209,7 +240,12 @@ public class ResourceLeakDetectorContractTest : IDisposable
 
     private sealed class BlockingHint(ManualResetEventSlim entered, ManualResetEventSlim release) : IResourceLeakHint
     {
-        public string ToHintString() { entered.Set(); release.Wait(); return "concurrent record"; }
+        public string ToHintString()
+        {
+            entered.Set();
+            release.Wait();
+            return "concurrent record";
+        }
     }
     [Fact]
     public void RecordThatStartedBeforeCloseCannotOverwriteCloseMarker()
@@ -237,21 +273,27 @@ public class ResourceLeakDetectorContractTest : IDisposable
         var detector = new Detector();
         detector.SetLeakListener(detector);
         IResourceLeakTracker<object> first = null;
-        for (int i = 0; i < 2; i++) first = CreateLeak(detector, out _);
+        for (int i = 0; i < 2; i++)
+            first = CreateLeak(detector, out _);
         CollectUntil(detector.Flush, () => detector.Reports.Count == 1);
-        GC.Collect(); GC.WaitForPendingFinalizers(); detector.Flush();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        detector.Flush();
         Assert.Single(detector.Reports);
         Assert.Equal(1, detector.ListenerCalls);
         detector.Reporting = false;
         var discarded = CreateLeak(detector, out var resource);
         CollectUntil(detector.Flush, () => IsCollected(resource));
-        GC.Collect(); GC.WaitForPendingFinalizers(); detector.Flush();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        detector.Flush();
         Assert.False(((IResourceLeak)discarded).Close());
         Assert.NotEmpty(discarded.ToString());
         detector.Reporting = true;
         detector.Flush();
         Assert.Single(detector.Reports);
-        GC.KeepAlive(first); GC.KeepAlive(discarded);
+        GC.KeepAlive(first);
+        GC.KeepAlive(discarded);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -263,6 +305,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
         detector.Hint = "second-tracker";
         detector.TrackForcibly(resource);
     }
+
     [Fact]
     public void OneResourceCanNotifyMultipleTrackersAfterTheirReferentIsCollected()
     {

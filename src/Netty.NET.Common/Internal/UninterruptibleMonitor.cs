@@ -27,6 +27,7 @@ internal static class UninterruptibleMonitor
         {
             this.monitor = monitor;
         }
+
         public void Dispose()
         {
             Monitor.Exit(monitor);

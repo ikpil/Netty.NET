@@ -174,5 +174,7 @@ internal sealed class MqttCodecUtil
         }
     }
 
-    private MqttCodecUtil() { }
+    private MqttCodecUtil()
+    {
+    }
 }

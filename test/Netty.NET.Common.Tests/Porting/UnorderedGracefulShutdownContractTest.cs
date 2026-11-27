@@ -31,20 +31,24 @@ public class UnorderedGracefulShutdownContractTest
         {
             _remove = remove;
         }
+
         internal void CancelResult()
         {
             _result.TrySetCanceled();
         }
+
         public void CancelForShutdown()
         {
             if (Interlocked.Exchange(ref _claim, 1) != 0) return;
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
         }
+
         public void Reject(Exception error)
         {
             _result.TrySetException(error);
         }
+
         public void Run()
         {
             Assert.Fail("Canceled reservation ran");

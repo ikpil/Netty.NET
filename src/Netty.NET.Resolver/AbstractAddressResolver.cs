@@ -118,10 +118,14 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
      * resolution.
      */
     protected abstract Task<T> DoResolveAsync(EndPoint unresolvedAddress, CancellationToken cancellationToken);
+
     /**
      * Invoked by {@link #resolveAll(SocketAddress)} to perform the actual name
      * resolution.
      */
     protected abstract Task<IReadOnlyList<T>> DoResolveAllAsync(EndPoint unresolvedAddress, CancellationToken cancellationToken);
-    public virtual void Dispose() { }
+
+    public virtual void Dispose()
+    {
+    }
 }

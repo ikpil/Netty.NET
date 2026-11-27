@@ -12,7 +12,11 @@ public class NativeShutdownHookContractTest
     private sealed class RecordingHook(List<string> trace, string name)
     {
         internal Thread Thread;
-        internal void Invoke() { Thread = Thread.CurrentThread; trace.Add(name); }
+        internal void Invoke()
+        {
+            Thread = Thread.CurrentThread;
+            trace.Add(name);
+        }
     }
 
     private static async Task Stop(SingleThreadEventExecutor executor)
@@ -95,12 +99,16 @@ public class NativeShutdownHookContractTest
     private sealed class NativeHookLoop : SingleThreadEventExecutor
     {
         internal int Dispatches;
-        internal NativeHookLoop() : base(null, new DefaultThreadFactory("native-hook", true), true) { }
+        internal NativeHookLoop() : base(null, new DefaultThreadFactory("native-hook", true), true)
+        {
+        }
+
         public override void Execute(Action task)
         {
             Interlocked.Increment(ref Dispatches);
             base.Execute(task);
         }
+
         protected override void Run()
         {
             for (;;)

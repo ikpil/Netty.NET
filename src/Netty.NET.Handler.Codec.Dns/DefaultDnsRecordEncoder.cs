@@ -43,7 +43,9 @@ public class DefaultDnsRecordEncoder : IDnsRecordEncoder
     /**
      * Creates a new instance.
      */
-    protected internal DefaultDnsRecordEncoder() { }
+    protected internal DefaultDnsRecordEncoder()
+    {
+    }
 
     public void EncodeQuestion(IDnsQuestion question, ByteBuf @out)
     {

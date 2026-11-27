@@ -13,6 +13,7 @@ public class RecyclerFactoryContractTest
         {
             return obj is Item;
         }
+
         public override int GetHashCode()
         {
             return 0;

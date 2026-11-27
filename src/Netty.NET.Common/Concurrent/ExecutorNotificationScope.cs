@@ -14,6 +14,7 @@ internal readonly ref struct ExecutorNotificationScope
     {
         ++_depth;
     }
+
     public void Dispose()
     {
         --_depth;

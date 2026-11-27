@@ -53,7 +53,9 @@ public sealed class Http3ServerExample
     internal static readonly int PORT = int.Parse(ExampleLauncher.GetProperty("port", "9999"),
             NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
 
-    private Http3ServerExample() { }
+    private Http3ServerExample()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

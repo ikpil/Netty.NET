@@ -45,7 +45,9 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
 
     /// <summary>Creates an observation whose callbacks can be registered while the operation is open.</summary>
     public ExecutorProgress(IEventExecutor executor, Task operation, int maxPendingReports = int.MaxValue)
-        : this(executor, operation, null, null, maxPendingReports, true) { }
+        : this(executor, operation, null, null, maxPendingReports, true)
+    {
+    }
 
     /// <summary>Creates an IProgress reporter for an existing native operation.</summary>
     /// <param name="executor">Executor used for observer invocation.</param>
@@ -55,7 +57,9 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
     /// <param name="maxPendingReports">Maximum buffered reports; TryReport returns false when this observation is full.</param>
     public ExecutorProgress(IEventExecutor executor, Task operation, Action<TransferProgress> progress,
         Action<Task> completed = null, int maxPendingReports = int.MaxValue)
-        : this(executor, operation, progress, completed, maxPendingReports, false) { }
+        : this(executor, operation, progress, completed, maxPendingReports, false)
+    {
+    }
 
     private ExecutorProgress(IEventExecutor executor, Task operation, Action<TransferProgress> progress,
         Action<Task> completed, int maxPendingReports, bool empty)
@@ -325,11 +329,13 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
             if (Interlocked.CompareExchange(ref _claim, 1, 0) == 0 && _owner.TryGetTarget(out var target))
                 target.Drain();
         }
+
         public void CancelForShutdown()
         {
             if (Interlocked.CompareExchange(ref _claim, 2, 0) == 0 && _owner.TryGetTarget(out var target))
                 target.DispatchFailed(null);
         }
+
         public void Reject(Exception error)
         {
             if (Interlocked.CompareExchange(ref _claim, 2, 0) == 0 && _owner.TryGetTarget(out var target))
@@ -364,6 +370,7 @@ public sealed class ProgressRegistration : IDisposable
     {
         Volatile.Read(ref Owner)?.Remove(this);
     }
+
     internal void Release()
     {
         Owner = null;
@@ -371,14 +378,17 @@ public sealed class ProgressRegistration : IDisposable
         Progress = Array.Empty<Action<TransferProgress>>();
         Completed = Array.Empty<Action<Task>>();
     }
+
     internal void Complete()
     {
         _notification.TrySetResult();
     }
+
     internal void Cancel()
     {
         _notification.TrySetCanceled();
     }
+
     internal void Reject(Exception error)
     {
         _notification.TrySetException(error);

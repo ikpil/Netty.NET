@@ -218,11 +218,13 @@ public sealed class ExecutorCompletion : IDisposable
             if (Interlocked.CompareExchange(ref _claim, 1, 0) == 0 && _owner.TryGetTarget(out var target))
                 target.Drain(this);
         }
+
         public void CancelForShutdown()
         {
             if (Interlocked.CompareExchange(ref _claim, 2, 0) == 0 && _owner.TryGetTarget(out var target))
                 target.DispatchFailed(this, null);
         }
+
         public void Reject(Exception error)
         {
             if (Interlocked.CompareExchange(ref _claim, 2, 0) == 0 && _owner.TryGetTarget(out var target))

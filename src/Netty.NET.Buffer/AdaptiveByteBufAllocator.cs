@@ -72,7 +72,9 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
             useCacheForNonEventLoopThreads ?? SystemPropertyUtil.GetBoolean("io.netty.allocator.useCachedMagazinesForNonEventLoopThreads", false),
             Math.Max(1, SystemPropertyUtil.GetLong("io.netty.allocator.chunkPurgePollsThreadLocal", 16)),
             Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.threadLocalChunkCacheMaxBytes", 8 * 1024 * 1024)),
-            LocalMinBytes()) { }
+            LocalMinBytes())
+    {
+    }
 
     private static int MaxStripes()
     {
@@ -98,18 +100,21 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
             lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
             useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);
     }
+
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
         return ToLeakAwareBuffer(HeapPool.Allocate(initialCapacity, maxCapacity));
     }
+
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
         return ToLeakAwareBuffer(DirectPool.Allocate(initialCapacity, maxCapacity));
     }
+
     public void Dispose()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();

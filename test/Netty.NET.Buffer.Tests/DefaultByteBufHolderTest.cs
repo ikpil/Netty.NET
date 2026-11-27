@@ -346,6 +346,7 @@ public class DefaultByteBufHolderTest
             Replacements++;
             return new ReplacingHolder(content, Tag);
         }
+
         public string Diagnostic()
         {
             return ContentToString();
@@ -389,7 +390,8 @@ public class DefaultByteBufHolderTest
         IByteBufHolder empty = new DefaultByteBufHolder(Unpooled.EmptyBuffer);
         IByteBufHolder retained = empty.RetainedDuplicate();
         Assert.Equal(1, empty.RefCnt);
-        Assert.False(empty.Release()); Assert.False(retained.Release());
+        Assert.False(empty.Release());
+        Assert.False(retained.Release());
         Assert.Same(Unpooled.EmptyBuffer, ((IByteBufConvertible)Unpooled.EmptyBuffer).AsByteBuf());
         ByteBuf root = Unpooled.Buffer(1, 1).WriteByte(8);
         ByteBuf wrapper = Unpooled.UnreleasableBuffer(root);

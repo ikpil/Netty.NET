@@ -72,6 +72,7 @@ public class EventLoopLifecycleContractTest
         }
         finally { await loop.StopAsync(); }
     }
+
     [Fact(Timeout = 10000)]
     public async Task PendingTasksIncludesTheTailQueueThroughTheParentType()
     {
@@ -96,6 +97,7 @@ public class EventLoopLifecycleContractTest
         }
         finally { release.Set(); await loop.StopAsync(); }
     }
+
     [Fact(Timeout = 10000)]
     public async Task ShutdownDrainsAcceptedTailWorkOnTheOwner()
     {
@@ -127,6 +129,7 @@ public class EventLoopLifecycleContractTest
         Assert.True(await ran.Task.WaitAsync(cancellation));
         Assert.Equal(0, loop.PendingTasks());
     }
+
     [Fact(Timeout = 10000)]
     public async Task TailExceptionsDoNotSuppressLaterAcceptedWork()
     {

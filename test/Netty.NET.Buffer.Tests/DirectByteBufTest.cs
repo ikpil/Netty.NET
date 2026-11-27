@@ -29,6 +29,7 @@ public class DirectByteBufTest : HeapByteBufTest
     {
         return new UnpooledDirectByteBuf(initialCapacity, maxCapacity, _contractAllocator);
     }
+
     [Fact]
     public void HeapAndDirectWireOperationsAndSharedViewsAgree()
     {
@@ -122,7 +123,8 @@ public class DirectByteBufTest : HeapByteBufTest
         ByteBuf buffer = new UnpooledDirectByteBuf(8, 8, allocator);
         buffer.SetLong(0, 0x0102030405060708);
         Memory<byte> borrowed = buffer.AsMemory(2, 4);
-        ReadOnlySpan<byte> captured = borrowed.Span; var pin = borrowed.Pin();
+        ReadOnlySpan<byte> captured = borrowed.Span;
+        var pin = borrowed.Pin();
         try
         {
             Assert.True(buffer.Release());
@@ -143,7 +145,8 @@ public class DirectByteBufTest : HeapByteBufTest
         ByteBuf buffer = new UnpooledDirectByteBuf(4, 16, allocator);
         buffer.WriteBytes(new byte[] { 1, 2, 3, 4 });
         Memory<byte> old = buffer.AsMemory(0, 4);
-        ReadOnlySpan<byte> captured = old.Span; var pin = old.Pin();
+        ReadOnlySpan<byte> captured = old.Span;
+        var pin = old.Pin();
         try
         {
             buffer.Capacity = 12;

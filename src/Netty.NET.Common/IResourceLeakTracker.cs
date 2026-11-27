@@ -48,7 +48,8 @@ public interface IResourceLeakTracker<T> : IResourceLeakTracker {
      *
      * @return A throwable with the stack trace of the successful close call, or {@code null}.
      */
-    Exception GetCloseStackTraceIfAny() {
+    Exception GetCloseStackTraceIfAny()
+    {
         return null;
     }
 }

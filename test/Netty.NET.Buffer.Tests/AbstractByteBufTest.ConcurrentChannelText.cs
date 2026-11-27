@@ -169,7 +169,11 @@ public abstract partial class AbstractByteBufTest
             Assert.Equal(0, _peer.Receive(extra, SocketFlags.None));
         }
 
-        public void Dispose() { _peer.Dispose(); Socket.Dispose(); }
+        public void Dispose()
+        {
+            _peer.Dispose();
+            Socket.Dispose();
+        }
     }
 
     public enum CharSequenceType { String, AsciiString }

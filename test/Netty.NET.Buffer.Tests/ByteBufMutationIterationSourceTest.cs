@@ -44,6 +44,7 @@ public class ByteBufMutationIterationSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -83,24 +84,32 @@ public class ByteBufMutationIterationSourceTest
         if (scenario is ZeroCase.SetAfterRelease or ZeroCase.WriteAfterRelease)
         {
             ReleaseBuffer(buffer);
-            if (scenario == ZeroCase.SetAfterRelease) Assert.Throws<IllegalReferenceCountException>(() => buffer.SetZero(0, 1));
-            else Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteZero(1));
+            if (scenario == ZeroCase.SetAfterRelease)
+                Assert.Throws<IllegalReferenceCountException>(() => buffer.SetZero(0, 1));
+            else
+                Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteZero(1));
             Assert.Equal(0, buffer.WriterIndex);
             return;
         }
-        if (scenario == ZeroCase.Write) Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
+        if (scenario == ZeroCase.Write)
+            Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
         buffer.Clear();
-        while (buffer.IsWritable()) buffer.WriteByte(0xFF);
-        if (scenario == ZeroCase.Write) buffer.Clear();
+        while (buffer.IsWritable())
+            buffer.WriteByte(0xFF);
+        if (scenario == ZeroCase.Write)
+            buffer.Clear();
         var random = new Random(12345);
         for (int i = 0; i < buffer.Capacity;)
         {
             int length = Math.Min(buffer.Capacity - i, random.Next(32));
-            if (scenario == ZeroCase.Set) Assert.Same(buffer, buffer.SetZero(i, length));
-            else Assert.Same(buffer, buffer.WriteZero(length));
+            if (scenario == ZeroCase.Set)
+                Assert.Same(buffer, buffer.SetZero(i, length));
+            else
+                Assert.Same(buffer, buffer.WriteZero(length));
             i += length;
         }
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(capacity, buffer.WriterIndex);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(capacity, buffer.WriterIndex);
         Assert.Equal(new byte[capacity], ByteBufUtil.GetBytes(buffer, 0, capacity));
         Assert.Equal(1, buffer.RefCnt);
     }
@@ -228,6 +237,7 @@ public class ByteBufMutationIterationSourceTest
         ReleaseBuffer(s.Root);
         Assert.Throws<IllegalReferenceCountException>(() => ReleasedWrites[(int)operation](s.Root));
         Assert.Equal(0, s.Root.RefCnt);
-        Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+        Assert.Equal(0, s.Root.ReaderIndex);
+        Assert.Equal(0, s.Root.WriterIndex);
     }
 }

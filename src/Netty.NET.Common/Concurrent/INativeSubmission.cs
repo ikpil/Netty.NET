@@ -9,6 +9,7 @@ internal interface INativeSubmission
     void Run();
     bool IsCanceled { get; }
     void CancelForShutdown();
+
     void Reject(Exception error);
 }
 

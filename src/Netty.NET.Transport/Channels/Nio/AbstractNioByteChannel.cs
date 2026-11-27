@@ -77,10 +77,12 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     {
         return Normalize(JavaChannel().LocalEndPoint);
     }
+
     protected override EndPoint RemoteAddress0()
     {
         return Normalize(JavaChannel().RemoteEndPoint);
     }
+
     protected override IChannelConfig NewConfig()
     {
         return new DefaultSocketChannelConfig(this, JavaChannel());
@@ -744,14 +746,17 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     {
         return OnLoopAsync(() => ShutdownOutput(null));
     }
+
     protected override void DoShutdownOutput()
     {
         JavaChannel().Shutdown(SocketShutdown.Send);
     }
+
     protected virtual void DoShutdownInput()
     {
         JavaChannel().Shutdown(SocketShutdown.Receive);
     }
+
     public async Task ShutdownAsync()
     {
         Exception outputFailure = null;
@@ -777,7 +782,9 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         public override bool CanWrite => true;
         public override long Length => throw new NotSupportedException();
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-        public override void Flush() { }
+        public override void Flush()
+        {
+        }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
@@ -831,10 +838,12 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             throw new NotSupportedException();
         }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
         }
+
         public override void SetLength(long value)
         {
             throw new NotSupportedException();

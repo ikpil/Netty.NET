@@ -102,6 +102,7 @@ public abstract class ZlibTest
     }
 
     protected abstract ZlibEncoder CreateEncoder(ZlibWrapper wrapper);
+
     protected abstract ZlibDecoder CreateDecoder(ZlibWrapper wrapper, int maxAllocation);
 
     [Fact]

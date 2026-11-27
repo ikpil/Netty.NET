@@ -2183,7 +2183,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     private sealed class DefaultCharEqualityComparator : ICharEqualityComparator
     {
         internal static readonly DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
-        private DefaultCharEqualityComparator() { }
+        private DefaultCharEqualityComparator()
+        {
+        }
 
         public bool Equals(char a, char b)
         {
@@ -2195,7 +2197,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         internal static readonly AsciiCaseInsensitiveCharEqualityComparator
                 INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
-        private AsciiCaseInsensitiveCharEqualityComparator() { }
+        private AsciiCaseInsensitiveCharEqualityComparator()
+        {
+        }
 
         public bool Equals(char a, char b)
         {

@@ -31,11 +31,13 @@ internal static class CollectedObjectWatch
             owner = new WeakReference<Watch>(watch);
             this.notification = notification;
         }
+
         internal void Cancel()
         {
             Interlocked.Exchange(ref notification, null);
             if (owner.TryGetTarget(out Watch watch)) watch.Remove(this);
         }
+
         internal void Signal()
         {
             Action action = Interlocked.Exchange(ref notification, null);
@@ -55,6 +57,7 @@ internal static class CollectedObjectWatch
             registration.Next = head;
             head = registration;
         }
+
         internal void Remove(Registration registration)
         {
             using var held = UninterruptibleMonitor.Enter(this);
@@ -72,6 +75,7 @@ internal static class CollectedObjectWatch
             }
             if (head == null && !suppressed) { GC.SuppressFinalize(this); suppressed = true; }
         }
+
         ~Watch()
         {
             Registration registrations;

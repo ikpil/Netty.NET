@@ -55,6 +55,7 @@ public class DefaultMaxMessagesRecvByteBufAllocatorTest
         Assert.True(handle.ContinueReading());
         channel.Finish();
     }
+
     [Fact]
     public void TestIgnoreReadBytes()
     {

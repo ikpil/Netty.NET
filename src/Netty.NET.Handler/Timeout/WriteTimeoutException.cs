@@ -25,7 +25,9 @@ public sealed class WriteTimeoutException : TimeoutException
 {
     public static readonly WriteTimeoutException INSTANCE = new WriteTimeoutException(true);
 
-    public WriteTimeoutException() { }
+    public WriteTimeoutException()
+    {
+    }
 
     public WriteTimeoutException(string message) : base(message, false)
     {

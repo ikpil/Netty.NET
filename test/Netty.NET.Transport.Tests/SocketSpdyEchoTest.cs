@@ -307,6 +307,7 @@ public class SocketSpdyEchoTest : AbstractSocketTest
             this.frames = frames;
             this.autoRead = autoRead;
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             if (!autoRead)

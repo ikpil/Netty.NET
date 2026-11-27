@@ -202,9 +202,23 @@ public class ChannelEventOrderContractTest
         }
     }
 
-    private static void Record(List<string> events, string value) { lock (events) events.Add(value); }
-    private static void Clear(List<string> events) { lock (events) events.Clear(); }
-    private static string[] Snapshot(List<string> events) { lock (events) return events.ToArray(); }
+    private static void Record(List<string> events, string value)
+    {
+        lock (events)
+            events.Add(value);
+    }
+
+    private static void Clear(List<string> events)
+    {
+        lock (events)
+            events.Clear();
+    }
+
+    private static string[] Snapshot(List<string> events)
+    {
+        lock (events)
+            return events.ToArray();
+    }
 
     private static async Task WaitFor(IChannel channel, List<string> events, string value)
     {
@@ -232,10 +246,31 @@ public class ChannelEventOrderContractTest
             if (recordRegistration) Record(events, "registered");
             ctx.FireChannelRegistered();
         }
-        public override void ChannelUnregistered(IChannelHandlerContext ctx) { Record(events, "unregistered"); ctx.FireChannelUnregistered(); }
-        public override void ChannelActive(IChannelHandlerContext ctx) { Record(events, "active"); ctx.FireChannelActive(); }
-        public override void ChannelInactive(IChannelHandlerContext ctx) { Record(events, "inactive"); ctx.FireChannelInactive(); }
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) { Record(events, "readComplete"); ctx.FireChannelReadComplete(); }
+
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            Record(events, "unregistered");
+            ctx.FireChannelUnregistered();
+        }
+
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            Record(events, "active");
+            ctx.FireChannelActive();
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            Record(events, "inactive");
+            ctx.FireChannelInactive();
+        }
+
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            Record(events, "readComplete");
+            ctx.FireChannelReadComplete();
+        }
+
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             Record(events, "writability:" + ctx.Channel.IsWritable);

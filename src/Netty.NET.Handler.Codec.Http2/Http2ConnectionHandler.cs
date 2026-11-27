@@ -293,8 +293,14 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         }
 
         public abstract void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out);
-        public virtual void HandlerRemoved(IChannelHandlerContext ctx) { }
-        public virtual void ChannelActive(IChannelHandlerContext ctx) { }
+
+        public virtual void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+        }
+
+        public virtual void ChannelActive(IChannelHandlerContext ctx)
+        {
+        }
 
         public virtual void ChannelInactive(IChannelHandlerContext ctx)
         {

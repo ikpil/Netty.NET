@@ -22,10 +22,12 @@ public class DynamicProgressContractTest
             try { while (_queue.TryDequeue(out var work)) work(); }
             finally { _running = null; }
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return thread != null && thread == _running;
         }
+
         public override void Execute(Action task)
         {
             ArgumentNullException.ThrowIfNull(task);
@@ -38,19 +40,26 @@ public class DynamicProgressContractTest
         {
             return Task.CompletedTask;
         }
-        public override void Shutdown() { }
+
+        public override void Shutdown()
+        {
+        }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
@@ -97,7 +106,8 @@ public class DynamicProgressContractTest
         var first = reporter.Register(callback, completed);
         using var second = reporter.Register(callback, completed);
         reporter.Report(new TransferProgress(1));
-        first.Dispose(); first.Dispose();
+        first.Dispose();
+        first.Dispose();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first.NotificationsCompleted);
         executor.RunAll();
         Assert.Equal(1, progress);
@@ -228,7 +238,9 @@ public class DynamicProgressContractTest
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reporter = new ExecutorProgress(executor, source.Task);
         WeakReference target = RemovedCallback(reporter);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         Assert.False(target.IsAlive);
         source.SetResult();
         await Drain(executor, reporter.NotificationsCompleted);
@@ -294,7 +306,9 @@ public class DynamicProgressContractTest
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         int calls = 0;
         Task notification = KeepSubscription(executor, source.Task, _ => ++calls);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         source.SetResult();
         await Drain(executor, notification);
         Assert.Equal(1, calls);
@@ -318,7 +332,9 @@ public class DynamicProgressContractTest
         var executor = new QueuedExecutor();
         var completed = CompletedSubscription(executor);
         await Drain(executor, completed.Notification);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         Assert.False(completed.Payload.IsAlive);
         Assert.False(completed.Callback.IsAlive);
         GC.KeepAlive(completed.Notification);

@@ -125,25 +125,43 @@ public class UnpooledPrimitiveCopyingTest
         double[] doubles = { 1d, -0d, double.PositiveInfinity };
         ByteBuf arrayCopy = kind switch
         {
-            0 => Unpooled.CopyInt(ints), 1 => Unpooled.CopyShort(shorts), 2 => Unpooled.CopyShort(ints),
-            3 => Unpooled.CopyMedium(ints), 4 => Unpooled.CopyLong(longs),
-            5 => Unpooled.CopyBoolean(booleans), 6 => Unpooled.CopyFloat(floats), _ => Unpooled.CopyDouble(doubles)
+            0 => Unpooled.CopyInt(ints),
+            1 => Unpooled.CopyShort(shorts),
+            2 => Unpooled.CopyShort(ints),
+            3 => Unpooled.CopyMedium(ints),
+            4 => Unpooled.CopyLong(longs),
+            5 => Unpooled.CopyBoolean(booleans),
+            6 => Unpooled.CopyFloat(floats),
+            _ => Unpooled.CopyDouble(doubles)
         };
         ByteBuf spanCopy = kind switch
         {
-            0 => Unpooled.CopyInt(ints.AsSpan()), 1 => Unpooled.CopyShort(shorts.AsSpan()),
-            2 => Unpooled.CopyShort(ints.AsSpan()), 3 => Unpooled.CopyMedium(ints.AsSpan()),
-            4 => Unpooled.CopyLong(longs.AsSpan()), 5 => Unpooled.CopyBoolean(booleans.AsSpan()),
-            6 => Unpooled.CopyFloat(floats.AsSpan()), _ => Unpooled.CopyDouble(doubles.AsSpan())
+            0 => Unpooled.CopyInt(ints.AsSpan()),
+            1 => Unpooled.CopyShort(shorts.AsSpan()),
+            2 => Unpooled.CopyShort(ints.AsSpan()),
+            3 => Unpooled.CopyMedium(ints.AsSpan()),
+            4 => Unpooled.CopyLong(longs.AsSpan()),
+            5 => Unpooled.CopyBoolean(booleans.AsSpan()),
+            6 => Unpooled.CopyFloat(floats.AsSpan()),
+            _ => Unpooled.CopyDouble(doubles.AsSpan())
         };
         string hex = kind switch
         {
-            0 => "80000000FFFFFFFF000000007FFFFFFF", 1 => "8000FFFF00007FFF", 2 => "0000FFFF0000FFFF",
-            3 => "000000FFFFFF000000FFFFFF", 4 => "8000000000000000FFFFFFFFFFFFFFFF00000000000000007FFFFFFFFFFFFFFF",
-            5 => "010001", 6 => "3F800000800000007F800000", _ => "3FF000000000000080000000000000007FF0000000000000"
+            0 => "80000000FFFFFFFF000000007FFFFFFF",
+            1 => "8000FFFF00007FFF",
+            2 => "0000FFFF0000FFFF",
+            3 => "000000FFFFFF000000FFFFFF",
+            4 => "8000000000000000FFFFFFFFFFFFFFFF00000000000000007FFFFFFFFFFFFFFF",
+            5 => "010001",
+            6 => "3F800000800000007F800000",
+            _ => "3FF000000000000080000000000000007FF0000000000000"
         };
-        Array.Clear(ints); Array.Clear(shorts); Array.Clear(longs);
-        Array.Clear(booleans); Array.Clear(floats); Array.Clear(doubles);
+        Array.Clear(ints);
+        Array.Clear(shorts);
+        Array.Clear(longs);
+        Array.Clear(booleans);
+        Array.Clear(floats);
+        Array.Clear(doubles);
         try
         {
             arrayCopy.SetByte(0, 0x55);

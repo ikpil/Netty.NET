@@ -13,6 +13,7 @@ public class MapOwnershipContractTest : IDisposable
     {
         FastThreadLocal.RemoveAll();
     }
+
     public void Dispose()
     {
         FastThreadLocal.RemoveAll();
@@ -65,6 +66,7 @@ public class MapOwnershipContractTest : IDisposable
             Assert.Null(InternalThreadLocalMap.GetIfSet());
             Assert.Equal(2, local.Removed.Count);
         }
+
         void Execute()
         {
             try

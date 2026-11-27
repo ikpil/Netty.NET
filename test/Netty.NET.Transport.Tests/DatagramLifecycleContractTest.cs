@@ -79,6 +79,7 @@ public class DatagramLifecycleContractTest
             await group.StopAsync();
         }
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -113,6 +114,7 @@ public class DatagramLifecycleContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Theory(Timeout = 10000)]
     [InlineData(false, false, false)]
     [InlineData(true, false, false)]
@@ -161,6 +163,7 @@ public class DatagramLifecycleContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact(Timeout = 10000)]
     public async Task NativeConnectFailureClosesTheDatagramChannel()
     {
@@ -276,7 +279,10 @@ public class DatagramLifecycleContractTest
     }
 
     private static T Get<T>(IChannelConfig config, ChannelOption<T> option)
-    { Assert.True(config.TryGetOption(option, out T value)); return value; }
+    {
+        Assert.True(config.TryGetOption(option, out T value));
+        return value;
+    }
 
     private sealed class Capture(ChannelWriter<int> writer) : SimpleChannelInboundHandler<DatagramPacket>
     {

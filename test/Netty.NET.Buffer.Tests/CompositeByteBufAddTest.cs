@@ -31,6 +31,7 @@ public class CompositeByteBufAddTest
     {
         return buffer.ReadableSequence.ToArray();
     }
+
     private static ByteBuf Segment(byte[] bytes, bool direct, NativeMemoryAllocator allocator)
     {
         return direct ? new UnpooledDirectByteBuf(bytes.Length, allocator: allocator).WriteBytes(bytes) : Unpooled.WrappedBuffer(bytes);
@@ -51,18 +52,24 @@ public class CompositeByteBufAddTest
         {
             buffer.AddComponent(Unpooled.WrappedBuffer(new byte[] { 0 }), true)
                 .AddComponent(Unpooled.WrappedBuffer(new byte[] { 5 }), true);
-            if (enumerable) buffer.AddComponents(1, (IEnumerable<ByteBuf>)batch, increaseWriterIndex);
-            else buffer.AddComponents(1, batch, increaseWriterIndex);
+            if (enumerable)
+                buffer.AddComponents(1, (IEnumerable<ByteBuf>)batch, increaseWriterIndex);
+            else
+                buffer.AddComponents(1, batch, increaseWriterIndex);
             Assert.Equal(5, buffer.NumComponents);
             Assert.Equal(6, buffer.Capacity);
             Assert.Equal(increaseWriterIndex ? 6 : 2, buffer.WriterIndex);
             Assert.Equal(new byte[] { 0, 1, 2, 3, 4, 5 }, buffer.AsReadOnlySequence(0, 6).ToArray());
-            Assert.Equal(1, first.ReaderIndex); Assert.Equal(3, first.WriterIndex);
-            Assert.Equal(0, second.ReaderIndex); Assert.Equal(2, second.WriterIndex);
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
+            Assert.Equal(1, first.ReaderIndex);
+            Assert.Equal(3, first.WriterIndex);
+            Assert.Equal(0, second.ReaderIndex);
+            Assert.Equal(2, second.WriterIndex);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
         }
         finally { buffer.Release(); }
-        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
     }
 
     [Fact]
@@ -118,16 +125,20 @@ public class CompositeByteBufAddTest
     public void TailReleaseFailureDoesNotPreventReleasingLaterEntries(bool enumerable)
     {
         ByteBuf prefix = Unpooled.WrappedBuffer(new byte[] { 1 });
-        ByteBuf dead = Unpooled.Buffer(1); dead.Release();
+        ByteBuf dead = Unpooled.Buffer(1);
+        dead.Release();
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 2 });
         ByteBuf[] batch = { prefix, null, dead, tail };
         CompositeByteBuf buffer = new();
         try
         {
-            if (enumerable) buffer.AddComponents((IEnumerable<ByteBuf>)batch, true);
-            else buffer.AddComponents(batch, true);
+            if (enumerable)
+                buffer.AddComponents((IEnumerable<ByteBuf>)batch, true);
+            else
+                buffer.AddComponents(batch, true);
             Assert.Equal(new byte[] { 1 }, Bytes(buffer));
-            Assert.Equal(0, dead.RefCnt); Assert.Equal(0, tail.RefCnt);
+            Assert.Equal(0, dead.RefCnt);
+            Assert.Equal(0, tail.RefCnt);
         }
         finally { buffer.Release(); }
     }
@@ -139,7 +150,8 @@ public class CompositeByteBufAddTest
     {
         CompositeByteBuf buffer = new();
         ByteBuf first = Unpooled.WrappedBuffer(new byte[] { 1, 2 });
-        ByteBuf dead = Unpooled.Buffer(1).WriteByte(3); dead.Release();
+        ByteBuf dead = Unpooled.Buffer(1).WriteByte(3);
+        dead.Release();
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 4 });
         ByteBuf[] batch = { first, dead, tail };
         var stream = new TrackingEnumerable(batch);
@@ -147,14 +159,17 @@ public class CompositeByteBufAddTest
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
             {
-                if (enumerable) buffer.AddComponents(stream, true);
-                else buffer.AddComponents(batch, true);
+                if (enumerable)
+                    buffer.AddComponents(stream, true);
+                else
+                    buffer.AddComponents(batch, true);
             });
             Assert.Equal(1, buffer.NumComponents);
             Assert.Equal(2, buffer.WriterIndex);
             Assert.Equal(new byte[] { 1, 2 }, Bytes(buffer));
             Assert.Equal(1, first.RefCnt);
-            Assert.Equal(0, dead.RefCnt); Assert.Equal(0, tail.RefCnt);
+            Assert.Equal(0, dead.RefCnt);
+            Assert.Equal(0, tail.RefCnt);
             Assert.Equal(enumerable ? 1 : 0, stream.DisposeCount);
         }
         finally { buffer.Release(); }
@@ -324,14 +339,20 @@ public class CompositeByteBufAddTest
             Assert.Equal(0, source.RefCnt);
             // s4 wasn't in added range so should have been jettisoned
             Assert.Equal(0, excluded.RefCnt);
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt); Assert.Equal(1, third.RefCnt);
-            Assert.Equal(1, first.ReaderIndex); Assert.Equal(3, first.WriterIndex);
-            first.SetByte(2, 9); Assert.Equal(9, target.GetByte(1));
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
+            Assert.Equal(1, third.RefCnt);
+            Assert.Equal(1, first.ReaderIndex);
+            Assert.Equal(3, first.WriterIndex);
+            first.SetByte(2, 9);
+            Assert.Equal(9, target.GetByte(1));
             Assert.Equal(direct, target.IsDirect);
         }
         finally { target.Release(); }
         // releasing composite should release the remaining components
-        Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt); Assert.Equal(0, third.RefCnt);
+        Assert.Equal(0, first.RefCnt);
+        Assert.Equal(0, second.RefCnt);
+        Assert.Equal(0, third.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -352,7 +373,8 @@ public class CompositeByteBufAddTest
         finally { target.Release(); }
         Assert.Equal(0, nested.RefCnt);
 
-        source = new(); target = new();
+        source = new();
+        target = new();
         source.AddComponents(new[] { Unpooled.WrappedBuffer(new byte[] { 1, 2 }), Unpooled.WrappedBuffer(new byte[] { 3, 4 }) }, true);
         ByteBuf view = source.Slice(1, 2).AsReadOnly();
         target.AddFlattenedComponents(view, true);
@@ -382,14 +404,16 @@ public class CompositeByteBufAddTest
         ByteBuf first = owner.ReadRetainedSlice(2), second = owner.Slice(2, 2).Retain();
         owner.Release();
         CompositeByteBuf source = new(), target = new();
-        source.AddComponents(new[] { first, second }, true); source.Retain();
+        source.AddComponents(new[] { first, second }, true);
+        source.Retain();
         source.SetIndex(1, 3);
         target.AddFlattenedComponents(source);
         try
         {
             Assert.Equal(1, source.RefCnt);
             Assert.Equal(4, owner.RefCnt);
-            Assert.Equal(0, target.WriterIndex); Assert.Equal(2, target.Capacity);
+            Assert.Equal(0, target.WriterIndex);
+            Assert.Equal(2, target.Capacity);
             source.SetIndex(0, 4);
             Assert.Equal(new byte[] { 2, 3 }, target.AsReadOnlySequence(0, 2).ToArray());
             source.Release();
@@ -398,7 +422,8 @@ public class CompositeByteBufAddTest
             Assert.Equal(new byte[] { 2, 3 }, Bytes(target));
         }
         finally { target.Release(); }
-        Assert.Equal(0, owner.RefCnt); Assert.Equal(0, allocator.ReservedBytes);
+        Assert.Equal(0, owner.RefCnt);
+        Assert.Equal(0, allocator.ReservedBytes);
     }
 
     [Theory]
@@ -429,18 +454,27 @@ public class CompositeByteBufAddTest
         ByteBuf prefix = Segment(new byte[] { 1, 2 }, true, allocator);
         ByteBuf incoming = Segment(new byte[] { 3, 4 }, true, allocator);
         CompositeByteBuf target = new(1, true, allocator), source = new();
-        target.AddComponent(prefix, true); target.ReaderIndex = 1; target.MarkReaderIndex(); target.MarkWriterIndex();
+        target.AddComponent(prefix, true);
+        target.ReaderIndex = 1;
+        target.MarkReaderIndex();
+        target.MarkWriterIndex();
         source.AddComponent(incoming, true);
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => target.AddFlattenedComponents(source, true));
-            Assert.Equal(1, target.NumComponents); Assert.Equal(2, target.Capacity);
-            Assert.Equal(1, target.ReaderIndex); Assert.Equal(2, target.WriterIndex);
+            Assert.Equal(1, target.NumComponents);
+            Assert.Equal(2, target.Capacity);
+            Assert.Equal(1, target.ReaderIndex);
+            Assert.Equal(2, target.WriterIndex);
             Assert.Equal(new byte[] { 2 }, Bytes(target));
-            target.ResetReaderIndex(); target.ResetWriterIndex();
-            Assert.Equal(1, target.ReaderIndex); Assert.Equal(2, target.WriterIndex);
-            Assert.Equal(1, source.RefCnt); Assert.Equal(1, incoming.RefCnt);
-            Assert.Equal(new byte[] { 3, 4 }, Bytes(source)); Assert.Equal(4, allocator.ReservedBytes);
+            target.ResetReaderIndex();
+            target.ResetWriterIndex();
+            Assert.Equal(1, target.ReaderIndex);
+            Assert.Equal(2, target.WriterIndex);
+            Assert.Equal(1, source.RefCnt);
+            Assert.Equal(1, incoming.RefCnt);
+            Assert.Equal(new byte[] { 3, 4 }, Bytes(source));
+            Assert.Equal(4, allocator.ReservedBytes);
         }
         finally { source.Release(); target.Release(); }
         Assert.Equal(0, allocator.ReservedBytes);
@@ -576,7 +610,12 @@ public class CompositeByteBufAddTest
         private readonly ByteBuf[] _buffers = buffers;
         private readonly Exception _failure = failure;
         internal int EnumeratorCount, DisposeCount;
-        public IEnumerator<ByteBuf> GetEnumerator() { ++EnumeratorCount; return new Enumerator(this); }
+        public IEnumerator<ByteBuf> GetEnumerator()
+        {
+            ++EnumeratorCount;
+            return new Enumerator(this);
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -592,10 +631,12 @@ public class CompositeByteBufAddTest
                 if (_index == 0 && owner._failure != null && !_failed) { _failed = true; throw owner._failure; }
                 return ++_index < owner._buffers.Length;
             }
+
             public void Reset()
             {
                 throw new NotSupportedException();
             }
+
             public void Dispose()
             {
                 ++owner.DisposeCount;
@@ -604,11 +645,16 @@ public class CompositeByteBufAddTest
     }
     private sealed class EnumerableHeapByteBuf : UnpooledHeapByteBuf, IEnumerable<ByteBuf>
     {
-        internal EnumerableHeapByteBuf(byte[] bytes) : base(bytes.Length) { WriteBytes(bytes); }
+        internal EnumerableHeapByteBuf(byte[] bytes) : base(bytes.Length)
+        {
+            WriteBytes(bytes);
+        }
+
         public IEnumerator<ByteBuf> GetEnumerator()
         {
             throw new InvalidOperationException("Buffer enumeration is forbidden in this fixture.");
         }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -618,16 +664,28 @@ public class CompositeByteBufAddTest
     {
         private readonly Action _observer;
         internal ObservingDirectByteBuf(byte value, NativeMemoryAllocator allocator, Action observer)
-            : base(1, allocator: allocator) { WriteByte(value); _observer = observer; }
+            : base(1, allocator: allocator)
+        {
+            WriteByte(value);
+            _observer = observer;
+        }
+
         protected override Memory<byte> GetMemoryCore(int index, int length)
-        { _observer?.Invoke(); return base.GetMemoryCore(index, length); }
+        {
+            _observer?.Invoke();
+            return base.GetMemoryCore(index, length);
+        }
     }
     private sealed class FailingRetainByteBuf : ByteBuf
     {
         private readonly ByteBuf _parent;
         private readonly Exception _failure;
         internal FailingRetainByteBuf(ByteBuf parent, Exception failure) : base(parent.MaxCapacity)
-        { _parent = parent; _failure = failure; SetIndex(parent.ReaderIndex, parent.WriterIndex); }
+        {
+            _parent = parent;
+            _failure = failure;
+            SetIndex(parent.ReaderIndex, parent.WriterIndex);
+        }
         public override int Capacity { get => _parent.Capacity; set => _parent.Capacity = value; }
         public override bool IsDirect => _parent.IsDirect;
         public override int RefCnt => _parent.RefCnt;
@@ -635,14 +693,17 @@ public class CompositeByteBufAddTest
         {
             throw _failure;
         }
+
         public override bool Release(int decrement = 1)
         {
             return _parent.Release(decrement);
         }
+
         public override ByteBuf Unwrap()
         {
             return _parent;
         }
+
         protected override Memory<byte> GetMemoryCore(int index, int length)
         {
             return _parent.AsMemory(index, length);

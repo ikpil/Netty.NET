@@ -39,24 +39,29 @@ public class ChannelInitializerTest : IAsyncLifetime
         _server = new ServerBootstrap().Group(_group).Channel<LocalServerChannel>().LocalAddress(SERVER_ADDRESS);
         _client = new Bootstrap().Group(_group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter());
     }
+
     public ValueTask InitializeAsync()
     {
         return ValueTask.CompletedTask;
     }
+
     public async ValueTask DisposeAsync()
     {
         await _group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(TIMEOUT_MILLIS));
     }
+
     [Fact]
     public async Task TestInitChannelThrowsRegisterFirst()
     {
         await TestInitChannelThrows(true);
     }
+
     [Fact]
     public async Task TestInitChannelThrowsRegisterAfter()
     {
         await TestInitChannelThrows(false);
     }
+
     private async Task TestInitChannelThrows(bool registerFirst)
     {
         var error = new Exception();
@@ -71,6 +76,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         await pipeline.Channel.CloseFuture;
         Assert.Same(error, cause);
     }
+
     [Fact]
     public async Task TestChannelInitializerInInitializerCorrectOrdering()
     {
@@ -106,6 +112,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         }
         finally { await channel.CloseAsync(); }
     }
+
     [Fact]
     public async Task TestChannelInitializerReentrance()
     {
@@ -128,28 +135,33 @@ public class ChannelInitializerTest : IAsyncLifetime
         }
         finally { await channel.CloseAsync(); }
     }
+
     [Fact(Timeout = TIMEOUT_MILLIS)]
     public async Task FirstHandlerInPipelineShouldReceiveChannelRegisteredEvent()
     {
         await TestChannelRegisteredEventPropagation(
             new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddFirst(_testHandler)));
     }
+
     [Fact(Timeout = TIMEOUT_MILLIS)]
     public async Task LastHandlerInPipelineShouldReceiveChannelRegisteredEvent()
     {
         await TestChannelRegisteredEventPropagation(
             new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(_testHandler)));
     }
+
     [Fact]
     public void TestAddFirstChannelInitializer()
     {
         TestAddChannelInitializer(true);
     }
+
     [Fact]
     public void TestAddLastChannelInitializer()
     {
         TestAddChannelInitializer(false);
     }
+
     private static void TestAddChannelInitializer(bool first)
     {
         bool called = false;
@@ -164,6 +176,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         channel.Finish();
         Assert.True(called);
     }
+
     private async Task TestChannelRegisteredEventPropagation(ChannelInitializer<LocalChannel> initializer)
     {
         IChannel clientChannel = null, serverChannel = null;
@@ -175,6 +188,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         }
         finally { await CloseChannel(clientChannel); await CloseChannel(serverChannel); }
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestChannelInitializerEventExecutor()
     {
@@ -214,6 +228,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         }
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
+
     private static Task CloseChannel(IChannel channel)
     {
         return channel?.CloseAsync() ?? Task.CompletedTask;
@@ -224,7 +239,12 @@ public class ChannelInitializerTest : IAsyncLifetime
         {
             throw error;
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { capture(cause); base.ExceptionCaught(ctx, cause); }
+
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            capture(cause);
+            base.ExceptionCaught(ctx, cause);
+        }
     }
     private sealed class RegisteredHandler(Action callback) : ChannelInboundHandlerAdapter
     {
@@ -237,7 +257,10 @@ public class ChannelInitializerTest : IAsyncLifetime
     {
         internal int ChannelRegisteredCount;
         public override void ChannelRegistered(IChannelHandlerContext ctx)
-        { Interlocked.Increment(ref ChannelRegisteredCount); ctx.FireChannelRegistered(); }
+        {
+            Interlocked.Increment(ref ChannelRegisteredCount);
+            ctx.FireChannelRegistered();
+        }
     }
     private sealed class ExecutorInitializer(Action invoked, Action complete,
         Action<Exception> capture, CountdownEvent latch) : ChannelInitializer<IChannel>
@@ -250,6 +273,7 @@ public class ChannelInitializerTest : IAsyncLifetime
             channel.Pipeline.AddAfter(context.Executor, context.Name, null, new RemovedHandler(latch));
             complete();
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             capture(cause);
@@ -261,6 +285,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         {
             // just drop on the floor.
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             latch.Signal();
@@ -278,18 +303,22 @@ public class ChannelInitializerTest : IAsyncLifetime
             // Retain the ordered marker inherited by the source DefaultEventLoop helper.
             return _worker.InEventLoop(thread) && (Interlocked.Increment(ref _calls) & 1) == 0;
         }
+
         public override void Execute(Action task)
         {
             _worker.Execute(task);
         }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return _worker.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return _worker.IsTerminated();
@@ -299,10 +328,12 @@ public class ChannelInitializerTest : IAsyncLifetime
         {
             return _worker.AwaitTermination(timeout);
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             return _worker.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
+
         [Obsolete]
         public override void Shutdown()
         {

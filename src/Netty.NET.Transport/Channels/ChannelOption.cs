@@ -40,11 +40,15 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     internal abstract void ValidateValue(object value);
     private static readonly ConcurrentDictionary<string, ChannelOption> Pool = new();
     private static int _nextId;
-    protected ChannelOption(int id, string name) : base(id, name) { }
+    protected ChannelOption(int id, string name) : base(id, name)
+    {
+    }
+
     internal static int NextId()
     {
         return Interlocked.Increment(ref _nextId);
     }
+
     /**
      * Returns the {@link ChannelOption} of the specified name.
      */
@@ -54,6 +58,7 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
         var option = Pool.GetOrAdd(name, n => new ChannelOption<T>(NextId(), n));
         return option as ChannelOption<T> ?? throw new ArgumentException("Option is already registered with a different value type.", nameof(name));
     }
+
     /**
      * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
@@ -64,6 +69,7 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
         string name = firstNameComponent.FullName ?? throw new ArgumentException("A named CLR type is required.", nameof(firstNameComponent));
         return ValueOf<T>(name + '#' + secondNameComponent);
     }
+
     /**
      * Returns {@code true} if a {@link ChannelOption} exists for the given {@code name}.
      */
@@ -71,6 +77,7 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     {
         return Pool.ContainsKey(ObjectUtil.CheckNonEmpty(name, nameof(name)));
     }
+
     /**
      * Creates a new {@link ChannelOption} for the given {@code name} or fail with an
      * {@link IllegalArgumentException} if a {@link ChannelOption} for the given {@code name} exists.
@@ -208,25 +215,35 @@ public class ChannelOption<T> : ChannelOption
         if (value is not T typed) throw new ArgumentException("Invalid option value type.", nameof(value));
         Validate(typed);
     }
+
     /**
      * Creates a new {@link ChannelOption} with the specified unique {@code name}.
      */
-    internal ChannelOption(int id, string name) : base(id, name) { }
+    internal ChannelOption(int id, string name) : base(id, name)
+    {
+    }
+
     [Obsolete("Use ChannelOption.ValueOf<T>.")]
-    protected ChannelOption(string name) : this(NextId(), name) { }
+    protected ChannelOption(string name) : this(NextId(), name)
+    {
+    }
+
     public static ChannelOption<T> ValueOf(string name)
     {
         return ChannelOption.ValueOf<T>(name);
     }
+
     public static ChannelOption<T> ValueOf(Type firstNameComponent, string secondNameComponent)
     {
         return ChannelOption.ValueOf<T>(firstNameComponent, secondNameComponent);
     }
+
     [Obsolete("Use ValueOf.")]
     public static ChannelOption<T> NewInstance(string name)
     {
         return ChannelOption.NewInstance<T>(name);
     }
+
     /**
      * Validate the value which is set for the {@link ChannelOption}. Sub-classes
      * may override this for special checks.

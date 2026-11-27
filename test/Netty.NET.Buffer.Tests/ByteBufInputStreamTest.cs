@@ -61,22 +61,36 @@ public class ByteBufInputStreamTest : IDisposable
     [InlineData(4, false)] [InlineData(4, true)] [InlineData(5, false)] [InlineData(5, true)]
     public void OriginalBoundedReadsMarksAndSkipShareTheReader(int kind, bool readOnly)
     {
-        ByteBuf owner = Owner(kind, new byte[] { 9, 1, 2, 3, 4, 5, 6 }); owner.ReaderIndex = 1;
+        ByteBuf owner = Owner(kind, new byte[] { 9, 1, 2, 3, 4, 5, 6 });
+        owner.ReaderIndex = 1;
         ByteBuf input = readOnly ? owner.AsReadOnly() : owner;
         using var stream = new ByteBufInputStream(input, 4, true);
-        Assert.True(stream.CanRead); Assert.False(stream.CanSeek); Assert.False(stream.CanWrite);
-        Assert.Equal(0, stream.BytesRead); Assert.Equal(4, stream.Available);
-        Assert.Equal(0, stream.Skip(-1)); Assert.Equal(0, stream.SkipBytes(-1));
-        Assert.Equal(1, stream.ReadByte()); stream.Mark(); Assert.Equal(2, stream.ReadByte());
-        stream.Reset(); Assert.Equal(2, stream.ReadByte());
-        Assert.Equal(2, stream.Skip(long.MaxValue)); Assert.Equal(4, stream.BytesRead);
-        Assert.Equal(-1, stream.ReadByte()); Assert.Equal(-1, stream.ReadByte());
-        Assert.Equal(0, stream.Read(new byte[3])); Assert.Equal(0, stream.Read(Span<byte>.Empty));
+        Assert.True(stream.CanRead);
+        Assert.False(stream.CanSeek);
+        Assert.False(stream.CanWrite);
+        Assert.Equal(0, stream.BytesRead);
+        Assert.Equal(4, stream.Available);
+        Assert.Equal(0, stream.Skip(-1));
+        Assert.Equal(0, stream.SkipBytes(-1));
+        Assert.Equal(1, stream.ReadByte());
+        stream.Mark();
+        Assert.Equal(2, stream.ReadByte());
+        stream.Reset();
+        Assert.Equal(2, stream.ReadByte());
+        Assert.Equal(2, stream.Skip(long.MaxValue));
+        Assert.Equal(4, stream.BytesRead);
+        Assert.Equal(-1, stream.ReadByte());
+        Assert.Equal(-1, stream.ReadByte());
+        Assert.Equal(0, stream.Read(new byte[3]));
+        Assert.Equal(0, stream.Read(Span<byte>.Empty));
         Assert.Equal(0, stream.Available);
         Assert.Equal(5, input.ReaderIndex);
         Assert.Equal(ReferenceEquals(input, owner) ? 5 : 1, owner.ReaderIndex);
-        stream.Reset(); Assert.Equal(3, stream.Available); Assert.Equal(2, stream.ReadByte());
-        stream.Dispose(); Assert.Equal(0, owner.RefCnt);
+        stream.Reset();
+        Assert.Equal(3, stream.Available);
+        Assert.Equal(2, stream.ReadByte());
+        stream.Dispose();
+        Assert.Equal(0, owner.RefCnt);
     }
 
     [Theory]
@@ -86,29 +100,43 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf encoded = Unpooled.Buffer(0);
         encoded.WriteBoolean(true).WriteBoolean(false).WriteByte(42).WriteByte(224);
         encoded.WriteBytes(Encoding.Latin1.GetBytes("Hello, World!"));
-        foreach (char value in "Hello, World!") encoded.WriteChar(value);
+        foreach (char value in "Hello, World!")
+            encoded.WriteChar(value);
         encoded.WriteDouble(42).WriteFloat(42).WriteInt(42).WriteLong(42).WriteShort(42).WriteShort(49152);
         encoded.WriteShort(13).WriteBytes(Encoding.ASCII.GetBytes("Hello, World!"));
         encoded.WriteBytes(Encoding.Latin1.GetBytes("The first line\r\r\n"));
         encoded.WriteBytes(new byte[] { 1, 2, 3, 4 });
-        ByteBuf owner = Owner(kind, encoded.ReadableSequence.ToArray()); encoded.Release();
+        ByteBuf owner = Owner(kind, encoded.ReadableSequence.ToArray());
+        encoded.Release();
         using var stream = new ByteBufInputStream(owner, true);
-        Assert.True(stream.ReadBoolean()); Assert.False(stream.ReadBoolean());
-        Assert.Equal(42, stream.ReadSByte()); Assert.Equal(224, stream.ReadUnsignedByte());
-        byte[] bytes = new byte[13]; stream.ReadFully(bytes);
+        Assert.True(stream.ReadBoolean());
+        Assert.False(stream.ReadBoolean());
+        Assert.Equal(42, stream.ReadSByte());
+        Assert.Equal(224, stream.ReadUnsignedByte());
+        byte[] bytes = new byte[13];
+        stream.ReadFully(bytes);
         Assert.Equal("Hello, World!", Encoding.Latin1.GetString(bytes));
-        foreach (char value in "Hello, World!") Assert.Equal(value, stream.ReadChar());
-        Assert.Equal(42, stream.ReadDouble()); Assert.Equal(42, stream.ReadSingle());
-        Assert.Equal(42, stream.ReadInt32()); Assert.Equal(42, stream.ReadInt64());
-        Assert.Equal(42, stream.ReadInt16()); Assert.Equal(49152, stream.ReadUInt16());
+        foreach (char value in "Hello, World!")
+            Assert.Equal(value, stream.ReadChar());
+        Assert.Equal(42, stream.ReadDouble());
+        Assert.Equal(42, stream.ReadSingle());
+        Assert.Equal(42, stream.ReadInt32());
+        Assert.Equal(42, stream.ReadInt64());
+        Assert.Equal(42, stream.ReadInt16());
+        Assert.Equal(49152, stream.ReadUInt16());
         Assert.Equal("Hello, World!", stream.ReadUtf());
-        Assert.Equal("The first line", stream.ReadLine()); Assert.Equal("", stream.ReadLine());
-        Assert.Equal(4, stream.Read(bytes)); Assert.Equal(new byte[] { 1, 2, 3, 4 }, bytes[..4]);
-        Assert.Equal(-1, stream.ReadByte()); Assert.Equal(0, stream.Read(bytes));
+        Assert.Equal("The first line", stream.ReadLine());
+        Assert.Equal("", stream.ReadLine());
+        Assert.Equal(4, stream.Read(bytes));
+        Assert.Equal(new byte[] { 1, 2, 3, 4 }, bytes[..4]);
+        Assert.Equal(-1, stream.ReadByte());
+        Assert.Equal(0, stream.Read(bytes));
         Assert.Throws<EndOfStreamException>(() => stream.ReadSByte());
         Assert.Throws<ArgumentOutOfRangeException>(() => stream.ReadFully(bytes, 0, -1));
         Assert.Throws<EndOfStreamException>(() => stream.ReadFully(bytes));
-        int count = stream.BytesRead; stream.Dispose(); Assert.Equal(count, stream.BytesRead);
+        int count = stream.BytesRead;
+        stream.Dispose();
+        Assert.Equal(count, stream.BytesRead);
     }
 
     [Theory]
@@ -184,9 +212,16 @@ public class ByteBufInputStreamTest : IDisposable
         using var stream = new ByteBufInputStream(buffer, true);
         int charCount = 7; //total chars in the string below without new line characters
         stream.Mark();
-        foreach (string expected in new[] { "", "a", "", "b", "c", "d", "e" }) Assert.Equal(expected, stream.ReadLine());
-        Assert.Null(stream.ReadLine()); stream.Reset();
-        int count = 0; while (stream.ReadLine() != null) { ++count; Assert.True(count <= charCount); }
+        foreach (string expected in new[] { "", "a", "", "b", "c", "d", "e" })
+            Assert.Equal(expected, stream.ReadLine());
+        Assert.Null(stream.ReadLine());
+        stream.Reset();
+        int count = 0;
+        while (stream.ReadLine() != null)
+        {
+            ++count;
+            Assert.True(count <= charCount);
+        }
         Assert.Equal(charCount, count);
     }
 
@@ -206,7 +241,8 @@ public class ByteBufInputStreamTest : IDisposable
             () => stream.ReadFully(destination)
         };
         Assert.Throws<EndOfStreamException>(reads[operation]);
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(new byte[] { 9, 9 }, destination);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(new byte[] { 9, 9 }, destination);
         stream.ReadFully(Span<byte>.Empty);
     }
 
@@ -216,18 +252,23 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf buffer = Unpooled.Buffer(2, 64).WriteByte(1);
         using var stream = new ByteBufInputStream(buffer, true);
         buffer.WriteByte(2).WriteByte(3);
-        Assert.Equal(1, stream.Available); Assert.Equal(1, stream.ReadByte());
-        Assert.Equal(-1, stream.ReadByte()); Assert.Equal(2, buffer.ReadableBytes);
+        Assert.Equal(1, stream.Available);
+        Assert.Equal(1, stream.ReadByte());
+        Assert.Equal(-1, stream.ReadByte());
+        Assert.Equal(2, buffer.ReadableBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public async Task DisposeAndDisposeAsyncReleaseAtMostOneExistingReference(bool releaseOnDispose)
     {
-        ByteBuf buffer = Unpooled.CopyInt(1); buffer.Retain();
+        ByteBuf buffer = Unpooled.CopyInt(1);
+        buffer.Retain();
         var stream = new ByteBufInputStream(buffer, releaseOnDispose);
         Assert.Equal(2, buffer.RefCnt);
-        await stream.DisposeAsync(); stream.Dispose(); stream.Close();
+        await stream.DisposeAsync();
+        stream.Dispose();
+        stream.Close();
         Assert.Equal(releaseOnDispose ? 1 : 2, buffer.RefCnt);
         Assert.False(stream.CanRead);
         Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
@@ -251,7 +292,8 @@ public class ByteBufInputStreamTest : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer.RetainedSlice(), 5, true));
         Assert.Equal(1, buffer.RefCnt);
         Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer, -1));
-        Assert.Equal(1, buffer.RefCnt); buffer.Release();
+        Assert.Equal(1, buffer.RefCnt);
+        buffer.Release();
         Assert.Throws<IllegalReferenceCountException>(() => new ByteBufInputStream(buffer));
     }
 
@@ -299,7 +341,8 @@ public class ByteBufInputStreamTest : IDisposable
     public void ModifiedUtf8RejectsMalformedPayloadAfterConsumingItsFramedBytes(string hex)
     {
         using var stream = new ByteBufInputStream(Owner(2, Convert.FromHexString(hex)), true);
-        Assert.Throws<InvalidDataException>(() => stream.ReadUtf()); Assert.Equal(0, stream.Available);
+        Assert.Throws<InvalidDataException>(() => stream.ReadUtf());
+        Assert.Equal(0, stream.Available);
     }
 
     [Fact]
@@ -308,7 +351,8 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf buffer = Unpooled.WrappedBuffer(new byte[] { 0, 3, 65, 66 });
         using var stream = new ByteBufInputStream(buffer, true);
         Assert.Throws<EndOfStreamException>(() => stream.ReadUtf());
-        Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(2, stream.Available);
+        Assert.Equal(2, buffer.ReaderIndex);
+        Assert.Equal(2, stream.Available);
     }
 
     [Theory]
@@ -317,12 +361,19 @@ public class ByteBufInputStreamTest : IDisposable
     {
         ByteBuf buffer = Owner(3, new byte[8]);
         using var stream = new ByteBufInputStream(buffer, width - 1, true);
-        Action read = width switch { 2 => () => stream.ReadInt16(), 4 => () => stream.ReadInt32(), _ => () => stream.ReadDouble() };
+        Action read = width switch
+        {
+            2 => () => stream.ReadInt16(),
+            4 => () => stream.ReadInt32(),
+            _ => () => stream.ReadDouble()
+        };
         Assert.Throws<EndOfStreamException>(read);
-        byte[] destination = new byte[width]; Array.Fill(destination, (byte)9);
+        byte[] destination = new byte[width];
+        Array.Fill(destination, (byte)9);
         Assert.Throws<EndOfStreamException>(() => stream.ReadFully(destination));
         Assert.All(destination, value => Assert.Equal(9, value));
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(width - 1, stream.Available);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(width - 1, stream.Available);
     }
 
     [Fact]
@@ -332,10 +383,13 @@ public class ByteBufInputStreamTest : IDisposable
         using var stream = new ByteBufInputStream(buffer, 1, true);
         byte[] destination = { 9, 9 };
         Assert.Throws<EndOfStreamException>(() => stream.ReadExactly(destination));
-        Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(new byte[] { 1, 9 }, destination);
-        stream.Reset(); Array.Fill(destination, (byte)9);
+        Assert.Equal(1, buffer.ReaderIndex);
+        Assert.Equal(new byte[] { 1, 9 }, destination);
+        stream.Reset();
+        Array.Fill(destination, (byte)9);
         Assert.Throws<EndOfStreamException>(() => stream.ReadFully(destination));
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(new byte[] { 9, 9 }, destination);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(new byte[] { 9, 9 }, destination);
         stream.Flush();
     }
 
@@ -346,16 +400,21 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf buffer = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
         using var stream = new ByteBufInputStream(buffer, 6, true);
         byte[] destination = { 9, 9, 9 };
-        using var canceled = new CancellationTokenSource(); canceled.Cancel();
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stream.ReadAsync(destination.AsMemory(), canceled.Token).AsTask());
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stream.ReadAsync(destination, 0, 3, canceled.Token));
-        Assert.Equal(new byte[] { 9, 9, 9 }, destination); Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(new byte[] { 9, 9, 9 }, destination);
+        Assert.Equal(0, buffer.ReaderIndex);
         using var reader = new BinaryReader(stream, Encoding.UTF8, true);
         Assert.Equal(0x04030201, reader.ReadInt32()); // BinaryReader independently selects little endian.
-        using var output = new MemoryStream(); await stream.CopyToAsync(output, TestContext.Current.CancellationToken);
-        Assert.Equal(new byte[] { 5, 6 }, output.ToArray()); Assert.Equal(6, buffer.ReaderIndex);
+        using var output = new MemoryStream();
+        await stream.CopyToAsync(output, TestContext.Current.CancellationToken);
+        Assert.Equal(new byte[] { 5, 6 }, output.ToArray());
+        Assert.Equal(6, buffer.ReaderIndex);
         Assert.Equal(0, await stream.ReadAsync(destination.AsMemory(), TestContext.Current.CancellationToken));
-        stream.Reset(); Assert.Equal(3, await stream.ReadAsync(destination, 0, 3, TestContext.Current.CancellationToken));
+        stream.Reset();
+        Assert.Equal(3, await stream.ReadAsync(destination, 0, 3, TestContext.Current.CancellationToken));
         Assert.Equal(new byte[] { 1, 2, 3 }, destination);
     }
 }

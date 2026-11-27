@@ -52,34 +52,42 @@ internal class SimpleLeakAwareCompositeByteBuf : WrappedCompositeByteBuf
     {
         return NewLeakAwareByteBuf(base.Slice());
     }
+
     public override ByteBuf Slice(int index, int length)
     {
         return NewLeakAwareByteBuf(base.Slice(index, length));
     }
+
     public override ByteBuf RetainedSlice()
     {
         return NewLeakAwareByteBuf(base.RetainedSlice());
     }
+
     public override ByteBuf RetainedSlice(int index, int length)
     {
         return NewLeakAwareByteBuf(base.RetainedSlice(index, length));
     }
+
     public override ByteBuf Duplicate()
     {
         return NewLeakAwareByteBuf(base.Duplicate());
     }
+
     public override ByteBuf RetainedDuplicate()
     {
         return NewLeakAwareByteBuf(base.RetainedDuplicate());
     }
+
     public override ByteBuf ReadSlice(int length)
     {
         return NewLeakAwareByteBuf(base.ReadSlice(length));
     }
+
     public override ByteBuf ReadRetainedSlice(int length)
     {
         return NewLeakAwareByteBuf(base.ReadRetainedSlice(length));
     }
+
     public override ByteBuf AsReadOnly()
     {
         return NewLeakAwareByteBuf(base.AsReadOnly());
@@ -89,6 +97,7 @@ internal class SimpleLeakAwareCompositeByteBuf : WrappedCompositeByteBuf
     {
         return NewLeakAwareByteBuf(wrapped, Unwrap(), Leak);
     }
+
     protected virtual SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf wrapped, ByteBuf trackedByteBuf,
         IResourceLeakTracker<ByteBuf> leakTracker)
     {

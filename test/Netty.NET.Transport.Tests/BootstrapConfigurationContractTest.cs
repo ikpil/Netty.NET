@@ -34,6 +34,7 @@ public class BootstrapConfigurationContractTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact]
     public async Task ClientConfigIsLiveButMapsAndClonesAreIndependentReadOnlySnapshots()
     {
@@ -71,6 +72,7 @@ public class BootstrapConfigurationContractTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact]
     public async Task ServerConfigSeparatesParentChildAndCloneStateWithoutExposingMutableMaps()
     {
@@ -100,6 +102,7 @@ public class BootstrapConfigurationContractTest
         }
         finally { await parent.StopAsync(); await child.StopAsync(); }
     }
+
     // CLR: the (InetAddress, int) overloads build new InetSocketAddress(inetHost, inetPort), whose null address is the
     // wildcard, and localAddress/bind(String, int) build SocketUtils.socketAddress(inetHost, inetPort), which looks the
     // host up at once and keeps it unresolved (a DnsEndPoint here) when the lookup fails.
@@ -130,6 +133,7 @@ public class BootstrapConfigurationContractTest
         // remoteAddress(String, int) stays unresolved (InetSocketAddress.createUnresolved) for the resolver.
         Assert.IsType<DnsEndPoint>(client.RemoteAddress("127.0.0.1", 9085).Config.RemoteAddress);
     }
+
     [Fact]
     public async Task BindByHostOrAddressBindsTheResolvedAddressAndAnUnresolvedHostFails()
     {

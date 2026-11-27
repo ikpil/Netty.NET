@@ -41,6 +41,7 @@ public static class HostsFileParser
     {
         return HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently());
     }
+
     /**
      * Parse hosts file at standard OS location using the given {@link Charset}s one after each other until
      * we were able to parse something or none is left.
@@ -52,6 +53,7 @@ public static class HostsFileParser
     {
         return HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently(charsets));
     }
+
     /**
      * Parse hosts file at standard OS location using the system default {@link Charset} for decoding.
      *
@@ -62,6 +64,7 @@ public static class HostsFileParser
     {
         return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse());
     }
+
     /**
      * Parse a hosts file using the system default {@link Charset} for decoding.
      *
@@ -73,6 +76,7 @@ public static class HostsFileParser
     {
         return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file));
     }
+
     /**
      * Parse a hosts file.
      *
@@ -85,6 +89,7 @@ public static class HostsFileParser
     {
         return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file, charsets));
     }
+
     /**
      * Parse a reader of hosts file format.
      *

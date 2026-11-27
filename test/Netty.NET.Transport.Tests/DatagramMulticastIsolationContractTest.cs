@@ -77,6 +77,7 @@ public class DatagramMulticastIsolationContractTest
                 return sourceSpecific
                     ? channel.JoinGroupAsync(multicast, iface, source) : channel.JoinGroupAsync(target, iface);
             }
+
             Task SendAsync(int value)
             {
                 return sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(value), target), cancellation);

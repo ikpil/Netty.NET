@@ -314,6 +314,7 @@ public class ResolverContractTest
         {
             return Task.FromResult(addresses[0]);
         }
+
         protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
         {
             return Task.FromResult(addresses);
@@ -326,6 +327,7 @@ public class ResolverContractTest
         {
             throw error;
         }
+
         protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
         {
             throw error;

@@ -475,9 +475,13 @@ public abstract class AbstractSingleThreadEventLoopTest
     {
         return false;
     }
+
     protected abstract IEventLoopGroup NewEventLoopGroup();
+
     protected abstract IEventLoopGroup NewAutoScalingEventLoopGroup();
+
     protected abstract IChannel NewChannel();
+
     // CLR: Class<? extends ServerChannel> is a Type; the annotation lets ServerBootstrap.Channel(Type) keep the
     // parameterless constructor under trimming.
     [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]

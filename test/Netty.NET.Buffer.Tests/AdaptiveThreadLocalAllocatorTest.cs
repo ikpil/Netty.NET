@@ -31,12 +31,15 @@ public class AdaptiveThreadLocalAllocatorTest
     {
         return new(false, low, native, 2, 4, 1, 4, nonEventLoop, 4, 4 * 131072, 2 * 131072);
     }
+
     private static void OnThread(Action action, bool fast = false)
     {
         Exception error = null;
         Action run = () => { try { if (fast) FastThreadLocalThread.RunWithFastThreadLocal(action); else action(); } catch (Exception e) { error = e; } };
-        var thread = new Thread(() => run()); thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(15))); Assert.Null(error);
+        var thread = new Thread(() => run());
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
+        Assert.Null(error);
     }
 
     [Theory]
@@ -69,10 +72,12 @@ public class AdaptiveThreadLocalAllocatorTest
     [Fact]
     public void LowMemoryAndBuddyAllocationsUseSharedMagazines()
     {
-        using var low = Allocator(low: true); using var normal = Allocator();
+        using var low = Allocator(low: true);
+        using var normal = Allocator();
         OnThread(() =>
         {
-            var small = low.HeapBuffer(7); var large = normal.HeapBuffer(32768);
+            var small = low.HeapBuffer(7);
+            var large = normal.HeapBuffer(32768);
             try
             {
                 Assert.Equal(0, low.HeapPool.LocalBindingCount);
@@ -81,53 +86,74 @@ public class AdaptiveThreadLocalAllocatorTest
             }
             finally { small.Release(); large.Release(); }
         }, true);
-        Assert.Equal(131072, low.UsedHeapMemory); Assert.Equal(262144, normal.UsedHeapMemory);
+        Assert.Equal(131072, low.UsedHeapMemory);
+        Assert.Equal(262144, normal.UsedHeapMemory);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void FastThreadExitReleasesCachesWhileLiveBufferAndLeaseSurvive(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var a = Allocator(native: native);
-        ByteBuf live = null; BufferMemoryLease lease = default; Exception error = null;
+        var native = new NativeMemoryAllocator();
+        using var a = Allocator(native: native);
+        ByteBuf live = null;
+        BufferMemoryLease lease = default;
+        Exception error = null;
         // Thread-local magazines require FastThreadLocalThread
         // (allocate() checks currentThreadWillCleanupFastThreadLocals)
         var thread = new FastThreadLocalThread(() =>
         {
             try
             {
-                live = direct ? a.DirectBuffer(7, 100) : a.HeapBuffer(7, 100); live.SetInt(0, 12345);
+                live = direct ? a.DirectBuffer(7, 100) : a.HeapBuffer(7, 100);
+                live.SetInt(0, 12345);
                 lease = live.AcquireReadLease();
                 for (int i = 0; i < 1300; i++)
-                { var b = direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256); b.Release(); }
+                {
+                    var b = direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256);
+                    b.Release();
+                }
             }
             catch (Exception e) { error = e; }
         });
-        thread.Thread.Start(); Assert.True(thread.Thread.Join(TimeSpan.FromSeconds(15))); Assert.Null(error);
+        thread.Thread.Start();
+        Assert.True(thread.Thread.Join(TimeSpan.FromSeconds(15)));
+        Assert.Null(error);
         Assert.Equal(0, a.HeapPool.LocalBindingCount + a.DirectPool.LocalBindingCount);
-        Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory); Assert.Equal(12345, live.GetInt(0));
-        live.Release(); Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
-        lease.Dispose(); Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory); Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
+        Assert.Equal(12345, live.GetInt(0));
+        live.Release();
+        Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
+        lease.Dispose();
+        Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory);
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void ScopeFailureCleansUpAndNextScopeCreatesNewGroups()
     {
-        using var a = Allocator(); MagazineGroup previous = null;
+        using var a = Allocator();
+        MagazineGroup previous = null;
         OnThread(() =>
         {
             Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() =>
             {
-                var b = a.HeapBuffer(7); b.Release(); previous = a.HeapPool.ThreadLocalGroup.GetIfExists()?[0];
+                var b = a.HeapBuffer(7);
+                b.Release();
+                previous = a.HeapPool.ThreadLocalGroup.GetIfExists()?[0];
                 throw new InvalidOperationException("scope failure");
             }));
-            Assert.True(previous.Freed); Assert.Equal(0, a.UsedHeapMemory);
+            Assert.True(previous.Freed);
+            Assert.Equal(0, a.UsedHeapMemory);
             FastThreadLocalThread.RunWithFastThreadLocal(() =>
             {
-                var b = a.HeapBuffer(7); b.Release(); Assert.NotSame(previous, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
+                var b = a.HeapBuffer(7);
+                b.Release();
+                Assert.NotSame(previous, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
             });
         });
-        Assert.Equal(0, a.UsedHeapMemory); Assert.Equal(0, a.HeapPool.LocalBindingCount);
+        Assert.Equal(0, a.UsedHeapMemory);
+        Assert.Equal(0, a.HeapPool.LocalBindingCount);
     }
 
     [Fact]

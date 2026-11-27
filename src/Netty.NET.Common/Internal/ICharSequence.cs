@@ -11,7 +11,9 @@ public interface ICharSequence : IReadOnlyList<char>
     ICharSequence SubSequence(int start);
 
     char CharAt(int index);
+
     int Length();
+
     int IndexOf(char ch, int start = 0);
 
     bool RegionMatches(int thisStart, ICharSequence seq, int start, int length);

@@ -117,7 +117,10 @@ public class NativeThreadFactoryContractTest
     private sealed class CapturingFactory : DefaultThreadFactory
     {
         internal Exception Error;
-        internal CapturingFactory() : base("ordinary", true) { }
+        internal CapturingFactory() : base("ordinary", true)
+        {
+        }
+
         protected override Thread NewThread(Action action, string name)
         {
             return new(() =>

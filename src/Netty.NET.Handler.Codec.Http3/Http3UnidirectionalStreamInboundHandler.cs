@@ -172,6 +172,7 @@ internal abstract class Http3UnidirectionalStreamInboundHandler : ByteToMessageD
                     "Received multiple QPACK encoder streams.", false);
         }
     }
+
     /**
      * Called if the current {@link Channel} is a
      * <a href="https://www.ietf.org/archive/id/draft-ietf-quic-qpack-19.html#name-encoder-and-decoder-streams">

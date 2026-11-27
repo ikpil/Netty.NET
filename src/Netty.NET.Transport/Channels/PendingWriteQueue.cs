@@ -56,6 +56,7 @@ public sealed class PendingWriteQueue
         _executor = ctx.Executor;
         _tracker = new PendingBytesTracker(ctx.Channel);
     }
+
     public PendingWriteQueue(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
@@ -85,12 +86,14 @@ public sealed class PendingWriteQueue
     {
         Debug.Assert(_executor.InEventLoop());
     }
+
     public Task Add(object msg, CancellationToken cancellationToken = default)
     {
         var producer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Add(msg, producer, cancellationToken);
         return producer.Task;
     }
+
     /**
      * Add the given {@code msg} and {@link ChannelPromise}.
      */
@@ -144,6 +147,7 @@ public sealed class PendingWriteQueue
                 entry.Cancellation.Dispose();
         }
     }
+
     /**
      * Remove all pending write operation and performs them via
      * {@link ChannelHandlerContext#write(Object, ChannelPromise)}.
@@ -174,6 +178,7 @@ public sealed class PendingWriteQueue
         AssertEmpty();
         return Task.WhenAll(tasks);
     }
+
     /**
      * Remove all pending write operation and fail them with the given {@link Throwable}. The message will be released
      * via {@link ReferenceCountUtil#safeRelease(Object)}.
@@ -202,6 +207,7 @@ public sealed class PendingWriteQueue
         }
         AssertEmpty();
     }
+
     /**
      * Remove a pending write operation and fail it with the given {@link Throwable}. The message will be released via
      * {@link ReferenceCountUtil#safeRelease(Object)}.
@@ -222,6 +228,7 @@ public sealed class PendingWriteQueue
         else
             SafeFail(entry.Producer, cause);
     }
+
     /**
      * Removes a pending write operation and performs it via
      * {@link ChannelHandlerContext#write(Object, ChannelPromise)}.
@@ -239,6 +246,7 @@ public sealed class PendingWriteQueue
         Unlink(entry);
         return Write(entry, cancelled);
     }
+
     /**
      * Removes a pending write operation and release it's message via {@link ReferenceCountUtil#safeRelease(Object)}.
      *
@@ -258,8 +266,16 @@ public sealed class PendingWriteQueue
             entry.Producer.TrySetCanceled(entry.Token);
         return entry.Producer;
     }
+
     private Entry DetachAll()
-    { var entry = _head; _head = _tail = null; Size = 0; Bytes = 0; return entry; }
+    {
+        var entry = _head;
+        _head = _tail = null;
+        Size = 0;
+        Bytes = 0;
+        return entry;
+    }
+
     private void Unlink(Entry entry)
     {
         var next = entry.Next;
@@ -275,12 +291,14 @@ public sealed class PendingWriteQueue
         { _head = next; Size--; Bytes -= entry.Size; Debug.Assert(Size > 0 && Bytes >= 0); }
         _tracker.DecrementPendingOutboundBytes(entry.Size);
     }
+
     private static bool StopCancellation(Entry entry)
     {
         int claim = Interlocked.Exchange(ref entry.Claim, 1);
         entry.Cancellation.Dispose();
         return claim == 2 || entry.Producer.Task.IsCanceled;
     }
+
     private Task Write(Entry entry, bool cancelled)
     {
         if (cancelled)
@@ -295,6 +313,7 @@ public sealed class PendingWriteQueue
             CompleteLater(operation, entry.Producer);
         return entry.Producer.Task;
     }
+
     private static void Complete(Task operation, TaskCompletionSource producer)
     {
         try
@@ -302,6 +321,7 @@ public sealed class PendingWriteQueue
         catch (OperationCanceledException error) when (operation.IsCanceled) { producer.TrySetCanceled(error.CancellationToken); }
         catch (Exception error) { SafeFail(producer, error); }
     }
+
     // CLR: Java hands the ChannelPromise itself to write(msg, promise), so it completes when the write does. A write
     // that completes later completes its producer through a continuation on Common's EventExecutorTaskScheduler over
     // the queue's executor: the completing thread queues it to that scheduler before the operation's TrySetResult
@@ -336,8 +356,13 @@ public sealed class PendingWriteQueue
         }
         return _completionScheduler;
     }
+
     private static void SafeFail(TaskCompletionSource producer, Exception cause)
-    { if (!producer.TrySetException(cause)) Logger.Warn("Failed to mark a producer as failure because it's done already: " + producer.Task, cause); }
+    {
+        if (!producer.TrySetException(cause))
+            Logger.Warn("Failed to mark a producer as failure because it's done already: " + producer.Task, cause);
+    }
+
     [Conditional("DEBUG")]
     private void AssertEmpty()
     {

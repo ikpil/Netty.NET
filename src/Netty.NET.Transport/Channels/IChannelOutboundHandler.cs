@@ -32,6 +32,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @throws Exception    thrown if an error occurs
      */
     Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken);
+
     /**
      * Called once a connect operation is made.
      *
@@ -42,6 +43,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @throws Exception        thrown if an error occurs
      */
     Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken);
+
     /**
      * Called once a disconnect operation is made.
      *
@@ -50,6 +52,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @throws Exception        thrown if an error occurs
      */
     Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken);
+
     /**
      * Called once a close operation is made.
      *
@@ -58,6 +61,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @throws Exception        thrown if an error occurs
      */
     Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken);
+
     /**
      * Called once a deregister operation is made from the current registered {@link EventLoop}.
      *
@@ -66,6 +70,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * @throws Exception        thrown if an error occurs
      */
     Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken);
+
     /**
      * Called once a write operation is made. The write operation will write the messages through the
      * {@link ChannelPipeline}. Those are then ready to be flushed to the actual {@link Channel} once
@@ -82,6 +87,7 @@ public interface IChannelOutboundHandler : IChannelHandler
      * Intercepts {@link ChannelHandlerContext#read()}.
      */
     void Read(IChannelHandlerContext ctx);
+
     /**
      * Called once a flush operation is made. The flush operation will try to flush out all previous written messages
      * that are pending.

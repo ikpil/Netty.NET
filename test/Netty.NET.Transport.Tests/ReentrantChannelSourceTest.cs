@@ -275,13 +275,30 @@ public class ReentrantChannelSourceTest
         private readonly StringBuilder _log = new();
         internal string Text => _log.ToString();
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
-        { _log.Append("WRITE\n"); return ctx.WriteAsync(msg, token); }
+        {
+            _log.Append("WRITE\n");
+            return ctx.WriteAsync(msg, token);
+        }
+
         public override void Flush(IChannelHandlerContext ctx)
-        { _log.Append("FLUSH\n"); ctx.Flush(); }
+        {
+            _log.Append("FLUSH\n");
+            ctx.Flush();
+        }
+
         public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token)
-        { if (!writability) _log.Append("CLOSE\n"); return ctx.CloseAsync(token); }
+        {
+            if (!writability)
+                _log.Append("CLOSE\n");
+            return ctx.CloseAsync(token);
+        }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
-        { if (!writability) _log.Append("EXCEPTION: ").Append(cause).Append('\n'); }
+        {
+            if (!writability)
+                _log.Append("EXCEPTION: ").Append(cause).Append('\n');
+        }
+
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             if (writability) _log.Append(ctx.Channel.IsWritable ? "WRITABILITY: writable=true\n" : "WRITABILITY: writable=false\n");
@@ -315,6 +332,7 @@ public class ReentrantChannelSourceTest
             if (_writes++ < 5) ctx.Channel.Flush();
             return ctx.WriteAsync(msg, token);
         }
+
         public override void Flush(IChannelHandlerContext ctx)
         {
             if (_flushes++ < 5) _ = ctx.Channel.WriteAsync(CreateTestBuffer(2000));
@@ -345,6 +363,7 @@ public class ReentrantChannelSourceTest
         {
             throw new InvalidOperationException("intentional failure");
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             _ = ctx.CloseAsync();
@@ -371,10 +390,12 @@ public class ReentrantChannelSourceTest
         {
             ctx.Read();
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             _queue.Enqueue(msg);
         }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             while (_demand && _queue.TryDequeue(out var item))
@@ -384,6 +405,7 @@ public class ReentrantChannelSourceTest
             }
             ctx.FireChannelReadComplete();
         }
+
         public override void Read(IChannelHandlerContext ctx)
         {
             if (_queue.TryDequeue(out var item)) ctx.FireChannelRead(item);
@@ -398,7 +420,10 @@ public class ReentrantChannelSourceTest
     private sealed class SaveInput(ChannelWriter<string> received) : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { received.TryWrite((string)msg); ctx.FireChannelRead(msg); }
+        {
+            received.TryWrite((string)msg);
+            ctx.FireChannelRead(msg);
+        }
     }
 
     private sealed class RequestInput : ChannelInboundHandlerAdapter
@@ -407,6 +432,7 @@ public class ReentrantChannelSourceTest
         {
             ctx.Read();
         }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             ctx.Read();

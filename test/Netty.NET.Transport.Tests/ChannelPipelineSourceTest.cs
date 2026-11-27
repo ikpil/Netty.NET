@@ -47,6 +47,7 @@ public class ChannelPipelineSourceTest
         Assert.Equal(1, boot.Removed);
         Assert.Equal(1, replacement.Removed);
     }
+
     [Fact]
     public void TestHandlerAddedRemovesItselfAndThrows()
     {
@@ -65,6 +66,7 @@ public class ChannelPipelineSourceTest
         Assert.False(channel.Finish());
         Assert.Equal(1, boot.Removed);
     }
+
     [Fact]
     public void TestHandlerReplacedBeforeRegistrationAndHandlerAddedThrows()
     {
@@ -88,6 +90,7 @@ public class ChannelPipelineSourceTest
         Assert.Equal(1, handler.Removed);
         Assert.Equal(1, replacement.Removed);
     }
+
     [Fact]
     public void TestCloseWhenHandlerRemovedReplacesOtherHandler()
     {
@@ -103,6 +106,7 @@ public class ChannelPipelineSourceTest
         Assert.Equal(1, replacement.Added);
         Assert.Equal(1, replacement.Removed);
     }
+
     [Fact]
     public void TestRemoveOfHandlerReplacedConcurrently()
     {
@@ -157,6 +161,7 @@ public class ChannelPipelineSourceTest
             Assert.Equal(removed ? 0 : 1, replacement.Removed);
         }
     }
+
     private static void AwaitOtherThread(ref int ready)
     {
         // Spin instead of blocking so both threads start at (nearly) the same time.
@@ -164,6 +169,7 @@ public class ChannelPipelineSourceTest
         while (Volatile.Read(ref ready) < 2)
             Thread.Yield();
     }
+
     private static void AssertPipelineLinked(IChannelPipeline channelPipeline, params string[] expectedNames)
     {
         var pipeline = (DefaultChannelPipeline)channelPipeline;
@@ -191,18 +197,27 @@ public class ChannelPipelineSourceTest
         {
             Interlocked.Increment(ref Added);
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             Interlocked.Increment(ref Removed);
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { Interlocked.Increment(ref Read); ctx.FireChannelRead(msg); }
+        {
+            Interlocked.Increment(ref Read);
+            ctx.FireChannelRead(msg);
+        }
     }
     private sealed class SelfReplacingHandler(IChannelHandler replacement, Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
         public override void HandlerAdded(IChannelHandlerContext ctx)
-        { ctx.Pipeline.Replace(this, "real", replacement); throw error; }
+        {
+            ctx.Pipeline.Replace(this, "real", replacement);
+            throw error;
+        }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             Interlocked.Increment(ref Removed);
@@ -211,7 +226,12 @@ public class ChannelPipelineSourceTest
     private sealed class SelfRemovingHandler(Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
-        public override void HandlerAdded(IChannelHandlerContext ctx) { ctx.Pipeline.Remove(this); throw error; }
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            ctx.Pipeline.Remove(this);
+            throw error;
+        }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             Interlocked.Increment(ref Removed);
@@ -224,6 +244,7 @@ public class ChannelPipelineSourceTest
         {
             throw error;
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             Interlocked.Increment(ref Removed);

@@ -22,7 +22,9 @@ namespace Netty.NET.Transport.Channels;
 internal sealed class ExtendedClosedChannelException : ClosedChannelException
 {
     // CLR: initCause(cause) when non-null becomes the constructor cause; a null cause leaves InnerException null.
-    internal ExtendedClosedChannelException(Exception cause) : base(cause) { }
+    internal ExtendedClosedChannelException(Exception cause) : base(cause)
+    {
+    }
 
     // Suppress a warning since the method doesn't need synchronization
     // CLR: Exception has no fillInStackTrace; the CLR records a stack trace only when an exception is thrown.

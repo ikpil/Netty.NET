@@ -34,6 +34,7 @@ public class DefaultPromiseTest
     {
         return 20000;
     }
+
     private static TaskCompletionSource<T> Source<T>()
     {
         return new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -45,28 +46,36 @@ public class DefaultPromiseTest
         {
             return false;
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             return Task.CompletedTask;
         }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override void Shutdown() { }
+        public override void Shutdown()
+        {
+        }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return false;
         }
+
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
@@ -84,6 +93,7 @@ public class DefaultPromiseTest
         Assert.True(source.Task.IsCanceled);
         Assert.Equal(0, executor.submissions);
     }
+
     [Fact]
     public void TestSuccessDoesNotScheduleWhenNoListeners()
     {
@@ -95,6 +105,7 @@ public class DefaultPromiseTest
         Assert.Same(value, source.Task.GetAwaiter().GetResult());
         Assert.Equal(0, executor.submissions);
     }
+
     [Fact]
     public void TestFailureDoesNotScheduleWhenNoListeners()
     {
@@ -106,6 +117,7 @@ public class DefaultPromiseTest
         Assert.Same(cause, source.Task.Exception.InnerException);
         Assert.Equal(0, executor.submissions);
     }
+
     [Fact]
     public void TestCancellationExceptionIsThrownWhenBlockingGet()
     {
@@ -113,6 +125,7 @@ public class DefaultPromiseTest
         Assert.True(source.TrySetCanceled());
         Assert.ThrowsAny<OperationCanceledException>(() => source.Task.GetAwaiter().GetResult());
     }
+
     [Fact]
     public async Task TestCancellationExceptionIsThrownWhenBlockingGetWithTimeout()
     {
@@ -121,6 +134,7 @@ public class DefaultPromiseTest
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
             await source.Task.WaitAsync(TimeSpan.FromSeconds(1)));
     }
+
     [Fact]
     public async Task TestCancellationExceptionIsReturnedAsCause()
     {
@@ -133,12 +147,14 @@ public class DefaultPromiseTest
         Assert.Equal(cancellation.Token, error.CancellationToken);
         Assert.Null(source.Task.Exception);
     }
+
     [Fact]
     public void TestStackOverflowWithImmediateEventExecutorA()
     {
         TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, false);
         TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, false);
     }
+
     [Fact]
     public void TestNoStackOverflowWithDefaultEventExecutorA()
     {
@@ -151,12 +167,14 @@ public class DefaultPromiseTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void TestNoStackOverflowWithImmediateEventExecutorB()
     {
         TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, true);
         TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, true);
     }
+
     [Fact]
     public void TestNoStackOverflowWithDefaultEventExecutorB()
     {
@@ -169,6 +187,7 @@ public class DefaultPromiseTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void TestListenerNotifyOrder()
     {
@@ -207,6 +226,7 @@ public class DefaultPromiseTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void TestListenerNotifyLater()
     {
@@ -215,26 +235,31 @@ public class DefaultPromiseTest
         // Testing second execution path in DefaultPromise
         RunListenerNotifyLater(2);
     }
+
     [Fact]
     public void TestPromiseListenerAddWhenCompleteFailure()
     {
         TestPromiseListenerAddWhenComplete(FakeException());
     }
+
     [Fact]
     public void TestPromiseListenerAddWhenCompleteSuccess()
     {
         TestPromiseListenerAddWhenComplete(null);
     }
+
     [Fact]
     public void TestLateListenerIsOrderedCorrectlySuccess()
     {
         TestLateListenerIsOrderedCorrectly(null);
     }
+
     [Fact]
     public void TestLateListenerIsOrderedCorrectlyFailure()
     {
         TestLateListenerIsOrderedCorrectly(FakeException());
     }
+
     [Fact]
     public void TestSignalRace()
     {
@@ -261,6 +286,7 @@ public class DefaultPromiseTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void SignalUncancellableCompletionValue()
     {
@@ -271,6 +297,7 @@ public class DefaultPromiseTest
         Assert.True(source.Task.IsCompletedSuccessfully);
         Assert.Same(value, source.Task.GetAwaiter().GetResult());
     }
+
     [Fact]
     public void SignalSuccessCompletionValue()
     {
@@ -281,6 +308,7 @@ public class DefaultPromiseTest
         Assert.True(source.Task.IsCompletedSuccessfully);
         Assert.Same(value, source.Task.GetAwaiter().GetResult());
     }
+
     [Fact]
     public async Task SetUncancellableGetNow()
     {
@@ -308,6 +336,7 @@ public class DefaultPromiseTest
         }
         finally { release.Set(); Shutdown(executor); }
     }
+
     private static void TestStackOverFlowChainedFutures(int promiseChainLength, IEventExecutor executor, bool runTestInExecutorThread, bool lateListener)
     {
         var sources = new TaskCompletionSource<object>[promiseChainLength];
@@ -344,6 +373,7 @@ public class DefaultPromiseTest
         }
         finally { foreach (var observation in observations) observation?.Dispose(); }
     }
+
     /**
      * This test is mean to simulate the following sequence of events, which all take place on the I/O thread:
      * <ol>
@@ -392,6 +422,7 @@ public class DefaultPromiseTest
         }
         finally { Shutdown(executor); }
     }
+
     private static void TestPromiseListenerAddWhenComplete(Exception cause)
     {
         using var latch = new CountdownEvent(1);
@@ -402,6 +433,7 @@ public class DefaultPromiseTest
         else source.SetException(cause);
         Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
     }
+
     private static void RunListenerNotifyLater(int numListenersBefore)
     {
         IEventExecutor executor = new TestEventExecutor();
@@ -425,7 +457,10 @@ public class DefaultPromiseTest
     }
     private sealed class TestEventExecutor : SingleThreadEventExecutor
     {
-        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.Invoke) { IsBackground = true }), true) { }
+        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.Invoke) { IsBackground = true }), true)
+        {
+        }
+
         protected override void Run()
         {
             for (;;)
@@ -446,10 +481,12 @@ public class DefaultPromiseTest
             thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task(); }) { IsBackground = true };
             thread.Start();
         }
+
         public void Execute(Action task)
         {
             tasks.Add(task);
         }
+
         public void Dispose()
         {
             tasks.CompleteAdding();
@@ -461,6 +498,7 @@ public class DefaultPromiseTest
     {
         Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
     }
+
     private static Exception FakeException()
     {
         return new Exception("fake exception");

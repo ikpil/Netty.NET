@@ -47,6 +47,7 @@ public class ByteBufCapacitySourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();

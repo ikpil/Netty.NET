@@ -28,11 +28,18 @@ public class NestedLeakAwareDerivedOwnershipTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { Assert.Same(expected, value); ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            Assert.Same(expected, value);
+            ++Closes;
+            return true;
+        }
     }
     public static IEnumerable<object[]> Cases()
     {
@@ -42,6 +49,7 @@ public class NestedLeakAwareDerivedOwnershipTest
         for (int factory = 0; factory < 4; ++factory)
         foreach (bool parentFirst in new[] { false, true }) yield return [provider, depth, mask, factory, parentFirst];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void RetainedChildrenPreserveEveryNestedParentTrackerUntilItsActualFinalRelease(int provider, int depth, int mask, int factory, bool parentFirst)
@@ -53,59 +61,80 @@ public class NestedLeakAwareDerivedOwnershipTest
         ByteBuf Data(int count)
         {
             ByteBuf b = direct ? allocator.DirectBuffer(count, 64) : allocator.HeapBuffer(count, 64);
-            for (int i = 0; i < count; ++i) b.WriteByte(i + 1);
+            for (int i = 0; i < count; ++i)
+                b.WriteByte(i + 1);
             return b;
         }
         ByteBuf root = provider >= 4 ? new CompositeByteBuf(allocator, direct, 16, Data(8), Data(24)) : Data(32);
-        root.SetIndex(2, 24); ByteBuf parent = root;
+        root.SetIndex(2, 24);
+        ByteBuf parent = root;
         var trackers = new List<Tracker>();
         for (int i = 0; i < depth; ++i)
         {
-            var tracker = new Tracker(parent); trackers.Add(tracker);
+            var tracker = new Tracker(parent);
+            trackers.Add(tracker);
             parent = (mask & 1 << i) != 0 ? new AdvancedLeakAwareByteBuf(parent, tracker) : new SimpleLeakAwareByteBuf(parent, tracker);
         }
-        ByteBuf child = null; bool childReleased = false, parentReleased = false;
+        ByteBuf child = null;
+        bool childReleased = false, parentReleased = false;
         try
         {
             child = factory switch
             {
-                0 => parent.RetainedSlice(3, 8), 1 => parent.RetainedSlice(),
-                2 => parent.RetainedDuplicate(), _ => parent.ReadRetainedSlice(8)
+                0 => parent.RetainedSlice(3, 8),
+                1 => parent.RetainedSlice(),
+                2 => parent.RetainedDuplicate(),
+                _ => parent.ReadRetainedSlice(8)
             };
-            Assert.Equal(2, root.RefCnt); Assert.Equal(pooled ? 1 : 2, child.RefCnt);
+            Assert.Equal(2, root.RefCnt);
+            Assert.Equal(pooled ? 1 : 2, child.RefCnt);
             Assert.All(trackers, t => Assert.Equal(0, t.Closes));
             IResourceLeakTracker<ByteBuf> childTracker = AllocatorLeakDetectionTest.Tracker(child);
-            if (pooled) Assert.All(trackers, t => Assert.NotSame(t, childTracker));
-            else Assert.Same(trackers[^1], childTracker);
+            if (pooled)
+                Assert.All(trackers, t => Assert.NotSame(t, childTracker));
+            else
+                Assert.Same(trackers[^1], childTracker);
             int[] records = trackers.ConvertAll(t => t.Records).ToArray();
             byte expected = child.GetByte(child.ReaderIndex);
-            if (pooled) Assert.Equal(records, trackers.ConvertAll(t => t.Records).ToArray());
+            if (pooled)
+                Assert.Equal(records, trackers.ConvertAll(t => t.Records).ToArray());
             if (parentFirst)
             {
-                Assert.False(parent.Release()); parentReleased = true;
-                Assert.Equal(1, root.RefCnt); Assert.Equal(1, child.RefCnt);
+                Assert.False(parent.Release());
+                parentReleased = true;
+                Assert.Equal(1, root.RefCnt);
+                Assert.Equal(1, child.RefCnt);
                 Assert.All(trackers, t => Assert.Equal(0, t.Closes));
                 records = trackers.ConvertAll(t => t.Records).ToArray();
                 Assert.Equal(expected, child.GetByte(child.ReaderIndex));
-                if (pooled) Assert.Equal(records, trackers.ConvertAll(t => t.Records).ToArray());
-                Assert.True(child.Release()); childReleased = true;
+                if (pooled)
+                    Assert.Equal(records, trackers.ConvertAll(t => t.Records).ToArray());
+                Assert.True(child.Release());
+                childReleased = true;
             }
             else
             {
-                Assert.Equal(pooled, child.Release()); childReleased = true;
-                Assert.Equal(1, root.RefCnt); Assert.Equal(pooled ? 0 : 1, child.RefCnt);
+                Assert.Equal(pooled, child.Release());
+                childReleased = true;
+                Assert.Equal(1, root.RefCnt);
+                Assert.Equal(pooled ? 0 : 1, child.RefCnt);
                 Assert.All(trackers, t => Assert.Equal(0, t.Closes));
                 Assert.Equal(factory == 3 ? 10 : 2, root.ReaderIndex);
-                Assert.True(parent.Release()); parentReleased = true;
+                Assert.True(parent.Release());
+                parentReleased = true;
             }
-            Assert.Equal(0, root.RefCnt); Assert.Equal(0, child.RefCnt);
+            Assert.Equal(0, root.RefCnt);
+            Assert.Equal(0, child.RefCnt);
             Assert.All(trackers, t => Assert.Equal(1, t.Closes));
         }
         finally
         {
-            if (!childReleased && child is { RefCnt: > 0 }) child.Release();
-            if (!parentReleased && parent.RefCnt > 0) parent.Release();
-            (allocator as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
+            if (!childReleased && child is { RefCnt: > 0 })
+                child.Release();
+            if (!parentReleased && parent.RefCnt > 0)
+                parent.Release();
+            (allocator as IDisposable)?.Dispose();
+            Assert.Equal(0, native.ReservedBytes);
         }
     }
 }

@@ -51,6 +51,7 @@ public class AllocatorStorageContractTest
         for (int provider = 0; provider < 4; ++provider)
         foreach (bool preferDirect in new[] { false, true }) yield return [provider, preferDirect];
     }
+
     public static IEnumerable<object[]> CopyWindows()
     {
         foreach (object[] p in Providers())

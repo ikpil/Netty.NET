@@ -52,8 +52,12 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     {
         return _allocation.Memory.Slice(index, length);
     }
+
     internal override BufferMemoryLease AcquireReadLease()
-    { EnsureAccessible(); return _allocation.AcquireLease(); }
+    {
+        EnsureAccessible();
+        return _allocation.AcquireLease();
+    }
     public override int Capacity
     {
         get => _capacity;
@@ -83,6 +87,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
         try { return result.WriteBytes(this, index, length); }
         catch { result.Release(); throw; }
     }
+
     protected override void Deallocate()
     {
         ThreadLocalDirectAllocation allocation = _allocation;

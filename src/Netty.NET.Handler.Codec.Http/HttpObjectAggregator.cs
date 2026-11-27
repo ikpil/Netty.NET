@@ -420,50 +420,62 @@ public class HttpObjectAggregator
         {
             return SetProtocolVersion(version);
         }
+
         IByteBufHolder IByteBufHolder.Copy()
         {
             return Copy();
         }
+
         IByteBufHolder IByteBufHolder.Duplicate()
         {
             return Duplicate();
         }
+
         IByteBufHolder IByteBufHolder.RetainedDuplicate()
         {
             return RetainedDuplicate();
         }
+
         IByteBufHolder IByteBufHolder.Replace(ByteBuf content)
         {
             return Replace(content);
         }
+
         IByteBufHolder IByteBufHolder.Retain()
         {
             return Retain();
         }
+
         IByteBufHolder IByteBufHolder.Retain(int increment)
         {
             return Retain(increment);
         }
+
         IByteBufHolder IByteBufHolder.Touch()
         {
             return Touch();
         }
+
         IByteBufHolder IByteBufHolder.Touch(object hint)
         {
             return Touch(hint);
         }
+
         IReferenceCounted IReferenceCounted.Retain()
         {
             return Retain();
         }
+
         IReferenceCounted IReferenceCounted.Retain(int increment)
         {
             return Retain(increment);
         }
+
         IReferenceCounted IReferenceCounted.Touch()
         {
             return Touch();
         }
+
         IReferenceCounted IReferenceCounted.Touch(object hint)
         {
             return Touch(hint);
@@ -562,6 +574,7 @@ public class HttpObjectAggregator
         {
             return SetMethod(method);
         }
+
         IHttpRequest IHttpRequest.SetUri(string uri)
         {
             return SetUri(uri);

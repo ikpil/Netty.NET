@@ -106,5 +106,7 @@ internal sealed class Bzip2Constants
      */
     internal const int HUFFMAN_MAXIMUM_TABLES = 6;
 
-    private Bzip2Constants() { }
+    private Bzip2Constants()
+    {
+    }
 }

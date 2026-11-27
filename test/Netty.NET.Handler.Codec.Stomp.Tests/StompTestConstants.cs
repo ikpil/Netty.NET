@@ -106,5 +106,7 @@ public sealed class StompTestConstants
              "custom_invalid\\t_header_\\tkey:custom_invalid\\t_header_\\tvalue\n" +
              '\n' + '\0';
 
-    private StompTestConstants() { }
+    private StompTestConstants()
+    {
+    }
 }

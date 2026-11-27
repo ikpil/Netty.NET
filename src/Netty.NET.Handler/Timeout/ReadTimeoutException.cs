@@ -25,7 +25,9 @@ public sealed class ReadTimeoutException : TimeoutException
 {
     public static readonly ReadTimeoutException INSTANCE = new ReadTimeoutException(true);
 
-    public ReadTimeoutException() { }
+    public ReadTimeoutException()
+    {
+    }
 
     public ReadTimeoutException(string message) : base(message, false)
     {

@@ -39,11 +39,18 @@ public partial class WrappedCompositeByteBufDispatchTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { Assert.Same(Expected, value); ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            Assert.Same(Expected, value);
+            ++Closes;
+            return true;
+        }
     }
     private sealed class Context : IDisposable
     {
@@ -62,10 +69,20 @@ public partial class WrappedCompositeByteBufDispatchTest
         internal Context(bool direct, int form)
         {
             var allocator = new UnpooledByteBufAllocator(direct, Native);
-            ByteBuf Data(int length) { ByteBuf b = allocator.Buffer(length, length); for (int i = 0; i < length; ++i) b.WriteByte(i + 1); return b; }
+            ByteBuf Data(int length)
+            {
+                ByteBuf b = allocator.Buffer(length, length);
+                for (int i = 0; i < length; ++i)
+                    b.WriteByte(i + 1);
+                return b;
+            }
             _components = [Data(8), Data(0), Data(24), Data(32)];
-            Peer = Data(64); Peer.SetIndex(1, 17); Batch = [Data(8), Data(8)];
-            Root = new Probe(allocator, direct, _components); Root.C = this; Root.SetIndex(3, 40);
+            Peer = Data(64);
+            Peer.SetIndex(1, 17);
+            Batch = [Data(8), Data(8)];
+            Root = new Probe(allocator, direct, _components);
+            Root.C = this;
+            Root.SetIndex(3, 40);
             Buffer = form switch
             {
                 0 => new WrappedCompositeByteBuf(Root),
@@ -76,13 +93,23 @@ public partial class WrappedCompositeByteBufDispatchTest
             };
             Tracker.Expected = Buffer.Unwrap();
         }
+
         public void Dispose()
         {
-            if (Buffer.RefCnt > 0) Buffer.Release();
-            foreach (ByteBuf b in _components) if (b.RefCnt > 0) b.Release();
-            if (Peer.RefCnt > 0) Peer.Release();
-            foreach (ByteBuf b in Batch) if (b.RefCnt > 0) b.Release();
-            Stream.Dispose(); Socket.Dispose(); File.Dispose(); Cancellation.Dispose();
+            if (Buffer.RefCnt > 0)
+                Buffer.Release();
+            foreach (ByteBuf b in _components)
+            if (b.RefCnt > 0)
+                b.Release();
+            if (Peer.RefCnt > 0)
+                Peer.Release();
+            foreach (ByteBuf b in Batch)
+            if (b.RefCnt > 0)
+                b.Release();
+            Stream.Dispose();
+            Socket.Dispose();
+            File.Dispose();
+            Cancellation.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -92,7 +119,11 @@ public partial class WrappedCompositeByteBufDispatchTest
         internal Context C;
         internal readonly DispatchFailure Failure = new();
         internal readonly List<string> Calls = [];
-        private void Visit(string method) { Calls.Add(method); }
+        private void Visit(string method)
+        {
+            Calls.Add(method);
+        }
+
     public override Memory<byte> AsMemory(int index, int length)
     {
         Visit("AsMemory(int,int)");
@@ -100,6 +131,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override Span<byte> AsSpan(int index, int length)
     {
         Visit("AsSpan(int,int)");
@@ -107,18 +139,21 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override byte GetByte(int index)
     {
         Visit("GetByte(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override bool GetBoolean(int index)
     {
         Visit("GetBoolean(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetByte(int index, int value)
     {
         Visit("SetByte(int,int)");
@@ -126,6 +161,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override ByteBuf SetBoolean(int index, bool value)
     {
         Visit("SetBoolean(int,bool)");
@@ -133,12 +169,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(value);
         throw Failure;
     }
+
     public override short GetShort(int index)
     {
         Visit("GetShort(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetShort(int index, int value)
     {
         Visit("SetShort(int,int)");
@@ -146,12 +184,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override short GetShortLE(int index)
     {
         Visit("GetShortLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetShortLE(int index, int value)
     {
         Visit("SetShortLE(int,int)");
@@ -159,12 +199,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override int GetInt(int index)
     {
         Visit("GetInt(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetInt(int index, int value)
     {
         Visit("SetInt(int,int)");
@@ -172,12 +214,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override int GetIntLE(int index)
     {
         Visit("GetIntLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetIntLE(int index, int value)
     {
         Visit("SetIntLE(int,int)");
@@ -185,12 +229,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override long GetLong(int index)
     {
         Visit("GetLong(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetLong(int index, long value)
     {
         Visit("SetLong(int,long)");
@@ -198,12 +244,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(81985529216486895L, value);
         throw Failure;
     }
+
     public override long GetLongLE(int index)
     {
         Visit("GetLongLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetLongLE(int index, long value)
     {
         Visit("SetLongLE(int,long)");
@@ -211,30 +259,35 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(81985529216486895L, value);
         throw Failure;
     }
+
     public override int GetUnsignedMedium(int index)
     {
         Visit("GetUnsignedMedium(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override int GetUnsignedMediumLE(int index)
     {
         Visit("GetUnsignedMediumLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override int GetMedium(int index)
     {
         Visit("GetMedium(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override int GetMediumLE(int index)
     {
         Visit("GetMediumLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetMedium(int index, int value)
     {
         Visit("SetMedium(int,int)");
@@ -242,6 +295,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override ByteBuf SetMediumLE(int index, int value)
     {
         Visit("SetMediumLE(int,int)");
@@ -249,36 +303,42 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override ushort GetUnsignedShort(int index)
     {
         Visit("GetUnsignedShort(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ushort GetUnsignedShortLE(int index)
     {
         Visit("GetUnsignedShortLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override uint GetUnsignedInt(int index)
     {
         Visit("GetUnsignedInt(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override uint GetUnsignedIntLE(int index)
     {
         Visit("GetUnsignedIntLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override char GetChar(int index)
     {
         Visit("GetChar(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetChar(int index, char value)
     {
         Visit("SetChar(int,char)");
@@ -286,30 +346,35 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal('\u00E9', value);
         throw Failure;
     }
+
     public override float GetFloat(int index)
     {
         Visit("GetFloat(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override float GetFloatLE(int index)
     {
         Visit("GetFloatLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override double GetDouble(int index)
     {
         Visit("GetDouble(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override double GetDoubleLE(int index)
     {
         Visit("GetDoubleLE(int)");
         Assert.Equal(3, index);
         throw Failure;
     }
+
     public override ByteBuf SetFloat(int index, float value)
     {
         Visit("SetFloat(int,float)");
@@ -317,6 +382,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(1.25f, value);
         throw Failure;
     }
+
     public override ByteBuf SetFloatLE(int index, float value)
     {
         Visit("SetFloatLE(int,float)");
@@ -324,6 +390,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(1.25f, value);
         throw Failure;
     }
+
     public override ByteBuf SetDouble(int index, double value)
     {
         Visit("SetDouble(int,double)");
@@ -331,6 +398,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(1.25d, value);
         throw Failure;
     }
+
     public override ByteBuf SetDoubleLE(int index, double value)
     {
         Visit("SetDoubleLE(int,double)");
@@ -338,233 +406,279 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(1.25d, value);
         throw Failure;
     }
+
     public override byte ReadByte()
     {
         Visit("ReadByte()");
         throw Failure;
     }
+
     public override ByteBuf WriteByte(int value)
     {
         Visit("WriteByte(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override bool ReadBoolean()
     {
         Visit("ReadBoolean()");
         throw Failure;
     }
+
     public override ByteBuf WriteBoolean(bool value)
     {
         Visit("WriteBoolean(bool)");
         Assert.True(value);
         throw Failure;
     }
+
     public override short ReadShort()
     {
         Visit("ReadShort()");
         throw Failure;
     }
+
     public override ByteBuf WriteShort(int value)
     {
         Visit("WriteShort(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override short ReadShortLE()
     {
         Visit("ReadShortLE()");
         throw Failure;
     }
+
     public override ByteBuf WriteShortLE(int value)
     {
         Visit("WriteShortLE(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override int ReadMedium()
     {
         Visit("ReadMedium()");
         throw Failure;
     }
+
     public override ByteBuf WriteMedium(int value)
     {
         Visit("WriteMedium(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override int ReadMediumLE()
     {
         Visit("ReadMediumLE()");
         throw Failure;
     }
+
     public override ByteBuf WriteMediumLE(int value)
     {
         Visit("WriteMediumLE(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override int ReadInt()
     {
         Visit("ReadInt()");
         throw Failure;
     }
+
     public override ByteBuf WriteInt(int value)
     {
         Visit("WriteInt(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override int ReadIntLE()
     {
         Visit("ReadIntLE()");
         throw Failure;
     }
+
     public override ByteBuf WriteIntLE(int value)
     {
         Visit("WriteIntLE(int)");
         Assert.Equal(305419896, value);
         throw Failure;
     }
+
     public override long ReadLong()
     {
         Visit("ReadLong()");
         throw Failure;
     }
+
     public override ByteBuf WriteLong(long value)
     {
         Visit("WriteLong(long)");
         Assert.Equal(81985529216486895L, value);
         throw Failure;
     }
+
     public override long ReadLongLE()
     {
         Visit("ReadLongLE()");
         throw Failure;
     }
+
     public override ByteBuf WriteLongLE(long value)
     {
         Visit("WriteLongLE(long)");
         Assert.Equal(81985529216486895L, value);
         throw Failure;
     }
+
     public override float ReadFloat()
     {
         Visit("ReadFloat()");
         throw Failure;
     }
+
     public override ByteBuf WriteFloat(float value)
     {
         Visit("WriteFloat(float)");
         Assert.Equal(1.25f, value);
         throw Failure;
     }
+
     public override float ReadFloatLE()
     {
         Visit("ReadFloatLE()");
         throw Failure;
     }
+
     public override ByteBuf WriteFloatLE(float value)
     {
         Visit("WriteFloatLE(float)");
         Assert.Equal(1.25f, value);
         throw Failure;
     }
+
     public override double ReadDouble()
     {
         Visit("ReadDouble()");
         throw Failure;
     }
+
     public override ByteBuf WriteDouble(double value)
     {
         Visit("WriteDouble(double)");
         Assert.Equal(1.25d, value);
         throw Failure;
     }
+
     public override double ReadDoubleLE()
     {
         Visit("ReadDoubleLE()");
         throw Failure;
     }
+
     public override ByteBuf WriteDoubleLE(double value)
     {
         Visit("WriteDoubleLE(double)");
         Assert.Equal(1.25d, value);
         throw Failure;
     }
+
     public override ushort ReadUnsignedShort()
     {
         Visit("ReadUnsignedShort()");
         throw Failure;
     }
+
     public override ushort ReadUnsignedShortLE()
     {
         Visit("ReadUnsignedShortLE()");
         throw Failure;
     }
+
     public override uint ReadUnsignedInt()
     {
         Visit("ReadUnsignedInt()");
         throw Failure;
     }
+
     public override uint ReadUnsignedIntLE()
     {
         Visit("ReadUnsignedIntLE()");
         throw Failure;
     }
+
     public override int ReadUnsignedMedium()
     {
         Visit("ReadUnsignedMedium()");
         throw Failure;
     }
+
     public override int ReadUnsignedMediumLE()
     {
         Visit("ReadUnsignedMediumLE()");
         throw Failure;
     }
+
     public override char ReadChar()
     {
         Visit("ReadChar()");
         throw Failure;
     }
+
     public override ByteBuf WriteChar(char value)
     {
         Visit("WriteChar(char)");
         Assert.Equal('\u00E9', value);
         throw Failure;
     }
+
     public override ByteBuf SkipBytes(int length)
     {
         Visit("SkipBytes(int)");
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf GetBytes(int index, Span<byte> destination)
     {
         Visit("GetBytes(int,Span<byte>)");
         Assert.Equal(3, index);
-        Assert.Equal(4, destination.Length); Assert.True(destination.Overlaps(C.Bytes.AsSpan(2, 4)));
+        Assert.Equal(4, destination.Length);
+            Assert.True(destination.Overlaps(C.Bytes.AsSpan(2, 4)));
         throw Failure;
     }
+
     public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
     {
         Visit("SetBytes(int,ReadOnlySpan<byte>)");
         Assert.Equal(3, index);
-        Assert.Equal(4, source.Length); Assert.True(source.Overlaps(C.Bytes.AsSpan(2, 4)));
+        Assert.Equal(4, source.Length);
+            Assert.True(source.Overlaps(C.Bytes.AsSpan(2, 4)));
         throw Failure;
     }
+
     public override ByteBuf ReadBytes(Span<byte> destination)
     {
         Visit("ReadBytes(Span<byte>)");
-        Assert.Equal(4, destination.Length); Assert.True(destination.Overlaps(C.Bytes.AsSpan(2, 4)));
+        Assert.Equal(4, destination.Length);
+            Assert.True(destination.Overlaps(C.Bytes.AsSpan(2, 4)));
         throw Failure;
     }
+
     public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
     {
         Visit("WriteBytes(ReadOnlySpan<byte>)");
-        Assert.Equal(4, source.Length); Assert.True(source.Overlaps(C.Bytes.AsSpan(2, 4)));
+        Assert.Equal(4, source.Length);
+            Assert.True(source.Overlaps(C.Bytes.AsSpan(2, 4)));
         throw Failure;
     }
+
     public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
     {
         Visit("GetBytes(int,ByteBuf,int,int)");
@@ -574,6 +688,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
         Visit("SetBytes(int,ByteBuf,int,int)");
@@ -583,6 +698,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf ReadBytes(ByteBuf destination, int length)
     {
         Visit("ReadBytes(ByteBuf,int)");
@@ -590,6 +706,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf WriteBytes(ByteBuf source, int length)
     {
         Visit("WriteBytes(ByteBuf,int)");
@@ -597,6 +714,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override int GetBytes(int index, Socket destination, int length)
     {
         Visit("GetBytes(int,Socket,int)");
@@ -605,6 +723,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ValueTask<int> GetBytesAsync(int index, Socket destination, int length,
         CancellationToken cancellationToken = default)
     {
@@ -615,6 +734,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override int SetBytes(int index, Socket source, int length)
     {
         Visit("SetBytes(int,Socket,int)");
@@ -623,6 +743,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ValueTask<int> SetBytesAsync(int index, Socket source, int length,
         CancellationToken cancellationToken = default)
     {
@@ -633,6 +754,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override int ReadBytes(Socket destination, int length)
     {
         Visit("ReadBytes(Socket,int)");
@@ -640,6 +762,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ValueTask<int> ReadBytesAsync(Socket destination, int length,
         CancellationToken cancellationToken = default)
     {
@@ -649,6 +772,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override int WriteBytes(Socket source, int length)
     {
         Visit("WriteBytes(Socket,int)");
@@ -656,6 +780,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ValueTask<int> WriteBytesAsync(Socket source, int length,
         CancellationToken cancellationToken = default)
     {
@@ -665,6 +790,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     {
         Visit("GetBytes(int,SafeFileHandle,long,int)");
@@ -674,6 +800,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override int SetBytes(int index, SafeFileHandle source, long position, int length)
     {
         Visit("SetBytes(int,SafeFileHandle,long,int)");
@@ -683,6 +810,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override int ReadBytes(SafeFileHandle destination, long position, int length)
     {
         Visit("ReadBytes(SafeFileHandle,long,int)");
@@ -691,6 +819,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override int WriteBytes(SafeFileHandle source, long position, int length)
     {
         Visit("WriteBytes(SafeFileHandle,long,int)");
@@ -699,6 +828,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ValueTask<int> GetBytesAsync(int index, SafeFileHandle destination, long position, int length,
         CancellationToken cancellationToken = default)
     {
@@ -710,6 +840,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ValueTask<int> SetBytesAsync(int index, SafeFileHandle source, long position, int length,
         CancellationToken cancellationToken = default)
     {
@@ -721,6 +852,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ValueTask<int> ReadBytesAsync(SafeFileHandle destination, long position, int length,
         CancellationToken cancellationToken = default)
     {
@@ -731,6 +863,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ValueTask<int> WriteBytesAsync(SafeFileHandle source, long position, int length,
         CancellationToken cancellationToken = default)
     {
@@ -741,6 +874,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         Visit("AsReadOnlyMemory(int,int)");
@@ -748,6 +882,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ReadOnlySpan<byte> AsReadOnlySpan(int index, int length)
     {
         Visit("AsReadOnlySpan(int,int)");
@@ -755,6 +890,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     {
         Visit("AsReadOnlySequence(int,int)");
@@ -762,6 +898,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf GetBytes(int index, Stream destination, int length)
     {
         Visit("GetBytes(int,Stream,int)");
@@ -770,6 +907,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override int SetBytes(int index, Stream source, int length)
     {
         Visit("SetBytes(int,Stream,int)");
@@ -778,6 +916,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf ReadBytes(Stream destination, int length)
     {
         Visit("ReadBytes(Stream,int)");
@@ -785,6 +924,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override int WriteBytes(Stream source, int length)
     {
         Visit("WriteBytes(Stream,int)");
@@ -792,6 +932,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ValueTask GetBytesAsync(int index, Stream destination, int length,
         CancellationToken cancellationToken = default)
     {
@@ -802,6 +943,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ValueTask<int> SetBytesAsync(int index, Stream source, int length,
         CancellationToken cancellationToken = default)
     {
@@ -812,6 +954,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ValueTask ReadBytesAsync(Stream destination, int length,
         CancellationToken cancellationToken = default)
     {
@@ -821,6 +964,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ValueTask<int> WriteBytesAsync(Stream source, int length,
         CancellationToken cancellationToken = default)
     {
@@ -830,6 +974,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(C.Cancellation.Token, cancellationToken);
         throw Failure;
     }
+
     public override ByteBuf GetBytes(int index, ByteBuf destination)
     {
         Visit("GetBytes(int,ByteBuf)");
@@ -837,6 +982,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Same(C.Peer, destination);
         throw Failure;
     }
+
     public override ByteBuf GetBytes(int index, ByteBuf destination, int length)
     {
         Visit("GetBytes(int,ByteBuf,int)");
@@ -845,6 +991,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf SetBytes(int index, ByteBuf source)
     {
         Visit("SetBytes(int,ByteBuf)");
@@ -852,6 +999,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Same(C.Peer, source);
         throw Failure;
     }
+
     public override ByteBuf SetBytes(int index, ByteBuf source, int length)
     {
         Visit("SetBytes(int,ByteBuf,int)");
@@ -860,12 +1008,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf ReadBytes(ByteBuf destination)
     {
         Visit("ReadBytes(ByteBuf)");
         Assert.Same(C.Peer, destination);
         throw Failure;
     }
+
     public override ByteBuf ReadBytes(ByteBuf destination, int destinationIndex, int length)
     {
         Visit("ReadBytes(ByteBuf,int,int)");
@@ -874,12 +1024,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override ByteBuf WriteBytes(ByteBuf source)
     {
         Visit("WriteBytes(ByteBuf)");
         Assert.Same(C.Peer, source);
         throw Failure;
     }
+
     public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
     {
         Visit("WriteBytes(ByteBuf,int,int)");
@@ -888,6 +1040,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponent(ByteBuf buffer, bool increaseWriterIndex = false)
     {
         Visit("AddComponent(ByteBuf,bool)");
@@ -895,6 +1048,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponent(int componentIndex, ByteBuf buffer, bool increaseWriterIndex = false)
     {
         Visit("AddComponent(int,ByteBuf,bool)");
@@ -903,12 +1057,14 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf RemoveComponent(int componentIndex)
     {
         Visit("RemoveComponent(int)");
         Assert.Equal(1, componentIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf RemoveComponents(int componentIndex, int numComponents)
     {
         Visit("RemoveComponents(int,int)");
@@ -916,6 +1072,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(2, numComponents);
         throw Failure;
     }
+
     public override IReadOnlyList<ByteBuf> Decompose(int offset, int length)
     {
         Visit("Decompose(int,int)");
@@ -923,11 +1080,13 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(4, length);
         throw Failure;
     }
+
     public override CompositeByteBuf Consolidate()
     {
         Visit("Consolidate()");
         throw Failure;
     }
+
     public override CompositeByteBuf Consolidate(int componentIndex, int numComponents)
     {
         Visit("Consolidate(int,int)");
@@ -935,17 +1094,20 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal(2, numComponents);
         throw Failure;
     }
+
     public override CompositeByteBuf DiscardReadComponents()
     {
         Visit("DiscardReadComponents()");
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponents(params ByteBuf[] buffers)
     {
         Visit("AddComponents(ByteBuf[])");
         Assert.Same(C.Batch, buffers);
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
     {
         Visit("AddComponents(ByteBuf[],bool)");
@@ -953,6 +1115,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponents(int componentIndex, ByteBuf[] buffers, bool increaseWriterIndex = false)
     {
         Visit("AddComponents(int,ByteBuf[],bool)");
@@ -961,6 +1124,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponents(IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
     {
         Visit("AddComponents(IEnumerable<ByteBuf>,bool)");
@@ -968,6 +1132,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf AddComponents(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
     {
         Visit("AddComponents(int,IEnumerable<ByteBuf>,bool)");
@@ -976,6 +1141,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override CompositeByteBuf AddFlattenedComponents(ByteBuf buffer, bool increaseWriterIndex = false)
     {
         Visit("AddFlattenedComponents(ByteBuf,bool)");
@@ -983,6 +1149,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.True(increaseWriterIndex);
         throw Failure;
     }
+
     public override IEnumerator<ByteBuf> GetEnumerator()
     {
         Visit("GetEnumerator()");
@@ -995,6 +1162,7 @@ public partial class WrappedCompositeByteBufDispatchTest
         for (int form = 0; form < 5; ++form)
         for (int operation = 0; operation < 133; ++operation) yield return [direct, form, operation];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void PublicOperationsPreserveWrappedEntryArgumentsAndFailureWithoutChangingIndices(bool direct, int form, int operation)
@@ -1007,8 +1175,10 @@ public partial class WrappedCompositeByteBufDispatchTest
         Assert.Equal((3, 40, 1), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.RefCnt));
         c.Root.SetIndex(4, 41).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal((3, 40), (c.Root.ReaderIndex, c.Root.WriterIndex));
-        Assert.Equal(form == 4 ? 1 : 0, c.Tracker.Records); Assert.Equal(0, c.Tracker.Closes);
-        c.Dispose(); Assert.Equal(form is 1 or 3 or 4 ? 1 : 0, c.Tracker.Closes);
+        Assert.Equal(form == 4 ? 1 : 0, c.Tracker.Records);
+        Assert.Equal(0, c.Tracker.Closes);
+        c.Dispose();
+        Assert.Equal(form is 1 or 3 or 4 ? 1 : 0, c.Tracker.Closes);
     }
     private static readonly string[] Signatures =
     [

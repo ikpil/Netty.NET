@@ -30,10 +30,12 @@ public class MultiSearchProcessorTest
     {
         return Enumerable.Range(0, 8).Select(i => new object[] { i });
     }
+
     private static byte[] Bytes(string text)
     {
         return Encoding.UTF8.GetBytes(text);
     }
+
     private static AhoCorasicSearchProcessorFactory Factory(params string[] patterns)
     {
         return AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns.Select(Bytes).ToArray());
@@ -188,12 +190,20 @@ public class MultiSearchProcessorTest
     public void FoundIdFollowsCurrentStateAndResetDiscardsPartialOrCompletedMatch()
     {
         IMultiSearchProcessor processor = Factory("ab", "b").NewSearchProcessor();
-        Assert.Equal(-1, processor.GetFoundNeedleId()); Assert.True(processor.Process((byte)'a'));
-        processor.Reset(); processor.Reset(); Assert.Equal(-1, processor.GetFoundNeedleId());
-        Assert.False(processor.Process((byte)'b')); Assert.Equal(1, processor.GetFoundNeedleId());
-        Assert.True(processor.Process((byte)'x')); Assert.Equal(-1, processor.GetFoundNeedleId());
-        Assert.True(processor.Process((byte)'a')); Assert.False(processor.Process((byte)'b')); Assert.Equal(0, processor.GetFoundNeedleId());
-        processor.Reset(); Assert.Equal(-1, processor.GetFoundNeedleId());
+        Assert.Equal(-1, processor.GetFoundNeedleId());
+        Assert.True(processor.Process((byte)'a'));
+        processor.Reset();
+        processor.Reset();
+        Assert.Equal(-1, processor.GetFoundNeedleId());
+        Assert.False(processor.Process((byte)'b'));
+        Assert.Equal(1, processor.GetFoundNeedleId());
+        Assert.True(processor.Process((byte)'x'));
+        Assert.Equal(-1, processor.GetFoundNeedleId());
+        Assert.True(processor.Process((byte)'a'));
+        Assert.False(processor.Process((byte)'b'));
+        Assert.Equal(0, processor.GetFoundNeedleId());
+        processor.Reset();
+        Assert.Equal(-1, processor.GetFoundNeedleId());
     }
 
     [Fact]
@@ -201,21 +211,30 @@ public class MultiSearchProcessorTest
     {
         byte[][] patterns = { Bytes("ab"), Bytes("b") };
         AbstractMultiSearchProcessorFactory factory = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns);
-        Array.Fill(patterns[0], (byte)'x'); patterns[1] = Bytes("z");
+        Array.Fill(patterns[0], (byte)'x');
+        patterns[1] = Bytes("z");
         IMultiSearchProcessor a = ((IMultiSearchProcessorFactory)factory).NewSearchProcessor();
         ISearchProcessor b = ((ISearchProcessorFactory)factory).NewSearchProcessor();
-        Assert.IsAssignableFrom<IMultiSearchProcessor>(b); Assert.NotSame(a, b);
-        Assert.True(a.Process((byte)'a')); Assert.False(b.Process((byte)'b'));
+        Assert.IsAssignableFrom<IMultiSearchProcessor>(b);
+        Assert.NotSame(a, b);
+        Assert.True(a.Process((byte)'a'));
+        Assert.False(b.Process((byte)'b'));
         Assert.Equal(1, ((IMultiSearchProcessor)b).GetFoundNeedleId());
-        Assert.False(a.Process((byte)'b')); Assert.Equal(0, a.GetFoundNeedleId());
+        Assert.False(a.Process((byte)'b'));
+        Assert.Equal(0, a.GetFoundNeedleId());
     }
 
     [Fact]
     public void EmptyPatternListMatchesNothingAndIndividualNullOrEmptyPatternsAreRejected()
     {
         IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory().NewSearchProcessor();
-        for (int i = 0; i < 256; i++) { Assert.True(processor.Process((byte)i)); Assert.Equal(-1, processor.GetFoundNeedleId()); }
-        processor.Reset(); Assert.Equal(-1, processor.GetFoundNeedleId());
+        for (int i = 0; i < 256; i++)
+        {
+            Assert.True(processor.Process((byte)i));
+            Assert.Equal(-1, processor.GetFoundNeedleId());
+        }
+        processor.Reset();
+        Assert.Equal(-1, processor.GetFoundNeedleId());
         Assert.Throws<ArgumentNullException>(() => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory((byte[][])null));
         Assert.Throws<ArgumentNullException>(() => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(Bytes("a"), null));
         Assert.Throws<ArgumentException>(() => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(Bytes("a"), Array.Empty<byte>()));
@@ -228,8 +247,14 @@ public class MultiSearchProcessorTest
         { new byte[] { 255, 128 }, new byte[] { 0, 255, 128 }, new byte[] { 255 } }).ToArray();
         IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns).NewSearchProcessor();
         for (int i = 0; i < 256; i++)
-        { Assert.False(processor.Process((byte)i)); Assert.Equal(i == 255 ? 258 : i, processor.GetFoundNeedleId()); }
-        processor.Reset(); Assert.False(processor.Process(0)); Assert.False(processor.Process(255)); Assert.False(processor.Process(128));
+        {
+            Assert.False(processor.Process((byte)i));
+            Assert.Equal(i == 255 ? 258 : i, processor.GetFoundNeedleId());
+        }
+        processor.Reset();
+        Assert.False(processor.Process(0));
+        Assert.False(processor.Process(255));
+        Assert.False(processor.Process(128));
         Assert.Equal(257, processor.GetFoundNeedleId());
     }
 
@@ -239,9 +264,13 @@ public class MultiSearchProcessorTest
         byte[] prefix = Enumerable.Repeat((byte)255, 1025).ToArray();
         byte[][] patterns = { prefix.Concat(new byte[] { 0 }).ToArray(), prefix.Concat(new byte[] { 128 }).ToArray(), new byte[] { 255, 128 } };
         IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns).NewSearchProcessor();
-        foreach (byte value in prefix) Assert.True(processor.Process(value));
-        Assert.False(processor.Process(128)); Assert.Equal(1, processor.GetFoundNeedleId());
-        Assert.True(processor.Process(255)); Assert.False(processor.Process(128)); Assert.Equal(2, processor.GetFoundNeedleId());
+        foreach (byte value in prefix)
+            Assert.True(processor.Process(value));
+        Assert.False(processor.Process(128));
+        Assert.Equal(1, processor.GetFoundNeedleId());
+        Assert.True(processor.Process(255));
+        Assert.False(processor.Process(128));
+        Assert.Equal(2, processor.GetFoundNeedleId());
     }
 
     [Fact]
@@ -284,8 +313,14 @@ public class MultiSearchProcessorTest
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
-        public void Record() { }
-        public void Record(object hint) { }
+        public void Record()
+        {
+        }
+
+        public void Record(object hint)
+        {
+        }
+
         public bool Close(ByteBuf buffer)
         {
             return true;

@@ -25,13 +25,31 @@ internal sealed partial class AdaptivePoolingAllocator
         // Original rootParent()._get*/_set* bypass public primitive overrides;
         // keep the allocation's logical storage kernels distinct from its physical Memory borrow.
         internal override byte ReadByteCore(int index)
-        { CheckIndex(index, 1); return _allocation.Root.ReadByteCore(_allocation.Offset + index); }
+        {
+            CheckIndex(index, 1);
+            return _allocation.Root.ReadByteCore(_allocation.Offset + index);
+        }
+
         internal override void WriteByteCore(int index, int value)
-        { EnsureCanWrite(); CheckIndex(index, 1); _allocation.Root.WriteByteCore(_allocation.Offset + index, value); }
+        {
+            EnsureCanWrite();
+            CheckIndex(index, 1);
+            _allocation.Root.WriteByteCore(_allocation.Offset + index, value);
+        }
+
         internal override ulong ReadWord(int index, int width, bool littleEndian)
-        { CheckIndex(index, width); return _allocation.Root.ReadWord(_allocation.Offset + index, width, littleEndian); }
+        {
+            CheckIndex(index, width);
+            return _allocation.Root.ReadWord(_allocation.Offset + index, width, littleEndian);
+        }
+
         internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
-        { EnsureCanWrite(); CheckIndex(index, width); _allocation.Root.SetWord(_allocation.Offset + index, value, width, littleEndian); return this; }
+        {
+            EnsureCanWrite();
+            CheckIndex(index, width);
+            _allocation.Root.SetWord(_allocation.Offset + index, value, width, littleEndian);
+            return this;
+        }
 
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
@@ -39,6 +57,7 @@ internal sealed partial class AdaptivePoolingAllocator
             _allocation.Root.GetBytes(_allocation.Offset + index, destination);
             return this;
         }
+
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             ArgumentNullException.ThrowIfNull(destination);
@@ -46,10 +65,12 @@ internal sealed partial class AdaptivePoolingAllocator
             _allocation.Root.GetBytes(_allocation.Offset + index, destination, destinationIndex, length);
             return this;
         }
+
         protected override void GetBytesCore(int index, Span<byte> destination)
         {
             _allocation.Root.GetBytes(_allocation.Offset + index, destination);
         }
+
         protected override void SetZeroCore(int index, int length)
         {
             _allocation.Root.SetZero(_allocation.Offset + index, length);
@@ -68,6 +89,7 @@ internal sealed partial class AdaptivePoolingAllocator
             int result = allocation.Root.ForEachByte(allocation.Offset + index, length, processor);
             return result < allocation.Offset ? -1 : result - allocation.Offset;
         }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             ArgumentNullException.ThrowIfNull(processor);

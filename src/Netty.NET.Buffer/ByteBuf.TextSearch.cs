@@ -49,8 +49,10 @@ public abstract partial class ByteBuf
     public virtual string ToString(int index, int length, Encoding charset)
     {
         ArgumentNullException.ThrowIfNull(charset);
-        if (TryGetReadOnlyMemory(index, length, out var memory)) return charset.GetString(memory.Span);
-        byte[] bytes = new byte[length]; GetBytesCore(index, bytes);
+        if (TryGetReadOnlyMemory(index, length, out var memory))
+            return charset.GetString(memory.Span);
+        byte[] bytes = new byte[length];
+        GetBytesCore(index, bytes);
         return charset.GetString(bytes);
     }
 
@@ -140,10 +142,12 @@ public abstract partial class ByteBuf
         // Original charset fallback:
         // setBytes(...) will take care of checking the indices.
         // CLR: the bounded memory lookup below validates the range before encoding.
-        if (TryGetMemory(index, length, out var memory)) return encoding.GetBytes(text, memory.Span);
+        if (TryGetMemory(index, length, out var memory))
+            return encoding.GetBytes(text, memory.Span);
         byte[] bytes = new byte[length];
         int written = encoding.GetBytes(text, bytes);
-        SetBytesCore(index, bytes.AsSpan(0, written)); return written;
+        SetBytesCore(index, bytes.AsSpan(0, written));
+        return written;
     }
 
     /**

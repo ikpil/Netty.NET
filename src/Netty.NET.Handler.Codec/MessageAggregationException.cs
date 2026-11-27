@@ -26,7 +26,9 @@ namespace Netty.NET.Handler.Codec;
 // serialization metadata and has no counterpart.
 public class MessageAggregationException : InvalidOperationException
 {
-    public MessageAggregationException() { }
+    public MessageAggregationException()
+    {
+    }
 
     public MessageAggregationException(string s) : base(s)
     {

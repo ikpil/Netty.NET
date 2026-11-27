@@ -25,10 +25,12 @@ public class ExecutorCompletionContractTest
             try { while (_queue.TryDequeue(out var work)) work(); }
             finally { _running = null; }
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return thread != null && thread == _running;
         }
+
         public override void Execute(Action work)
         {
             ArgumentNullException.ThrowIfNull(work);
@@ -42,19 +44,26 @@ public class ExecutorCompletionContractTest
         {
             return Task.CompletedTask;
         }
-        public override void Shutdown() { }
+
+        public override void Shutdown()
+        {
+        }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
@@ -452,7 +461,12 @@ public class ExecutorCompletionContractTest
         return new WeakReference(observation);
     }
 
-    private static void Collect() { GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect(); }
+    private static void Collect()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
 
     [Fact]
     public void PendingSourceTaskDoesNotRetainAnAbandonedObservation()

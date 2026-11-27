@@ -35,16 +35,19 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         return ValueTask.CompletedTask;
     }
+
     public async ValueTask DisposeAsync()
     {
         await _group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
     }
+
     private Task<IChannel> Connect(MyChannel channel)
     {
         return new Bootstrap().ChannelFactory(() => channel)
             .Group(_group).Handler(new ChannelInboundHandlerAdapter()).RemoteAddress(new IPEndPoint(IPAddress.Any, 0))
             .ConnectAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundChannelActive()
     {
@@ -54,6 +57,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         { Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
         finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundChannelInactive()
     {
@@ -62,6 +66,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         await channel.CloseAsync(TestContext.Current.CancellationToken);
         Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundException()
     {
@@ -77,6 +82,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         }
         finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundMessage()
     {
@@ -86,6 +92,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         { channel.Pipeline.FireChannelRead("testOnUnhandledInboundMessage"); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
         finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundReadComplete()
     {
@@ -95,6 +102,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         { channel.Pipeline.FireChannelReadComplete(); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
         finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundUserEventTriggered()
     {
@@ -104,6 +112,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         { channel.Pipeline.FireUserEventTriggered("testOnUnhandledInboundUserEventTriggered"); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
         finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
     }
+
     [Fact]
     public async Task TestOnUnhandledInboundWritabilityChanged()
     {
@@ -118,26 +127,44 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         internal Action Active, Inactive, ReadComplete, Writability;
         internal Action<object> Message, UserEvent;
         internal Action<Exception> Error;
-        public MyChannel() : base(null, new ChannelMetadata(false)) { }
+        public MyChannel() : base(null, new ChannelMetadata(false))
+        {
+        }
+
         protected override DefaultChannelPipeline NewChannelPipeline()
         {
             return new MyChannelPipeline(this);
         }
+
         protected override EndPoint LocalAddress0()
         {
             return null;
         }
+
         protected override EndPoint RemoteAddress0()
         {
             return null;
         }
+
         protected override Task DoBindAsync(EndPoint address, CancellationToken token)
         {
             return Task.CompletedTask;
         }
-        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) { SetActive(true); return Task.CompletedTask; }
-        protected override void DoClose() { }
-        protected override void DoBeginRead() { }
+
+        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
+        {
+            SetActive(true);
+            return Task.CompletedTask;
+        }
+
+        protected override void DoClose()
+        {
+        }
+
+        protected override void DoBeginRead()
+        {
+        }
+
         protected override Task DoWrite(object msg)
         {
             return Task.FromException(new IOException());
@@ -148,26 +175,32 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
             {
                 channel.Active?.Invoke();
             }
+
             protected override void OnUnhandledInboundChannelInactive()
             {
                 channel.Inactive?.Invoke();
             }
+
             protected override void OnUnhandledInboundException(Exception cause)
             {
                 channel.Error?.Invoke(cause);
             }
+
             protected override void OnUnhandledInboundMessage(object msg)
             {
                 channel.Message?.Invoke(msg);
             }
+
             protected override void OnUnhandledInboundChannelReadComplete()
             {
                 channel.ReadComplete?.Invoke();
             }
+
             protected override void OnUnhandledInboundUserEventTriggered(object evt)
             {
                 channel.UserEvent?.Invoke(evt);
             }
+
             protected override void OnUnhandledChannelWritabilityChanged()
             {
                 channel.Writability?.Invoke();

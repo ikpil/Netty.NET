@@ -37,14 +37,17 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         try { head = initialHint == null ? new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint); }
         finally { GC.KeepAlive(referent); }
     }
+
     public void Record()
     {
         Record0(null);
     }
+
     public void Record(object hint)
     {
         Record0(hint);
     }
+
     /**
          * This method works by exponentially backing off as more records are present in the stack. Each record has a
          * 1 / 2^n chance of dropping the top most record and replacing it with itself. This has a number of convenient
@@ -93,7 +96,13 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         } while (!ReferenceEquals(Interlocked.CompareExchange(ref head, next, previous), previous));
         if (dropped) Interlocked.Increment(ref droppedRecords);
     }
-    internal bool Dispose() { registration.Cancel(); return allLeaks.TryRemove(this, out _); }
+
+    internal bool Dispose()
+    {
+        registration.Cancel();
+        return allLeaks.TryRemove(this, out _);
+    }
+
     public bool Close()
     {
         if (!allLeaks.TryRemove(this, out _)) return false;
@@ -102,6 +111,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         Volatile.Write(ref head, TRACK_CLOSE ? new TraceRecord(true) : null);
         return true;
     }
+
     public bool Close(T trackedObject)
     {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
@@ -117,6 +127,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             ReachabilityFence0(trackedObject);
         }
     }
+
     /**
          * Ensures that the object referenced by the given reference remains
          * <a href="package-summary.html#reachability"><em>strongly reachable</em></a>,
@@ -142,19 +153,23 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         // The original synchronization is replaced by the CLR's explicit lifetime fence.
         GC.KeepAlive(referent);
     }
+
     public Exception GetCloseStackTraceIfAny()
     {
         TraceRecord current = Volatile.Read(ref head);
         return current?.Pos() == TraceRecord.CLOSE_MARK_POS ? current : null;
     }
+
     public override string ToString()
     {
         return GenerateReport(Volatile.Read(ref head));
     }
+
     internal string GetReportAndClearRecords()
     {
         return GenerateReport(Interlocked.Exchange(ref head, null));
     }
+
     private string GenerateReport(TraceRecord current)
     {
         if (current == null)

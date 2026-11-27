@@ -179,6 +179,7 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
     {
         return Config.GetAllocator();
     }
+
     /**
      * Return the value of the given {@link ChannelOption}
      */
@@ -187,6 +188,7 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
     {
         return Config.TryGetOption(option, out value);
     }
+
     /**
      * Sets a configuration property with the specified name and value.
      * To override this method properly, you must call the super class:
@@ -211,6 +213,7 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
     {
         return Config.SetOption(option, value);
     }
+
     /**
      * Register the {@link Channel} of the {@link ChannelPromise} and notify
      * the {@link ChannelFuture} once the registration was complete.

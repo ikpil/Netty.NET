@@ -29,8 +29,18 @@ public class ByteBufIterationKernelTest
         public int Indexed, Gets;
         public bool RejectIndexed;
         public readonly Failure Error = new();
-        public void BeforeIndexed() { ++Indexed; if (RejectIndexed) throw Error; }
-        public byte Get() { ++Gets; throw Error; }
+        public void BeforeIndexed()
+        {
+            ++Indexed;
+            if (RejectIndexed)
+                throw Error;
+        }
+
+        public byte Get()
+        {
+            ++Gets;
+            throw Error;
+        }
     }
 
     private sealed class Heap(Calls calls) : UnpooledHeapByteBuf(8, 32)
@@ -39,10 +49,18 @@ public class ByteBufIterationKernelTest
         {
             return calls.Get();
         }
+
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
-        { calls.BeforeIndexed(); return base.ForEachByte(index, length, processor); }
+        {
+            calls.BeforeIndexed();
+            return base.ForEachByte(index, length, processor);
+        }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
-        { calls.BeforeIndexed(); return base.ForEachByteDesc(index, length, processor); }
+        {
+            calls.BeforeIndexed();
+            return base.ForEachByteDesc(index, length, processor);
+        }
     }
 
     private sealed class Direct(Calls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 32, native)
@@ -51,10 +69,18 @@ public class ByteBufIterationKernelTest
         {
             return calls.Get();
         }
+
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
-        { calls.BeforeIndexed(); return base.ForEachByte(index, length, processor); }
+        {
+            calls.BeforeIndexed();
+            return base.ForEachByte(index, length, processor);
+        }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
-        { calls.BeforeIndexed(); return base.ForEachByteDesc(index, length, processor); }
+        {
+            calls.BeforeIndexed();
+            return base.ForEachByteDesc(index, length, processor);
+        }
     }
 
     private static ByteBuf Create(bool direct, Calls calls, NativeMemoryAllocator native)
@@ -63,10 +89,12 @@ public class ByteBufIterationKernelTest
         result.SetBytes(0, new byte[] { 128, 129, 130, 131, 132, 133, 134, 135 });
         return result.SetIndex(1, 7).MarkReaderIndex().MarkWriterIndex();
     }
+
     private static int Scan(ByteBuf buffer, bool descending, Func<byte, bool> processor)
     {
         return descending ? buffer.ForEachByteDesc(processor) : buffer.ForEachByte(processor);
     }
+
     private static int Scan(ByteBuf buffer, bool descending, int index, int length, Func<byte, bool> processor)
     {
         return descending ? buffer.ForEachByteDesc(index, length, processor) : buffer.ForEachByte(index, length, processor);
@@ -179,24 +207,29 @@ public class ByteBufIterationKernelTest
     [InlineData(true, false)] [InlineData(true, true)]
     public void EmptyInvalidNullAndReleasedRangesPreserveClrValidation(bool direct, bool descending)
     {
-        var native = new NativeMemoryAllocator(); var calls = new Calls();
+        var native = new NativeMemoryAllocator();
+        var calls = new Calls();
         ByteBuf root = Create(direct, calls, native);
         try
         {
             root.SetIndex(8, 8);
             Assert.Equal(-1, Scan(root, descending, _ => throw calls.Error));
-            Assert.Equal(0, calls.Indexed); Assert.Equal(0, calls.Gets);
+            Assert.Equal(0, calls.Indexed);
+            Assert.Equal(0, calls.Gets);
             Assert.Throws<ArgumentNullException>(() => Scan(root, descending, null));
             Assert.Equal(-1, Scan(root, descending, 8, 0, _ => throw calls.Error));
             Assert.Throws<ArgumentOutOfRangeException>(() => Scan(root, descending, 8, 1, _ => true));
             Assert.Throws<ArgumentOutOfRangeException>(() => Scan(root, descending, 0, -1, _ => true));
             Assert.Throws<ArgumentNullException>(() => Scan(root, descending, 0, 0, null));
-            Assert.Equal(4, calls.Indexed); Assert.Equal(0, calls.Gets);
-            Assert.True(root.Release()); calls.Indexed = 0;
+            Assert.Equal(4, calls.Indexed);
+            Assert.Equal(0, calls.Gets);
+            Assert.True(root.Release());
+            calls.Indexed = 0;
             Assert.Throws<IllegalReferenceCountException>(() => Scan(root, descending, _ => throw calls.Error));
             Assert.Equal(0, calls.Indexed);
             Assert.Throws<IllegalReferenceCountException>(() => Scan(root, descending, 0, 0, _ => throw calls.Error));
-            Assert.Equal(1, calls.Indexed); Assert.Equal(0, calls.Gets);
+            Assert.Equal(1, calls.Indexed);
+            Assert.Equal(0, calls.Gets);
         }
         finally { if (root.RefCnt != 0) root.Release(); }
         Assert.Equal(0, native.ReservedBytes);
@@ -214,8 +247,10 @@ public class ByteBufIterationKernelTest
     [MemberData(nameof(ReleaseCases))]
     public void CallbackReleaseStopsCleanlyOrRejectsTheNextStorageRead(bool direct, bool descending, bool indexed, bool stop)
     {
-        var native = new NativeMemoryAllocator(); var calls = new Calls { RejectIndexed = !indexed };
-        ByteBuf root = Create(direct, calls, native); int visits = 0;
+        var native = new NativeMemoryAllocator();
+        var calls = new Calls { RejectIndexed = !indexed };
+        ByteBuf root = Create(direct, calls, native);
+        int visits = 0;
         Func<byte, bool> processor = _ => { ++visits; Assert.True(root.Release()); return !stop; };
         try
         {
@@ -223,9 +258,13 @@ public class ByteBufIterationKernelTest
             {
                 return indexed ? Scan(root, descending, 2, 4, processor) : Scan(root, descending, processor);
             }
-            if (stop) Assert.Equal(descending ? indexed ? 5 : 6 : indexed ? 2 : 1, Invoke());
-            else Assert.Throws<IllegalReferenceCountException>(() => Invoke());
-            Assert.Equal(1, visits); Assert.Equal(indexed ? 1 : 0, calls.Indexed); Assert.Equal(0, calls.Gets);
+            if (stop)
+                Assert.Equal(descending ? indexed ? 5 : 6 : indexed ? 2 : 1, Invoke());
+            else
+                Assert.Throws<IllegalReferenceCountException>(() => Invoke());
+            Assert.Equal(1, visits);
+            Assert.Equal(indexed ? 1 : 0, calls.Indexed);
+            Assert.Equal(0, calls.Gets);
             Assert.Equal(0, root.RefCnt);
         }
         finally { if (root.RefCnt != 0) root.Release(); }

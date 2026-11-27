@@ -88,6 +88,7 @@ public class RoundRobinInetAddressResolver : InetNameResolver
     {
         return numAddresses == 1 ? 0 : Random.Shared.Next(numAddresses);
     }
+
     public override void Dispose()
     {
         _nameResolver.Dispose();

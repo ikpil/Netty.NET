@@ -328,15 +328,26 @@ public class LocalChannelOwnershipContractTest
     private sealed class ObservedQueuedServer(TaskCompletionSource<LocalChannel> queued) : LocalServerChannel
     {
         protected override LocalChannel NewLocalChannel(LocalChannel peer)
-        { var child = base.NewLocalChannel(peer); queued.TrySetResult(child); return child; }
+        {
+            var child = base.NewLocalChannel(peer);
+            queued.TrySetResult(child);
+            return child;
+        }
     }
     private sealed class RemovedReadMarker(TaskCompletionSource removed) : ChannelInboundHandlerAdapter
     {
         internal int Reads, Removals;
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { if (Equals("Hello World", msg)) Reads++; }
+        {
+            if (Equals("Hello World", msg))
+                Reads++;
+        }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
-        { Removals++; removed.TrySetResult(); }
+        {
+            Removals++;
+            removed.TrySetResult();
+        }
     }
     [Sharable]
     private sealed class ReadAgainOnRead(int expected) : ChannelInboundHandlerAdapter
@@ -350,6 +361,7 @@ public class LocalChannelOwnershipContractTest
             ctx.Read();
             Active.TrySetResult();
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Depths.Add(InternalThreadLocalMap.Get().LocalChannelReaderStackDepth());
@@ -369,19 +381,28 @@ public class LocalChannelOwnershipContractTest
         {
             return Retain(1);
         }
-        public IReferenceCounted Retain(int increment) { Interlocked.Add(ref _refCnt, increment); return this; }
+
+        public IReferenceCounted Retain(int increment)
+        {
+            Interlocked.Add(ref _refCnt, increment);
+            return this;
+        }
+
         public IReferenceCounted Touch()
         {
             return this;
         }
+
         public IReferenceCounted Touch(object hint)
         {
             return this;
         }
+
         public bool Release()
         {
             return Release(1);
         }
+
         public bool Release(int decrement)
         {
             bool deallocated = Interlocked.Add(ref _refCnt, -decrement) == 0;
@@ -392,7 +413,11 @@ public class LocalChannelOwnershipContractTest
     private sealed class RecordRead(string name, List<string> events, TaskCompletionSource<string[]> received) : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { events.Add(name); if (events.Count == 2) received.TrySetResult(events.ToArray()); }
+        {
+            events.Add(name);
+            if (events.Count == 2)
+                received.TrySetResult(events.ToArray());
+        }
     }
     private sealed class ReentrantRetainMessage(Action retained) : AbstractReferenceCounted
     {
@@ -404,6 +429,7 @@ public class LocalChannelOwnershipContractTest
         {
             return Retain(1);
         }
+
         public override IReferenceCounted Retain(int increment)
         {
             base.Retain(increment);
@@ -412,10 +438,12 @@ public class LocalChannelOwnershipContractTest
                 retained();
             return this;
         }
+
         public override IReferenceCounted Touch(object hint)
         {
             return this;
         }
+
         protected override void Deallocate()
         {
             Interlocked.Increment(ref Deallocations);

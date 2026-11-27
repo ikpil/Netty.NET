@@ -29,7 +29,9 @@ internal sealed class Http3PushStreamFrameTypeValidator : IHttp3FrameTypeValidat
 
     internal static readonly Http3PushStreamFrameTypeValidator INSTANCE = new Http3PushStreamFrameTypeValidator();
 
-    private Http3PushStreamFrameTypeValidator() { }
+    private Http3PushStreamFrameTypeValidator()
+    {
+    }
 
     public void Validate(long type, bool first)
     {

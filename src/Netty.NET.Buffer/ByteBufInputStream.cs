@@ -63,7 +63,9 @@ public sealed class ByteBufInputStream : Stream
      * {@code writerIndex}.
      * @param buffer The buffer which provides the content for this {@link InputStream}.
      */
-    public ByteBufInputStream(ByteBuf buffer) : this(buffer, ReadableLength(buffer), false) { }
+    public ByteBufInputStream(ByteBuf buffer) : this(buffer, ReadableLength(buffer), false)
+    {
+    }
 
     /**
      * Creates a new stream which reads data from the specified {@code buffer}
@@ -75,7 +77,9 @@ public sealed class ByteBufInputStream : Stream
      *         if {@code readerIndex + length} is greater than
      *            {@code writerIndex}
      */
-    public ByteBufInputStream(ByteBuf buffer, int length) : this(buffer, length, false) { }
+    public ByteBufInputStream(ByteBuf buffer, int length) : this(buffer, length, false)
+    {
+    }
 
     /**
      * Creates a new stream which reads data from the specified {@code buffer}
@@ -86,7 +90,9 @@ public sealed class ByteBufInputStream : Stream
      *                       be called on {@code buffer}.
      */
     public ByteBufInputStream(ByteBuf buffer, bool releaseOnDispose)
-        : this(buffer, ReadableLength(buffer), releaseOnDispose) { }
+        : this(buffer, ReadableLength(buffer), releaseOnDispose)
+    {
+    }
 
     /**
      * Creates a new stream which reads data from the specified {@code buffer}
@@ -119,7 +125,10 @@ public sealed class ByteBufInputStream : Stream
     }
 
     private static int ReadableLength(ByteBuf buffer)
-    { ArgumentNullException.ThrowIfNull(buffer); return buffer.ReadableBytes; }
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+        return buffer.ReadableBytes;
+    }
 
     /**
      * Returns the number of read bytes by this stream so far.
@@ -160,10 +169,18 @@ public sealed class ByteBufInputStream : Stream
     }
 
     // Suppress a warning since the class is not thread-safe
-    public void Mark() { ThrowIfClosed(); _buffer.MarkReaderIndex(); }
+    public void Mark()
+    {
+        ThrowIfClosed();
+        _buffer.MarkReaderIndex();
+    }
 
     // Suppress a warning since the class is not thread-safe
-    public void Reset() { ThrowIfClosed(); _buffer.ResetReaderIndex(); }
+    public void Reset()
+    {
+        ThrowIfClosed();
+        _buffer.ResetReaderIndex();
+    }
 
     public override int ReadByte()
     {
@@ -216,39 +233,73 @@ public sealed class ByteBufInputStream : Stream
     {
         return ReadUnsignedByte() != 0;
     }
+
     public sbyte ReadSByte()
     {
         return unchecked((sbyte)ReadUnsignedByte());
     }
-    public byte ReadUnsignedByte() { CheckAvailable(1); return _buffer.ReadByte(); }
-    public short ReadInt16() { CheckAvailable(2); return _buffer.ReadShort(); }
+
+    public byte ReadUnsignedByte()
+    {
+        CheckAvailable(1);
+        return _buffer.ReadByte();
+    }
+
+    public short ReadInt16()
+    {
+        CheckAvailable(2);
+        return _buffer.ReadShort();
+    }
+
     public ushort ReadUInt16()
     {
         return unchecked((ushort)ReadInt16());
     }
+
     public char ReadChar()
     {
         return unchecked((char)ReadInt16());
     }
-    public int ReadInt32() { CheckAvailable(4); return _buffer.ReadInt(); }
-    public long ReadInt64() { CheckAvailable(8); return _buffer.ReadLong(); }
+
+    public int ReadInt32()
+    {
+        CheckAvailable(4);
+        return _buffer.ReadInt();
+    }
+
+    public long ReadInt64()
+    {
+        CheckAvailable(8);
+        return _buffer.ReadLong();
+    }
+
     public float ReadSingle()
     {
         return BitConverter.Int32BitsToSingle(ReadInt32());
     }
+
     public double ReadDouble()
     {
         return BitConverter.Int64BitsToDouble(ReadInt64());
     }
 
     public void ReadFully(byte[] buffer)
-    { ArgumentNullException.ThrowIfNull(buffer); ReadFully(buffer.AsSpan()); }
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+        ReadFully(buffer.AsSpan());
+    }
 
     public void ReadFully(byte[] buffer, int offset, int count)
-    { ValidateBufferArguments(buffer, offset, count); ReadFully(buffer.AsSpan(offset, count)); }
+    {
+        ValidateBufferArguments(buffer, offset, count);
+        ReadFully(buffer.AsSpan(offset, count));
+    }
 
     public void ReadFully(Span<byte> destination)
-    { CheckAvailable(destination.Length); _buffer.ReadBytes(destination); }
+    {
+        CheckAvailable(destination.Length);
+        _buffer.ReadBytes(destination);
+    }
 
     /// <summary>Reads a byte-oriented line, mapping each octet to one UTF-16 code unit.</summary>
     public string ReadLine()
@@ -312,22 +363,27 @@ public sealed class ByteBufInputStream : Stream
     {
         ObjectDisposedException.ThrowIf(_closed, this);
     }
+
     public override void Flush()
     {
         ThrowIfClosed();
     }
+
     public override long Seek(long offset, SeekOrigin origin)
     {
         throw new NotSupportedException();
     }
+
     public override void SetLength(long value)
     {
         throw new NotSupportedException();
     }
+
     public override void Write(byte[] buffer, int offset, int count)
     {
         throw new NotSupportedException();
     }
+
     public override void Write(ReadOnlySpan<byte> buffer)
     {
         throw new NotSupportedException();

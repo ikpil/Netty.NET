@@ -25,6 +25,7 @@ public class SchedulingContractTest
         Assert.False(executor.IsShuttingDown());
         Assert.False(executor.IsShutdown());
     }
+
     [Fact]
     public void OneShotCallableCompletesWithValueOnTheExecutor()
     {
@@ -43,6 +44,7 @@ public class SchedulingContractTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void FailureRetainsTheCallableException()
     {
@@ -56,6 +58,7 @@ public class SchedulingContractTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void CancellingBeforeDeadlinePreventsExecution()
     {
@@ -74,6 +77,7 @@ public class SchedulingContractTest
         }
         finally { Shutdown(executor); }
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -100,6 +104,7 @@ public class SchedulingContractTest
         }
         finally { Shutdown(executor); }
     }
+
     [Fact]
     public void DifferentGenericResultTypesCanShareTheDeadlineQueue()
     {
@@ -116,11 +121,15 @@ public class SchedulingContractTest
     private class ManualExecutor : AbstractScheduledEventExecutor
     {
         private readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
-        public ManualExecutor() : base(null) { }
+        public ManualExecutor() : base(null)
+        {
+        }
+
         public override Ticker Ticker()
         {
             return clock;
         }
+
         public void Advance(long nanos)
         {
             clock.Advance(nanos);
@@ -133,22 +142,27 @@ public class SchedulingContractTest
             if (holdRemoval) removals.Add(task.QueueCallback);
             else base.ScheduleRemoveScheduled(task);
         }
+
         public Action PollDue()
         {
             return PollScheduledTask(GetCurrentTimeNanos());
         }
+
         public bool TransferDue(IQueue<Action> queue)
         {
             return FetchFromScheduledTaskQueue(queue);
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return !holdRemoval;
         }
+
         public override void Execute(Action task)
         {
             task();
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             return Task.CompletedTask;
@@ -158,19 +172,25 @@ public class SchedulingContractTest
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
         }
-        public override void Shutdown() { }
+
+        public override void Shutdown()
+        {
+        }
     }
     [Theory]
     [InlineData(false)]
@@ -193,6 +213,7 @@ public class SchedulingContractTest
         Assert.True(task.IsCompleted);
         if (!cancel) Assert.True(task.IsCompletedSuccessfully);
     }
+
     private static void Shutdown(IEventExecutor executor)
     {
         Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
@@ -283,26 +304,36 @@ public class SchedulingContractTest
         {
             return running;
         }
+
         internal void RunQueued(Action task)
         {
             running = true;
             try { task(); }
             finally { running = false; }
         }
+
         public override void Execute(Action command)
         {
             submissions.Add(command);
         }
+
         public override void LazyExecute(Action command)
         {
             ++lazyCalls;
             submissions.Add(command);
         }
+
         protected override bool BeforeScheduledTaskSubmitted(long deadline)
         {
             return before;
         }
-        protected override bool AfterScheduledTaskSubmitted(long deadline) { ++afterCalls; return after; }
+
+        protected override bool AfterScheduledTaskSubmitted(long deadline)
+        {
+            ++afterCalls;
+            return after;
+        }
+
         protected override void ValidateScheduled(TimeSpan amount)
         {
             if (amount > TimeSpan.FromTicks(1)) throw new ArgumentException("test scheduling limit");

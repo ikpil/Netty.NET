@@ -24,7 +24,9 @@ public sealed class NoopDnsCnameCache : IDnsCnameCache
 
     public static readonly NoopDnsCnameCache INSTANCE = new NoopDnsCnameCache();
 
-    private NoopDnsCnameCache() { }
+    private NoopDnsCnameCache()
+    {
+    }
 
     public string Get(string hostname)
     {

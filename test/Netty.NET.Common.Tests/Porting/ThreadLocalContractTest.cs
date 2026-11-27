@@ -123,10 +123,12 @@ public class ThreadLocalContractTest : IDisposable
         {
             return other is EqualLocal;
         }
+
         public override int GetHashCode()
         {
             return 1;
         }
+
         protected override void OnRemoval(string value)
         {
             Removed = value;

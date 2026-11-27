@@ -29,7 +29,9 @@ public sealed class ChannelGroupException : AggregateException, IReadOnlyCollect
 {
     private readonly KeyValuePair<IChannel, Exception>[] _failures;
 
-    public ChannelGroupException(IEnumerable<KeyValuePair<IChannel, Exception>> causes) : this(CopyCauses(causes)) { }
+    public ChannelGroupException(IEnumerable<KeyValuePair<IChannel, Exception>> causes) : this(CopyCauses(causes))
+    {
+    }
 
     private ChannelGroupException(KeyValuePair<IChannel, Exception>[] causes)
         : base("One or more channel group operations failed.", causes.Select(pair => pair.Value))

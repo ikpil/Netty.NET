@@ -26,9 +26,13 @@ namespace Netty.NET.Transport.Channels;
 [UnstableApi]
 public sealed class StacklessClosedChannelException : ClosedChannelException
 {
-    private StacklessClosedChannelException() { }
+    private StacklessClosedChannelException()
+    {
+    }
 
-    private StacklessClosedChannelException(Exception cause) : base(cause) { }
+    private StacklessClosedChannelException(Exception cause) : base(cause)
+    {
+    }
 
     // Suppress a warning since this method doesn't need synchronization
     // CLR: Exception has no fillInStackTrace to override. The CLR records a stack trace only when an exception is

@@ -70,9 +70,13 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
      * Invoked by {@link #resolve(String)} to perform the actual name resolution.
      */
     protected abstract Task<T> DoResolveAsync(string inetHost, CancellationToken cancellationToken);
+
     /**
      * Invoked by {@link #resolveAll(String)} to perform the actual name resolution.
      */
     protected abstract Task<IReadOnlyList<T>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken);
-    public virtual void Dispose() { }
+
+    public virtual void Dispose()
+    {
+    }
 }

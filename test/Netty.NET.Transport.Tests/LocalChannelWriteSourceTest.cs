@@ -239,7 +239,12 @@ public partial class LocalChannelSourceTest
         private int _remaining = remaining;
         private readonly TaskCompletionSource _done = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal int Current => Math.Max(0, Volatile.Read(ref _remaining));
-        internal void Signal() { if (Interlocked.Decrement(ref _remaining) == 0) _done.TrySetResult(); }
+        internal void Signal()
+        {
+            if (Interlocked.Decrement(ref _remaining) == 0)
+                _done.TrySetResult();
+        }
+
         internal Task WaitAsync()
         {
             return _done.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -249,7 +254,13 @@ public partial class LocalChannelSourceTest
         : ChannelInboundHandlerAdapter
     {
         public override void ChannelActive(IChannelHandlerContext ctx)
-        { if (writeOnActive) _ = ctx.WriteAndFlushAsync(expected.RetainedDuplicate()); else ctx.FireChannelActive(); }
+        {
+            if (writeOnActive)
+                _ = ctx.WriteAndFlushAsync(expected.RetainedDuplicate());
+            else
+                ctx.FireChannelActive();
+        }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             if (expected.Equals(msg) && (!expectedCount.HasValue || count.Current == expectedCount.Value))
@@ -257,8 +268,13 @@ public partial class LocalChannelSourceTest
             else
                 ctx.FireChannelRead(msg);
         }
+
         public override void ChannelInactive(IChannelHandlerContext ctx)
-        { if (inactive) count.Signal(); ctx.FireChannelInactive(); }
+        {
+            if (inactive)
+                count.Signal();
+            ctx.FireChannelInactive();
+        }
     }
     private sealed class EchoThenClose(ByteBuf data, MessageCount count) : ChannelInboundHandlerAdapter
     {
@@ -275,7 +291,12 @@ public partial class LocalChannelSourceTest
             else
                 ctx.FireChannelRead(msg);
         }
-        public override void ChannelInactive(IChannelHandlerContext ctx) { count.Signal(); ctx.FireChannelInactive(); }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            count.Signal();
+            ctx.FireChannelInactive();
+        }
     }
     private sealed class ReadFrames(MessageCount count) : ChannelInboundHandlerAdapter
     {

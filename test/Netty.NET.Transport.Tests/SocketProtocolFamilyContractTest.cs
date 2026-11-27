@@ -145,8 +145,13 @@ public class SocketProtocolFamilyContractTest
 
     private sealed class StreamProbe : NioSocketChannel, IDisposable
     {
-        internal StreamProbe(SocketProtocolFamily? family) : base(family) { }
-        internal StreamProbe(InternetProtocolFamily? family) : base(family) { }
+        internal StreamProbe(SocketProtocolFamily? family) : base(family)
+        {
+        }
+
+        internal StreamProbe(InternetProtocolFamily? family) : base(family)
+        {
+        }
         internal Socket NativeSocket => JavaChannel();
         public void Dispose()
         {
@@ -156,8 +161,13 @@ public class SocketProtocolFamilyContractTest
 
     private sealed class ServerProbe : NioServerSocketChannel, IDisposable
     {
-        internal ServerProbe(SocketProtocolFamily? family) : base(family) { }
-        internal ServerProbe(InternetProtocolFamily? family) : base(family) { }
+        internal ServerProbe(SocketProtocolFamily? family) : base(family)
+        {
+        }
+
+        internal ServerProbe(InternetProtocolFamily? family) : base(family)
+        {
+        }
         internal Socket NativeSocket => JavaChannel();
         public void Dispose()
         {

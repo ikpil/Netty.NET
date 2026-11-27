@@ -36,7 +36,10 @@ public sealed class CoalescingBufferQueue : AbstractCoalescingBufferQueue
     private readonly IChannel _channel;
     public CoalescingBufferQueue(IChannel channel, int initialSize = 4, bool updateWritability = false)
         : base(updateWritability ? channel : null, initialSize)
-    { _channel = channel ?? throw new ArgumentNullException(nameof(channel)); }
+    {
+        _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+    }
+
     /**
      * Remove a {@link ByteBuf} from the queue with the specified number of bytes. Any added buffer who's bytes are
      * fully consumed during removal will have it's promise completed when the passed aggregate {@link ChannelPromise}
@@ -51,12 +54,14 @@ public sealed class CoalescingBufferQueue : AbstractCoalescingBufferQueue
     {
         return Remove(_channel.Alloc(), bytes, aggregateProducer);
     }
+
     protected override ByteBuf Compose(IByteBufAllocator allocator, ByteBuf cumulation, ByteBuf next)
     {
         if (cumulation is CompositeByteBuf composite)
         { composite.AddComponent(next, true); return composite; }
         return ComposeIntoComposite(allocator, cumulation, next);
     }
+
     protected override ByteBuf RemoveEmptyValue()
     {
         return Unpooled.EmptyBuffer;

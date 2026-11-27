@@ -60,6 +60,7 @@ public class ThreadDeathWatcherTest
             Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
     }
+
     [Fact(Timeout = 10000)]
     public void TestUnwatch()
     {
@@ -87,6 +88,7 @@ public class ThreadDeathWatcherTest
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         }
     }
+
     [Fact(Timeout = 2000)]
     public void TestThreadGroup()
     {

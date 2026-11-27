@@ -66,6 +66,7 @@ public class BootstrapResolutionSourceTest
             await group.StopAsync();
         }
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestCancelBeforeRegistrationDoesNotResolveAddress()
     {
@@ -92,6 +93,7 @@ public class BootstrapResolutionSourceTest
         }
         finally { release.Set(); if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact]
     public async Task TestGetResolverFailed()
     {
@@ -144,12 +146,14 @@ public class BootstrapResolutionSourceTest
             {
                 return false;
             }
+
             protected override Task<EndPoint> DoResolveAsync(EndPoint address, CancellationToken token)
             {
                 Interlocked.Increment(ref owner.Count);
                 owner.Started.TrySetResult();
                 return owner.Producer.Task;
             }
+
             protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint address, CancellationToken token)
             {
                 throw new NotSupportedException();

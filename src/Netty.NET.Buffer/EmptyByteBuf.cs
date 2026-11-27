@@ -26,16 +26,22 @@ internal sealed class EmptyByteBuf : ByteBuf
 {
     private readonly IByteBufAllocator _allocator;
     internal EmptyByteBuf(IByteBufAllocator allocator) : base(0)
-    { ArgumentNullException.ThrowIfNull(allocator); _allocator = allocator; }
+    {
+        ArgumentNullException.ThrowIfNull(allocator);
+        _allocator = allocator;
+    }
+
     public override IByteBufAllocator Alloc()
     {
         return _allocator;
     }
+
     // The CLR buffer API uses explicit LE accessors; its default byte order is always BE.
     public override string ToString()
     {
         return "EmptyByteBufBE";
     }
+
     protected override Memory<byte> GetMemoryCore(int index, int length)
     {
         return Memory<byte>.Empty;
@@ -46,6 +52,7 @@ internal sealed class EmptyByteBuf : ByteBuf
     {
         return false;
     }
+
     public override bool IsWritable(int size)
     {
         return false;
@@ -62,18 +69,36 @@ internal sealed class EmptyByteBuf : ByteBuf
     {
         return this;
     }
+
     public override bool Release(int decrement = 1)
     {
         return false;
     }
+
     // Preserve this allocator's sentinel instead of AbstractByteBuf's global empty allocated-read result.
-    public override ByteBuf ReadBytes(int length) { CheckIndex(0, length); return this; }
-    public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return this; }
-    public override ByteBuf Slice(int index, int length) { CheckIndex(index, length); return this; }
+    public override ByteBuf ReadBytes(int length)
+    {
+        CheckIndex(0, length);
+        return this;
+    }
+
+    public override ByteBuf Copy(int index, int length)
+    {
+        CheckIndex(index, length);
+        return this;
+    }
+
+    public override ByteBuf Slice(int index, int length)
+    {
+        CheckIndex(index, length);
+        return this;
+    }
+
     public override ByteBuf Duplicate()
     {
         return this;
     }
+
     // Unlike an owned zero-capacity buffer, Netty's shared empty sentinel validates both search endpoints.
     public override int IndexOf(int fromIndex, int toIndex, byte value)
     {

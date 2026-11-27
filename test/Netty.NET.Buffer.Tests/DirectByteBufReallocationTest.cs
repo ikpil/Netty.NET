@@ -186,7 +186,8 @@ public class DirectByteBufReallocationTest
         using var s = new Storage(factory, budget: 32);
         ByteBuf b = s.Buffer;
         Memory<byte> old = b.AsMemory(0, 8);
-        ReadOnlySpan<byte> oldBytes = old.Span; var pin = old.Pin();
+        ReadOnlySpan<byte> oldBytes = old.Span;
+        var pin = old.Pin();
         try
         {
             b.Capacity = 16;

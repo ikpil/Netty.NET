@@ -73,6 +73,7 @@ public sealed class WebSocketVersion
         this.name = name;
         this.headerValue = headerValue;
     }
+
     /**
      * @return Value for HTTP Header 'Sec-WebSocket-Version'
      */

@@ -99,6 +99,7 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
     {
         return new AdaptiveByteBuf(initialCapacity, maxCapacity, (size, max) => Reserve(false, size, max));
     }
+
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
     {
         return new AdaptiveByteBuf(initialCapacity, maxCapacity, (size, max) => Reserve(true, size, max));

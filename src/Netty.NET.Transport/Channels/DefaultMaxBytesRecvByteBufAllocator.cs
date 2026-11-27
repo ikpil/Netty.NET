@@ -28,21 +28,27 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
     private readonly object _gate = new();
     private volatile int _maxBytesPerRead;
     private volatile int _maxBytesPerIndividualRead;
-    public DefaultMaxBytesRecvByteBufAllocator() : this(64 * 1024, 64 * 1024) { }
+    public DefaultMaxBytesRecvByteBufAllocator() : this(64 * 1024, 64 * 1024)
+    {
+    }
+
     public DefaultMaxBytesRecvByteBufAllocator(int maxBytesPerRead, int maxBytesPerIndividualRead)
     {
         CheckMaxBytesPerReadPair(maxBytesPerRead, maxBytesPerIndividualRead);
         _maxBytesPerRead = maxBytesPerRead;
         _maxBytesPerIndividualRead = maxBytesPerIndividualRead;
     }
+
     public IRecvByteBufAllocator.IHandle NewHandle()
     {
         return new HandleImpl(this);
     }
+
     public int MaxBytesPerRead()
     {
         return _maxBytesPerRead;
     }
+
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerRead(int maxBytesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytesPerRead);
@@ -56,10 +62,12 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         }
         return this;
     }
+
     public int MaxBytesPerIndividualRead()
     {
         return _maxBytesPerIndividualRead;
     }
+
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerIndividualRead(int maxBytesPerIndividualRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytesPerIndividualRead);
@@ -73,11 +81,13 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         }
         return this;
     }
+
     public (int MaxBytesPerRead, int MaxBytesPerIndividualRead) MaxBytesPerReadPair()
     {
         lock (_gate)
             return (_maxBytesPerRead, _maxBytesPerIndividualRead);
     }
+
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerReadPair(int maxBytesPerRead, int maxBytesPerIndividualRead)
     {
         CheckMaxBytesPerReadPair(maxBytesPerRead, maxBytesPerIndividualRead);
@@ -90,18 +100,22 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         }
         return this;
     }
+
     IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerRead(int value)
     {
         return MaxBytesPerRead(value);
     }
+
     IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerIndividualRead(int value)
     {
         return MaxBytesPerIndividualRead(value);
     }
+
     IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerReadPair(int total, int individual)
     {
         return MaxBytesPerReadPair(total, individual);
     }
+
     private static void CheckMaxBytesPerReadPair(int total, int individual)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(total);
@@ -119,16 +133,22 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         {
             return alloc.IoBuffer(Guess());
         }
+
         public int Guess()
         {
             return Math.Min(_individualReadMax, _bytesToRead);
         }
+
         public void Reset(IChannelConfig config)
         {
             _bytesToRead = owner.MaxBytesPerRead();
             _individualReadMax = owner.MaxBytesPerIndividualRead();
         }
-        public void IncMessagesRead(int amt) { }
+
+        public void IncMessagesRead(int amt)
+        {
+        }
+
         public void LastBytesRead(int bytes)
         {
             _lastBytesRead = bytes;
@@ -136,24 +156,32 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
             // The value may be "invalid" after this point, but it doesn't matter because reading will be stopped.
             _bytesToRead = unchecked(_bytesToRead - bytes);
         }
+
         public int LastBytesRead()
         {
             return _lastBytesRead;
         }
+
         public bool ContinueReading()
         {
             return ContinueReading(() => _attemptBytesRead == _lastBytesRead);
         }
+
         public bool ContinueReading(Func<bool> maybeMoreDataSupplier)
         {
             // Keep reading if we are allowed to read more bytes, and our last read filled up the buffer we provided.
             return _bytesToRead > 0 && maybeMoreDataSupplier();
         }
-        public void ReadComplete() { }
+
+        public void ReadComplete()
+        {
+        }
+
         public int AttemptedBytesRead()
         {
             return _attemptBytesRead;
         }
+
         public void AttemptedBytesRead(int bytes)
         {
             _attemptBytesRead = bytes;

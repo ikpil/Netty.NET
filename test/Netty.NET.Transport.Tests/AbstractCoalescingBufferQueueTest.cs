@@ -33,12 +33,14 @@ public class AbstractCoalescingBufferQueueTest
     {
         await TestDecrementAll(true);
     }
+
     // See https://github.com/netty/netty/issues/10286
     [Fact]
     public async Task TestDecrementAllWhenReleaseAndFailAll()
     {
         await TestDecrementAll(false);
     }
+
     private static async Task TestDecrementAll(bool write)
     {
         var channel = new EmbeddedChannel(new ReleasingWriter(), new EmptyHandler());
@@ -58,6 +60,7 @@ public class AbstractCoalescingBufferQueueTest
         Assert.Equal(0, queue.ReadableBytes);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestKeepStateConsistentOnError()
     {
@@ -103,6 +106,7 @@ public class AbstractCoalescingBufferQueueTest
             }
             return ComposeIntoComposite(allocator, cumulation, next);
         }
+
         protected override ByteBuf ComposeFirst(IByteBufAllocator allocator, ByteBuf first, int bufferSize)
         {
             if (error != null)
@@ -112,6 +116,7 @@ public class AbstractCoalescingBufferQueueTest
             }
             return base.ComposeFirst(allocator, first, bufferSize);
         }
+
         protected override ByteBuf RemoveEmptyValue()
         {
             return Unpooled.EmptyBuffer;
@@ -121,6 +126,9 @@ public class AbstractCoalescingBufferQueueTest
     private sealed class ReleasingWriter : ChannelOutboundHandlerAdapter
     {
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
-        { ReferenceCountUtil.Release(msg); return Task.CompletedTask; }
+        {
+            ReferenceCountUtil.Release(msg);
+            return Task.CompletedTask;
+        }
     }
 }

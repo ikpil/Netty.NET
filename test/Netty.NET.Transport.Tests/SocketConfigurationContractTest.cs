@@ -445,8 +445,13 @@ public class SocketConfigurationContractTest
     {
         return new(family, SocketType.Stream, ProtocolType.Tcp);
     }
+
     private static T Get<T>(IChannelConfig config, ChannelOption<T> option)
-    { Assert.True(config.TryGetOption(option, out T value)); return value; }
+    {
+        Assert.True(config.TryGetOption(option, out T value));
+        return value;
+    }
+
     private static void AssertUnsupported<T>(IChannelConfig config, ChannelOption<T> option, T value)
     {
         Assert.DoesNotContain(option, config.GetOptions().Keys);
@@ -456,7 +461,10 @@ public class SocketConfigurationContractTest
     private sealed class ActiveHandler(TaskCompletionSource<IChannel> accepted) : ChannelInboundHandlerAdapter
     {
         public override void ChannelActive(IChannelHandlerContext ctx)
-        { accepted.TrySetResult(ctx.Channel); ctx.FireChannelActive(); }
+        {
+            accepted.TrySetResult(ctx.Channel);
+            ctx.FireChannelActive();
+        }
     }
     private sealed class NativeOptionListener(bool noDelay) : NioServerSocketChannel(AddressFamily.InterNetwork)
     {

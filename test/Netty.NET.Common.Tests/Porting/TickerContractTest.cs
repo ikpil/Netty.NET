@@ -141,10 +141,12 @@ public class TickerContractTest
         {
             return 0;
         }
+
         public override long NanoTime()
         {
             return 0;
         }
+
         public override void Sleep(long delayNanos)
         {
             Delay = delayNanos;

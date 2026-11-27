@@ -52,6 +52,7 @@ public static partial class Unpooled
             _memory = memory;
             SetIndex(0, memory.Length);
         }
+
         public override IByteBufAllocator Alloc()
         {
             return UnpooledByteBufAllocator.Default;
@@ -67,11 +68,13 @@ public static partial class Unpooled
         {
             return _memory.Slice(index, length);
         }
+
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();
             return BufferMemoryLease.ForBorrowedMemory(_memory);
         }
+
         protected override void Deallocate()
         {
             _memory = default;

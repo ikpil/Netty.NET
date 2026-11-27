@@ -27,18 +27,29 @@ public class ByteBufWritableKernelTest
     {
         public int Count;
         public readonly Failure Error = new();
-        public void Visit() { ++Count; if (reject) throw Error; }
+        public void Visit()
+        {
+            ++Count;
+            if (reject)
+                throw Error;
+        }
     }
     private sealed class Heap(Calls calls, int initial, int maximum) : UnpooledHeapByteBuf(initial, maximum)
     {
         public override ByteBuf EnsureWritable(int minimumWritableBytes)
-        { calls.Visit(); return base.EnsureWritable(minimumWritableBytes); }
+        {
+            calls.Visit();
+            return base.EnsureWritable(minimumWritableBytes);
+        }
     }
     private sealed class Direct(Calls calls, int initial, int maximum, NativeMemoryAllocator native)
         : UnpooledDirectByteBuf(initial, maximum, native)
     {
         public override ByteBuf EnsureWritable(int minimumWritableBytes)
-        { calls.Visit(); return base.EnsureWritable(minimumWritableBytes); }
+        {
+            calls.Visit();
+            return base.EnsureWritable(minimumWritableBytes);
+        }
     }
 
     private static ByteBuf Create(bool direct, Calls calls, int scenario, NativeMemoryAllocator native)

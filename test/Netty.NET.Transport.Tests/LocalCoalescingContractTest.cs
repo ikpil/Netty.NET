@@ -135,6 +135,7 @@ public class LocalCoalescingContractTest
             msg.GetBytes(msg.ReaderIndex, bytes);
             received.TrySetResult(bytes);
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);

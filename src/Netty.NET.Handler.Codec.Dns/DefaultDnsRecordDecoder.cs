@@ -40,7 +40,9 @@ public class DefaultDnsRecordDecoder : IDnsRecordDecoder
     /**
      * Creates a new instance.
      */
-    protected internal DefaultDnsRecordDecoder() { }
+    protected internal DefaultDnsRecordDecoder()
+    {
+    }
 
     public IDnsQuestion DecodeQuestion(ByteBuf @in)
     {

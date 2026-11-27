@@ -39,6 +39,7 @@ public sealed class HostsFileEntries
         _inet4Entries = new ReadOnlyDictionary<string, IPAddress>(new Dictionary<string, IPAddress>(inet4Entries));
         _inet6Entries = new ReadOnlyDictionary<string, IPAddress>(new Dictionary<string, IPAddress>(inet6Entries));
     }
+
     /**
      * The IPv4 entries
      * @return the IPv4 entries
@@ -47,6 +48,7 @@ public sealed class HostsFileEntries
     {
         return _inet4Entries;
     }
+
     /**
      * The IPv6 entries
      * @return the IPv6 entries

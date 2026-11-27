@@ -38,11 +38,15 @@ public class ByteBufNativeCopyLeaseTest
         {
             throw new InvalidOperationException("Native copy must use DirectBuffer.");
         }
+
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
         {
-            ++Calls; Initial = initialCapacity; Maximum = maxCapacity;
+            ++Calls;
+            Initial = initialCapacity;
+            Maximum = maxCapacity;
             Callback?.Invoke();
-            if (FailAllocation) throw Error;
+            if (FailAllocation)
+                throw Error;
             return Last = new Target(this, initialCapacity, maxCapacity);
         }
     }
@@ -52,9 +56,11 @@ public class ByteBufNativeCopyLeaseTest
     {
         public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
         {
-            ++allocator.Writes; allocator.Input = source.ToArray();
+            ++allocator.Writes;
+            allocator.Input = source.ToArray();
             base.WriteBytes(source);
-            if (allocator.FailWrite) throw allocator.Error;
+            if (allocator.FailWrite)
+                throw allocator.Error;
             return this;
         }
     }
@@ -92,12 +98,16 @@ public class ByteBufNativeCopyLeaseTest
     {
         int reader = ReferenceEquals(root, view) ? 3 : 1;
         int writer = ReferenceEquals(root, view) ? 11 : Math.Min(view.Capacity, 16) - 1;
-        Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
-        Assert.Equal(3, root.ReaderIndex); Assert.Equal(11, root.WriterIndex);
+        Assert.Equal(reader, view.ReaderIndex);
+        Assert.Equal(writer, view.WriterIndex);
+        Assert.Equal(3, root.ReaderIndex);
+        Assert.Equal(11, root.WriterIndex);
         view.SetIndex(0, view.Capacity).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
+        Assert.Equal(reader, view.ReaderIndex);
+        Assert.Equal(writer, view.WriterIndex);
         root.SetIndex(0, root.Capacity).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(3, root.ReaderIndex); Assert.Equal(11, root.WriterIndex);
+        Assert.Equal(3, root.ReaderIndex);
+        Assert.Equal(11, root.WriterIndex);
     }
 
     public static IEnumerable<object[]> PortableCases()

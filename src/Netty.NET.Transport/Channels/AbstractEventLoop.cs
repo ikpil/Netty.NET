@@ -25,7 +25,9 @@ namespace Netty.NET.Transport.Channels;
  */
 public abstract class AbstractEventLoop : AbstractEventExecutor, IEventLoop
 {
-    protected AbstractEventLoop() { }
+    protected AbstractEventLoop()
+    {
+    }
 
     protected AbstractEventLoop(IEventLoopGroup parent) : base(parent)
     {

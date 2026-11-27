@@ -36,6 +36,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         return ValueTask.CompletedTask;
     }
+
     public async ValueTask DisposeAsync()
     {
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
@@ -52,6 +53,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         AssertRejection(_a);
         await _a.TerminationFuture.WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)]
     public async Task ShutdownAfterStart()
     {
@@ -66,6 +68,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         // Wait until the event loop is terminated.
         await _a.TerminationFuture.WaitAsync(TestContext.Current.CancellationToken);
     }
+
     private static void AssertRejection(IEventExecutor loop)
     {
         Assert.Throws<RejectedExecutionException>(() => loop.Execute(Noop));
@@ -75,14 +78,17 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         return ScheduleTask(_a).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)] public Task ScheduleTaskB()
     {
         return ScheduleTask(_b).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)] public Task ScheduleTaskC()
     {
         return ScheduleTask(_c).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     private static async Task ScheduleTask(IEventLoop loop)
     {
         long start = Stopwatch.GetTimestamp(), end = 0;
@@ -94,18 +100,22 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         return FixedRate(_a, false).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)] public Task ScheduleTaskAtFixedRateB()
     {
         return FixedRate(_b, false).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)] public Task ScheduleLaggyTaskAtFixedRateA()
     {
         return FixedRate(_a, true).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)] public Task ScheduleLaggyTaskAtFixedRateB()
     {
         return FixedRate(_b, true).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     private static async Task FixedRate(IEventLoop loop, bool laggy)
     {
         var timestamps = new ConcurrentQueue<long>();
@@ -148,6 +158,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             }
         }
     }
+
     // CLR: CountDownLatch.countDown() does nothing once the count is zero, but CountdownEvent.Signal() throws. A run
     // after the fifth (a sleep that overslept under load leaves more overdue runs) then faulted the periodic Task, so
     // it was not canceled (measured 2026-11-27). Only the event loop thread counts down, so the check cannot race.
@@ -155,6 +166,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         if (!latch.IsSet) latch.Signal();
     }
+
     private static void SleepIgnoringInterrupt(int milliseconds)
     {
         try { Thread.Sleep(milliseconds); }
@@ -165,10 +177,12 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         return FixedDelay(_a).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)] public Task ScheduleTaskWithFixedDelayB()
     {
         return FixedDelay(_b).WaitAsync(TestContext.Current.CancellationToken);
     }
+
     private static async Task FixedDelay(IEventLoop loop)
     {
         var timestamps = new ConcurrentQueue<long>();
@@ -177,12 +191,15 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         using var cancel = new CancellationTokenSource();
         var periodic = loop.ScheduleWithFixedDelayAsync(() =>
         {
-            timestamps.Enqueue(Stopwatch.GetTimestamp()); SleepIgnoringInterrupt(51); CountDown(latch);
+            timestamps.Enqueue(Stopwatch.GetTimestamp());
+            SleepIgnoringInterrupt(51);
+            CountDown(latch);
         }, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), cancel.Token);
         // CLR: the test thread waits for the latch as the source does. A Task.Run wait added a thread-pool hop between
         // the last count down and the cancel, in which another run started under load (measured 2026-11-27).
         latch.Wait(TestContext.Current.CancellationToken);
-        cancel.Cancel(); Assert.True(periodic.IsCanceled);
+        cancel.Cancel();
+        Assert.True(periodic.IsCanceled);
         await Task.Delay(300);
         Assert.Equal(expectedTimeStamps, timestamps.Count);
         // Check if the task was run without a lag.
@@ -233,7 +250,8 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         var channel = new LocalChannel();
         var registration = _a.RegisterAsync(channel);
         await Assert.ThrowsAsync<RejectedExecutionException>(() => registration.WaitAsync(TestContext.Current.CancellationToken));
-        Assert.True(registration.IsFaulted); Assert.False(channel.IsOpen);
+        Assert.True(registration.IsFaulted);
+        Assert.False(channel.IsOpen);
     }
 
     [Fact(Timeout = 5000)]
@@ -241,24 +259,40 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         var shutdown = _a.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(int.MaxValue));
         // Keep Scheduling tasks for another 2 seconds.
-        for (int i = 0; i < 20; i++) { Thread.Sleep(100); _a.Execute(Noop); }
+        for (int i = 0; i < 20; i++)
+        {
+            Thread.Sleep(100);
+            _a.Execute(Noop);
+        }
         long start = Stopwatch.GetTimestamp();
-        Assert.True(_a.IsShuttingDown()); Assert.False(_a.IsShutdown());
+        Assert.True(_a.IsShuttingDown());
+        Assert.False(_a.IsShutdown());
         await shutdown.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(Stopwatch.GetElapsedTime(start) >= TimeSpan.FromSeconds(1));
     }
+
     [Fact(Timeout = 5000)]
     public void TestGracefulShutdownTimeout()
     {
         _ = _a.ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
         // Keep Scheduling tasks for another 3 seconds.
         // Submitted tasks must be rejected after 2 second timeout.
-        for (int i = 0; i < 10; i++) { Thread.Sleep(100); _a.Execute(Noop); }
+        for (int i = 0; i < 10; i++)
+        {
+            Thread.Sleep(100);
+            _a.Execute(Noop);
+        }
         Assert.Throws<RejectedExecutionException>(() =>
         {
-            for (int i = 0; i < 20; i++) { TestContext.Current.CancellationToken.ThrowIfCancellationRequested(); Thread.Sleep(100); _a.Execute(Noop); }
+            for (int i = 0; i < 20; i++)
+            {
+                TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+                Thread.Sleep(100);
+                _a.Execute(Noop);
+            }
         });
-        Assert.True(_a.IsShuttingDown()); Assert.True(_a.IsShutdown());
+        Assert.True(_a.IsShuttingDown());
+        Assert.True(_a.IsShutdown());
     }
 
     [Fact(Timeout = 10000)]
@@ -269,18 +303,24 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         var noop = new CountingRunnable();
         await _c.SubmitAsync(noop.Work);
         await _c.IterationEnd.Reader.ReadAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(1, noop.Count); Assert.Equal(1, onIteration.Count);
+        Assert.Equal(1, noop.Count);
+        Assert.Equal(1, onIteration.Count);
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestRemoveOnEventLoopIteration()
     {
-        var onIteration1 = new CountingRunnable(); _c.ExecuteAfterEventLoopIteration(onIteration1.Work);
-        var onIteration2 = new CountingRunnable(); _c.ExecuteAfterEventLoopIteration(onIteration2.Work);
+        var onIteration1 = new CountingRunnable();
+        _c.ExecuteAfterEventLoopIteration(onIteration1.Work);
+        var onIteration2 = new CountingRunnable();
+        _c.ExecuteAfterEventLoopIteration(onIteration2.Work);
         _c.RemoveAfterEventLoopIterationTask(onIteration1.Work);
         var noop = new CountingRunnable();
         await _c.SubmitAsync(noop.Work);
         await _c.IterationEnd.Reader.ReadAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(1, noop.Count); Assert.Equal(1, onIteration2.Count); Assert.Equal(0, onIteration1.Count);
+        Assert.Equal(1, noop.Count);
+        Assert.Equal(1, onIteration2.Count);
+        Assert.Equal(0, onIteration1.Count);
     }
     private sealed class CountingRunnable
     {
@@ -295,7 +335,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     internal sealed class LoopA : SingleThreadEventLoop
     {
         internal int CleanedUp;
-        internal LoopA() : base(null, new DefaultThreadFactory(typeof(LoopA)), true) { }
+        internal LoopA() : base(null, new DefaultThreadFactory(typeof(LoopA)), true)
+        {
+        }
+
         protected override void Run()
         {
             for (;;)
@@ -305,6 +348,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 if (ConfirmShutdown()) break;
             }
         }
+
         protected override void Cleanup()
         {
             Interlocked.Increment(ref CleanedUp);
@@ -315,7 +359,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         private readonly AutoResetEvent _wakeup = new(false);
         private readonly object _wakeupGate = new();
         private bool _stopped;
-        internal LoopB() : base(null, new DefaultThreadFactory(typeof(LoopB)), false) { }
+        internal LoopB() : base(null, new DefaultThreadFactory(typeof(LoopB)), false)
+        {
+        }
+
         protected override void Run()
         {
             for (;;)
@@ -328,10 +375,12 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 if (ConfirmShutdown()) break;
             }
         }
+
         protected virtual void RunTasks0()
         {
             RunAllTasks();
         }
+
         protected override void Wakeup(bool inEventLoop)
         {
             lock (_wakeupGate)
@@ -339,6 +388,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 if (!_stopped) _wakeup.Set();
             }
         }
+
         protected override void Cleanup()
         {
             lock (_wakeupGate)
@@ -351,7 +401,12 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     private sealed class LoopC : LoopB
     {
         internal readonly System.Threading.Channels.Channel<bool> IterationEnd = System.Threading.Channels.Channel.CreateBounded<bool>(1);
-        protected override void AfterRunningAllTasks() { base.AfterRunningAllTasks(); IterationEnd.Writer.TryWrite(true); }
+        protected override void AfterRunningAllTasks()
+        {
+            base.AfterRunningAllTasks();
+            IterationEnd.Writer.TryWrite(true);
+        }
+
         protected override void RunTasks0()
         {
             RunAllTasks(60000000000L);

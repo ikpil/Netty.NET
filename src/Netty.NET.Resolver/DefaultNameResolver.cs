@@ -46,7 +46,9 @@ public class DefaultNameResolver : InetNameResolver
     private static readonly string PREFER_IPV6_ADDRESSES =
         SystemPropertyUtil.Get("java.net.preferIPv6Addresses", "false");
 
-    public DefaultNameResolver(IEventExecutor executor) : base(executor) { }
+    public DefaultNameResolver(IEventExecutor executor) : base(executor)
+    {
+    }
 
     protected override async Task<IPAddress> DoResolveAsync(string inetHost, CancellationToken cancellationToken)
     {

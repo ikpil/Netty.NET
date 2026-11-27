@@ -28,6 +28,7 @@ public abstract class Http3FrameTypeValidatorTest
 {
 
     protected abstract long[] InvalidFramesTypes();
+
     protected abstract long[] ValidFrameTypes();
 
     private protected abstract IHttp3FrameTypeValidator NewValidator();

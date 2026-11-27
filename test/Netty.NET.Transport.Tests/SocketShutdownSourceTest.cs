@@ -272,6 +272,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
             ss.Stop();
         }
     }
+
     private static void CheckThrowable(Exception cause)
     {
         // Depending on OIO / NIO both are ok
@@ -367,14 +368,17 @@ internal sealed class ShutdownTestHandler : SimpleChannelInboundHandler<ByteBuf>
     {
         Channel = (IDuplexChannel)ctx.Channel;
     }
+
     public override void ChannelInactive(IChannelHandlerContext ctx)
     {
         Closure.TrySetResult();
     }
+
     protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
     {
         Bytes.Writer.TryWrite((byte)msg.ReadByte());
     }
+
     public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         if (evt is ChannelInputShutdownEvent) { Interlocked.Increment(ref HalfClosureCount); HalfClosure.TrySetResult(); }
@@ -396,6 +400,7 @@ internal sealed class ShutdownFixture : IAsyncDisposable
         if (domain) { Client.Channel<NioDomainSocketChannel>(); Server.Channel<NioServerDomainSocketChannel>(); }
         else { Client.Channel<NioSocketChannel>(); Server.Channel<NioServerSocketChannel>(); }
     }
+
     public async ValueTask DisposeAsync()
     {
         await _group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));

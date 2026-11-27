@@ -216,6 +216,7 @@ public class ChannelOutboundBufferContractTest
         {
             deallocated();
         }
+
         public override IReferenceCounted Touch(object hint)
         {
             return this;

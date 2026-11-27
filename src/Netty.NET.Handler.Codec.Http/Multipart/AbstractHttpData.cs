@@ -253,30 +253,37 @@ public abstract class AbstractHttpData : AbstractReferenceCounted, IHttpData
     {
         return Copy();
     }
+
     IByteBufHolder IByteBufHolder.Duplicate()
     {
         return Duplicate();
     }
+
     IByteBufHolder IByteBufHolder.RetainedDuplicate()
     {
         return RetainedDuplicate();
     }
+
     IByteBufHolder IByteBufHolder.Replace(ByteBuf content)
     {
         return Replace(content);
     }
+
     IByteBufHolder IByteBufHolder.Retain()
     {
         return Retain();
     }
+
     IByteBufHolder IByteBufHolder.Retain(int increment)
     {
         return Retain(increment);
     }
+
     IByteBufHolder IByteBufHolder.Touch()
     {
         return Touch();
     }
+
     IByteBufHolder IByteBufHolder.Touch(object hint)
     {
         return Touch(hint);

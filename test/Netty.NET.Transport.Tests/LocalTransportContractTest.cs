@@ -54,6 +54,7 @@ public class LocalTransportContractTest
         {
             received.TrySetResult(msg.ReadableMemory.ToArray());
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);

@@ -102,6 +102,7 @@ public class DatagramReadBatchContractTest
     {
         return new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
     }
+
     private static void Send(Socket sender, IChannel channel, byte value)
     {
         Assert.Equal(1, sender.SendTo(new[] { value }, channel.LocalAddress));

@@ -22,5 +22,7 @@ namespace Netty.NET.Transport.Channels.Sockets;
 public sealed class ChannelInputShutdownReadComplete
 {
     public static readonly ChannelInputShutdownReadComplete INSTANCE = new();
-    private ChannelInputShutdownReadComplete() { }
+    private ChannelInputShutdownReadComplete()
+    {
+    }
 }

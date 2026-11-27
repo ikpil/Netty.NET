@@ -61,7 +61,10 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * the same name, which means no duplicate check is done against group names.
      */
     public DefaultChannelGroup(string name = null, bool stayClosed = false)
-    { Name = name ?? "group-" + Guid.NewGuid().ToString("N"); _stayClosed = stayClosed; }
+    {
+        Name = name ?? "group-" + Guid.NewGuid().ToString("N");
+        _stayClosed = stayClosed;
+    }
     /**
      * Returns the name of this group.  A group name is purely for helping
      * you to distinguish one group from others.
@@ -97,18 +100,22 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
             _ = channel.CloseAsync();
         return added;
     }
+
     public bool Remove(IChannel channel)
     {
         return channel != null && _channels.TryRemove(new KeyValuePair<IChannelId, IChannel>(channel.Id, channel));
     }
+
     public bool RemoveById(IChannelId id)
     {
         return id != null && _channels.TryRemove(id, out _);
     }
+
     public bool Contains(IChannel channel)
     {
         return channel != null && _channels.TryGetValue(channel.Id, out var value) && ReferenceEquals(value, channel);
     }
+
     /**
      * Returns the {@link Channel} which has the specified {@link ChannelId}.
      *
@@ -118,18 +125,22 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return _channels.TryGetValue(id, out var channel) ? channel : null;
     }
+
     public void Clear()
     {
         _channels.Clear();
     }
+
     public IEnumerator<IChannel> GetEnumerator()
     {
         return _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).GetEnumerator();
     }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+
     /**
      * Closes all {@link Channel}s in this group.  If the {@link Channel} is
      * connected to a remote peer or bound to a local address, it is
@@ -155,6 +166,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return CloseAsync(out _, matcher);
     }
+
     public Task CloseAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         if (_stayClosed)
@@ -169,6 +181,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         }
         return OperateAsync(async channel => { await channel.CloseAsync().ConfigureAwait(false); Remove(channel); }, matcher, true, out operations);
     }
+
     /**
      * Disconnects all {@link Channel}s in this group from their remote peers.
      *
@@ -191,10 +204,12 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return DisconnectAsync(out _, matcher);
     }
+
     public Task DisconnectAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         return OperateAsync(channel => channel.DisconnectAsync(), matcher, true, out operations);
     }
+
     /**
      * @deprecated This method will be removed in the next major feature release.
      *
@@ -223,10 +238,12 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return DeregisterAsync(out _, matcher);
     }
+
     public Task DeregisterAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         return OperateAsync(channel => channel.DeregisterAsync(), matcher, true, out operations);
     }
+
     /**
      * Writes the specified {@code message} to all {@link Channel}s in this
      * group. If the specified {@code message} is an instance of
@@ -266,10 +283,12 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return WriteAsync(message, out _, matcher);
     }
+
     public Task WriteAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         return WriteCoreAsync(message, matcher, false, out operations);
     }
+
     /**
      * Shortcut for calling {@link #write(Object)} and {@link #flush()}.
      */
@@ -285,10 +304,12 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return WriteAndFlushAsync(message, out _, matcher);
     }
+
     public Task WriteAndFlushAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         return WriteCoreAsync(message, matcher, true, out operations);
     }
+
     private Task WriteCoreAsync(object message, Func<IChannel, bool> matcher, bool flush, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -313,6 +334,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
+
     /**
      * Flush all {@link Channel}s in this group. If the specified {@code messages} are an instance of
      * {@link ByteBuf}, it is automatically
@@ -340,7 +362,13 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      *         the operation is done for all channels
      */
     public DefaultChannelGroup Flush(Func<IChannel, bool> matcher)
-    { foreach (var channel in _channels.Values) if (channel is not IServerChannel && (matcher == null || matcher(channel))) channel.Flush(); return this; }
+    {
+        foreach (var channel in _channels.Values)
+        if (channel is not IServerChannel && (matcher == null || matcher(channel)))
+            channel.Flush();
+        return this;
+    }
+
     private Task OperateAsync(Func<IChannel, Task> operation, Func<IChannel, bool> matcher, bool includeServers, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         var tasks = new List<KeyValuePair<IChannel, Task>>();
@@ -355,6 +383,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
+
     /**
      * Returns the {@link ChannelGroupFuture} which will be notified when all {@link Channel}s that are part of this
      * {@link ChannelGroup}, at the time of calling, are closed.
@@ -363,6 +392,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
     {
         return NewCloseFuture(out _, matcher);
     }
+
     public Task NewCloseFuture(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         var tasks = _channels.Values.Where(channel => matcher == null || matcher(channel))
@@ -370,6 +400,7 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
+
     public override string ToString()
     {
         return string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(name: {Name}, size: {Count})");

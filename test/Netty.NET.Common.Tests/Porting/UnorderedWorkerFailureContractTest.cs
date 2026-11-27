@@ -27,11 +27,18 @@ public class UnorderedWorkerFailureContractTest
         {
             _completion.TrySetCanceled();
         }
+
         public void Reject(Exception error)
         {
             _completion.TrySetException(error);
         }
-        public void Run() { entered.Set(); release.Wait(); throw Error; }
+
+        public void Run()
+        {
+            entered.Set();
+            release.Wait();
+            throw Error;
+        }
     }
 
     [Theory]

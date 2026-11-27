@@ -41,6 +41,7 @@ public static class TestsuitePermutation
     public interface IBootstrapComboFactory<SB, CB> where SB : class where CB : class
     {
         SB NewServerInstance();
+
         CB NewClientInstance();
     }
 

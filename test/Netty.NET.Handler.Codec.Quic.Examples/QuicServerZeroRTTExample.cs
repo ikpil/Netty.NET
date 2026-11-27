@@ -39,7 +39,9 @@ public sealed class QuicServerZeroRTTExample
 
     private static readonly IInternalLogger LOGGER = InternalLoggerFactory.GetInstance(typeof(QuicServerZeroRTTExample));
 
-    private QuicServerZeroRTTExample() { }
+    private QuicServerZeroRTTExample()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

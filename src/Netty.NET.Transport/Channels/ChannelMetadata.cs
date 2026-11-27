@@ -32,7 +32,10 @@ public sealed class ChannelMetadata
      *                          that allows a user to disconnect and then call {@link Channel#connect(SocketAddress)}
      *                          again, such as UDP/IP.
      */
-    public ChannelMetadata(bool hasDisconnect) : this(hasDisconnect, 16) { }
+    public ChannelMetadata(bool hasDisconnect) : this(hasDisconnect, 16)
+    {
+    }
+
     /**
      * Create a new instance
      *
@@ -48,6 +51,7 @@ public sealed class ChannelMetadata
         _hasDisconnect = hasDisconnect;
         _defaultMaxMessagesPerRead = defaultMaxMessagesPerRead;
     }
+
     /**
      * Returns {@code true} if and only if the channel has the {@code disconnect()} operation
      * that allows a user to disconnect and then call {@link Channel#connect(SocketAddress)} again,
@@ -57,6 +61,7 @@ public sealed class ChannelMetadata
     {
         return _hasDisconnect;
     }
+
     /**
      * If a {@link MaxMessagesRecvByteBufAllocator} is in use, then this is the default value for
      * {@link MaxMessagesRecvByteBufAllocator#maxMessagesPerRead()}.

@@ -99,6 +99,7 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
     {
         return matcher.IsInstanceOfType(evt);
     }
+
     public sealed override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         bool release = true;
@@ -111,6 +112,7 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
         }
         finally { if (_autoRelease && release) ReferenceCountUtil.Release(evt); }
     }
+
     /**
      * Is called for each user event triggered of type {@link I}.
      *

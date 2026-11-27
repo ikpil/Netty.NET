@@ -99,7 +99,8 @@ public class SocketFileRegionContractTest
     {
         await using var socket = await Connected.Open(true);
         string path = Path.GetTempFileName();
-        var data = new byte[2 * 1024 * 1024]; Random.Shared.NextBytes(data);
+        var data = new byte[2 * 1024 * 1024];
+        Random.Shared.NextBytes(data);
         try
         {
             await File.WriteAllBytesAsync(path, data, TestContext.Current.CancellationToken);
@@ -145,25 +146,45 @@ public class SocketFileRegionContractTest
         {
             return 0;
         }
+
         public long Count()
         {
             return count;
         }
+
         public long Transferred()
         {
             return TransferredBytes;
         }
-        public long TransferTo(Stream target, long position) { Positions.Enqueue(position); return transfer(this, target, position); }
+
+        public long TransferTo(Stream target, long position)
+        {
+            Positions.Enqueue(position);
+            return transfer(this, target, position);
+        }
+
         protected override void Deallocate()
         {
             Deallocated.TrySetResult();
         }
-        public new IFileRegion Retain() { base.Retain(); return this; }
-        public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
+
+        public new IFileRegion Retain()
+        {
+            base.Retain();
+            return this;
+        }
+
+        public override IFileRegion Retain(int increment)
+        {
+            base.Retain(increment);
+            return this;
+        }
+
         public new IFileRegion Touch()
         {
             return this;
         }
+
         public override IFileRegion Touch(object hint)
         {
             return this;
@@ -198,11 +219,15 @@ public class SocketFileRegionContractTest
             }
             catch { await connected.DisposeAsync(); throw; }
         }
+
         public async ValueTask DisposeAsync()
         {
-            if (Channel != null) await Channel.CloseAsync();
-            else OwnedSocket?.Dispose();
-            Peer?.Dispose(); _listener.Stop();
+            if (Channel != null)
+                await Channel.CloseAsync();
+            else
+                OwnedSocket?.Dispose();
+            Peer?.Dispose();
+            _listener.Stop();
             await _fixture.DisposeAsync();
         }
     }

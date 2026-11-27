@@ -621,8 +621,10 @@ public class AsciiStringCharacterTest
             _ => throw new ArgumentException("Unsupported test sequence", nameof(value))
         };
     }
+
     [Fact]
-    public void TestCachedWithAsciiString() {
+    public void TestCachedWithAsciiString()
+    {
         // Pure ASCII strings should reuse the original string to preserve identity
         string ascii = "hello";
         AsciiString cached = AsciiString.Cached(ascii);
@@ -633,7 +635,8 @@ public class AsciiStringCharacterTest
     }
 
     [Fact]
-    public void TestCachedWithAsciiLatin1String() {
+    public void TestCachedWithAsciiLatin1String()
+    {
         // Latin-1 strings (chars 128-255) should reuse the original string to preserve identity
         string latin1 = "h" + (char) 233 + "llo"; // héllo
         AsciiString cached = AsciiString.Cached(latin1);
@@ -644,7 +647,8 @@ public class AsciiStringCharacterTest
     }
 
     [Fact]
-    public void TestCachedSanitizesNonLatin1String() {
+    public void TestCachedSanitizesNonLatin1String()
+    {
         // Chars > 255 should be sanitized to '?' in the cached string to match the byte content
         string nonLatin1 = "test" + (char) 0x1234 + "ing";
         AsciiString cached = AsciiString.Cached(nonLatin1);
@@ -653,27 +657,31 @@ public class AsciiStringCharacterTest
     }
 
     [Fact]
-    public void TestCachedEmptyString() {
+    public void TestCachedEmptyString()
+    {
         AsciiString cached = AsciiString.Cached("");
         Assert.Equal("", cached.ToString());
         Assert.True(cached.IsEmpty());
     }
 
     [Fact]
-    public void TestCachedStringMatchesByteContent() {
+    public void TestCachedStringMatchesByteContent()
+    {
         // The cached string should always match the byte content round-trip
         string nonLatin1 = "a" + (char) 0x4321 + "b";
         AsciiString cached = AsciiString.Cached(nonLatin1);
         // Manually compute the expected sanitized string from the byte array
         StringBuilder expected = new StringBuilder();
-        foreach (byte b in cached.ToByteArray()) {
+        foreach (byte b in cached.ToByteArray())
+        {
             expected.Append((char) (b & 0xFF));
         }
         Assert.Equal(expected.ToString(), cached.ToString());
     }
 
     [Fact]
-    public void TestCachedWithAllAsciiConstants() {
+    public void TestCachedWithAllAsciiConstants()
+    {
         // Constants used in the codebase should be unaffected
         AsciiString host = AsciiString.Cached("host");
         Assert.Equal("host", host.ToString());

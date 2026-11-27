@@ -42,6 +42,7 @@ public class PendingWriteQueueTest
             ctx.Flush();
         }), 1);
     }
+
     [Fact]
     public async Task TestRemoveAndWriteAll()
     {
@@ -53,18 +54,21 @@ public class PendingWriteQueueTest
             ctx.Flush();
         }), 3);
     }
+
     [Fact]
     public async Task TestRemoveAndFail()
     {
         await AssertWriteFails(new TestHandler((queue, ctx, _) =>
         { queue.RemoveAndFail(new TestException()); ctx.Flush(); }), 1);
     }
+
     [Fact]
     public async Task TestRemoveAndFailAll()
     {
         await AssertWriteFails(new TestHandler((queue, ctx, _) =>
         { queue.RemoveAndFailAll(new TestException()); ctx.Flush(); }), 3);
     }
+
     [Fact]
     public void ShouldFireChannelWritabilityChangedAfterRemoval()
     {
@@ -78,6 +82,7 @@ public class PendingWriteQueueTest
         channel.Finish();
         Assert.Equal(0, message.RefCnt);
     }
+
     private static async Task AssertWrite(TestHandler handler, int count)
     {
         var buffer = Unpooled.CopiedBuffer("Test", Encoding.ASCII);
@@ -96,6 +101,7 @@ public class PendingWriteQueueTest
         buffer.Release();
         Assert.Null(channel.ReadOutbound());
     }
+
     private static void AssertBuffer(EmbeddedChannel channel, ByteBuf expected)
     {
         var written = channel.ReadOutbound<ByteBuf>();
@@ -103,6 +109,7 @@ public class PendingWriteQueueTest
         Assert.Equal(expected.ReadableMemory.ToArray(), written.ReadableMemory.ToArray());
         written.Release();
     }
+
     private static void AssertQueueEmpty(PendingWriteQueue queue)
     {
         Assert.True(queue.IsEmpty);
@@ -112,6 +119,7 @@ public class PendingWriteQueueTest
         Assert.Null(queue.RemoveAndWriteAsync());
         Assert.Null(queue.RemoveAndWriteAllAsync());
     }
+
     private static async Task AssertWriteFails(TestHandler handler, int count)
     {
         var buffer = Unpooled.CopiedBuffer("Test", Encoding.ASCII);
@@ -125,11 +133,13 @@ public class PendingWriteQueueTest
         buffer.Release();
         Assert.Null(channel.ReadOutbound());
     }
+
     private static EmbeddedChannel NewChannel()
     {
         // Add a handler so we can access a ChannelHandlerContext via the ChannelPipeline.
         return new EmbeddedChannel(new EmptyHandler());
     }
+
     [Fact]
     public void TestRemoveAndFailAllReentrantFailAll()
     {
@@ -148,6 +158,7 @@ public class PendingWriteQueueTest
         Assert.True(listener.IsCompletedSuccessfully);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestRemoveAndFailReentrantRemoveAndFail()
     {
@@ -182,6 +193,7 @@ public class PendingWriteQueueTest
         Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestRemoveAndWriteAllReentrantWrite()
     {
@@ -206,6 +218,7 @@ public class PendingWriteQueueTest
         Assert.Equal(2L, channel.ReadOutbound<long>());
         Assert.Equal(3L, channel.ReadOutbound<long>());
     }
+
     [Fact]
     public void TestRemoveAndWriteAllWithVoidPromise()
     {
@@ -222,6 +235,7 @@ public class PendingWriteQueueTest
         Assert.Equal(1L, channel.ReadOutbound<long>());
         Assert.Equal(2L, channel.ReadOutbound<long>());
     }
+
     [Fact]
     public void TestRemoveAndFailAllReentrantWrite()
     {
@@ -251,6 +265,7 @@ public class PendingWriteQueueTest
         Assert.Equal(2, failOrder[1]);
         Assert.Equal(3, failOrder[2]);
     }
+
     [Fact]
     public async Task TestRemoveAndWriteAllReentrance()
     {
@@ -273,6 +288,7 @@ public class PendingWriteQueueTest
         Assert.Null(channel.ReadOutbound());
         Assert.Null(channel.ReadInbound());
     }
+
     // See https://github.com/netty/netty/issues/3967
     [Fact]
     public void TestCloseChannelOnCreation()
@@ -287,6 +303,7 @@ public class PendingWriteQueueTest
         queue.RemoveAndFailAll(error);
         Assert.Same(error, Assert.Throws<InvalidOperationException>(() => promise.Task.GetAwaiter().GetResult()));
     }
+
     private static Task OnCompleted(Task task, Action callback)
     {
         return task.ContinueWith(completed =>
@@ -305,8 +322,14 @@ public class PendingWriteQueueTest
         {
             _queue = new PendingWriteQueue(ctx);
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
-        { base.ChannelActive(ctx); AssertQueueEmpty(_queue); Assert.True(ctx.Channel.IsWritable, "Should be writable"); }
+        {
+            base.ChannelActive(ctx);
+            AssertQueueEmpty(_queue);
+            Assert.True(ctx.Channel.IsWritable, "Should be writable");
+        }
+
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             Task result = _queue.Add(msg, token);
@@ -315,6 +338,7 @@ public class PendingWriteQueueTest
             Assert.NotNull(_queue.Current);
             return result;
         }
+
         public override void Flush(IChannelHandlerContext ctx)
         {
             flush(_queue, ctx, Observations);
@@ -327,6 +351,7 @@ public class PendingWriteQueueTest
         {
             Queue = new PendingWriteQueue(ctx);
         }
+
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             if (Queue.Current is not ByteBuf message)

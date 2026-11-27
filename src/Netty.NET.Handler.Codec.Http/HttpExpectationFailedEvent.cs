@@ -23,5 +23,7 @@ namespace Netty.NET.Handler.Codec.Http;
 public sealed class HttpExpectationFailedEvent
 {
     public static readonly HttpExpectationFailedEvent INSTANCE = new HttpExpectationFailedEvent();
-    private HttpExpectationFailedEvent() { }
+    private HttpExpectationFailedEvent()
+    {
+    }
 }

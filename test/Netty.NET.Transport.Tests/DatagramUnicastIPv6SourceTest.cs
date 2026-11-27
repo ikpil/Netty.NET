@@ -52,6 +52,7 @@ public class DatagramUnicastIPv6SourceTest : DatagramUnicastInetSourceTest
             // Ignore
         }
     }
+
     protected override SocketProtocolFamily SocketProtocolFamily()
     {
         return Channels.Sockets.SocketProtocolFamily.Inet6;

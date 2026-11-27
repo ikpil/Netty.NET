@@ -19,7 +19,8 @@ public class SocketShutdownContractTest
     public async Task ShutdownAttemptsOutputBeforeInputAndPreservesTheFirstFailure()
     {
         await using var fixture = new ShutdownFixture(false);
-        using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
         var outputFailure = new IOException("output failure");
         var inputFailure = new IOException("input failure");
         var channel = (FailingShutdownChannel)await new Bootstrap().Group(fixture.Client.Config.Group).ChannelFactory(() => new FailingShutdownChannel(outputFailure, inputFailure))
@@ -34,15 +35,27 @@ public class SocketShutdownContractTest
     {
         internal readonly List<string> Calls = new();
         internal bool AllOnOwner = true;
-        protected override void DoShutdownOutput() { AllOnOwner &= EventLoop.InEventLoop(); Calls.Add("output"); throw output; }
-        protected override void DoShutdownInput() { AllOnOwner &= EventLoop.InEventLoop(); Calls.Add("input"); throw input; }
+        protected override void DoShutdownOutput()
+        {
+            AllOnOwner &= EventLoop.InEventLoop();
+            Calls.Add("output");
+            throw output;
+        }
+
+        protected override void DoShutdownInput()
+        {
+            AllOnOwner &= EventLoop.InEventLoop();
+            Calls.Add("input");
+            throw input;
+        }
     }
 
     [Fact(Timeout = 10000)]
     public async Task OutputShutdownReleasesQueuedWritesAndKeepsInboundCommunicationOpen()
     {
         await using var fixture = new ShutdownFixture(false);
-        using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
         var handler = new ShutdownTestHandler();
         var channel = (NioSocketChannel)await fixture.Client.Handler(handler).ConnectAsync(listener.LocalEndpoint);
         using var peer = await listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
@@ -57,7 +70,9 @@ public class SocketShutdownContractTest
         await Assert.ThrowsAnyAsync<ClosedChannelException>(() => channel.WriteAndFlushAsync(rejected));
         Assert.Equal(0, rejected.RefCnt);
         await Assert.ThrowsAnyAsync<ClosedChannelException>(() => channel.ShutdownOutputAsync());
-        Assert.True(channel.IsOpen); Assert.True(channel.IsActive); Assert.False(channel.IsInputShutdown);
+        Assert.True(channel.IsOpen);
+        Assert.True(channel.IsActive);
+        Assert.False(channel.IsInputShutdown);
         var bytes = new byte[1];
         Assert.Equal(0, await peer.GetStream().ReadAsync(bytes, TestContext.Current.CancellationToken));
         await peer.GetStream().WriteAsync(new byte[] { 3 }, TestContext.Current.CancellationToken);
@@ -85,7 +100,9 @@ public class SocketShutdownContractTest
         await channel.EventLoop.SubmitAsync(() => { });
         Assert.Equal(new[] { "readComplete", "half", "readComplete", "final" }, handler.Events);
         Assert.True(handler.AllOnOwner);
-        Assert.True(channel.IsOpen); Assert.True(channel.IsActive); Assert.True(((NioSocketChannel)channel).IsInputShutdown);
+        Assert.True(channel.IsOpen);
+        Assert.True(channel.IsActive);
+        Assert.True(((NioSocketChannel)channel).IsInputShutdown);
     }
     private sealed class FinalReadHandler : ChannelInboundHandlerAdapter
     {
@@ -98,8 +115,13 @@ public class SocketShutdownContractTest
         {
             Active.TrySetResult(ctx.Channel);
         }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
-        { AllOnOwner &= ctx.Executor.InEventLoop(); Events.Add("readComplete"); }
+        {
+            AllOnOwner &= ctx.Executor.InEventLoop();
+            Events.Add("readComplete");
+        }
+
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             AllOnOwner &= ctx.Executor.InEventLoop();

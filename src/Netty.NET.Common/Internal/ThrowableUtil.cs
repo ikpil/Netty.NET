@@ -41,12 +41,14 @@ public static class ThrowableUtil
         if (cause.StackTrace == null) ExceptionDispatchInfo.SetRemoteStackTrace(cause, "   at " + clazz.FullName + "." + method + "(Unknown Source)");
         return cause;
     }
+
     // CLR factory compatibility overload retains the caller's source location.
     public static T UnknownStackTrace<T>(Func<string, T> factory, Type clazz,
         [CallerMemberName] string method = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) where T : Exception
     {
         return UnknownStackTrace(factory("location: " + clazz.Name + "::" + method + "() in " + file + ":" + line.ToString(CultureInfo.InvariantCulture)), clazz, method);
     }
+
     /**
      * Gets the stack trace from a Throwable as a String.
      *
@@ -61,6 +63,7 @@ public static class ThrowableUtil
         // ignore as should never happen
         return ObjectUtil.CheckNotNull(cause, "cause").ToString();
     }
+
     // CLR: a CLR-only helper (owner decision 2026-11-24) for the text of Throwable.toString(), which is "the name of
     // the class of this object", ": " and getLocalizedMessage(), or "just the class name" when that is null; it is
     // also the detail message "(cause==null ? null : cause.toString())" of the Throwable(Throwable) constructors
@@ -75,11 +78,13 @@ public static class ThrowableUtil
     {
         return cause == null ? null : cause.GetType().FullName + ": " + cause.Message;
     }
+
     [Obsolete]
     public static bool HaveSuppressed()
     {
         return true;
     }
+
     public static void AddSuppressed(Exception target, Exception suppressed)
     {
         if (suppressed == null) return;
@@ -88,21 +93,25 @@ public static class ThrowableUtil
         var list = Suppressed.GetValue(target, _ => new List<Exception>());
         lock (list) list.Add(suppressed);
     }
+
     public static void AddSuppressedAndClear(Exception target, List<Exception> suppressed)
     {
         AddSuppressed(target, suppressed);
         suppressed.Clear();
     }
+
     public static void AddSuppressed(Exception target, List<Exception> suppressed)
     {
         foreach (Exception error in suppressed) AddSuppressed(target, error);
     }
+
     public static Exception[] GetSuppressed(Exception source)
     {
         ObjectUtil.CheckNotNull(source, "source");
         if (!Suppressed.TryGetValue(source, out var list)) return Array.Empty<Exception>();
         lock (list) return list.ToArray();
     }
+
     /**
      * Capture the stack trace of the given thread, interrupt it, and attach the stack trace as a suppressed exception
      * to the given cause.

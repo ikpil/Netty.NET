@@ -103,18 +103,22 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
         ArgumentNullException.ThrowIfNull(key);
         return _pools.ContainsKey(key);
     }
+
     /**
      * Called once a new {@link ChannelPool} needs to be created as non exists yet for the {@code key}.
      */
     protected abstract TPool NewPool(TKey key);
+
     public IEnumerator<KeyValuePair<TKey, TPool>> GetEnumerator()
     {
         return _pools.GetEnumerator();
     }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+
     public async Task CloseAsync()
     {
         foreach (var key in _pools.Keys)
@@ -123,14 +127,17 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
             await RemoveAsync(key).ConfigureAwait(false);
         }
     }
+
     public void Close()
     {
         CloseAsync().GetAwaiter().GetResult();
     }
+
     public void Dispose()
     {
         Close();
     }
+
     public ValueTask DisposeAsync()
     {
         return new(CloseAsync());

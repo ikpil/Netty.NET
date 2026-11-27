@@ -92,6 +92,7 @@ public class NumericAddressFormattingContractTest
         {
             this.throws = throws;
         }
+
         public DisplayAddress(byte[] bytes, long scope, bool throws) : base(bytes, scope)
         {
             this.throws = throws;

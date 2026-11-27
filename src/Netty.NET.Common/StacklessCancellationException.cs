@@ -18,7 +18,8 @@ public class StacklessCancellationException : TaskCanceledException
         return this;
     }
 
-    public static StacklessCancellationException NewInstance(Type clazz, string method) {
+    public static StacklessCancellationException NewInstance(Type clazz, string method)
+    {
         return ThrowableUtil.UnknownStackTrace(msg => new StacklessCancellationException(msg), clazz, method);
     }
 }

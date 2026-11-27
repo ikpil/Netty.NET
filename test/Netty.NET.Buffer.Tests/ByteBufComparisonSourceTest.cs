@@ -44,6 +44,7 @@ public class ByteBufComparisonSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -74,10 +75,14 @@ public class ByteBufComparisonSourceTest
         // Write an unsigned integer that will cause buffer.getUnsignedInt() - buffer2.getUnsignedInt() to underflow the
         // int type and wrap around on the negative side.
         buffer2.WriteLong(0xF0000000L);
-        Assert.True(buffer.CompareTo(buffer2) < 0); Assert.True(buffer2.CompareTo(buffer) > 0);
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(8, buffer.WriterIndex);
-        Assert.Equal(0, buffer2.ReaderIndex); Assert.Equal(8, buffer2.WriterIndex);
-        Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, buffer2.RefCnt);
+        Assert.True(buffer.CompareTo(buffer2) < 0);
+        Assert.True(buffer2.CompareTo(buffer) > 0);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(8, buffer.WriterIndex);
+        Assert.Equal(0, buffer2.ReaderIndex);
+        Assert.Equal(8, buffer2.WriterIndex);
+        Assert.Equal(1, buffer.RefCnt);
+        Assert.Equal(1, buffer2.RefCnt);
     }
 
     [Theory]
@@ -86,7 +91,8 @@ public class ByteBufComparisonSourceTest
     {
         using var s = new Storage(provider, 4096);
         ByteBuf buffer = s.Root;
-        Assert.False(buffer.Equals((object)null)); Assert.False(buffer.Equals(new object()));
+        Assert.False(buffer.Equals((object)null));
+        Assert.False(buffer.Equals(new object()));
         byte[] value = new byte[32];
         buffer.SetIndex(0, value.Length);
         new Random(12345).NextBytes(value);
@@ -100,8 +106,10 @@ public class ByteBufComparisonSourceTest
             value[0] = unchecked((byte)(value[0] + 1));
             Assert.False(buffer.Equals((object)expected));
             Assert.False(((IEquatable<ByteBuf>)buffer).Equals(expected.Duplicate()));
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
-            Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, expected.RefCnt);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(32, buffer.WriterIndex);
+            Assert.Equal(1, buffer.RefCnt);
+            Assert.Equal(1, expected.RefCnt);
         }
         finally { Assert.True(expected.Release()); }
     }
@@ -115,20 +123,26 @@ public class ByteBufComparisonSourceTest
         // CLR IComparable sorts a non-null value after null; Java's original test expects an exception.
         Assert.Equal(1, buffer.CompareTo(null));
         // Fill the random stuff
-        byte[] value = new byte[32]; new Random(12345).NextBytes(value);
+        byte[] value = new byte[32];
+        new Random(12345).NextBytes(value);
         // Prevent overflow / underflow
-        if (value[0] == 0) ++value[0];
-        else if (value[0] == 255) --value[0];
+        if (value[0] == 0)
+            ++value[0];
+        else if (value[0] == 255)
+            --value[0];
         buffer.SetIndex(0, value.Length).SetBytes(0, value);
         ByteBuf expected = Unpooled.WrappedBuffer(value);
         try
         {
             ByteBuf alternate = expected.Duplicate();
-            Assert.Equal(0, buffer.CompareTo(expected)); Assert.Equal(0, buffer.CompareTo(alternate));
+            Assert.Equal(0, buffer.CompareTo(expected));
+            Assert.Equal(0, buffer.CompareTo(alternate));
             ++value[0];
-            Assert.True(buffer.CompareTo(expected) < 0); Assert.True(buffer.CompareTo(alternate) < 0);
+            Assert.True(buffer.CompareTo(expected) < 0);
+            Assert.True(buffer.CompareTo(alternate) < 0);
             value[0] -= 2;
-            Assert.True(buffer.CompareTo(expected) > 0); Assert.True(buffer.CompareTo(alternate) > 0);
+            Assert.True(buffer.CompareTo(expected) > 0);
+            Assert.True(buffer.CompareTo(alternate) > 0);
             ++value[0];
             Assert.True(buffer.CompareTo(expected.Slice(0, 31)) > 0);
             Assert.True(buffer.CompareTo(alternate.Slice(0, 31)) > 0);
@@ -137,12 +151,17 @@ public class ByteBufComparisonSourceTest
             foreach (ByteBuf comparison in new[] { expected, alternate })
             {
                 ByteBuf retained = buffer.RetainedSlice(0, 31);
-                try { Assert.True(retained.CompareTo(comparison) < 0); }
+                try
+                {
+                    Assert.True(retained.CompareTo(comparison) < 0);
+                }
                 finally { retained.Release(); }
             }
             Assert.Equal(value, ByteBufUtil.GetBytes(buffer, 0, 32));
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(32, buffer.WriterIndex);
-            Assert.Equal(1, buffer.RefCnt); Assert.Equal(1, expected.RefCnt);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(32, buffer.WriterIndex);
+            Assert.Equal(1, buffer.RefCnt);
+            Assert.Equal(1, expected.RefCnt);
         }
         finally { Assert.True(expected.Release()); }
     }
@@ -165,14 +184,20 @@ public class ByteBufComparisonSourceTest
         ByteBuf buf2 = second.Root.Clear().WriteBytes(bytesReversed);
         ByteBuf buf3 = third.Root.Clear().WriteBytes(bytes);
         ByteBuf buf4 = fourth.Root.Clear().WriteBytes(bytesReversed);
-        Assert.Equal(0x04030201, buf1.GetIntLE(0)); Assert.Equal(0x01020304, buf3.GetInt(0));
-        Assert.Equal(0x01020304, buf2.GetIntLE(0)); Assert.Equal(0x04030201, buf4.GetInt(0));
+        Assert.Equal(0x04030201, buf1.GetIntLE(0));
+        Assert.Equal(0x01020304, buf3.GetInt(0));
+        Assert.Equal(0x01020304, buf2.GetIntLE(0));
+        Assert.Equal(0x04030201, buf4.GetInt(0));
         Assert.Equal(buf1.CompareTo(buf2), buf3.CompareTo(buf4));
         Assert.Equal(buf2.CompareTo(buf1), buf4.CompareTo(buf3));
         Assert.Equal(buf1.CompareTo(buf3), buf2.CompareTo(buf4));
         Assert.Equal(buf3.CompareTo(buf1), buf4.CompareTo(buf2));
         // CLR: comparison does not consume or release.
         foreach (ByteBuf buffer in new[] { buf1, buf2, buf3, buf4 })
-        { Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex); Assert.Equal(1, buffer.RefCnt); }
+        {
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(4, buffer.WriterIndex);
+            Assert.Equal(1, buffer.RefCnt);
+        }
     }
 }

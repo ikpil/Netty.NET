@@ -47,7 +47,10 @@ internal static class NativeAotNetworkScenarios
     }
 
     private static void Check(bool condition, string message)
-    { if (!condition) throw new InvalidOperationException(message); }
+    {
+        if (!condition)
+            throw new InvalidOperationException(message);
+    }
 
     private static byte[] Payload(int length)
     {
@@ -116,10 +119,12 @@ internal static class NativeAotNetworkScenarios
         {
             _ = ctx.WriteAsync(msg);
         }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             ctx.Flush();
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             ctx.CloseAsync();
@@ -147,6 +152,7 @@ internal static class NativeAotNetworkScenarios
         {
             received.TrySetException(cause);
         }
+
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             received.TrySetException(new IOException("The connection closed before the echo completed."));

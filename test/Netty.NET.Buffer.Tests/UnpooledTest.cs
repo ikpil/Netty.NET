@@ -204,7 +204,12 @@ public class UnpooledTest
         // CLR: the source leaks the buffer(0) inputs of the copiedBuffer cases (copying takes no ownership); the
         // CLR test releases them at the end.
         var sources = new List<ByteBuf>();
-        ByteBuf Buffer0() { ByteBuf b = Unpooled.Buffer(0); sources.Add(b); return b; }
+        ByteBuf Buffer0()
+        {
+            ByteBuf b = Unpooled.Buffer(0);
+            sources.Add(b);
+            return b;
+        }
         try
         {
             AssertSameAndRelease(Unpooled.EmptyBuffer, Unpooled.WrappedBuffer(Array.Empty<byte>()));
@@ -492,9 +497,23 @@ public class UnpooledTest
     private sealed class ObservedStream : MemoryStream
     {
         public int Reads;
-        public override int Read(Span<byte> buffer) { ++Reads; return base.Read(buffer); }
-        public override int Read(byte[] buffer, int offset, int count) { ++Reads; return base.Read(buffer, offset, count); }
-        public override int ReadByte() { ++Reads; return base.ReadByte(); }
+        public override int Read(Span<byte> buffer)
+        {
+            ++Reads;
+            return base.Read(buffer);
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            ++Reads;
+            return base.Read(buffer, offset, count);
+        }
+
+        public override int ReadByte()
+        {
+            ++Reads;
+            return base.ReadByte();
+        }
     }
 
     [Fact]

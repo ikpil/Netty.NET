@@ -26,4 +26,9 @@ namespace Netty.NET.Transport.Channels.Sockets;
  * Instance to use
  */
 public sealed class ChannelInputShutdownEvent
-{ public static readonly ChannelInputShutdownEvent INSTANCE = new(); private ChannelInputShutdownEvent() { } }
+{
+    public static readonly ChannelInputShutdownEvent INSTANCE = new();
+    private ChannelInputShutdownEvent()
+    {
+    }
+}

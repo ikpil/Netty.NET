@@ -46,7 +46,9 @@ public sealed class QuicServerExample
 
     private static readonly IInternalLogger LOGGER = InternalLoggerFactory.GetInstance(typeof(QuicServerExample));
 
-    private QuicServerExample() { }
+    private QuicServerExample()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

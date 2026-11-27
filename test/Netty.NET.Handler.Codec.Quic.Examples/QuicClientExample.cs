@@ -41,7 +41,9 @@ namespace Netty.NET.Handler.Codec.Quic.Example;
 public sealed class QuicClientExample
 {
 
-    private QuicClientExample() { }
+    private QuicClientExample()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

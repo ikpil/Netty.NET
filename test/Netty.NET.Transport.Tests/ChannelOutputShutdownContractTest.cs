@@ -138,33 +138,52 @@ public class ChannelOutputShutdownContractTest
         internal bool AllOnOwner = true;
         internal Action DuringShutdown;
         internal Exception ShutdownFailure;
-        internal ProbeChannel(bool halfClose) : base(null, new ChannelMetadata(false)) { _halfClose = halfClose; SetActive(true); }
+        internal ProbeChannel(bool halfClose) : base(null, new ChannelMetadata(false))
+        {
+            _halfClose = halfClose;
+            SetActive(true);
+        }
+
         internal Task ShutdownAsync()
         {
             return OnLoopAsync(() => ShutdownOutput(null));
         }
+
         protected override EndPoint LocalAddress0()
         {
             return null;
         }
+
         protected override EndPoint RemoteAddress0()
         {
             return null;
         }
+
         protected override Task DoBindAsync(EndPoint address, CancellationToken token)
         {
             return Task.CompletedTask;
         }
+
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
         {
             return Task.CompletedTask;
         }
-        protected override void DoClose() { AllOnOwner &= EventLoop.InEventLoop(); NativeCloses++; }
-        protected override void DoBeginRead() { }
+
+        protected override void DoClose()
+        {
+            AllOnOwner &= EventLoop.InEventLoop();
+            NativeCloses++;
+        }
+
+        protected override void DoBeginRead()
+        {
+        }
+
         protected override Task DoWrite(object msg)
         {
             return Write.Task;
         }
+
         protected override void DoShutdownOutput()
         {
             AllOnOwner &= EventLoop.InEventLoop();
@@ -178,7 +197,10 @@ public class ChannelOutputShutdownContractTest
     {
         internal int Count;
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
-        { if (evt is ChannelOutputShutdownEvent) Count++; }
+        {
+            if (evt is ChannelOutputShutdownEvent)
+                Count++;
+        }
     }
 }
 #pragma warning restore xUnit1051

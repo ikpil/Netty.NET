@@ -268,6 +268,7 @@ public partial class PooledByteBufAllocator
             _ = task.ContinueWith(static failed => { _ = failed.Exception; }, CancellationToken.None,
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
+
         /**
          *  Should be called if the Thread that uses this cache is about to exit to release resources out of the cache
          */

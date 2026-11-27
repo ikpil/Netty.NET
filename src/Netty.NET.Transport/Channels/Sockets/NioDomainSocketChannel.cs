@@ -34,12 +34,16 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
     /**
      * Create a new instance
      */
-    public NioDomainSocketChannel() : this(new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified)) { }
+    public NioDomainSocketChannel() : this(new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))
+    {
+    }
 
     /**
      * Create a new instance using the given {@link SocketChannel}.
      */
-    public NioDomainSocketChannel(Socket socket) : this(null, socket) { }
+    public NioDomainSocketChannel(Socket socket) : this(null, socket)
+    {
+    }
 
     /**
      * Create a new instance
@@ -47,7 +51,9 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
      * @param parent    the {@link Channel} which created this instance or {@code null} if it was created by the user
      * @param socket    the {@link SocketChannel} which will be used
      */
-    public NioDomainSocketChannel(IChannel parent, Socket socket) : base(parent, Validate(socket)) { }
+    public NioDomainSocketChannel(IChannel parent, Socket socket) : base(parent, Validate(socket))
+    {
+    }
 
     protected override EndPoint LocalAddress0()
     {

@@ -34,10 +34,12 @@ internal readonly struct BufferMemoryLease : IDisposable
     {
         _handle = handle;
     }
+
     internal BufferMemoryLease(BufferMemoryLease[] children)
     {
         _children = children;
     }
+
     // CLR: pooled heap reservations must survive reuse as well as GC collection.
     internal BufferMemoryLease(IDisposable reservation)
     {

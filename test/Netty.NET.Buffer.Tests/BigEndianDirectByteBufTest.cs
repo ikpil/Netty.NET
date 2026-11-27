@@ -32,6 +32,7 @@ public class BigEndianDirectByteBufTest : AbstractContiguousByteBufTest
         Assert.Equal(0, result.WriterIndex);
         return result;
     }
+
     protected virtual ByteBuf NewDirectBuffer(int length, int maxCapacity)
     {
         return Allocator.DirectBuffer(length, maxCapacity);

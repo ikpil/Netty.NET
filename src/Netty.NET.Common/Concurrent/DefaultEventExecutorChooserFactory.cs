@@ -26,7 +26,9 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
 {
     public static readonly DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
-    private DefaultEventExecutorChooserFactory() { }
+    private DefaultEventExecutorChooserFactory()
+    {
+    }
 
     public IEventExecutorChooser NewChooser(IEventExecutor[] executors)
     {

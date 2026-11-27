@@ -27,6 +27,7 @@ public class LeakPresenceDetectorTest : IDisposable
     {
         ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(new Factory());
     }
+
     public void Dispose()
     {
         ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(oldFactory);
@@ -72,10 +73,12 @@ public class LeakPresenceDetectorTest : IDisposable
         {
             leak = ResourceLeakDetectorFactory.Instance().NewResourceLeakDetector<Resource>(typeof(Resource)).Track(this);
         }
+
         internal void Close()
         {
             leak.Close(this);
         }
+
         public void Dispose()
         {
             Close();
@@ -88,6 +91,7 @@ public class LeakPresenceDetectorTest : IDisposable
         {
             RESOURCE = LeakPresenceDetector.StaticInitializer(() => new Resource());
         }
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void Init()
         {

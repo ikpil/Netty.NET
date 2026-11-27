@@ -22,4 +22,9 @@ namespace Netty.NET.Transport.Channels.Sockets;
  * a {@link SocketChannel} was shutdown.
  */
 public sealed class ChannelOutputShutdownEvent
-{ public static readonly ChannelOutputShutdownEvent INSTANCE = new(); private ChannelOutputShutdownEvent() { } }
+{
+    public static readonly ChannelOutputShutdownEvent INSTANCE = new();
+    private ChannelOutputShutdownEvent()
+    {
+    }
+}

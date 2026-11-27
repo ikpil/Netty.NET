@@ -45,7 +45,10 @@ public sealed class WriteBufferWaterMark
      * @param low low water mark for write buffer.
      * @param high high water mark for write buffer
      */
-    public WriteBufferWaterMark(int low, int high) : this(low, high, true) { }
+    public WriteBufferWaterMark(int low, int high) : this(low, high, true)
+    {
+    }
+
     /**
      * This constructor is needed to keep backward-compatibility.
      */
@@ -60,6 +63,7 @@ public sealed class WriteBufferWaterMark
         _low = low;
         _high = high;
     }
+
     /**
      * Returns the low water mark for the write buffer.
      */
@@ -67,6 +71,7 @@ public sealed class WriteBufferWaterMark
     {
         return _low;
     }
+
     /**
      * Returns the high water mark for the write buffer.
      */
@@ -74,6 +79,7 @@ public sealed class WriteBufferWaterMark
     {
         return _high;
     }
+
     public override string ToString()
     {
         return FormattableString.Invariant($"WriteBufferWaterMark(low: {_low}, high: {_high})");

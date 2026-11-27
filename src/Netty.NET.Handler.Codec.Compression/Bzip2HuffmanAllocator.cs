@@ -229,5 +229,7 @@ internal sealed class Bzip2HuffmanAllocator
         }
     }
 
-    private Bzip2HuffmanAllocator() { }
+    private Bzip2HuffmanAllocator()
+    {
+    }
 }

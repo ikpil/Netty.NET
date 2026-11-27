@@ -41,10 +41,12 @@ public class CoalescingBufferQueueTest : IDisposable
         _queue = new CoalescingBufferQueue(_channel, 16, true);
         _mouseCompletion = task => { _mouseDone = true; _mouseSuccess = task.IsCompletedSuccessfully; };
     }
+
     public void Dispose()
     {
         Assert.False(_channel.Finish());
     }
+
     [Fact]
     public void TestAddFirstPromiseRetained()
     {
@@ -64,6 +66,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, _mouse.RefCnt);
     }
+
     [Fact]
     public void TestAddFirstVoidPromise()
     {
@@ -88,6 +91,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, _mouse.RefCnt);
     }
+
     [Fact]
     public void TestAggregateWithFullRead()
     {
@@ -106,6 +110,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, _mouse.RefCnt);
     }
+
     [Fact]
     public void TestWithVoidPromise()
     {
@@ -119,6 +124,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, _mouse.RefCnt);
     }
+
     [Fact]
     public void TestAggregateWithPartialRead()
     {
@@ -141,6 +147,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, _mouse.RefCnt);
     }
+
     [Fact]
     public void TestReadExactAddedBufferSizeReturnsOriginal()
     {
@@ -161,6 +168,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(1, _mouse.RefCnt);
         _mouse.Release();
     }
+
     [Fact]
     public void TestReadEmptyQueueReturnsEmptyBuffer()
     {
@@ -171,6 +179,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal("", Dequeue(int.MaxValue, NewProducer()));
         AssertQueueSize(0, true);
     }
+
     [Fact]
     public void TestReleaseAndFailAll()
     {
@@ -185,6 +194,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal("", Dequeue(int.MaxValue, NewProducer()));
         AssertQueueSize(0, true);
     }
+
     [Fact]
     public void TestEmptyBuffersAreCoalesced()
     {
@@ -204,6 +214,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, empty.RefCnt);
     }
+
     // If a queued buffer's readable bytes shrink after enqueue (released or consumed out from under the queue),
     // the queue must still report 0 readable bytes once drained.
     // See https://github.com/netty/netty/issues/16946
@@ -228,6 +239,7 @@ public class CoalescingBufferQueueTest : IDisposable
         removed.Release();
         AssertQueueSize(0, true);
     }
+
     [Fact]
     public void TestReadableBytesResetWhenReleaseAndFailAllSeesConsumedBuffer()
     {
@@ -241,6 +253,7 @@ public class CoalescingBufferQueueTest : IDisposable
         AssertQueueSize(0, true);
         Assert.Equal(0, buffer.RefCnt);
     }
+
     [Fact]
     public async Task TestReadableBytesResetWhenWriteAndRemoveAllSeesConsumedBuffer()
     {
@@ -257,6 +270,7 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, queue.ReadableBytes);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void TestReadableBytesResetWhenRemoveFirstSeesConsumedBuffer()
     {
@@ -271,6 +285,7 @@ public class CoalescingBufferQueueTest : IDisposable
         removed.Release();
         AssertQueueSize(0, true);
     }
+
     [Fact]
     public void TestMerge()
     {
@@ -290,16 +305,19 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _cat.RefCnt);
         Assert.Equal(0, _mouse.RefCnt);
     }
+
     [Fact]
     public void TestWritabilityChanged()
     {
         TestWritabilityChanged0(false);
     }
+
     [Fact]
     public void TestWritabilityChangedFailAll()
     {
         TestWritabilityChanged0(true);
     }
+
     private void TestWritabilityChanged0(bool fail)
     {
         _channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(3, 4));
@@ -330,11 +348,21 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.True(_channel.IsWritable);
         Assert.True(_queue.IsEmpty);
     }
+
     private static TaskCompletionSource NewProducer()
     {
         return new();
     }
-    private void AssertQueueSize(int size, bool isEmpty) { Assert.Equal(size, _queue.ReadableBytes); if (isEmpty) Assert.True(_queue.IsEmpty); else Assert.False(_queue.IsEmpty); }
+
+    private void AssertQueueSize(int size, bool isEmpty)
+    {
+        Assert.Equal(size, _queue.ReadableBytes);
+        if (isEmpty)
+            Assert.True(_queue.IsEmpty);
+        else
+            Assert.False(_queue.IsEmpty);
+    }
+
     private string Dequeue(int count, TaskCompletionSource aggregate)
     {
         var removed = _queue.Remove(count, aggregate);
@@ -346,6 +374,9 @@ public class CoalescingBufferQueueTest : IDisposable
     private sealed class ReleasingWriter : ChannelOutboundHandlerAdapter
     {
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
-        { ReferenceCountUtil.Release(msg); return Task.CompletedTask; }
+        {
+            ReferenceCountUtil.Release(msg);
+            return Task.CompletedTask;
+        }
     }
 }

@@ -117,8 +117,13 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
     /**
      * Create a new instance
      */
-    public NioSocketChannel() : this(null, NewChannel(null)) { }
-    public NioSocketChannel(AddressFamily family) : this(null, new Socket(family, SocketType.Stream, ProtocolType.Tcp)) { }
+    public NioSocketChannel() : this(null, NewChannel(null))
+    {
+    }
+
+    public NioSocketChannel(AddressFamily family) : this(null, new Socket(family, SocketType.Stream, ProtocolType.Tcp))
+    {
+    }
 
     /**
      * Create a new instance using the given {@link SelectorProvider} and protocol family (supported only since JDK 15).
@@ -126,17 +131,24 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
      * @deprecated use {@link NioSocketChannel#NioSocketChannel(SelectorProvider, SocketProtocolFamily)}
      */
     [Obsolete("use NioSocketChannel(SocketProtocolFamily?)")]
-    public NioSocketChannel(InternetProtocolFamily? family) : this(family == null ? null : family.Value.ToSocketProtocolFamily()) { }
+    public NioSocketChannel(InternetProtocolFamily? family) : this(family == null ? null : family.Value.ToSocketProtocolFamily())
+    {
+    }
 
     /**
      * Create a new instance using the given {@link SelectorProvider} and protocol family (supported only since JDK 15).
      */
     // CLR: there is no SelectorProvider; the CLR socket is opened directly for the family.
-    public NioSocketChannel(SocketProtocolFamily? family) : this(null, NewChannel(family)) { }
+    public NioSocketChannel(SocketProtocolFamily? family) : this(null, NewChannel(family))
+    {
+    }
+
     /**
      * Create a new instance using the given {@link SocketChannel}.
      */
-    public NioSocketChannel(Socket socket) : this(null, socket) { }
+    public NioSocketChannel(Socket socket) : this(null, socket)
+    {
+    }
 
     /**
      * Create a new instance

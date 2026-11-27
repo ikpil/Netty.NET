@@ -26,7 +26,10 @@ public class CompositeByteBufScalarKernelTest
     {
         public readonly List<(string Method, int Index)> Visits = [];
         public T Fail<T>(string method, int index)
-        { Visits.Add((method, index)); throw new ProbeFailure(); }
+        {
+            Visits.Add((method, index));
+            throw new ProbeFailure();
+        }
     }
     private sealed class HeapProbe : UnpooledHeapByteBuf
     {
@@ -35,74 +38,92 @@ public class CompositeByteBufScalarKernelTest
         {
             _observation = observation;
         }
+
         public override byte GetByte(int index)
         {
             return _observation.Fail<byte>("GetByte", index);
         }
+
         public override short GetShort(int index)
         {
             return _observation.Fail<short>("GetShort", index);
         }
+
         public override short GetShortLE(int index)
         {
             return _observation.Fail<short>("GetShortLE", index);
         }
+
         public override int GetUnsignedMedium(int index)
         {
             return _observation.Fail<int>("GetUnsignedMedium", index);
         }
+
         public override int GetUnsignedMediumLE(int index)
         {
             return _observation.Fail<int>("GetUnsignedMediumLE", index);
         }
+
         public override int GetInt(int index)
         {
             return _observation.Fail<int>("GetInt", index);
         }
+
         public override int GetIntLE(int index)
         {
             return _observation.Fail<int>("GetIntLE", index);
         }
+
         public override long GetLong(int index)
         {
             return _observation.Fail<long>("GetLong", index);
         }
+
         public override long GetLongLE(int index)
         {
             return _observation.Fail<long>("GetLongLE", index);
         }
+
         public override ByteBuf SetByte(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetByte", index);
         }
+
         public override ByteBuf SetShort(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetShort", index);
         }
+
         public override ByteBuf SetShortLE(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetShortLE", index);
         }
+
         public override ByteBuf SetMedium(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetMedium", index);
         }
+
         public override ByteBuf SetMediumLE(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetMediumLE", index);
         }
+
         public override ByteBuf SetInt(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetInt", index);
         }
+
         public override ByteBuf SetIntLE(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetIntLE", index);
         }
+
         public override ByteBuf SetLong(int index, long value)
         {
             return _observation.Fail<ByteBuf>("SetLong", index);
         }
+
         public override ByteBuf SetLongLE(int index, long value)
         {
             return _observation.Fail<ByteBuf>("SetLongLE", index);
@@ -115,74 +136,92 @@ public class CompositeByteBufScalarKernelTest
         {
             _observation = observation;
         }
+
         public override byte GetByte(int index)
         {
             return _observation.Fail<byte>("GetByte", index);
         }
+
         public override short GetShort(int index)
         {
             return _observation.Fail<short>("GetShort", index);
         }
+
         public override short GetShortLE(int index)
         {
             return _observation.Fail<short>("GetShortLE", index);
         }
+
         public override int GetUnsignedMedium(int index)
         {
             return _observation.Fail<int>("GetUnsignedMedium", index);
         }
+
         public override int GetUnsignedMediumLE(int index)
         {
             return _observation.Fail<int>("GetUnsignedMediumLE", index);
         }
+
         public override int GetInt(int index)
         {
             return _observation.Fail<int>("GetInt", index);
         }
+
         public override int GetIntLE(int index)
         {
             return _observation.Fail<int>("GetIntLE", index);
         }
+
         public override long GetLong(int index)
         {
             return _observation.Fail<long>("GetLong", index);
         }
+
         public override long GetLongLE(int index)
         {
             return _observation.Fail<long>("GetLongLE", index);
         }
+
         public override ByteBuf SetByte(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetByte", index);
         }
+
         public override ByteBuf SetShort(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetShort", index);
         }
+
         public override ByteBuf SetShortLE(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetShortLE", index);
         }
+
         public override ByteBuf SetMedium(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetMedium", index);
         }
+
         public override ByteBuf SetMediumLE(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetMediumLE", index);
         }
+
         public override ByteBuf SetInt(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetInt", index);
         }
+
         public override ByteBuf SetIntLE(int index, int value)
         {
             return _observation.Fail<ByteBuf>("SetIntLE", index);
         }
+
         public override ByteBuf SetLong(int index, long value)
         {
             return _observation.Fail<ByteBuf>("SetLong", index);
         }
+
         public override ByteBuf SetLongLE(int index, long value)
         {
             return _observation.Fail<ByteBuf>("SetLongLE", index);
@@ -285,6 +324,7 @@ public class CompositeByteBufScalarKernelTest
             _ => relative ? buffer.ReadLongLE() : buffer.GetLongLE(index)
         };
     }
+
     private static ByteBuf Write(ByteBuf buffer, int operation, int index, bool relative)
     {
         return operation switch

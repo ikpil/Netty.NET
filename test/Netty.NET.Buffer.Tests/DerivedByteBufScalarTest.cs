@@ -42,86 +42,103 @@ public class DerivedByteBufScalarTest
             o.Record("GetByte", index);
             return unchecked((byte)(base.GetByte(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetByte(int index, int value)
         {
             o.Record("SetByte", index, unchecked((ulong)value));
             return base.SetByte(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override short GetShort(int index)
         {
             o.Record("GetShort", index);
             return unchecked((short)(base.GetShort(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetShort(int index, int value)
         {
             o.Record("SetShort", index, unchecked((ulong)value));
             return base.SetShort(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override short GetShortLE(int index)
         {
             o.Record("GetShortLE", index);
             return unchecked((short)(base.GetShortLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetShortLE(int index, int value)
         {
             o.Record("SetShortLE", index, unchecked((ulong)value));
             return base.SetShortLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetUnsignedMedium(int index)
         {
             o.Record("GetUnsignedMedium", index);
             return unchecked((int)(base.GetUnsignedMedium(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetMedium(int index, int value)
         {
             o.Record("SetMedium", index, unchecked((ulong)value));
             return base.SetMedium(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetUnsignedMediumLE(int index)
         {
             o.Record("GetUnsignedMediumLE", index);
             return unchecked((int)(base.GetUnsignedMediumLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetMediumLE(int index, int value)
         {
             o.Record("SetMediumLE", index, unchecked((ulong)value));
             return base.SetMediumLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetInt(int index)
         {
             o.Record("GetInt", index);
             return unchecked((int)(base.GetInt(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetInt(int index, int value)
         {
             o.Record("SetInt", index, unchecked((ulong)value));
             return base.SetInt(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetIntLE(int index)
         {
             o.Record("GetIntLE", index);
             return unchecked((int)(base.GetIntLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetIntLE(int index, int value)
         {
             o.Record("SetIntLE", index, unchecked((ulong)value));
             return base.SetIntLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override long GetLong(int index)
         {
             o.Record("GetLong", index);
             return unchecked((long)(base.GetLong(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetLong(int index, long value)
         {
             o.Record("SetLong", index, unchecked((ulong)value));
             return base.SetLong(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override long GetLongLE(int index)
         {
             o.Record("GetLongLE", index);
             return unchecked((long)(base.GetLongLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetLongLE(int index, long value)
         {
             o.Record("SetLongLE", index, unchecked((ulong)value));
@@ -135,86 +152,103 @@ public class DerivedByteBufScalarTest
             o.Record("GetByte", index);
             return unchecked((byte)(base.GetByte(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetByte(int index, int value)
         {
             o.Record("SetByte", index, unchecked((ulong)value));
             return base.SetByte(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override short GetShort(int index)
         {
             o.Record("GetShort", index);
             return unchecked((short)(base.GetShort(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetShort(int index, int value)
         {
             o.Record("SetShort", index, unchecked((ulong)value));
             return base.SetShort(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override short GetShortLE(int index)
         {
             o.Record("GetShortLE", index);
             return unchecked((short)(base.GetShortLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetShortLE(int index, int value)
         {
             o.Record("SetShortLE", index, unchecked((ulong)value));
             return base.SetShortLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetUnsignedMedium(int index)
         {
             o.Record("GetUnsignedMedium", index);
             return unchecked((int)(base.GetUnsignedMedium(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetMedium(int index, int value)
         {
             o.Record("SetMedium", index, unchecked((ulong)value));
             return base.SetMedium(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetUnsignedMediumLE(int index)
         {
             o.Record("GetUnsignedMediumLE", index);
             return unchecked((int)(base.GetUnsignedMediumLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetMediumLE(int index, int value)
         {
             o.Record("SetMediumLE", index, unchecked((ulong)value));
             return base.SetMediumLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetInt(int index)
         {
             o.Record("GetInt", index);
             return unchecked((int)(base.GetInt(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetInt(int index, int value)
         {
             o.Record("SetInt", index, unchecked((ulong)value));
             return base.SetInt(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override int GetIntLE(int index)
         {
             o.Record("GetIntLE", index);
             return unchecked((int)(base.GetIntLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetIntLE(int index, int value)
         {
             o.Record("SetIntLE", index, unchecked((ulong)value));
             return base.SetIntLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override long GetLong(int index)
         {
             o.Record("GetLong", index);
             return unchecked((long)(base.GetLong(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetLong(int index, long value)
         {
             o.Record("SetLong", index, unchecked((ulong)value));
             return base.SetLong(index, value ^ (o.Alter ? 0x35 : 0));
         }
+
         public override long GetLongLE(int index)
         {
             o.Record("GetLongLE", index);
             return unchecked((long)(base.GetLongLE(index) ^ (o.Alter ? 0x35 : 0)));
         }
+
         public override ByteBuf SetLongLE(int index, long value)
         {
             o.Record("SetLongLE", index, unchecked((ulong)value));
@@ -246,6 +280,7 @@ public class DerivedByteBufScalarTest
             View.SetIndex(1, 10).MarkReaderIndex().MarkWriterIndex();
             Observation.Visits.Clear();
         }
+
         public void Dispose()
         {
             if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
@@ -262,12 +297,16 @@ public class DerivedByteBufScalarTest
     {
         return type is 2 or 4 or 6 or 8 or 11 or 13 or 15 or 18 or 20;
     }
+
     private static ulong Decode(byte[] bytes, int index, int type)
     {
-        ulong bits = 0; int width = Widths[type];
-        for (int i = 0; i < width; i++) bits |= (ulong)bytes[index + i] << (8 * (Little(type) ? i : width - 1 - i));
+        ulong bits = 0;
+        int width = Widths[type];
+        for (int i = 0; i < width; i++)
+            bits |= (ulong)bytes[index + i] << (8 * (Little(type) ? i : width - 1 - i));
         return bits;
     }
+
     private static ulong Result(ulong bits, int type)
     {
         if (type == 9) return bits == 0 ? 0UL : 1UL;
@@ -276,18 +315,22 @@ public class DerivedByteBufScalarTest
         if (type is 10 or 11) return unchecked((ulong)((int)(bits << 8) >> 8));
         return bits;
     }
+
     private static void Encode(byte[] bytes, int index, int type, ulong bits)
     {
         for (int i = 0; i < Widths[type]; i++) bytes[index + i] = unchecked((byte)(bits >> (8 * (Little(type) ? i : Widths[type] - 1 - i))));
     }
+
     private static ulong Written(int type)
     {
         return type == 9 ? 1UL : Value;
     }
+
     private static byte[] Snapshot(Storage s)
     {
         return s.Root.AsReadOnlySpan(0, 64).ToArray();
     }
+
     private static ulong Read(ByteBuf b, int type, int index, bool relative)
     {
         return type switch
@@ -316,6 +359,7 @@ public class DerivedByteBufScalarTest
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
+
     private static ByteBuf Write(ByteBuf b, int type, int index, bool relative)
     {
         return type switch
@@ -344,6 +388,7 @@ public class DerivedByteBufScalarTest
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
+
     public static IEnumerable<object[]> Cases()
     {
         foreach (bool direct in new[] { false, true })
@@ -351,19 +396,23 @@ public class DerivedByteBufScalarTest
         for (int type = 0; type < 21; type++)
         foreach (bool write in new[] { false, true }) yield return [direct, kind, type, write];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void AbsolutePoliciesAndRelativeKernelsFollowOriginalViewRules(bool direct, int kind, int type, bool write)
     {
         using var s = new Storage(direct, kind);
-        byte[] expected = Snapshot(s); int refs = s.Root.RefCnt, width = Widths[type];
+        byte[] expected = Snapshot(s);
+        int refs = s.Root.RefCnt, width = Widths[type];
         s.Observation.Alter = true;
         bool forwards = kind is 0 or 2 or 6 or 8;
         if (write && s.View.IsReadOnly)
         {
             Assert.Throws<NotSupportedException>(() => Write(s.View, type, 3, false));
             Assert.Throws<NotSupportedException>(() => Write(s.View, type, 3, true));
-            Assert.Empty(s.Observation.Visits); Assert.Equal(expected, Snapshot(s)); return;
+            Assert.Empty(s.Observation.Visits);
+            Assert.Equal(expected, Snapshot(s));
+            return;
         }
         ulong bits = Decode(expected, s.Offset + 3, type);
         if (write)
@@ -371,62 +420,90 @@ public class DerivedByteBufScalarTest
             Assert.Same(s.View, Write(s.View, type, 3, false));
             Encode(expected, s.Offset + 3, type, Written(type) ^ (forwards ? 0x35UL : 0));
         }
-        else Assert.Equal(Result(bits ^ (forwards ? 0x35UL : 0), type), Read(s.View, type, 3, false));
+        else
+            Assert.Equal(Result(bits ^ (forwards ? 0x35UL : 0), type), Read(s.View, type, 3, false));
         if (forwards)
         {
             Visit v = Assert.Single(s.Observation.Visits);
             Assert.Equal((write ? "Set" : "Get") + (write ? SetterNames : GetterNames)[Kernels[type]], v.Method);
             Assert.Equal(s.Offset + 3, v.Index);
         }
-        else Assert.Empty(s.Observation.Visits);
-        Assert.Equal(expected, Snapshot(s)); Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(10, s.View.WriterIndex);
+        else
+            Assert.Empty(s.Observation.Visits);
+        Assert.Equal(expected, Snapshot(s));
+        Assert.Equal(1, s.View.ReaderIndex);
+        Assert.Equal(10, s.View.WriterIndex);
         s.View.SetIndex(0, s.View.Capacity).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(10, s.View.WriterIndex);
+        Assert.Equal(1, s.View.ReaderIndex);
+        Assert.Equal(10, s.View.WriterIndex);
         Assert.Equal(refs, s.Root.RefCnt);
 
         bool relativeForwards = kind == 6 && write && type is 8 or 20;
-        s.View.SetIndex(1, write ? 2 : 10); s.Observation.Visits.Clear(); s.Observation.Fail = !relativeForwards;
+        s.View.SetIndex(1, write ? 2 : 10);
+        s.Observation.Visits.Clear();
+        s.Observation.Fail = !relativeForwards;
         if (write)
         {
             Assert.Same(s.View, Write(s.View, type, 0, true));
             Encode(expected, s.Offset + 2, type, Written(type) ^ (relativeForwards ? 0x35UL : 0));
         }
-        else Assert.Equal(Result(Decode(expected, s.Offset + 1, type), type), Read(s.View, type, 0, true));
+        else
+            Assert.Equal(Result(Decode(expected, s.Offset + 1, type), type), Read(s.View, type, 0, true));
         if (relativeForwards)
         {
             Visit v = Assert.Single(s.Observation.Visits);
-            Assert.Equal("SetLongLE", v.Method); Assert.Equal(2, v.Index);
+            Assert.Equal("SetLongLE", v.Method);
+            Assert.Equal(2, v.Index);
         }
-        else Assert.Empty(s.Observation.Visits);
+        else
+            Assert.Empty(s.Observation.Visits);
         Assert.Equal(expected, Snapshot(s));
-        Assert.Equal(write ? 1 : 1 + width, s.View.ReaderIndex); Assert.Equal(write ? 2 + width : 10, s.View.WriterIndex);
+        Assert.Equal(write ? 1 : 1 + width, s.View.ReaderIndex);
+        Assert.Equal(write ? 2 + width : 10, s.View.WriterIndex);
         if (forwards)
         {
-            s.Observation.Visits.Clear(); s.Observation.Fail = true;
-            if (write) Assert.Throws<IOException>(() => Write(s.View, type, 3, false));
-            else Assert.Throws<IOException>(() => Read(s.View, type, 3, false));
-            Assert.Single(s.Observation.Visits); Assert.Equal(expected, Snapshot(s));
+            s.Observation.Visits.Clear();
+            s.Observation.Fail = true;
+            if (write)
+                Assert.Throws<IOException>(() => Write(s.View, type, 3, false));
+            else
+                Assert.Throws<IOException>(() => Read(s.View, type, 3, false));
+            Assert.Single(s.Observation.Visits);
+            Assert.Equal(expected, Snapshot(s));
         }
         if (relativeForwards)
         {
-            s.View.SetIndex(1, 2); s.Observation.Visits.Clear(); s.Observation.Fail = true;
+            s.View.SetIndex(1, 2);
+            s.Observation.Visits.Clear();
+            s.Observation.Fail = true;
             Assert.Throws<IOException>(() => Write(s.View, type, 0, true));
-            Assert.Single(s.Observation.Visits); Assert.Equal(1, s.View.ReaderIndex); Assert.Equal(2, s.View.WriterIndex);
+            Assert.Single(s.Observation.Visits);
+            Assert.Equal(1, s.View.ReaderIndex);
+            Assert.Equal(2, s.View.WriterIndex);
             Assert.Equal(expected, Snapshot(s));
         }
-        s.Observation.Fail = false; s.Observation.Visits.Clear();
+        s.Observation.Fail = false;
+        s.Observation.Visits.Clear();
         int invalid = s.View.Capacity - width + 1;
-        if (write) Assert.Throws<ArgumentOutOfRangeException>(() => Write(s.View, type, invalid, false));
-        else Assert.Throws<ArgumentOutOfRangeException>(() => Read(s.View, type, invalid, false));
-        Assert.Empty(s.Observation.Visits); Assert.Equal(4, s.Root.ReaderIndex); Assert.Equal(60, s.Root.WriterIndex);
+        if (write)
+            Assert.Throws<ArgumentOutOfRangeException>(() => Write(s.View, type, invalid, false));
+        else
+            Assert.Throws<ArgumentOutOfRangeException>(() => Read(s.View, type, invalid, false));
+        Assert.Empty(s.Observation.Visits);
+        Assert.Equal(4, s.Root.ReaderIndex);
+        Assert.Equal(60, s.Root.WriterIndex);
         if (s.Owner != null)
         {
-            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
-            if (write) Assert.Throws<IllegalReferenceCountException>(() => Write(s.View, type, 3, false));
-            else Assert.Throws<IllegalReferenceCountException>(() => Read(s.View, type, 3, false));
+            Assert.True(s.Owner.Release());
+            Assert.Equal(1, s.Root.RefCnt);
+            if (write)
+                Assert.Throws<IllegalReferenceCountException>(() => Write(s.View, type, 3, false));
+            else
+                Assert.Throws<IllegalReferenceCountException>(() => Read(s.View, type, 3, false));
             Assert.Empty(s.Observation.Visits);
         }
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -450,21 +527,100 @@ public class DerivedByteBufScalarTest
         public int Calls;
         public ulong Bits;
         public ByteBuf Returned;
-        public RelativePolicy() : base(16, 16) { SetIndex(1, 10); }
-        public override byte ReadByte() { Calls++; return 0x89; }
-        public override short ReadShort() { Calls++; return unchecked((short)0x89ab); }
-        public override ByteBuf WriteByte(int value) { Calls++; Bits = unchecked((ulong)value); return Returned; }
-        public override ByteBuf WriteShort(int value) { Calls++; Bits = unchecked((ulong)value); return Returned; }
-        public override int ReadInt() { Calls++; return unchecked((int)0x89abcdef); }
-        public override int ReadIntLE() { Calls++; return unchecked((int)0x89abcdef); }
-        public override long ReadLong() { Calls++; return unchecked((long)0x89abcdef01234567UL); }
-        public override long ReadLongLE() { Calls++; return unchecked((long)0x89abcdef01234567UL); }
-        public override int ReadUnsignedMedium() { Calls++; return 0x89abcd; }
-        public override int ReadUnsignedMediumLE() { Calls++; return 0x89abcd; }
-        public override ByteBuf WriteInt(int value) { Calls++; Bits = unchecked((uint)value); return Returned; }
-        public override ByteBuf WriteIntLE(int value) { Calls++; Bits = unchecked((uint)value); return Returned; }
-        public override ByteBuf WriteLong(long value) { Calls++; Bits = unchecked((ulong)value); return Returned; }
-        public override ByteBuf WriteLongLE(long value) { Calls++; Bits = unchecked((ulong)value); return Returned; }
+        public RelativePolicy() : base(16, 16)
+        {
+            SetIndex(1, 10);
+        }
+
+        public override byte ReadByte()
+        {
+            Calls++;
+            return 0x89;
+        }
+
+        public override short ReadShort()
+        {
+            Calls++;
+            return unchecked((short)0x89ab);
+        }
+
+        public override ByteBuf WriteByte(int value)
+        {
+            Calls++;
+            Bits = unchecked((ulong)value);
+            return Returned;
+        }
+
+        public override ByteBuf WriteShort(int value)
+        {
+            Calls++;
+            Bits = unchecked((ulong)value);
+            return Returned;
+        }
+
+        public override int ReadInt()
+        {
+            Calls++;
+            return unchecked((int)0x89abcdef);
+        }
+
+        public override int ReadIntLE()
+        {
+            Calls++;
+            return unchecked((int)0x89abcdef);
+        }
+
+        public override long ReadLong()
+        {
+            Calls++;
+            return unchecked((long)0x89abcdef01234567UL);
+        }
+
+        public override long ReadLongLE()
+        {
+            Calls++;
+            return unchecked((long)0x89abcdef01234567UL);
+        }
+
+        public override int ReadUnsignedMedium()
+        {
+            Calls++;
+            return 0x89abcd;
+        }
+
+        public override int ReadUnsignedMediumLE()
+        {
+            Calls++;
+            return 0x89abcd;
+        }
+
+        public override ByteBuf WriteInt(int value)
+        {
+            Calls++;
+            Bits = unchecked((uint)value);
+            return Returned;
+        }
+
+        public override ByteBuf WriteIntLE(int value)
+        {
+            Calls++;
+            Bits = unchecked((uint)value);
+            return Returned;
+        }
+
+        public override ByteBuf WriteLong(long value)
+        {
+            Calls++;
+            Bits = unchecked((ulong)value);
+            return Returned;
+        }
+
+        public override ByteBuf WriteLongLE(long value)
+        {
+            Calls++;
+            Bits = unchecked((ulong)value);
+            return Returned;
+        }
     }
     [Theory]
     [InlineData(9)]

@@ -113,10 +113,12 @@ internal sealed partial class AdaptivePoolingAllocator
         {
             throw new NotSupportedException();
         }
+
         internal void Release()
         {
             Dispose(true);
         }
+
         protected override void Dispose(bool disposing)
         {
             if (Interlocked.Exchange(ref _disposed, 1) == 0) ReleaseClaim();
@@ -139,12 +141,14 @@ internal sealed partial class AdaptivePoolingAllocator
             {
                 _allocation = allocation;
             }
+
             public void Dispose()
             {
                 AdaptiveChunkAllocation allocation = Interlocked.Exchange(ref _allocation, null);
                 allocation?.ReleaseClaim();
                 GC.SuppressFinalize(this);
             }
+
             ~Claim()
             {
                 Dispose();

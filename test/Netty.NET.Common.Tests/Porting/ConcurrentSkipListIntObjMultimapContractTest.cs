@@ -252,6 +252,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         {
             Id = id;
         }
+
         public bool Equals(Value other)
         {
             Comparisons++;
@@ -260,10 +261,12 @@ public class ConcurrentSkipListIntObjMultimapContractTest
             callback?.Invoke();
             return other is not null && Id == other.Id;
         }
+
         public override bool Equals(object other)
         {
             return other is Value value && Equals(value);
         }
+
         public override int GetHashCode()
         {
             return Id;
@@ -276,15 +279,27 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         private readonly int _pending;
         private bool _dirty = true;
         internal int ProcessCount;
-        internal Chunk(int capacity, int pending) { _capacity = capacity; _pending = pending; }
+        internal Chunk(int capacity, int pending)
+        {
+            _capacity = capacity;
+            _pending = pending;
+        }
+
         internal int RemainingCapacity()
         {
             return _capacity;
         }
+
         internal bool HasUnprocessedFreelistEntries()
         {
             return _dirty;
         }
-        internal void ProcessFreelistEntries() { _capacity = _pending; _dirty = false; ProcessCount++; }
+
+        internal void ProcessFreelistEntries()
+        {
+            _capacity = _pending;
+            _dirty = false;
+            ProcessCount++;
+        }
     }
 }

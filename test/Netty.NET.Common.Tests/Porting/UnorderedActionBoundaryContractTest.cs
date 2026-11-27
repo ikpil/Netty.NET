@@ -214,14 +214,19 @@ public class UnorderedActionBoundaryContractTest
                 () => Assert.Same(stopped.Termination, stopped.Owner.StopAsync()), TestContext.Current.CancellationToken)))
             .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         await stopped.Owner.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        if (kind != "raw") Assert.True(stopped.Result.IsCanceled);
+        if (kind != "raw")
+            Assert.True(stopped.Result.IsCanceled);
         Assert.Equal(0, stopped.Owner.PendingTaskCount);
         for (int attempt = 0; attempt < 10 && stopped.Payload.IsAlive; attempt++)
         {
-            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
         Assert.False(stopped.Payload.IsAlive);
-        GC.KeepAlive(stopped.Owner); GC.KeepAlive(stopped.Termination); GC.KeepAlive(stopped.Result);
+        GC.KeepAlive(stopped.Owner);
+        GC.KeepAlive(stopped.Termination);
+        GC.KeepAlive(stopped.Result);
     }
 
     [Fact]

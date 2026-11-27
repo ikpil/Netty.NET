@@ -34,18 +34,22 @@ public partial class DefaultByteBufAllocatorTest
         return target.GetType()
             .GetField(name, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(target);
     }
+
     private static T DefaultSetting<T>(Scope scope, string name)
     {
         return (T)scope.Type("PooledByteBufAllocator").GetMethod(name).Invoke(null, null);
     }
+
     private static object Arena(object allocator)
     {
         return ((Array)Field(allocator, "_heapArenas")).GetValue(0);
     }
+
     private static void FastScope(Scope scope, Action action)
     {
         scope.CommonTypeCall("Concurrent.FastThreadLocalThread", "RunWithFastThreadLocal", action);
     }
+
     private static void MappedScope(Scope scope, Action action)
     {
         Type executorType = scope._common.GetType("Netty.NET.Common.Concurrent.ImmediateEventExecutor", true);
@@ -73,8 +77,10 @@ public partial class DefaultByteBufAllocatorTest
         scope.Set(PooledConfigurationKeys[2], alignment.ToString(CultureInfo.InvariantCulture));
         Assert.Equal(expectedPage, DefaultSetting<int>(scope, "DefaultPageSize"));
         Assert.Equal(expectedOrder, DefaultSetting<int>(scope, "DefaultMaxOrder"));
-        object allocator = scope.Default; Assert.Equal(chunk, Property<int>(Property<object>(allocator, "Metric"), "ChunkSize"));
-        if (chunk < 1000000) CheckFactory(allocator, "DirectBuffer", true);
+        object allocator = scope.Default;
+        Assert.Equal(chunk, Property<int>(Property<object>(allocator, "Metric"), "ChunkSize"));
+        if (chunk < 1000000)
+            CheckFactory(allocator, "DirectBuffer", true);
     }
 
     [Theory]
@@ -89,7 +95,8 @@ public partial class DefaultByteBufAllocatorTest
         Assert.Equal(Math.Max(0, direct), DefaultSetting<int>(scope, "DefaultNumDirectArena"));
         Assert.Equal(Math.Max(0, heap), Property<int>(metric, "NumHeapArenas"));
         Assert.Equal(Math.Max(0, direct), Property<int>(metric, "NumDirectArenas"));
-        CheckFactory(allocator, "HeapBuffer", false); CheckFactory(allocator, "DirectBuffer", true);
+        CheckFactory(allocator, "HeapBuffer", false);
+        CheckFactory(allocator, "DirectBuffer", true);
         Assert.Equal(direct > 0, Property<bool>(allocator, "IsDirectBufferPooled"));
     }
 
@@ -102,23 +109,29 @@ public partial class DefaultByteBufAllocatorTest
     {
         using var scope = new Scope("pooled", null);
         scope.Set(PooledConfigurationKeys[11], all.ToString());
-        scope.Set(PooledConfigurationKeys[5], "3"); scope.Set(PooledConfigurationKeys[6], "3");
+        scope.Set(PooledConfigurationKeys[5], "3");
+        scope.Set(PooledConfigurationKeys[6], "3");
         object allocator = scope.Default, arena = Arena(allocator);
         Assert.Equal(3, DefaultSetting<int>(scope, "DefaultSmallCacheSize"));
         Assert.Equal(3, DefaultSetting<int>(scope, "DefaultNormalCacheSize"));
         Action allocate = () =>
         {
-            object b = Call(allocator, "HeapBuffer", 16, 16); Call(b, "Release", 1);
+            object b = Call(allocator, "HeapBuffer", 16, 16);
+            Call(b, "Release", 1);
             Assert.Equal(fast || mapping || all ? 0L : 1L, Property<long>(arena, "NumSmallDeallocations"));
         };
         Action run = () => { if (mapping) MappedScope(scope, allocate); else allocate(); };
-        if (fast) FastScope(scope, run); else run();
+        if (fast)
+            FastScope(scope, run);
+        else
+            run();
         if (fast)
         {
             Assert.Equal(1L, Property<long>(arena, "NumSmallDeallocations"));
             Assert.Equal(0, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
         }
-        else Assert.Equal(1, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
+        else
+            Assert.Equal(1, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
     }
 
     [Theory]
@@ -127,16 +140,20 @@ public partial class DefaultByteBufAllocatorTest
     public void RuntimeTrimPeriodUsesCurrentPropertyOverDeprecatedAlias(string oldValue, string current, long milliseconds)
     {
         using var scope = new Scope("pooled", null);
-        scope.Set(PooledConfigurationKeys[10], oldValue); scope.Set(PooledConfigurationKeys[9], current);
+        scope.Set(PooledConfigurationKeys[10], oldValue);
+        scope.Set(PooledConfigurationKeys[9], current);
         Assert.Equal(TimeSpan.FromMilliseconds(milliseconds), (TimeSpan)Field(scope.Default, "_cacheTrimPeriod"));
     }
 
     [Fact]
     public void RuntimeConfigurationFreezesAndExplicitConstructorKeepsItsOptions()
     {
-        using var scope = new Scope("pooled", null); scope.Set(PooledConfigurationKeys[0], "4096"); scope.Set(PooledConfigurationKeys[1], "2");
+        using var scope = new Scope("pooled", null);
+        scope.Set(PooledConfigurationKeys[0], "4096");
+        scope.Set(PooledConfigurationKeys[1], "2");
         Assert.Equal(4096, DefaultSetting<int>(scope, "DefaultPageSize"));
-        scope.Set(PooledConfigurationKeys[0], "16384"); scope.Set(PooledConfigurationKeys[5], "1");
+        scope.Set(PooledConfigurationKeys[0], "16384");
+        scope.Set(PooledConfigurationKeys[5], "1");
         object allocator = scope.Default;
         Assert.Equal(16384, Property<int>(Property<object>(allocator, "Metric"), "ChunkSize"));
         Assert.Equal(256, DefaultSetting<int>(scope, "DefaultSmallCacheSize"));
@@ -150,7 +167,8 @@ public partial class DefaultByteBufAllocatorTest
     [InlineData(-1)] [InlineData(3)]
     public void InvalidRuntimeAlignmentIsRejectedAfterDefaultPageValidation(int alignment)
     {
-        using var scope = new Scope("pooled", null); scope.Set(PooledConfigurationKeys[2], alignment.ToString(CultureInfo.InvariantCulture));
+        using var scope = new Scope("pooled", null);
+        scope.Set(PooledConfigurationKeys[2], alignment.ToString(CultureInfo.InvariantCulture));
         var e = Assert.Throws<TargetInvocationException>(() => { _ = scope.Default; });
         Assert.IsType<ArgumentOutOfRangeException>(e.GetBaseException());
     }
@@ -159,10 +177,13 @@ public partial class DefaultByteBufAllocatorTest
     [InlineData(false)] [InlineData(true)]
     public void InvalidTrimThresholdFailsOnlyWhenRuntimeCacheIsEligible(bool eligible)
     {
-        using var scope = new Scope("pooled", null); scope.Set(PooledConfigurationKeys[8], "0");
+        using var scope = new Scope("pooled", null);
+        scope.Set(PooledConfigurationKeys[8], "0");
         object allocator = scope.Default;
-        if (eligible) FastScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
-        else CheckFactory(allocator, "HeapBuffer", false);
+        if (eligible)
+            FastScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
+        else
+            CheckFactory(allocator, "HeapBuffer", false);
         Assert.Equal(eligible ? 0 : 1, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
     }
 
@@ -170,17 +191,22 @@ public partial class DefaultByteBufAllocatorTest
     [InlineData(false)] [InlineData(true)]
     public void InvalidMaximumCachedCapacityFailsOnlyForEligibleRuntimeBinding(bool eligible)
     {
-        using var scope = new Scope("pooled", null); scope.Set(PooledConfigurationKeys[7], "-1");
+        using var scope = new Scope("pooled", null);
+        scope.Set(PooledConfigurationKeys[7], "-1");
         object allocator = scope.Default;
-        if (eligible) FastScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
-        else CheckFactory(allocator, "HeapBuffer", false);
+        if (eligible)
+            FastScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
+        else
+            CheckFactory(allocator, "HeapBuffer", false);
     }
 
     [Fact]
     public void NonpositiveCacheSizesDisableCachesEvenWithZeroTrimThreshold()
     {
         using var scope = new Scope("pooled", null);
-        scope.Set(PooledConfigurationKeys[5], "-1"); scope.Set(PooledConfigurationKeys[6], "0"); scope.Set(PooledConfigurationKeys[8], "0");
+        scope.Set(PooledConfigurationKeys[5], "-1");
+        scope.Set(PooledConfigurationKeys[6], "0");
+        scope.Set(PooledConfigurationKeys[8], "0");
         Assert.Equal(-1, DefaultSetting<int>(scope, "DefaultSmallCacheSize"));
         FastScope(scope, () => CheckFactory(scope.Default, "HeapBuffer", false));
     }
@@ -188,7 +214,8 @@ public partial class DefaultByteBufAllocatorTest
     [Fact]
     public void RuntimeSchedulingRejectionRollsBackBindingWithoutReservingStorage()
     {
-        using var scope = new Scope("pooled", null); scope.Set(PooledConfigurationKeys[9], "10");
+        using var scope = new Scope("pooled", null);
+        scope.Set(PooledConfigurationKeys[9], "10");
         object allocator = scope.Default;
         MappedScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
         Assert.Equal(0, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
@@ -198,15 +225,19 @@ public partial class DefaultByteBufAllocatorTest
     [Fact]
     public void RuntimeFastCleanupDoesNotDetachALaterBindingOrInvalidateLiveBuffer()
     {
-        using var scope = new Scope("pooled", null); object allocator = scope.Default, buffer = null;
+        using var scope = new Scope("pooled", null);
+        object allocator = scope.Default, buffer = null;
         FastScope(scope, () =>
         {
-            object old = Call(allocator, "HeapBuffer", 16, 16); Call(old, "Release", 1);
+            object old = Call(allocator, "HeapBuffer", 16, 16);
+            Call(old, "Release", 1);
             Assert.Equal(true, Call(allocator, "ReleaseCurrentThreadBinding"));
-            buffer = Call(allocator, "HeapBuffer", 16, 16); Call(buffer, "WriteInt", 123456789);
+            buffer = Call(allocator, "HeapBuffer", 16, 16);
+            Call(buffer, "WriteInt", 123456789);
         });
         Assert.Equal(0, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
-        Assert.Equal(123456789, Call(buffer, "GetInt", 0)); Call(buffer, "Release", 1);
+        Assert.Equal(123456789, Call(buffer, "GetInt", 0));
+        Call(buffer, "Release", 1);
         FastScope(scope, () => CheckFactory(allocator, "HeapBuffer", false));
         Assert.Equal(0, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
     }

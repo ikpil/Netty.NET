@@ -89,17 +89,22 @@ public class ByteBufStreamTransferTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ShortReadAndEofUseOneBoundedReadAcrossAllStorage(int kind)
     {
-        ByteBuf b = Owner(kind); b.WriterIndex = 3;
+        ByteBuf b = Owner(kind);
+        b.WriterIndex = 3;
         using var input = new ProbeStream { ReadCount = 2 };
         try
         {
-            Assert.Equal(2, b.WriteBytes(input, 20)); Assert.Equal(1, input.Calls);
-            Assert.Equal(5, b.WriterIndex); Assert.Equal(0, b.ReaderIndex);
+            Assert.Equal(2, b.WriteBytes(input, 20));
+            Assert.Equal(1, input.Calls);
+            Assert.Equal(5, b.WriterIndex);
+            Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(new byte[] { 1, 2 }, Bytes(b, 3, 2));
             Assert.Equal(new byte[15], Bytes(b, 5, 15));
             input.ReadCount = 0;
-            Assert.Equal(0, b.WriteBytes(input, 20)); Assert.Equal(5, b.WriterIndex);
-            Assert.Equal(2, input.Calls); Assert.False(input.Disposed);
+            Assert.Equal(0, b.WriteBytes(input, 20));
+            Assert.Equal(5, b.WriterIndex);
+            Assert.Equal(2, input.Calls);
+            Assert.False(input.Disposed);
         }
         finally { b.Release(); }
     }
@@ -108,13 +113,16 @@ public class ByteBufStreamTransferTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ReadFailureDoesNotPublishStagingOrAdvanceWriter(int kind)
     {
-        ByteBuf b = Owner(kind); b.WriterIndex = 3;
+        ByteBuf b = Owner(kind);
+        b.WriterIndex = 3;
         using var input = new ProbeStream { ReadCount = 2, Fail = true };
         try
         {
             Assert.Throws<IOException>(() => b.WriteBytes(input, 20));
-            Assert.Equal(new byte[32], Bytes(b, 0, 32)); Assert.Equal(3, b.WriterIndex);
-            Assert.Equal(1, input.Calls); Assert.False(input.Disposed);
+            Assert.Equal(new byte[32], Bytes(b, 0, 32));
+            Assert.Equal(3, b.WriterIndex);
+            Assert.Equal(1, input.Calls);
+            Assert.False(input.Disposed);
         }
         finally { b.Release(); }
     }
@@ -123,14 +131,17 @@ public class ByteBufStreamTransferTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ThrowingOutputCanAcceptPrefixButReaderStaysUnchanged(int kind)
     {
-        ByteBuf b = Owner(kind).WriteBytes(new byte[] { 9, 8, 7, 6 }); b.ReaderIndex = 1;
+        ByteBuf b = Owner(kind).WriteBytes(new byte[] { 9, 8, 7, 6 });
+        b.ReaderIndex = 1;
         using var output = new ProbeStream { Fail = true };
         try
         {
             Assert.Throws<IOException>(() => b.ReadBytes(output, 3));
             Assert.Equal(new byte[] { 8 }, output.Accepted);
-            Assert.Equal(1, b.ReaderIndex); Assert.Equal(4, b.WriterIndex);
-            Assert.Equal(1, output.Calls); Assert.False(output.Disposed);
+            Assert.Equal(1, b.ReaderIndex);
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(1, output.Calls);
+            Assert.False(output.Disposed);
         }
         finally { b.Release(); }
     }
@@ -139,11 +150,14 @@ public class ByteBufStreamTransferTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void EmptyAndInvalidRequestsDoNotCallStream(int kind)
     {
-        ByteBuf b = Owner(kind); using var stream = new ProbeStream();
+        ByteBuf b = Owner(kind);
+        using var stream = new ProbeStream();
         try
         {
-            Assert.Same(b, b.GetBytes(32, stream, 0)); Assert.Equal(0, b.SetBytes(32, stream, 0));
-            Assert.Same(b, b.ReadBytes(stream, 0)); Assert.Equal(0, b.WriteBytes(stream, 0));
+            Assert.Same(b, b.GetBytes(32, stream, 0));
+            Assert.Equal(0, b.SetBytes(32, stream, 0));
+            Assert.Same(b, b.ReadBytes(stream, 0));
+            Assert.Equal(0, b.WriteBytes(stream, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => b.GetBytes(33, stream, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => b.SetBytes(1, stream, int.MaxValue));
             Assert.Throws<ArgumentOutOfRangeException>(() => b.ReadBytes(stream, 1));
@@ -177,11 +191,13 @@ public class ByteBufStreamTransferTest
     [InlineData(-1)] [InlineData(33)]
     public void InvalidStreamReadCountsAreRejectedBeforePublishing(int count)
     {
-        ByteBuf b = Owner(1); using var input = new ProbeStream { ReadCount = count };
+        ByteBuf b = Owner(1);
+        using var input = new ProbeStream { ReadCount = count };
         try
         {
             Assert.Throws<IOException>(() => b.WriteBytes(input, 32));
-            Assert.Equal(0, b.WriterIndex); Assert.Equal(new byte[32], Bytes(b, 0, 32));
+            Assert.Equal(0, b.WriterIndex);
+            Assert.Equal(new byte[32], Bytes(b, 0, 32));
         }
         finally { b.Release(); }
     }
@@ -191,11 +207,14 @@ public class ByteBufStreamTransferTest
     public void OriginalReleasedOperationsAndReadonlyWritesRejectEvenEmptyRequests(int kind)
     {
         ByteBuf b = Owner(kind).WriteBytes(new byte[] { 1, 2 });
-        ByteBuf ro = b.AsReadOnly(); using var stream = new ProbeStream();
+        ByteBuf ro = b.AsReadOnly();
+        using var stream = new ProbeStream();
         Assert.Throws<NotSupportedException>(() => ro.SetBytes(0, stream, 0));
         Assert.Throws<NotSupportedException>(() => ro.WriteBytes(stream, 0));
-        ro.ReadBytes(stream, 2); Assert.Equal(new byte[] { 1, 2 }, stream.Accepted);
-        Assert.Equal(0, b.ReaderIndex); b.Release();
+        ro.ReadBytes(stream, 2);
+        Assert.Equal(new byte[] { 1, 2 }, stream.Accepted);
+        Assert.Equal(0, b.ReaderIndex);
+        b.Release();
         Assert.Throws<IllegalReferenceCountException>(() => b.GetBytes(0, stream, 0));
         Assert.Throws<IllegalReferenceCountException>(() => b.SetBytes(0, stream, 0));
         Assert.Throws<IllegalReferenceCountException>(() => b.ReadBytes(stream, 0));
@@ -205,27 +224,35 @@ public class ByteBufStreamTransferTest
     [Fact]
     public void EmptySingletonValidatesRangesAndBorrowsStreams()
     {
-        using var stream = new ProbeStream(); ByteBuf b = Unpooled.EmptyBuffer;
-        Assert.Equal(0, b.WriteBytes(stream, 0)); Assert.Equal(0, b.SetBytes(0, stream, 0));
-        b.ReadBytes(stream, 0); b.GetBytes(0, stream, 0);
+        using var stream = new ProbeStream();
+        ByteBuf b = Unpooled.EmptyBuffer;
+        Assert.Equal(0, b.WriteBytes(stream, 0));
+        Assert.Equal(0, b.SetBytes(0, stream, 0));
+        b.ReadBytes(stream, 0);
+        b.GetBytes(0, stream, 0);
         Assert.Throws<ArgumentOutOfRangeException>(() => b.SetBytes(1, stream, 0));
-        Assert.Equal(0, stream.Calls); Assert.False(stream.Disposed);
+        Assert.Equal(0, stream.Calls);
+        Assert.False(stream.Disposed);
     }
 
     [Fact]
     public void ViewsRespectOffsetsAndUnreleasableWriterSharesIndices()
     {
-        ByteBuf b = Owner(0); ByteBuf slice = b.Slice(4, 10).Clear();
+        ByteBuf b = Owner(0);
+        ByteBuf slice = b.Slice(4, 10).Clear();
         using var input = new MemoryStream(new byte[] { 7, 8 });
         using var output = new MemoryStream();
         try
         {
-            Assert.Equal(2, slice.WriteBytes(input, 2)); Assert.Equal(0, b.WriterIndex);
-            slice.ReadBytes(output, 2); Assert.Equal(new byte[] { 7, 8 }, output.ToArray());
+            Assert.Equal(2, slice.WriteBytes(input, 2));
+            Assert.Equal(0, b.WriterIndex);
+            slice.ReadBytes(output, 2);
+            Assert.Equal(new byte[] { 7, 8 }, output.ToArray());
             Assert.Equal(new byte[] { 7, 8 }, Bytes(b, 4, 2));
             ByteBuf wrapper = Unpooled.UnreleasableBuffer(b);
             using var more = new MemoryStream(new byte[] { 9 });
-            Assert.Equal(1, wrapper.WriteBytes(more, 1)); Assert.Equal(1, b.WriterIndex);
+            Assert.Equal(1, wrapper.WriteBytes(more, 1));
+            Assert.Equal(1, b.WriterIndex);
         }
         finally { b.Release(); }
     }
@@ -272,10 +299,12 @@ public class ByteBufStreamTransferTest
         ByteBuf b = Unpooled.WrappedUnmodifiableBuffer(
             Unpooled.WrappedBuffer(new byte[] { 1, 2 }),
             Unpooled.DirectBuffer(2, 2).WriteBytes(new byte[] { 3, 4 }));
-        using var output = new MemoryStream(); using var input = new ProbeStream();
+        using var output = new MemoryStream();
+        using var input = new ProbeStream();
         try
         {
-            b.ReaderIndex = 1; b.GetBytes(0, output, 4);
+            b.ReaderIndex = 1;
+            b.GetBytes(0, output, 4);
             b.ReadBytes(output, 3);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 2, 3, 4 }, output.ToArray());
             Assert.Equal(4, b.ReaderIndex);
@@ -359,25 +388,41 @@ public class ByteBufStreamTransferTest
             if (Fail) throw new IOException("Input failure after touching staging.");
             return ReadCount;
         }
+
         public override void Write(ReadOnlySpan<byte> source)
         {
-            Calls++; Callback?.Invoke(); Accepted = (Fail ? source[..1] : source).ToArray();
-            if (Fail) throw new IOException("Output failure after accepting a prefix.");
+            Calls++;
+            Callback?.Invoke();
+            Accepted = (Fail ? source[..1] : source).ToArray();
+            if (Fail)
+                throw new IOException("Output failure after accepting a prefix.");
         }
+
         public override int Read(byte[] b, int offset, int count)
         {
             return Read(b.AsSpan(offset, count));
         }
+
         public override void Write(byte[] b, int offset, int count)
         {
             Write(b.AsSpan(offset, count));
         }
-        protected override void Dispose(bool disposing) { Disposed = true; base.Dispose(disposing); }
-        public override void Flush() { }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
+
+        public override void Flush()
+        {
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
         }
+
         public override void SetLength(long value)
         {
             throw new NotSupportedException();

@@ -115,6 +115,7 @@ public class ChannelPromiseTaskContractTest
             Channel = new TaskTestChannel(_ => Write.Task);
             Loop.RegisterAsync(Channel, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
         }
+
         internal void PumpUntil(Func<bool> condition)
         {
             var deadline = DateTime.UtcNow.AddSeconds(5);
@@ -125,6 +126,7 @@ public class ChannelPromiseTaskContractTest
                 Thread.Yield();
             }
         }
+
         public void Dispose()
         {
             Write.TrySetResult();
@@ -141,10 +143,12 @@ internal sealed class TaskTestChannel(Func<object, Task> write) : AbstractChanne
     {
         return null;
     }
+
     protected override EndPoint RemoteAddress0()
     {
         return null;
     }
+
     protected override void DoRegister()
     {
         SetActive(true);
@@ -154,14 +158,22 @@ internal sealed class TaskTestChannel(Func<object, Task> write) : AbstractChanne
     {
         return write(msg);
     }
+
     protected override Task DoBindAsync(EndPoint localAddress, CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
+
     protected override Task DoConnectAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
-    protected override void DoClose() { }
-    protected override void DoBeginRead() { }
+
+    protected override void DoClose()
+    {
+    }
+
+    protected override void DoBeginRead()
+    {
+    }
 }

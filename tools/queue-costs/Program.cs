@@ -140,12 +140,14 @@ void Measure(string candidate, string phase, int count, int operations, Func<IQu
     }
     Record(candidate, phase, count, values);
 }
+
 void Record(string candidate, string phase, int count, List<(double Ns, double Bytes)> values)
 {
     double[] times = values.Select(v => v.Ns).Order().ToArray();
     double[] allocations = values.Select(v => v.Bytes).Order().ToArray();
     rows.Add(new Row(candidate, phase, count, times[samples / 2], times[0], times[^1], allocations[samples / 2]));
 }
+
 static IQueue Create(string candidate)
 {
     return candidate switch
@@ -168,14 +170,17 @@ sealed class Entry(int id, int offset) : IPriorityQueueNode<Entry>
     {
         return other is Entry;
     }
+
     public override int GetHashCode()
     {
         return 0;
     }
+
     public int PriorityQueueIndex(DefaultPriorityQueue<Entry> queue)
     {
         return index;
     }
+
     public void PriorityQueueIndex(DefaultPriorityQueue<Entry> queue, int value)
     {
         index = value;
@@ -185,7 +190,9 @@ interface IQueue
 {
     int Count { get; }
     void Add(Entry entry);
+
     bool Remove(Entry entry);
+
     Entry Pop();
 }
 sealed class Heap(bool rebuild) : IQueue
@@ -196,15 +203,18 @@ sealed class Heap(bool rebuild) : IQueue
     {
         queue.Enqueue(entry, entry.Priority);
     }
+
     public Entry Pop()
     {
         return queue.Dequeue();
     }
+
     public bool Remove(Entry entry)
     {
         return rebuild ? RemoveByRebuilding(entry) :
             queue.Remove(entry, out _, out _, ReferenceEqualityComparer.Instance);
     }
+
     private bool RemoveByRebuilding(Entry entry)
     {
         var items = queue.UnorderedItems.ToArray();
@@ -224,10 +234,12 @@ sealed class IndexedHeap : IQueue
     {
         queue.Offer(entry);
     }
+
     public Entry Pop()
     {
         return queue.Poll();
     }
+
     public bool Remove(Entry entry)
     {
         return queue.Remove(entry);
@@ -241,13 +253,20 @@ sealed class Tree : IQueue
     {
         queue.Add(entry);
     }
+
     public bool Remove(Entry entry)
     {
         // Priorities are unique but are not themselves identity. The adapter still
         // has to reject a distinct reference with the same deadline/sequence key.
         return queue.TryGetValue(entry, out Entry found) && ReferenceEquals(found, entry) && queue.Remove(entry);
     }
-    public Entry Pop() { Entry entry = queue.Min; queue.Remove(entry); return entry; }
+
+    public Entry Pop()
+    {
+        Entry entry = queue.Min;
+        queue.Remove(entry);
+        return entry;
+    }
 }
 sealed class PriorityComparer : IComparer<(long Deadline, long Sequence)>
 {

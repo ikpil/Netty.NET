@@ -19,35 +19,45 @@ public class ExecutorSubmissionContractTest
         {
             return running && thread == Thread.CurrentThread;
         }
+
         public override void Execute(Action task)
         {
             ArgumentNullException.ThrowIfNull(task);
             tasks.Add(task);
         }
+
         internal Action Take()
         {
             Assert.True(tasks.TryTake(out var task, TimeSpan.FromSeconds(5)));
             return task;
         }
+
         internal void Run(Action task)
         {
             running = true;
             try { task(); }
             finally { running = false; }
         }
-        public override void Shutdown() { }
+
+        public override void Shutdown()
+        {
+        }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;

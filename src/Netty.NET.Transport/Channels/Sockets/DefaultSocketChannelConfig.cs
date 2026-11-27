@@ -51,7 +51,10 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
     }
 
     protected override void AutoReadCleared()
-    { if (Channel is AbstractChannel channel) channel.ClearReadPending(); }
+    {
+        if (Channel is AbstractChannel channel)
+            channel.ClearReadPending();
+    }
 
     private static readonly ChannelOption[] StreamOptions = {
         ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.TCP_NODELAY,

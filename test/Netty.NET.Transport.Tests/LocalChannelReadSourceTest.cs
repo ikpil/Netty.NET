@@ -94,18 +94,21 @@ public partial class LocalChannelSourceTest
         await using var groups = new Groups();
         await CheckMaxMessagesPerRead(groups.Shared, groups.Shared, true, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup()
     {
         await using var groups = new Groups();
         await CheckMaxMessagesPerRead(groups.Shared, groups.Shared, false, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestMaxMessagesPerReadRespectedWithAutoReadDifferentGroup()
     {
         await using var groups = new Groups();
         await CheckMaxMessagesPerRead(groups.First, groups.Second, true, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup()
     {
@@ -138,18 +141,21 @@ public partial class LocalChannelSourceTest
         await using var groups = new Groups();
         await CheckServerMaxMessagesPerRead(groups.Shared, groups.Shared, true, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestServerMaxMessagesPerReadRespectedWithoutAutoReadSharedGroup()
     {
         await using var groups = new Groups();
         await CheckServerMaxMessagesPerRead(groups.Shared, groups.Shared, false, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestServerMaxMessagesPerReadRespectedWithAutoReadDifferentGroup()
     {
         await using var groups = new Groups();
         await CheckServerMaxMessagesPerRead(groups.First, groups.Second, true, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 5000)]
     public async Task TestServerMaxMessagesPerReadRespectedWithoutAutoReadDifferentGroup()
     {
@@ -258,6 +264,7 @@ public partial class LocalChannelSourceTest
         {
             _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer().WriteZero(100));
         }
+
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer)
         {
             // Just drop the buffer
@@ -301,6 +308,7 @@ public partial class LocalChannelSourceTest
         {
             WriteAndFlushReadOnSuccess(ctx, "test");
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             WriteAndFlushReadOnSuccess(ctx, msg);
@@ -322,8 +330,12 @@ public partial class LocalChannelSourceTest
         {
             ctx.Read();
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { if (counter.Signal()) WriteAndFlushReadOnSuccess(ctx, msg); }
+        {
+            if (counter.Signal())
+                WriteAndFlushReadOnSuccess(ctx, msg);
+        }
     }
     private sealed class WriteTenMessages : ChannelInboundHandlerAdapter
     {
@@ -344,12 +356,14 @@ public partial class LocalChannelSourceTest
                 ctx.Read();
             ctx.FireChannelActive();
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Assert.Equal(0, _read);
             _read++;
             ctx.FireChannelRead(msg);
         }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             Assert.Equal(1, _read);
@@ -370,6 +384,7 @@ public partial class LocalChannelSourceTest
                 _read = 0;
             ctx.FireChannelReadComplete();
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             // CLR: surface original callback assertion failures to the awaiting test as well as the pipeline.
@@ -381,15 +396,27 @@ public partial class LocalChannelSourceTest
     private sealed class QueuedLocalServer(Action queued) : LocalServerChannel
     {
         protected override LocalChannel NewLocalChannel(LocalChannel peer)
-        { var child = base.NewLocalChannel(peer); queued(); return child; }
+        {
+            var child = base.NewLocalChannel(peer);
+            queued();
+            return child;
+        }
     }
     private sealed class ReadCompleteCounts(System.Threading.Channels.ChannelWriter<int> counts) : ChannelInboundHandlerAdapter
     {
         private int _messagesRead;
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { _messagesRead++; ctx.FireChannelRead(msg); }
+        {
+            _messagesRead++;
+            ctx.FireChannelRead(msg);
+        }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
-        { counts.TryWrite(_messagesRead); _messagesRead = 0; ctx.FireChannelReadComplete(); }
+        {
+            counts.TryWrite(_messagesRead);
+            _messagesRead = 0;
+            ctx.FireChannelReadComplete();
+        }
     }
     private sealed class ReadCompleteRecvAllocator(TaskCompletionSource completed) : DefaultMaxMessagesRecvByteBufAllocator
     {
@@ -403,7 +430,12 @@ public partial class LocalChannelSourceTest
             {
                 return 128;
             }
-            public override void ReadComplete() { base.ReadComplete(); completed.TrySetResult(); }
+
+            public override void ReadComplete()
+            {
+                base.ReadComplete();
+                completed.TrySetResult();
+            }
         }
     }
 }

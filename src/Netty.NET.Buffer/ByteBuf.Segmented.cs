@@ -56,38 +56,58 @@ public abstract partial class ByteBuf
     // CLR: contiguous borrows never copy. Segmented operations use bounded
     // component transfers; words crossing a boundary use at most eight stack bytes.
     protected virtual bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
-    { memory = GetMemoryCore(index, length); return true; }
+    {
+        memory = GetMemoryCore(index, length);
+        return true;
+    }
+
     protected virtual bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
-    { memory = GetReadOnlyMemoryCore(index, length); return true; }
+    {
+        memory = GetReadOnlyMemoryCore(index, length);
+        return true;
+    }
+
     protected virtual void GetBytesCore(int index, Span<byte> destination)
     {
         GetReadOnlyMemoryCore(index, destination.Length).Span.CopyTo(destination);
     }
+
     protected virtual void SetBytesCore(int index, ReadOnlySpan<byte> source)
     {
         source.CopyTo(GetMemoryCore(index, source.Length).Span);
     }
+
     // CLR: publish staged input through the source's I/O kernel. Composite input
     // skips empty components, while ordinary bulk setters preserve their dispatch.
     protected internal virtual void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
     {
         SetBytes(index, source);
     }
+
     // fast-path for small writes to avoid thread-state change JDK's handling
     // CLR: Span.Clear replaces the heap helper's manual batch/64-byte threshold strategy.
     protected virtual void SetZeroCore(int index, int length)
     {
         GetMemoryCore(index, length).Span.Clear();
     }
+
     protected virtual ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
     {
         return new(GetReadOnlyMemoryCore(index, length));
     }
 
     internal bool TryGetMemory(int index, int length, out Memory<byte> memory)
-    { EnsureCanWrite(); CheckIndex(index, length); return TryGetMemoryCore(index, length, out memory); }
+    {
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        return TryGetMemoryCore(index, length, out memory);
+    }
+
     internal bool TryGetReadOnlyMemory(int index, int length, out ReadOnlyMemory<byte> memory)
-    { CheckIndex(index, length); return TryGetReadOnlyMemoryCore(index, length, out memory); }
+    {
+        CheckIndex(index, length);
+        return TryGetReadOnlyMemoryCore(index, length, out memory);
+    }
 
 /**
      * Exposes this buffer's bytes as an NIO {@link ByteBuffer}'s for the specified index and length
@@ -109,10 +129,17 @@ public abstract partial class ByteBuf
     /// <remarks>The segment layout is captured. Exclude resize, component changes and
     /// release while using this sequence; it does not acquire native pins.</remarks>
     public virtual ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
-    { CheckIndex(index, length); return GetReadOnlySequenceCore(index, length); }
+    {
+        CheckIndex(index, length);
+        return GetReadOnlySequenceCore(index, length);
+    }
     public ReadOnlySequence<byte> ReadableSequence => AsReadOnlySequence(ReaderIndex, ReadableBytes);
 
-    internal virtual BufferMemoryLease AcquireReadLease() { EnsureAccessible(); return default; }
+    internal virtual BufferMemoryLease AcquireReadLease()
+    {
+        EnsureAccessible();
+        return default;
+    }
 
     // Original helper descriptions retained for provenance. CLR heap/native/segmented
     // consumers share bounded spans and BinaryPrimitives; no JVM VarHandle loading gate
@@ -134,6 +161,7 @@ public abstract partial class ByteBuf
     {
         return AsReadOnlySpan(index, 1)[0];
     }
+
     internal virtual void WriteByteCore(int index, int value)
     {
         AsSpan(index, 1)[0] = unchecked((byte)value);

@@ -48,6 +48,7 @@ public class ByteBufViewFactorySourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -61,11 +62,13 @@ public class ByteBufViewFactorySourceTest
     {
         for (int provider = 0; provider < 5; ++provider) yield return [provider];
     }
+
     public static IEnumerable<object[]> RetainedProviders()
     {
         for (int provider = 0; provider < 5; ++provider)
         foreach (bool retained in new[] { false, true }) yield return [provider, retained];
     }
+
     public static IEnumerable<object[]> NestedBoundsCases()
     {
         for (int provider = 0; provider < 5; ++provider)
@@ -120,10 +123,12 @@ public class ByteBufViewFactorySourceTest
         using var s = new Storage(provider, 100);
         s.Root.WriteZero(50).MarkReaderIndex().MarkWriterIndex();
         Assert.Throws<ArgumentOutOfRangeException>(() => retained ? s.Root.ReadRetainedSlice(51) : s.Root.ReadSlice(51));
-        Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(50, s.Root.WriterIndex);
+        Assert.Equal(0, s.Root.ReaderIndex);
+        Assert.Equal(50, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);
         s.Root.SetIndex(1, 51).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(50, s.Root.WriterIndex);
+        Assert.Equal(0, s.Root.ReaderIndex);
+        Assert.Equal(50, s.Root.WriterIndex);
         Assert.Equal(new byte[50], ByteBufUtil.GetBytes(s.Root));
     }
 
@@ -137,6 +142,7 @@ public class ByteBufViewFactorySourceTest
         for (int provider = 0; provider < 5; ++provider)
         foreach (ReleasedFactory factory in Enum.GetValues<ReleasedFactory>()) yield return [provider, factory];
     }
+
     [Theory]
     [MemberData(nameof(ReleasedCases))]
     public void ViewFactoriesRejectReleasedOwners(int provider, ReleasedFactory factory)
@@ -144,7 +150,8 @@ public class ByteBufViewFactorySourceTest
         using var s = new Storage(provider, 8);
         // Clear the buffer so we are sure the reader and writer indices are 0.
         // This is important as we may return a slice from newBuffer(...).
-        s.Root.Clear(); Assert.True(s.Root.Release());
+        s.Root.Clear();
+        Assert.True(s.Root.Release());
         Assert.Throws<IllegalReferenceCountException>(() => factory switch
         {
             ReleasedFactory.Slice => s.Root.Slice(),
@@ -179,12 +186,15 @@ public class ByteBufViewFactorySourceTest
             ByteBuf slice = retained ? s.Root.RetainedSlice(range.Index, range.Length) : s.Root.Slice(range.Index, range.Length);
             try
             {
-                if (pass == 0) Assert.Equal(0, slice.ReaderIndex);
-                else Assert.Equal(range.Length, slice.WriterIndex);
+                if (pass == 0)
+                        Assert.Equal(0, slice.ReaderIndex);
+                else
+                        Assert.Equal(range.Length, slice.WriterIndex);
             }
             finally { if (retained) slice.Release(); }
         }
-        Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+        Assert.Equal(0, s.Root.ReaderIndex);
+        Assert.Equal(0, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);
     }
 

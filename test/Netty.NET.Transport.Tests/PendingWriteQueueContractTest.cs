@@ -37,6 +37,7 @@ public class PendingWriteQueueContractTest
         Assert.Null(channel.ReadOutbound());
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public async Task CancellationAfterTransferStillCancelsAnUnflushedTransportWrite()
     {
@@ -58,6 +59,7 @@ public class PendingWriteQueueContractTest
         Assert.Null(channel.ReadOutbound());
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public async Task CancellationAfterFlushDoesNotCancelAnInFlightTransportWrite()
     {
@@ -81,6 +83,7 @@ public class PendingWriteQueueContractTest
         Assert.Equal(0, message.RefCnt);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void RemoveReturnsProducerOwnershipAndWithdrawsQueueCancellation()
     {
@@ -99,6 +102,7 @@ public class PendingWriteQueueContractTest
         Assert.True(producer.Task.IsCompletedSuccessfully);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public async Task NativeSocketCompletionReturnsProducerCompletionToItsExecutor()
     {
@@ -141,7 +145,10 @@ public class PendingWriteQueueContractTest
     {
         internal readonly TaskCompletionSource AllowWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
         protected override async Task DoWrite(object msg)
-        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(msg).ConfigureAwait(false); }
+        {
+            await AllowWrite.Task.ConfigureAwait(false);
+            await base.DoWrite(msg).ConfigureAwait(false);
+        }
     }
     [Fact]
     public async Task OutputShutdownDetachesPendingAccountingAndMakesTheChannelUnwritable()

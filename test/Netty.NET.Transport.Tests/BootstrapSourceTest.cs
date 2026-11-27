@@ -46,6 +46,7 @@ public class BootstrapSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact]
     public void TestOptionsCopied()
     {
@@ -55,6 +56,7 @@ public class BootstrapSourceTest
         Assert.Same(ChannelOption.AUTO_READ, options[0].Key);
         Assert.Equal(true, options[0].Value);
     }
+
     [Fact]
     public void TestAttributesCopied()
     {
@@ -66,6 +68,7 @@ public class BootstrapSourceTest
         Assert.Same(key, attributes[0].Key);
         Assert.Equal(value, attributes[0].Value);
     }
+
     [Fact]
     public async Task OptionsAndAttributesMustBeAvailableOnChannelInit()
     {
@@ -83,16 +86,19 @@ public class BootstrapSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact(Timeout = 10000)]
     public Task TestBindDeadLock()
     {
         return CrossOwners(false, TestContext.Current.CancellationToken);
     }
+
     [Fact(Timeout = 10000)]
     public Task TestConnectDeadLock()
     {
         return CrossOwners(true, TestContext.Current.CancellationToken);
     }
+
     private static async Task CrossOwners(bool connect, CancellationToken timeout)
     {
         var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
@@ -121,6 +127,7 @@ public class BootstrapSourceTest
             { try { await operation; } catch { } }
         }
     }
+
     [Fact]
     public async Task TestChannelOptionOrderPreserve()
     {
@@ -139,6 +146,7 @@ public class BootstrapSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact]
     public void MustCallInitializerExtensions()
     {
@@ -165,6 +173,12 @@ public class BootstrapSourceTest
             return new OrderConfig(this, options);
         }
         private sealed class OrderConfig(IChannel channel, ConcurrentQueue<ChannelOption> options) : DefaultChannelConfig(channel)
-        { protected override bool SetValue(ChannelOption option, object value) { options.Enqueue(option); return base.SetValue(option, value); } }
+        {
+            protected override bool SetValue(ChannelOption option, object value)
+            {
+                options.Enqueue(option);
+                return base.SetValue(option, value);
+            }
+        }
     }
 }

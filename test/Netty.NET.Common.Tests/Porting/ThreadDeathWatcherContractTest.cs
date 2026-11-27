@@ -19,8 +19,18 @@ public class ThreadDeathWatcherContractTest : IDisposable
             Thread = new Thread(() => stop.Wait()) { IsBackground = true };
             Thread.Start();
         }
-        internal void End() { stop.Set(); Assert.True(Thread.Join(TimeSpan.FromSeconds(5))); }
-        public void Dispose() { End(); stop.Dispose(); }
+
+        internal void End()
+        {
+            stop.Set();
+            Assert.True(Thread.Join(TimeSpan.FromSeconds(5)));
+        }
+
+        public void Dispose()
+        {
+            End();
+            stop.Dispose();
+        }
     }
     public void Dispose()
     {
@@ -38,7 +48,8 @@ public class ThreadDeathWatcherContractTest : IDisposable
         Assert.Throws<ArgumentNullException>(() => ThreadDeathWatcher.Unwatch(thread, null));
         Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.Watch(thread, task));
         ThreadDeathWatcher.Unwatch(thread, task);
-        thread.Start(); Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.Watch(thread, task));
         Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromMilliseconds(-2)));
     }
@@ -172,11 +183,19 @@ public class ThreadDeathWatcherContractTest : IDisposable
         var waiter = new Thread(() =>
         {
             entered.Set();
-            try { ThreadDeathWatcher.AwaitInactivity(TimeSpan.MaxValue); }
+            try
+            {
+                ThreadDeathWatcher.AwaitInactivity(TimeSpan.MaxValue);
+            }
             catch (Exception caught) { failure = caught; }
-        }) { IsBackground = true };
-        waiter.Start(); Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-        waiter.Interrupt(); Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+        })
+        {
+            IsBackground = true
+        };
+        waiter.Start();
+        Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+        waiter.Interrupt();
+        Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         Assert.IsType<ThreadInterruptedException>(failure);
         second.End();
         Assert.True(secondDone.Wait(TimeSpan.FromSeconds(5)));

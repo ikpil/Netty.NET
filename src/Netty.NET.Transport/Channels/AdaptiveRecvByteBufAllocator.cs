@@ -50,7 +50,10 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
      * go down below {@code 64}, and does not go up above {@code 65536}.
      */
     // CLR: the original comment says 1024, but the pinned DEFAULT_INITIAL is 2048.
-    public AdaptiveRecvByteBufAllocator() : this(DEFAULT_MINIMUM, DEFAULT_INITIAL, DEFAULT_MAXIMUM) { }
+    public AdaptiveRecvByteBufAllocator() : this(DEFAULT_MINIMUM, DEFAULT_INITIAL, DEFAULT_MAXIMUM)
+    {
+    }
+
     /**
      * Creates a new predictor with the specified parameters.
      *
@@ -73,10 +76,12 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
         _initial = initial;
         _maximum = maximum;
     }
+
     public override IRecvByteBufAllocator.IHandle NewHandle()
     {
         return new HandleImpl(this, _minimum, _initial, _maximum);
     }
+
     public override AdaptiveRecvByteBufAllocator RespectMaybeMoreData(bool respectMaybeMoreData)
     {
         base.RespectMaybeMoreData(respectMaybeMoreData);
@@ -89,6 +94,7 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
         {
             _calculator = new AdaptiveCalculator(minimum, initial, maximum);
         }
+
         public override void LastBytesRead(int bytes)
         {
             // If we read as much as we asked for we should check if we need to ramp up the size of our next guess.
@@ -99,10 +105,12 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
                 _calculator.Record(bytes);
             base.LastBytesRead(bytes);
         }
+
         public override int Guess()
         {
             return _calculator.NextSize;
         }
+
         public override void ReadComplete()
         {
             _calculator.Record(TotalBytesRead());

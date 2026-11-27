@@ -24,7 +24,9 @@ internal sealed class UnresponsiveHandler : SimpleChannelInboundHandler<object>
 {
     internal static readonly UnresponsiveHandler INSTANCE = new UnresponsiveHandler();
 
-    private UnresponsiveHandler() { }
+    private UnresponsiveHandler()
+    {
+    }
 
     protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
     {

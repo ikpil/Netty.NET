@@ -96,6 +96,7 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
     {
         return matcher.IsInstanceOfType(msg);
     }
+
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         bool release = true;
@@ -108,6 +109,7 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
         }
         finally { if (_autoRelease && release) ReferenceCountUtil.Release(msg); }
     }
+
     /**
      * Is called for each message of type {@link I}.
      *

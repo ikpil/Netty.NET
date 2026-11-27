@@ -69,6 +69,7 @@ public class NioSocketChannelTest
             _ = WriteAfterCompletionAsync(f, ctx);
             ctx.Flush();
         }
+
         private static async Task WriteAfterCompletionAsync(Task future, IChannelHandlerContext ctx)
         {
             await future.ConfigureAwait(false);
@@ -124,6 +125,7 @@ public class NioSocketChannelTest
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
+
     // Test for https://github.com/netty/netty/issues/4805
     [Fact(Timeout = 30000)]
     public async Task TestChannelReRegisterReadSameEventLoop()
@@ -180,6 +182,7 @@ public class NioSocketChannelTest
             if (!latch.IsSet)
                 latch.Signal();
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             var loop = group.Next();
@@ -188,6 +191,7 @@ public class NioSocketChannelTest
             else
                 loop.Execute(() => _ = Deregister(ctx, loop));
         }
+
         private async Task Deregister(IChannelHandlerContext ctx, IEventLoop loop)
         {
             // As soon as the channel becomes active re-register it to another
@@ -258,6 +262,7 @@ public class NioSocketChannelTest
             futures.Enqueue(ctx.WriteAsync(ctx.Alloc().Buffer().WriteZero(1048576)));
             ctx.Flush();
         }
+
         private async Task CloseAsync(IChannelHandlerContext ctx)
         {
             try

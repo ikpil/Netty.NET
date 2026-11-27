@@ -1121,7 +1121,9 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
     }
 
     protected abstract bool IsDecodingRequest();
+
     protected abstract IHttpMessage CreateMessage(string[] initialLine);
+
     protected abstract IHttpMessage CreateInvalidMessage();
 
     private static int GetChunkSize(byte[] hex, int start, int length)

@@ -63,7 +63,11 @@ public class PipelineHandlerAdmissionContractTest
     {
         internal int Errors;
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { ctx.Pipeline.Remove(this); throw failure; }
+        {
+            ctx.Pipeline.Remove(this);
+            throw failure;
+        }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             Errors++;
@@ -83,8 +87,12 @@ public class PipelineHandlerAdmissionContractTest
         {
             handlerAdded.TrySetResult();
         }
+
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
-        { Interlocked.Increment(ref Events); received.TrySetResult(); }
+        {
+            Interlocked.Increment(ref Events);
+            received.TrySetResult();
+        }
     }
     private sealed class HeldAdditionExecutor : AbstractEventExecutor
     {
@@ -95,18 +103,32 @@ public class PipelineHandlerAdmissionContractTest
         {
             return _pool.InEventLoop(thread);
         }
+
         public override void Execute(Action task)
-        { if (Interlocked.Increment(ref _submissions) == 1) _addition = task; else _pool.Execute(task); }
+        {
+            if (Interlocked.Increment(ref _submissions) == 1)
+                _addition = task;
+            else
+                _pool.Execute(task);
+        }
+
         internal void ReleaseAddition()
-        { var task = Interlocked.Exchange(ref _addition, null); if (task != null) _pool.Execute(task); }
+        {
+            var task = Interlocked.Exchange(ref _addition, null);
+            if (task != null)
+                _pool.Execute(task);
+        }
+
         public override bool IsShuttingDown()
         {
             return _pool.IsShuttingDown();
         }
+
         public override bool IsShutdown()
         {
             return _pool.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return _pool.IsTerminated();
@@ -116,10 +138,12 @@ public class PipelineHandlerAdmissionContractTest
         {
             return _pool.AwaitTermination(timeout);
         }
+
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             return _pool.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
+
         [Obsolete]
         public override void Shutdown()
         {

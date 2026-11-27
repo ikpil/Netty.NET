@@ -95,6 +95,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
     {
         return Contains(node);
     }
+
     public bool RemoveTyped(T node)
     {
         return Remove(node);

@@ -34,6 +34,7 @@ public class ByteBufSafetySourceTest
         for (int form = 0; form < 4; ++form)
         for (int operation = 0; operation < 16; ++operation) yield return [provider, form, operation];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void GuardProbe(int provider, int form, int operation)
@@ -65,6 +66,7 @@ public class ByteBufSafetySourceTest
         Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex));
         if (root.RefCnt > 0) { b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex)); }
     }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public async Task ClrValidationRemainsEnabledRegardlessOfJvmOptOutFlags(bool enabled)
@@ -74,24 +76,34 @@ public class ByteBufSafetySourceTest
         string report = Path.Combine(Path.GetTempPath(), "netty-buffer-safety-" + Guid.NewGuid().ToString("N") + ".xml");
         var start = new ProcessStartInfo("dotnet")
         {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
             WorkingDirectory = Path.GetDirectoryName(typeof(ByteBufSafetySourceTest).Assembly.Location)!
         };
         foreach (string arg in new[] { typeof(ByteBufSafetySourceTest).Assembly.Location, "-method",
-                     typeof(ByteBufSafetySourceTest).FullName + ".GuardProbe", "-noLogo", "-noAutoReporters", "-result-xml", report }) start.ArgumentList.Add(arg);
-        foreach (string property in properties) start.Environment[property] = enabled ? "true" : "false";
+                     typeof(ByteBufSafetySourceTest).FullName + ".GuardProbe", "-noLogo", "-noAutoReporters", "-result-xml", report })
+            start.ArgumentList.Add(arg);
+        foreach (string property in properties)
+            start.Environment[property] = enabled ? "true" : "false";
         using var process = new Process { StartInfo = start };
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(30)); bool started = false;
+        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+        bool started = false;
         try
         {
-            started = process.Start(); Assert.True(started);
+            started = process.Start();
+            Assert.True(started);
             Task<string> output = process.StandardOutput.ReadToEndAsync(timeout.Token), error = process.StandardError.ReadToEndAsync(timeout.Token);
             await process.WaitForExitAsync(timeout.Token);
-            string log = await output + await error; Assert.True(process.ExitCode == 0, log);
+            string log = await output + await error;
+            Assert.True(process.ExitCode == 0, log);
             XElement assembly = XDocument.Load(report).Descendants("assembly").Single();
-            Assert.Equal("384", assembly.Attribute("total")?.Value); Assert.Equal("384", assembly.Attribute("passed")?.Value);
-            Assert.Equal("0", assembly.Attribute("failed")?.Value); Assert.Equal("0", assembly.Attribute("skipped")?.Value);
+            Assert.Equal("384", assembly.Attribute("total")?.Value);
+            Assert.Equal("384", assembly.Attribute("passed")?.Value);
+            Assert.Equal("0", assembly.Attribute("failed")?.Value);
+            Assert.Equal("0", assembly.Attribute("skipped")?.Value);
             Assert.Equal(before, properties.Select(Environment.GetEnvironmentVariable).ToArray());
         }
         finally { if (started && !process.HasExited) process.Kill(entireProcessTree: true); File.Delete(report); }

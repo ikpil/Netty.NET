@@ -49,19 +49,28 @@ public class ByteBufAllocatedUtilTest
     [InlineData(5, 0)] [InlineData(5, 1)] [InlineData(5, 2)]
     public void ReadFactoryConsumesExactlyRequestedBytesAndPreservesMarks(int sourceKind, int destinationKind)
     {
-        var (source, owner) = Source(sourceKind); var a = new ProbeAllocator(destinationKind);
+        var (source, owner) = Source(sourceKind);
+        var a = new ProbeAllocator(destinationKind);
         byte[] expected = ByteBufUtil.GetBytes(source, 2, 5);
         try
         {
             ByteBuf result = ByteBufUtil.ReadBytes(a, source, 5);
             try
             {
-                Assert.Same(a, result.Alloc()); Assert.Equal(5, a.RequestedCapacity);
-                Assert.Equal(expected, ByteBufUtil.GetBytes(result)); Assert.Equal(5, result.Capacity);
-                Assert.Equal(7, source.ReaderIndex); Assert.Equal(9, source.WriterIndex);
-                Assert.Equal(0, result.ReaderIndex); Assert.Equal(5, result.WriterIndex); Assert.Equal(1, result.RefCnt);
-                result.SetByte(0, 99); Assert.Equal(expected[0], source.GetByte(2));
-                source.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(2, source.ReaderIndex); Assert.Equal(9, source.WriterIndex);
+                Assert.Same(a, result.Alloc());
+                Assert.Equal(5, a.RequestedCapacity);
+                Assert.Equal(expected, ByteBufUtil.GetBytes(result));
+                Assert.Equal(5, result.Capacity);
+                Assert.Equal(7, source.ReaderIndex);
+                Assert.Equal(9, source.WriterIndex);
+                Assert.Equal(0, result.ReaderIndex);
+                Assert.Equal(5, result.WriterIndex);
+                Assert.Equal(1, result.RefCnt);
+                result.SetByte(0, 99);
+                Assert.Equal(expected[0], source.GetByte(2));
+                source.ResetReaderIndex().ResetWriterIndex();
+                Assert.Equal(2, source.ReaderIndex);
+                Assert.Equal(9, source.WriterIndex);
                 Assert.Equal(1, owner.RefCnt);
             }
             finally { result.Release(); }
@@ -74,17 +83,27 @@ public class ByteBufAllocatedUtilTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ReadFactoryReleasesAfterBoundsAndLifetimeFailuresEvenForEmptyReads(int kind)
     {
-        var a = new ProbeAllocator(kind); ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
+        var a = new ProbeAllocator(kind);
+        ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadBytes(a, source, 4));
-            Assert.Equal(0, a.Last.RefCnt); Assert.Equal(0, a.Native.ReservedBytes); Assert.Equal(0, source.ReaderIndex);
+            Assert.Equal(0, a.Last.RefCnt);
+            Assert.Equal(0, a.Native.ReservedBytes);
+            Assert.Equal(0, source.ReaderIndex);
             ByteBuf empty = ByteBufUtil.ReadBytes(a, source, 0);
-            try { Assert.Equal(0, empty.Capacity); Assert.Equal(int.MaxValue, empty.MaxCapacity); Assert.Equal(1, empty.RefCnt); Assert.Same(a, empty.Alloc()); }
+            try
+            {
+                Assert.Equal(0, empty.Capacity);
+                Assert.Equal(int.MaxValue, empty.MaxCapacity);
+                Assert.Equal(1, empty.RefCnt);
+                Assert.Same(a, empty.Alloc());
+            }
             finally { empty.Release(); }
             source.Release();
             Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReadBytes(a, source, 0));
-            Assert.Equal(0, a.Last.RefCnt); Assert.Equal(0, a.Native.ReservedBytes);
+            Assert.Equal(0, a.Last.RefCnt);
+            Assert.Equal(0, a.Native.ReservedBytes);
         }
         finally { if (source.RefCnt > 0) source.Release(); }
     }
@@ -92,12 +111,15 @@ public class ByteBufAllocatedUtilTest
     [Fact]
     public void ReadFailureReleasesReadOnlyDestinationWithoutAdvancingSource()
     {
-        var a = new ProbeAllocator(1) { ReadOnly = true }; ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
+        var a = new ProbeAllocator(1) { ReadOnly = true };
+        ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
         try
         {
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.ReadBytes(a, source, 3));
-            Assert.Equal(0, source.ReaderIndex); Assert.Equal(3, source.WriterIndex);
-            Assert.Equal(0, a.Last.RefCnt); Assert.Equal(0, a.Native.ReservedBytes);
+            Assert.Equal(0, source.ReaderIndex);
+            Assert.Equal(3, source.WriterIndex);
+            Assert.Equal(0, a.Last.RefCnt);
+            Assert.Equal(0, a.Native.ReservedBytes);
         }
         finally { source.Release(); }
     }
@@ -105,11 +127,18 @@ public class ByteBufAllocatedUtilTest
     [Fact]
     public void ExtraAllocatorCapacityDoesNotCauseOverread()
     {
-        var a = new ProbeAllocator(0) { ExtraCapacity = 4 }; ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
+        var a = new ProbeAllocator(0) { ExtraCapacity = 4 };
+        ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
         try
         {
             ByteBuf result = ByteBufUtil.ReadBytes(a, source, 3);
-            try { Assert.Equal(7, result.Capacity); Assert.Equal(3, result.WriterIndex); Assert.Equal(3, source.ReaderIndex); Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(result)); }
+            try
+            {
+                Assert.Equal(7, result.Capacity);
+                Assert.Equal(3, result.WriterIndex);
+                Assert.Equal(3, source.ReaderIndex);
+                Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(result));
+            }
             finally { result.Release(); }
         }
         finally { source.Release(); }
@@ -155,7 +184,8 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(kind) { ReadOnly = true };
         Assert.Throws<NotSupportedException>(() => Invoke(operation, a));
-        Assert.Equal(0, a.Last.RefCnt); Assert.Equal(0, a.Native.ReservedBytes);
+        Assert.Equal(0, a.Last.RefCnt);
+        Assert.Equal(0, a.Native.ReservedBytes);
         Assert.Equal(0, a.Last.WriterIndex);
     }
 
@@ -174,7 +204,9 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(1, 2);
         Assert.Throws<OutOfDirectMemoryError>(() => ByteBufUtil.WriteUtf8(a, new AsciiString("A")));
-        Assert.Equal(1, a.RequestedCapacity); Assert.Equal(0, a.Last.RefCnt); Assert.Equal(0, a.Native.ReservedBytes);
+        Assert.Equal(1, a.RequestedCapacity);
+        Assert.Equal(0, a.Last.RefCnt);
+        Assert.Equal(0, a.Native.ReservedBytes);
     }
 
     [Theory]
@@ -205,17 +237,24 @@ public class ByteBufAllocatedUtilTest
     {
         // Pinned codec-base StringEncoder uses encodeString; LineEncoder reserves the
         // encoded separator length with extraCapacity and appends it after the text.
-        var a = new ProbeAllocator(kind); string text = "!a\u00e9\ud83d\ude00!";
+        var a = new ProbeAllocator(kind);
+        string text = "!a\u00e9\ud83d\ude00!";
         ByteBuf b = ByteBufUtil.EncodeString(a, text.AsSpan(1, text.Length - 2), new UTF8Encoding(true), 2);
         try
         {
-            Assert.Equal(9, b.Capacity); Assert.Equal(7, b.WriterIndex);
+            Assert.Equal(9, b.Capacity);
+            Assert.Equal(7, b.WriterIndex);
             b.WriteBytes(new byte[] { 13, 10 });
             Assert.Equal(new byte[] { 97, 195, 169, 240, 159, 152, 128, 13, 10 }, ByteBufUtil.GetBytes(b));
         }
         finally { b.Release(); }
         ByteBuf empty = ByteBufUtil.EncodeString(a, ReadOnlySpan<char>.Empty, Encoding.UTF8);
-        try { Assert.Equal(0, empty.Capacity); Assert.Equal(int.MaxValue, empty.MaxCapacity); Assert.Equal(1, empty.RefCnt); }
+        try
+        {
+            Assert.Equal(0, empty.Capacity);
+            Assert.Equal(int.MaxValue, empty.MaxCapacity);
+            Assert.Equal(1, empty.RefCnt);
+        }
         finally { empty.Release(); }
     }
 
@@ -225,13 +264,16 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(kind);
         Assert.Throws<InvalidOperationException>(() => ByteBufUtil.EncodeString(a, "A", new FailingEncoding(), 2));
-        Assert.Equal(0, a.Last.RefCnt); Assert.Equal(0, a.Last.WriterIndex); Assert.Equal(0, a.Native.ReservedBytes);
+        Assert.Equal(0, a.Last.RefCnt);
+        Assert.Equal(0, a.Last.WriterIndex);
+        Assert.Equal(0, a.Native.ReservedBytes);
     }
 
     [Fact]
     public void ArgumentSizingAndAllocationFailuresPublishNoOwnerOrSourceAdvance()
     {
-        var a = new ProbeAllocator(0); AsciiString raw = new("A");
+        var a = new ProbeAllocator(0);
+        AsciiString raw = new("A");
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.ReadBytes(null, null, 0));
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.ReadBytes(a, null, 0));
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1 });
@@ -247,12 +289,15 @@ public class ByteBufAllocatedUtilTest
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.EncodeString(a, "A", Encoding.UTF8, -1));
             Assert.Throws<OverflowException>(() => ByteBufUtil.EncodeString(a, "A", Encoding.UTF8, int.MaxValue));
             Assert.Throws<EncoderFallbackException>(() => ByteBufUtil.EncodeString(a, "\ud800", new UTF8Encoding(false, true)));
-            Assert.Equal(0, a.Calls); Assert.Null(a.Last);
+            Assert.Equal(0, a.Calls);
+            Assert.Null(a.Last);
             a.FailAllocation = true;
             Assert.Throws<InvalidOperationException>(() => ByteBufUtil.ReadBytes(a, source, 1));
             Assert.Throws<InvalidOperationException>(() => ByteBufUtil.WriteUtf8(a, raw));
             Assert.Throws<InvalidOperationException>(() => ByteBufUtil.EncodeString(a, "A", Encoding.UTF8));
-            Assert.Null(a.Last); Assert.Equal(0, source.ReaderIndex); Assert.Equal(1, source.RefCnt);
+            Assert.Null(a.Last);
+            Assert.Equal(0, source.ReaderIndex);
+            Assert.Equal(1, source.RefCnt);
         }
         finally { source.Release(); }
     }
@@ -260,7 +305,10 @@ public class ByteBufAllocatedUtilTest
     private sealed class FailingEncoding : UTF8Encoding
     {
         public override int GetBytes(ReadOnlySpan<char> chars, Span<byte> bytes)
-        { bytes[0] = 99; throw new InvalidOperationException("Deliberate encoding failure after a partial write."); }
+        {
+            bytes[0] = 99;
+            throw new InvalidOperationException("Deliberate encoding failure after a partial write.");
+        }
     }
 
     private sealed class ProbeAllocator : AbstractByteBufAllocator
@@ -275,30 +323,40 @@ public class ByteBufAllocatedUtilTest
         public bool ReadOnly { get; set; }
         public bool FailAllocation { get; set; }
         public ProbeAllocator(int kind, long maximumBytes = long.MaxValue) : base(kind == 1)
-        { _kind = kind; Native = new NativeMemoryAllocator(maximumBytes); }
+        {
+            _kind = kind;
+            Native = new NativeMemoryAllocator(maximumBytes);
+        }
         public override bool IsDirectBufferPooled => false;
         protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
         {
             return Allocate(initialCapacity, maxCapacity, false);
         }
+
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
         {
             return Allocate(initialCapacity, maxCapacity, true);
         }
+
         private ByteBuf Allocate(int initial, int max, bool direct)
         {
-            Calls++; RequestedCapacity = initial; RequestedCapacities.Add(initial);
-            if (FailAllocation) throw new InvalidOperationException("Deliberate allocation failure.");
+            Calls++;
+            RequestedCapacity = initial;
+            RequestedCapacities.Add(initial);
+            if (FailAllocation)
+                throw new InvalidOperationException("Deliberate allocation failure.");
             int capacity = checked(initial + ExtraCapacity);
             ByteBuf b;
             if (_kind == 2)
             {
                 var composite = new CompositeByteBuf(this, false);
-                if (capacity > 0) composite.AddComponent(Unpooled.WrappedBuffer(new byte[capacity / 2]), true)
+                if (capacity > 0)
+                    composite.AddComponent(Unpooled.WrappedBuffer(new byte[capacity / 2]), true)
                     .AddComponent(Unpooled.WrappedBuffer(new byte[capacity - capacity / 2]), true);
                 b = composite.SetIndex(0, 0);
             }
-            else b = direct ? new UnpooledDirectByteBuf(this, capacity, max, Native) : new UnpooledHeapByteBuf(this, capacity, max);
+            else
+                b = direct ? new UnpooledDirectByteBuf(this, capacity, max, Native) : new UnpooledHeapByteBuf(this, capacity, max);
             Last = ReadOnly ? b.AsReadOnly() : b;
             return Last;
         }

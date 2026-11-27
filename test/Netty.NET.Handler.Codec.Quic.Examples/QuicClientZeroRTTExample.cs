@@ -40,7 +40,9 @@ namespace Netty.NET.Handler.Codec.Quic.Example;
 public sealed class QuicClientZeroRTTExample
 {
 
-    private QuicClientZeroRTTExample() { }
+    private QuicClientZeroRTTExample()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

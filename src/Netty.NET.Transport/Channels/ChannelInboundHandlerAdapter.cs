@@ -44,6 +44,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireChannelRegistered();
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireChannelUnregistered()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
@@ -55,6 +56,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireChannelUnregistered();
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireChannelActive()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
@@ -66,6 +68,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireChannelActive();
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireChannelInactive()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
@@ -77,6 +80,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireChannelInactive();
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireChannelRead(Object)} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
@@ -88,6 +92,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireChannelRead(msg);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireChannelReadComplete()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
@@ -99,6 +104,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireChannelReadComplete();
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireUserEventTriggered(Object)} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
@@ -110,6 +116,7 @@ public class ChannelInboundHandlerAdapter : ChannelHandlerAdapter, IChannelInbou
     {
         ctx.FireUserEventTriggered(evt);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#fireChannelWritabilityChanged()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.

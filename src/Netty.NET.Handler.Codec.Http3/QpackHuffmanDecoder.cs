@@ -4669,7 +4669,10 @@ internal sealed class QpackHuffmanDecoder
 
     private readonly Func<byte, bool> processor;
 
-    internal QpackHuffmanDecoder() { processor = Process; }
+    internal QpackHuffmanDecoder()
+    {
+        processor = Process;
+    }
 
     /**
      * Decompresses the given Huffman coded string literal.

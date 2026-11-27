@@ -84,9 +84,13 @@ public class ByteToMessageCodecTest
         {
         }
 
-        protected override void Encode(IChannelHandlerContext ctx, int msg, ByteBuf @out) { }
+        protected override void Encode(IChannelHandlerContext ctx, int msg, ByteBuf @out)
+        {
+        }
 
-        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out) { }
+        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
+        {
+        }
     }
 
     [Sharable]
@@ -96,8 +100,12 @@ public class ByteToMessageCodecTest
         {
         }
 
-        protected override void Encode(IChannelHandlerContext ctx, int msg, ByteBuf @out) { }
+        protected override void Encode(IChannelHandlerContext ctx, int msg, ByteBuf @out)
+        {
+        }
 
-        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out) { }
+        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
+        {
+        }
     }
 }

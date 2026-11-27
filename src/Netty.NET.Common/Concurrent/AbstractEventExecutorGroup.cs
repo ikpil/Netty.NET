@@ -33,8 +33,11 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public abstract void Shutdown();
 
     public abstract bool IsShutdown();
+
     public abstract bool IsShuttingDown();
+
     public abstract bool IsTerminated();
+
     public abstract bool AwaitTermination(TimeSpan timeout);
     public abstract Task TerminationFuture { get; }
     public abstract IEnumerable<IEventExecutor> Iterator();
@@ -45,11 +48,13 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     }
 
     public abstract Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
+
     public virtual Task StopAsync()
     {
         Shutdown();
         return TerminationFuture;
     }
+
     public abstract IEventExecutor Next();
 
     public virtual Task ShutdownGracefullyAsync()

@@ -76,5 +76,7 @@ internal sealed class EncoderUtil
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
-    private EncoderUtil() { }
+    private EncoderUtil()
+    {
+    }
 }

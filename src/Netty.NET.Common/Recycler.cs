@@ -126,7 +126,9 @@ public abstract class Recycler<T> where T : class
      * (similar to what {@link EnhancedHandle#unguardedRecycle(Object)} does).<br>
      */
     protected Recycler(bool unguarded)
-        : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD, unguarded) { }
+        : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD, unguarded)
+    {
+    }
 
     /**
      * USE IT CAREFULLY!<br>
@@ -139,11 +141,18 @@ public abstract class Recycler<T> where T : class
      * <p>
      */
     protected Recycler(Thread owner, bool unguarded)
-        : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD, owner, unguarded) { }
+        : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD, owner, unguarded)
+    {
+    }
 
     protected Recycler(int maxCapacityPerThread)
-        : this(maxCapacityPerThread, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD) { }
-    protected Recycler() : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD) { }
+        : this(maxCapacityPerThread, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+    {
+    }
+
+    protected Recycler() : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD)
+    {
+    }
 
     /**
      * USE IT CAREFULLY!<br>
@@ -151,7 +160,9 @@ public abstract class Recycler<T> where T : class
      * {@link #Recycler(boolean)}, but it allows to tune the chunk size used for local pooling.
      */
     protected Recycler(int chunksSize, int maxCapacityPerThread, bool unguarded)
-        : this(maxCapacityPerThread, Recycler.RATIO, chunksSize, unguarded) { }
+        : this(maxCapacityPerThread, Recycler.RATIO, chunksSize, unguarded)
+    {
+    }
 
     /**
      * USE IT CAREFULLY!<br>
@@ -162,7 +173,9 @@ public abstract class Recycler<T> where T : class
      * @throws IllegalArgumentException if {@code owner} is {@code null}.
      */
     protected Recycler(int chunkSize, int maxCapacityPerThread, Thread owner, bool unguarded)
-        : this(maxCapacityPerThread, Recycler.RATIO, chunkSize, owner, unguarded) { }
+        : this(maxCapacityPerThread, Recycler.RATIO, chunkSize, owner, unguarded)
+    {
+    }
 
     /**
      * @deprecated Use one of the following instead:
@@ -171,7 +184,10 @@ public abstract class Recycler<T> where T : class
     [Obsolete]
     // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor)
-        : this(maxCapacityPerThread, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD) { }
+        : this(maxCapacityPerThread, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+    {
+    }
+
     /**
      * @deprecated Use one of the following instead:
      * {@link #Recycler()}, {@link #Recycler(int)}, {@link #Recycler(int, int, int)}.
@@ -179,7 +195,10 @@ public abstract class Recycler<T> where T : class
     [Obsolete]
     // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor, int ratio, int maxDelayedQueuesPerThread)
-        : this(maxCapacityPerThread, ratio, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD) { }
+        : this(maxCapacityPerThread, ratio, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+    {
+    }
+
     /**
      * @deprecated Use one of the following instead:
      * {@link #Recycler()}, {@link #Recycler(int)}, {@link #Recycler(int, int, int)}.
@@ -187,24 +206,34 @@ public abstract class Recycler<T> where T : class
     [Obsolete]
     // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor, int ratio, int maxDelayedQueuesPerThread, int delayedQueueRatio)
-        : this(maxCapacityPerThread, ratio, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD) { }
+        : this(maxCapacityPerThread, ratio, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+    {
+    }
 
     protected Recycler(int maxCapacityPerThread, int interval, int chunkSize)
-        : this(maxCapacityPerThread, interval, chunkSize, true, null, false) { }
+        : this(maxCapacityPerThread, interval, chunkSize, true, null, false)
+    {
+    }
+
     /**
      * USE IT CAREFULLY!<br>
      * This is NOT enforcing pooled instances states to be validated if {@code unguarded =true}
      * as stated by {@link #Recycler(boolean)}.
      */
     protected Recycler(int maxCapacityPerThread, int interval, int chunkSize, bool unguarded)
-        : this(maxCapacityPerThread, interval, chunkSize, true, null, unguarded) { }
+        : this(maxCapacityPerThread, interval, chunkSize, true, null, unguarded)
+    {
+    }
+
     /**
      * USE IT CAREFULLY!<br>
      * This is NOT enforcing pooled instances states to be validated if {@code unguarded =true}
      * as stated by {@link #Recycler(boolean)}.
      */
     protected Recycler(int maxCapacityPerThread, int interval, int chunkSize, Thread owner, bool unguarded)
-        : this(maxCapacityPerThread, interval, chunkSize, false, owner, unguarded) { }
+        : this(maxCapacityPerThread, interval, chunkSize, false, owner, unguarded)
+    {
+    }
 
     private Recycler(int maxCapacityPerThread, int ratio, int chunkSize, bool useThreadLocalStorage, Thread owner, bool unguarded)
     {
@@ -232,6 +261,7 @@ public abstract class Recycler<T> where T : class
     {
         return unguarded ? new UnguardedLocalPool(capacity) : new GuardedLocalPool(capacity);
     }
+
     private static LocalPool CreatePool(Thread owner, int capacity, int interval, int chunkSize, bool unguarded)
     {
         return unguarded ? new UnguardedLocalPool(owner, capacity, interval, chunkSize) : new GuardedLocalPool(owner, capacity, interval, chunkSize);
@@ -244,7 +274,11 @@ public abstract class Recycler<T> where T : class
         return threadLocalPool.Get().GetWith(this);
     }
 
-    internal void UnpinOwner() { if (localPool != null) localPool.Unpin(); }
+    internal void UnpinOwner()
+    {
+        if (localPool != null)
+            localPool.Unpin();
+    }
 
     /**
      * @deprecated use {@link Handle#recycle(Object)}.
@@ -276,6 +310,7 @@ public abstract class Recycler<T> where T : class
             return CreatePool(!Recycler.BATCH_FAST_TL_ONLY || FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()
                 ? Thread.CurrentThread : null, capacity, interval, chunkSize, unguarded);
         }
+
         protected override void OnRemoval(LocalPool pool)
         {
             base.OnRemoval(pool);
@@ -293,6 +328,7 @@ public abstract class Recycler<T> where T : class
         {
             pool?.Release(value);
         }
+
         public override void UnguardedRecycle(object value)
         {
             pool?.Release((T)value);
@@ -314,6 +350,7 @@ public abstract class Recycler<T> where T : class
                 throw new InvalidOperationException("Object has been recycled already.");
             pool.Release(this);
         }
+
         public override void UnguardedRecycle(object item)
         {
             if (!ReferenceEquals(item, value)) throw new ArgumentException("object does not belong to handle");
@@ -322,7 +359,13 @@ public abstract class Recycler<T> where T : class
             Volatile.Write(ref state, STATE_AVAILABLE);
             pool.Release(this);
         }
-        internal T Claim() { Volatile.Write(ref state, STATE_CLAIMED); return value; }
+
+        internal T Claim()
+        {
+            Volatile.Write(ref state, STATE_CLAIMED);
+            return value;
+        }
+
         internal void Set(T item)
         {
             value = item;
@@ -333,8 +376,14 @@ public abstract class Recycler<T> where T : class
     {
         // Eagerly initiate DefaultHandle class-loading.
         // CLR initializes the generic handle type on use; Java's eager class-loading block is unnecessary.
-        internal GuardedLocalPool(int capacity) : base(capacity) { }
-        internal GuardedLocalPool(Thread owner, int capacity, int interval, int chunkSize) : base(owner, capacity, interval, chunkSize) { }
+        internal GuardedLocalPool(int capacity) : base(capacity)
+        {
+        }
+
+        internal GuardedLocalPool(Thread owner, int capacity, int interval, int chunkSize) : base(owner, capacity, interval, chunkSize)
+        {
+        }
+
         internal override T GetWith(Recycler<T> recycler)
         {
             DefaultHandle handle = Acquire();
@@ -354,10 +403,12 @@ public abstract class Recycler<T> where T : class
         {
             handle = capacity == 0 ? null : new LocalPoolHandle(this);
         }
+
         internal UnguardedLocalPool(Thread owner, int capacity, int interval, int chunkSize) : base(owner, capacity, interval, chunkSize)
         {
             handle = new LocalPoolHandle(this);
         }
+
         internal override T GetWith(Recycler<T> recycler)
         {
             return Acquire() ?? recycler.NewObject(CanAllocatePooled() ? handle : NOOP_HANDLE);
@@ -367,8 +418,11 @@ public abstract class Recycler<T> where T : class
     private abstract class LocalPool
     {
         internal abstract T GetWith(Recycler<T> recycler);
+
         internal abstract int Size();
+
         internal abstract void Detach();
+
         internal abstract void Unpin();
     }
 
@@ -388,6 +442,7 @@ public abstract class Recycler<T> where T : class
             ratioInterval = capacity == 0 ? -1 : 0;
             pooledHandles = CreateQueue<H>(capacity);
         }
+
         protected LocalPool(Thread owner, int capacity, int interval, int chunkSize)
         {
             ratioInterval = interval;
@@ -396,6 +451,7 @@ public abstract class Recycler<T> where T : class
             pooledHandles = CreateQueue<H>(capacity);
             ratioCounter = interval; // Start at interval so the first one will be recycled.
         }
+
         protected H Acquire()
         {
             int size = batchSize;
@@ -410,6 +466,7 @@ public abstract class Recycler<T> where T : class
             batch[top] = null;
             return value;
         }
+
         internal void Release(H value)
         {
             Thread currentOwner = Volatile.Read(ref owner);
@@ -422,6 +479,7 @@ public abstract class Recycler<T> where T : class
             }
             else Volatile.Read(ref pooledHandles)?.Offer(value);
         }
+
         private static bool IsTerminated(Thread owner)
         {
             // Do not use `Thread.getState()` in J9 JVM because it's known to have a performance issue.
@@ -429,6 +487,7 @@ public abstract class Recycler<T> where T : class
             // CLR ThreadState.Stopped distinguishes termination from an unstarted thread.
             return (owner.ThreadState & ThreadState.Stopped) != 0;
         }
+
         protected bool CanAllocatePooled()
         {
             if (ratioInterval < 0) return false;
@@ -437,14 +496,17 @@ public abstract class Recycler<T> where T : class
             ratioCounter = 0;
             return true;
         }
+
         internal override int Size()
         {
             return (Volatile.Read(ref pooledHandles)?.Size() ?? 0) + (batch != null ? batchSize : 0);
         }
+
         internal override void Unpin()
         {
             Volatile.Write(ref owner, null);
         }
+
         internal override void Detach()
         {
             ReturnQueue<H> handles = Volatile.Read(ref pooledHandles);
@@ -457,8 +519,11 @@ public abstract class Recycler<T> where T : class
     private interface ReturnQueue<H> where H : class
     {
         bool Offer(H value);
+
         H Poll();
+
         int Size();
+
         void Clear();
     }
     private static ReturnQueue<H> CreateQueue<H>(int capacity) where H : class
@@ -485,21 +550,30 @@ public abstract class Recycler<T> where T : class
             catch { Interlocked.Decrement(ref count); throw; }
             return true;
         }
+
         public H Poll()
         {
             return TryPoll(out H value) ? value : null;
         }
+
         private bool TryPoll(out H value)
         {
             if (!ConcurrentQueueOperations.TryDequeueUninterruptibly(queue, out value)) return false;
             Interlocked.Decrement(ref count);
             return true;
         }
+
         public int Size()
         {
             return Volatile.Read(ref count);
         }
-        public void Clear() { while (TryPoll(out _)) { } }
+
+        public void Clear()
+        {
+            while (TryPoll(out _))
+            {
+            }
+        }
     }
 
     /**
@@ -526,6 +600,7 @@ public abstract class Recycler<T> where T : class
             // but often only have comparatively few items in them.
             // CLR Queue uses the same compact, lazily grown array strategy.
         }
+
         public bool Offer(H value)
         {
             using var held = UninterruptibleMonitor.Enter(this);
@@ -533,12 +608,23 @@ public abstract class Recycler<T> where T : class
             deque.Enqueue(value);
             return true;
         }
+
         public H Poll()
         {
             using var held = UninterruptibleMonitor.Enter(this);
             return deque.TryDequeue(out H value) ? value : null;
         }
-        public int Size() { using var held = UninterruptibleMonitor.Enter(this); return deque.Count; }
-        public void Clear() { using var held = UninterruptibleMonitor.Enter(this); deque.Clear(); }
+
+        public int Size()
+        {
+            using var held = UninterruptibleMonitor.Enter(this);
+            return deque.Count;
+        }
+
+        public void Clear()
+        {
+            using var held = UninterruptibleMonitor.Enter(this);
+            deque.Clear();
+        }
     }
 }

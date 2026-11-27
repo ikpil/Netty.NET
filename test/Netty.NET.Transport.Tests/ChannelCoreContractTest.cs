@@ -33,6 +33,7 @@ public class ChannelCoreContractTest
         Assert.Equal("out", channel.ReadOutbound<string>());
         Assert.False(channel.FinishAndReleaseAll());
     }
+
     [Fact]
     public async Task WriteDoesNotCompleteOrProduceOutputUntilFlush()
     {
@@ -48,6 +49,7 @@ public class ChannelCoreContractTest
         Assert.True(buffer.Release());
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public async Task CanceledUnflushedWriteIsReleasedAndNotSent()
     {
@@ -67,6 +69,7 @@ public class ChannelCoreContractTest
         Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
         channel.Finish();
     }
+
     [Fact]
     public async Task CloseReleasesUnflushedWritesAndSignalsLifecycle()
     {
@@ -84,6 +87,7 @@ public class ChannelCoreContractTest
         Assert.False(channel.IsRegistered);
         Assert.False(channel.IsOpen);
     }
+
     [Fact]
     public void WaterMarksUseStrictCrossingAndUserBits()
     {
@@ -107,6 +111,7 @@ public class ChannelCoreContractTest
         Assert.Equal(new[] { "a.writable", "a.writable" }, calls);
         channel.Finish();
     }
+
     [Fact]
     public void ConfigurationDefaultsValidationAndUnknownOptions()
     {
@@ -126,6 +131,7 @@ public class ChannelCoreContractTest
         Assert.Throws<ArgumentException>(() => config.SetOptions(new[] { new KeyValuePair<ChannelOption, object>(ChannelOption.AUTO_READ, 1) }));
         channel.Finish();
     }
+
     [Fact]
     public void NonSharableReuseAndDuplicateNamesAreRejected()
     {
@@ -136,6 +142,7 @@ public class ChannelCoreContractTest
         Assert.Throws<ArgumentException>(() => channel.Pipeline.AddLast("name", new ChannelInboundHandlerAdapter()));
         channel.Finish();
     }
+
     [Fact]
     public void DeferredHandlerAddedAndNestedInitializersPreserveOrder()
     {
@@ -156,6 +163,7 @@ public class ChannelCoreContractTest
         Assert.Equal(new[] { "a", "b", "c", "d" }, channel.Pipeline.Select(p => ((Recorder)p.Value).Name));
         channel.Finish();
     }
+
     [Fact]
     public void SimpleInboundHandlerReleasesOnlyAcceptedMessages()
     {
@@ -167,6 +175,7 @@ public class ChannelCoreContractTest
         Assert.Equal("pass", channel.ReadInbound());
         channel.Finish();
     }
+
     [Fact]
     public async Task RealEventLoopOwnsRegistrationCallbacksAndShutdownClosesChannel()
     {
@@ -184,6 +193,7 @@ public class ChannelCoreContractTest
         Assert.Contains("a.registered", calls);
         Assert.Contains("a.removed", calls);
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -228,6 +238,7 @@ public class ChannelCoreContractTest
             await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }
+
     [Fact]
     public async Task InactiveFlushDoesNotRecursivelyDrainWritesAddedDuringRelease()
     {
@@ -264,25 +275,39 @@ public class ChannelCoreContractTest
     {
         private readonly Task _write;
         internal FailureChannel(Task write, bool active = true) : base(null, new ChannelMetadata(false))
-        { _write = write; SetActive(active); }
+        {
+            _write = write;
+            SetActive(active);
+        }
+
         protected override EndPoint LocalAddress0()
         {
             return null;
         }
+
         protected override EndPoint RemoteAddress0()
         {
             return null;
         }
+
         protected override Task DoBindAsync(EndPoint address, CancellationToken token)
         {
             return Task.CompletedTask;
         }
+
         protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
         {
             return Task.CompletedTask;
         }
-        protected override void DoClose() { }
-        protected override void DoBeginRead() { }
+
+        protected override void DoClose()
+        {
+        }
+
+        protected override void DoBeginRead()
+        {
+        }
+
         protected override Task DoWrite(object msg)
         {
             return _write;
@@ -305,31 +330,46 @@ public class ChannelCoreContractTest
         }
     }
     private sealed class BufferConsumer : SimpleChannelInboundHandler<ByteBuf>
-    { protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) { } }
+    {
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
+        {
+        }
+    }
     private sealed class LoopChannel() : AbstractChannel(null, new ChannelMetadata(false))
     {
         protected override System.Net.EndPoint LocalAddress0()
         {
             return null;
         }
+
         protected override System.Net.EndPoint RemoteAddress0()
         {
             return null;
         }
+
         protected override void DoRegister()
         {
             SetActive(true);
         }
+
         protected override Task DoBindAsync(System.Net.EndPoint address, CancellationToken token)
         {
             return Task.CompletedTask;
         }
+
         protected override Task DoConnectAsync(System.Net.EndPoint remote, System.Net.EndPoint local, CancellationToken token)
         {
             return Task.CompletedTask;
         }
-        protected override void DoClose() { }
-        protected override void DoBeginRead() { }
+
+        protected override void DoClose()
+        {
+        }
+
+        protected override void DoBeginRead()
+        {
+        }
+
         protected override Task DoWrite(object msg)
         {
             return Task.CompletedTask;
@@ -342,16 +382,46 @@ public class ChannelCoreContractTest
         {
             calls.Add(name + ".added");
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             calls.Add(name + ".removed");
         }
-        public override void ChannelRegistered(IChannelHandlerContext ctx) { calls.Add(name + ".registered"); ctx.FireChannelRegistered(); }
-        public override void ChannelInactive(IChannelHandlerContext ctx) { calls.Add(name + ".inactive"); ctx.FireChannelInactive(); }
-        public override void ChannelUnregistered(IChannelHandlerContext ctx) { calls.Add(name + ".unregistered"); ctx.FireChannelUnregistered(); }
-        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) { calls.Add(name + ".writable"); ctx.FireChannelWritabilityChanged(); }
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { calls.Add(name + ".in"); ctx.FireChannelRead(msg); }
+
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            calls.Add(name + ".registered");
+            ctx.FireChannelRegistered();
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            calls.Add(name + ".inactive");
+            ctx.FireChannelInactive();
+        }
+
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            calls.Add(name + ".unregistered");
+            ctx.FireChannelUnregistered();
+        }
+
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            calls.Add(name + ".writable");
+            ctx.FireChannelWritabilityChanged();
+        }
+
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            calls.Add(name + ".in");
+            ctx.FireChannelRead(msg);
+        }
+
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
-        { calls.Add(name + ".out"); return ctx.WriteAsync(msg, cancellationToken); }
+        {
+            calls.Add(name + ".out");
+            return ctx.WriteAsync(msg, cancellationToken);
+        }
     }
 }

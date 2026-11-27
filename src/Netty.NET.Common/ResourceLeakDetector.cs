@@ -68,6 +68,7 @@ public static class ResourceLeakDetector
             logger.Debug("-D{}: {}", PROP_TARGET_RECORDS, TARGET_RECORDS);
         }
     }
+
     /**
          * Returns level based on string value. Accepts also string that represents ordinal number of enum.
          *
@@ -83,6 +84,7 @@ public static class ResourceLeakDetector
                 text == ((int)candidate).ToString(CultureInfo.InvariantCulture)) return candidate;
         return DEFAULT_LEVEL;
     }
+
     /**
      * @deprecated Use {@link #setLevel(Level)} instead.
      */
@@ -91,6 +93,7 @@ public static class ResourceLeakDetector
     {
         SetLevel(enabled ? ResourceLeakDetectorLevel.SIMPLE : ResourceLeakDetectorLevel.DISABLED);
     }
+
     /**
      * Returns {@code true} if resource leak detection is enabled.
      */
@@ -98,6 +101,7 @@ public static class ResourceLeakDetector
     {
         return GetLevel() > ResourceLeakDetectorLevel.DISABLED;
     }
+
     /**
      * Sets the resource leak detection level.
      */
@@ -106,6 +110,7 @@ public static class ResourceLeakDetector
         if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(value));
         Volatile.Write(ref level, (int)value);
     }
+
     /**
      * Returns the current resource leak detection level.
      */
@@ -140,6 +145,7 @@ public static class ResourceLeakDetector
             }
         } while (!excludedMethods.CompareAndSet(oldMethods, newMethods));
     }
+
     // CLR stack methods can expose an open declaring type even for a closed
     // generic invocation. Java exclusions identify the class across all T.
     internal static string ExclusionTypeName(Type type)
@@ -164,12 +170,18 @@ public class ResourceLeakDetector<T> where T : class
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     [Obsolete]
-    public ResourceLeakDetector(Type resourceType) : this(TypeName(resourceType)) { }
+    public ResourceLeakDetector(Type resourceType) : this(TypeName(resourceType))
+    {
+    }
+
     /**
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     [Obsolete]
-    public ResourceLeakDetector(string resourceType) : this(resourceType, ResourceLeakDetector.DEFAULT_SAMPLING_INTERVAL, long.MaxValue) { }
+    public ResourceLeakDetector(string resourceType) : this(resourceType, ResourceLeakDetector.DEFAULT_SAMPLING_INTERVAL, long.MaxValue)
+    {
+    }
+
     /**
      * @deprecated Use {@link ResourceLeakDetector#ResourceLeakDetector(Class, int)}.
      * <p>
@@ -180,13 +192,19 @@ public class ResourceLeakDetector<T> where T : class
      * @param maxActive This is deprecated and will be ignored.
      */
     [Obsolete]
-    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) : this(resourceType, samplingInterval) { }
+    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) : this(resourceType, samplingInterval)
+    {
+    }
+
     /**
      * This should not be used directly by users of {@link ResourceLeakDetector}.
      * Please use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class)}
      * or {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}
      */
-    public ResourceLeakDetector(Type resourceType, int samplingInterval) : this(TypeName(resourceType), samplingInterval, long.MaxValue) { }
+    public ResourceLeakDetector(Type resourceType, int samplingInterval) : this(TypeName(resourceType), samplingInterval, long.MaxValue)
+    {
+    }
+
     /**
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      * <p>
@@ -199,7 +217,13 @@ public class ResourceLeakDetector<T> where T : class
         this.resourceType = resourceType;
         this.samplingInterval = samplingInterval;
     }
-    private static string TypeName(Type type) { ArgumentNullException.ThrowIfNull(type); return StringUtil.SimpleClassName(type); }
+
+    private static string TypeName(Type type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return StringUtil.SimpleClassName(type);
+    }
+
     /**
      * Creates a new {@link ResourceLeak} which is expected to be closed via {@link ResourceLeak#close()} when the
      * related resource is deallocated.
@@ -212,6 +236,7 @@ public class ResourceLeakDetector<T> where T : class
     {
         return Track0(obj, false);
     }
+
     /**
      * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
      * {@link ResourceLeakTracker#close(Object)} when the related resource is deallocated.
@@ -222,6 +247,7 @@ public class ResourceLeakDetector<T> where T : class
     {
         return Track0(obj, false);
     }
+
     /**
      * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
      * {@link ResourceLeakTracker#close(Object)} when the related resource is deallocated.
@@ -235,6 +261,7 @@ public class ResourceLeakDetector<T> where T : class
     {
         return Track0(obj, true);
     }
+
     /**
      * Check whether {@link ResourceLeakTracker#record()} does anything for this detector.
      *
@@ -245,6 +272,7 @@ public class ResourceLeakDetector<T> where T : class
         ResourceLeakDetectorLevel level = ResourceLeakDetector.GetLevel();
         return (level == ResourceLeakDetectorLevel.ADVANCED || level == ResourceLeakDetectorLevel.PARANOID) && ResourceLeakDetector.TARGET_RECORDS > 0;
     }
+
     private DefaultResourceLeak<T> Track0(T obj, bool force)
     {
         ResourceLeakDetectorLevel level = ResourceLeakDetector.GetLevel();
@@ -257,6 +285,7 @@ public class ResourceLeakDetector<T> where T : class
         ReportLeak();
         return new DefaultResourceLeak<T>(obj, refQueue, allLeaks, GetInitialHint(resourceType));
     }
+
     /**
      * When the return value is {@code true}, {@link #reportTracedLeak} and {@link #reportUntracedLeak}
      * will be called once a leak is detected, otherwise not.
@@ -267,6 +296,7 @@ public class ResourceLeakDetector<T> where T : class
     {
         return ResourceLeakDetector.logger.IsErrorEnabled();
     }
+
     private void ReportLeak()
     {
         if (!NeedReport())
@@ -285,6 +315,7 @@ public class ResourceLeakDetector<T> where T : class
             Volatile.Read(ref leakListener)?.OnLeak(resourceType, records);
         }
     }
+
     /**
      * This method is called when a traced leak is detected. It can be overridden for tracking how many times leaks
      * have been detected.
@@ -294,6 +325,7 @@ public class ResourceLeakDetector<T> where T : class
         ResourceLeakDetector.logger.Error("LEAK: {}.release() was not called before it's garbage-collected. " +
             "See https://netty.io/wiki/reference-counted-objects.html for more information.{}", resourceType, records);
     }
+
     /**
      * This method is called when an untraced leak is detected. It can be overridden for tracking how many times leaks
      * have been detected.
@@ -306,11 +338,15 @@ public class ResourceLeakDetector<T> where T : class
             "See https://netty.io/wiki/reference-counted-objects.html for more information.",
             resourceType, ResourceLeakDetector.PROP_LEVEL, "advanced", StringUtil.SimpleClassName(this));
     }
+
     /**
      * @deprecated This method will no longer be invoked by {@link ResourceLeakDetector}.
      */
     [Obsolete]
-    protected virtual void ReportInstancesLeak(string resourceType) { }
+    protected virtual void ReportInstancesLeak(string resourceType)
+    {
+    }
+
     /**
      * Create a hint object to be attached to an object tracked by this record. Similar to the additional information
      * supplied to {@link ResourceLeakTracker#record(Object)}, will be printed alongside the stack trace of the
@@ -320,6 +356,7 @@ public class ResourceLeakDetector<T> where T : class
     {
         return null;
     }
+
     /**
      * Set leak listener. Previous listener will be replaced.
      */

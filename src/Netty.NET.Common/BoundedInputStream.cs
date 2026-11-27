@@ -8,6 +8,11 @@ namespace Netty.NET.Common;
 /// </summary>
 public sealed class BoundedInputStream : Internal.BoundedStream
 {
-    public BoundedInputStream(Stream inner, long limit) : base(inner, limit) { }
-    public BoundedInputStream(Stream inner) : base(inner) { }
+    public BoundedInputStream(Stream inner, long limit) : base(inner, limit)
+    {
+    }
+
+    public BoundedInputStream(Stream inner) : base(inner)
+    {
+    }
 }

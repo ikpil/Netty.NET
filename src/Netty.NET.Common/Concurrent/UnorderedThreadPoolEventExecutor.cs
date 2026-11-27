@@ -83,7 +83,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
      */
     /// <remarks>Workers start on admission. Zero uses one transient worker while reservations remain.</remarks>
     public UnorderedThreadPoolEventExecutor(int corePoolSize)
-        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor))) { }
+        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)))
+    {
+    }
 
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)}
@@ -91,14 +93,18 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory)
         // CLR: ThreadPoolExecutor.AbortPolicy throws RejectedExecutionException("Task ... rejected from ...");
         // the CLR default delegate throws it without that JDK text (Action has no task-specific ToString).
-        : this(corePoolSize, threadFactory, (_, _) => throw new RejectedExecutionException()) { }
+        : this(corePoolSize, threadFactory, (_, _) => throw new RejectedExecutionException())
+    {
+    }
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int,
      * ThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize, Action<Action, UnorderedThreadPoolEventExecutor> handler)
-        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler) { }
+        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler)
+    {
+    }
 
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory, RejectedExecutionHandler)}
@@ -120,41 +126,64 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         return this;
     }
+
     public IEventExecutor Next()
     {
         return this;
     }
-    public IEnumerable<IEventExecutor> Iterator() { yield return this; }
+
+    public IEnumerable<IEventExecutor> Iterator()
+    {
+        yield return this;
+    }
+
     public Ticker Ticker()
     {
         return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
     }
+
     public bool InEventLoop()
     {
         return InEventLoop(Thread.CurrentThread);
     }
+
     public bool InEventLoop(Thread thread)
     {
         return thread != null && eventLoopThreads.ContainsKey(thread);
     }
+
     public bool IsExecutorThread(Thread thread)
     {
         return InEventLoop(thread);
     }
-    public bool IsShuttingDown() { using (UninterruptibleMonitor.Enter(gate)) return gracefulRequested || shutdownRequested; }
+
+    public bool IsShuttingDown()
+    {
+        using (UninterruptibleMonitor.Enter(gate))
+            return gracefulRequested || shutdownRequested;
+    }
+
     public bool IsSuspended()
     {
         return false;
     }
+
     public bool TrySuspend()
     {
         return false;
     }
-    public bool IsShutdown() { using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested; }
+
+    public bool IsShutdown()
+    {
+        using (UninterruptibleMonitor.Enter(gate))
+            return shutdownRequested;
+    }
+
     public bool IsTerminated()
     {
         using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && shutdownReservations == 0;
     }
+
     // All callers hold gate. Async continuations cannot run inline while pool
     // state is being published. A start reservation counts even before its
     // factory returns a Thread; shutdown cannot finish underneath that factory.
@@ -563,6 +592,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             finally { eventLoopThreads.TryRemove(Thread.CurrentThread, out _); }
         }
     }
+
     // A failure on a background worker has no admission caller to receive it.
     // Never let replacement creation/start kill the CLR process or leave accepted
     // native results pending. Close admission, reject waiting work, and publish the
@@ -595,6 +625,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         using (UninterruptibleMonitor.Enter(gate))
             return !stopping && !termination.Task.IsCompleted && (!shutdownRequested || work.period == 0);
     }
+
     private void ReExecutePeriodic(Work work)
     {
         using (UninterruptibleMonitor.Enter(gate))
@@ -611,6 +642,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         work.CancelOuter();
     }
+
     private void OnShutdown()
     {
         // A queue containing only live one-shots needs no snapshot or rebuild.
@@ -637,6 +669,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         finally { --shutdownReservations; }
         PublishPoolState();
     }
+
     private bool Remove(Work work)
     {
         // CLR reservations have one membership each. Match reference identity and
@@ -670,8 +703,11 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         long period { get; }
         long deadline { get; }
         void Run();
+
         bool IsCancelled();
+
         void CancelOuter();
+
         void Reject(Exception error);
     }
 
@@ -719,18 +755,22 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             deadline = owner.TriggerTime(0);
         }
+
         public bool IsCancelled()
         {
             return Volatile.Read(ref _submission)?.IsCanceled ?? true;
         }
+
         public void CancelOuter()
         {
             Interlocked.Exchange(ref _submission, null)?.CancelForShutdown();
         }
+
         public void Reject(Exception error)
         {
             Interlocked.Exchange(ref _submission, null)?.Reject(error);
         }
+
         public void Run()
         {
             INativeSubmission submission = Interlocked.Exchange(ref _submission, null);
@@ -808,18 +848,22 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             task.SetId(sequence);
         }
+
         public bool IsCancelled()
         {
             return _task.IsCanceled;
         }
+
         public void CancelOuter()
         {
             _task.CancelWithoutRemove();
         }
+
         public void Reject(Exception error)
         {
             _task.Reject(error);
         }
+
         public void Run()
         {
             _task.QueueCallback();
@@ -842,18 +886,22 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             deadline = owner.TriggerTime(0);
         }
+
         public bool IsCancelled()
         {
             return Volatile.Read(ref command) == null;
         }
+
         public void CancelOuter()
         {
             Interlocked.Exchange(ref command, null);
         }
+
         public void Reject(Exception error)
         {
             CancelOuter();
         }
+
         public void Run()
         {
             Action callback = Interlocked.Exchange(ref command, null);

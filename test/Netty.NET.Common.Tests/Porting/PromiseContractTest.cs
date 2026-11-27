@@ -43,6 +43,7 @@ public class PromiseContractTest
         await registration.NotificationCompleted;
         Assert.Equal(2, completions);
     }
+
     [Fact]
     public async Task CompletionRegistrationsReceiveTheOriginalSourceTask()
     {
@@ -58,6 +59,7 @@ public class PromiseContractTest
         Assert.Null(removedTask);
         Assert.True(removed.NotificationCompleted.IsCanceled);
     }
+
     [Fact]
     public async Task CommittedNativeSubmissionCanStillSucceedOrFailAfterCancellationRequest()
     {
@@ -94,6 +96,7 @@ public class PromiseContractTest
         }
         finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
     }
+
     [Fact]
     public async Task CancellationRetainsProducerTokenWithoutInventingStableExceptionIdentity()
     {
@@ -115,6 +118,7 @@ public class PromiseContractTest
         Assert.False(first.TrySetResult(null));
         Assert.False(first.TrySetException(new Exception("late failure")));
     }
+
     [Fact]
     public async Task FailureIdentityIsSharedAcrossObservationAwaitAndSynchronousTaskViews()
     {
@@ -131,6 +135,7 @@ public class PromiseContractTest
         Assert.Same(error, Assert.Throws<InvalidOperationException>(() => source.Task.GetAwaiter().GetResult()));
         Assert.Empty(ThrowableUtil.GetSuppressed(error));
     }
+
     [Fact]
     public void NullFailureDoesNotConsumeTheProducer()
     {
@@ -143,6 +148,7 @@ public class PromiseContractTest
         Assert.False(source.TrySetResult(new object()));
         Assert.Throws<InvalidOperationException>(() => source.SetResult(null));
     }
+
     [Fact]
     public void TaskFailurePreservesPreviouslyAttachedDiagnosticsWithoutAddingJavaSuppression()
     {
@@ -163,6 +169,7 @@ public class PromiseContractTest
         Assert.Empty(others);
         Assert.Equal(3, ThrowableUtil.GetSuppressed(error).Length);
     }
+
     [Fact]
     public async Task RegistrationRemovalUsesItsHandleAndRetainsOtherDuplicateCallbacks()
     {
@@ -179,6 +186,7 @@ public class PromiseContractTest
         Assert.Equal(new[] { 2, 1 }, calls);
         Assert.True(first.NotificationCompleted.IsCanceled);
     }
+
     [Fact]
     public async Task CallbackFailureDoesNotSuppressLaterOrReentrantRegistrations()
     {
@@ -200,6 +208,7 @@ public class PromiseContractTest
         Assert.Equal(new[] { 1, 2, 3 }, calls);
         Assert.True(source.Task.IsCompletedSuccessfully);
     }
+
     [Fact]
     public async Task ConcurrentProducerCompletionHasOneWinnerAndOneNotification()
     {
@@ -226,6 +235,7 @@ public class PromiseContractTest
             else Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
         }
     }
+
     [Fact]
     public async Task RegisteringWhileCompletingNotifiesEachExactlyOnce()
     {
@@ -241,6 +251,7 @@ public class PromiseContractTest
         Assert.All(counts, count => Assert.Equal(1, count));
         foreach (var registration in registrations) registration.Dispose();
     }
+
     [Fact]
     public async Task MultipleNativeAwaitersAreReleased()
     {
@@ -258,6 +269,7 @@ public class PromiseContractTest
         var results = await Task.WhenAll(waiters).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.All(results, result => Assert.Same(value, result));
     }
+
     [Fact]
     public async Task ObserverTimeoutDoesNotCompleteTheSourceAndNativeTimeoutBoundsAreExplicit()
     {
@@ -272,6 +284,7 @@ public class PromiseContractTest
         source.SetResult(value);
         Assert.Same(value, await infinite.WaitAsync(TimeSpan.FromSeconds(5)));
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -299,6 +312,7 @@ public class PromiseContractTest
         Assert.False(source.Task.IsCompleted);
         source.SetResult(null);
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -327,6 +341,7 @@ public class PromiseContractTest
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -345,6 +360,7 @@ public class PromiseContractTest
         source.SetResult(value);
         Assert.Same(value, await source.Task);
     }
+
     [Fact]
     public async Task AwaitingInsideNativeSubmissionAllowsTheLoopToCompleteTheProducer()
     {
@@ -373,6 +389,7 @@ public class PromiseContractTest
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         }
     }
+
     [Fact]
     public async Task EarlyAndLateCompletionRegistrationsUseTheAssignedExecutor()
     {
@@ -391,6 +408,7 @@ public class PromiseContractTest
         }
         finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
     }
+
     [Fact]
     public async Task ProgressSubscriptionsFilterReportsAndNormalizeUnknownTotal()
     {
@@ -428,6 +446,7 @@ public class PromiseContractTest
         await late.NotificationCompleted;
         Assert.Equal(2, normalCompletions);
     }
+
     [Fact]
     public void CompletedTasksRetainResultAndFailureIdentityAndCannotBeChangedByObserverCancellation()
     {
@@ -449,6 +468,7 @@ public class PromiseContractTest
         Assert.Same(failure, failure.WaitAsync(cancellation.Token));
         Assert.Throws<ArgumentNullException>(() => Task.FromException<object>(null));
     }
+
     [Fact]
     public void CompletedTaskUsesExplicitRegistrationsAndRejectsNullCallbacks()
     {

@@ -148,7 +148,8 @@ public class ByteBufAsciiCopyTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ReleasedDestinationsRejectEvenEmptyCopies(int kind)
     {
-        var (b, owner) = Destination(kind, 8); owner.Release();
+        var (b, owner) = Destination(kind, 8);
+        owner.Release();
         AsciiString source = new(Array.Empty<byte>(), false);
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.Copy(source, b));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.Copy(source, 0, b, 0));
@@ -163,17 +164,21 @@ public class ByteBufAsciiCopyTest
         ByteBuf root = Unpooled.WrappedBuffer(data);
         ByteBuf b = composite ? Unpooled.CompositeBuffer().AddComponent(root.Slice(0, 6), true).AddComponent(root.Slice(6, 6).Retain(), true) : root;
         int sourceIndex = forward ? 0 : 3, destinationIndex = forward ? 3 : 0;
-        byte[] expected = data.ToArray(); data.AsSpan(sourceIndex, 9).CopyTo(expected.AsSpan(destinationIndex));
+        byte[] expected = data.ToArray();
+        data.AsSpan(sourceIndex, 9).CopyTo(expected.AsSpan(destinationIndex));
         try
         {
             b.SetIndex(0, destinationIndex);
             AsciiString source = new(data, false);
             ByteBufUtil.Copy(source, sourceIndex, b, 9);
-            Assert.Equal(expected, data); Assert.Equal(destinationIndex + 9, b.WriterIndex);
+            Assert.Equal(expected, data);
+            Assert.Equal(destinationIndex + 9, b.WriterIndex);
             // Repeat the same aliasing contract through the absolute overload.
-            for (int i = 0; i < data.Length; i++) data[i] = (byte)i;
+            for (int i = 0; i < data.Length; i++)
+                data[i] = (byte)i;
             ByteBufUtil.Copy(source, sourceIndex, b, destinationIndex, 9);
-            Assert.Equal(expected, data); Assert.Equal(destinationIndex + 9, b.WriterIndex);
+            Assert.Equal(expected, data);
+            Assert.Equal(destinationIndex + 9, b.WriterIndex);
         }
         finally { b.Release(); }
     }

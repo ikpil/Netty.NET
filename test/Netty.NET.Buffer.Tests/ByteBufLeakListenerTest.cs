@@ -45,27 +45,35 @@ public class ByteBufLeakListenerTest : IDisposable
     {
         ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
         string hint = Guid.NewGuid().ToString();
-        var first = new Listener(hint); var second = new Listener(hint);
+        var first = new Listener(hint);
+        var second = new Listener(hint);
         ByteBufUtil.SetLeakListener(first);
         MakeLeak(hint, out var weak);
         CollectUntil(() => !weak.IsAlive);
         ByteBufUtil.SetLeakListener(second);
         CollectUntil(() => { Drain(); return second.Calls == 1; });
-        Assert.Equal(0, first.Calls); Assert.Equal(1, second.Calls);
-        Assert.Equal("ByteBuf", second.ResourceType); Assert.Contains(hint, second.Records);
+        Assert.Equal(0, first.Calls);
+        Assert.Equal(1, second.Calls);
+        Assert.Equal("ByteBuf", second.ResourceType);
+        Assert.Contains(hint, second.Records);
         Assert.Equal(Environment.CurrentManagedThreadId, second.ThreadId);
-        Drain(); Drain(); Assert.Equal(1, second.Calls);
+        Drain();
+        Drain();
+        Assert.Equal(1, second.Calls);
     }
 
     [Fact]
     public void NullRemovesTheListenerBeforeAnAlreadyCollectedLeakIsReported()
     {
         ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
-        string hint = Guid.NewGuid().ToString(); var listener = new Listener(hint);
-        ByteBufUtil.SetLeakListener(listener); ByteBufUtil.SetLeakListener(listener);
+        string hint = Guid.NewGuid().ToString();
+        var listener = new Listener(hint);
+        ByteBufUtil.SetLeakListener(listener);
+        ByteBufUtil.SetLeakListener(listener);
         var tracker = MakeLeak(hint, out var weak);
         CollectUntil(() => !weak.IsAlive);
-        ByteBufUtil.SetLeakListener(null); ByteBufUtil.SetLeakListener(null);
+        ByteBufUtil.SetLeakListener(null);
+        ByteBufUtil.SetLeakListener(null);
         // The report clears the abandoned tracker's records even without a listener.
         CollectUntil(() => { Drain(); return tracker.ToString().Length == 0; });
         Assert.Equal(0, listener.Calls);
@@ -77,28 +85,36 @@ public class ByteBufLeakListenerTest : IDisposable
     public void ListenerDoesNotTurnNormalAccessOrFinalReleaseIntoLeakNotifications(int kind)
     {
         ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
-        var listener = new Listener(); ByteBufUtil.SetLeakListener(listener);
+        var listener = new Listener();
+        ByteBufUtil.SetLeakListener(listener);
         var native = new NativeMemoryAllocator();
         IByteBufAllocator allocator = kind < 3 ? new UnpooledByteBufAllocator(true, native)
             : new PooledByteBufAllocator(true, maxOrder: 1, nativeAllocator: native);
         ByteBuf root = (kind % 3) switch
         {
-            0 => allocator.HeapBuffer(8, 8), 1 => allocator.DirectBuffer(8, 8),
+            0 => allocator.HeapBuffer(8, 8),
+            1 => allocator.DirectBuffer(8, 8),
             _ => allocator.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[8]), true)
         };
         try
         {
             root.SetIndex(0, 0).WriteLong(42).Touch("normally-released");
             ByteBuf view = root.RetainedSlice();
-            Assert.False(root.Release()); Assert.Equal(42, view.ReadLong()); Assert.True(view.Release());
+            Assert.False(root.Release());
+            Assert.Equal(42, view.ReadLong());
+            Assert.True(view.Release());
             // Tracking again drains eligible reports; a normally closed tracker cannot notify.
             ByteBuf next = allocator.DirectBuffer(1, 1);
-            try { Assert.Equal(0, listener.Calls); }
+            try
+            {
+                Assert.Equal(0, listener.Calls);
+            }
             finally { next.Release(); }
         }
         finally
         {
-            if (root.RefCnt > 0) root.Release(root.RefCnt);
+            if (root.RefCnt > 0)
+                root.Release(root.RefCnt);
             (allocator as IDisposable)?.Dispose();
         }
         Assert.Equal(0, native.ReservedBytes);
@@ -139,9 +155,12 @@ public class ByteBufLeakListenerTest : IDisposable
         public void OnLeak(string resourceType, string records)
         {
             // Only count this case's unique leak when unrelated collected buffers are drained.
-            if (hint != null && !records.Contains(hint)) return;
-            Calls++; ThreadId = Environment.CurrentManagedThreadId;
-            ResourceType = resourceType; Records = records;
+            if (hint != null && !records.Contains(hint))
+                return;
+            Calls++;
+            ThreadId = Environment.CurrentManagedThreadId;
+            ResourceType = resourceType;
+            Records = records;
         }
     }
 }

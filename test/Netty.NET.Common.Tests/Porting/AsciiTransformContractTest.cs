@@ -138,54 +138,67 @@ public class AsciiTransformContractTest
         {
             return this[index];
         }
+
         public int Length()
         {
             return Count;
         }
+
         public ICharSequence SubSequence(int start, int end)
         {
             return new IndexedSequence(text[start..end]);
         }
+
         public ICharSequence SubSequence(int start)
         {
             return SubSequence(start, Count);
         }
+
         public override string ToString()
         {
             return text;
         }
+
         public string ToString(int start)
         {
             return text[start..];
         }
+
         public bool RegionMatches(int a, ICharSequence b, int c, int d)
         {
             throw new NotSupportedException();
         }
+
         public bool RegionMatchesIgnoreCase(int a, ICharSequence b, int c, int d)
         {
             throw new NotSupportedException();
         }
+
         public bool ContentEquals(ICharSequence other)
         {
             throw new NotSupportedException();
         }
+
         public bool ContentEqualsIgnoreCase(ICharSequence other)
         {
             throw new NotSupportedException();
         }
+
         public int IndexOf(char ch, int start = 0)
         {
             throw new NotSupportedException();
         }
+
         public int HashCode(bool ignoreCase)
         {
             throw new NotSupportedException();
         }
+
         public IEnumerator<char> GetEnumerator()
         {
             throw new NotSupportedException();
         }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

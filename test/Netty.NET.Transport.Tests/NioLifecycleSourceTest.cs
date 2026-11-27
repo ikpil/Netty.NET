@@ -42,6 +42,7 @@ public class NioEventLoopSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact(Timeout = 60000)]
     public async Task TestTaskRemovalOnShutdownThrowsNoUnsupportedOperationException()
     {
@@ -69,27 +70,32 @@ public class NioEventLoopSourceTest
             finally { await group.StopAsync(); thread.Join(TimeSpan.FromSeconds(5)); }
         }
     }
+
     [Fact(Timeout = 3000)]
     public async Task TestChannelsRegistered()
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var loop = (SingleThreadIoEventLoop)group.Next();
-        var ch1 = new NioServerSocketChannel(); var ch2 = new NioServerSocketChannel();
+        var ch1 = new NioServerSocketChannel();
+        var ch2 = new NioServerSocketChannel();
         try
         {
             Assert.Equal(0, await RegisteredChannels(loop));
-            await loop.RegisterAsync(ch1); await loop.RegisterAsync(ch2);
+            await loop.RegisterAsync(ch1);
+            await loop.RegisterAsync(ch2);
             Assert.Equal(2, await RegisteredChannels(loop));
             await ch1.DeregisterAsync();
             int registered;
             // As SelectionKeys are removed in a lazy fashion in the JDK implementation we may need to query a few
             // times before we see the right number of registered chanels.
             // CLR registration is tracked directly; keep the original polling/owner barrier.
-            while ((registered = await RegisteredChannels(loop)) == 2) await Task.Delay(50, TestContext.Current.CancellationToken);
+            while ((registered = await RegisteredChannels(loop)) == 2)
+                await Task.Delay(50, TestContext.Current.CancellationToken);
             Assert.Equal(1, registered);
         }
         finally { await ch1.CloseAsync(); await ch2.CloseAsync(); await group.StopAsync(); }
     }
+
     // Only reliable if run from event loop
     // CLR: NioEventLoop.registeredChannels() returns NioIoHandler.numRegistered(); the deprecated NioEventLoop is not
     // ported, so the count is read from the loop's NioIoHandler.
@@ -162,15 +168,21 @@ public class TcpServerSocketSourceTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact]
     public async Task TestIsActiveFalseAfterClose()
     {
-        var channel = new NioServerSocketChannel(); var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+        var channel = new NioServerSocketChannel();
+        var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
-            await group.RegisterAsync(channel); await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
-            Assert.True(channel.IsActive); Assert.True(channel.IsOpen);
-            await channel.CloseAsync(); Assert.False(channel.IsOpen); Assert.False(channel.IsActive);
+            await group.RegisterAsync(channel);
+            await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            Assert.True(channel.IsActive);
+            Assert.True(channel.IsOpen);
+            await channel.CloseAsync();
+            Assert.False(channel.IsOpen);
+            Assert.False(channel.IsActive);
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
@@ -205,6 +217,7 @@ public class AbstractSocketChannelOptionsSourceTest
         }
         finally { await group.RegisterAsync(channel); await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

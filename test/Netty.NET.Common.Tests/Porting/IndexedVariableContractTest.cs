@@ -18,6 +18,7 @@ public class IndexedVariableContractTest : IDisposable
     {
         FastThreadLocal.RemoveAll();
     }
+
     public void Dispose()
     {
         FastThreadLocal.RemoveAll();
@@ -27,6 +28,7 @@ public class IndexedVariableContractTest : IDisposable
     {
         return (int)IndexField.GetValue(null);
     }
+
     private static void WriteIndex(int value)
     {
         IndexField.SetValue(null, value);

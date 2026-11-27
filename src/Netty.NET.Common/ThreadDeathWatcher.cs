@@ -58,6 +58,7 @@ public static class ThreadDeathWatcher
         // must not be sticky about its thread group
         threadFactory = new DefaultThreadFactory(poolName, true, ThreadPriority.Lowest, null);
     }
+
     /**
      * Schedules the specified {@code task} to run when the specified {@code thread} dies.
      *
@@ -78,6 +79,7 @@ public static class ThreadDeathWatcher
         if (!thread.IsAlive) throw new ArgumentException("thread must be alive.", nameof(thread));
         Schedule(thread, task, true);
     }
+
     /**
      * Cancels the task scheduled via {@link #watch(Thread, Runnable)}.
      */
@@ -91,6 +93,7 @@ public static class ThreadDeathWatcher
         ArgumentNullException.ThrowIfNull(task);
         Schedule(thread, task, false);
     }
+
     private static void Schedule(Thread thread, Action task, bool isWatch)
     {
         pendingEntries.Enqueue(new Entry(thread, task, isWatch));
@@ -111,6 +114,7 @@ public static class ThreadDeathWatcher
         }
         Volatile.Write(ref watcherThread, worker);
     }
+
     /**
      * Waits until the thread of this watcher has no threads to watch and terminates itself.
      * Because a new watcher thread will be started again on {@link #watch(Thread, Runnable)},
@@ -177,12 +181,14 @@ public static class ThreadDeathWatcher
                 }
             }
         }
+
         private void FetchWatchees()
         {
             while (pendingEntries.TryDequeue(out Entry entry))
                 if (entry.isWatch) watchees.Add(entry);
                 else watchees.Remove(entry);
         }
+
         private void NotifyWatchees()
         {
             for (int index = 0; index < watchees.Count;)
@@ -204,6 +210,7 @@ public static class ThreadDeathWatcher
         {
             return RuntimeHelpers.GetHashCode(thread) ^ RuntimeHelpers.GetHashCode(task);
         }
+
         public override bool Equals(object value)
         {
             return value is Entry other &&

@@ -154,35 +154,56 @@ public class LocalTransportThreadModel3SourceTest
         {
             Events.Enqueue(EventType.ExceptionCaught);
         }
+
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
-        { if (inbound) Events.Enqueue(EventType.UserEvent); }
+        {
+            if (inbound)
+                Events.Enqueue(EventType.UserEvent);
+        }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
-        { if (inbound) Events.Enqueue(EventType.MessageReceivedLast); }
+        {
+            if (inbound)
+                Events.Enqueue(EventType.MessageReceivedLast);
+        }
+
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             Events.Enqueue(EventType.Inactive);
         }
+
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             Events.Enqueue(EventType.Active);
         }
+
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
             Events.Enqueue(EventType.Unregistered);
             Unregistered.TrySetResult();
         }
+
         public override void ChannelRegistered(IChannelHandlerContext ctx)
         {
             Events.Enqueue(EventType.Registered);
         }
+
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
-        { if (inbound) Events.Enqueue(EventType.MessageReceived); }
+        {
+            if (inbound)
+                Events.Enqueue(EventType.MessageReceived);
+        }
+
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             if (!inbound) Events.Enqueue(EventType.Write);
             return Task.CompletedTask;
         }
+
         public override void Read(IChannelHandlerContext ctx)
-        { if (!inbound) Events.Enqueue(EventType.Read); }
+        {
+            if (!inbound)
+                Events.Enqueue(EventType.Read);
+        }
     }
 }

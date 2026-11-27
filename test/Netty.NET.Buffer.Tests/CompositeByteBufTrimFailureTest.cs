@@ -31,25 +31,43 @@ public class CompositeByteBufTrimFailureTest
     {
         public override ByteBuf Slice(int index, int length)
         {
-            ++o.Calls; o.Index = index; o.Length = length;
-            if (o.Mode == 1) throw o.Failure;
+            ++o.Calls;
+            o.Index = index;
+            o.Length = length;
+            if (o.Mode == 1)
+                throw o.Failure;
             ByteBuf result = base.Slice(index, length);
             // A borrowed slice has no new owner claim to release on failure.
-            if (o.Mode == 2) throw o.Failure;
+            if (o.Mode == 2)
+                throw o.Failure;
             return result;
         }
     }
     private sealed class Tracker(ByteBuf expected) : IResourceLeakTracker<ByteBuf>
     {
         internal int Closes;
-        public void Record() { }
-        public void Record(object hint) { }
-        public bool Close(ByteBuf b) { Assert.Same(expected, b); ++Closes; return true; }
+        public void Record()
+        {
+        }
+
+        public void Record(object hint)
+        {
+        }
+
+        public bool Close(ByteBuf b)
+        {
+            Assert.Same(expected, b);
+            ++Closes;
+            return true;
+        }
     }
     private sealed class ReleaseProbe(ByteBuf b, List<int> releases, int id) : WrappedByteBuf(b)
     {
         public override bool Release(int decrement = 1)
-        { releases.Add(id); return base.Release(decrement); }
+        {
+            releases.Add(id);
+            return base.Release(decrement);
+        }
     }
     public static IEnumerable<object[]> Cases()
     {
@@ -59,6 +77,7 @@ public class CompositeByteBufTrimFailureTest
         for (int tails = 0; tails < 3; ++tails)
         for (int mode = 0; mode < 3; ++mode) yield return [pooled, direct, facade, tails, mode];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void CachedSlicePreparationFailurePreservesTailOwnershipLayoutIndicesAndRetry(bool pooled, bool direct, int facade, int tails, int mode)
@@ -67,60 +86,88 @@ public class CompositeByteBufTrimFailureTest
         IByteBufAllocator allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4, nativeAllocator: native)
             : new UnpooledByteBufAllocator(false, native);
         ByteBuf raw = direct ? allocator.DirectBuffer(16, 16) : allocator.HeapBuffer(16, 16);
-        for (int i = 0; i < 16; ++i) raw.WriteByte(i + 1);
-        ByteBuf child = raw.RetainedSlice(2, 12); Assert.False(raw.Release());
-        var observation = new Observation(); var first = new SliceProbe(child, observation);
-        var root = new CompositeByteBuf(allocator, direct, 16); root.AddComponent(first, true);
-        var trailing = new List<ByteBuf>(); var releases = new List<int>();
+        for (int i = 0; i < 16; ++i)
+            raw.WriteByte(i + 1);
+        ByteBuf child = raw.RetainedSlice(2, 12);
+        Assert.False(raw.Release());
+        var observation = new Observation();
+        var first = new SliceProbe(child, observation);
+        var root = new CompositeByteBuf(allocator, direct, 16);
+        root.AddComponent(first, true);
+        var trailing = new List<ByteBuf>();
+        var releases = new List<int>();
         for (int i = 0; i < tails; ++i)
         {
             ByteBuf tail = direct ? allocator.DirectBuffer(6, 6) : allocator.HeapBuffer(6, 6);
             tail.WriteBytes(new byte[] { 51, 52, 53, 54, 55, 56 });
-            tail = new ReleaseProbe(tail, releases, i); trailing.Add(tail); root.AddComponent(tail, true);
+            tail = new ReleaseProbe(tail, releases, i);
+            trailing.Add(tail);
+            root.AddComponent(tail, true);
         }
         var tracker = new Tracker(root);
         CompositeByteBuf owner = facade switch
         {
-            0 => root, 1 => new WrappedCompositeByteBuf(root),
+            0 => root,
+            1 => new WrappedCompositeByteBuf(root),
             2 => new SimpleLeakAwareCompositeByteBuf(root, tracker),
             _ => new AdvancedLeakAwareCompositeByteBuf(root, tracker)
         };
         try
         {
             Assert.Same(first, root.ComponentSlice(0));
-            int capacity = root.Capacity; byte[] before = ByteBufUtil.GetBytes(root, 0, capacity);
+            int capacity = root.Capacity;
+            byte[] before = ByteBufUtil.GetBytes(root, 0, capacity);
             owner.SetIndex(1, 6).MarkReaderIndex().MarkWriterIndex().SetIndex(2, capacity - 1);
             observation.Mode = mode;
-            if (mode == 0) owner.Capacity = 7;
+            if (mode == 0)
+                owner.Capacity = 7;
             else
             {
                 Assert.Same(observation.Failure, Assert.Throws<SliceFailure>(() => owner.Capacity = 7));
-                Assert.Equal(capacity, owner.Capacity); Assert.Equal(tails + 1, root.NumComponents);
+                Assert.Equal(capacity, owner.Capacity);
+                Assert.Equal(tails + 1, root.NumComponents);
                 Assert.Equal((2, capacity - 1), (owner.ReaderIndex, owner.WriterIndex));
-                Assert.Equal(before, ByteBufUtil.GetBytes(root, 0, capacity)); Assert.Same(first, root.ComponentSlice(0));
-                Assert.Equal(1, first.RefCnt); Assert.Equal(1, raw.RefCnt);
+                Assert.Equal(before, ByteBufUtil.GetBytes(root, 0, capacity));
+                Assert.Same(first, root.ComponentSlice(0));
+                Assert.Equal(1, first.RefCnt);
+                Assert.Equal(1, raw.RefCnt);
                 Assert.All(trailing, b => Assert.Equal(1, b.RefCnt));
                 Assert.Empty(releases);
-                owner.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
+                owner.ResetWriterIndex().ResetReaderIndex();
+                Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
                 owner.SetIndex(2, capacity - 1);
             }
             Assert.Equal((1, 0, 7), (observation.Calls, observation.Index, observation.Length));
-            if (mode != 0) { observation.Mode = 0; owner.Capacity = 7; Assert.Equal(2, observation.Calls); }
+            if (mode != 0)
+            {
+                observation.Mode = 0;
+                owner.Capacity = 7;
+                Assert.Equal(2, observation.Calls);
+            }
             Assert.Equal((7, 1, 2, 7), (owner.Capacity, root.NumComponents, owner.ReaderIndex, owner.WriterIndex));
             Assert.Equal(before.AsSpan(0, 7).ToArray(), ByteBufUtil.GetBytes(owner, 0, 7));
-            Assert.Equal(7, root.ComponentSlice(0).Capacity); Assert.All(trailing, b => Assert.Equal(0, b.RefCnt));
+            Assert.Equal(7, root.ComponentSlice(0).Capacity);
+            Assert.All(trailing, b => Assert.Equal(0, b.RefCnt));
             Assert.Equal(tails == 2 ? new[] { 1, 0 } : tails == 1 ? new[] { 0 } : Array.Empty<int>(), releases);
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, raw.RefCnt);
-            owner.ResetWriterIndex().ResetReaderIndex(); Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, raw.RefCnt);
+            owner.ResetWriterIndex().ResetReaderIndex();
+            Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
         }
         finally
         {
-            if (owner.RefCnt > 0) owner.Release();
-            if (first.RefCnt > 0) first.Release();
-            foreach (ByteBuf b in trailing) if (b.RefCnt > 0) b.Release();
-            (allocator as IDisposable)?.Dispose(); Assert.Equal(0, native.ReservedBytes);
+            if (owner.RefCnt > 0)
+                owner.Release();
+            if (first.RefCnt > 0)
+                first.Release();
+            foreach (ByteBuf b in trailing)
+            if (b.RefCnt > 0)
+                b.Release();
+            (allocator as IDisposable)?.Dispose();
+            Assert.Equal(0, native.ReservedBytes);
         }
-        Assert.Equal(0, child.RefCnt); Assert.Equal(0, raw.RefCnt);
+        Assert.Equal(0, child.RefCnt);
+        Assert.Equal(0, raw.RefCnt);
         Assert.Equal(facade >= 2 ? 1 : 0, tracker.Closes);
     }
 }

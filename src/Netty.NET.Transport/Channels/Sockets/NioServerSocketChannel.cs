@@ -58,8 +58,13 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
     /**
      * Create a new instance
      */
-    public NioServerSocketChannel() : this(NewChannel(null)) { }
-    public NioServerSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp)) { }
+    public NioServerSocketChannel() : this(NewChannel(null))
+    {
+    }
+
+    public NioServerSocketChannel(AddressFamily family) : this(new Socket(family, SocketType.Stream, ProtocolType.Tcp))
+    {
+    }
 
     /**
      * Create a new instance using the given {@link SelectorProvider} and protocol family (supported only since JDK 15).
@@ -67,13 +72,18 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
      * @deprecated use {@link NioServerSocketChannel#NioServerSocketChannel(SelectorProvider, SocketProtocolFamily)}
      */
     [Obsolete("use NioServerSocketChannel(SocketProtocolFamily?)")]
-    public NioServerSocketChannel(InternetProtocolFamily? family) : this(family == null ? null : family.Value.ToSocketProtocolFamily()) { }
+    public NioServerSocketChannel(InternetProtocolFamily? family) : this(family == null ? null : family.Value.ToSocketProtocolFamily())
+    {
+    }
 
     /**
      * Create a new instance using the given {@link SelectorProvider} and protocol family (supported only since JDK 15).
      */
     // CLR: there is no SelectorProvider; the CLR socket is opened directly for the family.
-    public NioServerSocketChannel(SocketProtocolFamily? family) : this(NewChannel(family)) { }
+    public NioServerSocketChannel(SocketProtocolFamily? family) : this(NewChannel(family))
+    {
+    }
+
     /**
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
@@ -146,14 +156,17 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
     {
         return Normalize(JavaChannel().LocalEndPoint);
     }
+
     protected override EndPoint RemoteAddress0()
     {
         return null;
     }
+
     protected override IChannelConfig NewConfig()
     {
         return new DefaultServerSocketChannelConfig(this, JavaChannel());
     }
+
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -172,6 +185,7 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
         SetActive(true);
         return Task.CompletedTask;
     }
+
     protected override void DoClose()
     {
         base.DoClose();

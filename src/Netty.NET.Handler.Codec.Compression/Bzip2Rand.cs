@@ -77,5 +77,7 @@ internal sealed class Bzip2Rand
         return RNUMS[i];
     }
 
-    private Bzip2Rand() { }
+    private Bzip2Rand()
+    {
+    }
 }

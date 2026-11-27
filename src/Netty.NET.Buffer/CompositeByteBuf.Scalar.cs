@@ -23,13 +23,31 @@ public partial class CompositeByteBuf
     // CompositeByteBuf._get*/_set* dispatch through the selected component's public
     // primitive operations. Direct memory access would skip observable overrides.
     internal override byte ReadByteCore(int index)
-    { CheckIndex(index, 1); return (byte)ReadComponentWord(index, 1, false); }
+    {
+        CheckIndex(index, 1);
+        return (byte)ReadComponentWord(index, 1, false);
+    }
+
     internal override void WriteByteCore(int index, int value)
-    { EnsureCanWrite(); CheckIndex(index, 1); WriteComponentWord(index, unchecked((ulong)value), 1, false); }
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 1);
+        WriteComponentWord(index, unchecked((ulong)value), 1, false);
+    }
+
     internal override ulong ReadWord(int index, int width, bool littleEndian)
-    { CheckIndex(index, width); return ReadComponentWord(index, width, littleEndian); }
+    {
+        CheckIndex(index, width);
+        return ReadComponentWord(index, width, littleEndian);
+    }
+
     internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
-    { EnsureCanWrite(); CheckIndex(index, width); WriteComponentWord(index, value, width, littleEndian); return this; }
+    {
+        EnsureCanWrite();
+        CheckIndex(index, width);
+        WriteComponentWord(index, value, width, littleEndian);
+        return this;
+    }
 
     private ulong ReadComponentWord(int index, int width, bool littleEndian)
     {

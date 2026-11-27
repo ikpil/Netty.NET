@@ -433,10 +433,12 @@ public class FixedChannelPoolTest
             ServerBootstrap = new ServerBootstrap().Group(Group).Channel<LocalServerChannel>()
                 .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new ChannelInboundHandlerAdapter())));
         }
+
         internal async Task StartServerAsync()
         {
             Server = await ServerBootstrap.BindAsync(Address).WaitAsync(TimeSpan.FromSeconds(5));
         }
+
         public async ValueTask DisposeAsync()
         {
             if (Server != null)
@@ -451,7 +453,10 @@ public class FixedChannelPoolTest
         private readonly ManualResetEventSlim _continueAcquire = new();
         private IChannel _channel;
         internal IChannel Channel => Volatile.Read(ref _channel);
-        public override void ChannelCreated(IChannel channel) { /* NOOP */ }
+        public override void ChannelCreated(IChannel channel)
+        { /* NOOP */
+        }
+
         public override void ChannelAcquired(IChannel channel)
         {
             if (Interlocked.CompareExchange(ref _channel, channel, null) != null)
@@ -460,14 +465,17 @@ public class FixedChannelPoolTest
             if (!_continueAcquire.Wait(TimeSpan.FromSeconds(5)))
                 throw new TimeoutException("Timed out waiting to continue acquire");
         }
+
         internal Task AwaitChannelAcquiredAsync()
         {
             return _channelAcquired.Task.WaitAsync(TimeSpan.FromSeconds(5));
         }
+
         internal void ContinueAcquire()
         {
             _continueAcquire.Set();
         }
+
         public void Dispose()
         {
             _continueAcquire.Dispose();
@@ -476,15 +484,21 @@ public class FixedChannelPoolTest
 
     private sealed class TestChannelPoolHandler : AbstractChannelPoolHandler
     {
-        public override void ChannelCreated(IChannel channel) { /* NOOP */ }
+        public override void ChannelCreated(IChannel channel)
+        { /* NOOP */
+        }
     }
     private sealed class CallbackHandler(Action<IChannel> acquired = null, Action<IChannel> released = null) : AbstractChannelPoolHandler
     {
-        public override void ChannelCreated(IChannel channel) { /* NOOP */ }
+        public override void ChannelCreated(IChannel channel)
+        { /* NOOP */
+        }
+
         public override void ChannelAcquired(IChannel channel)
         {
             acquired?.Invoke(channel);
         }
+
         public override void ChannelReleased(IChannel channel)
         {
             released?.Invoke(channel);

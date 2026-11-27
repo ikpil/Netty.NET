@@ -38,15 +38,23 @@ public partial class CompositeByteBuf
     public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        CheckIndex(index, length); destination.EnsureCanWrite(); destination.CheckIndex(destinationIndex, length);
-        if (length == 0) return this;
+        CheckIndex(index, length);
+        destination.EnsureCanWrite();
+        destination.CheckIndex(destinationIndex, length);
+        if (length == 0)
+            return this;
         if (BulkRangesOverlap(this, index, destination, destinationIndex, length))
         {
             ByteBuf snapshot = new UnpooledHeapByteBuf(length);
-            try { GetBufferComponents(index, snapshot, 0, length); destination.SetBytes(destinationIndex, snapshot, 0, length); }
+            try
+            {
+                GetBufferComponents(index, snapshot, 0, length);
+                destination.SetBytes(destinationIndex, snapshot, 0, length);
+            }
             finally { snapshot.Release(); }
         }
-        else GetBufferComponents(index, destination, destinationIndex, length);
+        else
+            GetBufferComponents(index, destination, destinationIndex, length);
         return this;
     }
 
@@ -67,15 +75,22 @@ public partial class CompositeByteBuf
     {
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
-        CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
-        if (length == 0) return this;
+        CheckIndex(index, length);
+        source.CheckIndex(sourceIndex, length);
+        if (length == 0)
+            return this;
         if (BulkRangesOverlap(source, sourceIndex, this, index, length))
         {
             ByteBuf snapshot = new UnpooledHeapByteBuf(length);
-            try { snapshot.SetBytes(0, source, sourceIndex, length); SetBufferComponents(index, snapshot, 0, length); }
+            try
+            {
+                snapshot.SetBytes(0, source, sourceIndex, length);
+                SetBufferComponents(index, snapshot, 0, length);
+            }
             finally { snapshot.Release(); }
         }
-        else SetBufferComponents(index, source, sourceIndex, length);
+        else
+            SetBufferComponents(index, source, sourceIndex, length);
         return this;
     }
 

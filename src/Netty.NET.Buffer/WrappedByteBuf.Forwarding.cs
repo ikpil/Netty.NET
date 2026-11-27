@@ -50,10 +50,16 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetByte(int index, int value)
-    { Buffer.SetByte(index, value); return this; }
+    {
+        Buffer.SetByte(index, value);
+        return this;
+    }
 
     public override ByteBuf SetBoolean(int index, bool value)
-    { Buffer.SetBoolean(index, value); return this; }
+    {
+        Buffer.SetBoolean(index, value);
+        return this;
+    }
 
     public override short GetShort(int index)
     {
@@ -61,7 +67,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetShort(int index, int value)
-    { Buffer.SetShort(index, value); return this; }
+    {
+        Buffer.SetShort(index, value);
+        return this;
+    }
 
     public override short GetShortLE(int index)
     {
@@ -69,7 +78,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetShortLE(int index, int value)
-    { Buffer.SetShortLE(index, value); return this; }
+    {
+        Buffer.SetShortLE(index, value);
+        return this;
+    }
 
     public override int GetInt(int index)
     {
@@ -77,7 +89,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetInt(int index, int value)
-    { Buffer.SetInt(index, value); return this; }
+    {
+        Buffer.SetInt(index, value);
+        return this;
+    }
 
     public override int GetIntLE(int index)
     {
@@ -85,7 +100,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetIntLE(int index, int value)
-    { Buffer.SetIntLE(index, value); return this; }
+    {
+        Buffer.SetIntLE(index, value);
+        return this;
+    }
 
     public override long GetLong(int index)
     {
@@ -93,7 +111,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetLong(int index, long value)
-    { Buffer.SetLong(index, value); return this; }
+    {
+        Buffer.SetLong(index, value);
+        return this;
+    }
 
     public override long GetLongLE(int index)
     {
@@ -101,7 +122,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetLongLE(int index, long value)
-    { Buffer.SetLongLE(index, value); return this; }
+    {
+        Buffer.SetLongLE(index, value);
+        return this;
+    }
 
     public override int GetUnsignedMedium(int index)
     {
@@ -124,10 +148,16 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetMedium(int index, int value)
-    { Buffer.SetMedium(index, value); return this; }
+    {
+        Buffer.SetMedium(index, value);
+        return this;
+    }
 
     public override ByteBuf SetMediumLE(int index, int value)
-    { Buffer.SetMediumLE(index, value); return this; }
+    {
+        Buffer.SetMediumLE(index, value);
+        return this;
+    }
 
     public override ushort GetUnsignedShort(int index)
     {
@@ -155,7 +185,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetChar(int index, char value)
-    { Buffer.SetChar(index, value); return this; }
+    {
+        Buffer.SetChar(index, value);
+        return this;
+    }
 
     public override float GetFloat(int index)
     {
@@ -178,16 +211,28 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf SetFloat(int index, float value)
-    { Buffer.SetFloat(index, value); return this; }
+    {
+        Buffer.SetFloat(index, value);
+        return this;
+    }
 
     public override ByteBuf SetFloatLE(int index, float value)
-    { Buffer.SetFloatLE(index, value); return this; }
+    {
+        Buffer.SetFloatLE(index, value);
+        return this;
+    }
 
     public override ByteBuf SetDouble(int index, double value)
-    { Buffer.SetDouble(index, value); return this; }
+    {
+        Buffer.SetDouble(index, value);
+        return this;
+    }
 
     public override ByteBuf SetDoubleLE(int index, double value)
-    { Buffer.SetDoubleLE(index, value); return this; }
+    {
+        Buffer.SetDoubleLE(index, value);
+        return this;
+    }
 
     public override byte ReadByte()
     {
@@ -195,7 +240,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteByte(int value)
-    { Buffer.WriteByte(value); return this; }
+    {
+        Buffer.WriteByte(value);
+        return this;
+    }
 
     public override bool ReadBoolean()
     {
@@ -203,7 +251,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteBoolean(bool value)
-    { Buffer.WriteBoolean(value); return this; }
+    {
+        Buffer.WriteBoolean(value);
+        return this;
+    }
 
     public override short ReadShort()
     {
@@ -211,7 +262,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteShort(int value)
-    { Buffer.WriteShort(value); return this; }
+    {
+        Buffer.WriteShort(value);
+        return this;
+    }
 
     public override short ReadShortLE()
     {
@@ -219,7 +273,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteShortLE(int value)
-    { Buffer.WriteShortLE(value); return this; }
+    {
+        Buffer.WriteShortLE(value);
+        return this;
+    }
 
     public override int ReadMedium()
     {
@@ -227,7 +284,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteMedium(int value)
-    { Buffer.WriteMedium(value); return this; }
+    {
+        Buffer.WriteMedium(value);
+        return this;
+    }
 
     public override int ReadMediumLE()
     {
@@ -235,7 +295,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteMediumLE(int value)
-    { Buffer.WriteMediumLE(value); return this; }
+    {
+        Buffer.WriteMediumLE(value);
+        return this;
+    }
 
     public override int ReadInt()
     {
@@ -243,7 +306,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteInt(int value)
-    { Buffer.WriteInt(value); return this; }
+    {
+        Buffer.WriteInt(value);
+        return this;
+    }
 
     public override int ReadIntLE()
     {
@@ -251,7 +317,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteIntLE(int value)
-    { Buffer.WriteIntLE(value); return this; }
+    {
+        Buffer.WriteIntLE(value);
+        return this;
+    }
 
     public override long ReadLong()
     {
@@ -259,7 +328,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteLong(long value)
-    { Buffer.WriteLong(value); return this; }
+    {
+        Buffer.WriteLong(value);
+        return this;
+    }
 
     public override long ReadLongLE()
     {
@@ -267,7 +339,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteLongLE(long value)
-    { Buffer.WriteLongLE(value); return this; }
+    {
+        Buffer.WriteLongLE(value);
+        return this;
+    }
 
     public override float ReadFloat()
     {
@@ -275,7 +350,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteFloat(float value)
-    { Buffer.WriteFloat(value); return this; }
+    {
+        Buffer.WriteFloat(value);
+        return this;
+    }
 
     public override float ReadFloatLE()
     {
@@ -283,7 +361,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteFloatLE(float value)
-    { Buffer.WriteFloatLE(value); return this; }
+    {
+        Buffer.WriteFloatLE(value);
+        return this;
+    }
 
     public override double ReadDouble()
     {
@@ -291,7 +372,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteDouble(double value)
-    { Buffer.WriteDouble(value); return this; }
+    {
+        Buffer.WriteDouble(value);
+        return this;
+    }
 
     public override double ReadDoubleLE()
     {
@@ -299,7 +383,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteDoubleLE(double value)
-    { Buffer.WriteDoubleLE(value); return this; }
+    {
+        Buffer.WriteDoubleLE(value);
+        return this;
+    }
 
     public override ushort ReadUnsignedShort()
     {
@@ -337,34 +424,64 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf WriteChar(char value)
-    { Buffer.WriteChar(value); return this; }
+    {
+        Buffer.WriteChar(value);
+        return this;
+    }
 
     public override ByteBuf SkipBytes(int length)
-    { Buffer.SkipBytes(length); return this; }
+    {
+        Buffer.SkipBytes(length);
+        return this;
+    }
 
     public override ByteBuf GetBytes(int index, Span<byte> destination)
-    { Buffer.GetBytes(index, destination); return this; }
+    {
+        Buffer.GetBytes(index, destination);
+        return this;
+    }
 
     public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
-    { Buffer.SetBytes(index, source); return this; }
+    {
+        Buffer.SetBytes(index, source);
+        return this;
+    }
 
     public override ByteBuf ReadBytes(Span<byte> destination)
-    { Buffer.ReadBytes(destination); return this; }
+    {
+        Buffer.ReadBytes(destination);
+        return this;
+    }
 
     public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
-    { Buffer.WriteBytes(source); return this; }
+    {
+        Buffer.WriteBytes(source);
+        return this;
+    }
 
     public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
-    { Buffer.GetBytes(index, destination, destinationIndex, length); return this; }
+    {
+        Buffer.GetBytes(index, destination, destinationIndex, length);
+        return this;
+    }
 
     public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
-    { Buffer.SetBytes(index, source, sourceIndex, length); return this; }
+    {
+        Buffer.SetBytes(index, source, sourceIndex, length);
+        return this;
+    }
 
     public override ByteBuf ReadBytes(ByteBuf destination, int length)
-    { Buffer.ReadBytes(destination, length); return this; }
+    {
+        Buffer.ReadBytes(destination, length);
+        return this;
+    }
 
     public override ByteBuf WriteBytes(ByteBuf source, int length)
-    { Buffer.WriteBytes(source, length); return this; }
+    {
+        Buffer.WriteBytes(source, length);
+        return this;
+    }
 
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     {
@@ -470,7 +587,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf GetBytes(int index, Stream destination, int length)
-    { Buffer.GetBytes(index, destination, length); return this; }
+    {
+        Buffer.GetBytes(index, destination, length);
+        return this;
+    }
 
     public override int SetBytes(int index, Stream source, int length)
     {
@@ -478,7 +598,10 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf ReadBytes(Stream destination, int length)
-    { Buffer.ReadBytes(destination, length); return this; }
+    {
+        Buffer.ReadBytes(destination, length);
+        return this;
+    }
 
     public override int WriteBytes(Stream source, int length)
     {
@@ -510,26 +633,50 @@ public partial class WrappedByteBuf
     }
 
     public override ByteBuf GetBytes(int index, ByteBuf destination)
-    { Buffer.GetBytes(index, destination); return this; }
+    {
+        Buffer.GetBytes(index, destination);
+        return this;
+    }
 
     public override ByteBuf GetBytes(int index, ByteBuf destination, int length)
-    { Buffer.GetBytes(index, destination, length); return this; }
+    {
+        Buffer.GetBytes(index, destination, length);
+        return this;
+    }
 
     public override ByteBuf SetBytes(int index, ByteBuf source)
-    { Buffer.SetBytes(index, source); return this; }
+    {
+        Buffer.SetBytes(index, source);
+        return this;
+    }
 
     public override ByteBuf SetBytes(int index, ByteBuf source, int length)
-    { Buffer.SetBytes(index, source, length); return this; }
+    {
+        Buffer.SetBytes(index, source, length);
+        return this;
+    }
 
     public override ByteBuf ReadBytes(ByteBuf destination)
-    { Buffer.ReadBytes(destination); return this; }
+    {
+        Buffer.ReadBytes(destination);
+        return this;
+    }
 
     public override ByteBuf ReadBytes(ByteBuf destination, int destinationIndex, int length)
-    { Buffer.ReadBytes(destination, destinationIndex, length); return this; }
+    {
+        Buffer.ReadBytes(destination, destinationIndex, length);
+        return this;
+    }
 
     public override ByteBuf WriteBytes(ByteBuf source)
-    { Buffer.WriteBytes(source); return this; }
+    {
+        Buffer.WriteBytes(source);
+        return this;
+    }
 
     public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
-    { Buffer.WriteBytes(source, sourceIndex, length); return this; }
+    {
+        Buffer.WriteBytes(source, sourceIndex, length);
+        return this;
+    }
 }

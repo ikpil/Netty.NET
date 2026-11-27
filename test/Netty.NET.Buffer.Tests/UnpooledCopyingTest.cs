@@ -173,7 +173,8 @@ public class UnpooledCopyingTest
         ByteBuf copy = Unpooled.CopiedBuffer(a.AsReadOnly(), b.AsReadOnly());
         Assert.Equal(new[] { 1, 1 }, new[] { a.RefCnt, b.RefCnt });
         Assert.Equal(new[] { 1, 3, 1, 2 }, new[] { a.ReaderIndex, a.WriterIndex, b.ReaderIndex, b.WriterIndex });
-        a.Release(); b.Release();
+        a.Release();
+        b.Release();
         Assert.Equal(0, allocator.ReservedBytes);
         try
         {
@@ -307,7 +308,8 @@ public class UnpooledCopyingTest
     [Fact]
     public void EmptyReleasedSourceIsIgnoredOnlyWhenTheEntireInputIsUnreadable()
     {
-        ByteBuf dead = Unpooled.Buffer(1); dead.Release();
+        ByteBuf dead = Unpooled.Buffer(1);
+        dead.Release();
         ByteBuf readable = Unpooled.WrappedBuffer(new byte[] { 1 });
         try
         {
@@ -354,6 +356,7 @@ public class UnpooledCopyingTest
         {
             WriteBytes(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
         }
+
         protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         {
             return Fail ? throw Failure : base.GetReadOnlyMemoryCore(index, length);

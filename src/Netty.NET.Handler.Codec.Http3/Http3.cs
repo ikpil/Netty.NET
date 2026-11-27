@@ -38,7 +38,9 @@ namespace Netty.NET.Handler.Codec.Http3;
 public sealed class Http3
 {
 
-    private Http3() {  }
+    private Http3()
+    {
+    }
 
     private static readonly string[] H3_PROTOS = new string[] {
             "h3-29",

@@ -37,6 +37,7 @@ public class PooledBufferEventTest
         return new(poolHeap: pooled, poolDirect: pooled, maxOrder: 1, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache,
             useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
     }
+
     private static ByteBuf Allocate(PooledByteBufAllocator allocator, bool direct, int size, int max = 40000)
     {
         return direct ? allocator.DirectBuffer(size, max) : allocator.HeapBuffer(size, max);
@@ -46,27 +47,37 @@ public class PooledBufferEventTest
     [InlineData(false)] [InlineData(true)]
     public void OriginalPooledAllocationAndFinalReleaseCarryCompleteMetadata(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, direct, 128, int.MaxValue);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, direct, 128, int.MaxValue);
         try
         {
-            Record allocation = Assert.Single(listener.Events); Check(allocation, 1, 128, 128, int.MaxValue, direct);
-            Assert.True(allocation.Flag("chunkPooled")); Assert.False(allocation.Flag("chunkThreadLocal"));
+            Record allocation = Assert.Single(listener.Events);
+            Check(allocation, 1, 128, 128, int.MaxValue, direct);
+            Assert.True(allocation.Flag("chunkPooled"));
+            Assert.False(allocation.Flag("chunkThreadLocal"));
             Assert.Equal(direct ? (long)ManagedMemoryTest.Address(buffer.AsReadOnlyMemory(0, 128)) : 0, allocation.Number("address"));
-            buffer.Retain(); Assert.False(buffer.Release()); Assert.Single(listener.Events);
+            buffer.Retain();
+            Assert.False(buffer.Release());
+            Assert.Single(listener.Events);
             buffer.SetIndex(7, 99).MarkReaderIndex().MarkWriterIndex();
         }
         finally { buffer.Release(); }
-        Record release = listener.Events[1]; Check(release, 2, 128, 128, int.MaxValue, direct);
+        Record release = listener.Events[1];
+        Check(release, 2, 128, 128, int.MaxValue, direct);
         Assert.True(release.Number("address") == listener.Events[0].Number("address"));
-        Assert.Equal(2, listener.Events.Length); allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(2, listener.Events.Length);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void OriginalThreadLocalFlagDistinguishesCacheHitsFromCacheEligibleMisses(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native, cache: 4);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native, cache: 4);
         using var listener = new Listener();
         // Prime the cache.
         Allocate(allocator, direct, 128).Release();
@@ -74,44 +85,59 @@ public class PooledBufferEventTest
         Allocate(allocator, direct, 128).Release();
         Assert.Equal(new[] { 1, 2, 1, 2 }, listener.Events.Select(e => e.Id));
         Assert.False(listener.Events[0].Flag("chunkThreadLocal"));
-        Assert.True(listener.Events[2].Flag("chunkThreadLocal")); Assert.True(listener.Events[2].Flag("chunkPooled"));
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        Assert.True(listener.Events[2].Flag("chunkThreadLocal"));
+        Assert.True(listener.Events[2].Flag("chunkPooled"));
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void ResizeReportsOldAndNewSnapshotsOnlyWhenStorageIsReallocated(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, direct, 17);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, direct, 17);
         try
         {
             buffer.SetIndex(2, 15).MarkReaderIndex().MarkWriterIndex();
-            buffer.Capacity = 24; buffer.Capacity = 24; Assert.Single(listener.Events);
+            buffer.Capacity = 24;
+            buffer.Capacity = 24;
+            Assert.Single(listener.Events);
             buffer.Capacity = 16;
             Assert.Equal(new[] { 1, 3, 1 }, listener.Events.Select(e => e.Id));
-            Check(listener.Events[1], 3, 24, 32, 40000, direct); Assert.Equal(16, listener.Events[1].Number("newCapacity"));
+            Check(listener.Events[1], 3, 24, 32, 40000, direct);
+            Assert.Equal(16, listener.Events[1].Number("newCapacity"));
             Check(listener.Events[2], 1, 16, 16, 40000, direct);
             Assert.True(listener.Events[0].Number("address") == listener.Events[1].Number("address"));
-            Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(15, buffer.WriterIndex);
+            Assert.Equal(2, buffer.ReaderIndex);
+            Assert.Equal(15, buffer.WriterIndex);
             buffer.ResetReaderIndex().ResetWriterIndex();
         }
         finally { buffer.Release(); }
         Check(listener.Events[3], 2, 16, 16, 40000, direct);
         Assert.True(listener.Events[2].Number("address") == listener.Events[3].Number("address"));
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void FastCapacityIsCappedByTheBufferMaximumAndIndependentOfActiveCursors(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, direct, 17, 23);
-        buffer.SetIndex(7, 13); buffer.Capacity = 22; buffer.Release();
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, direct, 17, 23);
+        buffer.SetIndex(7, 13);
+        buffer.Capacity = 22;
+        buffer.Release();
         Check(listener.Events[0], 1, 17, 23, 23, direct);
         Check(listener.Events[1], 2, 22, 23, 23, direct);
-        Assert.Equal(2, listener.Events.Length); allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(2, listener.Events.Length);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
@@ -119,97 +145,130 @@ public class PooledBufferEventTest
     [InlineData(false, 17000, false)] [InlineData(true, 17000, false)]
     public void ArenaZeroAndHugeAllocationsDescribeTheActualStoragePolicy(bool direct, int size, bool pooled)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, direct, size, 17000);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, direct, size, 17000);
         int fast = Math.Min(((PooledByteBuf)AllocatorLeakDetectionTest.UnwrapLeak(buffer)).Allocation.ReservedLength, 17000);
         buffer.Release();
         Check(listener.Events[0], 1, size, fast, 17000, direct);
-        Assert.Equal(pooled, listener.Events[0].Flag("chunkPooled")); Assert.False(listener.Events[0].Flag("chunkThreadLocal"));
+        Assert.Equal(pooled, listener.Events[0].Flag("chunkPooled"));
+        Assert.False(listener.Events[0].Flag("chunkThreadLocal"));
         Check(listener.Events[1], 2, size, fast, 17000, direct);
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void OriginalNoArenaFallbackReportsAllocationWithoutInventingUnpooledFreeOrResizeEvents(bool direct)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native, pooled: false);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, direct, 17);
-        buffer.Capacity = 64; buffer.Release();
-        Record allocation = Assert.Single(listener.Events); Check(allocation, 1, 17, 17, 40000, direct);
-        Assert.False(allocation.Flag("chunkPooled")); Assert.False(allocation.Flag("chunkThreadLocal"));
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native, pooled: false);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, direct, 17);
+        buffer.Capacity = 64;
+        buffer.Release();
+        Record allocation = Assert.Single(listener.Events);
+        Check(allocation, 1, 17, 17, 40000, direct);
+        Assert.False(allocation.Flag("chunkPooled"));
+        Assert.False(allocation.Flag("chunkThreadLocal"));
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]
     [InlineData(1)] [InlineData(2)] [InlineData(4)]
     public void IndependentKeywordsSelectOnlyTheRequestedLifecycleEvent(long keyword)
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener((EventKeywords)keyword); ByteBuf buffer = Allocate(allocator, true, 16);
-        buffer.Capacity = 128; buffer.Release();
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener((EventKeywords)keyword);
+        ByteBuf buffer = Allocate(allocator, true, 16);
+        buffer.Capacity = 128;
+        buffer.Release();
         int id = keyword == 1 ? 1 : keyword == 2 ? 2 : 3;
         Assert.Equal(keyword == 1 ? 2 : 1, listener.Events.Length);
         Assert.All(listener.Events, e => Assert.Equal(id, e.Id));
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void FailedNativeResizeReportsAttemptWithoutPublishingAllocationOrChangingData()
     {
-        var native = new NativeMemoryAllocator(16384); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, true, 16);
+        var native = new NativeMemoryAllocator(16384);
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, true, 16);
         try
         {
-            buffer.WriteInt(0x12345678); buffer.SetIndex(1, 4);
+            buffer.WriteInt(0x12345678);
+            buffer.SetIndex(1, 4);
             Assert.Throws<OutOfDirectMemoryError>(() => buffer.Capacity = 20000);
             Assert.Equal(new[] { 1, 3 }, listener.Events.Select(e => e.Id));
-            Check(listener.Events[1], 3, 16, 16, 40000, true); Assert.Equal(20000, listener.Events[1].Number("newCapacity"));
-            Assert.Equal(16, buffer.Capacity); Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex);
-            Assert.Equal(0x12345678, buffer.GetInt(0)); Assert.Equal(16384, native.ReservedBytes);
+            Check(listener.Events[1], 3, 16, 16, 40000, true);
+            Assert.Equal(20000, listener.Events[1].Number("newCapacity"));
+            Assert.Equal(16, buffer.Capacity);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(4, buffer.WriterIndex);
+            Assert.Equal(0x12345678, buffer.GetInt(0));
+            Assert.Equal(16384, native.ReservedBytes);
         }
         finally { buffer.Release(); }
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void InvalidAndDisposedOperationsDoNotEmitSuccessfulAllocationsOrResizeAttempts()
     {
-        var native = new NativeMemoryAllocator(0); using var allocator = NewAllocator(native);
+        var native = new NativeMemoryAllocator(0);
+        using var allocator = NewAllocator(native);
         using var listener = new Listener();
         Assert.Throws<OutOfDirectMemoryError>(() => Allocate(allocator, true, 16));
         Assert.Throws<ArgumentOutOfRangeException>(() => Allocate(allocator, false, -1));
         ByteBuf buffer = Allocate(allocator, false, 16, 16);
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 17);
-        buffer.Release(); allocator.Dispose();
+        buffer.Release();
+        allocator.Dispose();
         Assert.Throws<ObjectDisposedException>(() => Allocate(allocator, false, 16));
-        Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id)); Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id));
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void DisabledAndReenabledTracingDoesNotRetainBufferOrNativeStorage()
     {
         Assert.False(BufferAllocatorEventSource.Log.IsEnabled());
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
         Allocate(allocator, true, 16).Release();
         using (var listener = new Listener())
         {
-            Allocate(allocator, true, 16).Release(); Assert.Equal(2, listener.Events.Length);
+            Allocate(allocator, true, 16).Release();
+            Assert.Equal(2, listener.Events.Length);
             listener.DisableEvents(BufferAllocatorEventSource.Log);
-            Allocate(allocator, true, 16).Release(); Assert.Equal(2, listener.Events.Length);
+            Allocate(allocator, true, 16).Release();
+            Assert.Equal(2, listener.Events.Length);
             listener.EnableEvents(BufferAllocatorEventSource.Log, EventLevel.Informational, (EventKeywords)7);
-            Allocate(allocator, true, 16).Release(); Assert.Equal(4, listener.Events.Length);
+            Allocate(allocator, true, 16).Release();
+            Assert.Equal(4, listener.Events.Length);
         }
-        Assert.False(BufferAllocatorEventSource.Log.IsEnabled()); allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        Assert.False(BufferAllocatorEventSource.Log.IsEnabled());
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void ListenerCallbacksObserveSnapshotsOutsideAllocatorAndResizeLocks()
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
         using var listener = new Listener();
         object sync = typeof(PooledByteBufAllocator).GetField("_sync", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(allocator);
-        ByteBuf buffer = null; bool held = false;
+        ByteBuf buffer = null;
+        bool held = false;
         listener.Callback = _ =>
         {
             held |= Monitor.IsEntered(sync);
@@ -220,15 +279,20 @@ public class PooledBufferEventTest
                 held |= Monitor.IsEntered(resize);
             }
         };
-        buffer = Allocate(allocator, true, 16); buffer.Capacity = 128; buffer.Release();
-        Assert.False(held); Assert.Equal(new[] { 1, 3, 1, 2 }, listener.Events.Select(e => e.Id));
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        buffer = Allocate(allocator, true, 16);
+        buffer.Capacity = 128;
+        buffer.Release();
+        Assert.False(held);
+        Assert.Equal(new[] { 1, 3, 1, 2 }, listener.Events.Select(e => e.Id));
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void NativeOffsetAndRetainedViewsKeepOneRootLifecycle()
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
         using var listener = new Listener();
         ByteBuf first = Allocate(allocator, true, 128), second = Allocate(allocator, true, 128);
         ByteBuf view = second.RetainedSlice(3, 8).Duplicate();
@@ -236,28 +300,36 @@ public class PooledBufferEventTest
         {
             Assert.Equal((long)ManagedMemoryTest.Address(second.AsReadOnlyMemory(0, 128)), listener.Events[1].Number("address"));
             Assert.True(listener.Events[0].Number("address") != listener.Events[1].Number("address"));
-            Assert.False(second.Release()); Assert.Equal(2, listener.Events.Length);
-            Assert.True(view.Release()); Assert.Equal(3, listener.Events.Length);
+            Assert.False(second.Release());
+            Assert.Equal(2, listener.Events.Length);
+            Assert.True(view.Release());
+            Assert.Equal(3, listener.Events.Length);
             Assert.True(listener.Events[1].Number("address") == listener.Events[2].Number("address"));
         }
         finally { first.Release(); }
         Assert.Equal(new[] { 1, 1, 2, 2 }, listener.Events.Select(e => e.Id));
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
     }
 
     [Fact]
     public void FreeEventDoesNotRetainStorageAfterTheLastOperationLeaseEnds()
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); ByteBuf buffer = Allocate(allocator, true, 16);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        ByteBuf buffer = Allocate(allocator, true, 16);
         var lease = AllocatorLeakDetectionTest.UnwrapLeak(buffer).AcquireReadLease();
         try
         {
-            buffer.Release(); allocator.Dispose();
-            Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id)); Assert.True(native.ReservedBytes > 0);
+            buffer.Release();
+            allocator.Dispose();
+            Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id));
+            Assert.True(native.ReservedBytes > 0);
         }
         finally { lease.Dispose(); }
-        Assert.Equal(0, native.ReservedBytes); Assert.Equal(2, listener.Events.Length);
+        Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(2, listener.Events.Length);
     }
 
     [Fact]
@@ -295,10 +367,15 @@ public class PooledBufferEventTest
     [Fact]
     public void ThrowingListenerCannotPreventReturnOfNativeStorage()
     {
-        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native);
-        using var listener = new Listener(); listener.Callback = _ => throw new InvalidOperationException("observer failure");
-        ByteBuf buffer = Allocate(allocator, true, 16); buffer.Capacity = 128; buffer.Release();
-        allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
+        var native = new NativeMemoryAllocator();
+        using var allocator = NewAllocator(native);
+        using var listener = new Listener();
+        listener.Callback = _ => throw new InvalidOperationException("observer failure");
+        ByteBuf buffer = Allocate(allocator, true, 16);
+        buffer.Capacity = 128;
+        buffer.Release();
+        allocator.Dispose();
+        Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(4, listener.Events.Count(e => e.Id > 0));
     }
 
@@ -306,8 +383,10 @@ public class PooledBufferEventTest
     {
         Assert.True(record.Id == id, record.Id == 0 ? string.Join("; ", record.Fields.Values) : "Unexpected event kind.");
         Assert.Equal(typeof(PooledByteBufAllocator).FullName, record.Fields["allocatorType"]);
-        Assert.Equal(size, record.Number("size")); Assert.Equal(fast, record.Number("maxFastCapacity"));
-        Assert.Equal(max, record.Number("maxCapacity")); Assert.Equal(direct, record.Flag("direct"));
+        Assert.Equal(size, record.Number("size"));
+        Assert.Equal(fast, record.Number("maxFastCapacity"));
+        Assert.Equal(max, record.Number("maxCapacity"));
+        Assert.Equal(direct, record.Flag("direct"));
         Assert.True(direct ? record.Number("address") != 0 : record.Number("address") == 0);
     }
 
@@ -317,6 +396,7 @@ public class PooledBufferEventTest
         {
             return Convert.ToInt64(Fields[field]);
         }
+
         internal bool Flag(string field)
         {
             return Convert.ToBoolean(Fields[field]);
@@ -334,11 +414,15 @@ public class PooledBufferEventTest
             _source = source ?? BufferAllocatorEventSource.Log;
             EnableEvents(_source, EventLevel.Informational, keywords);
         }
+
         protected override void OnEventWritten(EventWrittenEventArgs args)
         {
-            if (!ReferenceEquals(args.EventSource, _source)) return;
+            if (!ReferenceEquals(args.EventSource, _source))
+                return;
             var fields = args.PayloadNames.Zip(args.Payload).ToDictionary(x => x.First, x => x.Second);
-            var record = new Record(args.EventId, args.EventName, fields); _events.Enqueue(record); Callback?.Invoke(record);
+            var record = new Record(args.EventId, args.EventName, fields);
+            _events.Enqueue(record);
+            Callback?.Invoke(record);
         }
     }
 }

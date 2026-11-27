@@ -14,6 +14,7 @@ public class TypeParameterMatcherContractTest : IDisposable
     {
         FastThreadLocal.RemoveAll();
     }
+
     public void Dispose()
     {
         FastThreadLocal.RemoveAll();

@@ -44,7 +44,9 @@ public sealed class DnsClient
     private const int DNS_SERVER_PORT = 53;
     private const string DNS_SERVER_HOST = "8.8.8.8";
 
-    private DnsClient() { }
+    private DnsClient()
+    {
+    }
 
     private static void HandleQueryResp(DatagramDnsResponse msg)
     {

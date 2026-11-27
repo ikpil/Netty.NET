@@ -183,6 +183,7 @@ public class DatagramSourceAndReadErrorContractTest
         }
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
+
     [Fact(Timeout = 5000)]
     public async Task NonSocketReadErrorCompletesBatchAndClosesTheChannel()
     {
@@ -217,12 +218,23 @@ public class DatagramSourceAndReadErrorContractTest
     private sealed class Capture(ChannelWriter<int> writer, ConcurrentQueue<string> events = null, TaskCompletionSource<Exception> failure = null) : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
-        { events?.Enqueue("read"); writer.TryWrite(msg.Content.ReadByte()); }
+        {
+            events?.Enqueue("read");
+            writer.TryWrite(msg.Content.ReadByte());
+        }
+
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             events?.Enqueue("complete");
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
-        { events?.Enqueue("error"); if (failure != null) failure.TrySetResult(cause); else ctx.FireExceptionCaught(cause); }
+        {
+            events?.Enqueue("error");
+            if (failure != null)
+                failure.TrySetResult(cause);
+            else
+                ctx.FireExceptionCaught(cause);
+        }
     }
 }

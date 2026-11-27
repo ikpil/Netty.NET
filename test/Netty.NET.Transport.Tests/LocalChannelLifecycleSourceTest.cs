@@ -308,6 +308,7 @@ public partial class LocalChannelSourceTest
         var channel = new LocalChannel();
         return (channel, new Bootstrap().Group(group).ChannelFactory(() => channel).Handler(new TestHandler()).ConnectAsync(TestAddress));
     }
+
     private static async Task ObserveCompletion(Task task, TimeSpan timeout)
     {
         try
@@ -317,7 +318,11 @@ public partial class LocalChannelSourceTest
     private sealed class CountingWriteLocalChannel : LocalChannel
     {
         internal int WriteAttempts;
-        protected override void DoWrite(ChannelOutboundBuffer @in) { WriteAttempts++; base.DoWrite(@in); }
+        protected override void DoWrite(ChannelOutboundBuffer @in)
+        {
+            WriteAttempts++;
+            base.DoWrite(@in);
+        }
     }
     private sealed class CheckConnectCompletion(Func<Task> connect, TaskCompletionSource asserted) : TestHandler
     {
@@ -333,7 +338,10 @@ public partial class LocalChannelSourceTest
     private sealed class CloseOnRead(TaskCompletionSource closed) : SimpleChannelInboundHandler<object>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
-        { _ = ctx.CloseAsync(); closed.TrySetResult(); }
+        {
+            _ = ctx.CloseAsync();
+            closed.TrySetResult();
+        }
     }
     private sealed class DiscardHandler : SimpleChannelInboundHandler<object>
     {
@@ -345,12 +353,19 @@ public partial class LocalChannelSourceTest
     private sealed class ObservedLocalServer(TaskCompletionSource<LocalChannel> accepted) : LocalServerChannel
     {
         protected override LocalChannel NewLocalChannel(LocalChannel peer)
-        { var child = base.NewLocalChannel(peer); accepted.TrySetResult(child); return child; }
+        {
+            var child = base.NewLocalChannel(peer);
+            accepted.TrySetResult(child);
+            return child;
+        }
     }
     private sealed class ArrivingLocalServer(TaskCompletionSource arrived) : LocalServerChannel
     {
         protected override LocalChannel NewLocalChannel(LocalChannel peer)
-        { arrived.TrySetResult(); return base.NewLocalChannel(peer); }
+        {
+            arrived.TrySetResult();
+            return base.NewLocalChannel(peer);
+        }
     }
     private sealed class LocalTaskGatedGroup(ManualResetEventSlim closeLatch) : DefaultEventLoopGroup(1)
     {

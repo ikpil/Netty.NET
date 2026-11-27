@@ -171,28 +171,43 @@ public class ByteBufDecoderPolicyTest
     [MemberData(nameof(AllocatorCases))]
     public void OriginalAllocatedReadContractUsesCreatorPolicyAndIndependentLifetime(bool preferDirect, int kind)
     {
-        var native = new NativeMemoryAllocator(); var allocator = new UnpooledByteBufAllocator(preferDirect, native);
-        var (buffer, owner) = Source(allocator, kind); ByteBuf read = null;
+        var native = new NativeMemoryAllocator();
+        var allocator = new UnpooledByteBufAllocator(preferDirect, native);
+        var (buffer, owner) = Source(allocator, kind);
+        ByteBuf read = null;
         buffer.SetIndex(1, 5).MarkReaderIndex().MarkWriterIndex();
         byte[] expected = ByteBufUtil.GetBytes(buffer, 1, 3);
         long heap = allocator.Metric.UsedHeapMemory, direct = allocator.Metric.UsedDirectMemory;
         try
         {
             read = buffer.ReadBytes(3);
-            Assert.Same(allocator, read.Alloc()); Assert.Equal(preferDirect, read.IsDirect);
-            Assert.False(read.IsReadOnly); Assert.True(read.IsContiguous);
-            Assert.Equal(3, read.Capacity); Assert.Equal(buffer.MaxCapacity, read.MaxCapacity);
-            Assert.Equal(0, read.ReaderIndex); Assert.Equal(3, read.WriterIndex);
-            Assert.Equal(4, buffer.ReaderIndex); Assert.Equal(5, buffer.WriterIndex);
-            Assert.Equal(expected, ByteBufUtil.GetBytes(read)); Assert.Equal(1, owner.RefCnt);
+            Assert.Same(allocator, read.Alloc());
+            Assert.Equal(preferDirect, read.IsDirect);
+            Assert.False(read.IsReadOnly);
+            Assert.True(read.IsContiguous);
+            Assert.Equal(3, read.Capacity);
+            Assert.Equal(buffer.MaxCapacity, read.MaxCapacity);
+            Assert.Equal(0, read.ReaderIndex);
+            Assert.Equal(3, read.WriterIndex);
+            Assert.Equal(4, buffer.ReaderIndex);
+            Assert.Equal(5, buffer.WriterIndex);
+            Assert.Equal(expected, ByteBufUtil.GetBytes(read));
+            Assert.Equal(1, owner.RefCnt);
             Assert.Equal(heap + (preferDirect ? 0 : 3), allocator.Metric.UsedHeapMemory);
             Assert.Equal(direct + (preferDirect ? 3 : 0), allocator.Metric.UsedDirectMemory);
-            read.SetByte(0, 99); Assert.Equal(expected[0], buffer.GetByte(1)); read.SetByte(0, expected[0]);
-            buffer.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(5, buffer.WriterIndex);
-            owner.Release(); Assert.Equal(0, owner.RefCnt);
+            read.SetByte(0, 99);
+            Assert.Equal(expected[0], buffer.GetByte(1));
+            read.SetByte(0, expected[0]);
+            buffer.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(5, buffer.WriterIndex);
+            owner.Release();
+            Assert.Equal(0, owner.RefCnt);
             Assert.Equal(expected, ByteBufUtil.GetBytes(read));
-            Assert.True(read.Release()); read = null;
-            Assert.Equal(0, allocator.Metric.UsedHeapMemory); Assert.Equal(0, allocator.Metric.UsedDirectMemory);
+            Assert.True(read.Release());
+            read = null;
+            Assert.Equal(0, allocator.Metric.UsedHeapMemory);
+            Assert.Equal(0, allocator.Metric.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes);
         }
         finally { read?.Release(); if (owner.RefCnt > 0) owner.Release(); }
@@ -266,19 +281,26 @@ public class ByteBufDecoderPolicyTest
         ByteBuf readOnly = new ReadOnlyMemoryByteBuf(UnpooledByteBufAllocator.Default, manager.Memory);
         try
         {
-            Assert.True(writable.IsContiguous); Assert.True(readOnly.IsContiguous);
-            writable.SetIndex(1, 5); readOnly.SetIndex(2, 6);
-            Assert.Equal(3, writable.MaxFastWritableBytes); Assert.Equal(2, readOnly.MaxFastWritableBytes);
-            writable.SetByte(2, 77); Assert.Equal(77, readOnly.GetByte(2));
+            Assert.True(writable.IsContiguous);
+            Assert.True(readOnly.IsContiguous);
+            writable.SetIndex(1, 5);
+            readOnly.SetIndex(2, 6);
+            Assert.Equal(3, writable.MaxFastWritableBytes);
+            Assert.Equal(2, readOnly.MaxFastWritableBytes);
+            writable.SetByte(2, 77);
+            Assert.Equal(77, readOnly.GetByte(2));
         }
         finally { writable.Release(); readOnly.Release(); }
-        Assert.Equal(77, manager.GetSpan()[2]); Assert.False(manager.Disposed);
+        Assert.Equal(77, manager.GetSpan()[2]);
+        Assert.False(manager.Disposed);
     }
 
     private sealed class ReservedBuffer : AbstractReferenceCountedByteBuf
     {
         private byte[] _storage = new byte[16]; private int _capacity = 8;
-        internal ReservedBuffer() : base(16) { }
+        internal ReservedBuffer() : base(16)
+        {
+        }
         public override bool IsDirect => false;
         public override bool IsContiguous => true;
         public override int MaxFastWritableBytes => _storage.Length - WriterIndex;
@@ -291,7 +313,12 @@ public class ByteBufDecoderPolicyTest
         {
             return _storage.AsMemory(index, length);
         }
-        protected override void Deallocate() { _storage = Array.Empty<byte>(); _capacity = 0; }
+
+        protected override void Deallocate()
+        {
+            _storage = Array.Empty<byte>();
+            _capacity = 0;
+        }
     }
 
     private sealed class ProbeAllocator(bool direct) : AbstractByteBufAllocator(direct)
@@ -304,14 +331,18 @@ public class ByteBufDecoderPolicyTest
         {
             return Allocate(initialCapacity, maxCapacity, false);
         }
+
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
         {
             return Allocate(initialCapacity, maxCapacity, true);
         }
+
         private ByteBuf Allocate(int initial, int maximum, bool direct)
         {
-            Calls++; Requested = (initial, maximum);
-            if (FailAllocation) throw new InvalidOperationException("Deliberate allocation failure.");
+            Calls++;
+            Requested = (initial, maximum);
+            if (FailAllocation)
+                throw new InvalidOperationException("Deliberate allocation failure.");
             ByteBuf result = direct ? new UnpooledDirectByteBuf(this, initial + ExtraCapacity, maximum, Native)
                 : new UnpooledHeapByteBuf(this, initial + ExtraCapacity, maximum);
             Last = ReadOnly ? result.AsReadOnly() : result;
@@ -334,11 +365,16 @@ public class ByteBufDecoderPolicyTest
         {
             return _bytes;
         }
+
         public override MemoryHandle Pin(int elementIndex = 0)
         {
             throw new NotSupportedException();
         }
-        public override void Unpin() { }
+
+        public override void Unpin()
+        {
+        }
+
         protected override void Dispose(bool disposing)
         {
             Disposed = true;
@@ -347,8 +383,14 @@ public class ByteBufDecoderPolicyTest
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
-        public void Record() { }
-        public void Record(object hint) { }
+        public void Record()
+        {
+        }
+
+        public void Record(object hint)
+        {
+        }
+
         public bool Close(ByteBuf buffer)
         {
             return true;

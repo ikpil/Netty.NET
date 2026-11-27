@@ -311,7 +311,9 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
      * Gets called after the {@link ByteToMessageDecoder} was removed from the actual context and it doesn't handle
      * events anymore.
      */
-    protected virtual void HandlerRemoved0(IChannelHandlerContext ctx) { }
+    protected virtual void HandlerRemoved0(IChannelHandlerContext ctx)
+    {
+    }
 
     // CLR: the parameter keeps the source name 'input' (the source renames ChannelInboundHandler's 'msg' here).
     public override void ChannelRead(IChannelHandlerContext ctx, object input)

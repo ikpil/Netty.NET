@@ -103,6 +103,7 @@ public class SizeClassesTest
                 values.Add(basis + basis / 4 * delta);
         return values;
     }
+
     private static int Align(int size, int alignment)
     {
         return alignment == 0 ? size : checked((size + alignment - 1) / alignment * alignment);

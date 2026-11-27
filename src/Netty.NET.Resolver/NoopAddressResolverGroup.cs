@@ -25,7 +25,10 @@ namespace Netty.NET.Resolver;
 public sealed class NoopAddressResolverGroup : AddressResolverGroup<EndPoint>
 {
     public static readonly NoopAddressResolverGroup INSTANCE = new();
-    private NoopAddressResolverGroup() { }
+    private NoopAddressResolverGroup()
+    {
+    }
+
     protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor)
     {
         return new NoopAddressResolver(executor);

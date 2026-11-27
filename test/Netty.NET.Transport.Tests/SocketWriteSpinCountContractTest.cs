@@ -143,6 +143,7 @@ public class SocketWriteSpinCountContractTest
             Channel.Config.SetAutoRead(false).SetWriteSpinCount(writeSpinCount);
             Loop.RegisterAsync(Channel).GetAwaiter().GetResult();
         }
+
         internal void PumpUntil(Func<bool> condition)
         {
             var clock = Stopwatch.StartNew();
@@ -154,6 +155,7 @@ public class SocketWriteSpinCountContractTest
                 Thread.Sleep(1);
             }
         }
+
         internal byte[] Receive(int length)
         {
             var bytes = new byte[length];
@@ -167,7 +169,12 @@ public class SocketWriteSpinCountContractTest
             }
             return bytes;
         }
-        public void Dispose() { ManualIoEventLoopSourceTest.Terminate(Loop); _peer.Dispose(); }
+
+        public void Dispose()
+        {
+            ManualIoEventLoopSourceTest.Terminate(Loop);
+            _peer.Dispose();
+        }
     }
 
     // Accepts one byte per non-blocking write call, or the first two buffers of one gathered call.

@@ -63,6 +63,7 @@ public partial class LocalChannelSourceTest
             finally { await CloseChannel(client); await CloseChannel(server); }
         }
     }
+
     [Fact]
     public async Task TestConnectionRefused()
     {
@@ -71,6 +72,7 @@ public partial class LocalChannelSourceTest
         var error = await Assert.ThrowsAsync<SocketException>(() => bootstrap.ConnectAsync(LocalAddress.ANY));
         Assert.Equal(SocketError.ConnectionRefused, error.SocketErrorCode);
     }
+
     [Fact]
     public async Task TestConnectedAlready()
     {
@@ -94,6 +96,7 @@ public partial class LocalChannelSourceTest
         }
         finally { await CloseChannel(client); await CloseChannel(server); }
     }
+
     private static Task CloseChannel(IChannel channel)
     {
         return channel?.CloseAsync() ?? Task.CompletedTask;

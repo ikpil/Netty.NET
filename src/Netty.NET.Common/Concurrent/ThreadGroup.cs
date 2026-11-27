@@ -22,10 +22,12 @@ public sealed class ThreadGroup
     {
         return name;
     }
+
     public static ThreadGroup CurrentThreadGroup()
     {
         return GetThreadGroup(Thread.CurrentThread);
     }
+
     public static ThreadGroup GetThreadGroup(Thread thread)
     {
         ArgumentNullException.ThrowIfNull(thread);

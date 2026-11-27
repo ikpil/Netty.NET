@@ -33,7 +33,9 @@ public class UnsupportedMessageTypeException : CodecException
     {
     }
 
-    public UnsupportedMessageTypeException() { }
+    public UnsupportedMessageTypeException()
+    {
+    }
 
     public UnsupportedMessageTypeException(string message, Exception cause) : base(message, cause)
     {

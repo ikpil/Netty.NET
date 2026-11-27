@@ -37,6 +37,7 @@ public sealed class MqttUnsubAckMessage : MqttMessage
         : this(mqttFixedHeader, FallbackVariableHeader(variableHeader), payload)
     {
     }
+
     public MqttUnsubAckMessage(MqttFixedHeader mqttFixedHeader,
                                MqttMessageIdVariableHeader variableHeader)
         : this(mqttFixedHeader, variableHeader, null)

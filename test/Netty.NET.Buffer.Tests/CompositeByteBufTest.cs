@@ -104,7 +104,8 @@ public class CompositeByteBufTest
         Assert.Equal(1, buffer.RefCnt);
         buffer.Release();
         Assert.Equal(new[] { 0, 1, 2 }, new[] { c1.RefCnt, c2.RefCnt, c3.RefCnt });
-        c2.Release(); c3.Release(2);
+        c2.Release();
+        c3.Release(2);
     }
 
     [Fact]

@@ -35,31 +35,53 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     private readonly ConcurrentQueue<Action> _closeCompletions = new();
     private int _pendingCloseCompletions;
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp)
-        : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
+        : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject())
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory factory, bool addTaskWakesUp)
-        : this(parent, new ThreadPerTaskExecutor(factory).Execute, addTaskWakesUp) { }
+        : this(parent, new ThreadPerTaskExecutor(factory).Execute, addTaskWakesUp)
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp,
         bool supportSuspension)
-        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension) { }
+        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension)
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         bool supportSuspension)
-        : this(parent, executor, addTaskWakesUp, supportSuspension, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject()) { }
+        : this(parent, executor, addTaskWakesUp, supportSuspension, DEFAULT_MAX_PENDING_TASKS, RejectedExecutionHandlers.Reject())
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp,
         bool supportSuspension, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
         : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension, maxPendingTasks,
-            rejectedExecutionHandler) { }
+            rejectedExecutionHandler)
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
-        : this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler) { }
+        : this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler)
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         bool supportSuspension, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : base(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler)
     {
         _tailTasks = NewTaskQueue(maxPendingTasks);
     }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         IQueue<Action> taskQueue, IQueue<Action> tailTaskQueue, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
-        : this(parent, executor, addTaskWakesUp, false, taskQueue, tailTaskQueue, rejectedExecutionHandler) { }
+        : this(parent, executor, addTaskWakesUp, false, taskQueue, tailTaskQueue, rejectedExecutionHandler)
+    {
+    }
+
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         bool supportSuspension, IQueue<Action> taskQueue, IQueue<Action> tailTaskQueue,
         Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
@@ -67,8 +89,13 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     {
         _tailTasks = ObjectUtil.CheckNotNull(tailTaskQueue, "tailTaskQueue");
     }
+
     public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
-    { ArgumentNullException.ThrowIfNull(channel); return channel.RegisterAsync(this, cancellationToken); }
+    {
+        ArgumentNullException.ThrowIfNull(channel);
+        return channel.RegisterAsync(this, cancellationToken);
+    }
+
     /**
      * Adds a task to be run once at the end of next (or current) {@code eventloop} iteration.
      *
@@ -89,6 +116,7 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
             Wakeup(inEventLoop);
         }
     }
+
     /**
      * Removes a task that was added previously via {@link #executeAfterEventLoopIteration(Runnable)}.
      *
@@ -97,7 +125,11 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
      * @return {@code true} if the task was removed as a result of this call.
      */
     public bool RemoveAfterEventLoopIterationTask(Action task)
-    { ArgumentNullException.ThrowIfNull(task); return _tailTasks.TryRemove(task); }
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        return _tailTasks.TryRemove(task);
+    }
+
     // CLR-only native-close admission. A reserved callback survives public task rejection during shutdown.
     internal Action<Action> ReserveCloseCompletion()
     {
@@ -113,26 +145,31 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
             Wakeup(false);
         };
     }
+
     protected override void AfterRunningAllTasks()
     {
         RunAllTasksFrom(_tailTasks);
         RunCloseCompletions();
     }
+
     protected override Action TakeTask()
     {
         Action task = base.TakeTask();
         // A native worker wakes a blocking loop with its sentinel. Return executable owner work even in custom loops.
         return task ?? (_closeCompletions.IsEmpty ? null : RunCloseCompletions);
     }
+
     private void RunCloseCompletions()
     {
         while (_closeCompletions.TryDequeue(out var completion)) SafeExecute(completion);
     }
+
     protected override bool ConfirmShutdown()
     {
         bool shutdown = base.ConfirmShutdown();
         return shutdown && _pendingCloseCompletions == 0;
     }
+
     protected override bool CanSuspend(int state)
     {
         return _pendingCloseCompletions == 0 && base.CanSuspend(state);
@@ -142,14 +179,17 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     {
         return base.HasTasks() || HasTailTasks || !_closeCompletions.IsEmpty;
     }
+
     public override int PendingTasks()
     {
         return base.PendingTasks() + _tailTasks.Count + _closeCompletions.Count;
     }
+
     protected override int GetNumOfRegisteredChannels()
     {
         return RegisteredChannels();
     }
+
     /**
      * Returns the number of {@link Channel}s registered with this {@link EventLoop} or {@code -1}
      * if operation is not supported. The returned value is not guaranteed to be exact accurate and
@@ -159,6 +199,7 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     {
         return -1;
     }
+
     /**
      * @return read-only iterator of active {@link Channel}s registered with this {@link EventLoop}.
      *         The returned value is not guaranteed to be exact accurate and

@@ -16,22 +16,27 @@ public class DefaultChooserContractTest
         {
             throw new NotSupportedException();
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return false;
         }
+
         public override bool IsShuttingDown()
         {
             throw new NotSupportedException();
         }
+
         public override bool IsShutdown()
         {
             throw new NotSupportedException();
         }
+
         public override bool IsTerminated()
         {
             throw new NotSupportedException();
         }
+
         [Obsolete]
         public override void Shutdown()
         {
@@ -42,6 +47,7 @@ public class DefaultChooserContractTest
         {
             throw new NotSupportedException();
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             throw new NotSupportedException();

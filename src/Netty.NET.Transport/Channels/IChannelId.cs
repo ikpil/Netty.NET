@@ -47,6 +47,7 @@ public interface IChannelId : IComparable<IChannelId>
      * Returns the short but globally non-unique string representation of the {@link ChannelId}.
      */
     string AsShortText();
+
     /**
      * Returns the long yet globally unique string representation of the {@link ChannelId}.
      */

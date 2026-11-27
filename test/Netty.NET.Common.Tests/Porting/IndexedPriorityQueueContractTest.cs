@@ -15,14 +15,17 @@ public class IndexedPriorityQueueContractTest
         {
             return indices.GetValueOrDefault(queue, -1);
         }
+
         public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index)
         {
             indices[queue] = index;
         }
+
         public override bool Equals(object other)
         {
             return other is Node node && node.Priority == Priority;
         }
+
         public override int GetHashCode()
         {
             return Priority;

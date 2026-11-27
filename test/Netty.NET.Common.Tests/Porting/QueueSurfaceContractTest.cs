@@ -25,10 +25,12 @@ public class QueueSurfaceContractTest
         {
             Calls.Add(1);
         }
+
         internal void Second()
         {
             Calls.Add(2);
         }
+
         internal void Third()
         {
             Calls.Add(3);
@@ -118,6 +120,7 @@ public class QueueSurfaceContractTest
         {
             return Index;
         }
+
         public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index)
         {
             Index = index;

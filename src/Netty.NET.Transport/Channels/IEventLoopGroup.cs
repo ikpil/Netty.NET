@@ -29,6 +29,7 @@ public interface IEventLoopGroup : IEventExecutorGroup
      * Return the next {@link EventLoop} to use
      */
     new IEventLoop Next();
+
     /**
      * Register a {@link Channel} with this {@link EventLoop}. The returned {@link ChannelFuture}
      * will get notified once the registration was complete.

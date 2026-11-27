@@ -398,8 +398,15 @@ public class UnreleasableByteBufTest
     private sealed class ObservedHeapByteBuf : UnpooledHeapByteBuf
     {
         internal int TouchCalls;
-        internal ObservedHeapByteBuf() : base(1) { }
-        public override ByteBuf Touch(object hint = null) { ++TouchCalls; return this; }
+        internal ObservedHeapByteBuf() : base(1)
+        {
+        }
+
+        public override ByteBuf Touch(object hint = null)
+        {
+            ++TouchCalls;
+            return this;
+        }
     }
 
     [Theory]

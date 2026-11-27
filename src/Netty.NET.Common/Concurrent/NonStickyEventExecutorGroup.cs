@@ -40,7 +40,9 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
      * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain
      * any {@link OrderedEventExecutor}s.
      */
-    public NonStickyEventExecutorGroup(IEventExecutorGroup group) : this(group, 1024) { }
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group) : this(group, 1024)
+    {
+    }
 
     /**
      * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain

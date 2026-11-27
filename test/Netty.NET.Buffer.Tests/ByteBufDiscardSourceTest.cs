@@ -44,6 +44,7 @@ public class ByteBufDiscardSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -163,8 +164,14 @@ public class ByteBufDiscardSourceTest
         byte[] bytes = [13, 29, 47, 61, 83, 101, 127, 139, 157, 173, 191, 211, 227, 239, 251, 7];
         (int reader, int writer, int markedReader, int markedWriter) = state switch
         {
-            0 => (0, 12, 0, 0), 1 => (1, 12, 0, 0), 2 => (7, 12, 2, 4), 3 => (8, 12, 8, 9),
-            4 => (9, 12, 10, 11), 5 => (16, 16, 15, 16), 6 => (4, 4, 1, 3), _ => (0, 0, 0, 0)
+            0 => (0, 12, 0, 0),
+            1 => (1, 12, 0, 0),
+            2 => (7, 12, 2, 4),
+            3 => (8, 12, 8, 9),
+            4 => (9, 12, 10, 11),
+            5 => (16, 16, 15, 16),
+            6 => (4, 4, 1, 3),
+            _ => (0, 0, 0, 0)
         };
         ByteBuf buffer = s.Root;
         buffer.SetBytes(0, bytes).SetIndex(markedReader, markedWriter).MarkReaderIndex().MarkWriterIndex();
@@ -175,17 +182,22 @@ public class ByteBufDiscardSourceTest
             ? some ? reader / 8 * 8 : reader
             : !some || reader == writer || reader >= 8 ? reader : 0;
         byte[] expected = (byte[])bytes.Clone();
-        if (provider == 2) expected = bytes[removed..];
-        else if (removed != 0) bytes.AsSpan(reader, writer - reader).CopyTo(expected);
+        if (provider == 2)
+            expected = bytes[removed..];
+        else if (removed != 0)
+            bytes.AsSpan(reader, writer - reader).CopyTo(expected);
         byte[] unread = bytes[reader..writer];
         Assert.Same(buffer, some ? buffer.DiscardSomeReadBytes() : buffer.DiscardReadBytes());
-        Assert.Equal(reader - removed, buffer.ReaderIndex); Assert.Equal(writer - removed, buffer.WriterIndex);
+        Assert.Equal(reader - removed, buffer.ReaderIndex);
+        Assert.Equal(writer - removed, buffer.WriterIndex);
         Assert.Equal(provider == 2 ? 16 - removed : 16, buffer.Capacity);
         Assert.Equal(expected, ByteBufUtil.GetBytes(buffer, 0, buffer.Capacity));
         Assert.Equal(unread, ByteBufUtil.GetBytes(buffer, buffer.ReaderIndex, buffer.ReadableBytes));
         Assert.Equal(1, buffer.RefCnt);
-        buffer.ResetReaderIndex(); Assert.Equal(Math.Max(0, markedReader - removed), buffer.ReaderIndex);
-        buffer.ResetWriterIndex(); Assert.Equal(Math.Max(0, markedWriter - removed), buffer.WriterIndex);
+        buffer.ResetReaderIndex();
+        Assert.Equal(Math.Max(0, markedReader - removed), buffer.ReaderIndex);
+        buffer.ResetWriterIndex();
+        Assert.Equal(Math.Max(0, markedWriter - removed), buffer.WriterIndex);
     }
 
     private sealed class Failure : Exception;
@@ -196,20 +208,30 @@ public class ByteBufDiscardSourceTest
         public readonly Failure Error = new();
         public void Copy(ByteBuf receiver, int destination, ByteBuf source, int sourceIndex, int length)
         {
-            ++Count; Assert.Same(receiver, source);
-            Assert.Equal(0, destination); Assert.Equal(4, sourceIndex); Assert.Equal(4, length);
-            if (Fail) throw Error;
+            ++Count;
+            Assert.Same(receiver, source);
+            Assert.Equal(0, destination);
+            Assert.Equal(4, sourceIndex);
+            Assert.Equal(4, length);
+            if (Fail)
+                throw Error;
         }
     }
     private sealed class Heap(Calls calls) : UnpooledHeapByteBuf(8, 8)
     {
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
-        { calls.Copy(this, index, source, sourceIndex, length); return base.SetBytes(index, source, sourceIndex, length); }
+        {
+            calls.Copy(this, index, source, sourceIndex, length);
+            return base.SetBytes(index, source, sourceIndex, length);
+        }
     }
     private sealed class Direct(Calls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 8, native)
     {
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
-        { calls.Copy(this, index, source, sourceIndex, length); return base.SetBytes(index, source, sourceIndex, length); }
+        {
+            calls.Copy(this, index, source, sourceIndex, length);
+            return base.SetBytes(index, source, sourceIndex, length);
+        }
     }
 
     [Theory]

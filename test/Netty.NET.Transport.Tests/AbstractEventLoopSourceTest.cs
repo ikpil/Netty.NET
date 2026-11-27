@@ -62,6 +62,7 @@ public class AbstractEventLoopSourceTest
             await group.StopAsync(); await group2.StopAsync(); await executors.StopAsync();
         }
     }
+
     /**
      * Test for https://github.com/netty/netty/issues/14923
      */
@@ -95,8 +96,12 @@ public class AbstractEventLoopSourceTest
             await group.StopAsync();
         }
     }
+
     private static async Task CloseServerAfterClient(IChannel client, IChannel server)
-    { await client.CloseFuture; await server.CloseAsync(); }
+    {
+        await client.CloseFuture;
+        await server.CloseAsync();
+    }
     private sealed class LoggingHandler : ChannelInboundHandlerAdapter { }
     private sealed class ReRegisterHandler(MultiThreadIoEventLoopGroup group, bool throughChannel, Action<Exception> failed) : ChannelInboundHandlerAdapter
     {
@@ -104,6 +109,7 @@ public class AbstractEventLoopSourceTest
         {
             _ = ReRegister(ctx, msg);
         }
+
         private async Task ReRegister(IChannelHandlerContext outCtx, object msg)
         {
             bool handedOff = false;
@@ -127,8 +133,13 @@ public class AbstractEventLoopSourceTest
                 failed(error); await outCtx.CloseAsync();
             }
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
-        { ctx.FireExceptionCaught(cause); failed(cause); _ = ctx.CloseAsync(); }
+        {
+            ctx.FireExceptionCaught(cause);
+            failed(cause);
+            _ = ctx.CloseAsync();
+        }
     }
     private sealed class EchoThroughOriginalContext(IChannelHandlerContext outCtx) : ChannelInboundHandlerAdapter
     {
@@ -139,9 +150,18 @@ public class AbstractEventLoopSourceTest
     }
     private sealed class ClientReader(Action<Exception> failed) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) { ((ByteBuf)msg).Release(); _ = ctx.CloseAsync(); }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ((ByteBuf)msg).Release();
+            _ = ctx.CloseAsync();
+        }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
-        { failed(cause); ctx.FireExceptionCaught(cause); _ = ctx.CloseAsync(); }
+        {
+            failed(cause);
+            ctx.FireExceptionCaught(cause);
+            _ = ctx.CloseAsync();
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -161,5 +181,9 @@ public class AbstractEventLoopSourceTest
     }
     private sealed class TestChannelHandler : ChannelDuplexHandler { }
     private sealed class TestChannelHandler2 : ChannelDuplexHandler
-    { public override void ChannelRead(IChannelHandlerContext ctx, object msg) { } }
+    {
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+        }
+    }
 }

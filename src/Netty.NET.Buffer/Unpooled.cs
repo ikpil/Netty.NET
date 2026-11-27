@@ -88,6 +88,7 @@ public static partial class Unpooled
     {
         return UnpooledByteBufAllocator.Default.HeapBuffer(initialCapacity, maxCapacity);
     }
+
     /**
          * Creates a new big-endian buffer which wraps the specified {@code array}.
          * A modification on the specified array's content will be visible to the
@@ -98,6 +99,7 @@ public static partial class Unpooled
         ArgumentNullException.ThrowIfNull(bytes);
         return bytes.Length == 0 ? EmptyBuffer : new UnpooledHeapByteBuf(bytes);
     }
+
     /**
          * Creates a new big-endian buffer whose content is a copy of the
          * specified {@code array}.  The new buffer's {@code readerIndex} and
@@ -127,6 +129,7 @@ public static partial class Unpooled
     {
         return UnpooledByteBufAllocator.Default.DirectBuffer(initialCapacity, maxCapacity);
     }
+
     /**
      * Returns a new big-endian composite buffer with no components.
      */

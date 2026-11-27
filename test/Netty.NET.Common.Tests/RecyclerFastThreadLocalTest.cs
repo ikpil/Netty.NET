@@ -25,6 +25,7 @@ public class RecyclerFastThreadLocalTest : RecyclerTest
     {
         RunInFastThreadLocalThreadExtension.Run(invocation);
     }
+
     protected override Thread NewThread(Action invocation)
     {
         var owner = new FastThreadLocalThread(invocation);

@@ -104,5 +104,7 @@ public sealed class MqttMessageFactory
         return new MqttMessage(mqttFixedHeader, variableHeader, null, DecoderResult.Failure(cause));
     }
 
-    private MqttMessageFactory() { }
+    private MqttMessageFactory()
+    {
+    }
 }

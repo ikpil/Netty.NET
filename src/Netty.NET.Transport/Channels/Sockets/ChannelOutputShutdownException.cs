@@ -23,6 +23,11 @@ namespace Netty.NET.Transport.Channels.Sockets;
  */
 public sealed class ChannelOutputShutdownException : IOException
 {
-    public ChannelOutputShutdownException(string msg) : base(msg) { }
-    public ChannelOutputShutdownException(string msg, Exception cause) : base(msg, cause) { }
+    public ChannelOutputShutdownException(string msg) : base(msg)
+    {
+    }
+
+    public ChannelOutputShutdownException(string msg, Exception cause) : base(msg, cause)
+    {
+    }
 }

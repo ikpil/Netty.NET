@@ -56,6 +56,7 @@ public class SocketTransportContractTest
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
+
     [Fact]
     public async Task TcpManualReadWaitsUntilRequestedAndAutoReadCanResume()
     {
@@ -83,6 +84,7 @@ public class SocketTransportContractTest
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
+
     [Fact]
     public async Task FailedConnectClosesCreatedChannel()
     {
@@ -120,6 +122,7 @@ public class SocketTransportContractTest
             if (_bytes.Count >= size)
                 received.TrySetResult(_bytes.ToArray());
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);
@@ -138,6 +141,7 @@ public class SocketTransportContractTest
         {
             return Task.FromResult(IPAddress.Loopback);
         }
+
         protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string host, CancellationToken token)
         {
             return Task.FromResult<IReadOnlyList<IPAddress>>(new[] { IPAddress.Loopback });

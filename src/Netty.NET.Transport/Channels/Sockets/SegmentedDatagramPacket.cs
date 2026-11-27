@@ -33,7 +33,9 @@ public sealed class SegmentedDatagramPacket : DatagramPacket
      * @param recipient     the recipient.
      */
     public SegmentedDatagramPacket(ByteBuf data, int segmentSize, IPEndPoint recipient)
-        : this(data, segmentSize, recipient, null) { }
+        : this(data, segmentSize, recipient, null)
+    {
+    }
 
     /**
      * Create a new instance.
@@ -60,14 +62,17 @@ public sealed class SegmentedDatagramPacket : DatagramPacket
     {
         return (SegmentedDatagramPacket)base.Copy();
     }
+
     public override SegmentedDatagramPacket Duplicate()
     {
         return (SegmentedDatagramPacket)base.Duplicate();
     }
+
     public override SegmentedDatagramPacket RetainedDuplicate()
     {
         return (SegmentedDatagramPacket)base.RetainedDuplicate();
     }
+
     public override SegmentedDatagramPacket Replace(ByteBuf content)
     {
         return new(content, SegmentSize, Recipient, Sender);

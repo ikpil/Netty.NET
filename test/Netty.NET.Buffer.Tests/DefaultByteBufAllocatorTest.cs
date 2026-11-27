@@ -38,18 +38,23 @@ public partial class DefaultByteBufAllocatorTest
         internal readonly Assembly _buffer, _common;
         internal Scope(string kind, string noPreferDirect)
         {
-            Set("io.netty.allocator.type", kind); Set("io.netty.noPreferDirect", noPreferDirect);
-            Set("io.netty.availableProcessors", "2"); Set("io.netty.leakDetection.level", "disabled");
+            Set("io.netty.allocator.type", kind);
+            Set("io.netty.noPreferDirect", noPreferDirect);
+            Set("io.netty.availableProcessors", "2");
+            Set("io.netty.leakDetection.level", "disabled");
             Set("io.netty.allocator.lowMemory", null);
-            foreach (string name in PooledConfigurationKeys) Set(name, null);
+            foreach (string name in PooledConfigurationKeys)
+                Set(name, null);
             _common = _context.LoadFromAssemblyPath(typeof(NettyRuntime).Assembly.Location);
             _buffer = _context.LoadFromAssemblyPath(typeof(ByteBuf).Assembly.Location);
         }
+
         internal void Set(string key, string value)
         {
             if (!_previous.ContainsKey(key)) _previous.Add(key, Environment.GetEnvironmentVariable(key));
             Environment.SetEnvironmentVariable(key, value);
         }
+
         internal Type Type(string name)
         {
             return _buffer.GetType("Netty.NET.Buffer." + name, true);
@@ -60,11 +65,19 @@ public partial class DefaultByteBufAllocatorTest
         {
             return Track(Type(name).GetProperty("Default").GetValue(null));
         }
+
         internal object Adaptive(bool? prefer = null, bool? low = null)
         {
             return Track(Activator.CreateInstance(Type("AdaptiveByteBufAllocator"), prefer, null, low, null));
         }
-        internal object Track(object allocator) { lock (_allocators) _allocators.Add(allocator); return allocator; }
+
+        internal object Track(object allocator)
+        {
+            lock (_allocators)
+                _allocators.Add(allocator);
+            return allocator;
+        }
+
         internal object CommonTypeCall(string type, string method, params object[] args)
         {
             return _common.GetType("Netty.NET.Common." + type, true).GetMethod(method).Invoke(null, args);
@@ -79,7 +92,11 @@ public partial class DefaultByteBufAllocatorTest
             }
         }
         internal void CloseAllocators()
-        { foreach (var allocator in _allocators) (allocator as IDisposable)?.Dispose(); }
+        {
+            foreach (var allocator in _allocators)
+                (allocator as IDisposable)?.Dispose();
+        }
+
         public void Dispose()
         {
             try { CloseAllocators(); Assert.Equal(0, NativeBytes); }
@@ -97,10 +114,12 @@ public partial class DefaultByteBufAllocatorTest
             && m.GetParameters().Select((p, i) => args[i] == null || p.ParameterType.IsInstanceOfType(args[i])).All(x => x))
             .Invoke(target, args);
     }
+
     private static T Property<T>(object target, string name)
     {
         return (T)target.GetType().GetProperty(name).GetValue(target);
     }
+
     private static void CheckFactory(object allocator, string factory, bool direct)
     {
         object b = Call(allocator, factory, 9, 64);
@@ -122,19 +141,26 @@ public partial class DefaultByteBufAllocatorTest
             yield return new object[] { kind, noPrefer, kind == null || kind == "adaptive" ? "AdaptiveByteBufAllocator"
                 : kind == "unpooled" ? "UnpooledByteBufAllocator" : "PooledByteBufAllocator" };
     }
+
     [Theory]
     [MemberData(nameof(SelectionCases))]
     public void ExactSelectionPreferenceAndPublicFactories(string kind, string noPreferDirect, string expected)
     {
-        using var scope = new Scope(kind, noPreferDirect); object allocator = scope.Default;
-        Assert.Equal(expected, allocator.GetType().Name); Assert.Same(allocator, scope.Default);
+        using var scope = new Scope(kind, noPreferDirect);
+        object allocator = scope.Default;
+        Assert.Equal(expected, allocator.GetType().Name);
+        Assert.Same(allocator, scope.Default);
         Assert.Same(allocator, scope.UtilityDefault);
-        if (expected != "AdaptiveByteBufAllocator") Assert.Same(allocator, scope.Singleton(expected));
+        if (expected != "AdaptiveByteBufAllocator")
+            Assert.Same(allocator, scope.Singleton(expected));
         bool direct = noPreferDirect != "true";
-        CheckFactory(allocator, "Buffer", direct); CheckFactory(allocator, "HeapBuffer", false);
-        CheckFactory(allocator, "DirectBuffer", true); CheckFactory(allocator, "IoBuffer", true);
+        CheckFactory(allocator, "Buffer", direct);
+        CheckFactory(allocator, "HeapBuffer", false);
+        CheckFactory(allocator, "DirectBuffer", true);
+        CheckFactory(allocator, "IoBuffer", true);
         Assert.Equal(expected != "UnpooledByteBufAllocator", Property<bool>(allocator, "IsDirectBufferPooled"));
-        scope.CloseAllocators(); Assert.Equal(0, scope.NativeBytes);
+        scope.CloseAllocators();
+        Assert.Equal(0, scope.NativeBytes);
     }
 
     [Theory]
@@ -142,10 +168,14 @@ public partial class DefaultByteBufAllocatorTest
     public void SingletonAndUtilityFirstInitializationAvoidsCycles(string first)
     {
         using var scope = new Scope("adaptive", "true");
-        if (first == "utility") Assert.Equal(0x04030201, scope.Type("ByteBufUtil").GetMethod("SwapInt").Invoke(null, new object[] { 0x01020304 }));
-        else if (first == "adaptive") scope.Adaptive();
-        else scope.Singleton(first == "unpooled" ? "UnpooledByteBufAllocator" : "PooledByteBufAllocator");
-        Assert.Equal("AdaptiveByteBufAllocator", scope.Default.GetType().Name); Assert.Same(scope.Default, scope.UtilityDefault);
+        if (first == "utility")
+            Assert.Equal(0x04030201, scope.Type("ByteBufUtil").GetMethod("SwapInt").Invoke(null, new object[] { 0x01020304 }));
+        else if (first == "adaptive")
+            scope.Adaptive();
+        else
+            scope.Singleton(first == "unpooled" ? "UnpooledByteBufAllocator" : "PooledByteBufAllocator");
+        Assert.Equal("AdaptiveByteBufAllocator", scope.Default.GetType().Name);
+        Assert.Same(scope.Default, scope.UtilityDefault);
         CheckFactory(scope.Default, "Buffer", false);
     }
 
@@ -153,12 +183,16 @@ public partial class DefaultByteBufAllocatorTest
     [InlineData(false)] [InlineData(true)]
     public void SelectionAndPreferenceFreezeAfterInitialization(bool noPreferDirect)
     {
-        using var scope = new Scope("unpooled", noPreferDirect.ToString()); object first = scope.Default;
-        scope.Set("io.netty.allocator.type", "adaptive"); scope.Set("io.netty.noPreferDirect", (!noPreferDirect).ToString());
-        Assert.Same(first, scope.Default); Assert.Equal("UnpooledByteBufAllocator", scope.Default.GetType().Name);
+        using var scope = new Scope("unpooled", noPreferDirect.ToString());
+        object first = scope.Default;
+        scope.Set("io.netty.allocator.type", "adaptive");
+        scope.Set("io.netty.noPreferDirect", (!noPreferDirect).ToString());
+        Assert.Same(first, scope.Default);
+        Assert.Equal("UnpooledByteBufAllocator", scope.Default.GetType().Name);
         CheckFactory(scope.Singleton("PooledByteBufAllocator"), "Buffer", !noPreferDirect);
         CheckFactory(scope.Adaptive(), "Buffer", !noPreferDirect);
-        CheckFactory(scope.Adaptive(true), "Buffer", true); CheckFactory(scope.Adaptive(false), "Buffer", false);
+        CheckFactory(scope.Adaptive(true), "Buffer", true);
+        CheckFactory(scope.Adaptive(false), "Buffer", false);
     }
 
     [Fact]
@@ -168,7 +202,8 @@ public partial class DefaultByteBufAllocatorTest
         Assert.Equal(0x04030201, scope.Type("ByteBufUtil").GetMethod("SwapInt").Invoke(null, new object[] { 0x01020304 }));
         scope.Set("io.netty.allocator.type", "adaptive");
         scope.CommonTypeCall("NettyRuntime", "SetAvailableProcessors", 3);
-        object allocator = scope.Default; Assert.Equal("AdaptiveByteBufAllocator", allocator.GetType().Name);
+        object allocator = scope.Default;
+        Assert.Equal("AdaptiveByteBufAllocator", allocator.GetType().Name);
         Assert.Equal(3, scope.CommonTypeCall("NettyRuntime", "AvailableProcessors"));
     }
 
@@ -197,12 +232,17 @@ public partial class DefaultByteBufAllocatorTest
     [InlineData("true", false, false)] [InlineData("false", true, true)]
     public void ExplicitLowMemorySettingControlsGlobalAndCanBeOverridden(string setting, bool? low, bool expected)
     {
-        using var scope = new Scope("adaptive", null); scope.Set("io.netty.allocator.lowMemory", setting);
-        Check(scope.Default, setting == "true"); Check(scope.Adaptive(low: low), expected);
+        using var scope = new Scope("adaptive", null);
+        scope.Set("io.netty.allocator.lowMemory", setting);
+        Check(scope.Default, setting == "true");
+        Check(scope.Adaptive(low: low), expected);
         static void Check(object allocator, bool lowMemory)
         {
             object b = Call(allocator, "HeapBuffer", 32768, 32768);
-            try { Assert.Equal(lowMemory ? 32768L : 262144L, Property<long>(allocator, "UsedHeapMemory")); }
+            try
+            {
+                Assert.Equal(lowMemory ? 32768L : 262144L, Property<long>(allocator, "UsedHeapMemory"));
+            }
             finally { Call(b, "Release", 1); }
             Assert.Equal(lowMemory ? 0L : 262144L, Property<long>(allocator, "UsedHeapMemory"));
         }
@@ -212,9 +252,11 @@ public partial class DefaultByteBufAllocatorTest
     [InlineData("adaptive")] [InlineData("unpooled")] [InlineData("pooled")] [InlineData("unknown")]
     public void ConcurrentFirstAccessPublishesOneUsableInstance(string kind)
     {
-        using var scope = new Scope(kind, null); var allocators = new object[32];
+        using var scope = new Scope(kind, null);
+        var allocators = new object[32];
         Parallel.For(0, allocators.Length, i => allocators[i] = scope.Default);
-        Assert.All(allocators, a => Assert.Same(allocators[0], a)); CheckFactory(allocators[0], "Buffer", true);
+        Assert.All(allocators, a => Assert.Same(allocators[0], a));
+        CheckFactory(allocators[0], "Buffer", true);
     }
 
     [Theory]

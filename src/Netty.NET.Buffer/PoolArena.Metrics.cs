@@ -48,6 +48,7 @@ internal abstract partial class PoolArena
     {
         Interlocked.Increment(ref _threadBindings);
     }
+
     internal void RemoveThreadBinding()
     {
         Interlocked.Decrement(ref _threadBindings);
@@ -114,30 +115,37 @@ internal abstract partial class PoolArena
     {
         return SizeClass.SizeIdx2Size(sizeIdx);
     }
+
     public int SizeIdx2SizeCompute(int sizeIdx)
     {
         return SizeClass.SizeIdx2SizeCompute(sizeIdx);
     }
+
     public long PageIdx2Size(int pageIdx)
     {
         return SizeClass.PageIdx2Size(pageIdx);
     }
+
     public long PageIdx2SizeCompute(int pageIdx)
     {
         return SizeClass.PageIdx2SizeCompute(pageIdx);
     }
+
     public int Size2SizeIdx(int size)
     {
         return SizeClass.Size2SizeIdx(size);
     }
+
     public int Pages2PageIdx(int pages)
     {
         return SizeClass.Pages2PageIdx(pages);
     }
+
     public int Pages2PageIdxFloor(int pages)
     {
         return SizeClass.Pages2PageIdxFloor(pages);
     }
+
     public int NormalizeSize(int size)
     {
         return SizeClass.NormalizeSize(size);

@@ -30,11 +30,17 @@ public class UnreleasableByteBufComparisonTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            ++Closes;
+            return true;
+        }
     }
 
     private sealed class Storage : IDisposable
@@ -68,6 +74,7 @@ public class UnreleasableByteBufComparisonTest
             };
             Facade = Unpooled.UnreleasableBuffer(view);
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Assert.True(_tracked.Release());
@@ -158,11 +165,34 @@ public class UnreleasableByteBufComparisonTest
     {
         public int HashCalls, ObjectCalls, TypedCalls, CompareCalls;
         public ObservedHeap() : base(10, 32)
-        { WriteBytes(new byte[] { 128, 1, 2, 3, 4, 5, 6, 7, 8, 255 }); SetIndex(1, 9); }
-        public override int GetHashCode() { ++HashCalls; return base.GetHashCode(); }
-        public override bool Equals(object other) { ++ObjectCalls; return base.Equals(other); }
-        public override bool Equals(ByteBuf other) { ++TypedCalls; return base.Equals(other); }
-        public override int CompareTo(ByteBuf other) { ++CompareCalls; return base.CompareTo(other); }
+        {
+            WriteBytes(new byte[] { 128, 1, 2, 3, 4, 5, 6, 7, 8, 255 });
+            SetIndex(1, 9);
+        }
+
+        public override int GetHashCode()
+        {
+            ++HashCalls;
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object other)
+        {
+            ++ObjectCalls;
+            return base.Equals(other);
+        }
+
+        public override bool Equals(ByteBuf other)
+        {
+            ++TypedCalls;
+            return base.Equals(other);
+        }
+
+        public override int CompareTo(ByteBuf other)
+        {
+            ++CompareCalls;
+            return base.CompareTo(other);
+        }
     }
 
     [Theory]

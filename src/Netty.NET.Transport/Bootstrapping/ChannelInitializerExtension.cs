@@ -94,7 +94,9 @@ public abstract class ChannelInitializerExtension
      *
      * @param channel The channel that was initialized.
      */
-    public virtual void PostInitializeClientChannel(IChannel channel) { }
+    public virtual void PostInitializeClientChannel(IChannel channel)
+    {
+    }
 
     /**
      * Called by {@link ServerBootstrap} after the initialization of the given server listener channel.
@@ -109,7 +111,9 @@ public abstract class ChannelInitializerExtension
      *
      * @param channel The channel that was initialized.
      */
-    public virtual void PostInitializeServerListenerChannel(IChannel channel) { }
+    public virtual void PostInitializeServerListenerChannel(IChannel channel)
+    {
+    }
 
     /**
      * Called by {@link ServerBootstrap} after the initialization of the given child channel.
@@ -123,5 +127,7 @@ public abstract class ChannelInitializerExtension
      *
      * @param channel The channel that was initialized.
      */
-    public virtual void PostInitializeServerChildChannel(IChannel channel) { }
+    public virtual void PostInitializeServerChildChannel(IChannel channel)
+    {
+    }
 }

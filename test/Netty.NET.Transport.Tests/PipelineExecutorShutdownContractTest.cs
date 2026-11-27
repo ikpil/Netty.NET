@@ -33,6 +33,7 @@ public class PipelineExecutorShutdownContractTest
         {
             _log.Enqueue(_name + ".added");
         }
+
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             _log.Enqueue(_name + ".removed");

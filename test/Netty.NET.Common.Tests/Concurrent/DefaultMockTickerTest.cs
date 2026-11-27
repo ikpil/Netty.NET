@@ -106,6 +106,7 @@ public class DefaultMockTickerTest
             }
         }
     }
+
     [Fact]
     void SleepZero()
     {

@@ -33,7 +33,9 @@ namespace Netty.NET.Handler.Proxy;
 // message where Java's getMessage() is null. serialVersionUID is JVM serialization metadata and has no counterpart.
 public class ProxyConnectException : IOException
 {
-    public ProxyConnectException() { }
+    public ProxyConnectException()
+    {
+    }
 
     public ProxyConnectException(string msg) : base(msg)
     {

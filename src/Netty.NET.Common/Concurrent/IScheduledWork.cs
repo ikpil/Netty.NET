@@ -11,11 +11,17 @@ public interface IScheduledWork
     Action QueueCallback { get; }
     bool IsCanceled { get; }
     void CancelWithoutRemove();
+
     long DeadlineNanos();
+
     long DelayNanos(long now);
+
     long DelayNanos();
+
     long GetId();
+
     // CLR: Java setId returns this for chaining at its single call site; no caller uses it.
     void SetId(long id);
+
     void SetConsumed();
 }

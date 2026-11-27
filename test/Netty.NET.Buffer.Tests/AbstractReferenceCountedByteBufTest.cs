@@ -129,11 +129,15 @@ public class AbstractReferenceCountedByteBufTest
     private sealed class CountingBuffer : UnpooledHeapByteBuf
     {
         public int Deallocations;
-        public CountingBuffer() : base(8, int.MaxValue) { }
+        public CountingBuffer() : base(8, int.MaxValue)
+        {
+        }
+
         public void SetCount(int value)
         {
             SetReferenceCount(value);
         }
+
         protected override void Deallocate()
         {
             // Original fixture's stub deallocator:

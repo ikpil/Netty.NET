@@ -751,6 +751,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
             SetUserDefinedWritability(ctx, false);
         }
     }
+
     /**
      * Explicitly release the Write suspended status.
      */

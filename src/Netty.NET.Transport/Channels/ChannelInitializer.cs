@@ -61,6 +61,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
      *                      the {@link Channel}.
      */
     protected abstract void InitChannel(T channel);
+
     /**
      * {@inheritDoc} If override this method ensure you call super!
      */
@@ -79,6 +80,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
             }
         }
     }
+
     public sealed override void ChannelRegistered(IChannelHandlerContext ctx)
     {
         // Normally this method will never be called as handlerAdded(...) should call initChannel(...) and remove
@@ -97,6 +99,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
             ctx.FireChannelRegistered();
         }
     }
+
     private bool Initialize(IChannelHandlerContext ctx)
     {
         lock (_initializing)
@@ -118,8 +121,13 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
         }
         return true;
     }
+
     public override void HandlerRemoved(IChannelHandlerContext ctx)
-    { lock (_initializing) _initializing.Remove(ctx); }
+    {
+        lock (_initializing)
+            _initializing.Remove(ctx);
+    }
+
     private void RemoveState(IChannelHandlerContext ctx)
     {
         // The removal may happen in an async fashion if the EventExecutor we use does something funky.
@@ -132,6 +140,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
             ctx.Executor.Execute(() => { lock (_initializing) _initializing.Remove(ctx); });
         }
     }
+
     /**
      * Handle the {@link Throwable} by logging and closing the {@link Channel}. Sub-classes may override this.
      */

@@ -184,6 +184,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         return new DefaultChannelConfig(this);
     }
+
     /**
      * Returns a new {@link DefaultChannelPipeline} instance.
      */
@@ -191,6 +192,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         return new(this);
     }
+
     /**
      * Return the assigned {@link RecvByteBufAllocator.Handle} which will be used to allocate {@link ByteBuf}'s when
      * receiving data.
@@ -200,10 +202,12 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         return _receiveHandle ??= Config.GetRecvByteBufAllocator().NewHandle();
     }
+
     protected void SetActive(bool active)
     {
         _active = active;
     }
+
     /**
      * Return {@code true} if the given {@link EventLoop} is compatible with this instance.
      */
@@ -211,6 +215,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         return true;
     }
+
     public virtual Task RegisterAsync(IEventLoop eventLoop, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(eventLoop);
@@ -313,6 +318,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             }
         }
     }
+
     protected internal Task OnLoopAsync(Action action)
     {
         var loop = EventLoop;
@@ -332,13 +338,21 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             return Task.CompletedTask;
         });
     }
-    protected virtual void DoClearReadPending() { }
+
+    protected virtual void DoClearReadPending()
+    {
+    }
+
     /**
      * Set read pending to {@code false}.
      */
     internal void ClearReadPending()
     {
-        void Clear() { _readBeforeActive = false; DoClearReadPending(); }
+        void Clear()
+        {
+            _readBeforeActive = false;
+            DoClearReadPending();
+        }
         if (!_registered)
         {
             // Best effort if we are not registered yet clear readPending. This happens during channel initialization.
@@ -350,8 +364,15 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         else
             _ = OnLoopAsync(Clear);
     }
+
     protected internal void ExecuteOnLoop(Action action)
-    { if (EventLoop.InEventLoop()) action(); else EventLoop.Execute(action); }
+    {
+        if (EventLoop.InEventLoop())
+            action();
+        else
+            EventLoop.Execute(action);
+    }
+
     /**
      * Closes the {@link Channel} immediately without firing any events.  Probably only useful
      * when registration attempt failed.
@@ -378,8 +399,13 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             _closeFuture.TrySetResult();
         }
     }
+
     protected void EnsureOpen()
-    { if (!_open) throw NewClosedChannelException(_initialCloseCause, "ensureOpen(ChannelPromise)"); }
+    {
+        if (!_open)
+            throw NewClosedChannelException(_initialCloseCause, "ensureOpen(ChannelPromise)");
+    }
+
     private static ClosedChannelException NewClosedChannelException(Exception cause, string method)
     {
         // CLR: AbstractUnsafe is folded into AbstractChannel, so the origin class is AbstractChannel.
@@ -388,6 +414,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             : StacklessClosedChannelException.NewInstance(typeof(AbstractChannel), method, cause);
         return exception;
     }
+
     // CLR: bind/disconnect: run the operation, then success on the owner; a failure calls closeIfClosed() as the
     // source catch blocks do (safeSetFailure(promise, t); closeIfClosed();).
     private Task Operation(Func<Task> operation, Action success)
@@ -417,6 +444,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             await OnLoopAsync(() => { EnsureOpen(); success(); }).ConfigureAwait(false);
         }
     }
+
     /**
      * Bind the {@link SocketAddress} to the {@link Channel} of the {@link ChannelPromise} and notify
      * it once its done.
@@ -452,6 +480,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             }
         });
     }
+
     /**
      * Connect the {@link Channel} of the given {@link ChannelFuture} with the given remote {@link SocketAddress}.
      * If a specific local {@link SocketAddress} should be used it need to be given as argument. Otherwise just
@@ -489,6 +518,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             }
         }
     }
+
     /**
      * Disconnect the {@link Channel} of the {@link ChannelFuture} and notify the {@link ChannelPromise} once the
      * operation was complete.
@@ -511,6 +541,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             CloseIfClosed(); // doDisconnect() might have closed the channel
         });
     }
+
     /**
      * Close the {@link Channel} of the {@link ChannelPromise} and notify the {@link ChannelPromise} once the
      * operation was complete.
@@ -620,6 +651,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             outboundBuffer.Close(_outputShutdownCause ?? (IOException)closeCause, false);
         }
     }
+
     private void DoClose0(TaskCompletionSource promise)
     {
         try
@@ -634,6 +666,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             promise.TrySetException(t);
         }
     }
+
     private void FireChannelInactiveAndDeregister(bool wasActive)
     {
         if (!_registered && !_open && !_closePending)
@@ -645,6 +678,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         }
         _ = Deregister(wasActive && !IsActive);
     }
+
     /**
      * Prepares to close the {@link Channel}. If this method returns an {@link Executor}, the
      * caller must call the {@link Executor#execute(Runnable)} method with a task that calls
@@ -761,6 +795,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             Logger.Warn("Can't invoke task later as EventLoop rejected it", e);
         }
     }
+
     /**
      * Schedules a write operation.
      */
@@ -786,6 +821,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         }
         catch (Exception error) { ReferenceCountUtil.Release(msg); return Task.FromException(error); }
     }
+
     /**
      * Flush out all write operations scheduled via {@link #write(Object, ChannelPromise)}.
      */
@@ -797,6 +833,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         OutboundBuffer.AddFlush();
         Flush0();
     }
+
     // CLR: AbstractUnsafe.flush0(); _writing is the inFlush0 flag.
     protected virtual void Flush0()
     {
@@ -856,6 +893,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         throw new NotSupportedException();
     }
+
     private async Task DrainWritesAsync()
     {
         bool handedOff = false;
@@ -901,11 +939,13 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         catch (Exception error) { OnUnhandledException(error); }
         finally { if (!handedOff && EventLoop.InEventLoop()) { _writing = false; DoWriteComplete(); } }
     }
+
     // CLR: BeginRead holds a read() issued before activation until the channel is active.
     private protected void BeginReadIfRequestedBeforeActive()
     {
         if (_readBeforeActive) BeginRead();
     }
+
     /**
      * Schedules a read operation that fills the inbound buffer of the first {@link ChannelInboundHandler} in the
      * {@link ChannelPipeline}.  If there's already a pending read operation, this method does nothing.
@@ -933,6 +973,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             _ = Close();
         }
     }
+
     /**
      * Invoked when a new message is added to a {@link ChannelOutboundBuffer} of this {@link AbstractChannel}, so that
      * the {@link Channel} implementation converts the message to another. (e.g. heap buffer -> direct buffer)
@@ -959,6 +1000,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         try { ShutdownOutput(t); }
         catch (Exception shutdownFailure) { Pipeline.FireExceptionCaught(shutdownFailure); }
     }
+
     /**
      * Shutdown the output portion of the corresponding {@link Channel}.
      * For example this will clean up the {@link ChannelOutboundBuffer} and not allow any more writes.
@@ -995,6 +1037,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             Pipeline.FireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
         }
     }
+
     /**
      * Called when conditions justify shutting down the output portion of the channel. This may happen if a write
      * operation throws an exception.
@@ -1006,6 +1049,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         Task close = Close();
         if (close.IsFaulted) close.GetAwaiter().GetResult();
     }
+
     protected void CloseOnWriteError(Exception error)
     {
         /**
@@ -1019,6 +1063,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         _initialCloseCause = error;
         _ = Close();
     }
+
     /**
      * Is called after the {@link Channel} is registered with its {@link EventLoop} as part of the register process.
      * Subclasses may override this method
@@ -1031,70 +1076,108 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      *
      * @param promise {@link ChannelPromise} that must be notified once done to continue the registration.
      */
-    protected virtual void DoRegister() { }
+    protected virtual void DoRegister()
+    {
+    }
+
     /**
      * Deregister the {@link Channel} from its {@link EventLoop}.
      *
      * Sub-classes may override this method
      */
-    protected virtual void DoDeregister() { }
+    protected virtual void DoDeregister()
+    {
+    }
+
     /**
      * Bind the {@link Channel} to the {@link SocketAddress}
      */
     protected abstract Task DoBindAsync(EndPoint address, CancellationToken cancellationToken);
+
     protected abstract Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken);
+
     /**
      * Disconnect this {@link Channel} from its remote peer
      */
-    protected virtual Task DoDisconnectAsync(CancellationToken cancellationToken) { DoClose(); _active = false; return Task.CompletedTask; }
+    protected virtual Task DoDisconnectAsync(CancellationToken cancellationToken)
+    {
+        DoClose();
+        _active = false;
+        return Task.CompletedTask;
+    }
+
     /**
      * Close the {@link Channel}
      */
     protected abstract void DoClose();
+
     /**
      * Schedule a read operation.
      */
     protected abstract void DoBeginRead();
+
     // CLR: per-message Task write used by transports without a doWrite(ChannelOutboundBuffer) loop.
     protected virtual Task DoWrite(object msg)
     {
         return Task.FromException(new NotSupportedException());
     }
-    protected virtual void DoWriteComplete() { }
+
+    protected virtual void DoWriteComplete()
+    {
+    }
+
     protected internal virtual void OnUnhandledException(Exception error)
     {
         Logger.Warn("Unhandled channel exception.", error);
     }
+
     public virtual Task BindAsync(EndPoint address, CancellationToken cancellationToken = default)
     {
         return Pipeline.BindAsync(address, cancellationToken);
     }
+
     public virtual Task ConnectAsync(EndPoint remote, EndPoint localAddress = null, CancellationToken cancellationToken = default)
     {
         return Pipeline.ConnectAsync(remote, localAddress, cancellationToken);
     }
+
     public virtual Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
         return Pipeline.DisconnectAsync(cancellationToken);
     }
+
     public virtual Task CloseAsync(CancellationToken cancellationToken = default)
     {
         return Pipeline.CloseAsync(cancellationToken);
     }
+
     public virtual Task DeregisterAsync(CancellationToken cancellationToken = default)
     {
         return Pipeline.DeregisterAsync(cancellationToken);
     }
+
     public virtual Task WriteAsync(object msg, CancellationToken cancellationToken = default)
     {
         return Pipeline.WriteAsync(msg, cancellationToken);
     }
+
     public virtual Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
     {
         return Pipeline.WriteAndFlushAsync(msg, cancellationToken);
     }
-    public virtual IChannelOutboundInvoker Read() { Pipeline.Read(); return this; }
-    public virtual IChannelOutboundInvoker Flush() { Pipeline.Flush(); return this; }
+
+    public virtual IChannelOutboundInvoker Read()
+    {
+        Pipeline.Read();
+        return this;
+    }
+
+    public virtual IChannelOutboundInvoker Flush()
+    {
+        Pipeline.Flush();
+        return this;
+    }
+
     /**
      * Returns the ID of this channel.
      */
@@ -1164,6 +1247,7 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         // Check for root and toor as some BSDs have a toor user that is basically the same as root.
         return "root".Equals(username, StringComparison.Ordinal) || "toor".Equals(username, StringComparison.Ordinal);
     }
+
     /**
      * Returns the {@link String} representation of this channel.  The returned
      * string contains the {@linkplain #hashCode() ID}, {@linkplain #localAddress() local address},

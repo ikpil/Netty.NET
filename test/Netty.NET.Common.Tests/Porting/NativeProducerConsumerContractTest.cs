@@ -21,6 +21,7 @@ public class NativeProducerConsumerContractTest
             catch (Exception error) { _source.TrySetException(error); }
             return _source.Task;
         }
+
         internal void Complete(object value)
         {
             _source.SetResult(value);

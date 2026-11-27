@@ -691,5 +691,7 @@ internal sealed class FastLz
         return data.GetByte(offset + 1) << 8 | data.GetByte(offset);
     }
 
-    private FastLz() { }
+    private FastLz()
+    {
+    }
 }

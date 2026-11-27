@@ -72,7 +72,9 @@ public abstract class AbstractEventExecutor : IEventExecutor
     public abstract void Execute(Action task);
 
     public abstract bool IsShutdown();
+
     public abstract bool IsTerminated();
+
     public abstract bool AwaitTermination(TimeSpan timeout);
     public abstract Task TerminationFuture { get; }
 

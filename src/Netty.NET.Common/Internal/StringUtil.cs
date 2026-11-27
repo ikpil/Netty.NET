@@ -397,6 +397,7 @@ public static class StringUtil
         ArgumentNullException.ThrowIfNull(hexDump);
         return DecodeHexDump(hexDump, 0, hexDump.Length());
     }
+
     public static byte[] DecodeHexDump(string hexDump)
     {
         ArgumentNullException.ThrowIfNull(hexDump);
@@ -418,6 +419,7 @@ public static class StringUtil
         Type type = o.GetType();
         return type.FullName ?? type.Name;
     }
+
     public static string SimpleClassName<T>()
     {
         return SimpleClassName(typeof(T));

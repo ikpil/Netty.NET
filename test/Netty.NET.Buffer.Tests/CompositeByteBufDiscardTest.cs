@@ -33,6 +33,7 @@ public class CompositeByteBufDiscardTest
                 ? new PooledByteBufAllocator(direct, pageSize: 4096, maxOrder: 1, nativeAllocator: Native)
                 : new UnpooledByteBufAllocator(direct, Native);
         }
+
         public void Dispose()
         {
             (Allocator as IDisposable)?.Dispose();
@@ -44,6 +45,7 @@ public class CompositeByteBufDiscardTest
         foreach (bool pooled in new[] { false, true })
         foreach (bool direct in new[] { false, true }) yield return [pooled, direct];
     }
+
     public static IEnumerable<object[]> TailGrowths()
     {
         foreach (object[] provider in Providers())
@@ -224,7 +226,13 @@ public class CompositeByteBufDiscardTest
         using var s = new Storage(pooled, direct);
         CompositeByteBuf composite = s.Allocator.CompositeBuffer();
         var sources = new List<ByteBuf>();
-        void Discard() { if (some) composite.DiscardSomeReadBytes(); else composite.DiscardReadBytes(); }
+        void Discard()
+        {
+            if (some)
+                composite.DiscardSomeReadBytes();
+            else
+                composite.DiscardReadBytes();
+        }
         try
         {
             for (int i = 0; i < 4; ++i)

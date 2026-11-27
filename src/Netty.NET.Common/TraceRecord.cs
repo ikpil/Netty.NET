@@ -28,6 +28,7 @@ internal sealed class TraceRecord : Exception
         nextRecord = next;
         position = next.position + 1;
     }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal TraceRecord(TraceRecord next)
     {
@@ -35,6 +36,7 @@ internal sealed class TraceRecord : Exception
         nextRecord = next;
         position = next.position + 1;
     }
+
     // Used to terminate the stack
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal TraceRecord(bool closeMarker)
@@ -47,10 +49,12 @@ internal sealed class TraceRecord : Exception
     {
         return position;
     }
+
     internal TraceRecord Next()
     {
         return nextRecord;
     }
+
     public override string ToString()
     {
         var buffer = new StringBuilder(2048);
@@ -78,12 +82,14 @@ internal sealed class TraceRecord : Exception
         }
         return buffer.ToString();
     }
+
     private static void MethodBaseInfo(StackFrame frame, out string className, out string methodName)
     {
         var method = frame.GetMethod();
         className = ResourceLeakDetector.ExclusionTypeName(method?.DeclaringType);
         methodName = method?.Name;
     }
+
     private static bool IsImplementationFrame(StackFrame frame)
     {
         var method = frame.GetMethod();

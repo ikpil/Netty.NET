@@ -31,7 +31,12 @@ public class DerivedByteBufIterationTest
         public int? Result;
         public Func<byte, bool> Processor;
         public void Visit(int index, int length, Func<byte, bool> processor)
-        { ++Calls; Index = index; Length = length; Processor = processor; }
+        {
+            ++Calls;
+            Index = index;
+            Length = length;
+            Processor = processor;
+        }
     }
 
     private sealed class ObservedHeap(Observation o) : UnpooledHeapByteBuf(16, 64)
@@ -41,6 +46,7 @@ public class DerivedByteBufIterationTest
             o.Visit(index, length, processor);
             return o.Result ?? base.ForEachByte(index, length, processor);
         }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             o.Visit(index, length, processor);
@@ -55,6 +61,7 @@ public class DerivedByteBufIterationTest
             o.Visit(index, length, processor);
             return o.Result ?? base.ForEachByte(index, length, processor);
         }
+
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             o.Visit(index, length, processor);
@@ -92,6 +99,7 @@ public class DerivedByteBufIterationTest
             View.SetIndex(Offset == 0 ? 3 : 1, Offset == 0 ? 13 : View.Capacity - 1)
                 .MarkReaderIndex().MarkWriterIndex();
         }
+
         public void Dispose()
         {
             if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
@@ -106,10 +114,12 @@ public class DerivedByteBufIterationTest
         for (int kind = 0; kind < 11; ++kind)
         foreach (bool descending in new[] { false, true }) yield return [direct, kind, descending];
     }
+
     private static int Scan(ByteBuf b, bool descending, Func<byte, bool> p)
     {
         return descending ? b.ForEachByteDesc(p) : b.ForEachByte(p);
     }
+
     private static int Scan(ByteBuf b, bool descending, int index, int length, Func<byte, bool> p)
     {
         return descending ? b.ForEachByteDesc(index, length, p) : b.ForEachByte(index, length, p);
@@ -127,32 +137,42 @@ public class DerivedByteBufIterationTest
         Assert.Equal(descending ? new byte[] { (byte)(s.Offset + 4), (byte)(s.Offset + 3) }
             : new byte[] { (byte)(s.Offset + 2), (byte)(s.Offset + 3) }, visited);
         Assert.Equal(1, s.Observation.Calls);
-        Assert.Equal(s.Offset + 2, s.Observation.Index); Assert.Equal(3, s.Observation.Length);
+        Assert.Equal(s.Offset + 2, s.Observation.Index);
+        Assert.Equal(3, s.Observation.Length);
         Assert.Same(stop, s.Observation.Processor);
 
-        s.Observation.Calls = 0; visited.Clear();
+        s.Observation.Calls = 0;
+        visited.Clear();
         Assert.Equal(-1, Scan(s.View, descending, 2, 3, value => { visited.Add(value); return true; }));
         Assert.Equal(1, s.Observation.Calls);
         Assert.Equal(descending ? new byte[] { (byte)(s.Offset + 4), (byte)(s.Offset + 3), (byte)(s.Offset + 2) }
             : new byte[] { (byte)(s.Offset + 2), (byte)(s.Offset + 3), (byte)(s.Offset + 4) }, visited);
 
-        s.Observation.Calls = 0; visited.Clear();
+        s.Observation.Calls = 0;
+        visited.Clear();
         Assert.Equal(-1, Scan(s.View, descending, value => { visited.Add(value); return true; }));
         Assert.Equal(0, s.Observation.Calls);
         IEnumerable<byte> range = Enumerable.Range(s.Offset + reader, writer - reader).Select(x => (byte)x);
         Assert.Equal(descending ? range.Reverse() : range, visited);
 
         var failure = new InvalidOperationException("processor failure");
-        int calls = 0; s.Observation.Calls = 0;
+        int calls = 0;
+        s.Observation.Calls = 0;
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Scan(s.View, descending, 2, 3, _ =>
-        { if (++calls == 2) throw failure; return true; })));
-        Assert.Equal(2, calls); Assert.Equal(1, s.Observation.Calls);
+        {
+            if (++calls == 2)
+                throw failure;
+            return true;
+        })));
+        Assert.Equal(2, calls);
+        Assert.Equal(1, s.Observation.Calls);
         Assert.Equal(-1, Scan(s.View, descending, s.View.Capacity, 0, _ => throw failure));
         Assert.Throws<ArgumentOutOfRangeException>(() => Scan(s.View, descending, s.View.Capacity, 1, _ => throw failure));
 
         if (direct)
         {
-            visited.Clear(); s.Observation.Calls = 0;
+            visited.Clear();
+            s.Observation.Calls = 0;
             Assert.Equal(3, Scan(s.View, descending, 2, 3, value =>
             {
                 visited.Add(value);
@@ -165,22 +185,29 @@ public class DerivedByteBufIterationTest
             }));
             Assert.Equal(descending ? new byte[] { (byte)(s.Offset + 4), 99 }
                 : new byte[] { (byte)(s.Offset + 2), 99 }, visited);
-            Assert.Equal(1, s.Observation.Calls); Assert.Equal(32, s.Native.ReservedBytes);
+            Assert.Equal(1, s.Observation.Calls);
+            Assert.Equal(32, s.Native.ReservedBytes);
         }
-        Assert.Equal(reader, s.View.ReaderIndex); Assert.Equal(writer, s.View.WriterIndex);
-        Assert.Equal(2, s.Root.ReaderIndex); Assert.Equal(14, s.Root.WriterIndex);
+        Assert.Equal(reader, s.View.ReaderIndex);
+        Assert.Equal(writer, s.View.WriterIndex);
+        Assert.Equal(2, s.Root.ReaderIndex);
+        Assert.Equal(14, s.Root.WriterIndex);
         s.View.SetIndex(0, s.View.Capacity).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(reader, s.View.ReaderIndex); Assert.Equal(writer, s.View.WriterIndex);
+        Assert.Equal(reader, s.View.ReaderIndex);
+        Assert.Equal(writer, s.View.WriterIndex);
         if (s.Owner != null)
         {
-            Assert.Equal(2, s.Root.RefCnt); Assert.Equal(1, s.Owner.RefCnt);
-            Assert.True(s.Owner.Release()); Assert.Equal(1, s.Root.RefCnt);
+            Assert.Equal(2, s.Root.RefCnt);
+            Assert.Equal(1, s.Owner.RefCnt);
+            Assert.True(s.Owner.Release());
+            Assert.Equal(1, s.Root.RefCnt);
             // A live root cannot make an independently released pooled view accessible again.
             Assert.Throws<IllegalReferenceCountException>(() => Scan(s.View, descending, 2, 3, _ => true));
             Assert.Throws<IllegalReferenceCountException>(() => Scan(s.View, descending, _ => true));
             Assert.Equal(0, s.Root.GetByte(0));
         }
-        else Assert.Equal(1, s.Root.RefCnt);
+        else
+            Assert.Equal(1, s.Root.RefCnt);
     }
 
     public static IEnumerable<object[]> Results()

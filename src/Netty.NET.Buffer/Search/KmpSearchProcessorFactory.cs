@@ -61,7 +61,10 @@ public class KmpSearchProcessorFactory : AbstractSearchProcessorFactory
         private int _currentPosition;
 
         internal Processor(byte[] needle, int[] jumpTable)
-        { _needle = needle; _jumpTable = jumpTable; }
+        {
+            _needle = needle;
+            _jumpTable = jumpTable;
+        }
 
         public bool Process(byte value)
         {

@@ -589,6 +589,7 @@ public abstract class WebSocketServerHandshaker
     {
         return NewHandshakeResponse(req, responseHeaders);
     }
+
     /**
      * Performs the closing handshake.
      *

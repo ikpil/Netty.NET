@@ -71,6 +71,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     }
 
     internal abstract PooledByteBuf Allocate(int initialCapacity, int maxCapacity, PoolThreadCache cache = null);
+
     protected abstract Memory<byte> AllocateBacking(int length, out NativeMemoryOwner owner);
 
     internal Allocation AllocateMemory(int capacity, PoolThreadCache cache = null)

@@ -1446,9 +1446,13 @@ public class DefaultChannelPipeline : IChannelPipeline
 
         public override IChannelHandler Handler => this;
 
-        public void ChannelRegistered(IChannelHandlerContext ctx) { }
+        public void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+        }
 
-        public void ChannelUnregistered(IChannelHandlerContext ctx) { }
+        public void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+        }
 
         public void ChannelActive(IChannelHandlerContext ctx)
         {
@@ -1465,9 +1469,13 @@ public class DefaultChannelPipeline : IChannelPipeline
             _pipeline.OnUnhandledChannelWritabilityChanged();
         }
 
-        public void HandlerAdded(IChannelHandlerContext ctx) { }
+        public void HandlerAdded(IChannelHandlerContext ctx)
+        {
+        }
 
-        public void HandlerRemoved(IChannelHandlerContext ctx) { }
+        public void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+        }
 
         public void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {

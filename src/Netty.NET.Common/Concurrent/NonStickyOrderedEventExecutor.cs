@@ -283,14 +283,17 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         {
             return Interlocked.CompareExchange(ref _claim, 2, 0) == 0;
         }
+
         public void CancelForShutdown()
         {
             if (Invalidate()) owner.FinishPending(this, null, true);
         }
+
         public void Reject(Exception error)
         {
             if (Invalidate()) owner.FinishPending(this, error, false);
         }
+
         public void Run()
         {
             if (Interlocked.CompareExchange(ref _claim, 1, 0) != 0) return;

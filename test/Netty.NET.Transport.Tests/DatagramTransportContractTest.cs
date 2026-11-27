@@ -44,6 +44,7 @@ public class DatagramTransportContractTest
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
+
     [Theory]
     [InlineData(0, false)]
     [InlineData(1024, false)]
@@ -85,6 +86,7 @@ public class DatagramTransportContractTest
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
+
     [Fact]
     public async Task GroupWritesUseIndependentBufferIndicesAndReleaseEveryOwner()
     {
@@ -113,6 +115,7 @@ public class DatagramTransportContractTest
         {
             received.TrySetResult((packet.Content.ReadableMemory.ToArray(), packet.Sender));
         }
+
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             received.TrySetException(cause);

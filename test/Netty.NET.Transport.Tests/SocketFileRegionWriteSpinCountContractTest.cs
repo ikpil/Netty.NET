@@ -193,35 +193,55 @@ public class SocketFileRegionWriteSpinCountContractTest
         {
             return 0;
         }
+
         public long Count()
         {
             return count;
         }
+
         public long Transferred()
         {
             return _transferred;
         }
+
         internal void Advance(long count)
         {
             _transferred += count;
         }
+
         public long TransferTo(Stream target, long position)
         {
             Positions.Add(position);
             Assert.Equal(_transferred, position);
-            if (transfer != null) return transfer(this, target, position);
-            target.WriteByte(42); _transferred++; return 1;
+            if (transfer != null)
+                return transfer(this, target, position);
+            target.WriteByte(42);
+            _transferred++;
+            return 1;
         }
+
         protected override void Deallocate()
         {
             Deallocated = true;
         }
-        public new IFileRegion Retain() { base.Retain(); return this; }
-        public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
+
+        public new IFileRegion Retain()
+        {
+            base.Retain();
+            return this;
+        }
+
+        public override IFileRegion Retain(int increment)
+        {
+            base.Retain(increment);
+            return this;
+        }
+
         public new IFileRegion Touch()
         {
             return this;
         }
+
         public override IFileRegion Touch(object hint)
         {
             return this;
@@ -236,13 +256,15 @@ public class SocketFileRegionWriteSpinCountContractTest
         internal Fixture(int writeSpinCount)
         {
             using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listener.Bind(new IPEndPoint(IPAddress.Loopback, 0)); listener.Listen(1);
+            listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            listener.Listen(1);
             _peer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _peer.Connect(listener.LocalEndPoint);
             Channel = new Probe(listener.Accept());
             Channel.Config.SetAutoRead(false).SetWriteSpinCount(writeSpinCount);
             Loop.RegisterAsync(Channel).GetAwaiter().GetResult();
         }
+
         internal void PumpUntil(Func<bool> condition)
         {
             var clock = Stopwatch.StartNew();
@@ -253,17 +275,26 @@ public class SocketFileRegionWriteSpinCountContractTest
                 Loop.RunNow(); Thread.Sleep(1);
             }
         }
+
         internal byte[] Receive(int length)
         {
-            var bytes = new byte[length]; int offset = 0;
+            var bytes = new byte[length];
+            int offset = 0;
             while (offset < length)
             {
                 Assert.True(_peer.Poll(2_000_000, SelectMode.SelectRead));
-                int read = _peer.Receive(bytes.AsSpan(offset)); Assert.True(read > 0); offset += read;
+                int read = _peer.Receive(bytes.AsSpan(offset));
+                Assert.True(read > 0);
+                offset += read;
             }
             return bytes;
         }
-        public void Dispose() { ManualIoEventLoopSourceTest.Terminate(Loop); _peer.Dispose(); }
+
+        public void Dispose()
+        {
+            ManualIoEventLoopSourceTest.Terminate(Loop);
+            _peer.Dispose();
+        }
     }
 
     // Counts the non-blocking byte writes and the doWriteFileRegion attempts of NioSocketChannel.doWrite; byte

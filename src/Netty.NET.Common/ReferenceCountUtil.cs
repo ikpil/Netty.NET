@@ -31,6 +31,7 @@ public static class ReferenceCountUtil
     {
         ResourceLeakDetector.AddExclusions(typeof(ReferenceCountUtil), nameof(Touch));
     }
+
     /**
      * Try to call {@link ReferenceCounted#retain()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -39,6 +40,7 @@ public static class ReferenceCountUtil
     {
         return msg is IReferenceCounted reference ? (T)reference.Retain() : msg;
     }
+
     /**
      * Try to call {@link ReferenceCounted#retain(int)} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -48,6 +50,7 @@ public static class ReferenceCountUtil
         ObjectUtil.CheckPositive(increment, "increment");
         return msg is IReferenceCounted reference ? (T)reference.Retain(increment) : msg;
     }
+
     /**
      * Tries to call {@link ReferenceCounted#touch()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -56,6 +59,7 @@ public static class ReferenceCountUtil
     {
         return msg is IReferenceCounted reference ? (T)reference.Touch() : msg;
     }
+
     /**
      * Tries to call {@link ReferenceCounted#touch(Object)} if the specified message implements
      * {@link ReferenceCounted}.  If the specified message doesn't implement {@link ReferenceCounted},
@@ -65,6 +69,7 @@ public static class ReferenceCountUtil
     {
         return msg is IReferenceCounted reference ? (T)reference.Touch(hint) : msg;
     }
+
     /**
      * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -73,6 +78,7 @@ public static class ReferenceCountUtil
     {
         return msg is IReferenceCounted reference && reference.Release();
     }
+
     /**
      * Try to call {@link ReferenceCounted#release(int)} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -82,6 +88,7 @@ public static class ReferenceCountUtil
         ObjectUtil.CheckPositive(decrement, "decrement");
         return msg is IReferenceCounted reference && reference.Release(decrement);
     }
+
     /**
      * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -94,6 +101,7 @@ public static class ReferenceCountUtil
         try { Release(msg); }
         catch (Exception failure) { logger.Warn("Failed to release a message: {}", msg, failure); }
     }
+
     /**
      * Try to call {@link ReferenceCounted#release(int)} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -113,6 +121,7 @@ public static class ReferenceCountUtil
             if (logger.IsWarnEnabled()) logger.Warn("Failed to release a message: {} (decrement: {})", msg, decrement, failure);
         }
     }
+
     /**
      * Schedules the specified object to be released when the caller thread terminates. Note that this operation is
      * intended to simplify reference counting of ephemeral objects during unit tests. Do not use it beyond the
@@ -125,6 +134,7 @@ public static class ReferenceCountUtil
     {
         return ReleaseLater(msg, 1);
     }
+
     /**
      * Schedules the specified object to be released when the caller thread terminates. Note that this operation is
      * intended to simplify reference counting of ephemeral objects during unit tests. Do not use it beyond the
@@ -139,6 +149,7 @@ public static class ReferenceCountUtil
         if (msg is IReferenceCounted reference) ThreadDeathWatcher.Watch(Thread.CurrentThread, new ReleasingTask(reference, decrement).Run);
         return msg;
     }
+
     /**
      * Returns reference count of a {@link ReferenceCounted} object. If object is not type of
      * {@link ReferenceCounted}, {@code -1} is returned.
@@ -161,6 +172,7 @@ public static class ReferenceCountUtil
             }
             catch (Exception failure) { logger.Warn("Failed to release an object: {}", obj, failure); }
         }
+
         public override string ToString()
         {
             return StringUtil.SimpleClassName(obj) + ".release(" + decrement.ToString(CultureInfo.InvariantCulture) + ") refCnt: " + obj.RefCnt.ToString(CultureInfo.InvariantCulture);

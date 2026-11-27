@@ -54,7 +54,9 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
      */
     /// <remarks>An optional native allocator controls reservations for direct buffers, their copies and composite padding.</remarks>
     public UnpooledByteBufAllocator(bool preferDirect = false, NativeMemoryAllocator nativeAllocator = null)
-        : this(preferDirect, false, nativeAllocator) { }
+        : this(preferDirect, false, nativeAllocator)
+    {
+    }
 
     /**
      * Create a new instance
@@ -110,10 +112,12 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
         {
             Interlocked.Add(ref _heapBytes, amount);
         }
+
         internal void AddDirect(long amount)
         {
             Interlocked.Add(ref _directBytes, amount);
         }
+
         public override string ToString()
         {
             return string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory})");

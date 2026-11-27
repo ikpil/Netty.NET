@@ -41,6 +41,7 @@ public sealed class HostsFileEntriesProvider
          * @throws IOException file could not be read
          */
         HostsFileEntriesProvider Parse();
+
         /**
          * Parses the hosts file at standard OS location using the given {@link Charset}s one after another until
          * parse something or none is left.
@@ -50,6 +51,7 @@ public sealed class HostsFileEntriesProvider
          * @throws IOException file could not be read
          */
         HostsFileEntriesProvider Parse(params Encoding[] charsets);
+
         /**
          * Parses the provided hosts file using the given {@link Charset}s one after another until
          * parse something or none is left. In case {@link Charset}s are not provided,
@@ -62,6 +64,7 @@ public sealed class HostsFileEntriesProvider
          * @throws IOException file could not be read
          */
         HostsFileEntriesProvider Parse(FileInfo file, params Encoding[] charsets);
+
         /**
          * Performs the parsing operation using the provided reader of hosts file format.
          *
@@ -69,12 +72,14 @@ public sealed class HostsFileEntriesProvider
          * @return a new {@link HostsFileEntriesProvider}
          */
         HostsFileEntriesProvider Parse(TextReader reader);
+
         /**
          * Parses the hosts file at standard OS location using the system default {@link Charset} for decoding.
          *
          * @return a new {@link HostsFileEntriesProvider}
          */
         HostsFileEntriesProvider ParseSilently();
+
         /**
          * Parses the hosts file at standard OS location using the given {@link Charset}s one after another until
          * parse something or none is left.
@@ -83,6 +88,7 @@ public sealed class HostsFileEntriesProvider
          * @return a new {@link HostsFileEntriesProvider}
          */
         HostsFileEntriesProvider ParseSilently(params Encoding[] charsets);
+
         /**
          * Parses the provided hosts file using the given {@link Charset}s one after another until
          * parse something or none is left. In case {@link Charset}s are not provided,
@@ -129,6 +135,7 @@ public sealed class HostsFileEntriesProvider
     {
         return _ipv4Entries;
     }
+
     /**
      * The IPv6 entries.
      *
@@ -163,6 +170,7 @@ public sealed class HostsFileEntriesProvider
         {
             return Parse(LocateHostsFile(), Encoding.Default);
         }
+
         public HostsFileEntriesProvider Parse(params Encoding[] charsets)
         {
             return Parse(LocateHostsFile(), charsets);
@@ -266,10 +274,12 @@ public sealed class HostsFileEntriesProvider
         {
             return ParseSilently(LocateHostsFile(), Encoding.Default);
         }
+
         public HostsFileEntriesProvider ParseSilently(params Encoding[] charsets)
         {
             return ParseSilently(LocateHostsFile(), charsets);
         }
+
         public HostsFileEntriesProvider ParseSilently(FileInfo file, params Encoding[] charsets)
         {
             try

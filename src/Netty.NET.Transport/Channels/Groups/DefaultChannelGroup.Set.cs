@@ -116,12 +116,14 @@ public partial class DefaultChannelGroup
         if (ReferenceEquals(other, this)) return;
         foreach (var channel in other) Add(channel);
     }
+
     public void ExceptWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
         if (ReferenceEquals(other, this)) { Clear(); return; }
         foreach (var channel in other) Remove(channel);
     }
+
     public void IntersectWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -129,38 +131,50 @@ public partial class DefaultChannelGroup
         var keep = Members(other);
         foreach (var channel in ToArray()) if (!keep.Contains(channel)) Remove(channel);
     }
+
     public void SymmetricExceptWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
         if (ReferenceEquals(other, this)) { Clear(); return; }
         foreach (var channel in Members(other)) if (!Remove(channel)) Add(channel);
     }
+
     public bool IsSubsetOf(IEnumerable<IChannel> other)
     {
         return Members(this).IsSubsetOf(Checked(other));
     }
+
     public bool IsSupersetOf(IEnumerable<IChannel> other)
     {
         return Members(this).IsSupersetOf(Checked(other));
     }
+
     public bool IsProperSubsetOf(IEnumerable<IChannel> other)
     {
         return Members(this).IsProperSubsetOf(Checked(other));
     }
+
     public bool IsProperSupersetOf(IEnumerable<IChannel> other)
     {
         return Members(this).IsProperSupersetOf(Checked(other));
     }
+
     public bool Overlaps(IEnumerable<IChannel> other)
     {
         return Members(this).Overlaps(Checked(other));
     }
+
     public bool SetEquals(IEnumerable<IChannel> other)
     {
         return Members(this).SetEquals(Checked(other));
     }
+
     private static IEnumerable<IChannel> Checked(IEnumerable<IChannel> other)
-    { ArgumentNullException.ThrowIfNull(other); return other; }
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        return other;
+    }
+
     private static HashSet<IChannel> Members(IEnumerable<IChannel> channels)
     {
         return new(channels, ReferenceEqualityComparer.Instance);

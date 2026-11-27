@@ -105,22 +105,28 @@ public class QueuedActionContractTest
         internal int LazyExecutions;
         internal int WakeChecks;
         internal Action Prefix;
-        internal HookLoop() : base(null, new DefaultThreadFactory("native-action-hook", true), true) { }
+        internal HookLoop() : base(null, new DefaultThreadFactory("native-action-hook", true), true)
+        {
+        }
+
         public override void Execute(Action task)
         {
             Interlocked.Increment(ref Executions);
             base.Execute(Prefix == null ? task : Prefix + task);
         }
+
         public override void LazyExecute(Action task)
         {
             Interlocked.Increment(ref LazyExecutions);
             base.LazyExecute(task);
         }
+
         protected override bool WakesUpForTask(Action task)
         {
             Interlocked.Increment(ref WakeChecks);
             return base.WakesUpForTask(task);
         }
+
         protected override void Run()
         {
             for (;;)
@@ -151,23 +157,32 @@ public class QueuedActionContractTest
     {
         internal int Executions;
         internal Func<Action, Action> Transform = static task => task;
-        public override void Execute(Action task) { Executions++; owner.Execute(Transform(task)); }
+        public override void Execute(Action task)
+        {
+            Executions++;
+            owner.Execute(Transform(task));
+        }
+
         public override bool InEventLoop(Thread thread)
         {
             return owner.InEventLoop(thread);
         }
+
         public override bool IsShuttingDown()
         {
             return owner.IsShuttingDown();
         }
+
         public override bool IsShutdown()
         {
             return owner.IsShutdown();
         }
+
         public override bool IsTerminated()
         {
             return owner.IsTerminated();
         }
+
         [Obsolete]
         public override void Shutdown()
         {
@@ -178,6 +193,7 @@ public class QueuedActionContractTest
         {
             return owner.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return owner.AwaitTermination(timeout);

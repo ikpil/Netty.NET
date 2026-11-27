@@ -381,7 +381,8 @@ public class ByteBufAllocatorClrContractTest
         Assert.Throws<ArgumentOutOfRangeException>(() => a.HeapBuffer(initial, max));
         Assert.Throws<ArgumentOutOfRangeException>(() => a.DirectBuffer(initial, max));
         Assert.Throws<ArgumentOutOfRangeException>(() => a.IoBuffer(initial, max));
-        Assert.Equal(0, a.HeapCalls); Assert.Equal(0, a.DirectCalls);
+        Assert.Equal(0, a.HeapCalls);
+        Assert.Equal(0, a.DirectCalls);
     }
 
     [Theory]
@@ -397,14 +398,27 @@ public class ByteBufAllocatorClrContractTest
     [Fact]
     public void EmptySentinelBelongsToAllocatorAndHasNoAllocationOrOwnershipCost()
     {
-        var a = new RecordingAllocator(); var other = new RecordingAllocator();
+        var a = new RecordingAllocator();
+        var other = new RecordingAllocator();
         ByteBuf empty = a.Buffer(0, 0);
-        Assert.Same(empty, a.HeapBuffer(0, 0)); Assert.Same(empty, a.DirectBuffer(0, 0)); Assert.Same(empty, a.IoBuffer(0, 0));
-        Assert.NotSame(empty, other.Buffer(0, 0)); Assert.Same(a, empty.Alloc());
-        Assert.Equal(0, a.HeapCalls); Assert.Equal(0, a.DirectCalls);
-        Assert.Same(empty, empty.Retain()); Assert.False(empty.Release()); Assert.Equal(1, empty.RefCnt);
+        Assert.Same(empty, a.HeapBuffer(0, 0));
+        Assert.Same(empty, a.DirectBuffer(0, 0));
+        Assert.Same(empty, a.IoBuffer(0, 0));
+        Assert.NotSame(empty, other.Buffer(0, 0));
+        Assert.Same(a, empty.Alloc());
+        Assert.Equal(0, a.HeapCalls);
+        Assert.Equal(0, a.DirectCalls);
+        Assert.Same(empty, empty.Retain());
+        Assert.False(empty.Release());
+        Assert.Equal(1, empty.RefCnt);
         ByteBuf growable = a.HeapBuffer(0, 1);
-        try { Assert.NotSame(empty, growable); Assert.Same(a, growable.Alloc()); growable.WriteByte(4); Assert.Equal(1, growable.Capacity); }
+        try
+        {
+            Assert.NotSame(empty, growable);
+            Assert.Same(a, growable.Alloc());
+            growable.WriteByte(4);
+            Assert.Equal(1, growable.Capacity);
+        }
         finally { growable.Release(); }
         Assert.Same(Unpooled.EmptyBuffer, UnpooledByteBufAllocator.Default.DirectBuffer(0, 0));
         Assert.Same(IByteBufAllocator.Default, ByteBufUtil.DefaultAllocator);
@@ -414,24 +428,38 @@ public class ByteBufAllocatorClrContractTest
     [InlineData(false)] [InlineData(true)]
     public void ViewsCopiesAndGrowthKeepTheCreatingAllocator(bool direct)
     {
-        var a = new RecordingAllocator(); ByteBuf root = direct ? a.DirectBuffer(4, 64) : a.HeapBuffer(4, 64);
+        var a = new RecordingAllocator();
+        ByteBuf root = direct ? a.DirectBuffer(4, 64) : a.HeapBuffer(4, 64);
         try
         {
             root.WriteBytes(new byte[] { 1, 2, 3, 4 });
             ByteBuf[] views = { root, root.Duplicate(), root.Slice(1, 2), root.AsReadOnly(), Unpooled.UnreleasableBuffer(root), root.Slice(1, 2).Duplicate().AsReadOnly() };
             foreach (ByteBuf view in views)
             {
-                Assert.Same(a, view.Alloc()); int calls = direct ? a.DirectCalls : a.HeapCalls;
+                Assert.Same(a, view.Alloc());
+                int calls = direct ? a.DirectCalls : a.HeapCalls;
                 ByteBuf copy = view.Copy();
-                try { Assert.Same(a, copy.Alloc()); Assert.Equal(direct, copy.IsDirect); Assert.Equal(64, copy.MaxCapacity); Assert.Equal(ByteBufUtil.GetBytes(view), ByteBufUtil.GetBytes(copy)); }
+                try
+                {
+                    Assert.Same(a, copy.Alloc());
+                    Assert.Equal(direct, copy.IsDirect);
+                    Assert.Equal(64, copy.MaxCapacity);
+                    Assert.Equal(ByteBufUtil.GetBytes(view), ByteBufUtil.GetBytes(copy));
+                }
                 finally { copy.Release(); }
                 Assert.Equal(calls + 1, direct ? a.DirectCalls : a.HeapCalls);
             }
-            root.EnsureWritable(1); Assert.Equal(5, root.Capacity); Assert.Equal((5, 64), a.LastCalculation);
-            Assert.Equal(2, root.EnsureWritable(2, false)); Assert.Equal(6, root.Capacity);
-            Assert.Equal(1, root.EnsureWritable(100, false)); Assert.Equal(6, root.Capacity);
-            Assert.Equal(3, root.EnsureWritable(100, true)); Assert.Equal(64, root.Capacity);
-            Assert.Equal(4, root.WriterIndex); Assert.Equal(1, root.RefCnt);
+            root.EnsureWritable(1);
+            Assert.Equal(5, root.Capacity);
+            Assert.Equal((5, 64), a.LastCalculation);
+            Assert.Equal(2, root.EnsureWritable(2, false));
+            Assert.Equal(6, root.Capacity);
+            Assert.Equal(1, root.EnsureWritable(100, false));
+            Assert.Equal(6, root.Capacity);
+            Assert.Equal(3, root.EnsureWritable(100, true));
+            Assert.Equal(64, root.Capacity);
+            Assert.Equal(4, root.WriterIndex);
+            Assert.Equal(1, root.RefCnt);
         }
         finally { root.Release(); }
     }
@@ -440,17 +468,27 @@ public class ByteBufAllocatorClrContractTest
     [InlineData(false)] [InlineData(true)]
     public void CompositePaddingConsolidationAndCopyUseTheAllocator(bool direct)
     {
-        var a = new RecordingAllocator(); CompositeByteBuf b = direct ? a.CompositeDirectBuffer(2) : a.CompositeHeapBuffer(2);
+        var a = new RecordingAllocator();
+        CompositeByteBuf b = direct ? a.CompositeDirectBuffer(2) : a.CompositeHeapBuffer(2);
         try
         {
             b.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }), true);
             b.AddComponent(Unpooled.WrappedBuffer(new byte[] { 3, 4 }), true);
             b.AddComponent(Unpooled.WrappedBuffer(new byte[] { 5, 6 }), true);
-            Assert.Equal(1, b.NumComponents); Assert.Equal(direct, b.IsDirect); Assert.Same(a, b.Component(0).Alloc());
-            Assert.Equal(direct ? 1 : 0, a.DirectCalls); Assert.Equal(direct ? 0 : 1, a.HeapCalls);
-            b.Capacity = 8; Assert.Same(a, b.Component(1).Alloc());
+            Assert.Equal(1, b.NumComponents);
+            Assert.Equal(direct, b.IsDirect);
+            Assert.Same(a, b.Component(0).Alloc());
+            Assert.Equal(direct ? 1 : 0, a.DirectCalls);
+            Assert.Equal(direct ? 0 : 1, a.HeapCalls);
+            b.Capacity = 8;
+            Assert.Same(a, b.Component(1).Alloc());
             ByteBuf copy = b.Slice(1, 4).Copy();
-            try { Assert.Same(a, copy.Alloc()); Assert.Equal(direct, copy.IsDirect); Assert.Equal(new byte[] { 2, 3, 4, 5 }, ByteBufUtil.GetBytes(copy)); }
+            try
+            {
+                Assert.Same(a, copy.Alloc());
+                Assert.Equal(direct, copy.IsDirect);
+                Assert.Equal(new byte[] { 2, 3, 4, 5 }, ByteBufUtil.GetBytes(copy));
+            }
             finally { copy.Release(); }
         }
         finally { b.Release(); }
@@ -460,27 +498,41 @@ public class ByteBufAllocatorClrContractTest
     [InlineData(false)] [InlineData(true)]
     public void NativeReservationDomainIncludesCopiesAndCompositeAllocations(bool useLegacyConstructor)
     {
-        var native = new NativeMemoryAllocator(16); var a = new UnpooledByteBufAllocator(true, native);
+        var native = new NativeMemoryAllocator(16);
+        var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = useLegacyConstructor ? new UnpooledDirectByteBuf(4, 8, native) : a.DirectBuffer(4, 8);
         try
         {
-            b.WriteInt(0x01020304); IByteBufAllocator policy = b.Alloc();
+            b.WriteInt(0x01020304);
+            IByteBufAllocator policy = b.Alloc();
             ByteBuf copy = b.Duplicate().Copy();
-            try { Assert.Same(policy, copy.Alloc()); Assert.Equal(8, native.ReservedBytes); }
+            try
+            {
+                Assert.Same(policy, copy.Alloc());
+                Assert.Equal(8, native.ReservedBytes);
+            }
             finally { copy.Release(); }
-            b.Capacity = 8; Assert.Equal(8, native.ReservedBytes);
+            b.Capacity = 8;
+            Assert.Equal(8, native.ReservedBytes);
             ByteBuf full = policy.DirectBuffer(8, 8);
             try
             {
                 Assert.Throws<OutOfDirectMemoryError>(() => b.Copy());
-                Assert.Equal(16, native.ReservedBytes); Assert.Equal(8, b.Capacity); Assert.Equal(4, b.WriterIndex);
+                Assert.Equal(16, native.ReservedBytes);
+                Assert.Equal(8, b.Capacity);
+                Assert.Equal(4, b.WriterIndex);
             }
             finally { full.Release(); }
         }
         finally { b.Release(); }
         Assert.Equal(0, native.ReservedBytes);
         CompositeByteBuf composite = useLegacyConstructor ? new CompositeByteBuf(16, true, native) : a.CompositeDirectBuffer();
-        try { composite.Capacity = 8; Assert.Equal(8, native.ReservedBytes); Assert.Same(composite.Alloc(), composite.Component(0).Alloc()); }
+        try
+        {
+            composite.Capacity = 8;
+            Assert.Equal(8, native.ReservedBytes);
+            Assert.Same(composite.Alloc(), composite.Component(0).Alloc());
+        }
         finally { composite.Release(); }
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -488,15 +540,20 @@ public class ByteBufAllocatorClrContractTest
     [Fact]
     public void FailedGrowthKeepsTheReservationWhileAnOperationLeaseIsActive()
     {
-        var native = new NativeMemoryAllocator(8); var a = new UnpooledByteBufAllocator(true, native);
+        var native = new NativeMemoryAllocator(8);
+        var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
         using var lease = b.AcquireReadLease();
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 8);
-            Assert.Equal(4, native.ReservedBytes); Assert.Equal(4, b.Capacity); Assert.Equal(4, b.WriterIndex);
-            Assert.Equal(0x01020304, b.GetInt(0)); Assert.Same(a, b.Alloc());
-            b.Release(); Assert.Equal(4, native.ReservedBytes);
+            Assert.Equal(4, native.ReservedBytes);
+            Assert.Equal(4, b.Capacity);
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(0x01020304, b.GetInt(0));
+            Assert.Same(a, b.Alloc());
+            b.Release();
+            Assert.Equal(4, native.ReservedBytes);
         }
         finally { if (b.RefCnt > 0) b.Release(); lease.Dispose(); }
         Assert.Equal(0, native.ReservedBytes);
@@ -505,13 +562,19 @@ public class ByteBufAllocatorClrContractTest
     [Fact]
     public async Task AllocatorFactoriesAreSafeForConcurrentIndependentBuffers()
     {
-        var native = new NativeMemoryAllocator(4096); var a = new UnpooledByteBufAllocator(true, native);
+        var native = new NativeMemoryAllocator(4096);
+        var a = new UnpooledByteBufAllocator(true, native);
         await Task.WhenAll(Enumerable.Range(0, 32).Select(i => Task.Run(() =>
         {
             for (int n = 0; n < 16; n++)
             {
                 ByteBuf b = (i & 1) == 0 ? a.DirectBuffer(8, 16) : a.HeapBuffer(8, 16);
-                try { b.WriteLong(i); Assert.Equal(i, b.ReadLong()); Assert.Same(a, b.Alloc()); }
+                try
+                {
+                    b.WriteLong(i);
+                    Assert.Equal(i, b.ReadLong());
+                    Assert.Same(a, b.Alloc());
+                }
                 finally { b.Release(); }
             }
         }, TestContext.Current.CancellationToken)));
@@ -533,10 +596,21 @@ public class ByteBufAllocatorClrContractTest
         public (int Minimum, int Maximum) LastCalculation { get; private set; }
         public override bool IsDirectBufferPooled => false;
         public override int CalculateNewCapacity(int minimumNewCapacity, int maxCapacity)
-        { LastCalculation = (minimumNewCapacity, maxCapacity); return minimumNewCapacity; }
+        {
+            LastCalculation = (minimumNewCapacity, maxCapacity);
+            return minimumNewCapacity;
+        }
+
         protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-        { HeapCalls++; return new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity); }
+        {
+            HeapCalls++;
+            return new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+        }
+
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-        { DirectCalls++; return new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity); }
+        {
+            DirectCalls++;
+            return new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity);
+        }
     }
 }

@@ -139,11 +139,13 @@ public class ChannelPoolContractTest
         {
             Assert.True(channel.EventLoop.InEventLoop());
         }
+
         public override void ChannelAcquired(IChannel channel)
         {
             Assert.True(channel.EventLoop.InEventLoop());
             Interlocked.Increment(ref _acquired);
         }
+
         public override void ChannelReleased(IChannel channel)
         {
             Assert.True(channel.EventLoop.InEventLoop());
@@ -176,19 +178,28 @@ public class ChannelPoolContractTest
         {
             throw new NotSupportedException();
         }
+
         public Task ReleaseAsync(IChannel channel)
         {
             throw new NotSupportedException();
         }
-        public Task CloseAsync() { Closed = true; return Task.CompletedTask; }
+
+        public Task CloseAsync()
+        {
+            Closed = true;
+            return Task.CompletedTask;
+        }
+
         public void Close()
         {
             Closed = true;
         }
+
         public void Dispose()
         {
             Close();
         }
+
         public ValueTask DisposeAsync()
         {
             return new(CloseAsync());

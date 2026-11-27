@@ -49,6 +49,7 @@ public class ByteBufTextSourceTest
             };
             Root.Clear();
         }
+
         public void Dispose()
         {
             if (Root.RefCnt > 0) Root.Release();
@@ -102,7 +103,8 @@ public class ByteBufTextSourceTest
         buffer.WriteBytes(copied);
         Assert.Equal("Hello, World!", buffer.ToString(Encoding.Latin1));
         // CLR: ToString(Encoding) reads without consuming.
-        Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(13, buffer.WriterIndex);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(13, buffer.WriterIndex);
         Assert.Equal(1, buffer.RefCnt);
     }
 
@@ -255,8 +257,10 @@ public class ByteBufTextSourceTest
         // CLR: the original assertThrows around this helper becomes an inner Assert.Throws, so the
         // unchanged state can be checked afterwards; ArgumentOutOfRangeException replaces IndexOutOfBoundsException.
         Assert.Throws<ArgumentOutOfRangeException>(() => buf.SetCharSequence(0, "AB", charset));
-        Assert.Equal(1, buf.Capacity); Assert.Equal(90, buf.GetByte(0));
-        Assert.Equal(0, buf.ReaderIndex); Assert.Equal(0, buf.WriterIndex);
+        Assert.Equal(1, buf.Capacity);
+        Assert.Equal(90, buf.GetByte(0));
+        Assert.Equal(0, buf.ReaderIndex);
+        Assert.Equal(0, buf.WriterIndex);
         Assert.Equal(1, buf.RefCnt);
     }
 
@@ -305,7 +309,8 @@ public class ByteBufTextSourceTest
         Assert.Equal(sequence, buf.GetCharSequence(1, bytes, charset).ToString());
         // CLR: exact byte count and unchanged cursors.
         Assert.Equal(ExpectedLength(charset), bytes);
-        Assert.Equal(0, buf.ReaderIndex); Assert.Equal(0, buf.WriterIndex);
+        Assert.Equal(0, buf.ReaderIndex);
+        Assert.Equal(0, buf.WriterIndex);
         Assert.Equal(1, buf.RefCnt);
     }
 
@@ -350,7 +355,8 @@ public class ByteBufTextSourceTest
         Assert.Equal(sequence, buf.ReadCharSequence(bytes, charset).ToString());
         // CLR: exact byte count and consumed cursors.
         Assert.Equal(ExpectedLength(charset), bytes);
-        Assert.Equal(1 + bytes, buf.ReaderIndex); Assert.Equal(1 + bytes, buf.WriterIndex);
+        Assert.Equal(1 + bytes, buf.ReaderIndex);
+        Assert.Equal(1 + bytes, buf.WriterIndex);
         Assert.Equal(1, buf.RefCnt);
     }
 
@@ -394,7 +400,8 @@ public class ByteBufTextSourceTest
         Assert.Equal(sequence, buf.ReadString(bytes, charset));
         // CLR: exact byte count and consumed cursors.
         Assert.Equal(ExpectedLength(charset), bytes);
-        Assert.Equal(1 + bytes, buf.ReaderIndex); Assert.Equal(1 + bytes, buf.WriterIndex);
+        Assert.Equal(1 + bytes, buf.ReaderIndex);
+        Assert.Equal(1 + bytes, buf.WriterIndex);
         Assert.Equal(1, buf.RefCnt);
     }
 
@@ -410,7 +417,9 @@ public class ByteBufTextSourceTest
         // CLR: ArgumentOutOfRangeException replaces IndexOutOfBoundsException.
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.SetCharSequence(0, sequence, Encoding.UTF8));
         // CLR: the rejected write leaves the capacity and cursors unchanged.
-        Assert.Equal(4, buffer.Capacity); Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
+        Assert.Equal(4, buffer.Capacity);
+        Assert.Equal(0, buffer.ReaderIndex);
+        Assert.Equal(0, buffer.WriterIndex);
         Assert.Equal(1, buffer.RefCnt);
     }
 
@@ -452,7 +461,12 @@ public class ByteBufTextSourceTest
         ByteBuf buffer = s.Root;
         Encoding encoding = Charset(charset);
         byte[] expectedWire = charset switch
-        { 0 => [65, 63], 1 => [65, 195, 169], 2 => [65, 233], _ => [0, 65, 0, 233] };
+        {
+            0 => [65, 63],
+            1 => [65, 195, 169],
+            2 => [65, 233],
+            _ => [0, 65, 0, 233]
+        };
         string expectedText = charset == 0 ? "A?" : "Aé";
         buffer.SetZero(0, 16).SetIndex(2, 4).MarkReaderIndex().MarkWriterIndex();
         Assert.Equal(expectedWire.Length, buffer.SetCharSequence(7, "Aé", encoding));
@@ -460,12 +474,15 @@ public class ByteBufTextSourceTest
         expectedWire.CopyTo(expectedContent, 7);
         Assert.Equal(expectedContent, ByteBufUtil.GetBytes(buffer, 0, 16));
         Assert.Equal(expectedText, buffer.ToString(7, expectedWire.Length, encoding));
-        Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex);
+        Assert.Equal(2, buffer.ReaderIndex);
+        Assert.Equal(4, buffer.WriterIndex);
         buffer.SetIndex(7, 7 + expectedWire.Length);
         Assert.Equal(expectedText, buffer.ReadString(expectedWire.Length, encoding));
         Assert.Equal(7 + expectedWire.Length, buffer.ReaderIndex);
         buffer.ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(4, buffer.WriterIndex);
-        Assert.Equal(16, buffer.Capacity); Assert.Equal(1, buffer.RefCnt);
+        Assert.Equal(2, buffer.ReaderIndex);
+        Assert.Equal(4, buffer.WriterIndex);
+        Assert.Equal(16, buffer.Capacity);
+        Assert.Equal(1, buffer.RefCnt);
     }
 }

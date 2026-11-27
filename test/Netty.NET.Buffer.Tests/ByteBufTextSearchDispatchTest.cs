@@ -33,11 +33,17 @@ public class ByteBufTextSearchDispatchTest
         {
             ++Records;
         }
+
         public void Record(object hint)
         {
             ++Records;
         }
-        public bool Close(ByteBuf value) { ++Closes; return true; }
+
+        public bool Close(ByteBuf value)
+        {
+            ++Closes;
+            return true;
+        }
     }
 
     private sealed class Storage : IDisposable
@@ -117,7 +123,14 @@ public class ByteBufTextSearchDispatchTest
         ByteBuf buffer = storage.Facade;
         object expected = operation switch
         {
-            0 => 4, 1 => 3, 2 => -1, 3 => 2, 4 => "AéBCD", 5 => "éB", 6 => "Aé", _ => 4
+            0 => 4,
+            1 => 3,
+            2 => -1,
+            3 => 2,
+            4 => "AéBCD",
+            5 => "éB",
+            6 => "Aé",
+            _ => 4
         };
         Assert.Equal(expected, Invoke(buffer, operation, Encoding.UTF8));
         Assert.Equal(1, storage.Inner.Records);
@@ -140,16 +153,23 @@ public class ByteBufTextSearchDispatchTest
         {
             switch (operation)
             {
-                case 0: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.IndexOf(0, 9, 66)); break;
+                case 0:
+                    Assert.Throws<ArgumentOutOfRangeException>(() => buffer.IndexOf(0, 9, 66));
+                    break;
                 case 1:
                     Assert.Equal(-1, buffer.BytesBefore(255));
                     break;
-                case 2: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.BytesBefore(7, 66)); break;
-                case 3: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.BytesBefore(7, 2, 66)); break;
+                case 2:
+                    Assert.Throws<ArgumentOutOfRangeException>(() => buffer.BytesBefore(7, 66));
+                    break;
+                case 3:
+                    Assert.Throws<ArgumentOutOfRangeException>(() => buffer.BytesBefore(7, 2, 66));
+                    break;
             }
         }
         Assert.Equal(before + 1, storage.Inner.Records);
-        Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
+        Assert.Equal(1, buffer.ReaderIndex);
+        Assert.Equal(7, buffer.WriterIndex);
         // Decoding uses the supplied CLR fallback policy; failures must not advance the reader.
         if (operation is 4 or 5 or 6)
         {
@@ -158,7 +178,8 @@ public class ByteBufTextSearchDispatchTest
             before = storage.Inner.Records;
             Assert.Throws<DecoderFallbackException>(() => Invoke(buffer, operation, strict));
             Assert.Equal(before + 1, storage.Inner.Records);
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(7, buffer.WriterIndex);
         }
         else if (operation is 7 or 8)
         {
@@ -166,18 +187,23 @@ public class ByteBufTextSearchDispatchTest
             before = storage.Inner.Records;
             Assert.Throws<EncoderFallbackException>(() =>
             {
-                if (operation == 7) buffer.SetCharSequence(2, "\ud800", strict);
-                else buffer.WriteCharSequence("\ud800", strict);
+                if (operation == 7)
+                    buffer.SetCharSequence(2, "\ud800", strict);
+                else
+                    buffer.WriteCharSequence("\ud800", strict);
             });
             Assert.Equal(before + 1, storage.Inner.Records);
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(7, buffer.WriterIndex);
         }
         Assert.Equal(0, storage.Outer.Records);
         Assert.Equal(0, storage.Inner.Closes);
         Assert.Equal(1, buffer.RefCnt);
         storage.Root.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
-        Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
-        storage.Dispose(); before = storage.Inner.Records;
+        Assert.Equal(1, buffer.ReaderIndex);
+        Assert.Equal(7, buffer.WriterIndex);
+        storage.Dispose();
+        before = storage.Inner.Records;
         // IndexOf has an original zero-capacity fast path, including owners cleared by release.
         if (operation == 0 && storage.Root.Capacity == 0)
             Assert.Equal(-1, Invoke(buffer, operation, Encoding.UTF8));
@@ -196,8 +222,12 @@ public class ByteBufTextSearchDispatchTest
         public int Visit(int operation, int index = -1, int length = -1, byte value = 0,
             Encoding encoding = null, ReadOnlySpan<char> text = default)
         {
-            ++Calls[operation]; Index = index; Length = length; Value = value;
-            Encoding = encoding; Text = text.ToString();
+            ++Calls[operation];
+            Index = index;
+            Length = length;
+            Value = value;
+            Encoding = encoding;
+            Text = text.ToString();
             return 40 + operation;
         }
     }
@@ -208,34 +238,42 @@ public class ByteBufTextSearchDispatchTest
         {
             return o.Visit(0, fromIndex, toIndex, value);
         }
+
         public override int BytesBefore(byte value)
         {
             return o.Visit(1, value: value);
         }
+
         public override int BytesBefore(int length, byte value)
         {
             return o.Visit(2, length: length, value: value);
         }
+
         public override int BytesBefore(int index, int length, byte value)
         {
             return o.Visit(3, index, length, value);
         }
+
         public override string ToString(Encoding charset)
         {
             return o.Visit(4, encoding: charset).ToString();
         }
+
         public override string ToString(int index, int length, Encoding charset)
         {
             return o.Visit(5, index, length, encoding: charset).ToString();
         }
+
         public override string ReadString(int length, Encoding charset)
         {
             return o.Visit(6, length: length, encoding: charset).ToString();
         }
+
         public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
         {
             return o.Visit(7, index, encoding: charset, text: sequence);
         }
+
         public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
         {
             return o.Visit(8, encoding: charset, text: sequence);
@@ -248,34 +286,42 @@ public class ByteBufTextSearchDispatchTest
         {
             return o.Visit(0, fromIndex, toIndex, value);
         }
+
         public override int BytesBefore(byte value)
         {
             return o.Visit(1, value: value);
         }
+
         public override int BytesBefore(int length, byte value)
         {
             return o.Visit(2, length: length, value: value);
         }
+
         public override int BytesBefore(int index, int length, byte value)
         {
             return o.Visit(3, index, length, value);
         }
+
         public override string ToString(Encoding charset)
         {
             return o.Visit(4, encoding: charset).ToString();
         }
+
         public override string ToString(int index, int length, Encoding charset)
         {
             return o.Visit(5, index, length, encoding: charset).ToString();
         }
+
         public override string ReadString(int length, Encoding charset)
         {
             return o.Visit(6, length: length, encoding: charset).ToString();
         }
+
         public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
         {
             return o.Visit(7, index, encoding: charset, text: sequence);
         }
+
         public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
         {
             return o.Visit(8, encoding: charset, text: sequence);

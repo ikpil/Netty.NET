@@ -53,7 +53,9 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     // describes the actual components, including nested composites.
     public CompositeByteBuf(int maxNumComponents = 16, bool direct = false, NativeMemoryAllocator allocator = null)
         : this(allocator == null ? UnpooledByteBufAllocator.Default : new UnpooledByteBufAllocator(direct, allocator),
-            direct, maxNumComponents) { }
+            direct, maxNumComponents)
+    {
+    }
 
     public CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents = 16)
         : base(int.MaxValue)
@@ -209,6 +211,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         return RemoveComponentsCore(componentIndex, 1);
     }
+
     /**
      * Remove the number of {@link ByteBuf}s starting from the given index.
      *
@@ -235,9 +238,17 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /**
      * Return the index for the given offset
      */
-    public int ToComponentIndex(int offset) { CheckIndex(offset, 1); return FindComponentIndex(offset); }
+    public int ToComponentIndex(int offset)
+    {
+        CheckIndex(offset, 1);
+        return FindComponentIndex(offset);
+    }
+
     public int ToByteIndex(int componentIndex)
-    { CheckComponentRange(componentIndex, 1); return _components[componentIndex].Offset; }
+    {
+        CheckComponentRange(componentIndex, 1);
+        return _components[componentIndex].Offset;
+    }
 
     /**
      * Return a duplicate of the {@link ByteBuf} on the specified component index.
@@ -261,6 +272,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         // returned buffer.
         return _components[componentIndex].Source.Duplicate();
     }
+
     /**
      * Return a slice of the {@link ByteBuf} on the specified component index.
      * <p>
@@ -281,6 +293,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         ComponentEntry component = _components[componentIndex];
         return component.Slice();
     }
+
     /**
      * Return the {@link ByteBuf} on the specified index
      *
@@ -367,6 +380,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         return ConsolidateCore(0, _components.Count);
     }
+
     /**
      * Consolidate the composed {@link ByteBuf}s
      *
@@ -422,17 +436,25 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         EnsureAccessible();
         int readerIndex = ReaderIndex;
-        if (readerIndex == 0) return this;
+        if (readerIndex == 0)
+            return this;
         // Discard everything if (readerIndex = writerIndex = capacity).
         if (readerIndex == WriterIndex && WriterIndex == Capacity)
-        { RemoveComponentsCore(0, _components.Count); SetIndex(0, 0); AdjustMarkers(readerIndex); return this; }
+        {
+            RemoveComponentsCore(0, _components.Count);
+            SetIndex(0, 0);
+            AdjustMarkers(readerIndex);
+            return this;
+        }
         // Remove read components.
         int first = FindComponentIndex(readerIndex);
-        if (first == 0) return this; // Nothing to discard
+        if (first == 0)
+            return this; // Nothing to discard
         int offset = _components[first].Offset;
         RemoveComponentsCore(0, first);
         // Update indexes and markers.
-        SetIndex(readerIndex - offset, WriterIndex - offset); AdjustMarkers(offset);
+        SetIndex(readerIndex - offset, WriterIndex - offset);
+        AdjustMarkers(offset);
         return this;
     }
 
@@ -440,10 +462,16 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         EnsureAccessible();
         int readerIndex = ReaderIndex;
-        if (readerIndex == 0) return this;
+        if (readerIndex == 0)
+            return this;
         // Discard everything if (readerIndex = writerIndex = capacity).
         if (readerIndex == WriterIndex && WriterIndex == Capacity)
-        { RemoveComponentsCore(0, _components.Count); SetIndex(0, 0); AdjustMarkers(readerIndex); return this; }
+        {
+            RemoveComponentsCore(0, _components.Count);
+            SetIndex(0, 0);
+            AdjustMarkers(readerIndex);
+            return this;
+        }
         int first = FindComponentIndex(readerIndex);
         ComponentEntry component = _components[first];
         // Replace the first readable component with a new slice.
@@ -454,9 +482,11 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         component.Trim(trimmedBytes, component.Length - trimmedBytes);
         RemoveComponentsCore(0, first);
         // Update indexes and markers.
-        SetIndex(0, WriterIndex - readerIndex); AdjustMarkers(readerIndex);
+        SetIndex(0, WriterIndex - readerIndex);
+        AdjustMarkers(readerIndex);
         return this;
     }
+
     public override CompositeByteBuf DiscardSomeReadBytes()
     {
         return DiscardReadComponents();
@@ -467,26 +497,39 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         return TryGetMemoryCore(index, length, out var memory) ? memory
             : throw new NotSupportedException("The range spans multiple components. Use byte transfers or consolidate first.");
     }
+
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
     {
         return TryGetReadOnlyMemoryCore(index, length, out var memory) ? memory
             : throw new NotSupportedException("The range spans multiple components. Use AsReadOnlySequence or byte transfers.");
     }
+
     protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
     {
-        if (length == 0) { memory = Memory<byte>.Empty; return true; }
+        if (length == 0)
+        {
+            memory = Memory<byte>.Empty;
+            return true;
+        }
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (length <= component.EndOffset - index)
             return component.Source.TryGetMemory(component.SourceIndex + (index - component.Offset), length, out memory);
-        memory = default; return false;
+        memory = default;
+        return false;
     }
+
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
     {
-        if (length == 0) { memory = ReadOnlyMemory<byte>.Empty; return true; }
+        if (length == 0)
+        {
+            memory = ReadOnlyMemory<byte>.Empty;
+            return true;
+        }
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (length <= component.EndOffset - index)
             return component.Source.TryGetReadOnlyMemory(component.SourceIndex + (index - component.Offset), length, out memory);
-        memory = default; return false;
+        memory = default;
+        return false;
     }
 
     protected override void GetBytesCore(int index, Span<byte> destination)
@@ -501,22 +544,27 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             index += count; destination = destination[count..];
         }
     }
+
     protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
     {
-        EnsureCanWrite(); CheckIndex(index, source.Length);
-        if (source.IsEmpty) return;
+        EnsureCanWrite();
+        CheckIndex(index, source.Length);
+        if (source.IsEmpty)
+            return;
         int componentIndex = FindComponentIndex(index);
         while (!source.IsEmpty)
         {
             ComponentEntry component = _components[componentIndex++];
             int count = Math.Min(component.EndOffset - index, source.Length);
             // Skip empty buffer
-            if (count == 0) continue;
+            if (count == 0)
+                continue;
             component.Source.SetBytesFromIoCore(component.SourceIndex + (index - component.Offset), source[..count]);
             index += count;
             source = source[count..];
         }
     }
+
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
     {
         if (source.IsEmpty) return;
@@ -529,6 +577,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             index += count; source = source[count..];
         }
     }
+
     protected override void SetZeroCore(int index, int length)
     {
         if (length == 0) return;
@@ -544,11 +593,16 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 
     internal override bool SupportsDirectBulkCopy => false;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
-    { CheckIndex(index, length); return CreateReadOnlySequence(index, length, true); }
+    {
+        CheckIndex(index, length);
+        return CreateReadOnlySequence(index, length, true);
+    }
+
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
     {
         return CreateReadOnlySequence(index, length, false);
     }
+
     private ReadOnlySequence<byte> CreateReadOnlySequence(int index, int length, bool copying)
     {
         if (length == 0) return ReadOnlySequence<byte>.Empty;
@@ -614,11 +668,13 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         return _direct ? Alloc().DirectBuffer(capacity, MaxCapacity) : Alloc().HeapBuffer(capacity, MaxCapacity);
     }
+
     private void CheckComponentRange(int index, int count)
     {
         EnsureAccessible();
         if (index < 0 || count < 0 || index > _components.Count - count) throw new ArgumentOutOfRangeException(nameof(index));
     }
+
     private int FindComponentIndex(int offset)
     {
         // fast-path zero offset
@@ -637,6 +693,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         }
         throw new ArgumentOutOfRangeException(nameof(offset));
     }
+
     private void UpdateOffsets()
     {
         int offset = 0;
@@ -656,15 +713,20 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         internal int EndOffset => Offset + Length;
         internal ComponentEntry(ByteBuf source, int sourceIndex, int length, bool reuseWholeSource = true)
         {
-            Source = source; SourceIndex = sourceIndex; Length = length;
+            Source = source;
+            SourceIndex = sourceIndex;
+            Length = length;
             // We don't need to slice later to expose the internal component if the readable range
             // is already the entire buffer
-            if (reuseWholeSource && sourceIndex == 0 && length == source.Capacity) _slice = source;
+            if (reuseWholeSource && sourceIndex == 0 && length == source.Capacity)
+                _slice = source;
         }
+
         internal ByteBuf Slice()
         {
             return _slice ??= Source.Slice(SourceIndex, Length);
         }
+
         internal void Trim(int start, int length)
         {
             // We must replace the cached slice with a derived one to ensure that
@@ -674,6 +736,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             Length = length;
             _slice = replacement;
         }
+
         internal void Free()
         {
             _slice = null;
@@ -688,7 +751,11 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             Memory = memory;
         }
+
         internal void Append(SequenceSegment next)
-        { next.RunningIndex = RunningIndex + Memory.Length; Next = next; }
+        {
+            next.RunningIndex = RunningIndex + Memory.Length;
+            Next = next;
+        }
     }
 }

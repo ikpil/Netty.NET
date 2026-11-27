@@ -31,6 +31,7 @@ public interface IChannelPoolMap<TKey, TPool> where TKey : notnull where TPool :
      * Please note that {@code null} keys are not allowed.
      */
     TPool Get(TKey key);
+
     /**
      * Returns {@code true} if a {@link ChannelPool} exists for the given {@code key}.
      *

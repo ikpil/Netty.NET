@@ -53,7 +53,9 @@ public sealed class Http3SpecTestServer
     private static readonly byte[] CONTENT = Encoding.ASCII.GetBytes("Hello World!\r\n");
     internal const int PORT = 9999;
 
-    private Http3SpecTestServer() { }
+    private Http3SpecTestServer()
+    {
+    }
 
     public static async Task Main(string[] args)
     {

@@ -162,10 +162,12 @@ internal sealed partial class AdaptivePoolingAllocator
         {
             ObjectDisposedException.ThrowIf(IsRetired, this);
         }
+
         private protected bool TryRetire()
         {
             return Interlocked.Exchange(ref _retired, 1) == 0;
         }
+
         private protected void Retain()
         {
             ReferenceCountUpdater.Retain(ref _refCnt);

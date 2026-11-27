@@ -23,10 +23,12 @@ public class ExecutorProgressContractTest
             try { while (_queue.TryDequeue(out var work)) work(); }
             finally { _running = null; }
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return thread == _running;
         }
+
         public override void Execute(Action work)
         {
             ArgumentNullException.ThrowIfNull(work);
@@ -39,19 +41,26 @@ public class ExecutorProgressContractTest
         {
             return Task.CompletedTask;
         }
-        public override void Shutdown() { }
+
+        public override void Shutdown()
+        {
+        }
+
         public override bool IsShuttingDown()
         {
             return false;
         }
+
         public override bool IsShutdown()
         {
             return false;
         }
+
         public override bool IsTerminated()
         {
             return false;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
@@ -223,7 +232,8 @@ public class ExecutorProgressContractTest
         int calls = 0;
         var reporter = new ExecutorProgress(executor, operation.Task, _ => ++calls, _ => ++calls);
         reporter.Report(new TransferProgress(1));
-        reporter.Dispose(); reporter.Dispose();
+        reporter.Dispose();
+        reporter.Dispose();
         executor.RunAll();
         Assert.Equal(0, calls);
         Assert.False(operation.Task.IsCompleted);
@@ -283,7 +293,9 @@ public class ExecutorProgressContractTest
         var executor = new QueuedExecutor();
         var completed = CompletedResult(executor);
         await Drain(executor, completed.Notifications);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         Assert.False(completed.Result.IsAlive);
         GC.KeepAlive(completed.Notifications);
     }
@@ -339,7 +351,9 @@ public class ExecutorProgressContractTest
     {
         var operation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         WeakReference weak = AbandonReporter(new QueuedExecutor(), operation.Task);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         Assert.False(weak.IsAlive);
         GC.KeepAlive(operation);
     }
@@ -357,7 +371,9 @@ public class ExecutorProgressContractTest
         var operation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         int calls = 0;
         Task notification = KeepNotificationTask(executor, operation.Task, _ => ++calls);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         operation.SetResult();
         await Drain(executor, notification);
         Assert.Equal(1, calls);

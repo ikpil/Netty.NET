@@ -25,7 +25,10 @@ namespace Netty.NET.Resolver;
 public sealed class DefaultAddressResolverGroup : AddressResolverGroup<IPEndPoint>
 {
     public static readonly DefaultAddressResolverGroup INSTANCE = new();
-    private DefaultAddressResolverGroup() { }
+    private DefaultAddressResolverGroup()
+    {
+    }
+
     protected override IAddressResolver<IPEndPoint> NewResolver(IEventExecutor executor)
     {
         return new DefaultNameResolver(executor).AsAddressResolver();

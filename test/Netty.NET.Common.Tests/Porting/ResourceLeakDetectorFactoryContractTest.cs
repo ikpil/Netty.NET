@@ -12,6 +12,7 @@ public class ResourceLeakDetectorFactoryContractTest
     {
         return CreateFactory(type?.AssemblyQualifiedName);
     }
+
     private static DefaultResourceLeakDetectorFactory CreateFactory(string typeName)
     {
         string previous = Environment.GetEnvironmentVariable(Property);
@@ -28,21 +29,40 @@ public class ResourceLeakDetectorFactoryContractTest
         public readonly Type Resource;
         public readonly int Sampling;
         public readonly long? MaxActive;
-        public Custom(Type resource, int sampling) : base(resource, sampling) { Resource = resource; Sampling = sampling; }
-        public Custom(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive) { Resource = resource; Sampling = sampling; MaxActive = maxActive; }
+        public Custom(Type resource, int sampling) : base(resource, sampling)
+        {
+            Resource = resource;
+            Sampling = sampling;
+        }
+
+        public Custom(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive)
+        {
+            Resource = resource;
+            Sampling = sampling;
+            MaxActive = maxActive;
+        }
     }
     public sealed class ClosedCustom : Custom<object>
     {
-        public ClosedCustom(Type resource, int sampling) : base(resource, sampling) { }
-        public ClosedCustom(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive) { }
+        public ClosedCustom(Type resource, int sampling) : base(resource, sampling)
+        {
+        }
+
+        public ClosedCustom(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive)
+        {
+        }
     }
     public sealed class ModernOnly<T> : ResourceLeakDetector<T> where T : class
     {
-        public ModernOnly(Type resource, int sampling) : base(resource, sampling) { }
+        public ModernOnly(Type resource, int sampling) : base(resource, sampling)
+        {
+        }
     }
     public sealed class LegacyOnly<T> : ResourceLeakDetector<T> where T : class
     {
-        public LegacyOnly(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive) { }
+        public LegacyOnly(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive)
+        {
+        }
     }
     public sealed class Throwing<T> : ResourceLeakDetector<T> where T : class
     {
@@ -50,6 +70,7 @@ public class ResourceLeakDetectorFactoryContractTest
         {
             throw new InvalidOperationException("custom constructor");
         }
+
         public Throwing(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive)
         {
             throw new InvalidOperationException("custom constructor");
@@ -57,11 +78,15 @@ public class ResourceLeakDetectorFactoryContractTest
     }
     public sealed class StreamOnly<T> : ResourceLeakDetector<T> where T : Stream
     {
-        public StreamOnly(Type resource, int sampling) : base(resource, sampling) { }
+        public StreamOnly(Type resource, int sampling) : base(resource, sampling)
+        {
+        }
     }
     public sealed class InvalidArity<T, U> : ResourceLeakDetector<T> where T : class
     {
-        public InvalidArity(Type resource, int sampling) : base(resource, sampling) { }
+        public InvalidArity(Type resource, int sampling) : base(resource, sampling)
+        {
+        }
     }
     public sealed class InitializationFailure : ResourceLeakDetector<object>
     {
@@ -69,7 +94,10 @@ public class ResourceLeakDetectorFactoryContractTest
         {
             throw new InvalidOperationException("custom initializer");
         }
-        public InitializationFailure(Type resource, int sampling) : base(resource, sampling) { }
+
+        public InitializationFailure(Type resource, int sampling) : base(resource, sampling)
+        {
+        }
     }
 
     [Fact]
@@ -140,7 +168,9 @@ public class ResourceLeakDetectorFactoryContractTest
         internal long MaxActive;
         public override ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int sampling, long maxActive)
         {
-            Resource = resource; Sampling = sampling; MaxActive = maxActive;
+            Resource = resource;
+            Sampling = sampling;
+            MaxActive = maxActive;
             return new ResourceLeakDetector<T>(resource, sampling, maxActive);
         }
     }

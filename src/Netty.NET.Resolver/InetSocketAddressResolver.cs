@@ -47,6 +47,7 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
     {
         return address is IPEndPoint or DnsEndPoint;
     }
+
     protected override bool DoIsResolved(EndPoint address)
     {
         return address is IPEndPoint;

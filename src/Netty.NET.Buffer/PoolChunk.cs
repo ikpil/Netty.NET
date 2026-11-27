@@ -451,26 +451,32 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
     {
         return (int)(handle >> RUN_OFFSET_SHIFT);
     }
+
     internal static int RunSize(int pageShifts, long handle)
     {
         return RunPages(handle) << pageShifts;
     }
+
     internal static int RunPages(long handle)
     {
         return (int)(handle >> SIZE_SHIFT & 0x7fff);
     }
+
     internal static bool IsUsed(long handle)
     {
         return (handle >> IS_USED_SHIFT & 1) == 1L;
     }
+
     internal static bool IsRun(long handle)
     {
         return !IsSubpage(handle);
     }
+
     internal static bool IsSubpage(long handle)
     {
         return (handle >> IS_SUBPAGE_SHIFT & 1) == 1L;
     }
+
     internal static int BitmapIdx(long handle)
     {
         return unchecked((int)handle);

@@ -39,6 +39,7 @@ public interface IFileRegion : IReferenceCounted
      * Returns the offset in the file where the transfer began.
      */
     long Position();
+
     /**
      * Returns the bytes which was transferred already.
      *
@@ -55,10 +56,12 @@ public interface IFileRegion : IReferenceCounted
      */
     // CLR: the misspelled deprecated alias is folded into the correctly spelled method.
     long Transferred();
+
     /**
      * Returns the number of bytes to transfer.
      */
     long Count();
+
     /**
      * Transfers the content of this file region to the specified channel.
      *
@@ -70,8 +73,12 @@ public interface IFileRegion : IReferenceCounted
      *                  byte of the region transferred.
      */
     long TransferTo(Stream target, long position);
+
     new IFileRegion Retain();
+
     new IFileRegion Retain(int increment);
+
     new IFileRegion Touch();
+
     new IFileRegion Touch(object hint);
 }

@@ -28,23 +28,32 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
     private readonly bool _ignoreBytesRead;
     private volatile int _maxMessagesPerRead;
     private volatile bool _respectMaybeMoreData = true;
-    protected DefaultMaxMessagesRecvByteBufAllocator() : this(1) { }
-    protected DefaultMaxMessagesRecvByteBufAllocator(int maxMessagesPerRead) : this(maxMessagesPerRead, false) { }
+    protected DefaultMaxMessagesRecvByteBufAllocator() : this(1)
+    {
+    }
+
+    protected DefaultMaxMessagesRecvByteBufAllocator(int maxMessagesPerRead) : this(maxMessagesPerRead, false)
+    {
+    }
+
     protected internal DefaultMaxMessagesRecvByteBufAllocator(int maxMessagesPerRead, bool ignoreBytesRead)
     {
         _ignoreBytesRead = ignoreBytesRead;
         MaxMessagesPerRead(maxMessagesPerRead);
     }
+
     public int MaxMessagesPerRead()
     {
         return _maxMessagesPerRead;
     }
+
     public IMaxMessagesRecvByteBufAllocator MaxMessagesPerRead(int maxMessagesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxMessagesPerRead);
         _maxMessagesPerRead = maxMessagesPerRead;
         return this;
     }
+
     /**
      * Determine if future instances of {@link #newHandle()} will stop reading if we think there is no more data.
      * @param respectMaybeMoreData
@@ -62,6 +71,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
         _respectMaybeMoreData = respectMaybeMoreData;
         return this;
     }
+
     /**
      * Get if future instances of {@link #newHandle()} will stop reading if we think there is no more data.
      * @return
@@ -77,6 +87,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
     {
         return _respectMaybeMoreData;
     }
+
     public abstract IRecvByteBufAllocator.IHandle NewHandle();
     /**
      * Focuses on enforcing the maximum messages per read condition for {@link #continueReading()}.
@@ -99,6 +110,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
             _respectMaybeMoreData = owner.RespectMaybeMoreData();
             _defaultMaybeMoreSupplier = () => _attemptedBytesRead == _lastBytesRead;
         }
+
         /**
          * Only {@link ChannelConfig#getMaxMessagesPerRead()} is used.
          */
@@ -108,43 +120,56 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
             _maxMessagePerRead = _owner.MaxMessagesPerRead();
             _totalMessages = _totalBytesRead = 0;
         }
+
         public virtual ByteBuf Allocate(IByteBufAllocator alloc)
         {
             return alloc.IoBuffer(Guess());
         }
+
         public abstract int Guess();
+
         public void IncMessagesRead(int amt)
         {
             _totalMessages = unchecked(_totalMessages + amt);
         }
+
         public virtual void LastBytesRead(int bytes)
         {
             _lastBytesRead = bytes;
             if (bytes > 0)
                 _totalBytesRead = unchecked(_totalBytesRead + bytes);
         }
+
         public int LastBytesRead()
         {
             return _lastBytesRead;
         }
+
         public virtual bool ContinueReading()
         {
             return ContinueReading(_defaultMaybeMoreSupplier);
         }
+
         public virtual bool ContinueReading(Func<bool> maybeMoreDataSupplier)
         {
             return _config.IsAutoRead() && (!_respectMaybeMoreData || maybeMoreDataSupplier()) &&
                 _totalMessages < _maxMessagePerRead && (_owner._ignoreBytesRead || _totalBytesRead > 0);
         }
-        public virtual void ReadComplete() { }
+
+        public virtual void ReadComplete()
+        {
+        }
+
         public int AttemptedBytesRead()
         {
             return _attemptedBytesRead;
         }
+
         public void AttemptedBytesRead(int bytes)
         {
             _attemptedBytesRead = bytes;
         }
+
         protected int TotalBytesRead()
         {
             return _totalBytesRead < 0 ? int.MaxValue : _totalBytesRead;

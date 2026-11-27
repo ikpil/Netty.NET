@@ -78,8 +78,10 @@ public static class PlatformDependent
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
     // CLR: package-private in Java; internal (OsClassifiersTest reaches it through InternalsVisibleTo).
-    internal static void AddFilesystemOsClassifiers(ICollection<string> availableClassifiers) {
-        if (ProcessOsReleaseFile("/etc/os-release", availableClassifiers)) {
+    internal static void AddFilesystemOsClassifiers(ICollection<string> availableClassifiers)
+    {
+        if (ProcessOsReleaseFile("/etc/os-release", availableClassifiers))
+        {
             return;
         }
         ProcessOsReleaseFile("/usr/lib/os-release", availableClassifiers);
@@ -132,36 +134,43 @@ public static class PlatformDependent
     }
 
     // CLR: package-private in Java; internal (OsClassifiersTest reaches it through InternalsVisibleTo).
-    internal static bool AddPropertyOsClassifiers(ICollection<string> availableClassifiers) {
+    internal static bool AddPropertyOsClassifiers(ICollection<string> availableClassifiers)
+    {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
         // illegal otherwise
         string osClassifiersPropertyName = "io.netty.osClassifiers";
         string osClassifiers = SystemPropertyUtil.Get(osClassifiersPropertyName);
-        if (osClassifiers == null) {
+        if (osClassifiers == null)
+        {
             return false;
         }
-        if (osClassifiers.IsEmpty()) {
+        if (osClassifiers.IsEmpty())
+        {
             // let users omit classifiers with just -Dio.netty.osClassifiers
             return true;
         }
         string[] classifiers = osClassifiers.Split(',');
         // String.split(regex) discards trailing empty fields on the JVM.
         int classifierCount = classifiers.Length;
-        while (classifierCount > 0 && classifiers[classifierCount - 1].Length == 0) classifierCount--;
+        while (classifierCount > 0 && classifiers[classifierCount - 1].Length == 0)
+            classifierCount--;
         Array.Resize(ref classifiers, classifierCount);
-        if (classifiers.Length == 0) {
+        if (classifiers.Length == 0)
+        {
             throw new ArgumentException(
                     osClassifiersPropertyName + " property is not empty, but contains no classifiers: "
                             + osClassifiers);
         }
         // at most ID, ID_LIKE classifiers
-        if (classifiers.Length > 2) {
+        if (classifiers.Length > 2)
+        {
             throw new ArgumentException(
                     osClassifiersPropertyName + " property contains more than 2 classifiers: " + osClassifiers);
         }
-        foreach (string classifier in classifiers) {
+        foreach (string classifier in classifiers)
+        {
             AddClassifier(availableClassifiers, classifier);
         }
         return true;
@@ -170,43 +179,50 @@ public static class PlatformDependent
     /**
      * Returns {@code true} if and only if the current platform is Android
      */
-    public static bool IsAndroid() {
+    public static bool IsAndroid()
+    {
         return IS_ANDROID;
     }
 
     /**
      * Return {@code true} if the JVM is running on Windows
      */
-    public static bool IsWindows() {
+    public static bool IsWindows()
+    {
         return IS_WINDOWS;
     }
 
     /**
      * Return {@code true} if the JVM is running on OSX / MacOS
      */
-    public static bool IsOsx() {
+    public static bool IsOsx()
+    {
         return IS_OSX;
     }
 
     /**
      * Returns {@code true} if and only if it is fine to enable TCP_NODELAY socket option by default.
      */
-    public static bool CanEnableTcpNoDelayByDefault() {
+    public static bool CanEnableTcpNoDelayByDefault()
+    {
         return CAN_ENABLE_TCP_NODELAY_BY_DEFAULT;
     }
 
     /**
      * Returns the temporary directory.
      */
-    public static DirectoryInfo Tmpdir() {
+    public static DirectoryInfo Tmpdir()
+    {
         return TMPDIR;
     }
 
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
      */
-    private static int HashCodeAsciiCompute(ICharSequence value, int offset, int hash) {
-        if (BIG_ENDIAN_NATIVE_ORDER) {
+    private static int HashCodeAsciiCompute(ICharSequence value, int offset, int hash)
+    {
+        if (BIG_ENDIAN_NATIVE_ORDER)
+        {
             return unchecked(hash * HASH_CODE_C1 +
                     // Low order int
                     HashCodeAsciiSanitizeInt(value, offset + 4) * HASH_CODE_C2 +
@@ -223,8 +239,10 @@ public static class PlatformDependent
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(int)} but for {@link CharSequence}.
      */
-    private static int HashCodeAsciiSanitizeInt(ICharSequence value, int offset) {
-        if (BIG_ENDIAN_NATIVE_ORDER) {
+    private static int HashCodeAsciiSanitizeInt(ICharSequence value, int offset)
+    {
+        if (BIG_ENDIAN_NATIVE_ORDER)
+        {
             // mimic a unsafe.getInt call on a big endian machine
             return (value.CharAt(offset + 3) & 0x1f) |
                    (value.CharAt(offset + 2) & 0x1f) << 8 |
@@ -240,8 +258,10 @@ public static class PlatformDependent
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(short)} but for {@link CharSequence}.
      */
-    private static int HashCodeAsciiSanitizeShort(ICharSequence value, int offset) {
-        if (BIG_ENDIAN_NATIVE_ORDER) {
+    private static int HashCodeAsciiSanitizeShort(ICharSequence value, int offset)
+    {
+        if (BIG_ENDIAN_NATIVE_ORDER)
+        {
             // mimic a unsafe.getShort call on a big endian machine
             return (value.CharAt(offset + 1) & 0x1f) |
                     (value.CharAt(offset) & 0x1f) << 8;
@@ -253,11 +273,13 @@ public static class PlatformDependent
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(byte)} but for {@link CharSequence}.
      */
-    private static int HashCodeAsciiSanitizeByte(char value) {
+    private static int HashCodeAsciiSanitizeByte(char value)
+    {
         return value & 0x1f;
     }
 
-    public static void CopyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length) {
+    public static void CopyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length)
+    {
         ArgumentNullException.ThrowIfNull(src);
         ArgumentNullException.ThrowIfNull(dst);
         int count = checked((int)length);
@@ -266,12 +288,14 @@ public static class PlatformDependent
         src.AsSpan(srcIndex, count).CopyTo(dst.AsSpan(dstIndex, count));
     }
 
-    public static void SetMemory(byte[] dst, int dstIndex, long bytes, byte value) {
+    public static void SetMemory(byte[] dst, int dstIndex, long bytes, byte value)
+    {
         ArgumentNullException.ThrowIfNull(dst);
         dst.AsSpan(dstIndex, checked((int)bytes)).Fill(value);
     }
 
-    public static long Align(long value, int alignment) {
+    public static long Align(long value, int alignment)
+    {
         return Pow2.Align(value, alignment);
     }
 
@@ -286,11 +310,13 @@ public static class PlatformDependent
      * @param length the amount of bytes to compare. This is assumed to be validated as not going out of bounds
      * by the caller.
      */
-    public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+    {
         ArgumentNullException.ThrowIfNull(bytes1);
         ArgumentNullException.ThrowIfNull(bytes2);
         // Keep the existing empty result for nonpositive comparison lengths.
-        if (length <= 0) return true;
+        if (length <= 0)
+            return true;
         return bytes1.AsSpan(startPos1, length).SequenceEqual(bytes2.AsSpan(startPos2, length));
     }
 
@@ -301,9 +327,11 @@ public static class PlatformDependent
      * @param length The amount of bytes to check for zero.
      * @return {@code false} if {@code bytes[startPos:startsPos+length)} contains a value other than zero.
      */
-    public static bool IsZero(byte[] bytes, int startPos, int length) {
+    public static bool IsZero(byte[] bytes, int startPos, int length)
+    {
         ArgumentNullException.ThrowIfNull(bytes);
-        if (length <= 0) return true;
+        if (length <= 0)
+            return true;
         return bytes.AsSpan(startPos, length).IndexOfAnyExcept((byte)0) < 0;
     }
 
@@ -328,7 +356,8 @@ public static class PlatformDependent
      * by the caller.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int EqualsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static int EqualsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+    {
         // CLR bounded fixed-time comparison replaces both JVM Unsafe branches.
         return ConstantTimeUtils.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
     }
@@ -342,7 +371,8 @@ public static class PlatformDependent
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
-    public static int HashCodeAscii(byte[] bytes, int startPos, int length) {
+    public static int HashCodeAscii(byte[] bytes, int startPos, int length)
+    {
         ArgumentNullException.ThrowIfNull(bytes);
         ReadOnlySpan<byte> data = bytes.AsSpan(startPos, length);
         // Native-order words preserve Netty's low-five-bit hash contract. The
@@ -350,10 +380,12 @@ public static class PlatformDependent
         int hash = HASH_CODE_ASCII_SEED;
         int remainingBytes = length & 7;
         int end = remainingBytes;
-        for (int i = length - 8; i >= end; i -= 8) {
+        for (int i = length - 8; i >= end; i -= 8)
+        {
             hash = HashCodeAsciiCompute(MemoryMarshal.Read<long>(data.Slice(i)), hash);
         }
-        switch(remainingBytes) {
+        switch(remainingBytes)
+        {
         case 7:
             return unchecked(((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(data[0]))
                           * HASH_CODE_C2 + HashCodeAsciiSanitize(MemoryMarshal.Read<short>(data.Slice(1))))
@@ -436,11 +468,14 @@ public static class PlatformDependent
         return hash;
     }
 
-    private static DirectoryInfo Tmpdir0() {
+    private static DirectoryInfo Tmpdir0()
+    {
         DirectoryInfo f;
-        try {
+        try
+        {
             f = ToDirectory(SystemPropertyUtil.Get("io.netty.tmpdir"));
-            if (f != null) {
+            if (f != null)
+            {
                 logger.Debug("-Dio.netty.tmpdir: {}", f);
                 return f;
             }
@@ -448,48 +483,62 @@ public static class PlatformDependent
             // CLR: java.io.tmpdir is the JVM temporary directory; its CLR counterpart is Path.GetTempPath()
             // (Windows GetTempPath2/GetTempPath, Unix $TMPDIR or /tmp/), not an environment key of that name.
             f = ToDirectory(Path.GetTempPath());
-            if (f != null) {
+            if (f != null)
+            {
                 logger.Debug("-Dio.netty.tmpdir: {} (java.io.tmpdir)", f);
                 return f;
             }
 
             // This shouldn't happen, but just in case ..
-            if (IsWindows()) {
+            if (IsWindows())
+            {
                 f = ToDirectory(Environment.GetEnvironmentVariable("TEMP"));
-                if (f != null) {
+                if (f != null)
+                {
                     logger.Debug("-Dio.netty.tmpdir: {} (%TEMP%)", f);
                     return f;
                 }
 
                 string userprofile = Environment.GetEnvironmentVariable("USERPROFILE");
-                if (userprofile != null) {
+                if (userprofile != null)
+                {
                     f = ToDirectory(userprofile + "\\AppData\\Local\\Temp");
-                    if (f != null) {
+                    if (f != null)
+                    {
                         logger.Debug("-Dio.netty.tmpdir: {} (%USERPROFILE%\\AppData\\Local\\Temp)", f);
                         return f;
                     }
 
                     f = ToDirectory(userprofile + "\\Local Settings\\Temp");
-                    if (f != null) {
+                    if (f != null)
+                    {
                         logger.Debug("-Dio.netty.tmpdir: {} (%USERPROFILE%\\Local Settings\\Temp)", f);
                         return f;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 f = ToDirectory(Environment.GetEnvironmentVariable("TMPDIR"));
-                if (f != null) {
+                if (f != null)
+                {
                     logger.Debug("-Dio.netty.tmpdir: {} ($TMPDIR)", f);
                     return f;
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
             // Environment variable inaccessible
         }
 
         // Last resort.
-        if (IsWindows()) {
+        if (IsWindows())
+        {
             f = new DirectoryInfo("C:\\Windows\\Temp");
-        } else {
+        }
+        else
+        {
             f = new DirectoryInfo("/tmp");
         }
 
@@ -497,7 +546,8 @@ public static class PlatformDependent
         return f;
     }
 
-    private static DirectoryInfo ToDirectory(string path) {
+    private static DirectoryInfo ToDirectory(string path)
+    {
         if (path == null)
             return null;
 
@@ -519,15 +569,18 @@ public static class PlatformDependent
         }
     }
 
-    public static string NormalizedArch() {
+    public static string NormalizedArch()
+    {
         return NORMALIZED_ARCH;
     }
 
-    public static string NormalizedOs() {
+    public static string NormalizedOs()
+    {
         return NORMALIZED_OS;
     }
 
-    public static IReadOnlyList<string> NormalizedLinuxClassifiers() {
+    public static IReadOnlyList<string> NormalizedLinuxClassifiers()
+    {
         return LINUX_OS_CLASSIFIERS.Value;
     }
 
@@ -544,7 +597,8 @@ public static class PlatformDependent
     /// Creates an empty file in the supplied directory, or the CLR temporary directory.
     /// Null prefix means no prefix; null suffix means .tmp. The caller owns deletion.
     /// </summary>
-    public static FileInfo CreateTempFile(string prefix, string suffix, DirectoryInfo directory) {
+    public static FileInfo CreateTempFile(string prefix, string suffix, DirectoryInfo directory)
+    {
         prefix ??= string.Empty;
         suffix ??= ".tmp";
         char[] invalidNameChars = Path.GetInvalidFileNameChars();
@@ -558,16 +612,20 @@ public static class PlatformDependent
         if (!OperatingSystem.IsWindows())
             options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
-        for (int attempt = 0; ; ++attempt) {
+        for (int attempt = 0; ; ++attempt)
+        {
             string filePath = Path.Combine(dirPath, prefix + Path.GetRandomFileName() + suffix);
             FileStream stream;
-            try {
+            try
+            {
                 // CreateNew reserves the name atomically; never truncate or follow an existing file/link.
                 stream = new FileStream(filePath, options);
-            } catch (IOException error) when (attempt < 100 &&
+            }
+            catch (IOException error) when (attempt < 100 &&
                 (OperatingSystem.IsWindows()
                     ? error.HResult == unchecked((int)0x80070050) || error.HResult == unchecked((int)0x800700b7)
-                    : error.HResult == 17)) {
+                    : error.HResult == 17))
+            {
                 // CLR maps Windows FILE_EXISTS/ALREADY_EXISTS and Unix EEXIST differently.
                 // Retry only a name collision, with a bound as in the CLR Windows temp-file API.
                 continue;
@@ -583,16 +641,22 @@ public static class PlatformDependent
      * @param dest             destination set
      * @param maybeClassifiers potential classifiers to add
      */
-    private static void AddClassifier(ICollection<string> dest, params string[] maybeClassifiers) {
-        foreach (string id in maybeClassifiers) {
-            if (IsAllowedClassifier(id) && !dest.Contains(id)) {
+    private static void AddClassifier(ICollection<string> dest, params string[] maybeClassifiers)
+    {
+        foreach (string id in maybeClassifiers)
+        {
+            if (IsAllowedClassifier(id) && !dest.Contains(id))
+            {
                 dest.Add(id);
             }
         }
     }
+
     // keep in sync with maven's pom.xml via os.detection.classifierWithLikes!
-    private static bool IsAllowedClassifier(string classifier) {
-        switch (classifier) {
+    private static bool IsAllowedClassifier(string classifier)
+    {
+        switch (classifier)
+        {
             case "fedora":
             case "suse":
             case "arch":
@@ -603,12 +667,15 @@ public static class PlatformDependent
     }
 
     //replaces value.trim().replaceAll("[\"']", "") to avoid regexp overhead
-    private static string NormalizeOsReleaseVariableValue(string value) {
+    private static string NormalizeOsReleaseVariableValue(string value)
+    {
         string trimmed = value.Trim();
         StringBuilder sb = new StringBuilder(trimmed.Length);
-        for (int i = 0; i < trimmed.Length; i++) {
+        for (int i = 0; i < trimmed.Length; i++)
+        {
             char c = trimmed[i];
-            if (c != '"' && c != '\'') {
+            if (c != '"' && c != '\'')
+            {
                 sb.Append(c);
             }
         }
@@ -617,20 +684,25 @@ public static class PlatformDependent
 
     //replaces value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
     // CLR: like the source loop's Character.toLowerCase, char.ToLowerInvariant is locale-independent.
-    private static string Normalize(string value) {
+    private static string Normalize(string value)
+    {
         StringBuilder sb = new StringBuilder(value.Length);
-        for (int i = 0; i < value.Length; i++) {
+        for (int i = 0; i < value.Length; i++)
+        {
             char c = char.ToLowerInvariant(value[i]);
-            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+            {
                 sb.Append(c);
             }
         }
         return sb.ToString();
     }
 
-    private static string NormalizeArch(string value) {
+    private static string NormalizeArch(string value)
+    {
         value = Normalize(value);
-        switch (value) {
+        switch (value)
+        {
             case "x8664":
             case "amd64":
             case "ia32e":
@@ -697,39 +769,51 @@ public static class PlatformDependent
         }
     }
 
-    private static string NormalizeOs(string value) {
+    private static string NormalizeOs(string value)
+    {
         value = Normalize(value);
-        if (value.StartsWith("aix")) {
+        if (value.StartsWith("aix"))
+        {
             return "aix";
         }
-        if (value.StartsWith("hpux")) {
+        if (value.StartsWith("hpux"))
+        {
             return "hpux";
         }
-        if (value.StartsWith("os400")) {
+        if (value.StartsWith("os400"))
+        {
             // Avoid the names such as os4000
-            if (value.Length <= 5 || !Char.IsDigit(value[5])) {
+            if (value.Length <= 5 || !Char.IsDigit(value[5]))
+            {
                 return "os400";
             }
         }
-        if (value.StartsWith("linux")) {
+        if (value.StartsWith("linux"))
+        {
             return "linux";
         }
-        if (value.StartsWith("macosx") || value.StartsWith("osx") || value.StartsWith("darwin")) {
+        if (value.StartsWith("macosx") || value.StartsWith("osx") || value.StartsWith("darwin"))
+        {
             return "osx";
         }
-        if (value.StartsWith("freebsd")) {
+        if (value.StartsWith("freebsd"))
+        {
             return "freebsd";
         }
-        if (value.StartsWith("openbsd")) {
+        if (value.StartsWith("openbsd"))
+        {
             return "openbsd";
         }
-        if (value.StartsWith("netbsd")) {
+        if (value.StartsWith("netbsd"))
+        {
             return "netbsd";
         }
-        if (value.StartsWith("solaris") || value.StartsWith("sunos")) {
+        if (value.StartsWith("solaris") || value.StartsWith("sunos"))
+        {
             return "sunos";
         }
-        if (value.StartsWith("windows")) {
+        if (value.StartsWith("windows"))
+        {
             return "windows";
         }
 

@@ -25,9 +25,12 @@ public class BitapSearchProcessorFactoryTest
     public void TestAcceptMaximumLengthNeedle()
     {
         var processor = AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(new byte[64]).NewSearchProcessor();
-        for (int i = 0; i < 63; i++) Assert.True(processor.Process(0));
-        Assert.False(processor.Process(0)); Assert.False(processor.Process(0));
-        processor.Reset(); Assert.True(processor.Process(0));
+        for (int i = 0; i < 63; i++)
+            Assert.True(processor.Process(0));
+        Assert.False(processor.Process(0));
+        Assert.False(processor.Process(0));
+        processor.Reset();
+        Assert.True(processor.Process(0));
     }
 
     [Fact]

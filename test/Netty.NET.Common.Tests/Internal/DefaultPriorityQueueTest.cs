@@ -25,7 +25,8 @@ namespace Netty.NET.Common.Tests.Internal;
 public class DefaultPriorityQueueTest 
 {
     [Fact]
-    public void TestPoll() {
+    public void TestPoll()
+    {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         AssertEmptyQueue(queue);
 
@@ -67,7 +68,8 @@ public class DefaultPriorityQueueTest
     }
 
     [Fact]
-    public void TestClear() {
+    public void TestClear()
+    {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         AssertEmptyQueue(queue);
 
@@ -99,7 +101,8 @@ public class DefaultPriorityQueueTest
     }
 
     [Fact]
-    public void TestClearIgnoringIndexes() {
+    public void TestClearIgnoringIndexes()
+    {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         AssertEmptyQueue(queue);
 
@@ -118,10 +121,13 @@ public class DefaultPriorityQueueTest
         AssertEmptyQueue(queue);
 
         // Elements cannot be re-inserted but new ones can.
-        try {
+        try
+        {
             queue.Offer(a);
             Assert.Fail();
-        } catch (ArgumentException t) {
+        }
+        catch (ArgumentException t)
+        {
             // expected
         }
 
@@ -130,36 +136,46 @@ public class DefaultPriorityQueueTest
     }
 
     [Fact]
-    public void TestRemoval() {
+    public void TestRemoval()
+    {
         TestRemoval0(false);
     }
 
     [Fact]
-    public void TestRemovalTyped() {
+    public void TestRemovalTyped()
+    {
         TestRemoval0(true);
     }
 
     [Fact]
-    public void TestRemovalFuzz() {
+    public void TestRemovalFuzz()
+    {
         var threadLocalRandom = Random.Shared;
         int numElements = threadLocalRandom.Next(0, 30);
         TestElement[] values = new TestElement[numElements];
         DefaultPriorityQueue<TestElement> queue =
                 new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, values.Length);
-        for (int i = 0; i < values.Length; ++i) {
-            do {
+        for (int i = 0; i < values.Length; ++i)
+        {
+            do
+            {
                 values[i] = new TestElement(threadLocalRandom.Next(0, numElements * 2));
             } while (!queue.Offer(values[i]));
         }
 
-        for (int i = 0; i < values.Length; ++i) {
-            try {
+        for (int i = 0; i < values.Length; ++i)
+        {
+            try
+            {
                 Assert.True(queue.RemoveTyped(values[i]));
                 Assert.Equal(queue.Size(), values.Length - (i + 1));
-            } catch (Exception cause) {
+            }
+            catch (Exception cause)
+            {
                 StringBuilder sb = new StringBuilder(values.Length * 2);
                 sb.Append("error on removal of index: ").Append(i).Append(" [");
-                foreach (TestElement value in values) {
+                foreach (TestElement value in values)
+                {
                     sb.Append(value).Append(" ");
                 }
                 sb.Append("]");
@@ -169,7 +185,8 @@ public class DefaultPriorityQueueTest
         AssertEmptyQueue(queue);
     }
 
-    private static void TestRemoval0(bool typed) {
+    private static void TestRemoval0(bool typed)
+    {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 4);
         AssertEmptyQueue(queue);
 
@@ -218,7 +235,8 @@ public class DefaultPriorityQueueTest
     }
 
     [Fact]
-    public void TestZeroInitialSize() {
+    public void TestZeroInitialSize()
+    {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         AssertEmptyQueue(queue);
         TestElement e = new TestElement(1);
@@ -231,7 +249,8 @@ public class DefaultPriorityQueueTest
     }
 
     [Fact]
-    public void TestPriorityChange() {
+    public void TestPriorityChange()
+    {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         AssertEmptyQueue(queue);
         TestElement a = new TestElement(10);
@@ -274,19 +293,25 @@ public class DefaultPriorityQueueTest
             Assert.Equal(expectedOrderList.Count == 0, queue.IsEmpty());
         }
     }
-    private static void AssertOffer(DefaultPriorityQueue<TestElement> queue, TestElement a) {
+
+    private static void AssertOffer(DefaultPriorityQueue<TestElement> queue, TestElement a)
+    {
         Assert.True(queue.Offer(a));
         Assert.True(queue.Contains(a));
         Assert.True(queue.ContainsTyped(a));
-        try { // An element can not be inserted more than 1 time.
+        try
+        { // An element can not be inserted more than 1 time.
             queue.Offer(a);
             Assert.Fail();
-        } catch (ArgumentException ignored) {
+        }
+        catch (ArgumentException ignored)
+        {
             // ignored
         }
     }
 
-    private static void AssertEmptyQueue(DefaultPriorityQueue<TestElement> queue) {
+    private static void AssertEmptyQueue(DefaultPriorityQueue<TestElement> queue)
+    {
         Assert.Null(queue.Peek());
         Assert.Null(queue.Poll());
         Assert.Equal(0, queue.Size());
@@ -310,18 +335,22 @@ public class DefaultPriorityQueueTest
         {
             this.value = value;
         }
+
         public override bool Equals(object o)
         {
             return o is TestElement element && element.value == value;
         }
+
         public override int GetHashCode()
         {
             return value;
         }
+
         public int PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue)
         {
             return _index;
         }
+
         public void PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue, int i)
         {
             _index = i;

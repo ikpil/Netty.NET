@@ -63,7 +63,11 @@ internal sealed partial class AdaptivePoolingAllocator
             throw new InvalidOperationException("The adaptive reservation is smaller than the requested capacity.");
         }
 
-        public override IByteBufAllocator Alloc() { EnsureAccessible(); return _allocation.Allocator; }
+        public override IByteBufAllocator Alloc()
+        {
+            EnsureAccessible();
+            return _allocation.Allocator;
+        }
         public override bool IsDirect
         {
             get { EnsureAccessible(); return _allocation.IsDirect; }
@@ -77,6 +81,7 @@ internal sealed partial class AdaptivePoolingAllocator
         {
             return _allocation.Memory.Slice(index, length);
         }
+
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();

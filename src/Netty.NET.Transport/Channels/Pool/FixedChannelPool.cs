@@ -64,7 +64,9 @@ public class FixedChannelPool : SimpleChannelPool
      *                          a {@link Channel} will be delayed until a connection is returned to the pool again.
      */
     public FixedChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler, int maxConnections)
-        : this(bootstrap, handler, maxConnections, int.MaxValue) { }
+        : this(bootstrap, handler, maxConnections, int.MaxValue)
+    {
+    }
 
     /**
      * Creates a new instance using the {@link ChannelHealthChecker#ACTIVE}.
@@ -78,7 +80,9 @@ public class FixedChannelPool : SimpleChannelPool
      *                              be failed.
      */
     public FixedChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler, int maxConnections, int maxPendingAcquires)
-        : this(bootstrap, handler, ChannelHealthChecker.Active, null, Timeout.InfiniteTimeSpan, maxConnections, maxPendingAcquires) { }
+        : this(bootstrap, handler, ChannelHealthChecker.Active, null, Timeout.InfiniteTimeSpan, maxConnections, maxPendingAcquires)
+    {
+    }
 
     /**
      * Creates a new instance.
@@ -99,7 +103,9 @@ public class FixedChannelPool : SimpleChannelPool
      */
     public FixedChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler, Func<IChannel, Task<bool>> healthCheck,
         AcquireTimeoutAction? action, TimeSpan acquireTimeout, int maxConnections, int maxPendingAcquires)
-        : this(bootstrap, handler, healthCheck, action, acquireTimeout, maxConnections, maxPendingAcquires, true) { }
+        : this(bootstrap, handler, healthCheck, action, acquireTimeout, maxConnections, maxPendingAcquires, true)
+    {
+    }
 
     /**
      * Creates a new instance.
@@ -122,7 +128,9 @@ public class FixedChannelPool : SimpleChannelPool
      */
     public FixedChannelPool(Bootstrap bootstrap, IChannelPoolHandler handler, Func<IChannel, Task<bool>> healthCheck,
         AcquireTimeoutAction? action, TimeSpan acquireTimeout, int maxConnections, int maxPendingAcquires, bool releaseHealthCheck)
-        : this(bootstrap, handler, healthCheck, action, acquireTimeout, maxConnections, maxPendingAcquires, releaseHealthCheck, true) { }
+        : this(bootstrap, handler, healthCheck, action, acquireTimeout, maxConnections, maxPendingAcquires, releaseHealthCheck, true)
+    {
+    }
 
     /**
      * Creates a new instance.
@@ -470,8 +478,19 @@ public class FixedChannelPool : SimpleChannelPool
         {
             _registration = token.Register(() => Producer.TrySetCanceled(token));
         }
-        internal void Fail(Exception error) { Producer.TrySetException(error); Finish(); }
-        internal void Finish() { _registration.Unregister(); CancelTimeout(); }
+
+        internal void Fail(Exception error)
+        {
+            Producer.TrySetException(error);
+            Finish();
+        }
+
+        internal void Finish()
+        {
+            _registration.Unregister();
+            CancelTimeout();
+        }
+
         internal void CancelTimeout()
         {
             var cancellation = Interlocked.Exchange(ref TimeoutCancellation, null);

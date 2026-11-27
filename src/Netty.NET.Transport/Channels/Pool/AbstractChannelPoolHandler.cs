@@ -30,9 +30,11 @@ public abstract class AbstractChannelPoolHandler : IChannelPoolHandler
     {
         // NOOP
     }
+
     public virtual void ChannelReleased(IChannel channel)
     {
         // NOOP
     }
+
     public abstract void ChannelCreated(IChannel channel);
 }

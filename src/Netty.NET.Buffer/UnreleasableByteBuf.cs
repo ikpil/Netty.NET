@@ -27,17 +27,21 @@ namespace Netty.NET.Buffer;
 internal sealed class UnreleasableByteBuf : WrappedByteBuf
 {
     internal UnreleasableByteBuf(ByteBuf parent)
-        : base(parent is UnreleasableByteBuf unreleasable ? unreleasable.Unwrap() : parent) { }
+        : base(parent is UnreleasableByteBuf unreleasable ? unreleasable.Unwrap() : parent)
+    {
+    }
 
     // Original no-ops ignore even nonpositive counts and do not resurrect a dead owner.
     public override ByteBuf Retain(int increment = 1)
     {
         return this;
     }
+
     public override bool Release(int decrement = 1)
     {
         return false;
     }
+
     public override ByteBuf Touch(object hint = null)
     {
         return this;
@@ -47,10 +51,12 @@ internal sealed class UnreleasableByteBuf : WrappedByteBuf
     {
         return Buffer.IsReadOnly ? this : new UnreleasableByteBuf(Buffer.AsReadOnly());
     }
+
     public override ByteBuf ReadSlice(int length)
     {
         return new UnreleasableByteBuf(Buffer.ReadSlice(length));
     }
+
     public override ByteBuf ReadRetainedSlice(int length)
     {
         // We could call buf.readSlice(..), and then call buf.release(). However this creates a leak in unit tests
@@ -58,10 +64,12 @@ internal sealed class UnreleasableByteBuf : WrappedByteBuf
         // So we just use readSlice(..) because the end result should be logically equivalent.
         return ReadSlice(length);
     }
+
     public override ByteBuf Slice()
     {
         return new UnreleasableByteBuf(Buffer.Slice());
     }
+
     public override ByteBuf RetainedSlice()
     {
         // We could call buf.retainedSlice(), and then call buf.release(). However this creates a leak in unit tests
@@ -69,10 +77,12 @@ internal sealed class UnreleasableByteBuf : WrappedByteBuf
         // So we just use slice() because the end result should be logically equivalent.
         return Slice();
     }
+
     public override ByteBuf Slice(int index, int length)
     {
         return new UnreleasableByteBuf(Buffer.Slice(index, length));
     }
+
     public override ByteBuf RetainedSlice(int index, int length)
     {
         // We could call buf.retainedSlice(..), and then call buf.release(). However this creates a leak in unit tests
@@ -80,10 +90,12 @@ internal sealed class UnreleasableByteBuf : WrappedByteBuf
         // So we just use slice(..) because the end result should be logically equivalent.
         return Slice(index, length);
     }
+
     public override ByteBuf Duplicate()
     {
         return new UnreleasableByteBuf(Buffer.Duplicate());
     }
+
     public override ByteBuf RetainedDuplicate()
     {
         // We could call buf.retainedDuplicate(), and then call buf.release(). However this creates a leak in unit tests

@@ -18,37 +18,54 @@ public class NativeSchedulingContractTest
         {
             _clock.Advance(TimeSpan.FromTicks(nanos / 100));
         }
+
         internal Action Poll()
         {
             return PollScheduledTask();
         }
+
         public override Ticker Ticker()
         {
             return _clock;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return true;
         }
+
         public override void Execute(Action task)
         {
             task();
         }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return TerminationFuture; }
-        public override void Shutdown() { _shutdown = true; CancelScheduledTasks(); }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            Shutdown();
+            return TerminationFuture;
+        }
+
+        public override void Shutdown()
+        {
+            _shutdown = true;
+            CancelScheduledTasks();
+        }
+
         public override bool IsShuttingDown()
         {
             return _shutdown;
         }
+
         public override bool IsShutdown()
         {
             return _shutdown;
         }
+
         public override bool IsTerminated()
         {
             return _shutdown;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return _shutdown;
@@ -66,7 +83,9 @@ public class NativeSchedulingContractTest
         Task third = executor.ScheduleAsync(() => { order.Add(3); }, TimeSpan.FromTicks(1));
         Assert.Null(executor.Poll());
         executor.Advance(100);
-        executor.Poll().Invoke(); executor.Poll().Invoke(); executor.Poll().Invoke();
+        executor.Poll().Invoke();
+        executor.Poll().Invoke();
+        executor.Poll().Invoke();
         Assert.Equal(new[] { 1, 2, 3 }, order);
         Assert.Equal(42, await first);
         Assert.Equal("text", await second);
@@ -297,7 +316,9 @@ public class NativeSchedulingContractTest
 
     private sealed class InspectableExecutor : SingleThreadEventExecutor
     {
-        internal InspectableExecutor() : base(null, new DefaultThreadFactory(typeof(InspectableExecutor)), true) { }
+        internal InspectableExecutor() : base(null, new DefaultThreadFactory(typeof(InspectableExecutor)), true)
+        {
+        }
         internal int ScheduledCount => _scheduledTaskQueue?.Count ?? 0;
         internal IScheduledWork ScheduledHead => PeekScheduledTask();
         protected override void Run()
@@ -523,7 +544,9 @@ public class NativeSchedulingContractTest
     {
         var executor = new ManualExecutor();
         WeakReference weak = CancelCapturedPayload(executor);
-        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         Assert.False(weak.IsAlive);
         Assert.Null(executor.Head);
         GC.KeepAlive(executor);

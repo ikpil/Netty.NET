@@ -31,6 +31,7 @@ public class UnpooledAsciiStringCopyingTest
             3 => Encoding.Unicode, 4 => Encoding.BigEndianUnicode, _ => Encoding.UTF32
         };
     }
+
     public static IEnumerable<object[]> Cases()
     {
         for (int kind = 0; kind < 6; ++kind)
@@ -38,6 +39,7 @@ public class UnpooledAsciiStringCopyingTest
         foreach (bool range in new[] { false, true })
         foreach (bool offset in new[] { false, true }) yield return [kind, shape, range, offset];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void WholeOctetShortcutsAndRangedCharacterEncodingKeepDistinctContracts(int kind, int shape, bool range, bool offset)
@@ -70,6 +72,7 @@ public class UnpooledAsciiStringCopyingTest
         }
         finally { copy.Release(); }
     }
+
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)]
     public void SubregionsUseLogicalAsciiStringOffsets(int kind)
@@ -80,6 +83,7 @@ public class UnpooledAsciiStringCopyingTest
         try { Assert.Equal(encoding.GetBytes(new[] { (char)128, (char)255 }), ByteBufUtil.GetBytes(copy)); }
         finally { copy.Release(); }
     }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void WholeAsciiOctetsBypassCharacterFallbackWhileRangesHonorIt(bool ignore)
@@ -97,6 +101,7 @@ public class UnpooledAsciiStringCopyingTest
         }
         else Assert.Throws<EncoderFallbackException>(() => Unpooled.CopiedBuffer(text, 0, 2, encoding));
     }
+
     [Fact]
     public void ArgumentsAreValidatedEvenForEmptyAsciiStringRanges()
     {

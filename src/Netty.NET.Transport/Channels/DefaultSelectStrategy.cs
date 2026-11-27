@@ -25,7 +25,9 @@ internal sealed class DefaultSelectStrategy : ISelectStrategy
 {
     internal static readonly ISelectStrategy INSTANCE = new DefaultSelectStrategy();
 
-    private DefaultSelectStrategy() { }
+    private DefaultSelectStrategy()
+    {
+    }
 
     public int CalculateStrategy(Func<int> selectSupplier, bool hasTasks)
     {

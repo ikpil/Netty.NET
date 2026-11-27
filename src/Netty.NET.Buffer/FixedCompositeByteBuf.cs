@@ -38,7 +38,9 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         return FormattableString.Invariant($"{result[..^1]}, components={_components.Length})");
     }
 
-    internal FixedCompositeByteBuf(ByteBuf[] buffers) : this(Capture(buffers)) { }
+    internal FixedCompositeByteBuf(ByteBuf[] buffers) : this(Capture(buffers))
+    {
+    }
 
     private FixedCompositeByteBuf(Component[] components)
         : base(components.Length == 0 ? 0 : components[^1].EndOffset)
@@ -83,7 +85,12 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
     {
         return false;
     }
-    public override ByteBuf DiscardReadBytes() { EnsureCanWrite(); return this; }
+
+    public override ByteBuf DiscardReadBytes()
+    {
+        EnsureCanWrite();
+        return this;
+    }
 
     protected override Memory<byte> GetMemoryCore(int index, int length)
     {
@@ -108,9 +115,16 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
 
     // The original fixed composite has the same component-dispatching read kernels.
     internal override byte ReadByteCore(int index)
-    { CheckIndex(index, 1); return (byte)ReadComponentWord(index, 1, false); }
+    {
+        CheckIndex(index, 1);
+        return (byte)ReadComponentWord(index, 1, false);
+    }
+
     internal override ulong ReadWord(int index, int width, bool littleEndian)
-    { CheckIndex(index, width); return ReadComponentWord(index, width, littleEndian); }
+    {
+        CheckIndex(index, width);
+        return ReadComponentWord(index, width, littleEndian);
+    }
 
     private ulong ReadComponentWord(int index, int width, bool littleEndian)
     {
@@ -151,11 +165,16 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
 
     internal override bool SupportsDirectBulkCopy => false;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
-    { CheckIndex(index, length); return CreateReadOnlySequence(index, length, true); }
+    {
+        CheckIndex(index, length);
+        return CreateReadOnlySequence(index, length, true);
+    }
+
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
     {
         return CreateReadOnlySequence(index, length, false);
     }
+
     private ReadOnlySequence<byte> CreateReadOnlySequence(int index, int length, bool copying)
     {
         if (length == 0) return ReadOnlySequence<byte>.Empty;
@@ -245,7 +264,11 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         {
             Memory = memory;
         }
+
         internal void Append(SequenceSegment next)
-        { next.RunningIndex = RunningIndex + Memory.Length; Next = next; }
+        {
+            next.RunningIndex = RunningIndex + Memory.Length;
+            Next = next;
+        }
     }
 }

@@ -31,9 +31,15 @@ public class ByteBufAbsoluteTransferDispatchTest
         public readonly Failure Error = new();
         public void Before(int index, ByteBuf peer, int peerIndex, int length)
         {
-            ++Count; Index = index; Peer = peer; PeerIndex = peerIndex; Length = length;
-            if (FailureMode == 1) throw Error;
+            ++Count;
+            Index = index;
+            Peer = peer;
+            PeerIndex = peerIndex;
+            Length = length;
+            if (FailureMode == 1)
+                throw Error;
         }
+
         public ByteBuf After(ByteBuf result)
         {
             if (FailureMode == 2) throw Error;
@@ -45,19 +51,26 @@ public class ByteBufAbsoluteTransferDispatchTest
     {
         public override ByteBuf GetBytes(int index, ByteBuf destination, int length)
         {
-            if (!calls.Whole) return base.GetBytes(index, destination, length);
-            calls.Before(index, destination, -1, length); return destination;
+            if (!calls.Whole)
+                return base.GetBytes(index, destination, length);
+            calls.Before(index, destination, -1, length);
+            return destination;
         }
+
         public override ByteBuf SetBytes(int index, ByteBuf source, int length)
         {
-            if (!calls.Whole) return base.SetBytes(index, source, length);
-            calls.Before(index, source, -1, length); return source;
+            if (!calls.Whole)
+                return base.SetBytes(index, source, length);
+            calls.Before(index, source, -1, length);
+            return source;
         }
+
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             calls.Before(index, destination, destinationIndex, length);
             return calls.SkipCopy ? destination : calls.After(base.GetBytes(index, destination, destinationIndex, length));
         }
+
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             calls.Before(index, source, sourceIndex, length);
@@ -69,19 +82,26 @@ public class ByteBufAbsoluteTransferDispatchTest
     {
         public override ByteBuf GetBytes(int index, ByteBuf destination, int length)
         {
-            if (!calls.Whole) return base.GetBytes(index, destination, length);
-            calls.Before(index, destination, -1, length); return destination;
+            if (!calls.Whole)
+                return base.GetBytes(index, destination, length);
+            calls.Before(index, destination, -1, length);
+            return destination;
         }
+
         public override ByteBuf SetBytes(int index, ByteBuf source, int length)
         {
-            if (!calls.Whole) return base.SetBytes(index, source, length);
-            calls.Before(index, source, -1, length); return source;
+            if (!calls.Whole)
+                return base.SetBytes(index, source, length);
+            calls.Before(index, source, -1, length);
+            return source;
         }
+
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             calls.Before(index, destination, destinationIndex, length);
             return calls.SkipCopy ? destination : calls.After(base.GetBytes(index, destination, destinationIndex, length));
         }
+
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             calls.Before(index, source, sourceIndex, length);

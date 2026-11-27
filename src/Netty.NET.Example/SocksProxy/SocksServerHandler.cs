@@ -34,7 +34,9 @@ public sealed class SocksServerHandler : SimpleChannelInboundHandler<ISocksMessa
 
     public static readonly SocksServerHandler INSTANCE = new SocksServerHandler();
 
-    private SocksServerHandler() { }
+    private SocksServerHandler()
+    {
+    }
 
     protected override void ChannelRead0(IChannelHandlerContext ctx, ISocksMessage socksRequest)
     {

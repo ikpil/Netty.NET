@@ -38,6 +38,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
     {
         return ctx.BindAsync(localAddress, cancellationToken);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#connect(SocketAddress, SocketAddress, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -49,6 +50,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
     {
         return ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#disconnect(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -60,6 +62,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
     {
         return ctx.DisconnectAsync(cancellationToken);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#close(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -71,6 +74,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
     {
         return ctx.CloseAsync(cancellationToken);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#deregister(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -82,6 +86,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
     {
         return ctx.DeregisterAsync(cancellationToken);
     }
+
     /**
      * Calls {@link ChannelHandlerContext#write(Object, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
@@ -105,6 +110,7 @@ public class ChannelDuplexHandler : ChannelInboundHandlerAdapter, IChannelOutbou
     {
         ctx.Read();
     }
+
     /**
      * Calls {@link ChannelHandlerContext#flush()} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.

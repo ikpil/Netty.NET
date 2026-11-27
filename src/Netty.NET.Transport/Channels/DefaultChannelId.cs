@@ -346,7 +346,9 @@ public sealed class DefaultChannelId : IChannelId
     // carries every field (machine ID, process ID, sequence, timestamp, random); interface polymorphism is not encoded.
     public sealed class Converter : JsonConverter<DefaultChannelId>
     {
-        public Converter() { }
+        public Converter()
+        {
+        }
 
         public override DefaultChannelId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

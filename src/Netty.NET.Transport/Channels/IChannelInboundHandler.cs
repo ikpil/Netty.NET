@@ -27,23 +27,28 @@ public interface IChannelInboundHandler : IChannelHandler
      * The {@link Channel} of the {@link ChannelHandlerContext} was registered with its {@link EventLoop}
      */
     void ChannelRegistered(IChannelHandlerContext ctx);
+
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} was unregistered from its {@link EventLoop}
      */
     void ChannelUnregistered(IChannelHandlerContext ctx);
+
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} is now active
      */
     void ChannelActive(IChannelHandlerContext ctx);
+
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} was registered is now inactive and reached its
      * end of lifetime.
      */
     void ChannelInactive(IChannelHandlerContext ctx);
+
     /**
      * Invoked when the current {@link Channel} has read a message from the peer.
      */
     void ChannelRead(IChannelHandlerContext ctx, object msg);
+
     /**
      * Invoked when the last message read by the current read operation has been consumed by
      * {@link #channelRead(ChannelHandlerContext, Object)}.  If {@link ChannelOption#AUTO_READ} is off, no further
@@ -51,10 +56,12 @@ public interface IChannelInboundHandler : IChannelHandler
      * {@link ChannelHandlerContext#read()} is called.
      */
     void ChannelReadComplete(IChannelHandlerContext ctx);
+
     /**
      * Gets called if an user event was triggered.
      */
     void UserEventTriggered(IChannelHandlerContext ctx, object evt);
+
     /**
      * Gets called once the writable state of a {@link Channel} changed. You can check the state with
      * {@link Channel#isWritable()}.

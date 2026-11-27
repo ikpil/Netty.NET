@@ -175,11 +175,13 @@ public interface IChannelHandler
      * Gets called after the {@link ChannelHandler} was added to the actual context and it's ready to handle events.
      */
     void HandlerAdded(IChannelHandlerContext ctx);
+
     /**
      * Gets called after the {@link ChannelHandler} was removed from the actual context and it doesn't handle events
      * anymore.
      */
     void HandlerRemoved(IChannelHandlerContext ctx);
+
     /**
      * Gets called if a {@link Throwable} was thrown.
      *

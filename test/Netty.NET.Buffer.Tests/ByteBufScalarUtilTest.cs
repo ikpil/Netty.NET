@@ -159,10 +159,18 @@ public class ByteBufScalarUtilTest
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
     public void AccessibilityChecksObserveSharedOwnershipWithoutRetaining(int kind)
     {
-        ByteBuf b = Storage(kind, 4); ByteBuf retained = b.RetainedSlice(0, 4);
+        ByteBuf b = Storage(kind, 4);
+        ByteBuf retained = b.RetainedSlice(0, 4);
         ByteBuf[] views = { b, retained, b.Duplicate(), b.AsReadOnly(), Unpooled.UnreleasableBuffer(b) };
-        foreach (ByteBuf view in views) { Assert.True(ByteBufUtil.IsAccessible(view)); Assert.Same(view, ByteBufUtil.EnsureAccessible(view)); }
-        Assert.Equal(2, b.RefCnt); b.Release(); Assert.True(ByteBufUtil.IsAccessible(b)); retained.Release();
+        foreach (ByteBuf view in views)
+        {
+            Assert.True(ByteBufUtil.IsAccessible(view));
+            Assert.Same(view, ByteBufUtil.EnsureAccessible(view));
+        }
+        Assert.Equal(2, b.RefCnt);
+        b.Release();
+        Assert.True(ByteBufUtil.IsAccessible(b));
+        retained.Release();
         foreach (ByteBuf view in views)
         {
             Assert.False(ByteBufUtil.IsAccessible(view));
@@ -175,22 +183,29 @@ public class ByteBufScalarUtilTest
     [Fact]
     public void WritableStatusMatchesActualGrowthOutcomesAndRejectsUnknownCodes()
     {
-        var a = new UnpooledByteBufAllocator(); ByteBuf b = a.HeapBuffer(2, 8);
+        var a = new UnpooledByteBufAllocator();
+        ByteBuf b = a.HeapBuffer(2, 8);
         try
         {
-            Assert.Equal(0, b.EnsureWritable(2, false)); Assert.True(ByteBufUtil.EnsureWritableSuccess(0));
-            Assert.Equal(1, b.EnsureWritable(9, false)); Assert.False(ByteBufUtil.EnsureWritableSuccess(1));
-            Assert.Equal(2, b.EnsureWritable(3, false)); Assert.True(ByteBufUtil.EnsureWritableSuccess(2));
+            Assert.Equal(0, b.EnsureWritable(2, false));
+            Assert.True(ByteBufUtil.EnsureWritableSuccess(0));
+            Assert.Equal(1, b.EnsureWritable(9, false));
+            Assert.False(ByteBufUtil.EnsureWritableSuccess(1));
+            Assert.Equal(2, b.EnsureWritable(3, false));
+            Assert.True(ByteBufUtil.EnsureWritableSuccess(2));
         }
         finally { b.Release(); }
         b = a.HeapBuffer(2, 8);
         try
         {
-            Assert.Equal(3, b.EnsureWritable(9, true)); Assert.False(ByteBufUtil.EnsureWritableSuccess(3));
-            Assert.Equal(8, b.Capacity); Assert.Equal(0, b.WriterIndex);
+            Assert.Equal(3, b.EnsureWritable(9, true));
+            Assert.False(ByteBufUtil.EnsureWritableSuccess(3));
+            Assert.Equal(8, b.Capacity);
+            Assert.Equal(0, b.WriterIndex);
         }
         finally { b.Release(); }
-        foreach (int code in new[] { int.MinValue, -1, 4, int.MaxValue }) Assert.False(ByteBufUtil.EnsureWritableSuccess(code));
+        foreach (int code in new[] { int.MinValue, -1, 4, int.MaxValue })
+            Assert.False(ByteBufUtil.EnsureWritableSuccess(code));
     }
 
     [Fact]

@@ -326,6 +326,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             httpContent.Release();
         }
     }
+
     private void EncodeNotHttpMessageContentTypes(IChannelHandlerContext ctx, object msg, IList<object> @out)
     {
         Debug.Assert(!(msg is IHttpMessage));

@@ -33,6 +33,7 @@ public class CoalescingBufferQueueContractTest
         Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public void AggregateCallbackFailureDoesNotPreventOtherProducerCompletion()
     {
@@ -55,6 +56,7 @@ public class CoalescingBufferQueueContractTest
         Assert.Equal(0, second.RefCnt);
         Assert.False(channel.Finish());
     }
+
     [Fact]
     public async Task RejectedCompletionDispatchDoesNotLeaveTheNativeProducerPending()
     {
@@ -85,7 +87,10 @@ public class CoalescingBufferQueueContractTest
     {
         internal readonly TaskCompletionSource AllowWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
         protected override async Task DoWrite(object msg)
-        { await AllowWrite.Task.ConfigureAwait(false); await base.DoWrite(msg).ConfigureAwait(false); }
+        {
+            await AllowWrite.Task.ConfigureAwait(false);
+            await base.DoWrite(msg).ConfigureAwait(false);
+        }
     }
     private sealed class EmptyHandler : ChannelHandlerAdapter { }
     private sealed class RejectableExecutor : AbstractEventExecutor
@@ -96,29 +101,45 @@ public class CoalescingBufferQueueContractTest
         {
             _stopped = true;
         }
+
         public override bool InEventLoop(Thread thread)
         {
             return !_stopped && ReferenceEquals(thread, _owner);
         }
-        public override void Execute(Action task) { if (_stopped) throw new RejectedExecutionException(); task(); }
+
+        public override void Execute(Action task)
+        {
+            if (_stopped)
+                throw new RejectedExecutionException();
+            task();
+        }
         public override Task TerminationFuture => Task.CompletedTask;
         public override bool IsShuttingDown()
         {
             return _stopped;
         }
+
         public override bool IsShutdown()
         {
             return _stopped;
         }
+
         public override bool IsTerminated()
         {
             return _stopped;
         }
+
         public override bool AwaitTermination(TimeSpan timeout)
         {
             return _stopped;
         }
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Stop(); return Task.CompletedTask; }
+
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            Stop();
+            return Task.CompletedTask;
+        }
+
         [Obsolete]
         public override void Shutdown()
         {

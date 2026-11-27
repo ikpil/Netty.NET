@@ -34,7 +34,10 @@ public class LocalServerChannel : AbstractServerChannel
     private bool _acceptPending;
     private IIoRegistration _registration;
     private readonly LocalServerUnsafe _unsafe;
-    public LocalServerChannel() { _unsafe = new LocalServerUnsafe(this); }
+    public LocalServerChannel()
+    {
+        _unsafe = new LocalServerUnsafe(this);
+    }
 
     protected override bool IsCompatible(IEventLoop loop)
     {
@@ -135,6 +138,7 @@ public class LocalServerChannel : AbstractServerChannel
     {
         return _local;
     }
+
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -143,6 +147,7 @@ public class LocalServerChannel : AbstractServerChannel
         SetActive(true);
         return Task.CompletedTask;
     }
+
     protected override void DoClose()
     {
         if (state <= 1)
@@ -160,6 +165,7 @@ public class LocalServerChannel : AbstractServerChannel
         while (_inbound.TryDequeue(out var child))
             child.CloseForcibly();
     }
+
     /**
      * A factory method for {@link LocalChannel}s. Users may override it
      * to create custom instances of {@link LocalChannel}s.
@@ -168,6 +174,7 @@ public class LocalServerChannel : AbstractServerChannel
     {
         return new(this, peer);
     }
+
     internal LocalChannel Serve(LocalChannel peer)
     {
         LocalChannel child = NewLocalChannel(peer);
@@ -235,6 +242,8 @@ public class LocalServerChannel : AbstractServerChannel
     private sealed class ServerConfig : DefaultChannelConfig
     {
         internal ServerConfig(IChannel channel) : base(channel, new ServerChannelRecvByteBufAllocator())
-        { SetAllocator(new PreferHeapByteBufAllocator(GetAllocator())); }
+        {
+            SetAllocator(new PreferHeapByteBufAllocator(GetAllocator()));
+        }
     }
 }

@@ -151,6 +151,7 @@ public sealed class QuicStreamChannelBootstrap
             this.streamOptions = streamOptions;
             this.streamAttrs = streamAttrs;
         }
+
         protected override void InitChannel(IQuicStreamChannel ch)
         {
             Quic.SetupChannel(ch, streamOptions, streamAttrs, streamHandler, logger);

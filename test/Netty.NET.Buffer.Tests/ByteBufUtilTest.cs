@@ -52,15 +52,22 @@ public class ByteBufUtilTest
                 _ => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: _native)
             };
         }
+
         public ByteBuf Buffer(int capacity)
         {
             return _direct ? _allocator.DirectBuffer(capacity) : _allocator.HeapBuffer(capacity);
         }
+
         public CompositeByteBuf Composite()
         {
             return _direct ? _allocator.CompositeDirectBuffer() : _allocator.CompositeHeapBuffer();
         }
-        public void Dispose() { (_allocator as IDisposable)?.Dispose(); Assert.Equal(0, _native.ReservedBytes); }
+
+        public void Dispose()
+        {
+            (_allocator as IDisposable)?.Dispose();
+            Assert.Equal(0, _native.ReservedBytes);
+        }
     }
     // Java UTF-8 encodes an isolated UTF-16 surrogate as '?'.
     private static readonly Encoding NettyUtf8 = Encoding.GetEncoding("utf-8", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback);
@@ -516,9 +523,18 @@ public class ByteBufUtilTest
     {
         var copies = new List<ByteBuf>();
         ByteBuf Copy(string value, Encoding encoding)
-        { ByteBuf copy = Unpooled.CopiedBuffer(value, encoding); copies.Add(copy); return copy; }
+        {
+            ByteBuf copy = Unpooled.CopiedBuffer(value, encoding);
+            copies.Add(copy);
+            return copy;
+        }
+
         ByteBuf CopyBytes(byte[] value)
-        { ByteBuf copy = Unpooled.CopiedBuffer(value); copies.Add(copy); return copy; }
+        {
+            ByteBuf copy = Unpooled.CopiedBuffer(value);
+            copies.Add(copy);
+            return copy;
+        }
         try
         {
             ByteBuf haystack = Copy("abc123", NettyUtf8);
@@ -776,6 +792,7 @@ public class ByteBufUtilTest
             }
         }
     }
+
     [Fact]
     public void DecodeRandomHexBytesWithEvenLength()
     {

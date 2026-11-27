@@ -82,6 +82,7 @@ public class ByteBufWireContractTest
             case 8: if (le) b.SetLongLE(index, value); else b.SetLong(index, value); break;
         }
     }
+
     private static long Get(ByteBuf b, int index, int width, bool le)
     {
         return width switch

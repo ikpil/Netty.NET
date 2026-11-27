@@ -55,18 +55,40 @@ public class DefaultAddressedEnvelope<T, TAddress> : IAddressedEnvelope<T, TAddr
     public TAddress Sender { get; }
     public TAddress Recipient { get; }
     public int RefCnt => Content is IReferenceCounted counted ? counted.RefCnt : 1;
-    public IReferenceCounted Retain() { ReferenceCountUtil.Retain(Content); return this; }
-    public IReferenceCounted Retain(int increment) { ReferenceCountUtil.Retain(Content, increment); return this; }
+    public IReferenceCounted Retain()
+    {
+        ReferenceCountUtil.Retain(Content);
+        return this;
+    }
+
+    public IReferenceCounted Retain(int increment)
+    {
+        ReferenceCountUtil.Retain(Content, increment);
+        return this;
+    }
+
     public bool Release()
     {
         return ReferenceCountUtil.Release(Content);
     }
+
     public bool Release(int decrement)
     {
         return ReferenceCountUtil.Release(Content, decrement);
     }
-    public IReferenceCounted Touch() { ReferenceCountUtil.Touch(Content); return this; }
-    public IReferenceCounted Touch(object hint) { ReferenceCountUtil.Touch(Content, hint); return this; }
+
+    public IReferenceCounted Touch()
+    {
+        ReferenceCountUtil.Touch(Content);
+        return this;
+    }
+
+    public IReferenceCounted Touch(object hint)
+    {
+        ReferenceCountUtil.Touch(Content, hint);
+        return this;
+    }
+
     // CLR: Java concatenation renders a null recipient as "null".
     public override string ToString()
     {

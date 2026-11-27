@@ -113,10 +113,12 @@ public class DomainSocketSourceTest
     {
         return new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
     }
+
     internal static UnixDomainSocketEndPoint NewAddress()
     {
         return new(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
     }
+
     internal static void RequireDomainSockets()
     {
         if (!Socket.OSSupportsUnixDomainSockets) Assert.Skip("This host does not support Unix domain sockets.");

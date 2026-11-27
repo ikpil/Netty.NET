@@ -37,6 +37,7 @@ public class Socks4ClientEncoderTest
         buf.Release();
         Assert.False(encoder.Finish());
     }
+
     [Fact]
     public void MustEncodeCommandRequestToDomain()
     {

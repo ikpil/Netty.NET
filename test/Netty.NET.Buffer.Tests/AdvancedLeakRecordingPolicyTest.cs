@@ -38,8 +38,19 @@ public class AdvancedLeakRecordingPolicyTest
         {
             ++Records;
         }
-        public void Record(object hint) { ++Records; Hint = hint; }
-        public bool Close(ByteBuf value) { Assert.Same(expected, value); ++Closes; return true; }
+
+        public void Record(object hint)
+        {
+            ++Records;
+            Hint = hint;
+        }
+
+        public bool Close(ByteBuf value)
+        {
+            Assert.Same(expected, value);
+            ++Closes;
+            return true;
+        }
     }
     [Theory]
     [InlineData(false)] [InlineData(true)]
@@ -83,57 +94,112 @@ public class AdvancedLeakRecordingPolicyTest
             File.Delete(report);
         }
     }
+
     public static IEnumerable<object[]> Cases()
     {
         for (int provider = 0; provider < 4; ++provider)
         for (int depth = 1; depth <= 2; ++depth)
         for (int operation = 0; operation < 20; ++operation) yield return [provider, depth, operation];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task RecordingPolicyProbe(int provider, int depth, int operation)
     {
         bool referenceOnly = SystemPropertyUtil.GetBoolean(Property, false), composite = provider >= 2;
-        var native = new NativeMemoryAllocator(); var allocator = new UnpooledByteBufAllocator(false, true, native);
+        var native = new NativeMemoryAllocator();
+        var allocator = new UnpooledByteBufAllocator(false, true, native);
         ByteBuf Data(int count)
         {
             ByteBuf b = (provider & 1) != 0 ? allocator.DirectBuffer(count, 64) : allocator.HeapBuffer(count, 64);
-            for (int i = 0; i < count; ++i) b.WriteByte(i + 1);
+            for (int i = 0; i < count; ++i)
+                b.WriteByte(i + 1);
             return b;
         }
         ByteBuf root = composite ? new CompositeByteBuf(allocator, (provider & 1) != 0, 16, Data(32), Data(32)) : Data(64);
-        root.SetIndex(2, 32); ByteBuf b = root; var trackers = new List<Tracker>();
+        root.SetIndex(2, 32);
+        ByteBuf b = root;
+        var trackers = new List<Tracker>();
         for (int i = 0; i < depth; ++i)
         {
-            var tracker = new Tracker(b); trackers.Add(tracker);
+            var tracker = new Tracker(b);
+            trackers.Add(tracker);
             b = composite ? new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)b, tracker) : new AdvancedLeakAwareByteBuf(b, tracker);
         }
-        using var output = new MemoryStream(); using var input = new MemoryStream(new byte[] { 65, 66, 67, 68 });
+        using var output = new MemoryStream();
+        using var input = new MemoryStream(new byte[] { 65, 66, 67, 68 });
         object hint = new();
         try
         {
             switch (operation)
             {
-                case 0: Assert.Equal(4, b.GetByte(3)); break;
-                case 1: Assert.Throws<ArgumentOutOfRangeException>(() => b.GetByte(-1)); break;
-                case 2: Assert.Same(b, b.SetInt(3, 0x01020304)); break;
-                case 3: Assert.Equal(3, b.ReadByte()); break;
-                case 4: Assert.Same(b, b.WriteByte(17)); break;
-                case 5: Assert.Equal(4, b.AsReadOnlyMemory(3, 4).Length); break;
-                case 6: Assert.Equal(4, b.ToString(3, 4, Encoding.ASCII).Length); break;
-                case 7: ByteBuf copy = b.Copy(3, 4); try { Assert.Equal(4, copy.ReadableBytes); } finally { copy.Release(); } break;
-                case 8: Assert.Equal(4, b.Slice(3, 4).Capacity); break;
-                case 9: Assert.Same(b, b.Retain()); break;
-                case 10: Assert.Throws<ArgumentException>(() => b.Retain(0)); break;
-                case 11: Assert.Throws<ArgumentException>(() => b.Release(0)); break;
-                case 12: Assert.Same(b, b.Touch()); break;
-                case 13: Assert.Same(b, b.Touch(hint)); break;
-                case 14: Assert.Equal(-1, b.ForEachByte(3, 4, _ => true)); break;
-                case 15: b.GetBytes(3, output, 4); Assert.Equal(4, output.Length); break;
-                case 16: Assert.Equal(4, b.SetBytes(3, input, 4)); break;
-                case 17: await b.GetBytesAsync(3, output, 4, TestContext.Current.CancellationToken); Assert.Equal(4, output.Length); break;
-                case 18: Assert.Equal(4, await b.SetBytesAsync(3, input, 4, TestContext.Current.CancellationToken)); break;
-                default: Assert.False(b.IsReadOnly); break;
+                case 0:
+                    Assert.Equal(4, b.GetByte(3));
+                    break;
+                case 1:
+                    Assert.Throws<ArgumentOutOfRangeException>(() => b.GetByte(-1));
+                    break;
+                case 2:
+                    Assert.Same(b, b.SetInt(3, 0x01020304));
+                    break;
+                case 3:
+                    Assert.Equal(3, b.ReadByte());
+                    break;
+                case 4:
+                    Assert.Same(b, b.WriteByte(17));
+                    break;
+                case 5:
+                    Assert.Equal(4, b.AsReadOnlyMemory(3, 4).Length);
+                    break;
+                case 6:
+                    Assert.Equal(4, b.ToString(3, 4, Encoding.ASCII).Length);
+                    break;
+                case 7:
+                    ByteBuf copy = b.Copy(3, 4);
+                    try
+                    {
+                        Assert.Equal(4, copy.ReadableBytes);
+                    }
+                    finally { copy.Release(); }
+                    break;
+                case 8:
+                    Assert.Equal(4, b.Slice(3, 4).Capacity);
+                    break;
+                case 9:
+                    Assert.Same(b, b.Retain());
+                    break;
+                case 10:
+                    Assert.Throws<ArgumentException>(() => b.Retain(0));
+                    break;
+                case 11:
+                    Assert.Throws<ArgumentException>(() => b.Release(0));
+                    break;
+                case 12:
+                    Assert.Same(b, b.Touch());
+                    break;
+                case 13:
+                    Assert.Same(b, b.Touch(hint));
+                    break;
+                case 14:
+                    Assert.Equal(-1, b.ForEachByte(3, 4, _ => true));
+                    break;
+                case 15:
+                    b.GetBytes(3, output, 4);
+                    Assert.Equal(4, output.Length);
+                    break;
+                case 16:
+                    Assert.Equal(4, b.SetBytes(3, input, 4));
+                    break;
+                case 17:
+                    await b.GetBytesAsync(3, output, 4, TestContext.Current.CancellationToken);
+                    Assert.Equal(4, output.Length);
+                    break;
+                case 18:
+                    Assert.Equal(4, await b.SetBytesAsync(3, input, 4, TestContext.Current.CancellationToken));
+                    break;
+                default:
+                    Assert.False(b.IsReadOnly);
+                    break;
             }
             int expected = operation is >= 9 and <= 13 ? 1 : operation == 19 && !composite || referenceOnly ? 0 : 1;
             // Touch describes the outer facade only; it intentionally does not delegate.
@@ -142,7 +208,8 @@ public class AdvancedLeakRecordingPolicyTest
                 int records = operation is 12 or 13 && i < depth - 1 ? 0 : expected;
                 Assert.Equal(records, trackers[i].Records);
                 Assert.Equal(0, trackers[i].Closes);
-                if (operation == 13 && i == depth - 1) Assert.Same(hint, trackers[i].Hint);
+                if (operation == 13 && i == depth - 1)
+                    Assert.Same(hint, trackers[i].Hint);
             }
             Assert.Equal((operation == 3 ? 3 : 2, operation == 4 ? 33 : 32, operation == 9 ? 2 : 1),
                 (root.ReaderIndex, root.WriterIndex, root.RefCnt));

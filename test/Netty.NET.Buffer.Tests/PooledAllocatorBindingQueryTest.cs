@@ -31,6 +31,7 @@ public class PooledAllocatorBindingQueryTest
         foreach (bool cached in new[] { false, true })
         for (int trigger = 0; trigger < 3; ++trigger) yield return [topology, direct, cached, trigger];
     }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void PresenceQueryIsPhysicalThreadScopedAndNeverInitializesOrTrimsBindings(int topology, bool direct, bool cached, int trigger)

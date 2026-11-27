@@ -103,18 +103,22 @@ public class DefaultAttributeMap : IAttributeMap
         {
             return key;
         }
+
         public T Get()
         {
             return Volatile.Read(ref value);
         }
+
         public void Set(T value)
         {
             Volatile.Write(ref this.value, value);
         }
+
         public T GetAndSet(T value)
         {
             return Interlocked.Exchange(ref this.value, value);
         }
+
         public bool CompareAndSet(T oldValue, T newValue)
         {
             return ReferenceEquals(Interlocked.CompareExchange(ref value, newValue, oldValue), oldValue);

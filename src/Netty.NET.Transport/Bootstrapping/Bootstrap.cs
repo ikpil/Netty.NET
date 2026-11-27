@@ -69,16 +69,23 @@ public class Bootstrap : AbstractBootstrap
     private readonly OrderedDictionary<ChannelOption, object> _options = new();
     private readonly object _optionsGate = new();
     private readonly ConcurrentDictionary<IAttributeKey, (object Value, Action<IChannel> Apply)> _attributes = new();
-    internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
+    internal KeyValuePair<ChannelOption, object>[] NewOptionsArray()
+    {
+        lock (_optionsGate)
+            return _options.ToArray();
+    }
+
     internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
     {
         return _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
     }
+
     // Select the configured owner without pretending that a native EventLoop is an EventLoopGroup.
     internal IEventLoop NextEventLoop()
     {
         return _registrationLoop ?? (_group ?? throw new InvalidOperationException("Group not set.")).Next();
     }
+
     /**
      * The {@link EventLoopGroup} which is used to handle all the events for the to-be-created
      * {@link Channel}
@@ -93,6 +100,7 @@ public class Bootstrap : AbstractBootstrap
         _group = group;
         return this;
     }
+
     /**
      * @deprecated Use {@link #channelFactory(io.netty.channel.ChannelFactory)} instead.
      */
@@ -114,6 +122,7 @@ public class Bootstrap : AbstractBootstrap
         _factory = channelFactory;
         return this;
     }
+
     /**
      * The {@link Class} which is used to create {@link Channel} instances from.
      * You either use this or {@link #channelFactory(io.netty.channel.ChannelFactory)} if your
@@ -126,12 +135,14 @@ public class Bootstrap : AbstractBootstrap
         ObjectUtil.CheckNotNull(channelClass, "channelClass");
         return ChannelFactory(new ReflectiveChannelFactory<IChannel>(channelClass).NewChannel);
     }
+
     // CLR: the generic form supplies the class at compile time and uses the same reflective factory.
     public Bootstrap Channel<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>()
         where T : IChannel, new()
     {
         return Channel(typeof(T));
     }
+
     /**
      * the {@link ChannelHandler} to use for serving the requests.
      */
@@ -140,6 +151,7 @@ public class Bootstrap : AbstractBootstrap
         _handler = ObjectUtil.CheckNotNull(handler, "handler");
         return this;
     }
+
     /**
      * The {@link SocketAddress} to connect to once the {@link #connect()} method
      * is called.
@@ -150,6 +162,7 @@ public class Bootstrap : AbstractBootstrap
         _remote = remoteAddress;
         return this;
     }
+
     /**
      * @see #remoteAddress(SocketAddress)
      */
@@ -157,6 +170,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return RemoteAddress(new DnsEndPoint(inetHost, inetPort));
     }
+
     /**
      * @see #remoteAddress(SocketAddress)
      */
@@ -164,6 +178,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return RemoteAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
     }
+
     /**
      * The {@link SocketAddress} which is used to bind the local "end" to.
      */
@@ -172,6 +187,7 @@ public class Bootstrap : AbstractBootstrap
         _local = localAddress;
         return this;
     }
+
     /**
      * @see #localAddress(SocketAddress)
      */
@@ -180,6 +196,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
     }
+
     /**
      * @see #localAddress(SocketAddress)
      */
@@ -187,6 +204,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
     }
+
     /**
      * @see #localAddress(SocketAddress)
      */
@@ -194,6 +212,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
     }
+
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
@@ -214,6 +233,7 @@ public class Bootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Allow to specify an initial attribute of the newly created {@link Channel}.  If the {@code value} is
      * {@code null}, the attribute of the specified {@code key} is removed.
@@ -231,11 +251,17 @@ public class Bootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Disables address name resolution. Name resolution may be re-enabled with
      * {@link Bootstrap#resolver(AddressResolverGroup)}
      */
-    public Bootstrap DisableResolver() { _disableResolver = true; return this; }
+    public Bootstrap DisableResolver()
+    {
+        _disableResolver = true;
+        return this;
+    }
+
     /**
      * Sets the {@link NameResolver} which will resolve the address of the unresolved named address.
      *
@@ -250,6 +276,7 @@ public class Bootstrap : AbstractBootstrap
         _disableResolver = false;
         return this;
     }
+
     /**
      * Validate all the parameters. Sub-classes may override this, but should
      * call the super method in that case.
@@ -271,6 +298,7 @@ public class Bootstrap : AbstractBootstrap
         }
         return this;
     }
+
     /**
      * Returns a deep clone of this bootstrap which has the identical configuration.  This method is useful when making
      * multiple {@link Channel}s with similar settings.  Please note that this method does not clone the
@@ -284,6 +312,7 @@ public class Bootstrap : AbstractBootstrap
         foreach (var pair in _attributes) copy._attributes[pair.Key] = pair.Value;
         return copy;
     }
+
     // CLR: EventLoop is not an EventLoopGroup facade. An explicit registration owner provides
     // the original clone(eventLoop) behavior while keeping group lifecycle ownership shared.
     /**
@@ -298,6 +327,7 @@ public class Bootstrap : AbstractBootstrap
         copy._registrationLoop = eventLoop;
         return copy;
     }
+
     /**
      * Create a new {@link Channel} and register it with an {@link EventLoop}.
      */
@@ -350,6 +380,7 @@ public class Bootstrap : AbstractBootstrap
             }
         }
     }
+
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -364,6 +395,7 @@ public class Bootstrap : AbstractBootstrap
 
         return DoResolveAndConnectAsync(remoteAddress, _local, cancellationToken);
     }
+
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -371,6 +403,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return ConnectAsync(new DnsEndPoint(inetHost, inetPort), cancellationToken);
     }
+
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -378,6 +411,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return ConnectAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
     }
+
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -387,6 +421,7 @@ public class Bootstrap : AbstractBootstrap
         Validate();
         return DoResolveAndConnectAsync(remoteAddress, _local, cancellationToken);
     }
+
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -396,6 +431,7 @@ public class Bootstrap : AbstractBootstrap
         Validate();
         return DoResolveAndConnectAsync(remoteAddress, localAddress, cancellationToken);
     }
+
     /**
      * @see #connect()
      */
@@ -552,6 +588,7 @@ public class Bootstrap : AbstractBootstrap
             }
         });
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -565,6 +602,7 @@ public class Bootstrap : AbstractBootstrap
         }
         return BindAsync(localAddress, cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -572,6 +610,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -579,6 +618,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -586,6 +626,7 @@ public class Bootstrap : AbstractBootstrap
     {
         return BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
     }
+
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -654,7 +695,9 @@ public class Bootstrap : AbstractBootstrap
         internal abstract class Resolver
         {
             internal abstract bool IsSupported(EndPoint address);
+
             internal abstract bool IsResolved(EndPoint address);
+
             internal abstract Task<EndPoint> Resolve(EndPoint address, CancellationToken cancellationToken);
         }
 
@@ -664,6 +707,7 @@ public class Bootstrap : AbstractBootstrap
             {
                 return resolver.IsSupported(address);
             }
+
             internal override bool IsResolved(EndPoint address)
             {
                 return resolver.IsResolved(address);

@@ -37,11 +37,13 @@ public class BootstrapCompletionSourceTest
     {
         return LateBind(false);
     }
+
     [Fact]
     public Task TestLateRegisterSuccessBindFailed()
     {
         return LateBind(true);
     }
+
     private static async Task LateBind(bool fail)
     {
         var group = new HeldRegistrationGroup();
@@ -72,6 +74,7 @@ public class BootstrapCompletionSourceTest
         }
         finally { group.Producer.TrySetResult(); await group.StopAsync(); }
     }
+
     [Fact(Timeout = 10000)]
     public async Task TestLateRegistrationConnect()
     {
@@ -83,6 +86,7 @@ public class BootstrapCompletionSourceTest
         }
         finally { await group.StopAsync(); }
     }
+
     [Fact]
     public void TestResolverDefault()
     {
@@ -91,6 +95,7 @@ public class BootstrapCompletionSourceTest
         Assert.NotNull(bootstrap.Config.Resolver);
         Assert.IsType<DefaultAddressResolverGroup>(bootstrap.Config.Resolver);
     }
+
     [Fact]
     public void TestResolverDisabled()
     {
@@ -98,6 +103,7 @@ public class BootstrapCompletionSourceTest
         Assert.DoesNotContain("resolver:", bootstrap.Config.ToString());
         Assert.Null(bootstrap.Config.Resolver);
     }
+
     [Fact]
     public async Task TestAsyncResolutionSuccess()
     {
@@ -116,6 +122,7 @@ public class BootstrapCompletionSourceTest
         }
         finally { await groupA.StopAsync(); await groupB.StopAsync(); }
     }
+
     [Fact]
     public async Task TestAsyncResolutionFailure()
     {
@@ -140,13 +147,22 @@ public class BootstrapCompletionSourceTest
     private sealed class HeldRegistrationGroup : MultiThreadIoEventLoopGroup
     {
         internal readonly TaskCompletionSource Producer = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal HeldRegistrationGroup() : base(1, LocalIoHandler.NewFactory()) { }
+        internal HeldRegistrationGroup() : base(1, LocalIoHandler.NewFactory())
+        {
+        }
+
         public override Task RegisterAsync(IChannel channel, CancellationToken token = default)
-        { base.RegisterAsync(channel, token).GetAwaiter().GetResult(); return Producer.Task; }
+        {
+            base.RegisterAsync(channel, token).GetAwaiter().GetResult();
+            return Producer.Task;
+        }
     }
     private sealed class QueuedRegistrationGroup : MultiThreadIoEventLoopGroup
     {
-        internal QueuedRegistrationGroup() : base(1, LocalIoHandler.NewFactory()) { }
+        internal QueuedRegistrationGroup() : base(1, LocalIoHandler.NewFactory())
+        {
+        }
+
         public override Task RegisterAsync(IChannel channel, CancellationToken token = default)
         {
             var producer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -185,12 +201,14 @@ public class BootstrapCompletionSourceTest
             {
                 return false;
             }
+
             protected override Task<EndPoint> DoResolveAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<EndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
                 Executor.Execute(() => { if (success) producer.SetResult(address); else producer.SetException(new UnknownHostException(address.ToString())); });
                 return producer.Task;
             }
+
             protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<IReadOnlyList<EndPoint>>(TaskCreationOptions.RunContinuationsAsynchronously);

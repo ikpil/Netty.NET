@@ -68,14 +68,19 @@ public class ByteBufArrayExtractionTest
     [InlineData(0)] [InlineData(1)]
     public void OriginalNonzeroArrayOffsetAndArrayLongerThanSliceNeverLeakOtherBytes(int offset)
     {
-        byte[] storage = { 5, 0, 0, 0, 5 }; ByteBuf owner = Unpooled.WrappedBuffer(storage);
+        byte[] storage = { 5, 0, 0, 0, 5 };
+        ByteBuf owner = Unpooled.WrappedBuffer(storage);
         try
         {
-            ByteBuf slice = owner.Slice(offset, 4); slice.WriterIndex = 0; slice.WriteInt(0x01020304);
+            ByteBuf slice = owner.Slice(offset, 4);
+            slice.WriterIndex = 0;
+            slice.WriteInt(0x01020304);
             CheckOriginalRanges(slice);
             byte[] extracted = ByteBufUtil.GetBytes(slice, 0, 4, false);
-            Assert.NotSame(storage, extracted); Assert.Equal(4, extracted.Length);
-            extracted[0] = 99; Assert.Equal(1, slice.GetByte(0));
+            Assert.NotSame(storage, extracted);
+            Assert.Equal(4, extracted.Length);
+            extracted[0] = 99;
+            Assert.Equal(1, slice.GetByte(0));
             Assert.Equal(5, storage[offset == 0 ? 4 : 0]);
         }
         finally { owner.Release(); }
@@ -173,9 +178,15 @@ public class ByteBufArrayExtractionTest
     {
         ByteBuf b = Unpooled.Buffer(4, 8).WriteInt(0x01020304);
         byte[] shared = ByteBufUtil.GetBytes(b, 0, 4, false), snapshot = ByteBufUtil.GetBytes(b);
-        b.Capacity = 8; b.SetByte(0, 42); Assert.Equal(1, shared[0]); Assert.Equal(1, snapshot[0]);
-        shared[1] = 99; Assert.Equal(2, b.GetByte(1));
-        b.Release(); Assert.Equal(new byte[] { 1, 99, 3, 4 }, shared); Assert.Equal(new byte[] { 1, 2, 3, 4 }, snapshot);
+        b.Capacity = 8;
+        b.SetByte(0, 42);
+        Assert.Equal(1, shared[0]);
+        Assert.Equal(1, snapshot[0]);
+        shared[1] = 99;
+        Assert.Equal(2, b.GetByte(1));
+        b.Release();
+        Assert.Equal(new byte[] { 1, 99, 3, 4 }, shared);
+        Assert.Equal(new byte[] { 1, 2, 3, 4 }, snapshot);
     }
 
     [Fact]

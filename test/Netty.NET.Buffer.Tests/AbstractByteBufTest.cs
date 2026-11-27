@@ -42,6 +42,7 @@ public abstract partial class AbstractByteBufTest : IDisposable
     {
         return NewBuffer(capacity, int.MaxValue);
     }
+
     protected abstract ByteBuf NewBuffer(int capacity, int maxCapacity);
 
     protected void Init(IByteBufAllocator allocator)
@@ -58,15 +59,22 @@ public abstract partial class AbstractByteBufTest : IDisposable
     {
         return Own(Unpooled.WrappedBuffer(bytes));
     }
+
     private ByteBuf WrappedMemory(Memory<byte> bytes)
     {
         return Own(Unpooled.WrappedBuffer(bytes));
     }
+
     private ByteBuf DirectBuffer(int capacity)
     {
         return Own(_peerAllocator.DirectBuffer(capacity));
     }
-    private ByteBuf Own(ByteBuf value) { _peers.Add(value); return value; }
+
+    private ByteBuf Own(ByteBuf value)
+    {
+        _peers.Add(value);
+        return value;
+    }
 
     public virtual void Dispose()
     {

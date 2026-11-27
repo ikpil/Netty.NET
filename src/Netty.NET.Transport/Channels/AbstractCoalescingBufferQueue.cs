@@ -76,6 +76,7 @@ public abstract class AbstractCoalescingBufferQueue
         _pairs.AddFirst(buffer);
         IncrementReadableBytes(buffer.ReadableBytes);
     }
+
     /**
      * Add a buffer to the end of the queue.
      */
@@ -83,6 +84,7 @@ public abstract class AbstractCoalescingBufferQueue
     {
         AddCore(buffer, null);
     }
+
     /**
      * Add a buffer to the end of the queue and associate a promise with it that should be completed when
      * all the buffer's bytes have been consumed from the queue and written.
@@ -96,6 +98,7 @@ public abstract class AbstractCoalescingBufferQueue
         // before we complete it's promise.
         AddCore(buffer, producer);
     }
+
     /**
      * Add a buffer to the end of the queue and associate a listener with it that should be completed when
      * all the buffers  bytes have been consumed from the queue and written.
@@ -106,6 +109,7 @@ public abstract class AbstractCoalescingBufferQueue
     {
         AddCore(buffer, completion);
     }
+
     private void AddCore(ByteBuf buffer, object completion)
     {
         ArgumentNullException.ThrowIfNull(buffer);
@@ -118,8 +122,16 @@ public abstract class AbstractCoalescingBufferQueue
             _pairs.AddLast(completion);
         IncrementReadableBytes(buffer.ReadableBytes);
     }
+
     private object Poll()
-    { var first = _pairs.First; if (first == null) return null; _pairs.RemoveFirst(); return first.Value; }
+    {
+        var first = _pairs.First;
+        if (first == null)
+            return null;
+        _pairs.RemoveFirst();
+        return first.Value;
+    }
+
     /**
      * Remove the first {@link ByteBuf} from the queue.
      * @param aggregatePromise used to aggregate the promises and listeners for the returned buffer.
@@ -136,6 +148,7 @@ public abstract class AbstractCoalescingBufferQueue
         ReconcileReadableBytes();
         return result;
     }
+
     /**
      * Remove a {@link ByteBuf} from the queue with the specified number of bytes. Any added buffer who's bytes are
      * fully consumed during removal will have it's promise completed when the passed aggregate {@link ChannelPromise}
@@ -215,6 +228,7 @@ public abstract class AbstractCoalescingBufferQueue
         ReconcileReadableBytes();
         return result;
     }
+
     private static void Notify(object completion, Task operation)
     {
         if (completion is Action<Task> callback)
@@ -225,6 +239,7 @@ public abstract class AbstractCoalescingBufferQueue
         catch (OperationCanceledException error) when (operation.IsCanceled) { producer.TrySetCanceled(error.CancellationToken); }
         catch (Exception error) { producer.TrySetException(error); }
     }
+
     private static void NotifySafely(object completion, Task operation)
     {
         if (completion == null)
@@ -233,6 +248,7 @@ public abstract class AbstractCoalescingBufferQueue
         { Notify(completion, operation); }
         catch (Exception error) { Logger.Warn("A buffer completion callback threw an exception.", error); }
     }
+
     private static void Attach(TaskCompletionSource aggregate, object completion)
     {
         // Default TCS producers and ExecuteSynchronously preserve the source's inline listener reentrance.
@@ -240,6 +256,7 @@ public abstract class AbstractCoalescingBufferQueue
         _ = aggregate.Task.ContinueWith(task => NotifySafely(completion, task), CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
+
     /**
      *  Release all buffers in the queue and complete all listeners and promises.
      */
@@ -273,6 +290,7 @@ public abstract class AbstractCoalescingBufferQueue
         if (pending != null)
             throw new InvalidOperationException("A buffer completion callback failed.", pending);
     }
+
     /**
      * Copy all pending entries in this queue into the destination queue.
      * @param dest to copy pending buffers to.
@@ -284,6 +302,7 @@ public abstract class AbstractCoalescingBufferQueue
             destination._pairs.AddLast(entry);
         destination.IncrementReadableBytes(_readableBytes);
     }
+
     /**
      * Writes all remaining elements in this queue.
      * @param ctx The context to write all elements to.
@@ -331,6 +350,7 @@ public abstract class AbstractCoalescingBufferQueue
             throw new InvalidOperationException("Writing queued buffers failed.", pending);
         return Task.WhenAll(writes);
     }
+
     private static Task Write(IChannelHandlerContext ctx, ByteBuf buffer, object completion)
     {
         if (completion is TaskCompletionSource producer && producer.Task.IsCanceled)
@@ -365,10 +385,12 @@ public abstract class AbstractCoalescingBufferQueue
             await operation.ConfigureAwait(false);
         }
     }
+
     /**
      * Calculate the result of {@code current + next}.
      */
     protected abstract ByteBuf Compose(IByteBufAllocator allocator, ByteBuf cumulation, ByteBuf next);
+
     /**
      * Compose {@code cumulation} and {@code next} into a new {@link CompositeByteBuf}.
      */
@@ -382,6 +404,7 @@ public abstract class AbstractCoalescingBufferQueue
         catch { composite.Release(); ReferenceCountUtil.SafeRelease(next); throw; }
         return composite;
     }
+
     /**
      * Compose {@code cumulation} and {@code next} into a new {@link ByteBufAllocator#ioBuffer()}.
      * @param alloc The allocator to use to allocate the new buffer.
@@ -399,6 +422,7 @@ public abstract class AbstractCoalescingBufferQueue
         next.Release();
         return result;
     }
+
 #pragma warning disable CS0618 // Preserve the original protected override bridge.
     /**
      * Calculate the first {@link ByteBuf} which will be used in subsequent calls to
@@ -410,6 +434,7 @@ public abstract class AbstractCoalescingBufferQueue
     {
         return ComposeFirst(allocator, first);
     }
+
 #pragma warning restore CS0618
     [Obsolete("Override ComposeFirst(IByteBufAllocator, ByteBuf, int) instead.")]
     /**
@@ -423,11 +448,13 @@ public abstract class AbstractCoalescingBufferQueue
     {
         return first;
     }
+
     /**
      * The value to return when {@link #remove(ByteBufAllocator, int, ChannelPromise)} is called but the queue is empty.
      * @return the {@link ByteBuf} which represents an empty queue.
      */
     protected abstract ByteBuf RemoveEmptyValue();
+
     private void IncrementReadableBytes(int increment)
     {
         long next = (long)_readableBytes + increment;
@@ -436,8 +463,14 @@ public abstract class AbstractCoalescingBufferQueue
         _readableBytes = (int)next;
         _tracker?.IncrementPendingOutboundBytes(increment);
     }
+
     private void DecrementReadableBytes(int decrement)
-    { _readableBytes -= decrement; Debug.Assert(_readableBytes >= 0); _tracker?.DecrementPendingOutboundBytes(decrement); }
+    {
+        _readableBytes -= decrement;
+        Debug.Assert(_readableBytes >= 0);
+        _tracker?.DecrementPendingOutboundBytes(decrement);
+    }
+
     /**
      * Resets readableBytes to 0 when the queue is empty. They can only diverge if a queued buffer was released
      * or consumed while still referenced by the queue (similar to a reference-counting bug) after it was added,
@@ -454,6 +487,7 @@ public abstract class AbstractCoalescingBufferQueue
             DecrementReadableBytes(_readableBytes);
         }
     }
+
     public override string ToString()
     {
         return "bytes: " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " buffers: " + ((Size >> 1).ToString(CultureInfo.InvariantCulture));
